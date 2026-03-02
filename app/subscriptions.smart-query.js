@@ -1541,6 +1541,16 @@ window.SubscriptionsSmartQuery = (function () {
     const hasCandidates = hasKeywords || hasIntentQueries;
     const isFirstRound = !(Array.isArray(modalState.requestHistory) && modalState.requestHistory.length);
     const actionLabel = isFirstRound ? '生成候选' : '新增候选';
+    const tipSection = isFirstRound
+      ? `<div class="dpr-modal-group-title">
+           请先在下方输入你的检索想法
+         </div>
+         <div class="dpr-help-examples">
+           <div class="dpr-help-example">ex: 强化学习 符号回归</div>
+           <div class="dpr-help-example">ex: 请帮我去查找强化学习和符号回归相关的论文</div>
+           <div class="dpr-help-example">ex: 请帮我查找可解释的强化学习驱动符号回归方程发现论文</div>
+         </div>`
+      : '';
     const kwSection = hasKeywordSection
       ? `<div class="dpr-chat-result-block">
            <div class="dpr-modal-group-title">关键词（用于召回）</div>
@@ -1570,15 +1580,8 @@ window.SubscriptionsSmartQuery = (function () {
         <button class="arxiv-tool-btn" data-action="close">关闭</button>
       </div>
       <div class="dpr-chat-result-module">
-        <div class="dpr-modal-group-title">
-          请先在下方输入你的检索想法
-        </div>
-        <div class="dpr-help-examples">
-          <div class="dpr-help-example">ex: 强化学习 符号回归</div>
-          <div class="dpr-help-example">ex: 请帮我去查找强化学习和符号回归相关的论文</div>
-          <div class="dpr-help-example">ex: 请帮我查找可解释的强化学习驱动符号回归方程发现论文</div>
-        </div>
-        <div class="dpr-cloud-scroll">${mixedHtml || emptyBlock}</div>
+        ${tipSection}
+        <div class="dpr-chat-result-content">${mixedHtml || emptyBlock}</div>
       </div>
       <div class="dpr-modal-actions dpr-chat-action-area">
         <div class="dpr-chat-row">
@@ -1613,6 +1616,24 @@ window.SubscriptionsSmartQuery = (function () {
         </button>
       </div>
     `;
+
+    requestAnimationFrame(() => {
+      if (!modalPanel) return;
+      const rows = 3;
+      const slotScrolls = modalPanel.querySelectorAll('.dpr-chat-slot-scroll');
+      slotScrolls.forEach((slot) => {
+        const grid = slot.querySelector('.dpr-cloud-grid');
+        const firstItem = slot.querySelector('.dpr-cloud-item');
+        if (!grid || !firstItem) return;
+
+        const style = getComputedStyle(grid);
+        const gap = Number.parseFloat(style.rowGap || style.gap || '0') || 0;
+        const itemHeight = firstItem.getBoundingClientRect().height;
+        if (!itemHeight || Number.isNaN(itemHeight)) return;
+
+        slot.style.maxHeight = `${itemHeight * rows + gap * (rows - 1)}px`;
+      });
+    });
   };
 
   const applyChatSelection = () => {
