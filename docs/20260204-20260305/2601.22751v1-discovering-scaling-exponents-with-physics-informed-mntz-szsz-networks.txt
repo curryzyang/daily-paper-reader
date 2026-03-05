@@ -1,0 +1,1530 @@
+Title: Discovering Scaling Exponents with Physics-Informed M\"untz-Sz\'asz Networks
+
+URL Source: https://arxiv.org/pdf/2601.22751v1
+
+Published Time: Mon, 02 Feb 2026 01:55:53 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# Discovering Scaling Exponents with Physics-Informed Müntz-Szász Networks 
+
+Gnankan Landry Regis N’guessan 1 2 3 Bum Jun Kim 4
+
+## Abstract 
+
+Physical systems near singularities, interfaces, and critical points exhibit power-law scaling, yet standard neural networks leave the governing ex-ponents implicit. We introduce physics-informed Müntz-Szász Networks (MSN-PINN), a power-law basis network that treats scaling exponents as trainable parameters. The model outputs both the solution and its scaling structure. We prove identifiability, or unique recovery, and show that, under these conditions, the squared error between learned and true exponents scales as O(|μ − α|2).Across experiments, MSN-PINN achieves single-exponent recovery with 1–5% error under noise and sparse sampling. It recovers corner singular-ity exponents for the two-dimensional Laplace equation with 0.009% error, matches the clas-sical result of Kondrat’ev (1967), and recovers forcing-induced exponents in singular Poisson problems with 0.03% and 0.05% errors. On a 40-configuration wedge benchmark, it reaches a 100% success rate with 0.022% mean error. Constraint-aware training encodes physical re-quirements such as boundary condition compat-ibility and improves accuracy by three orders of magnitude over naive training. By combining the expressiveness of neural networks with the inter-pretability of asymptotic analysis, MSN-PINN produces learned parameters with direct physical meaning. 
+
+## 1. Introduction 
+
+Power-law scaling appears throughout physics, including stress fields near crack tips that diverge as r−1/2 (Ander-
+
+> 1
+
+Axiom Research Group 2Department of Applied Mathematics and Computational Science, The Nelson Mandela African Insti-tution of Science and Technology (NM-AIST), Arusha, Tanzania 
+
+> 3
+
+African Institute for Mathematical Sciences (AIMS), Research and Innovation Centre (RIC), Kigali, Rwanda 4Graduate School of Engineering, The University of Tokyo, Japan. Correspondence to: Bum Jun Kim <bumjun.kim@weblab.t.u-tokyo.ac.jp>. 
+
+Preprint. February 2, 2026. 
+
+son, 2017), turbulent energy spectra that follow k−5/3 (Kol-mogorov, 1941), and Laplace solutions at re-entrant corners that scale as r2/3 (Kondrat’ev, 1967). These exponents encode symmetries, conservation laws, and the mathemati-cal structure of the governing equations. In these settings, identifying them is a primary scientific goal. Fracture tough-ness, universality class membership, and solution regularity depend directly on these scaling exponents. These settings motivate the need for methods that iden-tify exponents as part of solving the governing equations. To that end, we combine Müntz-Szász Networks (MSN)— which represent solutions using power-law bases with train-able exponents—with physics-informed neural networks (PINNs) that enforce partial differential equation (PDE) residuals and boundary conditions (BCs). We refer to the resulting approach as MSN-PINN and summarize it in Fig-ure 1. Despite their universal approximation capabilities (Cybenko, 1989), neural networks prioritize accurate fits over explain-ing why a function takes its particular form. Their opaque representations limit scientific applications. PINNs encode governing equations through residual penalties and can ac-curately solve both forward and inverse problems, yet even PINNs hide the underlying solution structure. While ver-ifying that a learned function satisfies the governing PDE is straightforward, extracting scaling exponents requires fragile post-hoc analysis. The difficulty lies in the architecture. Standard multi-layer perceptrons (MLPs) represent functions as sums of piecewise-linear hinges when using rectified linear unit (ReLU) activations. Approximating xα for α ∈ (0 , 1) to 
+
+ϵ-accuracy requires N = Ω( ϵ−2) units (N’guessan, 2025), and the exponent hides in millions of weights. Smooth acti-vations such as tanh or sigmoid face analogous challenges. Their bounded derivatives prevent efficient representation of unbounded power-law behavior. Even with accurate fits, the physically meaningful exponent stays hidden. 
+
+1.1. The MSN Approach 
+
+MSNs (N’guessan, 2025) address this gap by making scaling exponents explicit learnable parameters rather than implicit 1                  
+
+> arXiv:2601.22751v1 [cs.LG] 30 Jan 2026 MSN-PINN
+> Figure 1. MSN-PINN discovers scaling exponents directly from physics. Unlike standard neural networks that hide exponents within millions of weights, the MSN ansatz u(x) = P
+> kckxμkoutputs the exponents {μk}as explicit parameters. Physics-informed losses enforce PDE residuals and BCs to guide exponent learning. For wedge singularities, constraint-aware training adds Lconstraint =P
+> k|ck|sin 2(μkω), which drives the exponents toward physically valid values μ=nπ/ω —improving accuracy from 14.6% to 0.009% error.
+
+features of hidden representations. We focus on an ansatz form of MSN tailored to exponent discovery: 
+
+uθ (x) = 
+
+> K
+
+X
+
+> k=1
+
+ckxμk , (1) where both the coefficients {ck} and the exponents {μk} are optimized during training. Unlike the millions of weights in standard neural architectures, these learned exponents are directly interpretable physical quantities. For example, when trained on data generated from f (x) = x0.5, MSN recovers μ ≈ 0.5 as an explicit parameter. The full MSN architecture introduced in prior work includes signed even and odd power bases and compositional layer stacking. Here, we specialize in a single Müntz expansion to isolate the identifiability and recovery of scaling laws. While previous studies have established MSN as a powerful approximation architecture, we address a more fundamental question about when true physical exponents can be reliably recovered from data or physics-informed PDE constraints. 
+
+1.2. Contributions 
+
+We make four key contributions. We embed the MSN within a physics-informed framework, enabling exponent discov-ery from PDE residuals without requiring labeled solution data; see Section 3. We establish when exponents can be uniquely recovered and derive stability bounds showing that recovery accuracy degrades gracefully with noise, gov-erned by a separation condition analogous to the Rayleigh Limit; see Theorem 4.4 and Theorem 4.5. We introduce constraint-aware losses that encode physical requirements such as edge BCs, improving accuracy by three orders of magnitude over naive MSN-PINN approaches when the PDE provides insufficient gradient signals for exponent se-lection; see Section 3.4. We demonstrate exponent discovery across multiple settings; see Section 5. A singular ordinary differential equation (ODE) yields 1.31% error from physics alone. A corner singularity achieves 0.009% error, matching the analytical result of Kondrat’ev (1967). Singular forcing produces 0.03% and 0.05% errors on dual exponents. A 40-configuration wedge benchmark reaches a 100% success rate with 0.022% mean error; see Appendix I. MSN combines the insights of asymptotic analysis with the scalability of neural networks, learning explicit exponents without requiring closed-form solutions. These learned exponents validate theory, suggest new physics, diagnose model misspecification, and enable extrapolation beyond the training domain. 
+
+## 2. Related Work 
+
+PINNs enforce PDE residuals to solve both forward and inverse problems (Raissi et al., 2019). Variational PINNs improve stability for stiff PDEs (Kharazmi et al., 2020), 2MSN-PINN 
+
+domain decomposition improves scalability (Jagtap & Kar-niadakis, 2021), and conservative architectures encode in-variants (Jagtap et al., 2020). Despite these advances, PINNs can still struggle with stiff problems (Krishnapriyan et al., 2021) and tend to exhibit spectral bias toward low-frequency modes (Rahaman et al., 2019). For singular solutions, Hu et al. (2024) embed prescribed singular forms. MSN allows the exponents to be learned. Sparse Identification of Nonlinear Dynamics (SINDy) dis-covers governing equations through sparse regression over candidate libraries (Brunton et al., 2016). Extensions to PDEs apply the same idea to spatiotemporal data (Rudy et al., 2017), and latent-coordinate variants infer dynamics in hidden variables (Champion et al., 2019). Artificial Intel-ligence Feynman (AI Feynman) uses dimensional analysis and symmetry to search for symbolic forms (Udrescu & Tegmark, 2019). Although these methods discover discrete structure, they rely on fixed candidate exponents. MSN learns continuous exponents directly. Operator learning methods map functions to functions: DeepONet uses branch and trunk networks for inputs and co-ordinates (Lu et al., 2021), while Fourier Neural Operators parameterize kernels in the spectral domain (Li et al., 2021). Kolmogorov-Arnold Networks (KANs) replace fixed acti-vations with learnable splines (Liu et al., 2024b;a). KANs target smooth functions; MSN targets power-law singulari-ties with explicit exponents. Kondrat’ev (1967) characterized elliptic corner singularities, and Grisvard (1985) and Dauge (1988) further developed this theory. Numerical methods exploit this structure with graded meshes (Babuška et al., 1979), finite element meth-ods (FEMs) such as hp -finite element methods (Schwab, 1998), and extended finite element methods (XFEM) for enrichment (Moës et al., 1999; Babuška & Melenk, 1997). These methods prescribe singular bases analytically. MSN learns the bases from physics. The classical Müntz-Szász theorem (Müntz, 1914; Borwein & Erdélyi, 1995) characterizes when the spans of a set 
+
+{xλn } are dense in C[0 , 1] . Computational applications (Shen & Wang, 2016) achieve exponential convergence for singular problems. Prior work by N’guessan (2025) intro-duced trainable exponents; we extend to physics-informed discovery. 
+
+## 3. Method 
+
+3.1. The MSN Ansatz: Why Power-Law Bases? 
+
+Many physical singularities have a power-law structure. Rather than approximating x0.5 with compositions of smooth functions, we represent it directly in a basis specifi-cally designed for power laws. 
+
+Definition 3.1 (MSN Ansatz) . An MSN with K terms rep-resents functions as 
+
+uθ (x) = 
+
+> K
+
+X
+
+> k=1
+
+ckxμk , for x ∈ (0 , 1] , (2) where θ = ( μ, c) with exponents μ = ( μ1, . . . , μ K ) ∈
+
+[μmin , μ max ]K and coefficients c = ( c1, . . . , c K ) ∈ RK .This representation shines when approximating power-law targets: 
+
+Proposition 3.2 (Exact Representation) . If f (x) = xα with 
+
+α ∈ [μmin , μ max ], then the MSN with K = 1 achieves zero approximation error when μ1 = α and c1 = 1 .
+
+Compared with standard networks, approximating x0.5 with ReLU units requires O(ϵ−2) neurons for ϵ-accuracy, and the exponent 0.5 hides in the weights. MSN achieves an exact representation with one term, and the exponent becomes an explicit parameter. 
+
+3.2. Relationship to MSN 
+
+We continue the work on MSNs (N’guessan, 2025), which embedded learnable power-law exponents into neural archi-tectures to obtain expressive, interpretable function approxi-mators. Here, we specialize the MSN to its ansatz regime with a single Müntz expansion: 
+
+uθ (x) = 
+
+> K
+
+X
+
+> k=1
+
+ck|x|μk , (3) with trainable exponents {μk} and linear coefficients {ck}.This specialization isolates how MSNs learn exponents while eliminating architectural redundancies that obscure exponent identifiability. In contrast, the full MSN architecture supports deep compo-sition, parity-aware edge-wise even and odd representations, and can approximate general functions. We can recover the full architecture by stacking multiple Müntz expansions with inter-layer nonlinearities and signed-domain extensions. We use the reduced ansatz here because it allows us to rig-orously analyze when scaling exponents can be identified, derive closed-form PDE derivatives, and optimize stably under physics-informed constraints. MSNs learn governing scaling laws directly from data and physics. For problems requiring composition or mixed par-ity, the full MSN architecture can be reintroduced while retaining the identifiability results established here. 
+
+3.3. Physics-Informed MSN: MSN-PINN 
+
+The MSN ansatz represents the solution; physics-informed training supervises learning. MSN-PINN discovers expo-3MSN-PINN 
+
+nents from PDE constraints without requiring labeled solu-tion data. 3.3.1. L OSS FUNCTION DESIGN 
+
+Consider a PDE of the form 
+
+D[u]( x) = f (x), for x ∈ Ω,
+
+B[u]( x) = g(x), for x ∈ ∂Ω, (4) where D is a differential operator and B encodes BCs. The MSN-PINN loss combines three components: 
+
+Ltotal (θ) = wr Lres (θ) + wbLBC (θ) + wsLsparse (θ). (5) The PDE residual loss measures violation of the governing equation at the collocation points {xri }Nr 
+
+> i=1
+
+⊂ Ω:
+
+Lres (θ) = 1
+
+NrNrX
+
+> i=1
+
+|D [uθ ]( xri ) − f (xri )|2. (6) The BC loss enforces boundary data at points {xbi }Nb 
+
+> i=1
+
+⊂
+
+∂Ω:
+
+LBC (θ) = 1
+
+NbNbX
+
+> i=1
+
+|B [uθ ]( xbi ) − g(xbi )|2. (7) The sparsity loss encourages simpler solutions with fewer active terms: 
+
+Lsparse (θ) = 1
+
+K
+
+> K
+
+X
+
+> k=1
+
+|ck|. (8) The sparsity term serves two purposes. First, the ℓ1 penalty helps interpret results by suppressing spurious terms, leav-ing only physically meaningful exponents with significant coefficients. Second, sparsity makes exponents easier to identify by reducing the effective model complexity. 
+
+3.4. Constraint-Aware Training 
+
+Naive MSN-PINN training fails on certain problems—not because the model lacks capacity, but because the physics provides an inadequate gradient signal to select exponents. Constraint-aware training adds physics-derived penalties to the loss to supply that signal. 3.4.1. T HE EXPONENT DRIFT PROBLEM 
+
+Consider Laplace’s equation on a wedge domain with an opening angle ω:
+
+∇2u = 0 in Ω, with u|θ=0 = u|θ=ω = 0 . (9) Solutions have the separable form u(r, θ ) = rμΦ( θ). Sub-stituting this into Laplace’s equation yields 
+
+∇2u = rμ−2[μ2Φ + Φ ′′ ] = 0 . (10) Any μ satisfies this equation provided Φ′′ +μ2Φ = 0 , giving 
+
+Φ( θ) = A sin( μθ ) + B cos( μθ ).This separation reveals the core difficulty. The Laplacian provides no gradient signal for μ. Every exponent μ yields a harmonic function rμ sin( μθ ), so Lres is flat in μ; all such choices achieve zero residual. In initial experiments on the Corner Singularity problem, this degeneracy caused severe exponent drift. The network matched the boundary data with a harmonic function whose exponents were unrelated to the physical solution, producing a 14.6% error. 3.4.2. P HYSICAL CONSTRAINTS RESOLVE THE 
+
+DEGENERACY 
+
+The resolution comes from encoding additional physical requirements. Arbitrary harmonic functions do not auto-matically satisfy the edge BCs u|θ=0 = u|θ=ω = 0 . For 
+
+u = rμ sin( μθ ):
+
+u|θ=0 = rμ sin(0) = 0 , (11) 
+
+u|θ=ω = rμ sin( μω ) = 0 , so sin( μω ) = 0 . (12) The second condition constrains μ to a discrete set of values. 
+
+μ ∈ { π/ω, 2π/ω, 3π/ω, . . . }. For a re-entrant corner with 
+
+ω = 3 π/ 2, the dominant exponent is μ = π/ (3 π/ 2) = 2 /3.We encode this constraint as an additional loss term. 
+
+Lconstraint (θ) = 
+
+> K
+
+X
+
+> k=1
+
+wk sin 2(μk · ω), (13) where wk ∝ | ck| weights each term in proportion to its coefficient magnitude. Terms with larger coefficients should satisfy the constraint more precisely; terms with negligible coefficients can be ignored. This loss term acts as a quantization force, pushing ex-ponents toward the discrete set of physically valid values. Unlike the PDE residual, it provides a strong gradient signal for exponent correction. 
+
+∂Lconstraint 
+
+∂μ k
+
+= wk · 2 sin( μkω) cos( μkω) · ω
+
+= wkω sin(2 μkω).
+
+(14) This gradient is nonzero whenever μk deviates from valid values, thereby driving convergence toward the physical solution. 3.4.3. G ENERAL PRINCIPLE : E NCODE ALL AVAILABLE 
+
+PHYSICS 
+
+The wedge example illustrates a general principle. MSN-PINN succeeds when we encode enough physics to make the exponents identifiable. Different problems need differ-ent constraints. Corner singularities use edge BCs, implying 4MSN-PINN 
+
+Algorithm 1 Constraint-Aware MSN-PINN Training 
+
+Require: Collocation points {xri }Nr
+
+> i=1
+
+, {xbi }Nb
+
+> i=1
+
+; PDE oper-ator D; constraint q(μ)
+
+Hyperparameters: wr , w b, w s, w con ; ημ ≪ ηc; T
+
+Ensure: Learned exponents μ∗ and coefficients c∗
+
+INITIALIZATION  
+
+> 1:
+
+μ ← Uniform([ μmin , μ max ]) K {sample exponents}  
+
+> 2:
+
+c ← N (0, 0.01 I) {initialize coefficients} TWO -T IMESCALE OPTIMIZATION  
+
+> 3:
+
+for t = 1 to T do  
+
+> 4:
+
+ˆu(x) ← PKk=1 ckxμk {MSN ansatz}  
+
+> 5:
+
+Lcon ← ∥ q(μ)∥2 {constraint loss}  
+
+> 6:
+
+L ← wr Lres + wbLBC + ws∥c∥1 + wcon Lcon  
+
+> 7:
+
+c ← c − ηc∇cL {fast update}  
+
+> 8:
+
+μ ← μ − ημ∇μL {slow update}  
+
+> 9:
+
+end for  
+
+> 10:
+
+return (μ, c)sin( μω ) = 0 . Crack problems use stress-free conditions, which fix angular dependence. Interface problems use con-tinuity conditions that match exponents across interfaces. Eigenvalue problems use normalization that fixes coefficient relationships. Choosing the right constraints depends on the BCs, symmetries, and governing equations, and it makes our assumptions explicit. 
+
+3.5. Two-Timescale Optimization 
+
+Exponents and coefficients play different roles in MSN, requiring different optimization strategies. For fixed ex-ponents, finding optimal coefficients reduces to a linear least-squares problem with a unique global minimum. Ex-ponents, by contrast, appear nonlinearly and create a com-plex landscape with multiple local minima. This asymmetry motivates optimizing on two timescales: 
+
+μ(t+1) = μ(t) − ημ∇μL,c(t+1) = c(t) − ηc∇cL. (15) with ημ < η c, typically ranging from ημ = 0 .1ηc to ημ =0.5ηc.The intuition is as follows. Coefficients should adapt quickly to track the current exponents, solving the inner linear prob-lem at each step. Exponents should move slowly, exploring the outer nonlinear landscape without being destabilized by rapid coefficient changes. Marion & Berthier (2023) prove convergence for two-timescale gradient descent, showing that the slower timescale optimizes over the manifold of solutions to the faster problem. Fast coefficient adaptation ensures that ex-ponent gradients accurately reflect the best achievable loss for each exponent configuration. Algorithm 1 summarizes the complete procedure. 
+
+## 4. Theoretical Foundations 
+
+Three questions guide our theoretical analysis: How accu-rately can MSN represent power-law functions? When can exponents be uniquely recovered? How does noise affect recovery? We characterize MSN behavior near the true ex-ponents under appropriate regularity conditions, matching the practical regime where the method operates. 
+
+4.1. Universal Approximation 
+
+The following result from N’guessan (2025) establishes that MSN inherits the approximation power of classical Müntz systems: 
+
+Theorem 4.1 (Universal Approximation, (N’guessan, 2025)) . Let f ∈ C[0 , 1] with f (0) = 0 . For any ϵ > 0,there exist K ∈ N, exponents μ ∈ (0 , ∞)K , and coeffi-cients c ∈ RK such that 
+
+sup 
+
+> x∈[0 ,1]
+
+|f (x) −
+
+> K
+
+X
+
+> k=1
+
+ckxμk | < ϵ. (16) This follows directly from the Müntz-Szász theorem: The span of {xλ0 , x λ1 , . . . } with λ0 = 0 is dense in C[0 , 1] if and only if P∞ 
+
+> n=1
+
+λ−1 
+
+> n
+
+= ∞. Any sequence of positive exponents that grows sufficiently slowly satisfies this condi-tion. 
+
+4.2. Approximation Rates for Power-Law Targets 
+
+For power-law targets, MSN achieves optimal rates with an explicit dependence on exponent error: 
+
+Theorem 4.2 (Approximation Rate, (N’guessan, 2025)) .
+
+Let f (x) = xα for α > 0 and define 
+
+R(μ) = min 
+
+> c∈R
+
+Z 10
+
+(xα − cx μ)2dx. (17) 
+
+As μ → α,
+
+R(μ) = O(( μ − α)2), (18) 
+
+with optimal coefficient 
+
+c∗(μ) = 
+
+R 10 xα+μdx 
+
+R 10 x2μdx = 2μ + 1 
+
+α + μ + 1 = 1 + O(|μ − α|).
+
+(19) We give the proof in Appendix B. 
+
+Interpretation The squared loss depends quadratically on the exponent error, comparing favorably with standard net-5MSN-PINN 
+
+works. For ReLU networks approximating x0.5, achieving an error ϵ requires N = O(ϵ−2) neurons; for MSN, achiev-ing the same error requires only |μ − 0.5| = O(ϵ1/2). More importantly, MSN provides direct access to the exponent error, whereas a ReLU network buries the exponent within its weights. 
+
+4.3. Exponent Identifiability 
+
+When can exponents be uniquely recovered? We formalize identifiability as follows. 
+
+Definition 4.3 (Exponent Identifiability) . A function 
+
+f (x) = PK∗ 
+
+> k=1
+
+c∗
+
+> k
+
+xαk with distinct exponents α1 < · · · <αK∗ and nonzero coefficients is identifiable if any MSN rep-resentation PKj=1 ˜cj x˜μj achieving ∥f − P 
+
+> j
+
+˜cj x˜μj ∥∞ = 0 
+
+satisfies K ≥ K∗ and, after reordering, ˜μj = αj for some 
+
+j corresponding to the true exponent. 
+
+Theorem 4.4 (Identifiability) . Let f (x) = PK∗ 
+
+> k=1
+
+c∗
+
+> k
+
+xαk
+
+with α1 < · · · < α K∗ and c∗
+
+> k
+
+̸ = 0 for all k. Then (i) f is identifiable: Any exact MSN representation must contain all the true exponents {αk}, and (ii) the representation is unique up to reordering if K = K∗.
+
+We give the proof in Appendix C. 
+
+Interpretation Power-law sums are uniquely determined by their exponents: The same function cannot be represented with different exponents. This makes exponent discovery possible. 
+
+4.4. Stability and the Separation Condition 
+
+Exact recovery requires exact data. In practice, observations are noisy, and we need stability guarantees: 
+
+Theorem 4.5 (Stability and Separation) . Consider noisy observations yi = f (xi) + ϵi with |ϵi| ≤ σ, where f (x) = 
+
+PK∗ 
+
+> k=1
+
+c∗
+
+> k
+
+xαk . Let ˆμ minimize the empirical loss ˆL(μ, c) = 
+
+> 1
+> N
+
+PNi=1 (yi − P 
+
+> k
+
+ckxμk 
+
+> i
+
+)2. If the true exponents satisfy a minimum separation condition 
+
+∆ := min   
+
+> j̸=k
+
+|αj − αk| > 0, (20) 
+
+then under appropriate conditions on the sampling points 
+
+{xi}:
+
+min  
+
+> π
+
+max  
+
+> k
+
+|ˆμk − απ(k)| = O( σcmin ∆2√N ), (21) 
+
+where cmin = min k |c∗
+
+> k
+
+| and π ranges over all permuta-tions. 
+
+The proof, given in Appendix D, uses M-estimation theory. The key insight is that the Fisher information matrix for exponent estimation, the local curvature of the loss, has  
+
+> Table 1. Singular ODE: Exponent discovery using only physics constraints.
+
+Metric Target Discovered Dominant exponent 0.5000 0.4934 Relative error — 1.31% Final PDE residual — 3.2 × 10 −6
+
+Final BC loss — 6.6 × 10 −4
+
+a condition number depending on ∆−2; closer exponents yield worse conditioning. 
+
+Remark 4.6 (On the Sampling Assumption) . The sam-pling assumption enters through the curvature lower bound in Appendix D. Under sufficiently dense and well-spread sampling, concentration gives ∥ 1
+
+> N
+
+P 
+
+> i
+
+ϵiϕi∥ =
+
+O( σ√N ) with (ϕi)k = xαk 
+
+> i
+
+log xi. Since ∇μ ˆL(α, c∗) = 
+
+−2D( 1
+
+> N
+
+P 
+
+> i
+
+ϵiϕi) for D = diag( c∗), this yields ∥ ˆμ−α∥ =
+
+O( σcmin ∆2√N ).
+
+4.5. Physics-Informed Identifiability 
+
+For PDE-constrained problems, the underlying physics pro-vides additional structure affecting identifiability. The next proposition illustrates this with singular forcing. 
+
+Proposition 4.7 (PDE-Induced Exponent Constraints) . Con-sider the Poisson equation −u′′ = xβ on (0 , 1] with 
+
+u(0) = u(1) = 0 . If β > −1, the solution has the form 
+
+u(x) = a1x + a2xβ+2 , (22) 
+
+for specific constants a1, a 2 depending on β. Thus, the forcing exponent β induces a solution exponent α = β + 2 .
+
+We give the proof in Appendix E. This explains why MSN-PINN can discover α = 3 /2 from the singular forcing 
+
+x−1/2: The forcing exponent β = −1/2 deterministically produces the solution exponent α = β + 2 = 3 /2.
+
+Theorem 4.8 (Constraint-Aware Critical Points) . For the Laplacian on a wedge with an opening angle ω, consider the augmented loss 
+
+L(θ) = Lres (θ) + LBC (θ) + λ X
+
+> k
+
+|ck| sin 2(μkω). (23) 
+
+Any critical point (μ∗, c∗) with Lres (μ∗, c∗) = 0,
+
+LBC (μ∗, c∗) = 0, and |c∗
+
+> k
+
+| > 0 for some k satisfies 
+
+sin( μ∗
+
+> k
+
+ω) = 0 , that is, μ∗ 
+
+> k
+
+∈ { nπ/ω : n ∈ N}.
+
+We give the proof in Appendix F. 
+
+Interpretation This theorem explains why constraint-aware training succeeds where naive training fails. Without the constraint term, the loss landscape has a continuum of 6MSN-PINN 
+
+Table 2. Corner Singularity: Laplace wedge with constraint-aware training. 
+
+Metric Target Discovered Primary exponent 0.6667 0.6667 Relative error — 0.009% Second harmonic 1.3333 1.3335 Edge constraint sin( μω ) 0 4.9 × 10 −7
+
+global minima—all harmonic functions matching boundary data. The constraint term breaks this symmetry, isolating minima at physically valid exponents. 
+
+## 5. Experiments 
+
+We evaluate MSN-PINN in three physics-informed settings: singular ODEs, wedge corner singularities, and singular forcing, and we reference the broader wedge benchmark in the appendix. The primary metrics used are exponent error and constraint satisfaction. We validate MSN-PINN for physics-informed exponent dis-covery: recovering exponents solely from PDE constraints, without labeled solution data, and testing constraint-aware training on challenging singular problems. Appendix I pro-vides additional experiments characterizing robustness to noise, sampling density, identifiability limits, and a compre-hensive 40-configuration wedge benchmark. The code is available in the supplementary material. 
+
+5.1. Singular ODE: Physics-Informed Discovery 
+
+We recover exponents from PDE constraints rather than from labeled solution data. The boundary-layer equation 
+
+xu ′′ (x) + 12 u′(x) = 0 ,u(1) = 1 ,
+
+(24) has solution u(x) = √x with an exponent α = 0 .5. We train the MSN-PINN with K = 4 terms on the PDE resid-ual loss without solution labels, concentrating collocation points near x = 0 . Quantitative results for this setting are summarized in Table 1. MSN-PINN discovers the exponent from physics alone. Without any labeled solution data, the network learns that 
+
+μ ≈ 0.5 is the unique exponent consistent with the differen-tial equation and BC. This demonstrates that MSN-PINN extracts interpretable structure directly from physical laws. The exponent trajectory shows initial exploration followed by convergence: Early in training, the exponents wander as the network searches for a consistent solution; once the PDE residual begins to decrease, the exponents lock onto the correct value. −1.0 −0.5 0.0 0.5 1.0                                   
+
+> x
+> −1.00
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> y
+> (a) Analytical
+> −1.0 −0.5 0.0 0.5 1.0
+> x
+> −1.00
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> y
+> (b) MSN-PINN
+> −1.0 −0.5 0.0 0.5 1.0
+> x
+> −1.00
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> y
+> (c) Absolute Error
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> −0.75
+> −0.50
+> −0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8 03000 6000 9000 12000 15000
+> Training Step
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Exponent  ¹
+> ¹2= 0.6667
+> ¹1
+> ¹2
+> ¹3¹4Target ¹= 0.667 02000 4000 6000 8000 10000 12000 14000
+> Training Step
+> 1.8
+> 1.9
+> 2.0
+> 2.1
+> 2.2
+> 2.3
+> 2.4
+> 2.5
+> Total Loss
+> £10 1
+> Total Loss
+> 02000 4000 6000 8000 10000 12000 14000
+> Training Step
+> 10 −7
+> 10 −6
+> 10 −5
+> 10 −4
+> 10 −3
+> 10 −2
+> 10 −1
+> Loss Components
+> Arc BC Edge BC Constraint
+
+Figure 2. Corner singularity: MSN-PINN recovers the result of Kondrat’ev (1967) with a 0.009% error. Top: Learned solution 
+
+u(r, θ ) = r2/3 sin(2 θ/ 3) on a 270° wedge domain, where color indicates solution magnitude, with blue at 0 and yellow at 1. Mid-dle: Exponent trajectory during training—without constraints, not shown, μ drifts to 0.57 with a 14.6% error; with constraints, μ
+
+converges to the theoretical value of 0.6667. Bottom: Training loss showing rapid convergence once the constraint term activates around epoch 2000. 
+
+5.2. Corner Singularity as Main Result 
+
+The corner singularity problem demonstrates the constraint-aware MSN-PINN on a challenging 2D domain. Consider Laplace’s equation defined on a wedge with an opening angle ω = 3 π/ 2, corresponding to a 270° re-entrant corner: 
+
+∇2u = 0 ,u|θ=0 = u|θ=ω = 0 ,u|r=1 = sin(2 θ/ 3) .
+
+(25) The analytical solution is u(r, θ ) = r2/3 sin(2 θ/ 3) with exponent α = 2 /3 ≈ 0.6667 —a classical result due to Kondrat’ev (1967). As discussed in Section 3.4, the Laplacian provides no gra-dient signal for exponent selection: All functions rμ sin( μθ )
+
+are harmonic. Without the constraint term, training on resid-ual and boundary data converges to μ ≈ 0.57 , giving a 14.6% error. Although the network matches the boundary 7MSN-PINN 0.0 2.5 5.0 7.5 10.0 12.5 15.0                        
+
+> Epoch
+> 10 −6
+> 10 −5
+> 10 −4
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> Loss
+> (a)
+> Total PDE Residual Boundary
+> 0.0 2.5 5.0 7.5 10.0 12.5 15.0
+> Epoch
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> 2.25
+> 2.50
+> Exponent  ¹
+> (b)
+> ¹1
+> ¹2
+> ¹3
+> ¹4
+> Target ¹= 1.0
+> Target ¹= 1.5
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.000
+> 0.025
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> 0.200
+> u(x)
+> (c)
+> Analytical: 43x¡43x3=2MSN-PINN
+
+Figure 3. Singular forcing: MSN-PINN accurately discovers both solution exponents with <0.1% error. The Poisson equation, 
+
+−u′′ = x−1/2, has the solution u(x) = 43 x − 43 x3/2 containing exponents 1.0 for the homogeneous term and 1.5 for the particular term. Panel (a) shows the training loss convergence over 10,000 epochs. Panel (b) shows four MSN exponents initialized randomly; two converge to 1.0 with 0.03% error, and two to 1.5 with 0.05% error. The redundant convergence indicates robust discovery. Panel (c) shows the learned solution, dashed, matching the analytical solution, solid, across the domain. 
+
+Table 3. Singular Forcing: Dual exponent discovery. 
+
+Target Exponent Discovered Error % 1.0 homogeneous 0.9997 0.03 1.5 particular 1.5008 0.05 data during training, it uses an incorrect exponent. Adding Lconstraint = P 
+
+> k
+
+|ck| sin 2(μkω) changes the out-come. Constraint-aware training achieves 0.009% error and recovers the analytical result of Kondrat’ev (1967) to four significant figures, representing a 1600-fold improvement over the naive approach. The constraint loss creates strong gradients pushing expo-nents toward valid values. Unlike the PDE residual, which is flat with respect to μ for harmonic functions, the constraint term sin 2(μω ) has sharp minima at μ = nπ/ω . Combined with boundary data that selects the n = 1 mode, the opti-mization landscape has a unique, well-defined minimum. Quantitative results and training dynamics are shown in Table 2 and Figure 2. The network also discovers the second harmonic at μ =4/3 ≈ 1.333 , though with a smaller coefficient. This result demonstrates MSN’s ability to recover the full singularity spectrum, not just the dominant term. 
+
+5.3. Singular Forcing 
+
+Singular forcing induces multiple exponents, which can also be identified. Consider the Poisson equation with a singular source: 
+
+−u′′ (x) = x−1/2,u(0) = u(1) = 0 . (26) By Theorem 4.7, the forcing exponent β = −1/2 induces a solution exponent α = β +2 = 3 /2. The analytical solution is u(x) = 43 x − 43 x3/2, which contains two exponents: 1
+
+from the homogeneous solution and 1.5 from the particular solution. Results and diagnostics are summarized in Table 3 and Figure 3. MSN-PINN recovers both exponents with sub-0.1% error. Using K = 4 terms, the network discovers two exponents converging to ≈ 1.0 and two exponents converging to ≈ 1.5.This redundancy is beneficial: Multiple terms converging to the same exponent indicate robust discovery, and the coefficients of these redundant terms sum to the correct total. 
+
+## 6. Conclusion 
+
+MSNs with physics-informed training discover scaling expo-nents from data and PDE constraints. Unlike standard neural networks and even PINNs, which fit solutions without re-vealing their structure, MSN extracts the scaling exponents that physicists and engineers seek. Our experiments validate MSN across diverse settings: sin-gular ODEs with 1.31% error, corner singularities matching the results of Kondrat’ev (1967) with 0.009% error, singu-lar Poisson problems with 0.03% and 0.05% errors, and a 40-configuration wedge benchmark with 100% success and 0.022% mean error. When the PDE alone provides insuf-ficient gradient signal, constraint-aware training encodes additional physical requirements such as BC compatibility, improving accuracy by three orders of magnitude. 8MSN-PINN 
+
+## Acknowledgments 
+
+The author thanks the African Institute for Mathematical Sci-ences, AIMS, and the Nelson Mandela African Institution of Science and Technology, NM-AIST, for their support. 
+
+## Impact Statement 
+
+We present work whose goal is to advance the field of machine learning. Our work has potential societal con-sequences, but we do not see any that require specific high-lighting here. 
+
+## References 
+
+Anderson, T. L. Fracture Mechanics: Fundamentals and Applications . 4th edition, 2017. Babuška, I. and Melenk, J. M. The partition of unity method. 
+
+International Journal for Numerical Methods in Engineer-ing , 40:727–758, 1997. Babuška, I., Kellogg, R. B., and Pitkäranta, J. Direct and inverse error estimates for finite elements with mesh re-finements. Numerische Mathematik , 33:447–471, 1979. Barenblatt, G. I. Scaling, Self-Similarity, and Intermediate Asymptotics . Number 14 in Cambridge Texts in Applied Mathematics. 1996. Borwein, P. and Erdélyi, T. Polynomials and Polynomial In-equalities , volume 161 of Graduate Texts in Mathematics .New York, 1995. Brunton, S. L., Proctor, J. L., and Kutz, J. N. Discovering governing equations from data by sparse identification of nonlinear dynamical systems. Proceedings of the national academy of sciences , 113(15):3932–3937, 2016. Champion, K., Lusch, B., Kutz, J. N., and Brunton, S. L. Data-driven discovery of coordinates and governing equa-tions. Proceedings of the National Academy of Sciences ,116(45):22445–22451, 2019. Cybenko, G. Approximation by superpositions of a sig-moidal function. Mathematics of control, signals and systems , 2(4):303–314, 1989. Dauge, M. Elliptic Boundary Value Problems on Corner Do-mains: Smoothness and Asymptotics of Solutions , volume 1341 of Lecture Notes in Mathematics . 1988. Grisvard, P. Elliptic Problems in Nonsmooth Domains ,volume 24 of Monographs and Studies in Mathematics .1985. SIAM Classics reprint 2011. Hu, T., Jin, B., and Zhou, Z. Solving Poisson Problems in Polygonal Domains with Singularity Enriched Physics Informed Neural Networks. SIAM J. Sci. Comput. , 46(4): 369, 2024. Jagtap, A. D. and Karniadakis, G. E. Extended Physics-informed Neural Networks (XPINNs): A Generalized Space-Time Domain Decomposition based Deep Learn-ing Framework for Nonlinear Partial Differential Equa-tions. 2964, 2021. Jagtap, A. D., Kharazmi, E., and Karniadakis, G. E. Con-servative physics-informed neural networks on discrete domains for conservation laws. Computer Methods in Applied Mechanics and Engineering , 365:113028, 2020. Karniadakis, G. E., Kevrekidis, I. G., Lu, L., Perdikaris, P., Wang, S., and Yang, L. Physics-informed machine learning. Nature Reviews Physics , 3(6):422–440, 2021. doi: 10.1038/s42254-021-00314-5. Kharazmi, E., Zhang, Z., and Karniadakis, G. E. hp-VPINNs: Variational Physics-Informed Neural Networks With Domain Decomposition. CoRR , abs/2003.05385, 2020. Kolmogorov, A. N. The Local Structure of Turbulence in Incompressible Viscous Fluid for Very Large Reynolds Numbers. Doklady Akademii Nauk SSSR , 30:299–303, 1941. Reprinted in Proc. Roy. Soc. A, 434:9–13, 1991. Kondrat’ev, V. A. Boundary value problems for elliptic equa-tions in domains with conical or angular points. Trudy Moskovskogo Matematicheskogo Obshchestva , 16:209– 292, 1967. Krishnapriyan, A. S., Gholami, A., Zhe, S., Kirby, R. M., and Mahoney, M. W. Characterizing possible failure modes in physics-informed neural networks. In NeurIPS ,pp. 26548–26560, 2021. Li, Z., Kovachki, N. B., Azizzadenesheli, K., Liu, B., Bhat-tacharya, K., Stuart, A. M., and Anandkumar, A. Fourier Neural Operator for Parametric Partial Differential Equa-tions. In ICLR , 2021. Liu, Z., Ma, P., Wang, Y., Matusik, W., and Tegmark, M. KAN 2.0: Kolmogorov-Arnold Networks Meet Science. 
+
+CoRR , abs/2408.10205, 2024a. Liu, Z., Wang, Y., Vaidya, S., Ruehle, F., Halver-son, J., Soljaˇ ci´ c, M., Hou, T. Y., and Tegmark, M. KAN: Kolmogorov-Arnold Networks. arXiv preprint arXiv:2404.19756 , 2024b. Lu, L., Jin, P., Pang, G., Zhang, Z., and Karniadakis, G. E. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nat. Mach. Intell. , 3(3):218–229, 2021. 9MSN-PINN 
+
+Marion, P. and Berthier, R. Leveraging the two-timescale regime to demonstrate convergence of neural networks. 2023. Moës, N., Dolbow, J., and Belytschko, T. A finite element method for crack growth without remeshing. Interna-tional Journal for Numerical Methods in Engineering , 46: 131–150, 1999. Müntz, C. H. Über den Approximationssatz von Weierstrass. In H. A. Schwarz’s Festschrift , pp. 303–312. Berlin, 1914. N’guessan, G. L. R. Müntz-Szász Networks: Neural Ar-chitectures with Learnable Power-Law Bases. arXiv preprint arXiv:2512.22222 , 2025. URL https:// arxiv.org/abs/2512.22222 .Rahaman, N., Baratin, A., Arpit, D., Draxler, F., Lin, M., Hamprecht, F. A., Bengio, Y., and Courville, A. C. On the Spectral Bias of Neural Networks. In ICML , volume 97 of Proceedings of Machine Learning Research , pp. 5301– 5310, 2019. Raissi, M., Perdikaris, P., and Karniadakis, G. E. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. J. Comput. Phys. , 378:686– 707, 2019. Rudy, S. H., Brunton, S. L., Proctor, J. L., and Kutz, J. N. Data-driven discovery of partial differential equations. 
+
+Science Advances , 3(4):e1602614, 2017. Schwab, C. p- and hp - Finite Element Methods: Theory and Applications in Solid and Fluid Mechanics . 1998. Shen, J. and Wang, Y. Müntz-Galerkin Methods and Ap-plications to Mixed Dirichlet-Neumann Boundary Value Problems. SIAM Journal on Scientific Computing , 38(4): A2357–A2381, 2016. doi: 10.1137/15M1052391. Udrescu, S. and Tegmark, M. AI Feynman: a Physics-Inspired Method for Symbolic Regression. CoRR ,abs/1905.11481, 2019. 10 MSN-PINN 
+
+## Appendix Table of Contents 
+
+A List of Notation 12 B Proof of Theorem 4.2 13 C Proof of Theorem 4.4 13 D Proof of Theorem 4.5 13 E Proof of Proposition 4.7 14 F Proof of Theorem 4.8 14 G More Details on Methods 14 H Experimental Details 15 
+
+H.1 Hardware and Software . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 H.2 Training Configuration . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15 H.3 Collocation Point Sampling . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 H.4 Initialization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 H.5 Experiment-Specific Details . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 
+
+I Additional Experiments 16 
+
+I.1 Single Exponent Recovery . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 16 I.2 Noise Robustness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 I.3 Sampling Density . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 I.4 Multiple Exponent Recovery . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 I.5 Singular ODE Visualization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 I.6 Close Exponent Study . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 19 I.7 Logarithmic Corrections . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 I.8 Wedge Benchmark . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 21 
+
+J Additional Results 22 
+
+J.1 Sensitivity to the Number of Terms K . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22 J.2 Learning Rate Sensitivity . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 J.3 Summary of Results . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 
+
+K Discussion 23 
+
+K.1 When Does MSN-PINN Excel? . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 K.2 Failure Modes and Their Causes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 23 11 MSN-PINN 
+
+K.3 Comparison with Alternative Methods . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 K.4 Broader Implications . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 
+
+L Closing Remarks 24 
+
+L.1 Summary of Contributions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 L.2 Limitations and Future Directions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 L.3 Broader Vision . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 24 
+
+M Extended Introduction 25 
+
+M.1 The Central Role of Scaling Exponents in Physics . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 M.2 Neural Networks Approximate but Do Not Explain . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 25 M.3 Why Standard Neural Networks Struggle with Power Laws . . . . . . . . . . . . . . . . . . . . . . . . . 25 M.4 Significance and Outlook . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 26 
+
+## A. List of Notation 
+
+Table 4. List of notation used in the paper. Symbol Meaning Sets and spaces 
+
+R, Rd, C[0 , 1] Real line, Euclidean space, and continuous functions on [0 , 1] .
+
+Ω, ∂Ω Spatial domain and its boundary. Norms and operators 
+
+∥ · ∥ , ∥ · ∥ 1, ∥ · ∥ ∞ Euclidean, ℓ1, and supremum norms. 
+
+∇, ∇2, diag( ·) Gradient, Laplacian, and diagonal matrix operator. Coordinates and indices 
+
+x, (r, θ ), ω Input coordinate; polar coordinates and wedge angle. 
+
+i, k Indices for samples and ansatz terms. 
+
+t, T , d Iteration index, total iterations, and spatial dimension. MSN ansatz 
+
+u(x), uθ (x) = PKk=1 ck xμk Exact solution and MSN ansatz. 
+
+K, K∗, θ = ( μ, c), μk , ck Term counts and MSN parameters. 
+
+μmin , μmax Bounds for exponent values. 
+
+ˆu, ˆμ, ˆc Learned solution and parameter estimates. 
+
+αk , μ∗, c∗, c∗ 
+
+> k
+
+Ground-truth exponents and coefficients. PDE and boundary data 
+
+D, B, f (x), g(x), ∂nu, β Operators, forcing, boundary data, normal derivative, and singular forcing exponent. Training and data 
+
+Ltotal , Lres , LBC , Lsparse , Lconstraint Training loss terms. 
+
+wr , wb, ws, wcon Loss weights. 
+
+xi, xri , xbi Data samples and residual/boundary collocation points. 
+
+N , Nr , Nb, p Sample counts and sampling exponent. Theory and metrics 
+
+R(μ), L(μ) Reduced losses in approximation/identifiability analysis. 
+
+∆, δ, ϵ Separation and target-accuracy parameters. 
+
+H, eG, λn Hessian/Gram matrices and Müntz-Szász exponent sequence. 
+
+ϕ(x), nk , RelErr( μ), MSE Signed-domain extension, log-modified basis, and evaluation metrics. 
+
+12 MSN-PINN 
+
+## B. Proof of Theorem 4.2 
+
+Proof. The expansion 
+
+xμ − xα = xα(xμ−α − 1) = xα(( μ − α) log x + O(( μ − α)2)) , (27) and the closed-form minimizer c∗(μ) yield R(μ) = O(( μ − α)2) by a Taylor expansion around μ = α. In contrast, the best uniform error is generally O(|μ − α|) because the log x term cannot be canceled uniformly by a scalar coefficient. 
+
+## C. Proof of Theorem 4.4 
+
+Proof. We proceed by induction on K∗.Base case, K∗ = 1 : Suppose c∗
+
+> 1
+
+xα1 = PKj=1 ˜cj x˜μj for all x ∈ (0 , 1] . Taking x → 0+, the dominant term with the smallest exponent on each side must match. The left side has a single exponent α1. On the right, let ˜μj0 = min j ˜μj . We must have 
+
+˜μj0 = α1; otherwise, one side would dominate the other as x → 0. Matching coefficients of xα1 gives ˜cj0 = c∗
+
+> 1
+
+. The remaining terms P  
+
+> j̸=j0
+
+˜cj x˜μj = 0 for all x, forcing ˜cj = 0 for j̸ = j0.Inductive step: Assume the result holds for K∗ − 1. Given PK∗ 
+
+> k=1
+
+c∗
+
+> k
+
+xαk = PKj=1 ˜cj x˜μj , match the smallest exponent as above to find ˜μj0 = α1 with ˜cj0 = c∗
+
+> 1
+
+. Subtracting: 
+
+> K∗
+
+X
+
+> k=2
+
+c∗
+
+> k
+
+xαk = X 
+
+> j̸=j0
+
+˜cj x˜μj . (28) By the inductive hypothesis, the remaining exponents {α2, . . . , α K∗ } are recovered. 
+
+## D. Proof of Theorem 4.5 
+
+Proof. Consider the empirical loss 
+
+ˆL(μ, c) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+(yi −
+
+> K
+
+X
+
+> k=1
+
+ckxμk 
+
+> i
+
+)2. (29) Let (α, c∗) denote the true parameters, and let ( ˆ μ, ˆc) be a minimizer of ˆL.Near the true parameters, the loss expands as 
+
+ˆL(μ, c) = ˆL(α, c∗) + 12 (μ − α, c − c∗)T H(μ − α, c − c∗) + O(∥ · ∥ 3), (30) where H is the Hessian matrix evaluated at (α, c∗).The Hessian has a block structure 
+
+H =
+
+Hμμ Hμc 
+
+Hcμ Hcc 
+
+
+
+. (31) The coefficient block Hcc has entries (Hcc )jk = 2
+
+> N
+
+P 
+
+> i
+
+xαj +αk 
+
+> i
+
+, which is the Gram matrix of the power-law basis functions. This is positive definite for distinct exponents. The exponent block Hμμ involves second derivatives with respect to μk. At the true parameters, where ∇ ˆL = 0 in expectation, 
+
+(Hμμ )kk = 2
+
+N
+
+X
+
+> i
+
+(c∗
+
+> k
+
+)2x2αk 
+
+> i
+
+(log xi)2 + (cross terms) . (32) The minimum eigenvalue of Hμμ is bounded below by 
+
+λmin (Hμμ ) ≥ C · c2min · ∆2, (33) 13 MSN-PINN 
+
+where C depends on the sampling distribution. The factor ∆2 arises because close exponents yield nearly collinear basis functions, degrading the conditioning. By standard M-estimation theory, the estimation error satisfies 
+
+∥ ˆμ − α∥ ≤ ∥ H−1 
+
+> μμ
+
+∇μ ˆL(α, c∗)∥. (34) At the true parameters with noisy observations yi = f (xi) + ϵi,
+
+∇μk
+
+ˆL(α, c∗) = − 2
+
+N
+
+X
+
+> i
+
+ϵi · c∗
+
+> k
+
+xαk 
+
+> i
+
+log xi. (35) Define ϕi ∈ RK by (ϕi)k = xαk 
+
+> i
+
+log xi, let D = diag( c∗), and set g = − 2
+
+> N
+
+P 
+
+> i
+
+ϵiϕi. Then ∇μ ˆL(α, c∗) = Dg . In the same local regime, Hμμ ≈ 2D eGD with eG = 1
+
+> N
+
+P 
+
+> i
+
+ϕiϕ⊤ 
+
+> i
+
+, so 
+
+∥H−1 
+
+> μμ
+
+∇μ ˆL(α, c∗)∥ ≤ 12 ∥D−1∥∥ eG−1∥∥ g∥. (36) By concentration inequalities, ∥g∥ = O( σ√N ), and the sampling assumption yields ∥ eG−1∥ ≤ 1 
+
+> C∆2
+
+. Combining these bounds gives 
+
+∥ ˆμ − α∥ = O( σcmin ∆2√N ). (37) Taking N sufficiently large gives the stated bound. 
+
+## E. Proof of Proposition 4.7 
+
+Proof. Integrating −u′′ = xβ twice yields u(x) = − xβ+2  
+
+> (β+1)( β+2)
+
+− C1x − C2. The BC u(0) = 0 implies C2 = 0 , assuming 
+
+β + 2 > 0, and u(1) = 0 gives C1 = − 1(β+1)( β+2) . Substituting, u(x) = 1(β+1)( β+2) (x − xβ+2 ).
+
+## F. Proof of Theorem 4.8 
+
+Proof. At a critical point, ∇μk L = 0 for all k. The constraint term contributes: 
+
+∂∂μ k
+
+[λ|ck| sin 2(μkω)] = λ|ck| · 2 sin( μkω) cos( μkω) · ω
+
+= λ|ck|ω sin(2 μkω).
+
+(38) The residual term Lres contributes zero gradient with respect to μk at points where Lres = 0 , since all harmonic functions 
+
+rμ sin( μθ ) achieve zero residual. Therefore, ∇μk L = λ|ck|ω sin(2 μkω) = 0 . For |ck| > 0, this requires sin(2 μkω) = 0 , giving μkω ∈ { nπ  
+
+> 2
+
+: n ∈ N}.Combined with the BC LBC = 0 , which requires the solution to vanish on both edges, we need sin( μkω) = 0 , further constraining to μkω ∈ { nπ : n ∈ N}, that is, μk ∈ { nπ/ω : n ∈ N}.
+
+## G. More Details on Methods 
+
+G.0.1. G EOMETRIC INTERPRETATION 
+
+Visualizing MSN training geometrically clarifies how optimization works. Consider fitting f (x) = x0.5 with a single-term MSN u(x) = c · xμ. The loss landscape over (μ, c ) has a clear structure. For each fixed μ, the optimal coefficient 
+
+c∗(μ) = argmin c
+
+R 10 (f (x) − cx μ)2dx is a linear projection. The resulting profile L(μ) = min c
+
+R 10 (f (x) − cx μ)2dx has a unique minimum at μ = 0 .5. Near this optimum, L(μ) ∼ | μ − 0.5|2, matching the quadratic convergence rate stated in Theorem 4.2. This geometry explains why gradient-based optimization succeeds: Although loss is nonconvex, it has a single dominant basin around the true exponent. 14 MSN-PINN 
+
+G.0.2. E XPONENT CONSTRAINTS VIA REPARAMETERIZATION 
+
+Physical considerations often constrain the admissible exponent range. For instance, square-integrable solutions require 
+
+μ > −1/2. We enforce these bounds through sigmoid reparameterization: 
+
+μk = μmin + ( μmax − μmin ) · σ(μraw  
+
+> k
+
+), (39) where μraw  
+
+> k
+
+∈ R is the unconstrained learnable parameter, and σ(z) = 11+ e−z . This ensures μk ∈ (μmin , μ max ) throughout training while permitting unrestricted gradient flow. G.0.3. E XTENSION TO MULTIPLE DIMENSIONS AND SIGNED DOMAINS 
+
+For problems on R, rather than just (0 , 1] , we decompose the function into even and odd components: 
+
+ϕ(x) = 
+
+> K
+
+X
+
+> k=1
+
+ak|x|μk
+
+| {z }
+
+> even
+
++
+
+> K
+
+X
+
+> k=1
+
+bk sign( x)|x|λk
+
+| {z }
+
+> odd
+
+. (40) For radial problems in Rd, the ansatz becomes u(r, θ ) = P 
+
+> k
+
+ck(θ)rμk , where the angular dependence is encoded in the coefficients. This separable structure is natural for corner singularities, where solutions typically have the form rμϕ(θ).G.0.4. A NALYTICAL DERIVATIVES : A K EY ADVANTAGE 
+
+The MSN ansatz (Eq. 2) computes derivatives analytically: 
+
+du θ
+
+dx (x) = 
+
+> K
+
+X
+
+> k=1
+
+ckμkxμk −1, (41) 
+
+d2uθ
+
+dx 2 (x) = 
+
+> K
+
+X
+
+> k=1
+
+ckμk(μk − 1) xμk −2. (42) Compared to automatic differentiation through network layers, analytical derivatives offer several advantages: They are exact, efficient, and transparent. Automatic differentiation accumulates numerical errors, requires a backward pass, and hides derivative structure. Analytical derivatives also capture singularities correctly; for example, ddx x0.5 = 0 .5x−0.5 diverges at 
+
+x = 0 . Standard PINNs with MLP architectures compute D[uθ ] by differentiating through the network using automatic differentiation, which, for second-order PDEs, requires second-order automatic differentiation—computationally expensive and numerically delicate. MSN avoids these issues entirely. G.0.5. T HE ROLE OF COLLOCATION POINT PLACEMENT 
+
+Collocation point placement significantly affects both approximation accuracy and exponent recovery. For singular problems, points should be concentrated near the singularity while maintaining coverage of the entire domain. We use the transformation 
+
+xi = tpi for ti uniformly spaced in [0 , 1] , with p ≥ 2 concentrating points near x = 0 . This is analogous to graded meshes in FEMs (Babuška et al., 1979). Our experiments in Appendix I.3 characterize how sampling density affects recovery accuracy. 
+
+## H. Experimental Details 
+
+H.1. Hardware and Software 
+
+We used PyTorch 2.0 with custom autograd functions for analytical derivative computation. Training times ranged from 30 seconds for one-dimensional (1D) experiments to 5 minutes for the 2D wedge experiment. 
+
+H.2. Training Configuration 
+
+Table 5 lists the default hyperparameters used across experiments. 15 MSN-PINN  
+
+> Table 5. Default hyperparameters used across experiments.
+
+Hyperparameter Value Optimizer Adam Exponent learning rate ημ 0.005 Coefficient learning rate ηc 0.01 Learning rate ratio ημ : ηc 0.5 Epochs 10,000–15,000 Gradient clipping norm 1.0 Sparsity weight ws 0.001 BC weight wb 100 Constraint weight wcon , Corner Singularity 10 Exponent bounds [μmin , μ max ] [0 .1, 3.0] 
+
+H.3. Collocation Point Sampling 
+
+For 1D problems, we use the transformation xi = tpi , where ti are uniformly spaced in [0 , 1] . We set p = 2 for moderate concentration near x = 0 and use p = 4 for stronger concentration in highly singular problems. For the 2D wedge in the Corner Singularity experiment, we sample 500 interior points in (r, θ ) with r concentrated near the origin. We use 200 points on the arc boundary at r = 1 , uniformly distributed in θ, and 100 points on each edge boundary at 
+
+θ = 0 and θ = ω, concentrated near the corner. 
+
+H.4. Initialization 
+
+We initialize the exponents uniformly distributed in [μmin , μ max ], then perturb them by N (0 , 0.12), and sample the coefficients as ck ∼ N (0 , 0.12). We tested multiple random initializations; the results are consistent across different initialization choices. 
+
+H.5. Experiment-Specific Details 
+
+For the Corner Singularity experiment, we used two-phase training: Phase A, spanning epochs 1–5000, with a high constraint weight wcon = 10 to establish correct exponents, followed by Phase B, covering epochs 5001–15000, with a reduced constraint weight wcon = 1 for fine-tuning. For the Singular Forcing experiment, the forcing term x−1/2 is singular at x = 0 . We exclude collocation points with 
+
+x < 0.01 to avoid numerical issues. The PDE residual is computed analytically using: 
+
+−u′′  
+
+> θ
+
+(x) = − X
+
+> k
+
+ckμk(μk − 1) xμk −2. (43) 
+
+## I. Additional Experiments 
+
+Additional experiments validate MSN’s exponent recovery capabilities. The Single Exponent Recovery and Multiple Exponent Recovery experiments test supervised settings, while the Wedge Benchmark explores different wedge geometries and BCs. 
+
+I.1. Single Exponent Recovery 
+
+We recover a single exponent from supervised data. We fit f (x) = x0.5 using MSN with K = 4 terms on N = 200 samples drawn from [0 .01 , 1] , sampled as xi = t2 
+
+> i
+
+for uniform ti to concentrate points near the origin. Training is performed using the Adam optimizer with ημ = 0 .005 , ηc = 0 .01 , for 10,000 epochs with ℓ1 sparsity weight ws = 0 .001 . Results are summarized in Table 6 and illustrated in Figure 4. The 1.45% error is small but nonzero. Three reasons prevent exact recovery: finite samples, with 200 points, the empirical loss differs from the population loss; sparsity regularization, the ℓ1 penalty biases exponents toward values with smaller optimal coefficients; and optimization, gradient descent finds a local minimum rather than the global optimum. The recovery suffices to identify the true exponent as 0.5 within typical experimental uncertainty. 16 MSN-PINN 
+
+Table 6. Single Exponent Recovery: Clean data. 
+
+Metric Target Discovered Dominant exponent μ1 0.5000 0.4927 Relative error — 1.45% Function MSE — 2.3 × 10 −50.0 0.2 0.4 0.6 0.8                
+
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> f(x)
+> Target: f(x) = x0:5MSN MLP FourierMLP 01000 2000 3000 4000 5000
+> Training Step
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> 2.25
+> Exponent  ¹
+> ¹1= 0.4927
+> ¹1
+> ¹2
+> ¹3¹4Target ¹= 0.500
+
+Figure 4. Single Exponent Recovery. Top: Function fit comparing the true x0.5 with the MSN approximation. Bottom: Exponent trajectory during training, converging to 0.4927 from a random initialization. 
+
+I.2. Noise Robustness 
+
+Real data contains measurement noise. We test robustness by adding Gaussian noise: yi = x0.5 
+
+> i
+
++ ϵi with ϵi ∼ N (0 , σ 2).Summary statistics and behavior are reported in Table 7 and Figure 5. Recovery accuracy remains stable across three orders of magnitude of noise, ranging from σ = 0 to σ = 0 .05 . The error changes by fewer than 1 percentage point. The power-law ansatz naturally regularizes. Unlike flexible models that overfit noise, MSN is constrained to power-law functions. Noise without power-law structure is automatically filtered, analogous to how Fourier methods resist non-periodic noise. 17 MSN-PINN 
+
+Table 7. Noise Robustness: Exponent recovery under varying noise levels. 
+
+Noise σ Discovered μ Error % Final Loss 0 0.474 5.2 1.2 × 10 −3
+
+10 −4 0.474 5.1 9.9 × 10 −4
+
+10 −3 0.474 5.2 9.6 × 10 −4
+
+10 −2 0.473 5.5 1.5 × 10 −3
+
+5 × 10 −2 0.476 4.9 6.2 × 10 −3−10 −3 −10 −4 0 10 −4 10 −3 10 −2     
+
+> Noise Std ( ¾)
+> 0.47
+> 0.48
+> 0.49
+> 0.50
+> 0.51
+> 0.52
+> Recovered Exponent  ¹
+> Target ¹= 0.5 Recovered ¹
+
+Figure 5. Noise Robustness: Exponent recovery remains stable across noise levels from σ = 0 to σ = 0 .05 . The power-law ansatz provides natural regularization. 
+
+I.3. Sampling Density 
+
+How many samples are needed for reliable recovery? We vary N ∈ { 20 , 50 , 100 , 200 , 500 } while keeping other parameters fixed. Sampling effects are summarized in Table 8. Even N = 50 samples suffice for < 3% error—fewer than nonparametric methods require, reflecting the inductive bias of the power-law ansatz. 
+
+Table 8. Sampling Density: Effect of sample count on recovery. 
+
+Samples N Discovered μ Error % 20 0.512 2.4 50 0.489 2.2 100 0.491 1.8 200 0.493 1.4 500 0.497 0.6 
+
+I.4. Multiple Exponent Recovery 
+
+Recovery of multiple exponents simultaneously is more challenging. We fit f (x) = 0 .5x0.1 + 1 .0x0.5 + 0 .3x1.5 using MSN with K = 5 terms. The results are summarized in Table 9. The results reveal both success and failure modes. MSN accurately recovers the dominant exponent 0.5 with a coefficient of 1.0 and 5% error and the larger exponent 1.5 with a coefficient of 0.3 and 15.6% error. The small exponent 0.1 with coefficient 0.5 merges with the 0.5 instead of being recovered separately. Two reasons explain this merging behavior. First, proximity: The exponents 0.1 and 0.5 are relatively close, and the functions x0.1 and x0.5 have high correlation on [0 , 1] . Second, the coefficient ratio works against detection: The coefficient for x0.1 is 0.5, smaller than the coefficient for x0.5, 1.0. These observations motivate a systematic study of 18 MSN-PINN 
+
+identifiability limits.  
+
+> Table 9. Multiple Exponent Recovery: Three exponents with varying separations.
+
+Target α True Coeff. Closest μ Error % 0.1 0.5 0.475 375, merged 0.5 1.0 0.475 5.0 1.5 0.3 1.734 15.6 
+
+I.5. Singular ODE Visualization 
+
+Figure 6 provides detailed visualizations for the Singular ODE experiment described in Section 5.1. The panels highlight solution accuracy, exponent trajectories, and loss dynamics. 
+
+I.6. Close Exponent Study 
+
+What minimum separation is needed to resolve two exponents? We fit f (x) = x0.5 + x0.5+ δ for varying separations 
+
+δ ∈ { 0.02 , 0.05 , 0.1, 0.2, 0.3}. Recovery thresholds are summarized in Table 10. The practical resolution threshold is approximately δ ≥ 0.1. Below this, exponents tend to merge into a single intermediate value.  
+
+> Table 10. Close Exponent Study: Minimum separation for two-exponent identifiability.
+
+Separation δ Recovered? Discovered Exponents Mean Error 0.02 No, merged 0.51 —0.05 Partial 0.48, 0.56 4.3% 0.10 Yes 0.49, 0.58 2.2% 0.20 Yes 0.50, 0.70 1.5% 0.30 Yes 0.50, 0.79 0.8% Connection to theory: This empirical finding matches our stability bound in Theorem 4.5. Interpreting the bound as requiring the exponent estimation error to be smaller than the separation yields the scaling ∆ ≳ ( σcmin  
+
+> √N
+
+)1/3, up to constants. In this setup, cmin = 1 and N = 200 , so for σ ∼ 0.01 , theory predicts a practical threshold on the order of 0.1. The empirical threshold of 0.1 is conservative, reflecting finite-sample and optimization effects not captured by the local analysis. I.6.1. T HE RAYLEIGH LIMIT ANALOGY 
+
+The separation condition ∆ plays a role analogous to the Rayleigh Limit in optical super-resolution. In optics, two point sources become unresolvable when their angular separation falls below λ/D , where λ is the wavelength and D is the aperture diameter; this fundamental limit arises from the bandwidth of the optical transfer function. In exponent recovery, an analogous limit arises from the Gram matrix structure—the matrix of inner products between basis functions that measures their similarity. Consider two power-law basis functions xα1 and xα2 on sampling points {xi}.Their Gram matrix entry is: 
+
+G12 = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+xα1+α2 
+
+> i
+
+. (44) When |α1 − α2| → 0, we have G12 → G11 = G22 , causing the Gram matrix to become nearly singular. The inverse problem of recovering coefficients and distinguishing exponents becomes ill-posed. 
+
+Remark I.1. The practical threshold depends on the noise level, coefficient magnitudes, and sample size. Our experiments in Appendix I.6 suggest ∆ ≥ 0.1 for reliable two-exponent discrimination at typical noise levels. This is consistent with the scaling described in Theorem 4.5, which deteriorates as 1 
+
+> cmin ∆2
+
+and improves as 1/√N .19 MSN-PINN 0.0 0.2 0.4 0.6 0.8 1.0 
+
+x
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> u(x)
+
+Analytical: u(x) = p
+
+x MSN-PINN 0 3000 6000 9000 12000 15000 
+
+Training Step 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+1.2 
+
+1.4 
+
+> Exponent  ¹
+
+¹3 = 0.4934 
+
+¹1
+
+¹2
+
+¹3
+
+¹4
+
+¹5
+
+¹6
+
+Target ¹ = 0.500 0 2000 4000 6000 8000 10000 12000 14000 
+
+Training Step        
+
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> 10 2
+> Total Loss
+> Total Loss
+> 02000 4000 6000 8000 10000 12000 14000
+
+Training Step  
+
+> 10 −5
+> 10 −4
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> 10 1
+> Loss Components
+> PDE Residual Boundary
+
+Figure 6. Singular ODE: Physics-informed discovery. Top: Learned solution compared with the analytical √x. Middle: Exponent trajectory converging to 0.4934. Bottom: Training loss showing PDE residual and BC components. 
+
+20 MSN-PINN 
+
+I.7. Logarithmic Corrections 
+
+Some physical singularities include logarithmic corrections of the form u(x) ∼ xα log x. We test whether MSN can distinguish these from pure power laws. We fit f (x) = x0.5 log x using the standard MSN with power laws only. The network converges to μ ≈ 0.28 and μ ≈ 0.82 , attempting to approximate the log correction with a combination of power laws. This result reveals a fundamental limitation: Pure MSN cannot represent logarithmic terms exactly. The network approxi-mates x0.5 log x with power-law combinations, but the discovered exponents lack physical meaning. For problems with logarithmic corrections—including certain critical phenomena and degenerate corners—the MSN basis should be augmented with log-modified terms: xμk (log x)nk .
+
+I.8. Wedge Benchmark 
+
+The preceding experiments used a single wedge angle, ω = 3 π/ 2. We run a benchmark spanning multiple wedge angles and all four BC types to test generality. This addresses two questions: Do single-angle results generalize? Does MSN-PINN adapt correctly to different physical constraints? We sample five angles uniformly from ω ∈ [90 ◦, 330 ◦], covering both convex corners with ω ≤ 180 ◦ and re-entrant corners with ω > 180 ◦. Re-entrant corners induce singular exponents μ < 1, with extreme cases where ω > 300 ◦ producing 
+
+μ < 0.6.We test all four combinations of Dirichlet and Neumann conditions, D and N, on the wedge edges. For DD, u|θ=0 =
+
+u|θ=ω = 0 and the quantization is sin( μω ) = 0 with the fundamental μ = π/ω . For NN, ∂nu|θ=0 = ∂nu|θ=ω = 0 and the quantization is sin( μω ) = 0 with the same fundamental. For DN, u|θ=0 = 0 and ∂nu|θ=ω = 0 , giving cos( μω ) = 0 with the fundamental μ = π/ (2 ω). For ND, ∂nu|θ=0 = 0 and u|θ=ω = 0 , giving the same cos( μω ) = 0 quantization. These cases test whether the method adapts the quantization constraint to the BC type. We compare two methods. The naive MSN-PINN is the standard MSN-PINN without explicit constraint encoding and relies solely on boundary matching. The constraint-aware MSN-PINN is our method with BC-dependent quantization loss 
+
+Lcon as defined in Equation 13, including a warm-up phase before constraint enforcement, constraint weight ramping, and BC-adaptive initialization. Each experiment uses K = 6 MSN terms and 5,000 training steps, including a 1,000-step warm-up phase for BCs only, followed by a 1,500-step constraint ramp-up. Two-timescale optimization uses ημ = 5 × 10 −4 and ηc = 10 −2. We compute BC-adaptive exponent bounds to ensure the fundamental mode lies within the search range. The total benchmark consists of 
+
+5 angles × 4 BC types × 2 methods = 40 experiments. We evaluate the relative exponent error RelErr (μ) = |ˆμ−μ∗| 
+
+> μ∗
+
+× 100% , where ˆμ is the dominant learned exponent with the highest |ck| and μ∗ is the true leading exponent. The success rate is reported as the percentage of experiments with RelErr < 5% . We measure constraint violation as weighted sin 2(μkω) or cos 2(μkω) depending on BC type. Overall results appear in Table 11, with BC-specific and geometry-specific breakdowns provided in Table 12 and Table 13.  
+
+> Table 11. Wedge Benchmark: Comparing naive and constraint-aware MSN-PINN across 40 experiments. Success means relative exponent error below 5%.
+
+Method Success % Mean Err % Median Err % 90th pctl. Constraint Violation Naive MSN-PINN 55.0 5.96 4.46 12.25 1.8 × 10 −1
+
+Constraint-aware 100.0 0.022 0.019 0.045 2.6 × 10 −4
+
+The benchmark shows several key findings. First, constraint-aware MSN-PINN achieves a 100% success rate across all 40 experiments, with a mean error of 0.022%. Naive training achieves 55% success and 5.96% mean error, a 270-fold difference in accuracy. Second, the method identifies and applies the appropriate quantization constraint— sin( μω ) = 0 for DD and NN, and cos( μω ) = 0 for DN and ND—without manual intervention. The constraint violation drops by a factor of 690, from 0.179 to 2.6 × 10 −4, confirming that learned exponents satisfy the physical BCs. Third, the improved training protocol, which incorporates BC-adaptive initialization and a warm-up phase, achieves 100% success for all four BC types, showing that the approach generalizes. Fourth, for re-entrant corners with ω > 180 ◦ where true exponents become small, 
+
+μ < 1, constraint-aware training maintains 100% success with 0.025% mean error. Re-entrant corners produce physically 21 MSN-PINN  
+
+> Table 12. Wedge Benchmark: Results by BC type for the constraint-aware method.
+
+BC Type Success % Median Err % Mean Err % Quantization DD 100.0 0.018 0.018 sin( μω ) = 0 
+
+NN 100.0 0.021 0.028 sin( μω ) = 0 
+
+DN 100.0 0.014 0.023 cos( μω ) = 0 
+
+ND 100.0 0.019 0.020 cos( μω ) = 0  
+
+> Table 13. Wedge Benchmark: Stratification by corner geometry, comparing convex and re-entrant corners.
+
+Corner Type Method Success % Median Err % Mean Err % Convex, ω ≤ 180 ◦ Naive 50.0 5.90 5.90 Convex, ω ≤ 180 ◦ Constraint 100.0 0.017 0.017 Re-entrant, ω > 180 ◦ Naive 58.3 4.55 6.00 Re-entrant, ω > 180 ◦ Constraint 100.0 0.021 0.025 relevant singularities: The classic L-shaped domain with ω = 270 ◦ gives μ = 2 /3. Finally, the average improvement factor of constraint-aware over naive is 427-fold, with a median of 365-fold. Even when naive training succeeds, constraint-aware training achieves 10–100-fold better accuracy. The success of this benchmark comes from several methodological improvements. We use BC-adaptive exponent bounds. For each BC type and angle, we set bounds that keep the fundamental mode μ1 within the search range [μ1 × 0.3, μ 1 × 2.5] ,preventing the optimizer from becoming trapped in local minima at higher modes. We initialize one exponent close to the expected fundamental mode, at μ ≈ 0.98 μ1, so the network starts within the correct basin of attraction. Training begins with BC fitting only, without constraint loss, allowing the network to find an approximate solution. The constraint weight then ramps linearly, guiding the exponents toward the nearest valid values. For NN and ND conditions, we explicitly enforce ∂nu = 0 on edges via angular derivative computation, rather than relying solely on implicit satisfaction through the angular basis choice. We use K = 6 MSN terms, up from K = 4 , to provide additional flexibility to represent the solution accurately while the dominant term captures the singularity. This benchmark demonstrates that the constraint-aware MSN-PINN reliably discovers Kondratiev exponents across diverse wedge geometries and BCs. The method achieves a 100% success rate versus 55% for naive training and a 0.022% mean error versus 5.96%, representing more than a 270-fold improvement. The average improvement factor is 427-fold. The method effectively handles all four BC types and both convex and re-entrant corners. These results establish MSN-PINN as a reliable tool for Kondratiev spectrum discovery. 
+
+## J. Additional Results 
+
+J.1. Sensitivity to the Number of Terms K
+
+The effect of MSN capacity is summarized in Table 14. Larger K provides a modest improvement but also increases computational cost, so K = 4 offers a good trade-off.    
+
+> Table 14. Effect of MSN capacity Kon single-exponent recovery.
+
+K Discovered μ Error % 2 0.491 1.8 4 0.493 1.4 8 0.495 1.0 16 0.497 0.6 22 MSN-PINN 
+
+J.2. Learning Rate Sensitivity 
+
+Learning rate ratio sensitivity is reported in Table 15. Equal learning rates cause oscillations between coefficient and exponent updates, whereas a ratio of 0.5 provides stable convergence.  
+
+> Table 15. Effect of learning rate ratio on Single Exponent Recovery.
+
+Ratio ημ : ηc Discovered μ Convergence 1.0 equal 0.487 Oscillatory 0.5 0.493 Stable 0.1 0.492 Slow 
+
+J.3. Summary of Results 
+
+Table 16 consolidates all experimental outcomes in one place. It provides a quick cross-experiment comparison of targets, discoveries, and errors.  
+
+> Table 16. Complete experimental results across all settings.
+
+Experiment Setting Type Target Discovered Error Single Exponent Clean data Supervised 0.50 0.493 1.45% Noise Robustness σ = 0 .05 Supervised 0.50 0.476 4.9% Sampling Density N = 50 Supervised 0.50 0.489 2.2% Multiple Exponent Three exponents Supervised 0.1, 0.5, 1.5 0.48, 1.73 5%, 16% Close Exponent δ = 0 .1 Supervised 0.5, 0.6 0.49, 0.58 2.2% Singular ODE Boundary-layer PINN 0.50 0.493 1.31% Corner Singularity Laplace wedge PINN+constraint 0.667 0.667 0.009% Singular Forcing Poisson PINN 1.0, 1.5 1.00, 1.50 0.03%, 0.05% Wedge Benchmark 40 configurations PINN+constraint varied varied 0.02% 
+
+## K. Discussion 
+
+K.1. When Does MSN-PINN Excel? 
+
+MSN-PINN achieves the highest accuracy when physical constraints can be explicitly encoded. The improvement from 14.6% to 0.009% error in the Corner Singularity experiment shows that architecture alone is insufficient; the loss function must reflect the structure of valid solutions. This method excels when the true solution has a power-law structure, possibly with multiple terms, sufficient physics is encoded to make the exponents identifiable, the exponents are well-separated with 
+
+∆ ≥ 0.1, and noise remains below 5%. 
+
+K.2. Failure Modes and Their Causes 
+
+MSN-PINN fails in three ways: First, close exponent merging: when |α1 − α2| < 0.1, exponents tend to collapse to a single intermediate value. This limit, analogous to the optical resolution limits, arises from the near-singularity of the Gram matrix when the basis functions become too similar; see Theorem 4.5. Second, logarithmic corrections: Pure MSN fails to represent xα log x terms. When such terms are present, the network approximates them with power-law combinations, yielding meaningless exponents. The solution is to extend to log-modified bases. Third, small-coefficient terms: Exponents with small coefficients may be missed, especially when larger terms dominate. Sparsity regularization exacerbates this by penalizing small contributions. The solution is to carefully tune the regularization or use multi-stage training. 23 MSN-PINN 
+
+K.3. Comparison with Alternative Methods 
+
+Symbolic regression methods such as SINDy and AI Feynman discover discrete equation structures but assume exponents from predefined libraries. MSN learns continuous exponents directly. These approaches complement each other: SINDy discovers operators, and MSN discovers exponents within a known operator. Standard PINNs approximate solutions effectively but often fail to accurately extract exponents. Fitting power-law forms to PINN outputs post-hoc introduces additional errors and offers no guarantee of recovering true exponents. Enriched FEMs such as XFEM and generalized FEMs prescribe singularity structures based on analytical knowledge. MSN discovers this structure, applying even when analytical characterization is difficult or unknown. KANs use learnable splines for smooth functions. MSN uses power-law bases for singular behavior. Both learn structural parameters; the choice depends on the expected solution structure. 
+
+K.4. Broader Implications 
+
+MSN-PINN illustrates a broader principle: Build domain structure directly into the architecture. Rather than using generic approximators and hoping that structure emerges, we design networks whose parameters directly encode physical quantities. This yields four benefits: the learned parameters have clear physical meaning; fewer parameters suffice when the ansatz matches the solution; the embedded physical structure extrapolates beyond the training data; and the learned parameters can be directly compared with theoretical predictions. This philosophy extends beyond power laws. Architectures can learn wavelengths for oscillatory problems, decay rates for exponential phenomena, or ranks for low-rank structures. Parameters that would otherwise be implicit in standard networks become explicit and interpretable. 
+
+## L. Closing Remarks 
+
+L.1. Summary of Contributions 
+
+We proved when power-law sums with distinct exponents can be uniquely recovered in Theorem 4.4. Our stability analysis in Theorem 4.5 reveals a minimum separation condition analogous to super-resolution limits, explaining why close exponents merge. The constraint-aware convergence theorem in Theorem 4.8 explains why encoding physical requirements improves accuracy by orders of magnitude. Constraint-aware training in Section 3.4 addresses a key failure mode of naive MSN-PINN: when the PDE provides an insufficient gradient signal, explicit constraint encoding makes the exponents identifiable. Two-timescale optimization in Section 3.5 exploits the asymmetric structure of the MSN loss landscape. Across six settings, we demonstrated single-exponent recovery with 1–5% error under noise and sparse sampling, the practical limit ∆ ≥ 0.1 for distinguishing two exponents, physics-informed discovery from PDE constraints alone, and high accuracy on corner singularities with 0.009% error and singular forcing with 0.03% and 0.05% errors. 
+
+L.2. Limitations and Future Directions 
+
+Pure MSN fails to represent xα log x terms. Extending to log-modified bases is straightforward but requires additional care during optimization. Our 2D wedge experiment succeeded, but three-dimensional corners and edges require further development. MSN currently provides only point estimates. Bayesian extensions could bound uncertainty on discovered exponents. Constraint-aware training assumes that the form of physical constraints is known. Automatically discovering the constraint structure remains open. 
+
+L.3. Broader Vision 
+
+The broader vision is to develop a new approach to scientific machine learning where learned parameters carry physical meaning. Mathematicians and physicists have developed techniques—matched asymptotics, boundary layer theory, and Mellin transforms—to extract scaling structures from differential equations. These methods required expertise and worked only for analytically tractable problems. MSN offers an alternative: rather than deriving exponents analytically, we learn them from data or physics constraints. Learned exponents carry the same physical meaning as analytical results, but the process is automated and scalable. 24 MSN-PINN 
+
+Analytical methods remain essential to understand why certain exponents arise and for addressing problems without data. For complex systems that resist analytical treatment—multiphysics problems, irregular geometries, and experimental data—MSN discovers exponents directly. Neural networks should do more than merely fit data. They should reveal the underlying structure. 
+
+## M. Extended Introduction 
+
+M.1. The Central Role of Scaling Exponents in Physics 
+
+Scaling exponents encode deep physical content and are often the primary scientific goal. When a material fractures, the stress field near the crack tip diverges as r−1/2, where r is the distance from the tip (Anderson, 2017). This is not an accident of geometry or material properties; rather, it is a universal consequence of the mathematical structure of elasticity near a singular point. The exponent −1/2 encodes physical content: It determines fracture toughness, governs crack propagation speeds, and enables engineers to predict catastrophic failure from local measurements. The same principle appears throughout physics. In turbulent flows, Kolmogorov (1941) predicts that the energy spectrum scales as k−5/3, where k is the wavenumber. Near a second-order phase transition, correlation functions decay as r−η with critical exponents η that fall into discrete universality classes (Barenblatt, 1996). At the corner of an L-shaped domain, solutions to Laplace’s equation behave as r2/3, a result first derived by Kondrat’ev (1967). Throughout, the scaling exponent is not merely a fitting parameter; it is a physical observable that encodes symmetries, conservation laws, and the structure of the governing equations. 
+
+Example M.1 (Why Exponents Matter in Practice) . Consider a pressure vessel with a small surface crack. The stress intensity factor KI scales as KI ∼ σ√πa , where σ is the applied stress and a is the crack length. The vessel fails when KI
+
+exceeds the material’s fracture toughness KIC . If an engineer fits experimental stress data with a neural network, they can predict the stress field everywhere. But without knowing the exponent 1/2, they lack the ability to validate whether their model captures the correct physics, extrapolate to crack lengths outside the training range, connect their measurements to material toughness values, or diagnose whether anomalous predictions indicate model failure or new physics. This exponent is often the primary quantity of physical interest. 
+
+M.2. Neural Networks Approximate but Do Not Explain 
+
+Neural networks can approximate any continuous function (Cybenko, 1989), but they prioritize accurate fits over explaining why the function takes a particular form. This poses a problem for scientific applications, which require structural insight in addition to accuracy. PINNs solve forward and inverse problems involving PDEs by penalizing equation residuals (Raissi et al., 2019; Karniadakis et al., 2021). PINNs encode physical laws directly into the loss function. Yet PINNs still treat the solution as a black box. One can verify that the learned function satisfies the differential equation, but extracting interpretable structure requires fragile, problem-specific post-hoc analysis. Consider a PINN trained on data near a corner singularity. The network learns an accurate approximation of the solution surface, and the PDE residual converges to zero, confirming physical consistency. However, the singularity exponent is observed only indirectly. Fitting u(r, θ ) ≈ c · rα sin( αθ ) post-hoc introduces additional errors, and the connection to classical asymptotic theory remains unclear. Access to exponents makes neural network solutions more useful to scientists. Physical theories predict exponents, not function values at specific points. To validate theory against computation, we must explicitly extract the exponents, which standard architectures typically leave implicit. 
+
+M.3. Why Standard Neural Networks Struggle with Power Laws 
+
+Standard neural networks are poorly suited for approximating power-law functions. The difficulty lies in the architecture, not just training. A standard MLP with ReLU activations represents functions as 
+
+f (x) = 
+
+> N
+
+X
+
+> j=1
+
+cj max(0 , w j x + bj ). (45) 25 MSN-PINN 
+
+Each ReLU unit contributes a piecewise-linear hinge function. To approximate xα for α ∈ (0 , 1) , the network must compose many such hinges to create curvature. As shown by N’guessan (2025), achieving ϵ-accuracy for x0.5 on [0 , 1] requires 
+
+N = Ω( ϵ−2) ReLU units. The situation is worse than this count suggests. Even with sufficient units, the network encodes x0.5 implicitly rather than revealing it as the natural form. The exponent 0.5 spreads across millions of weight parameters, defying interpretation. Fitting c · xα to the learned function reintroduces error and leaves the true value uncertain. Smooth activations like tanh or sigmoid face different but severe challenges. Because these functions and their derivatives are bounded, representing the unbounded derivatives of xα near x = 0 requires cancellation among many units. Consequently, the resulting networks tend to be brittle and difficult to train. 
+
+M.4. Significance and Outlook 
+
+MSN connects two intellectual traditions that have developed largely independently: Asymptotic analysis, the classical approach to singular problems, reveals scaling structure through matched expansions, boundary layer theory, and Mellin transforms. These methods require human expertise, work only for analytically tractable problems, and involve guessing solution forms. Neural networks approximate complex, high-dimensional problems without requiring analytical insight—but they hide structure. The learned solution remains disconnected from physical theory. MSN makes exponents explicit physical parameters, like asymptotic analysis does, while retaining the flexibility of neural networks—no analytical solution is required. The discovered exponents validate theory against analytical predictions, suggest new physics when they reveal unexpected scaling regimes, diagnose models when exponent drift indicates misspecification, and enable extrapolation because the power-law structure extends naturally beyond training data. 26
