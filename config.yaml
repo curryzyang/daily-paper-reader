@@ -25,3 +25,57 @@ subscriptions:
     stage: A
     diff_threshold_pct: 15
   keyword_recall_mode: or
+  intent_profiles:
+    - tag: PDE控制交通流
+      description: 查找偏微分方程的边界控制与交通流结合的研究论文
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: Traffic Flow
+          keyword_cn: 交通流
+          query: T
+        - keyword: Neural Operator
+          keyword_cn: 神经算子
+          query: 'n'
+        - keyword: PDE
+          keyword_cn: 偏微分方程
+          query: P
+        - keyword: Backstepping
+          keyword_cn: 反步法
+          query: B
+        - keyword: Boundary control
+          keyword_cn: 边界控制
+          query: B
+      intent_queries:
+        - query: Neural Operator
+          query_cn: 神经算子
+          enabled: true
+          source: manual
+          note: ''
+        - query: PDE
+          query_cn: 偏微分方程
+          enabled: true
+          source: manual
+          note: ''
+        - query: Traffic Flow
+          query_cn: 交通流
+          enabled: true
+          source: manual
+          note: ''
+      updated_at: '2026-04-09T10:04:46.584Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
