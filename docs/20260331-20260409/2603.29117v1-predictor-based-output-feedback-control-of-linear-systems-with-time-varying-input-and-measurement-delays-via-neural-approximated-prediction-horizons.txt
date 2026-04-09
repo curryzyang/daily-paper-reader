@@ -1,0 +1,1187 @@
+Title: Predictor-Based Output-Feedback Control of Linear Systems with Time-Varying Input and Measurement Delays via Neural-Approximated Prediction Horizons
+
+URL Source: https://arxiv.org/pdf/2603.29117v1
+
+Published Time: Wed, 01 Apr 2026 00:25:35 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+Systems & Control Letters 00 (2026) 1–11 
+
+# Systems & Control Letters 
+
+# Predictor-Based Output-Feedback Control of Linear Systems with Time-Varying Input and Measurement Delays via Neural-Approximated Prediction Horizons ✩
+
+# Luke Bhan a, ∗, Miroslav Krsti´ cb, Yuanyuan Shi a
+
+> a
+
+Department of Electrical and Computer Engineering, University of California San Diego, La Jolla, CA 92093-0411, USA 
+
+> b
+
+Department of Mechanical and Aerospace Engineering, University of California San Diego, La Jolla, CA 92093-0411, USA 
+
+Abstract 
+
+Due to simplicity and strong stability guarantees, predictor feedback methods have stood as a popular approach for time delay systems since the 1950s. For time-varying delays, however, implementation requires computing a prediction horizon defined by the inverse of the delay function, which is rarely available in closed form and must be approximated. In this work, we formulate the inverse delay mapping as an operator learning problem and study predictor feedback under approximation of the prediction horizon. We propose two approaches: (i) a numerical method based on time integration of an equivalent ODE, and (ii) a data-driven method using neural operators to learn the inverse mapping. We show that both approaches achieve arbitrary approximation accuracy over compact sets, with complementary trade-o ff s in computational cost and scalability. Building on these approximations, we then develop an output-feedback predictor design for systems with delays in both the input and the measurement. We prove that the resulting closed-loop system is globally exponentially stable when the prediction horizon is approximated with su ffi ciently small error. Lastly, numerical experiments validate the proposed methods and illustrate their trade-o ff s between accuracy and computational e ffi ciency. 
+
+© 2024 Published by Elsevier Ltd. 
+
+Keywords: Predictor feedback, Learning-based control, Time-varying delays, Neural operators 
+
+1. Introduction 
+
+Time-varying delays arise naturally in cyber-physical sys-tems due to communication networks, computation pipelines, and input latencies. As a result, delays must be accounted for when designing control laws as even small delays (on the order of milliseconds) can degrade or destabilize closed-loop perfor-mance [1]. Hence, control of delayed systems has been stud-ied extensively for decades, beginning with early approaches such as the Smith predictor [2] and Artstein model reduction [3], and continuing through the development of modern delay-system analysis tools via Lyapunov-Krasovskii /Razuminkihin methods (see [4, 5, 6, 7, 8, 9, 10, 11]). 
+
+> ✩
+
+The work of L. Bhan is supported by the U.S. Department of Energy (DOE) grant DE-SC0024386. The work of M. Krsti´ c was funded by AFOSR grant FA9550- 23-1-0535 and NSF grant ECCS-2151525. The work of Y. Shi is supported by Department of Energy grant DE-SC0025495, Schmidt Sciences AI2050 Early Career Fellowship, and NSF grant ECCS-2442689. 
+
+> ∗
+
+Corresponding Author 
+
+One of the most popular compensation paradigms is the class of ”predictor” feedback methods, which reconstruct the future state of the system at the point where the control in-put will be applied [12, 13, 14, 15, 16]. When implemented exactly, predictor-based designs can handle arbitrarily long de-lays, recovering-nominal closed-loop behavior. However, pre-dictor feedback methods face several computational challenges. For nonlinear systems, the controller generally requires solving implicit ODEs [17, 18]. In the presence of time-varying delays, the predictor additionally depends on the inverse delay map-ping to determine the time-varying prediction horizon, which is generally not available in closed form. As a result, despite their strong theoretical guarantees, predictor-based methods for non-constant delays can almost never be implemented exactly [19]. In this work, we focus on the latter challenge and develop two approaches for approximating the inverse delay mapping underlying time-varying predictor feedback. The first is a clas-sical numerical integration scheme obtained by rewriting the in-verse delay function as an ODE and then solving it numerically. 1    
+
+> arXiv:2603.29117v1 [eess.SY] 31 Mar 2026 /Systems &Control Letters 00 (2026) 1–11 2
+
+The second is a data-driven approach based on neural opera-tors [20, 21], which have recently gained attention in control as learned surrogates for computationally intensive numerical pro-cedures, with speedups of up to 1000 ×. For example, they have been used to approximate backstepping gain kernels for PDE control [22, 23, 24], adaptive control design [25, 26, 27], im-plicit ODE mappings arising in predictor constructions [28, 29], and operators appearing in tra ffi c-flow and oil-system models [30, 31]. Moreover, within the same framework, we move be-yond the standard state-feedback setting and present the first predictor-feedback output-feedback design for linear systems with both time-varying input and measurement delays. The resulting controller combines observer-based state reconstruc-tion from delayed measurements with predictor-based compen-sation of the input delay, while retaining the implementation challenges associated with practical predictor computation. Therefore, the main contributions of this work are summa-rized as: 
+
+• We establish an operator-theoretic framework for approx-imating the inverse delay mapping. In particular, we re-formulate inverse delay recovery as an operator approxi-mation problem and prove that the inverse delay mapping is Lipschitz continuous on compact sets. This structural result provides the regularity foundation needed to an-alyze approximation schemes in a unified and rigorous manner. 
+
+• Building on this framework, we derive two approxima-tion theorems that provide rigorous guarantees for two distinct constructions of the inverse delay mapping over compact sets. In particular, the first theorem establishes approximation guarantees for a numerical integration ap-proach based on an equivalent ODE formulation of the inverse mapping, while the second theorem character-izes approximation by a neural operator that learns the inverse mapping over compact families of delay func-tions. Together, these results show that both the model-based and learning-based approaches fit naturally within the operator-theoretic framework and admit explicit ap-proximation guarantees on compact sets. 
+
+• We develop a predictor-based control framework, formu-lated through the transport PDE representation, that is robust to inverse-delay approximation error and preserves closed-loop stability under suitable conditions. More specif-ically, we incorporate approximate inverse delay map-pings into the predictor design and use the transport PDE formulation to track how approximation errors propagate through the predictor dynamics. This leads to su ffi cient conditions under which robust exponential closed-loop stability is maintained despite imperfect inversion of the delay mapping. 
+
+Notation: The Euclidean norm is denoted by | · | , and the induced matrix norm by ∥ · ∥ . For a symmetric matrix M >
+
+0, λmin (M) and λmax (M) denote its minimum and maximum eigenvalues. For a function f , ∥ f ∥L∞(a,b) := sup τ∈[a,b] | f (τ)| and 
+
+∥ f ∥L2(a,b) :=
+
+R ba | f (τ)|2dτ
+
+1/2
+
+. For distributed states 
+
+u(x, t), ∥u(t)∥22 := R 10 |u(x, t)|2dx . We use R+ = (0 , ∞). The space Ck(Ω; Rq) denotes k-times continuously di ff erentiable func-tions. Lastly, time derivatives are denoted by ˙f (t) and for dis-tributed states, ux(x, t) and ut(x, t) denote the partial space and time derivatives respectively. A preliminary version of this work was submitted to the 2026 IEEE Conference on Decision and Control [32]. This manuscript is substantially di ff erent and significantly extends that earlier version. Specifically, the preliminary work addressed only the state-feedback case and did not include the new con-trol law developed in Section 2. Moreover, the treatment of the output-feedback case in this manuscript requires a considerably more sophisticated stability analysis in Section 4 together with expanded and improved numerical results in Section 5. 
+
+2. Output-feedback Control Design 
+
+In this work, we study: ˙Z(t) = AZ (t) + BU (t − D1(t)) , t ≥ 0 (1a) 
+
+Y(t) = CZ (t − D2(t)) , t ≥ 0 (1b) where Z ∈ Rn is the state, U ∈ Rm is the control input, D1, D2 :
+
+R → R+ are delay functions, and Y(t) is the system measure-ment available to the engineer. We begin by establishing the two preliminary function definitions: 
+
+ϕ1(t) = t − D1(t) , ϕ2(t) = t − D2(t) . (2) 
+
+ϕ1 represents the delay-time, that is the current delay time stamp at t in the input. ϕ2 gives the delayed-state measurement at time 
+
+t - that is how far in the past we are measuring the state. To ensure well-posedness of the system, we make the fol-lowing assumptions regarding the delay functions in (2) 
+
+Assumption 1. Let ϕi : R+ → R, i ∈ { 1, 2}, be continuously di ff erentiable functions. Assume there exists a constant π∗ 
+
+> 0
+
+> 0
+
+such that t − ϕi(t) ≥ π∗ 
+
+> 0
+
+> 0 , ∀t > 0, i ∈ { 1, 2}. (3) 
+
+Moreover, define 
+
+π∗ 
+
+> 1
+
+:= 1sup 
+
+> i∈{ 1,2}
+
+sup  
+
+> ν≥ϕ−1
+> i(0)
+
+(ν − ϕi(ν)) > 0. (4) 
+
+Assumption 2. Let ϕi : R+ → R, i ∈ { 1, 2}, be continuously di ff erentiable functions. Assume there exists a constant π∗ 
+
+> 2
+
+> 0
+
+such that 
+
+ϕ′ 
+
+> i
+
+(t) ≥ π∗ 
+
+> 2
+
+> 0 , ∀t > 0, i ∈ { 1, 2}. (5) 
+
+Moreover, define 
+
+π∗ 
+
+> 3
+
+:= 1sup 
+
+> i∈{ 1,2}
+
+sup  
+
+> ν≥ϕ−1
+> i(0)
+
+ϕ′ 
+
+> i
+
+(ν) > 0. (6) 2/ Systems & Control Letters 00 (2026) 1–11 3
+
+Delayed measurement 
+
+Y(t) = CZ (ϕ2(t)) 
+
+Stage 1 
+
+Observer (7a) 
+
+ξ(t) ≈ Z(ϕ2(t)) 
+
+Stage 2 
+
+Reconstruction (7b) ˆZ(t) ≈ Z(t)
+
+Stage 3 
+
+Prediction (7c) ˆP(t) = ˆZ(t + ψ(t)) 
+
+Predictor feedback (7d) 
+
+U(t) = K ˆP(t)
+
+Delayed-input Plant ˙Z(t) = AZ (t) + BU (ϕ1(t)) 
+
+Y(t)
+
+ξ(t) ˆZ(t)
+
+ˆP(t)
+
+U(t)Z(ϕ2(t)) 
+
+U(ϕ1(ϕ2(τ))) U(ϕ1(τ)) 
+
+τ
+
+Y(t) = CZ (ϕ2(t)) measured 
+
+ξ(t) ≈ Z(ϕ2(t)) ˆZ(t) ˆP(t) = ˆZ(t + ψ(t)) 
+
+Stage 1 Stage 2 Stage 3 
+
+reconstruction horizon prediction horizon ψ(t)ϕ1(ϕ2(t)) ϕ2(t) t ϕ−11 (t)
+
+required input history U(θ), θ ∈ [ϕ1(ϕ2(t)) , t)
+
+> Figure 1. Three-stage observer–predictor feedback law and corresponding horizons.
+
+Note that both assumptions are required for the exact imple-mentation of predictor feedback under time-varying delays [33, 34]. Specifically, they ensure that ( a) the delay remains strictly positive and ( b) its temporal variation is su ffi ciently slow, in the sense that ˙ D(t) < 1. Thus, the analysis pertains to systems with 
+
+slowly varying delay mechanisms , including transport-dominated processes, network-induced delays with mild time variation [35], and sensing or actuation pipelines whose latency changes con-tinuously with the operating condition. We propose the following control design in three segments: 1. Construct an observer for the delayed state Z(ϕ2(t)) using the measurement Y(t), yielding the estimate ξ(t): ˙ξ(t) = ϕ′
+
+> 2
+
+(t)hAξ(t) + BU (ϕ1(ϕ2(t))) + L Y(t) − Cξ(t)i ,
+
+(7a) 2. Propagate this estimate forward in time using the plant dynamics to obtain ˆ Z(t), an estimate of the current state: ˆZ(t) = eA(t−ϕ2(t)) ξ(t) +
+
+Z t
+
+> ϕ2(t)
+
+eA(t−τ) B U (ϕ1(τ)) dτ, (7b) 3. Propagate the estimate further to the predicted future state ˆP(t) = ˆZ(t +ψ(t)), where ψ(t) = ϕ−11 (t)−t is the prediction horizon. We then use this predicted state as input to the nominal control law: ˆP(t) = eAψ(t) ˆZ(t)
+
++
+
+Z t+ψ(t)
+
+> t
+
+eA t+ψ(t)−s
+
+B U  ϕ1(s) ds , (7c) 
+
+U(t) = K ˆP(t). (7d) Notice that the control law requires an initialization of both the control and the state measurements as 
+
+U(θ) , θ ∈ [ϕ1(ϕ2(0)) , 0] , (8a) 
+
+Z(θ) , θ ∈ [ϕ2(0) , 0] , (8b) with the observer initial condition at t = 0 as ξ(0) = ξ0 ∈ Rn.A full diagram of the stages of the control law, as well as the various horizons in this work is given in Figure 1. Furthermore, we choose K and L such that both A + BK and A − LC are Hurwitz as is standard in linear systems. In this work, we will show that the exact implementation of this scheme satisfies the following theorem: 
+
+Theorem 1. Consider the plant (1a) , (1b) such that Assump-tions 1 and 2 are satisfied. Then, there exist constants M , C > 0
+
+such that all solutions of the plant with the exact feedback con-trol law (7a) -(7d) satisfy for all t ≥ 0
+
+Γ(t) ≤ Me −Ct Γ(0) , (9) 
+
+Γ(t) : = |Z(t)|2 + |Z(t) − ˆZ(t)|2 + sup 
+
+> ϕ1(t)≤τ≤t
+
+|U(τ)|2. (10) Theorem 1 claims global exponential stability of the full feedback control law and we will see that Theorem 1 is a spe-cial case of our main result. However, there is one major issue with the theorem in that it assumes (7a)-(7d) are implemented exactly. For most delay functions, the control law (7a)-(7d) cannot be computed exactly as the predictor ˆ P(t) requires the inverse of the delay time ψ(t) = ϕ−11 (t) − t. Hence, this moti-vates developing the following two approximation schemes for 
+
+ψ in Section 3 3/ Systems & Control Letters 00 (2026) 1–11 4
+
+3. Approximation schemes for the delay horizon time 
+
+As we saw in Section 2, the analytical inverse of the delay-time function is rarely computable. Consequently, in this sec-tion, we will propose two approaches for its approximation. We begin by defining an operator formulation of the mappings: 
+
+Definition 1. (Delay time operator ) Consider any function D (t) ∈
+
+C1(R+; R+). Then, define the delay time operator Φ : C1(R+, R+) →
+
+C1(R+, R+) as the a ffi ne mapping satisfying 
+
+Φ(D)( t) : = t − D(t) , t ∈ R+. (11) 
+
+Definition 2. (Prediction horizon time operator ) Consider any function D (t) ∈ C1(R+; R+) and corresponding ϕ(t) = t − D(t)
+
+satisfying Assumptions 1 and 2. The corresponding inverse function is implicitly given such that ϕ−1(ϕ(t)) = t. Then, define the inverse delay time operator Ψ : C1(R+, R+) → C1(R+, R+)
+
+as 
+
+Ψ(D)( t) : = ϕ−1(t) − t , (12) 
+
+where ϕ−1(ϕ(t)) = t. 
+
+For convenience, we denote the operator output by 
+
+ψ(t) = Ψ (D)( t). (13) The first approach is a numerical time-stepping scheme ob-tained by approximating the ODE characterizing Ψ using Eu-ler’s method. We begin by establishing a key property of the operator Ψ, namely that it is Lipschitz. 
+
+Lemma 1 (Lipschitz dependence of Ψ on D). Let D 1, D2 ∈
+
+C1(R>0; R>0) and define ϕi(t) : = t − Di(t), i ∈ { 1, 2}. Assume that each ϕi satisfies Assumptions 1 and 2. Then, for every y in the common range R D ϕ1(R>0) ∩ ϕ2(R>0),
+
+Ψ(D1)( y) − Ψ(D2)( y) ≤ 1
+
+π∗
+
+> 2
+
+∥D1 − D2∥L∞(R>0). (14) 
+
+where Ψ is given as in Definition 2. 
+
+The proof is given in Appendix 1. 
+
+3.1. Euler-approximation of the inverse delay time 
+
+The Euler method for approximating inverses has been well studied, but never applied in the context of predictor feedback problems [36], [13]. Hence, we provide a terse explanation of the approach and corresponding error theorem to highlight the challenges. From the identity ϕ(ψ(t) + t) = t, the derivative of 
+
+ψ(t) satisfies the ODE 
+
+dψ(t)
+
+dt = ˙D(t + ψ(t)) 1 − ˙D(t + ψ(t)) , (15) where the initial condition satisfies the fixed-point equation ψ(0) −
+
+D(ψ(0)) = 0. This equation is well-posed under Assumption 2. The ratio appearing in (15) reflects the rate of change of the delay through ˙ D. When ˙ D(t) approaches 1, the prediction hori-zon varies rapidly, whereas when the delay varies slowly, the horizon length remains nearly constant. To compute ψ(t), one first solves the fixed-point equation for ψ(0) and then numer-ically integrates the ODE forward in time. Under the classi-cal Euler approximation of the ODE, one obtains the following well-known theorem: 
+
+Theorem 2 (Explicit Euler approximation of ψ [36]) . Suppose Assumptions 1 and 2 hold and, in addition, ϕ ∈ C2(R>0). Then consider the di ff erential equation satisfying 
+
+˙ψ(t) = ˙D(t + ψ(t)) 1 − ˙D(t + ψ(t)) , (16a) 
+
+ψ(0) = t0, (16b) 
+
+t0 − D(t0) = 0. (16c) 
+
+Let h = T/N and define t n = nh for n = 0, . . . , N. Define the explicit Euler approximation ˆψ(tn) by 
+
+ˆψ(tn+1) = ˆψ(tn) + h ˙D(tn + ˆψ(tn)) 1 − ˙D(tn + ˆψ(tn)) (17) 
+
+Then, on any compact interval [0 , T ], with T > 0, the explicit Euler approximation satisfies 
+
+max  
+
+> 0≤tn≤T
+
+ψ(tn) − ˆψ(tn) ≤
+
+" eKT − 1
+
+K
+
+# 12 h max 
+
+> 0≤t≤T
+
+¨ψ(t) , (18) 
+
+where the Lipschitz constant K may be chosen as K = sup 
+
+> 0≤t≤T
+
+ϕ′′ (t + ψ(t)) (ϕ′(t + ψ(t))) 2 (19) 
+
+≤ 1(π∗
+
+> 3
+
+)2 sup 
+
+> 0≤t≤T
+
+ϕ′′ (t + ψ(t)) . (20) Notice that, to guarantee a uniform error bound of size ϵ > 0on [0 , T ], it su ffi ces to choose the step-size h so that 
+
+h ≤ 2ϵK
+
+ eKT − 1 max 
+
+> 0≤t≤T
+
+¨ψ(t) . (21) To interpret the constants in the Euler error bound, note that the derivatives of ϕ and ψ are determined directly by the delay function D(t). Since ϕ(t) = t − D(t), we have ϕ′′ (t) = − ¨D(t). Moreover, recalling that ψ(t) = ϕ−1(t) − t, one obtains ¨ ψ(t) =
+
+¨D(t + ψ(t)) /(1 − ˙D(t + ψ(t))) 3. Thus the quantities ϕ′′ and ¨ ψ
+
+appearing in the error bound reflect the curvature of the delay profile D(t) along the prediction horizon. Intuitively, slower varying delays (small ˙ D and ¨ D) lead to smaller bounds in the Euler approximation error. The explicit Euler scheme is presented only as a simple il-lustrative example; higher-order integration methods (e.g., Runge– Kutta schemes) could be employed to improve the local trunca-tion error. However, such methods have two drawbacks. First, for all the stability analysis that follows, we only require D ∈ C1
+
+and hence, higher-order numerical methods will require stronger regularity in the delay function. Second, the qualitative depen-dence of the global error bound on the time horizon T is not specific to Euler. For non-contractive dynamics, time-marching 4/ Systems & Control Letters 00 (2026) 1–11 5
+
+schemes typically yield estimates whose constants grow with 
+
+T , as a consequence of Gr¨ onwall-type arguments [37]. Thus, although any prescribed tolerance ϵ > 0 can in prin-ciple be achieved by selecting h su ffi ciently small, the required step size generally deteriorates as T increases. In other words, maintaining uniform accuracy over long horizons becomes in-creasingly expensive. This observation motivates approximat-ing the inverse mapping ψ directly as an operator, rather than computing it via sequential time integration. Lastly, note that this growth with respect to T does not ap-pear in the predictor approximation schemes of [13]. There, the predictor evolves over a fixed interval equal to the delay length, so the approximation error depends only on the known delay magnitude rather than on an arbitrarily long integration hori-zon. This illustrates a key di ff erence in approximating feedback laws under time-varying delays. 
+
+3.2. Neural operator approximation of the inverse delay time 
+
+Further, we also present a neural operator approach to ap-proximating ψ(t). For completeness, we begin with a brief re-view of operator learning. Neural operators are neural networks with structured kernel parameterizations that approximate map-pings between function spaces, admitting universal operator ap-proximation guarantees (see [38]). Prominent architectures in-clude DeepONet [20], the Fourier Neural Operator (FNO) [21], and transformer-based variants [38]. We provide the formal definition of a neural operator as 
+
+Definition 3 (Neural Operators) . [39, Section 1.2] Let Ωu ⊂
+
+Rdu1 , Ωv ⊂ Rdv1 be bounded domains with Lipschitz boundary and let Fc ⊂ C0(Ωu; Rc), Fv ⊂ C0(Ωv; Rv) be continuous func-tion spaces. Given a channel dimension d c > 0, we call any 
+
+ˆΨ a neural operator given it satisfies the compositional form 
+
+ˆΨ = Q◦L L ◦· · ·◦L 1 ◦R where R is a lifting layer, Ll, l = 1, ..., Lare the hidden layers, and Q is a projection layer. That is, R is given by             
+
+> R:Fc(Ωu;Rc)→ F s(Ωs;Rdc),c(x)7→R(c(x),x),(22)
+
+where Ωs ⊂ Rds1 , Fs(Ωs; Rdc ) is a Banach space for the hidden layers and R : Rc × Ωu → Rdc is a learnable neural network acting between finite-dimensional Euclidean spaces. For l =
+
+1, ..., L, each hidden layer is given by         
+
+> (Llv)( x) : =s(Wlv(x)+bl+(Klv)( x)) ,(23)
+
+where weights W l ∈ Rdc×dc and biases b l ∈ Rdc are learnable parameters, s : R → R is a smooth, infinitely di ff erentiable activation function that acts component-wise on inputs, and Kl
+
+is the nonlocal operator given by     
+
+> (Klv)( x)=
+> Z
+> X
+> Kl(x,y)v(y)dy ,(24)
+
+where K l(x, y) is a kernel function containing learnable param-eters. Lastly, the projection layer Q is given by             
+
+> Q:Fs(Ωs;Rdc)→ F v(Ωv;Rv),s(x)7→Q(s(x),y),(25)
+
+where Q is a finite dimensional neural network from Rdc ×Ωv →
+
+Rv.
+
+Henceforth, we refer to any neural operator as any neural network satisfying the form of Definition 3. Given the continu-ity of Ψ as in Lemma 1, we have the following Theorem as a consequence of [39, Theorem 2.1] 
+
+Theorem 3. Let Assumptions 1 and 2 hold. Fix a compact set K ⊂ C1(Ωu, R+) where Ωu ⊂ R+ is bounded. Then, for any 
+
+ϵ > 0 there exists a neural operator in the form of Definition 3 such that for all t ∈ Ωu
+
+sup 
+
+> D∈K
+
+|Ψ(D)( t) − ˆΨ(D)( t)| ≤ ϵ . (26) Although the neural operator framework provides a theoret-ical ϵ-approximation guarantee, practical challenges remain for large time horizons T . Accurately approximating the inverse delay over long intervals generally requires extensive training data and su ffi ciently expressive network architectures, so in prac-tice the complexity may still scale with T as in time-stepping schemes [40]. 
+
+4. Exponential stability of the closed loop design 
+
+We will use ˆ ψ(t) = ˆΨ(D)( t) to represent the approximation function obtained by either approach and ψ(t) to be the exact inverse delay time solution. We now present our main result: 
+
+Theorem 4. Consider the plant (1a) , (1b) and suppose that Assumptions 1 and 2 hold. Consider the control law (7a) –(7d) 
+
+implemented using an approximate prediction horizon function 
+
+ˆψ(t). Then, there exists ϵ∗ > 0 such that for any approximation satisfying 
+
+|ψ(t) − ˆψ(t)| ≤ ϵ, ∀t ≥ 0, (27) 
+
+with ϵ ∈ (0 , ϵ ∗), there exists a constant M > 0 and monoton-ically decreasing function C (ϵ) > 0, such that all solutions of the closed-loop system satisfy 
+
+Γ(t) ≤ Me −C(ϵ)tΓ(0) , ∀t ≥ 0, (28) 
+
+where 
+
+Γ(t) : = |Z(t)|2 + |Z(t) − ˆZ(t)|2 + sup 
+
+> ϕ1(t)≤τ≤t
+
+|U(τ)|2. (29) We briefly discuss the implications of implementing The-orem 4 under the proposed designs. The approximation con-dition (27) requires a uniform-in-time bound on the prediction horizon error. However, the approximation guarantees provided by Theorems 2 and 3 are inherently finite-horizon as they re-quire compact sets. Nevertheless, a global implementation can be achieved by choosing a compact interval for ˆ ψ large enough. Further, since the constants M and C in Theorem 4 depend only on the approximation error bound and system parameters, they can be chosen uniformly across intervals. This allows the stabil-ity estimate to be propagated over successive compact time in-tervals given that the interval length is chosen su ffi ciently large to maintain a contraction: 5/ Systems & Control Letters 00 (2026) 1–11 6
+
+Corollary 1. Suppose the hypotheses of Theorem 4 hold, and fix ϵ ∈ (0 , ϵ ∗), where ϵ∗ is given by Theorem 4. Let M and C := C(ϵ) be the corresponding constants in (28) . Then, if H is given by H > ln( M)
+
+C(ϵ∗) (30) 
+
+then, for all ϵ < ϵ ∗ there exists an approximation ˆψt such that 
+
+|ψ(τ) − ˆψt(τ)| ≤ ϵ , τ ∈ [t, t + H] , (31) 
+
+and all solutions of the closed loop system satisfy 
+
+Γ(t) ≤ Me − ¯Ct Γ(0) , ∀t ≥ 0 , (32) ¯C := C(ϵ) − ln( M)/H . (33) 
+
+Proof. (Of Theorem 4) The proof of the result can be broken up into a series of steps. First, we introduce the following back-stepping transformation which, due to the ψ approximation, will have a boundary term. Then, we will bound this bound-ary term by the state estimation error. 
+
+Step 1: An estimate on the target system We begin by rewrit-ing the delay ODE as the following transport PDE-ODE cas-cade by introducing the distributed input 
+
+u(x, t) = U(ϕ1(t + xψ(t))) , (34) which yields the system ˙Z(t) = AZ (t) + Bu (0 , t) , (35a) 
+
+ut(x, t) = π(x, t)ux(x, t) , x ∈ (0 , 1) (35b) 
+
+u(1 , t) = U(t) , (35c) 
+
+Y(t) = CZ (ϕ2(t)) (35d) where the transport speed π(x, t) is given by 
+
+π(x, t) = 1 + x ˙ψ(t)
+
+ψ(t) (36) Note, Assumption 1 guarantees that the denominator is non-zero and hence the transport speed cannot blow up. Consider the invertible backstepping transform [33] gov-erned by 
+
+w(x, t) = u(x, t) − Ke Ax ψ(t)Z(t) − K
+
+Z x
+
+> 0
+
+eA(x−y)ψ(t) Bu (y, t)ψ(t)dy .
+
+(37) This yields the following target system with boundary pertur-bation ˙Z(t) = (A + BK )Z(t) + Bw (0 , t) , (38a) 
+
+wt(x, t) = π(x, t)wx(x, t) , x ∈ (0 , 1) , (38b) 
+
+w(1 , t) = K[eA ˆψ(t) ˆZ(t) − eAψ(t)Z(t)] (38c) 
+
++ K
+
+Z 10
+
+Bu (y, t)[ ˆ ψ(t)eA(1 −y) ˆ ψ(t) − ψ(t)eA(1 −y)ψ(t)]dy 
+
+(38d) We begin by analyzing the w part of the cascaded system. Consider the Lyapunov function 
+
+L(t) = 12
+
+Z 10
+
+ebx w2(x, t)dx , (39) where b > 0 is a constant. Computing the time derivative yields ˙L(t) =
+
+Z 10
+
+ebx w(x, t)wt(x, t)dx 
+
+=
+
+Z 10
+
+ebx w(x, t)π(x, t)wx(x, t)dx 
+
+= ebx 
+
+2 π(x, t)w2(x, t)|10
+
+− 12
+
+Z 10
+
+(bπ(x, t) + πx(x, t)) ebx w2(x, t)dx 
+
+= − π(0 , t)2 w2(0 , t) + π(1 , t)eb
+
+2 w2(1 , t)
+
+− 12
+
+Z 10
+
+(bπ(x, t) + πx(x, t)) ebx w2(x, t)dx (40) One can show that by choosing b ≥ (1 − π∗
+
+> 3
+
+) max 
+
+
+
+1, 1
+
+> π∗
+> 3
+
+
+
+, then one obtains 
+
+bπ(x, t) + πx(x, t) ≥ π∗
+
+> 1
+
+β∗ , (41) where 
+
+β∗ = min {b − 1 + π∗
+
+> 3
+
+, (b + 1) π∗ 
+
+> 3
+
+− 1} > 0 . (42) Further, we have 
+
+π(0 , t) = 1/ψ (t) ≥ π∗
+
+> 1
+
+, (43) 
+
+π(1 , t) = 1 + ˙ψ(t)
+
+ψ(t) ≤ 1
+
+π∗
+
+> 0
+
+π∗
+
+> 2
+
+, (44) and hence we obtain ˙L(t) ≤ − π∗
+
+> 1
+
+2 w2(0 , t) − π∗
+
+> 1
+
+β∗ L(t) + eb
+
+2π∗
+
+> 0
+
+π∗
+
+> 2
+
+w2(1 , t) . (45) Hence, the only term that creates challenges is the boundary term w(1 , t). 
+
+Step 2: A bound on w(1 , t). We begin with the first term in the boundary w(1 , t). Adding and subtracting eAψ(t) ˆZ(t) and eA ˆψ(t)Z(t)gives 
+
+KeA ˆψ(t) ˆZ(t) − eAψ(t)Z(t) = Ke Aψ(t)  ˆZ(t) − Z(t)
+
++ K eA ˆψ(t) − eAψ(t)  ˆZ(t) − Z(t)
+
++ K eA ˆψ(t) − eAψ(t)Z(t). (46) Hence, 
+
+KeA ˆψ(t) ˆZ(t) − eAψ(t)Z(t) ≤ ∥ K∥ ∥ eAψ(t)∥ | ˆZ(t) − Z(t)|
+
++ ∥K∥ ∥ eA ˆψ(t) − eAψ(t)∥ | ˆZ(t) − Z(t)|
+
++ ∥K∥ ∥ eA ˆψ(t) − eAψ(t)∥ | Z(t)|. (47) 6/ Systems & Control Letters 00 (2026) 1–11 7
+
+Using Assumption (1) and the fact | ˆψ(t) − ψ(t)| ≤ ϵ ∀t , we have 
+
+∥K∥∥ eAψ(t)∥ ≤ ∥ K∥e∥A∥/π ∗ 
+
+> 1
+
+=: Ω1 (48) and 
+
+∥K∥∥ eA ˆψ(t) − eAψ(t)∥ = ∥K∥∥ eAψ(t)∥∥ eA[ ˆ ψ(t)−ψ(t)] − I∥≤ Ω1(e∥A∥ϵ − 1) =: δ1(ϵ) . (49) Thus, we have 
+
+KeA ˆψ(t) ˆZ(t) − eAψ(t)Z(t) ≤ [Ω1 + δ1(ϵ)] | ˆZ(t) − Z(t)|
+
++ δ1(ϵ)|Z(t)| . (50) We now focus on the second term: 
+
+K
+
+Z 10
+
+Bu (y, t) ˆψ(t)eA(1 −y) ˆ ψ(t) − ψ(t)eA(1 −y)ψ(t) dy 
+
+≤ ∥ K∥∥ B∥
+
+Z 10
+
+|u(y, t)|| ˆψ(t) − ψ(t)| ∥ eA(1 −y) ˆ ψ(t)∥
+
++ |ψ(t)| ∥ eA(1 −y) ˆ ψ(t) − eA(1 −y)ψ(t)∥ dy 
+
+≤ ∥ B∥ Ω1| ˆψ(t) − ψ(t)| + |ψ(t)|δ1(ϵ) Z 10
+
+|u(y, t)| dy 
+
+≤ ∥ B∥ Ω1ϵ + |ψ(t)|δ1(ϵ) Z 10
+
+|u(y, t)| dy . (51) Now, using the fact |ψ(t)| ≤ 1
+
+> π∗
+> 1
+
+, along with estimate in (50), (51) 
+
+|w(1 , t)| ≤ | Ω1 + δ1(ϵ)|| ˆZ(t) − Z(t)| + δ1(ϵ)|Z(t)|
+
++ ∥B∥ Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!
+
+∥u(t)∥2. (52) Using the inequality ( a + b + c)2 ≤ 3a2 + 3b2 + 3c2, we have 
+
+w2(1 , t) ≤ 3|Ω1 + δ1(ϵ)|2| ˆZ(t) − Z(t)|2 + 3δ1(ϵ)2|Z(t)|2
+
++ 3∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2
+
+∥u(t)∥22. (53) Now following [33], we have that 
+
+∥w(t)∥22 ≤ α1(t)∥u(t)∥22 + α2(t)|Z(t)|2, (54) 
+
+∥u(t)∥22 ≤ β1(t)∥w(t)∥22 + β2(t)|Z(t)|2, (55) where 
+
+α1(t) = 3 1 +
+
+Z 10
+
+∥Ke Aψ(t)x B∥2ψ(t)2dx 
+
+!
+
+, (56) 
+
+α2(t) = 3
+
+Z 10
+
+∥Ke Aψ(t)x∥2dx , (57) 
+
+β1(t) = 3 1 +
+
+Z 10
+
+∥Ke (A+BK )ψ(t)x B∥2ψ(t)2dx 
+
+!
+
+, (58) 
+
+β2(t) = 3
+
+Z 10
+
+∥Ke (A+BK )ψ(t)x∥2dx , (59) with uniform estimates 
+
+α1(t) ≤ ¯α1 = 3 1 + ∥K∥2∥B∥2
+
+2π∗
+
+> 1
+
+∥A∥
+
+
+
+e 2∥A∥ 
+
+> π∗
+> 1
+
+− 1
+
+! 
+
+, (60) 
+
+α2(t) ≤ ¯α2 = 3∥K∥2π∗
+
+> 1
+
+2∥A∥
+
+
+
+e 2∥A∥ 
+
+> π∗
+> 1
+
+− 1
+
+
+
+, (61) 
+
+β1(t) ≤ ¯β1 = 3 1 + ∥K∥2∥B∥2
+
+2π∗
+
+> 1
+
+∥A + BK ∥
+
+
+
+e 2∥A+BK ∥ 
+
+> π∗
+> 1
+
+− 1
+
+! 
+
+, (62) 
+
+β2(t) ≤ ¯β2 = 3∥K∥2π∗
+
+> 1
+
+2∥A + BK ∥
+
+
+
+e 2∥A+BK ∥ 
+
+> π∗
+> 1
+
+− 1
+
+
+
+. (63) Hence, we obtain the final perturbation: 
+
+w2(1 , t) ≤ 3|Ω1 + δ1(ϵ)|2| ˆZ(t) − Z(t)|2
+
++
+
+3δ1(ϵ)2 + 3 ¯ β2∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2 |Z(t)|2
+
++ 3 ¯ β1∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2
+
+∥w(t)∥22. (64) Notice, the perturbation estimate has error due to both ˆ ψ and the observer ˆ Z(t). 
+
+Step 3: A Lyapunov analysis of the full system: Note that, since 
+
+A + BK and A − LC are Hurwitz, for any Q, R symmetric, pos-itive definite, there exists unique P, S symmetric, positive defi-nite that satisfy the Lyapunov equations 
+
+P(A + BK ) + (A + BK )T P = −Q , (65) 
+
+S (A − LC ) + (A − LC )T S = −R . (66) Hence, we have that (using Young’s inequality) 
+
+ddt 
+
+Z(t)T PZ (t) = − ZT (t)QZ (t) + 2ZT (t)PBw (0 , t) ,
+
+≤ − λmin (Q)2 |Z(t)|2 + 2∥PB ∥2
+
+λmin (Q) w2(0 , t) , (67) and additionally, letting ˜ ξ(t) = Z(ϕ2(t)) − ξ(t), by the observer design, we have 
+
+ddt ( ˜ ξ(t)T S ˜ξ(t)) ≤ − λmin (R)ϕ′
+
+> 2
+
+(t)| ˜ξ(t)|2
+
+≤ − π∗
+
+> 2
+
+λmin (R)| ˜ξ(t)|2 . (68) Consider the Lyapunov functional: 
+
+V(t) = Z(t)T PZ (t) + 4∥PB ∥2
+
+π∗
+
+> 1
+
+λmin (Q) L(t)
+
++ μ ˜ξ(t)T S ˜ξ(t) , (69) where μ > 0 is to be given. Taking the derivative, we obtain ˙V(t) ≤ − λmin (Q)2 |Z(t)|2 − 4∥PB ∥2β∗
+
+λmin (Q) L(t) − μπ ∗
+
+> 2
+
+λmin (R)| ˜ξ(t)|2
+
++ Ω 2|Ω1 + δ1(ϵ)|2| ˆZ(t) − Z(t)|2
+
++ Ω 2 |δ1(ϵ)|2 + 3 ¯ β2∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!! 
+
+|Z(t)|2
+
++ Ω 2 ¯β1∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2
+
+2L(t) , (70) 7/ Systems & Control Letters 00 (2026) 1–11 8
+
+where 
+
+Ω2 := 6∥PB ∥2eb
+
+π∗
+
+> 0
+
+π∗
+
+> 1
+
+π∗
+
+> 2
+
+λmin (Q) . (71) If we have that ϵ < ϵ ∗ where ϵ∗ satisfies the following: max 
+
+
+
+Ω2Ω21 e∥A∥ϵ∗
+
+− 1 2 , Ω21 ϵ∗ + e∥A∥ϵ∗
+
+− 1
+
+π∗
+
+> 1
+
+!2 
+
+≤ min 
+
+( λmin (Q)12 Ω2 ¯β2∥B∥2 , 2∥PB ∥2β∗
+
+Ω2 ¯β1∥B∥2λmin (Q) , λmin (Q)4
+
+)
+
+.
+
+(72) To give insight into how this condition is derived, we require that the negative terms in (70) dominate the ϵ-dependent pertur-bation terms. Thus, the above inequality is a su ffi cient small-ness condition ensuring that the approximation error remains below the robustness margin of the closed-loop system. For the engineer, this means that the predictor approximation must be made su ffi ciently accurate relative to the plant dynamics, con-troller /observer gains, and delay bounds in order to preserve exponential stability. Hence, we obtain ˙V(t) ≤ − c1|Z(t)|2 − c2 L(t)
+
+− μπ ∗
+
+> 2
+
+λmin (R)| ˜ξ(t)|2 + Ω 2|Ω1 + δ1(ϵ)|2| ˆZ(t) − Z(t)|2
+
+(73) where 
+
+c1 := λmin (Q)2 − Ω2
+
+|δ1(ϵ)|2 + 3 ¯ β2∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2 > 0,
+
+(74) 
+
+c2 := 4∥PB ∥2β∗
+
+λmin (Q) − 2Ω2 ¯β1∥B∥2 Ω1ϵ + δ1(ϵ)
+
+π∗
+
+> 1
+
+!2
+
+> 0. (75) To complete, the bound on the Lyapunov function, it requires to bound the observer error. First, note that 
+
+| ˆZ(t) − Z(t)|2 = | − eA(t−ϕ2(t)) ˜ξ(t)|2
+
+≤ e2∥A∥/π ∗ 
+
+> 1
+
+| ˜ξ(t)|2 . (76) From here, noting that 
+
+Ω2δ1(ϵ)2 ≤ λmin (Q)4 , (77) we can choose μ as 
+
+μ > 
+
+2Ω2Ω21 + λmin (Q)2
+
+ e2∥A∥/π ∗
+
+> 1
+
+π∗
+
+> 2
+
+λmin (R) , (78) yielding ˙V(t) ≤ − c1|Z(t)|2 − c2 L(t) − c3| ˜ξ(t)|2 , (79) where 
+
+c3 := μπ ∗
+
+> 2
+
+λmin (R) − Ω2|Ω1 + δ1(ϵ)|2e2∥A∥/π ∗ 
+
+> 1
+
+. (80) Notice that c1, c2, c3 are all monotonically decreasing in ϵ. Hence, there exists c4(ϵ) > 0, monotonic, such that ˙V(t) ≤ − c4V(t) , ∀t ≥ 0 (81) yielding, for all t ≥ 0
+
+V(t) ≤ V(0) e−c4t . (82) From here, using the standard bounds between ∥w∥ and ∥u∥ as well as between ˜ ξ and |Z − ˆZ|, we obtain a constant M > 0, independent of both time and ϵ, such that 
+
+Γ(t)
+
+M ≤ V(t) ≤ MΓ(t) . (83) From here, using (82) and (83), we complete the result. 
+
+5. Numerical example 
+
+All code for this numerical example is publicly available [41]. 
+
+Problem formulation: To illustrate the approach, we consider the system (1a), (1b) with 
+
+A =
+
+"0 11 2
+
+#
+
+, B =
+
+"01
+
+#
+
+, C = h1 −1i . (84) Notice the open-loop system is unstable and hence we choose 
+
+K = [−4, −4] and L = [−4, −8] T as the controller gains to en-sure the matrices A + BK and A − LC are Hurwitz. 
+
+Dataset generation: In this example, we train a Fourier Neural Operator [21] that learns the mapping D 7 → ψ where 
+
+D and ψ are given uniformly over [0 , H] as discretized function representations. We let H = 12 in this example. The family of delay functions considered is given by 
+
+D(t) = a + b
+
+1 + t + α sin  ωt + φ ,
+
+which yields oscillatory delay profiles (See bottom left of Fig-ure 2). We generate a dataset of 2000 examples by indepen-dently sampling the parameters 
+
+a ∼ U (0 .2, 3.0) , b ∼ U (0 , 10) , α ∼ U (−0.3, 0.3) ,ω ∼ U (0 .2, 3.0) , φ ∼ U (0 , 2π),
+
+where U(a, b) indicates the uniform distribution over [ a, b]. This family of functions are oscillatory and do not have a known analytical inverse, hence they must be approximated. Further-more, for some choices of the parameters, they do not satisfy the Assumptions (namely ϕ′ < 0). Hence, for each sampled delay function we verify that the assumptions of the theory are satisfied on the interval [0 , H] before including the function into our dataset. To generate high-fidelity training targets for the neural op-erator, we compute accurate solutions of the implicit relation 
+
+ϕ(ψ(t) + t) − t = 0,
+
+8/ Systems & Control Letters 00 (2026) 1–11 90 2 4 6 8 10 12 
+
+> −180
+> −120
+> −60
+> 0
+> 60
+
+State and estimate       
+
+> Z1(t)
+> Z2(t)ˆZ1(t)ˆZ2(t)
+> 0246810 12
+> −600
+> −300
+> 0
+> 300
+> 600
+
+Control input U (t)      
+
+> 0246810 12
+
+t
+
+> 0.1
+> 0.3
+> 0.5
+> 0.7
+
+Delays and learned prediction horizon         
+
+> D1(t)D2(t)ˆψFNO (t)
+> 0246810 12
+
+t
+
+> 10 −13
+> 10 −9
+> 10 −5
+> 10 −1
+
+Residual φ( ˆψ(t) + t) − t                               
+
+> Euler RK4 FNO
+> Figure 2. Example of feedback control for the problem in (84) with the FNO approximation of ˆ ψ. The parameters for the delay function D1were ( a1,b1, α 1, ω 1, φ 1)=
+> (0 .4,0.31 ,−0.10 ,4.95 ,0.95) and for D2were ( a2,b2, α 2, ω 2, φ 2)=(0 .28 ,0.15 ,−0.06 ,1.28 ,0.82). The initial condition of the plant was Z(0) =[−1,1] and the observer ξ(0) =[5 ,−5]. The input history was fixed to ensure 0 input for the initial condition and the plant history was set to Z(0) for all times t≤0.
+
+which defines ψ(t) = ϕ−1(t) − t. For each sampled delay func-tion, ψ(t) is computed o ffl ine on a fine temporal grid with dis-cretization step dt = 10 −3. At each grid point t, the above scalar nonlinear equation is solved to machine precision using a root-finding algorithm, producing highly accurate reference solutions used as supervision for training. The dataset of 2 k pairs is randomly split into 80% training, 10% validation, and 10% test samples. Prior to training, both inputs and outputs are normalized using the empirical dataset mean and standard deviation. We train a one-dimensional Fourier Neural Operator (FNO) [21] with 32 Fourier modes and 64 hidden channels to learn the mapping D 7 → ψ. The network is trained for 200 epochs using the Adam optimizer [42] with learning rate 10 −3, and the training objective is the root-mean-square error between the predicted and reference horizons on the discretized grid. A validation error of 9 × 10 −3 is achieved during training. Finally, it is important to mention that this computation is performed entirely o ffl ine (taking ≈ 3 hours for dataset generation and training) and therefore does not a ff ect the real-time control implementation. After training, the neural op-erator provides a direct approximation of the mapping D 7 → ψ.
+
+Online deployment: During simulation, the trained neural operator is evaluated once on the temporal grid to produce the approximation ˆ ψ(t), which is then used directly in the predictor-feedback law. This replaces the implicit inversion with a single neural-operator evaluation. For comparison, the Euler-based approach computes the initial condition in (16b), (16c) using a root-finding method (bisection method [43]), after which the corresponding ODE is integrated online using the forward Euler method for t ∈ [0 , T ]. The Runge-Kutta 4 (RK4 [43]) follows the same procedure as Euler, but uses a fourth-order Runge–Kutta (RK4) integrator for time integration. Figure 2 shows an exam-ple of the closed-loop response using the neural-operator pre-diction ˆ ψ(t). The delay functions D1 and D2 lie within the train-ing distribution but were not explicitly seen during training. The observer states converge rapidly and the plant stabilizes. The bottom-right panel reports the consistency error, measuring how well ˆ ψ(t) satisfies the implicit relation ϕ( ˆ ψ(t) + t) − t = 0. Lastly, to provide a comparison of computational e ffi ciency, we evaluate the wall-clock time required to compute the so-lution over 1000 independent samples. On average, the Euler method requires 11 .98 ms per evaluation, while RK4 incurs a roughly 3 .5× higher cost at 42 .50 ms. Moreover, the learned FNO surrogate is the fastest due to the GPU usage (Nvidia 4070), requiring only 2 .01 ms per evaluation, corresponding to a 6 .0× speedup over Euler and 21 .1× over RK4, but comes at a sacrifice of accuracy as shown in the bottom right of Figure 2. Hence, the frequency of the control input and robustness of the linear system will determine which approximation approach for ˆψ is best. 
+
+6. Conclusion 
+
+In this work, we studied predictor-feedback implementation for linear systems with time-varying input and measurement de-lays when the inverse delay-time mapping is not available in 9/ Systems & Control Letters 00 (2026) 1–11 10 
+
+closed form. We developed an output-feedback design consist-ing of an observer, a predictor, and the nominal delay-free con-trol law. To address the fact that the predictor horizon depends on the inverse delay-time mapping, we proposed two practi-cal approximation methods: an ODE-based numerical inversion scheme and a neural-operator approximation framework. For both approaches, approximation guarantees were established over compact sets. We then derived su ffi cient conditions un-der which exponential closed-loop stability is preserved despite approximation error. Lastly, we presented a numerical exam-ple demonstrating the tradeo ff between approximation accuracy and computational cost while highlighting the e ffi cacy of the approach. 
+
+References 
+
+[1] M. Jin, S. H. Kang, P. H. Chang, J. Lee, Robust control of robot ma-nipulators using inclusive and enhanced time delay control, IEEE /ASME Transactions on Mechatronics 22 (5) (2017) 2141–2152. [2] O. J. M. Smith, Closer control of loops with dead time, Chemical Engi-neering Progress 53 (5) (1957) 217–219. [3] Z. Artstein, Linear systems with delayed controls: A reduction, IEEE Transactions on Automatic Control 27 (4) (1982) 869–879. [4] W. Michiels, S.-I. Niculescu, Stability and Stabilization of Time-Delay Systems, Society for Industrial and Applied Mathematics, 2007. arXiv: https://epubs.siam.org/doi/pdf/10.1137/1.9780898718645 ,
+
+doi:10.1137/1.9780898718645 .URL https://epubs.siam.org/doi/abs/10.1137/1. 9780898718645 
+
+[5] E. Fridman, Introduction to Time-Delay Systems: Analysis and Control, Birkh¨ auser, Basel, 2014. [6] K. Gu, J. Chen, V. L. Kharitonov, Stability of time-delay systems, Springer Science & Business Media, 2003. [7] X.-M. Zhang, Q.-L. Han, X. Ge, Novel stability criteria for linear time-delay systems using lyapunov-krasovskii functionals with a cubic poly-nomial on time-varying delay, IEEE /CAA Journal of Automatica Sinica 8 (1) (2021) 77–85. doi:10.1109/JAS.2020.1003111 .[8] A. Seuret, F. Gouaisbaut, Stability of linear systems with time-varying delays using Bessel–Legendre inequalities, IEEE Transactions on Au-tomatic Control 63 (1) (2018) 225–232. doi:10.1109/TAC.2017. 2730485 .[9] C.-K. Zhang, Y. He, L. Jiang, M. Wu, Notes on stability of time-delay sys-tems: Bounding inequalities and augmented Lyapunov-Krasovskii func-tionals, IEEE Transactions on Automatic Control 62 (10) (2017) 5331– 5336. doi:10.1109/TAC.2016.2635381 .[10] B. Zhou, A. V. Egorov, Razumikhin and Krasovskii stability theorems for time-varying time-delay systems, Automatica 71 (2016) 281–291. 
+
+doi:https://doi.org/10.1016/j.automatica.2016.04.048 .URL https://www.sciencedirect.com/science/article/pii/ S000510981630173X 
+
+[11] A. N. Nekhoroshikh, D. Efimov, A. Polyakov, W. Perruquetti, I. B. Furtat, Hyperexponential and fixed-time stability of time-delay systems: Lya-punov–Razumikhin method, IEEE Transactions on Automatic Control 68 (3) (2023) 1862–1869. doi:10.1109/TAC.2022.3168487 .[12] M. Krstic, Delay Compensation for Nonlinear, Adaptive, and PDE Sys-tems, Systems & Control: Foundations & Applications, Birkh¨ auser, Boston, MA, 2009. [13] I. Karafyllis, M. Krstic, Predictor Feedback for Delay Systems: Imple-mentations and Approximations, Systems & Control: Foundations & Ap-plications, Birkh¨ auser, 2017. [14] H. Lhachemi, C. Prieur, R. Shorten, Robustness of constant-delay pre-dictor feedback with respect to distinct uncertain time-varying input de-lays, IFAC-PapersOnLine 53 (2) (2020) 7677–7682, 21st IFAC World Congress. doi:https://doi.org/10.1016/j.ifacol.2020.12. 1511 .URL https://www.sciencedirect.com/science/article/pii/ S2405896320321066 
+
+[15] Y. Deng, V. L´ echapp´ e, C. Zhang, E. Moulay, D. Du, F. Plestan, Q.-L. Han, Designing discrete predictor-based controllers for networked control systems with time-varying delays: Application to a visual servo inverted pendulum system, IEEE /CAA Journal of Automatica Sinica 9 (10) (2022) 1763–1777. doi:10.1109/JAS.2021.1004249 .[16] N. Bekiaris-Liberis, D. Bresch-Pietri, N. Petit, Compensation of input-dependent hydraulic input delay for a model of a microfluidic process un-der zweifach–fung e ff ect, Automatica 160 (2024) 111428. doi:https: //doi.org/10.1016/j.automatica.2023.111428 .URL https://www.sciencedirect.com/science/article/pii/ S0005109823005952 
+
+[17] B. Zhou, Truncated Predictor Feedback for Time-Delay Systems, 1st Edi-tion, Engineering, Springer Berlin Heidelberg, Berlin, Heidelberg, 2014, xIX, 480 pages. doi:10.1007/978-3-642-54206-0 .[18] L. Bhan, M. Krstic, Y. Shi, Stabilization of nonlinear systems with un-known delays via delay-adaptive neural operator approximate predictors (2025). arXiv:2509.26443 .URL https://arxiv.org/abs/2509.26443 
+
+[19] N. Bekiaris-Liberis, M. Krsti´ c, Nonlinear Control Under Nonconstant De-lays, SIAM, Philadelphia, 2013. [20] L. Lu, P. Jin, G. Pang, Z. Zhang, G. Karniadakis, Learning non-linear operators via DeepONet based on the universal approxima-tion theorem of operators, Nature Machine Intelligence doi:10.1038/ s42256-021-00302-5 .[21] Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stu-art, A. Anandkumar, Fourier neural operator for parametric partial dif-ferential equations, International Conference on Learning Representa-tions doi:10.48550/arXiv.2010.08895 .[22] L. Bhan, Y. Shi, M. Krstic, Neural operators for bypassing gain and con-trol computations in PDE backstepping, IEEE Transactions on Automatic Control 69 (8) (2024) 5310–5325. doi:10.1109/TAC.2023.3347499 .[23] S. Wang, M. Diagne, M. Krsti´ c, Deep learning of delay-compensated backstepping for reaction–di ff usion pdes, IEEE Transactions on Auto-matic Control 70 (6) (2025) 4209–4216. doi:10.1109/TAC.2025. 3538755 .[24] Y. Zhang, J. Auriol, H. Yu, Operator learning for robust stabilization of linear markov-jumping hyperbolic pdes, Automatica 185 (2026) 112809. 
+
+doi:https://doi.org/10.1016/j.automatica.2025.112809 .URL https://www.sciencedirect.com/science/article/pii/ S0005109825007083 
+
+[25] M. Lamarque, L. Bhan, Y. Shi, M. Krstic, Adaptive neural-operator backstepping control of a benchmark hyperbolic pde, Automatica 177 (2025) 112329. doi:https://doi.org/10.1016/j.automatica. 2025.112329 .URL https://www.sciencedirect.com/science/article/pii/ S0005109825002225 
+
+[26] M. Lamarque, L. Bhan, R. Vazquez, M. Krstic, Gain scheduling with a neural operator for a transport pde with nonlinear recirculation, IEEE Transactions on Automatic Control 70 (8) (2025) 5616–5623. doi:10. 1109/TAC.2025.3549700 .[27] L. Bhan, Y. Shi, M. Krstic, Adaptive control of reaction–di ff usion pdes via neural operator-approximated gain kernels, Systems & Control Letters 195 (2025) 105968. doi:https://doi.org/10.1016/j.sysconle. 2024.105968 .URL https://www.sciencedirect.com/science/article/pii/ S0167691124002561 
+
+[28] L. Bhan, P. Qin, M. Krstic, Y. Shi, Neural operators for predictor feedback control of nonlinear delay systems, in: N. Ozay, L. Balzano, D. Panagou, A. Abate (Eds.), Proceedings of the 7th Annual Learning for Dynamics & Control Conference, Vol. 283 of Proceedings of Machine Learning Re-search, PMLR, 2025, pp. 179–193. URL https://proceedings.mlr.press/v283/bhan25a.html 
+
+[29] F. Bajraktari, L. Bhan, M. Krstic, Y. Shi, Delay compensation of multi-input distinct delay nonlinear systems via neural operators, in: Proceed-ings of the 2026 American Control Conference (ACC), 2026, to appear. [30] K. Lv, J. Wang, Y. Zhang, H. Yu, Neural operators for adaptive con-trol of freeway tra ffi c, Automatica 182 (2025) 112553. doi:https: //doi.org/10.1016/j.automatica.2025.112553 .URL https://www.sciencedirect.com/science/article/pii/ S0005109825004480 
+
+[31] S. Toumi, Neural operators in backstepping control for hyperbolic partial 
+
+10 / Systems & Control Letters 00 (2026) 1–11 11 di ff erential equations (PDEs) in rotary drilling systems, Systems & Con-trol Letters 204 (2025) 106191. doi:https://doi.org/10.1016/j. sysconle.2025.106191 .URL https://www.sciencedirect.com/science/article/pii/ S0167691125001732 
+
+[32] L. Bhan, M. Krstic, Y. Shi, Neural-approximated time-varying prediction horizons for linear predictor feedback under time-varying delays, submit-ted to IEEE 2026 Conference on Decision and Control (2026). [33] M. Krstic, Lyapunov stability of linear predictor feedback for time-varying input delay, IEEE Transactions on Automatic Control 55 (2) (2010) 554–559. doi:10.1109/TAC.2009.2038196 .[34] N. Bekiaris-Liberis, M. Krstic, Compensation of time-varying input and state delays for nonlinear systems, Journal of Dynamic Sys-tems, Measurement, and Control 134 (1) (2011) 011009. arXiv: https://asmedigitalcollection.asme.org/dynamicsystems/ article-pdf/134/1/011009/5783294/011009_1.pdf ,
+
+doi:10.1115/1.4005278 .URL https://doi.org/10.1115/1.4005278 
+
+[35] K. Liu, A. Selivanov, E. Fridman, Survey on time-delay approach to net-worked control, Annual Reviews in Control 48 (2019) 57–79. doi: https://doi.org/10.1016/j.arcontrol.2019.06.005 .URL https://www.sciencedirect.com/science/article/pii/ S1367578819300021 
+
+[36] K. E. Atkinson, W. Han, D. E. Stewart, Numerical Solution of Ordinary Di ff erential Equations, John Wiley & Sons, Hoboken, NJ, 2009. [37] E. Hairer, S. P. Nørsett, G. Wanner, Solving Ordinary Di ff erential Equa-tions I: Nonsti ff Problems, Springer, 1993. [38] N. Kovachki, Z. Li, B. Liu, K. Azizzadenesheli, K. Bhattacharya, A. Stu-art, A. Anandkumar, Neural operator: Learning maps between function spaces, The Journal of Machine Learning Research 24 (2023) 4061–4157. 
+
+doi:10.48550/arXiv.2108.08481 .[39] S. Lanthaler, Z. Li, A. M. Stuart, Nonlocality and nonlinearity implies universality in operator learning (2024). arXiv:2304.13221 .URL https://arxiv.org/abs/2304.13221 
+
+[40] S. Lanthaler, A. M. Stuart, M. Trautner, Discretization error of fourier neural operators (2025). arXiv:2405.02221 .URL https://arxiv.org/abs/2405.02221 
+
+[41] L. Bhan, Code for: Output-Feedback Stabilization of Linear Pre-dictor Feedback Systems under Time-Varying Delays via Neural-Approximated Prediction Horizons, https://github.com/ lukebhan/NeuralApproximatedPredictorHorizons , gitHub repository (2026). [42] I. Loshchilov, F. Hutter, Decoupled weight decay regularization, in: In-ternational Conference on Learning Representations, 2019. URL https://openreview.net/forum?id=Bkg6RiCqY7 
+
+[43] R. L. Burden, J. D. Faires, Numerical Analysis, 10th Edition, Cengage Learning, 2015. 
+
+Appendix A. Proof of Lemma 1 
+
+Proof. Fix any y ∈ R and define ψi(y) D Ψ(Di)( y), i ∈{1, 2} so that 
+
+ϕ−1 
+
+> i
+
+(y) = y + ψi(y) . (A.1) Hence, applying ϕ to both sides, we have that 
+
+y = (y + ψi(y)) − Di(y + ψi(y)) . (A.2) Subtracting yields 
+
+ψ1(y) − ψ2(y) = D1(y + ψ1(y)) − D2(y + ψ2(y)) . (A.3) Adding and subtracting D2(y + ψ1(y)), we have 
+
+|ψ1(y) − ψ2(y)| ≤| D1(y + ψ1(y)) − D2(y + ψ1(y)) | (A.4) 
+
++ |D2(y + ψ1(y)) − D2(y + ψ2(y)) | (A.5) Since ϕ′
+
+> 2
+
+(t) = 1 − D′
+
+> 2
+
+(t) ≥ π∗ 
+
+> 2
+
+> 0, we have D′
+
+> 2
+
+(t) ≤ 1 − π∗
+
+> 2
+
+.Applying the mean value theorem yields 
+
+|D2(y + ψ1(y)) − D2(y + ψ2(y)) |≤ (1 − π∗
+
+> 2
+
+)|ψ1(y) − ψ2(y)|. (A.6) Hence, combining, we obtain 
+
+|ψ1(y) − ψ2(y)| ≤ ∥ D1 − D2∥L∞ + (1 − π∗
+
+> 2
+
+)|ψ1(y) − ψ2(y)| .
+
+(A.7) Rearranging yields the direct result. 11

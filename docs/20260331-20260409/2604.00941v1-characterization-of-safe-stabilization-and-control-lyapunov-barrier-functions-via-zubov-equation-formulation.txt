@@ -1,0 +1,605 @@
+Title: Characterization of Safe Stabilization and Control Lyapunov-Barrier Functions via Zubov Equation Formulation
+
+URL Source: https://arxiv.org/pdf/2604.00941v1
+
+Published Time: Thu, 02 Apr 2026 01:07:03 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Characterization of Safe Stabilization and Control Lyapunov–Barrier Functions via Zubov Equation Formulation 
+
+Yiming Meng and Jun Liu 
+
+Abstract — Design and analysis of stabilizing controllers with safety guarantees for nonlinear systems have received consider-able attention in recent years. Control Lyapunov–barrier func-tions (CLBFs) provide a powerful framework for simultane-ously ensuring stability and safety; however, their construction for nonlinear systems remains challenging. To address this issue, we build on recent advances in PDE-based characterizations of control Lyapunov functions and Lyapunov–barrier functions for autonomous systems, and propose a succinct Zubov–HJB PDE formulation for safe stabilization of nonlinear control-affine systems under a common compatibility assumption. We further show that the viscosity solution of this PDE yields a maximal CLBF, enabling (not necessarily continuous) feedback synthesis with stability and safety guarantees. In light of recent advances in neural-network-based methods for solving Zubov-type PDEs, this theoretical framework also provides a natural interface to emerging numerical approaches. 
+
+Index Terms — Control Lyapunov-barrier function, Zubov equation, safe stabilization, PDE characterization. 
+
+I. I NTRODUCTION 
+
+Control synthesis for stabilization with safety remains a fundamental and challenging problem in modern control theory and has received increasing attention in a variety of safety-critical applications, such as robotic motion planning and trajectory regulation [8], [9], [24]. Control Lyapunov functions (CLFs) provide a powerful tool for analyzing asymptotic controllability and stabiliza-tion, supported by classical converse results and constructive feedback designs for control-affine systems. Similarly, con-trol barrier functions (CBFs) are used to enforce safety con-straints [1]–[3], [12], [18], [23]. To achieve stabilization and safety simultaneously, optimization-based approaches, most notably quadratic programming (QP) frameworks, have been proposed to combine Lyapunov and barrier certificates for the real-time synthesis of control inputs. However, these methods do not always provide guarantees, due to potential conflicts between the stabilization objective and safety constraints. The main challenge lies in ensuring compatibility between the CLF and CBF conditions so that the optimization prob-lem remains feasible. When such compatibility is absent, stability is typically relaxed and treated as a soft constraint. An alternative approach is to merge a CLF and a CBF into a single control Lyapunov–barrier function (CLBF) [17], [27], which serves as a unified Lyapunov-like certificate.   
+
+> This research was supported in part by an NSERC Discover Grant and the Canada Research Chairs program. The authors also acknowledge the Mathematics Faculty Computing Facility (MFCF) at the University of Waterloo for computing support. Both authors are with the Department of Applied Mathematics, Faculty of Mathematics, University of Waterloo, Waterloo, Ontario N2L 3G1, Canada. Emails: yiming.meng@uwaterloo.ca, j.liu@uwaterloo.ca
+
+When such a function is continuously differentiable, Sontag’s universal formula can be applied to construct a stabilizing feedback that also enforces safety [28]. Under the compatibility assumption, recent works have studied the construction of continuously differentiable CLBFs [21], [22], [25], [26]. However, such constructions re-quire several stringent conditions. We summarize a hierarchy of underlying causes that explain why continuous differen-tiability is restrictive. (1) Due to the equivalence between a single smooth CLBF and a continuously differentiable CLF-CBF pair, the existence of a smooth CLBF necessarily requires a continuously differentiable CLF [29]. This, in turn, requires the existence of a continuous stabilizing feedback law, which is generally not guaranteed. (2) Even when a smooth CLF-CBF pair exists, continuous feedback for stabilization with safety may fail to exist in the presence of bounded obstacles. In particular, as shown in [5], topological obstructions can arise. (3) Even when the boundedness of the obstacle is no longer an issue, the geometric structure of the safe set and the topology of the system flow may still prevent the existence of a continuous stabilizing feedback. These observations motivate the need for a more general, possibly nonsmooth, formulation of CLBFs. In addition to the difficulty of ensuring differentiability of CLBFs (or equivalently, a CLF–CBF pair), the challenge of constructing a CLF defined on a nonlocal domain raises further concerns that the resulting feedback may guaran-tee only local stabilization with safety. Motivated by this issue, in [13], a discounted stabilize–avoid value function is proposed, which certifies safety at the set level but does not induce a Lyapunov–barrier feedback law guaranteeing finite-time reachability and safety. The work in [10] adopts a PDE-based formulation but relies on a nontrivial terminal cost, resulting in less convenient boundary conditions and a Hamilton–Jacobi equation that is not readily solvable with existing computational tools. The work in [26] provides an explicit formula for a CLBF; however, it necessarily relies on two functions that solve two HJ-type PDEs. Recent work [19] has developed a Zubov PDE formulation for constructing a unified Lyapunov–barrier function (for autonomous systems) by solving a Dirichlet boundary value problem associated with the Zubov equation, defined via a proper indicator function of the obstacle set. The resulting Lyapunov–barrier function is defined on the maximal domain where the system admits stabilization under safety constraints. Moreover, it has been shown to be a maximal Lyapunov function for a suitably modified dynamical system, which enables the use of existing tools, such as [15], [16], to learn near-
+
+> arXiv:2604.00941v1 [math.DS] 1 Apr 2026
+
+maximal Lyapunov–barrier functions. Inspired by this idea, we propose a Zubov–HJB formulation for control-affine systems that yields a (not necessarily smooth) CLBF. The construction of CLFs and CBFs is reduced to a single PDE, whose solvability is equivalent to the existence of a continuous CLBF and whose solution behaves as a CLF on the safe null-controllability domain. A recent renaissance in Hamilton–Jacobi (HJ) type PDE methods has provided a promising alternative for construct-ing Lyapunov and control Lyapunov functions [6], [11], [14], [20]. In particular, [14] has investigated Zubov-type equations for control systems using physics-informed neural networks (PINNs) to compute CLFs. This approach enables formal verification via SMT solvers and has been shown to outperform traditional SOS and rational CLF methods, while explicitly incorporating the Zubov-HJB PDE structure. In this view, the proposed framework also serves as an important interface with emerging numerical methods. 
+
+Notation: We list some notation used in this paper. For 
+
+x ∈ Rn and r ≥ 0, we denote the ball of radius r centered at x by B(x; r) = {y ∈ Rn : ∥y − x∥ ≤ r}, where ∥·∥ is the Euclidean norm. For a closed set A ⊂ Rn and x ∈ Rn, we denote the distance from x to A by ∥x∥A = inf y∈A ∥x − y∥.For a set A ⊆ Rn, A denotes its closure. For two sets A, B ∈
+
+Rn, we use A \ B to denote the set difference defined by 
+
+A \ B = {x : x ∈ A, x ̸ ∈ B}. We also write a ≳ b if there exists a C > 0 (independent of a and b) such that a ≥ Cb .II. P RELIMINARIES 
+
+A. Dynamical Systems and Stabilization-with-Safety 
+
+Consider a continuous-time dynamical system 
+
+˙x = f (x) + g(x)u (1) where f : Rn → Rn and g : Rn → Rn×m are assumed to be locally Lipschitz; x ∈ Rn is the state, u ∈ Rm is the control input. For simplicity, in the context of controlled trajectory, we overload the notation u as the control signal, i.e. u :[0 , ∞) → Rm; the unique solution starting from x0 under the control u is denoted by ϕ(t; x0, u ). We may also write the solution as ϕ(t) or ϕ if the omitted arguments are not emphasized. We are interested in the case where the maximal interval of existence is [0 , ∞) for admissible controls u ∈U := L∞([0 , ∞); Rm).Without loss of generality, we also assume f (0) = 0 .Denote X0 ⊆ Rn as the set of initial conditions and U ⊆ Rn
+
+as the obstacle. Throughout the paper, we also denote S =
+
+U c for simplicity. We then consider safe stabilization w.r.t. the origin as follows. 
+
+Definition 1 (Stabilization-with-safety guarantee): We say that (1) satisfies a stability-with-safety specification 
+
+(X0, U ) if, for all x ∈ X 0, there exists an admissible control signal u ∈ U such that lim t→∞ ∥ϕ(t; x, u )∥ → 0 and 
+
+ϕ(t; x, u ) /∈ U for all t ≥ 0. □
+
+Analogously to the domain of null-controllability, which is defined as 
+
+D0 := 
+
+n
+
+x ∈ Rn : ∃u ∈ U s.t. lim  
+
+> t→∞
+
+∥ϕ(t; x, u )∥ → 0
+
+o
+
+,
+
+we define the domain of null-controllability with safety constraint as 
+
+D := 
+
+n
+
+x ∈ Rn : ∃u ∈ U s.t. lim  
+
+> t→∞
+
+∥ϕ(t; x, u )∥ → 0
+
+and ϕ(t; x, u ) /∈ U ∀t ≥ 0} .
+
+To this end, we assume local stabilizability of (1). 
+
+Assumption 1: We assume that there exists an open ball 
+
+B(0; r), a constant k > 0, and β ∈ KL such that for any x ∈
+
+B(0; r) there exists u ∈ U with ∥u∥∞ ≤ k, and ∥ϕ(t; x, u ) ≤
+
+β(∥x∥, t ) for all t ≥ 0. □
+
+For future reference, we make the following assumptions on S to facilitate the analysis. 
+
+Assumption 2: We assume 1) S = {x ∈ Rn : h(x) < 1} with some locally Lipschitz continuous function h;2) S is open and connected; 3) B(0; r) ⊆ S ⊆ D0, where B(0; r) is the local stabilization region as required in Assumption 1. □
+
+We also define the exit time from S, or equivalently entry time in U , as 
+
+τ (x, u ) = inf {t ≥ 0 : ϕ(t; x, u ) ∈ U } , (2) with the convention that inf ∅ = + ∞. A closely related notion of weak invariance is defined as follows: 
+
+Ds := {x ∈ Rn : ∃u ∈ U s.t. τ (x, u ) = ∞} . (3) 
+
+Remark 1: Since, by definition, D ⊆ D 0 ∩ D s, and Ds ⊆
+
+S, it follows that D ⊆ D 0 ∩ S. To study the behavior on 
+
+D, the only relevant part is D0 ∩ S. The assumption that 
+
+S ⊆ D is adopted for convenience, since in any case we do not consider the regions D0 \ S or S \ D 0. We would like to clarify that the common assumptions in [22], [25], [26] all explicitly or implicitly require S ⊆ D 0. □
+
+B. Nonsmooth Value Functions for Asymptotic Controllabil-ity and Controlled Forward Invariance 
+
+Continuously differentiable CLFs and CBFs provide a classical framework for stabilization and safety, with nec-essary and sufficient existence conditions. Their combina-tion into a CLBF is appealing for enforcing stabilization with safety. However, differentiability imposes restrictive requirements, including continuous feedback and geometric or topological conditions on the safe set, which often fail in practice. In contrast, nonsmooth CLFs and CBFs can charac-terize asymptotic controllability and safety while permitting discontinuous feedback. We introduce these notions using the concept of the proximal subgradient, defined below. 
+
+Definition 2: For any φ ∈ C (Rn) and x ∈ dom( φ), a vector ζ ∈ Rn is called a proximal subgradient of φ at x if there exist constants σ, η > 0 such that 
+
+φ(y) ≥ φ(x) + ⟨ζ, y − x⟩ − σ∥y − x∥2, ∀y ∈ B(x; η). (4) The set of all proximal subgradients of φ at x is denoted by 
+
+∂P φ(x). □
+
+Converse theorems state that the system (1) is asymptoti-cally controllable if and only if there exists a (not necessarily smooth) CLF V ∈ C (D0) such that V is positive definite on 
+
+D, and there exist a positive definite continuous function w
+
+and a σ ∈ K ∞ such that for all x ∈ D 0,
+
+inf 
+
+> ∥u∥≤ σ(∥x∥)
+
+⟨ζ, f (x) + g(x)u⟩ ≤ − w(x), ∀ζ ∈ ∂P V (x). (5) Similar to the generalized notion of CLFs above, we now present a nonsmooth version of CBFs. Let h be the function defining S (as in Assumption 2). Then h is called a CBF for system (1) w.r.t S if there exists a locally Lipschitz class 
+
+K∞ function α such that for all x ∈ S,
+
+inf 
+
+> u∈Rm
+
+⟨ζ, f (x) + g(x)u⟩ ≤ α(1 − h(x)) , ∀ζ ∈ ∂P h(x). (6) 
+
+Remark 2: Based on the connections between proximal subgradients and other generalized derivatives for character-izing nonsmooth regularity [7], there are several equivalent formulations of nonsmooth CLFs and CBFs. For instance, one may use the lower right Dini directional derivative to replace the left-hand side of (5) and (6) (e.g., the com-plete CLF concept in [5]), or adopt subdifferential and viscosity supersolution formulations (e.g., Eq. (1.2) in [6]). We adopt proximal conditions, as they provide a natural geometric perspective at nondifferentiable points, are linear in f (x) + g(x)u, and play an important role in constructing discontinuous feedback [29]. Note that all of the above formulations reduce to the classical notion when the value functions are differentiable. □
+
+C. Problem Formulation 
+
+We aim to: (i) Characterize a CLF V defined on the entire domain D via a Lyapunov-like equation formulation; (ii) Construct a CLBF W such that W is positive definite and satisfies 1) inf u∈Rm ⟨ζ, f (x) + g(x)u⟩ < 0 for all x ∈ D \ { 0} and for all ζ ∈ ∂P W (x);2) W (x) < 1 for all x ∈ D and W ≥ 1 for all x ∈ U .III. F UNDAMENTAL PROPERTIES OF DOMAIN OF 
+
+NULL -CONTROLLABILITY WITH SAFETY CONSTRAINT 
+
+Before characterizing stabilization-with-safety guarantees and deriving the converse Lyapunov–barrier function, we use this short section to present basic properties of D. Recall the related definitions and assumptions in Section II-A. 
+
+Proposition 1: Under Assumption 1 and 2, D is open and connected. 
+
+Proof: By Assumption 1, there exists some r > 0
+
+such that B(0; r) ⊆ D, and every point in B(0; r) can be steered to the origin. We aim to show that, for any 
+
+x ∈ D , there exists ρ > 0 such that B(x; ρ) ⊂ D . Take any x ∈ D . By definition, there exists ux ∈ U such that 
+
+ϕ(t; x, u x) ∈ S for all t ≥ 0, and there exists a Tx ∈
+
+(0 , ∞) such that ϕ(Tx; x, u x) ∈ B(0; r/ 2) . Note that the set 
+
+{ϕ(t; x, u x), 0 ≤ t ≤ Tx} is compact, and there exists δx > 0
+
+such that ∥ϕ(t; x, u x)∥U ≥ δx for all t ∈ [0 , T x].Now, let uz ∈ U be such that uz (t) = ux(t) for all 
+
+t ∈ [0 , T x]. By the continuity of the trajectory, there exists a ρ > 0 such that whenever z ∈ B(x; ρ), ∥ϕ(t; x, u x) −
+
+ϕ(t; z, u z )∥ < min {δx/2, r/ 2} for all t ∈ [0 , T x]. We then have ∥ϕ(t; z, u z )∥U ≥ ∥ ϕ(t; x, u x)∥U − ∥ ϕ(t; x, u x) −
+
+ϕ(t; z, u z )∥ ≥ δx/2 for all t ∈ [0 , T x]. On the other hand, we notice that ∥ϕ(Tx; x, u x) − ϕ(Tx; z, u z )∥ < r/ 2, which implies ϕ(Tx; z, u z ) ∈ B(0; r), and therefore z ∈ D . The openness of D thus follows. Since B(0; r) ⊆ D is connected and every x ∈ D can be joined to B(0; r) by a trajectory lying entirely in D, it follows that D is path-connected, and hence connected. 
+
+Proposition 2: For any y ∈ ∂D, it must fall into one of the following three cases: (1) y ∈ ∂D0; (2) y ∈ ∂Ds ∩ D 0;(3) y ∈ (Ds ∩ D 0) \ D .
+
+Proof: It is clear that D ⊆ D 0 ∩ D s. Therefore, for any point y ∈ ∂D, it must be that either (1) y / ∈ D 0, or (2) 
+
+y ∈ D 0 \ D s, or (3) y ∈ (D0 ∩ D s) \ D . Then (3) in the statement follows. For (1), we have B(y; r) ∩ D̸ = ∅ for all 
+
+r > 0. Then, B(y; r) ∩ D 0̸ = ∅ for all r > 0 and y ∈ D 0.Since D0 is open [6], we have y ∈ D 0 \ D 0 = ∂D0. For (2), it falls in a similar manner as (1). Since y ∈ ∂D and y / ∈ D s,every neighborhood of y intersects with Ds and Dcs, which implies y ∈ ∂Ds. Together with y ∈ D 0, we conclude that 
+
+y ∈ D 0 ∩ ∂Ds.Note that for (3) of Proposition 2, stabilization and safety are individually achievable but never simultaneously by the same control. IV. C ONVERSE LYAPUNOV -B ARRIER FUNCTION FOR 
+
+STABILITY WITH SAFETY GUARANTEES 
+
+In this section, we derive a set of PDE-based converse CLBF theorems for (1), which characterizes a stabilization-with-safety guarantee specification (X0, U ) for some unsafe set U ⊂ Rn.
+
+A. Key Concepts and Assumptions 
+
+We first impose a restriction on Ds and D0 to eliminate geometric and dynamical obstructions to safe convergence to the origin. 
+
+Assumption 3: Let v : D0 → R be a CLF as defined in Section II-B. We assume that Γ( x)̸ = ∅ for every x ∈{x : 1 − ε ≤ h(x) < 1} for some ε > 0, where h is as in Assumption 2, Γ( x) is defined in (8), and wϵ in (8) is continuous and positive. □
+
+Assumption 3 is weaker than that in [21], [25] in terms of the region where the inequalities hold, and the safe set in our paper is open, with a more general nonsmooth formulation. Another version of the compatibility assumption can be found in [26], which considers a compact safe set. We have the following immediate result. 
+
+Corollary 1: Given Assumption 3, for any y ∈ ∂D, y ∈
+
+∂D0 or y ∈ ∂S ∩ D 0. □
+
+Proof: Recall Proposition 2. It can be verified that 
+
+Ds ⊆ S ⊆ D 0. Moreover, by the properties established in the Appendix, the compatibility condition eliminates the possibility that stabilization and safety are individually achievable but not simultaneously achievable by the same control. Hence, y / ∈ (Ds ∩D 0)\D . Additionally, Assumption 3 also implies that Ds ∩ D 0 = S ∩ D 0, and since D0 is open, 
+
+y ∈ ∂Ds ∩ D 0 =⇒ y ∈ ∂S ∩ D 0.The compatibility assumption is standard in the current literature and is sufficient for the following analysis of stabilization with safety. It is also a reasonable assumption in the sense that, to the best of the authors’ knowledge, although its necessity remains unproven, no counterexample has been constructed to date. We therefore adopt this assumption. To proceed, we introduce the following controlled version of a proper indicator defined on an open domain, which generalizes the idea of a radially unbounded function on Rn.
+
+Definition 3: Let {0} be contained in an open set D ⊆
+
+Rn. A continuous function η : D × Rm → R≥0 is said to be a proper controlled indicator for the origin on D if the following two conditions hold: (1) η(x, u ) = 0 if and only if x = 0 and u = 0 ; (2) inf u∈Rm η(xm, u ) → ∞ for any sequence {xm} in D such that either xm → p ∈ ∂D or 
+
+∥xm∥ → ∞ as m → ∞ ; (3) for any compact set K ⊂ D
+
+and any x ∈ K, if ∥u∥ → ∞ , then η(x, u ) → ∞ . □
+
+Similar to [19], the indicator function that serves as a running cost must be carefully designed so that the resulting value function characterizes the set D. We impose the following assumptions. 
+
+Assumption 4: Given a proper indicator η : S × Rm →
+
+R for {0} and S, we denote ω(x) := inf u∈Rm η(x, u ) and assume that 1) For any δ > 0, there exists ηδ > 0 such that ω(x) ≥ ηδ
+
+for all x ∈ S with ∥x∥ ≥ δ.2) η(x, u ) ≲ (α−12 (∥x∥)) b for all (x, u ) ∈ B(0; r) ×
+
+B(0; k) for some b > 0, where r and k are as in Assumption 1, and α1, α 2 ∈ K satisfy β(r, t ) ≤
+
+α2(α1(r)e−t).3) There exists a continuous function m : S × Rm →
+
+R≥0 and a compact set K ⊂ S × Rm, such that 
+
+m(x, u ) ≤ CK for all (x, u ) ∈ K and some CK > 0,
+
+η(x, u ) ≥ m(x, u ) for all (x, u ) ∈ (S × Rm) \ K, and 
+
+∥ϕ(T ; x, u ) − x∥ ≤ R T 
+
+> 0
+
+m(ϕ(s; x, u ), u (s)) ds for all 
+
+x ∈ S, u ∈ U , T ≥ 0.4) There exists an a-neighborhood of ∂S and a function 
+
+ψ(x) : R+ → R+, such that ψ is non-increasing, 
+
+ψ(a) → ∞ as a → 0, ω(x) ≳ ψ(∥x∥∂Ds ), and R a 
+
+> 0
+
+ψ(x)dx = ∞. □
+
+Items 1)–3) of Assumption 4 are analogous to those im-posed in [6] [16], except for a different choice of η(x, u ) and a more general formulation. These conditions are imposed to regulate the growth rate near the origin and at large. Item 4) of Assumption 4 is introduced to play a role similar to that in [19, Assumption 2-2)]. It ensures that the integral, with η
+
+as the integrand, diverges in a neighborhood of ∂S , where the integrand itself becomes unbounded, so that the value remains consistent with the terminal cost q as trajectories approach the boundary of S.
+
+B. Maximal Converse Lyapunov-Barrier Function for Stability-with-Safety Specification 
+
+This subsection explicitly construct value functions, which serve as maximal CLF on D and CLBF for (X0, U ).Define q(x) = q0(x) for x ∈ S and q(x) = ∞ for x ∈
+
+∂S ∪(Rn \S), where q0 ∈ C (S) and q0(x) → ∞ as x → ∂S .Consider a proper indicator η : S × Rm → R on S. For 
+
+u ∈ U , we further define 
+
+V (x) = inf  
+
+> u∈U
+
+J(x, u ), (7) where J(x, u ) is defined in (9). 
+
+Lemma 1: For all x ∈ Rn and t ≥ 0, the Dynamic Programming Principle for V in (10) holds. 
+
+Proof: For simplicity, we denote Ft(x, u ) := 
+
+R t∧τ (x,u )0 η(ϕ(s; x, u ), u (s)) ds + V (ϕ(t ∧ τ (x, u ); x, u )) and 
+
+y = y(t, x, u ) := ϕ(t ∧ τ (x, u ); x, u ). We aim to show 
+
+V (x) = inf u∈U Ft(x, u ) for any x ∈ Rn. For any u, v ∈ U ,denote u′(s) = u(s) for s ∈ [0 , t ] and u′(s) = v(s − t) for 
+
+s ∈ (t, ∞) and u′′ (s) := u(t + s) for all s ≥ 0.Fix any u ∈ U . Suppose τ (x, u ) ≥ t. which implies 
+
+τ (x, u ′) = t + τ (y, v ) and ϕ(t + s; x, u ′) = ϕ(s; y, v ) for all s ≥ 0. Then, J(x, u ′) = R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds +
+
+R τ (y,v )0 η(ϕ(s; y, v ), v (s)) ds + q(ϕ(τ (y, v ); y, v )) when 
+
+τ (y, v ) < ∞, and J(x, u ′) = R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds +R ∞ 
+
+> 0
+
+η(ϕ(s; y, v ), v (s)) ds when τ (y, v ) = ∞. In either case, we have J(x, u ′) = R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds + J(y, v ).Therefore, V (x) = inf w∈U J(x, w ) ≤ inf v∈U J(x, u ′) = R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds + V (y) = Ft(x, u ). Since u ∈ U is arbitrary, we have V (x) ≤ inf u∈U Ft(x, u ). For τ (x, u ) < t ,it reduces to Ft(x, u ) = J(x, u ), in which case we also have V (x) ≤ inf u∈U Ft(x, u ).Now we show the inverse side. Suppose τ (x, u ) ≥ t.Then, ϕ(t + s; x, u ) = ϕ(s; y, u ′′ ) for all s ≥ 0 and 
+
+τ (y, u ′′ ) + t = τ (x, u ). Similar to above, in either case where τ (x, u ) < ∞ or τ (x, u ) = ∞, we have J(x, u ) = R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds +J(y, u ′′ ). It follows that J(x, u ) ≥
+
+R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds + V (y) = Ft(x, u ). Then, for any 
+
+ε > 0, there exists some uε ∈ U and V (x) + ε ≥
+
+J(x, u ε) ≥ Ft(x, u ε) ≥ inf u∈U Ft(x, u ). Sending ε ↓ 0, we have V (x) ≥ inf u∈U Ft(x, u ). For τ (x, u ) < t , it reduces to 
+
+Ft(x, u ε) = J(x, u ε). Following the same argument, we still have V (x) ≥ inf u∈U Ft(x, u ).The following theorem establishes key properties of V .
+
+Theorem 1: Under Assumption 1-4, the function V :
+
+Rn → R ∪ { +∞} defined by (7) satisfies the following properties: 1) V (x) < ∞ if and only if x ∈ D ;2) V (x) → ∞ as x → ∂D or ∥x∥ → ∞ ;3) V is positive definite on D;4) V is continuous on D.
+
+Proof: (1) Pick a point x ∈ D. Then there exists a u ∈ U and a t ∈ (0 , ∞) such that τ (x, u ) = ∞
+
+and ϕ(t; x, u ) ∈ B(0; r) as stated in Assumption 1. By Lemma 1, V (x) ≤ R t 
+
+> 0
+
+η(ϕ(s; x, u ), u (s)) ds + V (ϕ(t; x, u )) .The finiteness of both terms follows from the argument in [6, Proposition 3.3] under Assumption 4-2). To show the converse, we suppose x /∈ D and denote τr (x, u ) = inf {t ≥ 0 : ϕ(t; x, u ) ∈ B(0; r)}, where the B(0; r) is as stated in Assumption 1. Then, for all u ∈ U , either τ (x, u ) <Γ( x) = {u ∈ Rm : ⟨ζ, f (x) + g(x)u⟩ < −wε(x) ∀ζ ∈ ∂P v(x) and ⟨ξ, f (x) + g(x)u⟩ ≤ α(1 − h(x)) ∀ξ ∈ ∂P h(x)} (8) 
+
+J(x, u ) = 
+
+Z τ (x,u )0
+
+η(ϕ(t; x, u ), u (t)) dt + q(ϕ(τ (x, u ); x, u )) , τ (x, u ) < ∞,
+
+Z ∞
+
+> 0
+
+η(ϕ(t; x, u ), u (t)) dt, τ (x, u ) = ∞,
+
+(9) 
+
+V (x) = inf 
+
+> u∈U
+
+(Z t∧τ (x,u )0
+
+η(ϕ(s; x, u ), u (s)) ds + V (ϕ(t ∧ τ (x, u ); x, u )) 
+
+)
+
+. (10) 
+
+− sup 
+
+> u∈Rm
+
+{DW (x)( f (x) + g(x)u) + (1 − W (x)) φ(W (x)) η(x, u )} = 0 (11) 
+
+∞ or τr (x, u ) = ∞. Both cases imply J(x, u ) = ∞, the former by definition and the latter by the same argument as in [6, Proposition 3.3]. Therefore, V (x) = ∞, which leads to a contradiction. (2) By Corollary 2, for any y ∈ ∂D, we have either y ∈
+
+∂D0 or y ∈ ∂S ∩D 0. Consider {xm} ⊂ D . The cases xm →∞ and xm → y ∈ ∂D0 follow the same proof as in [6, Proposition 3.6]. It suffices to show the case where xm →
+
+y ∈ ∂S ∩ D 0 ⊆ ∂D.Recall that ω(x) := inf u∈Rm η(x, u ), as defined in As-sumption 4. By Lemma 1, for sufficiently large m, pick any 
+
+ε > 0, there exists um such that, for any T > 0,
+
+V (xm) + ε
+
+≥
+
+Z T
+
+> 0
+
+η(ϕ(s; xm, u m), u m(s)) ds + V (ϕ(T ; xm, u m)) 
+
+≥
+
+Z T
+
+> 0
+
+η(ϕ(s; xm, u m), u m(s)) ds 
+
+≥
+
+Z T
+
+> 0
+
+ω(ϕ(s; xm, u m)) ds. 
+
+Let a be given as in (4) of Assumption 4. For any t ∈ (0 , t δ )
+
+for some sufficiently small tδ > 0, we have 
+
+∥ϕ(t; xm, u m)∥∂S 
+
+≤ ∥ ϕ(t; xm, u m) − ϕ(τ (y, u m); xm, u m)∥
+
++ ∥ϕ(τ (y, u m); xm, u m) − ϕ(τ (y, u m); y, u m)∥≤ ∥ f ∥ t + εm
+
+≤ ∥ f ∥ tδ + εm ≤ a, 
+
+(12) where εm := ∥xm − y∥ → 0, and the second inequality follows directly by the locally Lipschitz continuity of f and that sup u∈U τ (y, u ) = 0 . It follows that 
+
+V (xm) ≥
+
+Z δt
+
+> 0
+
+ω(ϕ(s; xm)) ds 
+
+≳
+
+Z δt
+
+> 0
+
+ψ(∥f ∥s) + εm)ds 
+
+≳
+
+Z εm+∥f ∥δt
+
+> εm
+
+ψ(x)dx 
+
+and lim inf m→∞ V (xm) ≳ R ∥f ∥δt 
+
+> 0
+
+ψ(x)dx . Hence, 
+
+V (xm) → ∞ by Assumption 4-4). (3) It is clear that V (0) = 0 . To show the converse, we assume x̸ = 0 but V (x) = 0 . Then, there exists {uk} ⊂ U such that J(x, u k) → 0 as k → ∞ . Let δ = ∥x∥/2,and define tk := inf {t ≥ 0 : ∥ϕ(t; x, u k)∥ ≤ δ}. By (1) of Assumption 4, J(x, u k) ≥ R tk 
+
+> 0
+
+η(ϕ(s; x, u k), u k(s)) ds ≥
+
+ηctk, which implies tk → 0. Now let K ⊂ S × Rm be as in (3) of Assumption 4, consider Ek := {t ∈ [0 , t k] : 
+
+ϕ(t; x, u k), u k(t)) ∈ K. It follows that 
+
+J(x, u k) ≥
+
+Z 
+
+> [0 ,t k]\Ek
+
+η(ϕ(s; x, u k), u k(s)) ds 
+
+≥
+
+Z 
+
+> [0 ,t k]\Ek
+
+m(ϕ(s; x, u k), u k(s)) ds 
+
+≥ ∥ ϕ(tk; x, u k) − x∥ − 
+
+Z
+
+> Ek
+
+m(ϕ(s; x, u k), u k(s)) ds 
+
+≥ ∥ x∥ − ∥ ϕ(tk; x, u k)∥ − CK tk
+
+≥ δ − CK tk.
+
+Therefore, lim inf k→∞ J(x, u k) ≥ δ > 0, which contradicts 
+
+J(x, u k) → 0. The above shows V (x) > 0 for x̸ = 0 . The proof is complete. (4) The proof follows the same procedure as in [6]. We omit it due to repetition. Note that, for any xm → ∂D such that V (xm) ≤ C for all m ∈ N, one has J(xm, u m) ≤ V (xk) + ε ≤ C + ε.However, by boundedness of {ϕ(t; xm, u m), t ≥ 0, m ∈ N}
+
+and the uniform boundedness of R t 
+
+> 0
+
+∥um(t)∥dt in m, one has ∥ϕ(t; xm, u m) − ϕ(t; y, u m)∥ < δ for any δ, t > 0 and sufficiently large m, which eventually implies that y ∈ D 0.This means that the only case in which V (xm) does not diverge is when xm → y ∈ D 0. This is why condition (4) in Assumption 4 is necessarily required, to impose an additional rate of divergence near ∂S .
+
+Example 1: We show a counterexample where the inte-grand diverges near the boundary but V (xm)̸ → ∞ for 
+
+xm → y ∈ ∂D. Consider ˙x = −x+u. Let u′ ≡ 0. Following the same argument as in [19, Example 2], onn can show that J(xm, u ′) is uniformly bounded in m. Consequently, 
+
+V (xm) ≤ J(xm, u ′) is uniformly bounded. □
+
+Remark 3: To obtain the second inequality from the first inequality in (12), it only needs to assume that 
+
+sup m τ (y, u m) < ∞. However, the compatibility assumption directly implies sup m τ (y, u m) = 0, which is somewhat stronger than necessary, yet a weaker version of the assump-tion is nontrivial in the literature to the best of the authors’ knowledge. □
+
+Based on Theorem 1, and by similar reasoning as in [16, Section. 3], one can also show that V in (9) is the unique viscosity solution to the HJB 
+
+− sup 
+
+> u∈Rm
+
+{DV (x)( f (x) + g(x)u) − η(x, u )} = 0 (13) with V (0) = 0 . As a direct consequence, such V is also a viscosity supersolution on D satisfying (5). We omit the proof due to similarity. Considering β : [0 , ∞) → R satisfying ˙β = (1 − β)φ(β)
+
+with β(0) = 0 , where φ(s) > 0 for all s ≥ 0, there exists a nonempty interval I such that the function G : I → R,defined by s 7 → (1 − s)φ(s), is monotonically decreasing on I. It can be verified that β is strictly increasing and that 
+
+β(s) → 1 as s → ∞ . We further define W (x) = β(V (x)) 
+
+for all x ∈ D and W (x) = 1 otherwise. Then, by [4, Chapter II, Proposition 2.5], W is the unique viscosity solution to the Zubov equation (11) in D, with 
+
+W (0) = 0 . By the construction of β, W (x) → 1 as x →
+
+∂D. On the other hand, W (x) = 1 for all x ∈ D s \ D 
+
+is a trivial solution to (11). Following a similar procedure as in [6, Section 4], W is the unique viscosity solution to (11). Additionally, by virtue of Remark 2, such W readily qualifies as a CLBF as defined in Section II-C via proximal gradients. Such V and W , once obtained, can be used to design (not necessarily continuous) feedback controls using the same procedure as for CLFs [28], [29]. 
+
+Remark 4: One can consider a special form of η(x, u ) = 
+
+θ xTQx +uTRu  
+
+> (1 −h(x)) k
+
+for θ, k > 0 and positive definitematrices Q and 
+
+R, to ensure η a valid proper indicator. In this case, one can let γ(x) = (1 −h(x)) k 
+
+> θ
+
+, and set ˜f (x) = γ(x)f (x)and ˜g(x) = 
+
+γ(x)g(x). One can verify that ( ˜f , ˜g) and (f, g ) are topo-logically equivalent on D [6], [19]. Then V also solves for the corresponding HJB − sup u∈Rm {DV (x)( ˜f (x)+˜ g(x)u)−
+
+xTQx − uTRu } = 0 and W can be defined correspondingly (with the same regular cost xTQx − uTRu }) as the solution of the Zubov equation associated with the system ( ˜f , ˜g).Multiple-obstacle settings can also be handled using a similar idea as in [19, Section IV]. □
+
+C. Discussion 
+
+In [26], the authors provide a succinct formula for ˆV (x) =   
+
+> v(x)
+> v(ϕ(T(x); x))
+
+, regardless of differentiability, constructed from a CLF v : D0 → R and the corresponding closed-loop control. Here, T (x) denotes the first hitting time of the boundary of the safe set for the closed-loop system. One can show that such a ˆV is equivalent to the construction of 
+
+V in this paper: both approaches quantify D by tuning the level sets of an existing CLF on D0, although in different ways. However, the given formula satisfies DV (x)( f (x) + 
+
+g(x)u) = −ω1(x) for some positive definite continuous function ω1 with Dω 1(x) → 0, but also requires a second PDE to characterize T (x), which is impractical. In contrast, this work directly modifies the cost function in the associated optimal control problem by penalizing trajectories and con-trols that leave the safe set, leading to a single PDE whose solution serves as a CLBF, but at the cost of lacking a general explicit representation of the solution. V. C ONCLUSION 
+
+In this work, we developed a Zubov–HJB PDE framework for constructing control Lyapunov–barrier functions on the domain of null-controllability with safety constraints. The proposed formulation yields a maximal CLBF characterized as the viscosity solution of a single PDE, enabling feedback synthesis with stability and safety guarantees without requir-ing differentiability. The construction relies on a compati-bility assumption that ensures well-posedness and desirable boundary behavior. While this assumption is standard and no constructive counterexample is known, its necessity remains open. Future work will focus on weakening this condition by further investigating the interaction between system flows and the boundary of the safe set, as well as developing efficient numerical methods for solving the proposed PDE. REFERENCES [1] Ayush Agrawal and Koushil Sreenath. Discrete control barrier func-tions for safety-critical control of discrete systems with application to bipedal robot navigation. In Proc. of RSS , 2017. [2] Aaron D Ames, Samuel Coogan, Magnus Egerstedt, Gennaro No-tomista, Koushil Sreenath, and Paulo Tabuada. Control barrier functions: Theory and applications. In 2019 18th European control conference (ECC) , pages 3420–3431. Ieee, 2019. [3] Aaron D Ames, Xiangru Xu, Jessy W Grizzle, and Paulo Tabuada. Control barrier function based quadratic programs for safety critical systems. IEEE Transactions on Automatic Control , 62(8):3861–3876, 2016. [4] Martino Bardi, Italo Capuzzo Dolcetta, et al. Optimal Control and Viscosity Solutions of Hamilton-Jacobi-Bellman Equations , volume 12. Springer, 1997. [5] Philipp Braun and Christopher M Kellett. On (the existence of) control lyapunov barrier functions. 2017. [6] Fabio Camilli, Lars Gr¨ une, and Fabian Wirth. Control Lyapunov func-tions and zubov’s method. SIAM Journal on Control and Optimization ,47(1):301–326, 2008. [7] Frank H Clarke, Yu S Ledyaev, Ronald J Stern, and RR Wolenski.                                    
+
+> Nonsmooth analysis and control theory . Springer, 1998. [8] Timm Faulwasser, Benjamin Kern, and Rolf Findeisen. Model pre-dictive path-following for constrained nonlinear systems. In Proc. of CDC , pages 8642–8647. IEEE, 2009. [9] Laurent Fribourg and Romain Soulat. Control of switching systems by invariance analysis: applcation to power electronics .John Wiley & Sons, 2013. [10] Lars Gr¨ une and Athena Picarelli. Zubov’s equation for state-constrained perturbed nonlinear systems. Nonlinear Differential Equa-tions and Applications NoDEA , 22:1765–1799, 2015. [11] Lars Gr¨ une and Mario Sperl. Examples for separable control Lya-punov functions and their neural network approximation. IFAC-PapersOnLine , 56(1):19–24, 2023. [12] Shao-Chen Hsu, Xiangru Xu, and Aaron D Ames. Control barrier function based quadratic programs with application to bipedal robotic walking. In Proc. of ACC , pages 4542–4548. IEEE, 2015. [13] Boyang Li, Zheng Gong, and Sylvia Herbert. Solving reach-and stabilize-avoid problems using discounted reachability. arXiv preprint arXiv:2505.09067 , 2025. [14] Jun Liu, Maxwell Fitzsimmons, Ruikun Zhou, and Yiming Meng. Formally verified physics-informed neural control lyapunov functions. In 2025 American Control Conference (ACC) ,pages 1347–1354. IEEE, 2025. [15] Jun Liu, Yiming Meng, Maxwell Fitzsimmons, and Ruikun Zhou. LyZNet: A lightweight Python tool for learning and verifying neural Lyapunov functions and regions of attraction. In Proc. of HSCC , 2024.
+
+[16] Jun Liu, Yiming Meng, Maxwell Fitzsimmons, and Ruikun Zhou. Physics-informed neural network Lyapunov functions: PDE charac-terization, learning, and verification. Automatica , 175:112193, 2025. [17] Yiming Meng, Yinan Li, Maxwell Fitzsimmons, and Jun Liu. Smooth converse lyapunov-barrier theorems for asymptotic stability with safety constraints and reach-avoid-stay specifications. Automatica ,144:110478, 2022. [18] Yiming Meng, Yinan Li, and Jun Liu. Control of nonlinear systems with reach-avoid-stay specifications: A lyapunov-barrier approach with an application to the moore-greizer model. In 2021 American Control Conference (ACC) , 2021. [19] Yiming Meng and Jun Liu. Towards learning and verifying maximal lyapunov-barrier functions with a zubov pde formulation. In 2026 European control conference (ECC) . IEEE. [20] Yiming Meng, Ruikun Zhou, Amartya Mukherjee, Maxwell Fitzsim-mons, Christopher Song, and Jun Liu. Physics-informed neural network policy iteration: Algorithms, convergence, and verification. In Proc. of Forty-first International Conference on Machine Learning (ICML) , pages 35378–35403, 2024. [21] Pol Mestres and Jorge Cort´ es. Optimization-based safe stabilizing feedback with guaranteed region of attraction. IEEE Control Systems Letters , 7:367–372, 2022. [22] Pol Mestres and Jorge Cort´ es. Converse theorems for certificates of safety and stability. IEEE Transactions on Automatic Control , 2025. [23] Quan Nguyen, Xingye Da, JW Grizzle, and Koushil Sreenath. Dy-namic walking on stepping stones with gait library and control barrier functions. In Proc. of WAFR , pages 384–399. Springer, 2020. [24] Petter Nilsson, Necmiye Ozay, and Jun Liu. Augmented finite transition systems as abstractions for control synthesis. Discrete Event Dynamic Systems , 27(2):301–340, 2017. [25] Pio Ong and Jorge Cort´ es. Universal formula for smooth safe stabilization. In 2019 IEEE 58th conference on decision and control (CDC) , pages 2373–2378. IEEE, 2019. [26] Thanin Quartz, Maxwell Fitzsimmons, and Jun Liu. A converse control lyapunov theorem for joint safety and stability. In 2026 American control conference (ACC) .[27] Muhammad Zakiyullah Romdlony and Bayu Jayawardhana. Stabiliza-tion with guaranteed safety using control lyapunov–barrier function. 
+
+Automatica , 66:39–47, 2016. [28] Eduardo D Sontag. A ‘universal’ construction of Artstein’s theorem on nonlinear stabilization. Systems & Control Letters , 13(2):117–123, 1989. [29] Eduardo D Sontag. Stability and stabilization: discontinuities and the effect of disturbances. In Nonlinear analysis, differential equations and control , pages 551–598. Springer, 1999. 
+
+APPENDIX 
+
+Lemma 2: Let Nε := {x ∈ S : 1 − ε ≤ h(x) < 1}.If for each x ∈ Nε there exists a u ∈ Rm such that 
+
+⟨ξ, f (x) + g(x)u⟩ ≤ α(1 − h(x)) for all ξ ∈ ∂P h(x), then 
+
+S is controlled invariant. 
+
+Proof: For simply, we denote x(t) of some controlled path under some u ∈ U . Fix x0 ∈ N ε, and let z(t) solve ˙z =
+
+α(1 − z) with z0 := z(0) = h(x0). It is clear that z(t) < 1
+
+for all t ≥ 0. Now consider the closed set epi (h) = {(x, z ) : 
+
+h(x) ≤ z}, which is the epigraph of h. If we can show that epi (h) is controlled invariant, then there exists a u ∈ U such that h(x(t)) ≤ z(t) for all t ≥ for any (x0, z 0) ∈ epi (h),and h(x(t)) ≤ z(t) < 1 for all t ≥ 0.By definition, the proximal normal cone of epi (h) is such that N P
+
+> epi (h)
+
+(x, z ) = {λ(ξ, −1) : λ ≥ 0, ξ ∈ ∂P h(x)}.Take any ξ ∈ ∂P h(x0). By assumption, there exists a 
+
+u ∈ U such that ⟨ξ, f (x) + g(x)u⟩ ≤ α(1 − h(x0)) ,which implies inf u⟨(ξ, −1) , (f (x) + g(x)u, α (1 − z0)) ⟩ ≤ 0.Consequently, inf u⟨ϑ, (f (x) + g(x)u, α (1 − z0)) ⟩ ≤ 0 for all 
+
+ϑ ∈ N P
+
+> epi (h)
+
+(x, z ). Then, by [7, Chapter 4, Theorem 2.10], epi (h) is controlled invariant. The proof is complete. 
+
+Lemma 3: Under Assumption 3, S is controlled invariant and asymptotic controllable. 
+
+Proof: Recall notation Nε. Define Iε := {x ∈
+
+S : h(x) < 1 − ε}. By Assumption 3 and Lemma , for all x ∈ N , there exists a κ1(x) ∈ Γ( x) such that 
+
+⟨ζ, f (x) + g(x)κ1(x)⟩ ≤ − wε(x) for all ζ ∈ ∂P v(x). For all x ∈ I ε \ B(0; r), there exists a feedback κ2(x) such that ⟨ζ, f (x) + g(x)κ2(x)⟩ ≤ − w(x) for all ζ ∈ ∂P v(x).Let ˜w(x) = wε(x) for x ∈ N ε and ˜w(x) = w(x) for 
+
+x ∈ Iε \ B(0; r). Then it can be verified that ˜w(x) ≥
+
+min {min x∈Aδ ∩N ε wε(x), min x∈Aδ ∩(Iε\B(0; r)) wε(x)} =: 
+
+w > 0, where δ ∈ (0 , r ) and Aδ := {z ∈ S : v(z) ≤
+
+v(x)} ∩ { x ∈ S : ∥x∥ ≥ δ} is compact. By Clarke’s weak decrease theorem applied to v, we have v(x(t)) ≤ v(x) − wt 
+
+for all t ≥ 0 until entering B(0; r). The statement follows by combining this with Lemma 2.

@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01349v1/fig-001.webp",
+      "caption": "Figure 1: PI-JEPA architecture overview. The solution field u(x, t) is partitioned into context and target patch sets. A context encoder fθ and an EMA target encoder fξ map these to latent codes zc and zt, respectively. A bank of K latent predictors {gϕk } predicts the target embeddings ẑ(k)t aligned to each sub-operator in the physical splitting. The total loss L combines a predictive term, a PDE residual physics term, and a covariance regularizer. The EMA update ensures the target encoder provides stable, slowly-evolving learning targets throughout self-supervised pretraining.",
+      "page": 7,
+      "index": 1,
+      "width": 553,
+      "height": 559
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01349v1/fig-002.webp",
+      "caption": "Figure 3: Spatiotemporal block masking strategy. Context patches (blue) are selected from a contiguous subregion at time t. Target patches (orange) form a spatially displaced block at the subsequent timestep t+∆t. The predictor must anticipate the latent representation of the target region, implicitly learning the causal dynamics—advection, diffusion, or reaction—linking context to target. Unmasked patches (gray) contribute to the target encoder representation but are not used in the predictive loss.",
+      "page": 10,
+      "index": 2,
+      "width": 536,
+      "height": 231
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01349v1/fig-003.webp",
+      "caption": "Table 4: PI-JEPA architectural and training hyperparameters.",
+      "page": 18,
+      "index": 3,
+      "width": 660,
+      "height": 746
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01349v1/fig-004.webp",
+      "caption": "Figure 4: Data efficiency on single-phase Darcy flow (64×64). PI-JEPA (blue) outperforms FNO (red) and DeepONet (orange) for Nℓ ≤ 100. The gap between PI-JEPA and the scratch baseline (gray, dashed) quantifies the benefit of self-supervised pretraining. FNO surpasses PI-JEPA at Nℓ ≥ 250 where its spectral inductive bias is fully exploited. All results averaged over 3 seeds.",
+      "page": 13,
+      "index": 4,
+      "width": 820,
+      "height": 499
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01349v1/fig-005.webp",
+      "caption": "Figure 2: Operator splitting correspondence. The numerical Lie–Trotter splitting (top row) decomposes each timestep into sequential physical sub-operators L1, . . . ,LK . PI-JEPA’s latent predictor bank (bottom row) mirrors this structure: predictor gϕk advances the latent state through the k-th sub-step, and a per-sub-operator PDE residual loss L(k) phys regularizes each prediction. The dashed arrows indicate this physics supervision coupling. Illustrated here for K = 2 (pressure + saturation), the scheme extends to K = 3 for reactive transport by adding a reaction predictor.",
+      "page": 8,
+      "index": 5,
+      "width": 770,
+      "height": 232
+    }
+  ]
+}

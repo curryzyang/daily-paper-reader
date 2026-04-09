@@ -1,0 +1,1381 @@
+Title: Stochastic Dimension Implicit Functional Projections for Exact Integral Conservation in High-Dimensional PINNs
+
+URL Source: https://arxiv.org/pdf/2603.29237v1
+
+Published Time: Wed, 01 Apr 2026 00:29:46 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS FOR EXACT INTEGRAL CONSERVATION IN HIGH-DIMENSIONAL PINNS ∗
+
+ZHANGYONG LIANG †
+
+Abstract. Enforcing exact macroscopic conservation laws, such as total mass and energy, in continuous neural partial differential equation (PDE) solvers poses significant computational chal-lenges, particularly in high-dimensional domains. First, explicit discrete projections for global spatial integrals typically require deterministic quadrature over uniform grids, which scales poorly with spa-tial dimension and restricts the mesh-free formulation of physics-informed neural networks (PINNs). Second, evaluating high-order spatial differential operators incurs substantial memory overhead dur-ing reverse-mode automatic differentiation. Furthermore, generic implicit optimization layers often lack theoretical convergence guarantees when applied to the non-convex manifolds associated with quadratic energy conservation. To address these issues, we propose the Stochastic Dimension Implicit Functional Projection (SDIFP) framework. Rather than explicitly projecting discrete spatial vec-tors, SDIFP applies a global affine transformation directly to the continuous network output. This formulation yields closed-form algebraic solutions for non-convex integral constraints using detached Monte Carlo (MC) quadrature, thereby bypassing spatial grid dependencies. For scalable backprop-agation, we introduce a doubly-stochastic unbiased gradient estimator (DS-UGE). By decoupling the spatial mini-batch sampling used for implicit functional gradients from the stochastic subsampling of the differential operator terms, the DS-UGE bounds the optimization memory complexity from 
+
+O(M × NL) to O(N × |I| ). Consequently, SDIFP mitigates overfitting to mini-batch sampling vari-ance, preserves the mathematical regularity of the approximated solutions, and maintains standard 
+
+O(1) point-wise inference efficiency, providing a scalable and mesh-free approach for solving exactly conservative high-dimensional PDEs. 
+
+Key words. Physics-informed neural networks, exact conservation, dual curse of dimensionality, implicit functional projection, non-convex constraints. 
+
+AMS subject classifications. 65M99, 68T07, 49M30, 65D30 
+
+1. Introduction. Recently, neural network-based approaches have emerged as a promising computational paradigm for solving and modeling partial differential equa-tions (PDEs) [5, 30]. Among these, physics-informed neural networks (PINNs) [43] have gained widespread adoption by parameterizing the PDE solution continuously, requiring minimal labeled data, and operating entirely in a mesh-free manner. Con-ventionally, the loss function of a PINN enforces the residuals of the governing PDEs alongside initial and boundary conditions. This introduces a soft constraint on the physical formulation, penalizing predictions that deviate from the underlying equa-tions. While this soft penalty affords necessary flexibility during optimization, it fun-damentally permits the learned continuous approximations to violate strict physical principles [44]. In many complex physical and engineering systems, exact adherence to macro-scopic conservation laws—such as the conservation of mass, momentum, and energy— is not merely a desirable regularization technique, but a strict prerequisite for physical fidelity and long-term numerical stability. Treating these global integral quantities as soft constraints inherently alters the solution space regardless of penalty weights, fre-quently leading to nonphysical artifacts such as artificial dissipation or spurious energy accumulation. Consequently, there is a pressing need to impose hard constraints that mathematically guarantee the neural network outputs obey global integral invariants by design, independent of the optimization dynamics or data distribution. 
+
+> ∗
+
+Submitted to the editors DATE. 
+
+> †
+
+National Center for Applied Mathematics, Tianjin University, Tianjin, 300072, China. 1
+
+> arXiv:2603.29237v1 [cs.LG] 31 Mar 2026
+
+2 Z. LIANG 
+
+Enforcing exact global integral constraints within a continuous, mesh-free deep learning framework, however, presents significant mathematical and computational challenges. Recent efforts, such as PINN-proj [2], attempt to guarantee integral con-servation by analytically projecting the network’s discrete spatial outputs onto a con-servation manifold. Yet, evaluating these global integrals analytically forces such methods to rely on deterministic quadrature rules over fixed, uniform spatial meshes [29]. This compromises the elegant mesh-free nature of PINNs and exacerbates the curse of dimensionality for high-dimensional PDEs. Furthermore, replacing uniform grids with stochastic Monte Carlo (MC) collocation points introduces a fundamental statistical inconsistency: forcing a randomly sampled mini-batch to exactly satisfy a macroscopic global constant coerces the neural network to overfit the statistical sam-pling variance. This inadvertently induces high-frequency spurious spatial oscillations, severely degrading the regularity of the approximated PDE solution. As an alternative to explicitly discrete projections, state-of-the-art differentiable optimization layers, such as Πnet [21], leverage operator splitting algorithms (e.g., Douglas-Rachford) [12] and the implicit function theorem (IFT) [13] to project neural network outputs onto feasible sets. While highly effective for generic parametric constrained optimization, these implicit solvers rigorously require the constraint sets to be convex. In physical systems, however, energy conservation frequently entails a global quadratic integral (e.g., R 
+
+> X
+
+u2 dx = C), which topologically defines a hyper-ellipsoid—a strictly non-convex manifold. Applying standard operator splitting to such non-convex integral constraints generally leads to algorithmic divergence and lacks theoretical convergence guarantees. Moreover, performing point-wise discrete projections tightly couples all spatial collocation points during backpropagation [19], which inflates computational complexity and negates the inherent O(1) point-wise evaluation efficiency of standard PINNs. Scaling exactly conservative neural PDE solvers to high dimensions also creates a computational bottleneck in evaluating high-order spatial differential operators. The memory footprint required for reverse-mode automatic differentiation across all spa-tial dimensions scales prohibitively [55], frequently causing out-of-memory failures on modern accelerators even for minimal batch sizes. Several efforts have been proposed to mitigate this differential curse of dimensionality. Stochastic Dimension Gradient Descent (SDGD) [24] randomizes over the input dimensions where in each iteration, the partial derivatives are only calculated for a minibatch of sampled dimensions with back-propagation. In [25, 32, 27], the classical technique of Hutchinson Trace Es-timator (HTE) [28] is used to estimate the trace of Hessian or Jacobian to inputs. Others choose to bypass AD completely to reduce the complexity of computation. In [39], the finite difference method is used for estimating the Hessian trace. Ran-domized smoothing [23, 26] uses the expectation over Gaussian random variable as ansatz, so that its derivatives can be expressed as another expectation Gaussian ran-dom variable via Stein’s identity [48]. More recently, Stochastic Taylor Derivative Estimator (STDE) [46] was proposed to efficiently amortize arbitrary differential op-erators, though its accuracy still depends on discretization or smoothing parameters. Nevertheless, none of these methods possess inherent mechanisms to enforce exact global physical invariants such as integral conservation laws. To fundamentally resolve these theoretical bottlenecks and simultaneously over-come the dual curse of dimensionality (grid-dependent integral projections and memory-intensive differential operators), we propose the Stochastic Dimension Implicit Functional 
+
+Projection ( SDIFP ) framework. Instead of projecting a high-dimensional discrete vector of spatial evaluations, SDIFP projects the continuous functional parameters STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 3via a global affine transformation ˜ u(x) = α · uraw (x; θ) + β. This paradigm shift decouples the spatial complexity from the constraint satisfaction verification, reduc-ing an otherwise intractable infinite-dimensional non-convex projection into a robust, low-dimensional algebraic root-finding system. Concurrently, to evaluate the govern-ing equations efficiently, this continuous projection is seamlessly synergized with a stochastic dimension-sampling mechanism. Our primary contributions are summarized as follows: 
+
+• Exact mesh-free conservation via detached MC quadrature: We evaluate global integrals utilizing large-scale Monte Carlo (MC) sequences strictly detached from the automatic differentiation (AD) computational graph. This mitigates the integral curse of dimensionality associated with grid-based quadrature, bypass-ing the reliance on fixed uniform meshes without incurring prohibitive memory overhead. 
+
+• Analytical resolution of non-convex constraints: By projecting in the affine functional space rather than the discrete Euclidean space, we derive exact, closed-form algebraic solutions for simultaneously conserving linear (mass) and strictly non-convex quadratic (energy) integrals. This effectively circumvents the theoret-ical convexity prerequisites of generic implicit solvers. 
+
+• Double-stochastic unbiased gradient estimator: To backpropagate through both the non-convex projection layer and the high-dimensional differential oper-ators, we formulate an orthogonal dual-decoupling estimator. By combining a spatial mini-batch evaluation for implicit functional gradients with a stochastic sampling of the PDE’s differential dimensions, we reduce the overall optimiza-tion memory complexity from an intractable O(M × d) to an optimally bounded 
+
+O(N × | I|) without sacrificing mathematical unbiasedness. 
+
+• Preservation of solution regularity and O(1) inference: By isolating the global integration evaluation from the localized gradient updates, SDIFP prevents the network from overfitting to mini-batch sampling variance. Furthermore, fixing the scalar projection parameters post-training preserves the canonical point-wise evaluation efficiency of standard PINNs. The remainder of this paper is organized as follows. In Section 3, we review the theoretical bottlenecks of explicit discrete projections and high-dimensional operators. In Section 4, we detail the proposed SDIFP framework, including the derivation of functional projection roots and the double-stochastic unbiased gradient estimator. In Section 5, we present numerical experiments demonstrating the accuracy, efficiency, and exact conservation properties of the proposed method in high-dimensional sys-tems. Concluding remarks are provided in Section 6. 
+
+2. Related Work. Soft Constraints on PINNs. Soft penalty terms for con-straint violations in the objective function are one approach to incorporate constraints in neural networks [36], and have been adopted to solve parametric constrained op-timization problems [51], and partial differential equations through physics-informed neural networks [15, 43]. A soft constraint can be used to enforce the conservation law in a PINN by adding a loss term that penalizes the difference between the conserved quantity in the current prediction and the ground truth [47]. Training can either be done entirely with this modified loss function [16], or in two stages where the modified loss function is used in a second stage of training [34]. Creating soft constraints in this way can also be used to enforce conservation of flux between two neighboring discrete subdomains [29]. Despite their ability to handle general constraints, these approaches offer no guarantees at inference time. Beside requiring manual tuning of the penalty 4 Z. LIANG 
+
+parameters [42], which is challenging yet critical for good performance, the use of soft constraints is discouraged for the following reasons. First, the structure of the con-straints set can be exploited to design more efficient algorithms; see, e.g., the simplex algorithm [11]. Second, treating constraints softly may significantly alter the problem solution regardless of tuning [22]. Third, certain constrained optimization problems (e.g., linear programs) may not admit a solution at all when constraints are treated softly [3]. 
+
+Hard Constraints on PINNs. Hard constraints have been used in PINNs to strictly enforce initial and boundary conditions [54]. KKT-hPINN uses KKT con-ditions to create an untrainable projection that conserves a desired quantity, but is limited to linear constraints [7]. To circumvent the shortcomings of soft constraints, hard-constrained neural networks aim to enforce constraints on the NN output by design. [18] address linear homogeneous inequality constraints by parameterizing the feasible set. RAYEN [50] enforces convex constraints by scaling the line segment be-tween infeasible points and a fixed point in the feasible set’s interior. These methods enjoy rapid inference but require expensive offline preprocessing and are not applicable to input-dependent constraints. [37] propose a closed-form expression for polyhedral constraints and employ CVXPYlayers [1] for general convex sets. [10] orthogonally project the NN output or intermediate layers using Dykstra’s algorithm [4], but rely on loop unrolling. DC3 [14] introduces an equality completion and inequality correc-tion procedure. [33] impose non-linear equality constraints by recursively linearizing them. Lagrangian and augmented Lagrangian approaches [17, 40] are considered for general non-convex constraints, with drawbacks similar to soft constraints. [31] con-sider a probabilistic sampling approach. LinSATNet [53] imposes non-negative linear constraints, relaxed by GLinSAT [56] which requires bounded constraints [49]. Aprojection-based method applies multiple Newton iterations after each training step to guarantee conservation [6]. AT-PINN-HC [8] introduces hard-constraint strategies with various auxiliary functions (polynomial, trigonometric, exponential, logarithmic) for structural vibration problems, achieving error reductions of one to four orders of magnitude. The HCP-PINN [52] extends hard constraint methods to strongly nonlin-ear PDEs, using a hard constraint projection layer to project solutions to a hyperplane that admits only exact solutions to the governing equations. 
+
+Learning Conservation Laws. Conservation laws can be mapped to hard con-straints by incorporating them directly into the structure of neural networks. The Hamiltonian [20] or Lagrangian [9] describe how total energy is conserved in a sys-tem, and can be parametrized by a neural network so that its quantities are always conserved. Hard constraints can also be created by parameterizing a divergence-free vector field that corresponds to the continuity equation [45]. This divergence-free assumption, however, limits these neural conservation laws to forms of conserved sys-tems, whereas PINNs can solve and model non-conservative systems with sources, sinks, or boundary flux. Neural operators have also been applied to enforce conser-vation using the continuity equation [35], and a differential projection layer can be incorporated to learn the governing PDE and enforce it as a hard constraint [38]. 
+
+3. Preliminaries. In this section, we review the fundamental concepts of physics-informed neural networks (PINNs), the mathematical formulation of global conserva-tion laws, and recent explicit projection methods designed to enforce these constraints. Furthermore, we explicitly identify the theoretical limitations of these discrete pro-jection approaches, thereby motivating the necessity for a continuous, mesh-free func-tional paradigm. STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 5
+
+3.1. Physics-informed neural networks and soft constraints. We consider a physical system governed by a general partial differential equation (PDE) over a spatial domain X ⊂ Rd and a time domain T :(3.1) ∂u ∂t + N [u] = 0 , x ∈ X , t ∈ T ,
+
+where u(x, t ) is the continuous state variable and N [·] is a differentiable nonlinear spatial operator. A standard PINN approximates the latent solution via a neural network uθ (x, t ) parameterized by weights θ. The network is trained by minimizing a composite loss function L, which penalizes both data discrepancies and PDE residuals: (3.2) L = 1
+
+NuNuX
+
+> i=1
+
+uθ (xiu, t iu) − ui 2 + 1
+
+NfNf
+
+X
+
+> i=1
+
+f (xif , t if ) 2 ,
+
+Here, {(xiu, t iu, u i)} represents the initial and boundary condition data, while {(xif , t if )}
+
+are collocation points randomly sampled (e.g., via Latin hypercube sampling) from the spatio-temporal domain to evaluate the PDE residual f (x, t ) := ∂u θ 
+
+> ∂t
+
++ N [uθ ]. To enforce global conservation laws, a conventional approach—referred to as PINN with soft constraints (PINN-SC)—incorporates an additional penalty term into the objective function: (3.3) LSC = L + λ 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+|c(t) − ˆcθ (t)|2 .
+
+where c(t) is the ground truth conserved quantity, ˆ cθ (t) is the network prediction, and 
+
+λ is a weighting hyperparameter. Despite improved performance with careful tuning, this soft constraint inherently permits the learned continuous solution to deviate from strict physical principles, yielding a mathematically unverified approximation of the conservation laws. 
+
+3.2. Global conservation laws and integral invariants. Many fundamental PDEs naturally describe the conservation of physical quantities. A canonical conser-vative form is expressed as (3.4) ∂u ∂t + ∇ · F(u) = 0 ,
+
+where the flux F(u) denotes the flow of the quantity across the spatial domain. To analyze the macroscopic behavior, we integrate the conservation law over the spatial domain X . Applying the divergence theorem yields (3.5) ddt 
+
+Z
+
+> X
+
+u dx = −
+
+Z
+
+> X
+
+∇ · F(u) dx = −
+
+I
+
+> ∂X
+
+F(u) · dS.
+
+This formulation demonstrates that the net temporal change of the conserved quantity depends exclusively on the boundary fluxes. Under periodic, reflective, or homoge-neous Neumann boundary conditions, the net flux is zero, and the integral quantity remains strictly constant. For non-conserved systems (e.g., with source/sink terms or open boundaries), the exact quantity c(t) evolves deterministically and can be explicitly calculated through temporal integration. In this work, we focus on imposing exact hard constraints on two foundational global integrals over the spatial domain X . The linear integral (e.g., representing 6 Z. LIANG 
+
+total mass or momentum) and the quadratic integral (e.g., representing total energy) are defined respectively as (3.6) c1(t) = 
+
+Z
+
+> X
+
+u(x, t ) dx, c2(t) = 
+
+Z
+
+> X
+
+u2(x, t ) dx. 
+
+3.3. Explicit discrete projections. Because exact continuous integration over analytical neural network outputs is computationally intractable, recent explicit pro-jection methods, such as PINN-proj [2], attempt to evaluate these continuous integrals via discrete numerical quadrature. Given a uniform grid with spatial discretization size ∆ x and n total grid points, the continuous integrals are approximated as de-terministic Riemann sums: ˆc1(t) ≈ ∆x1⊤ 
+
+> n
+
+¯uθ (t) and ˆ c2(t) ≈ ∆x¯uθ (t)⊤ ¯uθ (t), where ¯uθ (t) ∈ Rn is the discrete vector of the network outputs, and 1n is the all-ones vector. PINN-proj forces the discrete network outputs to respect the integral constraints by solving a Euclidean constrained optimization problem: min y ∥¯uθ (t) − y∥22, subject to the respective Riemann sum constraints. Utilizing Lagrange multipliers, this yields unique analytical discrete projections: 
+
+• Conservation of the linear integral: 
+
+(3.7) ˜uθ (xi, t ) = uθ (xi, t ) + c1(t)
+
+n∆x − 1
+
+n
+
+> n
+
+X
+
+> j=1
+
+uθ (xj , t ),
+
+• Conservation of the quadratic integral: 
+
+(3.8) ˜uθ (xi, t ) = uθ (xi, t )
+
+s
+
+c2(t)∆x Pnj=1 u2 
+
+> θ
+
+(xj , t ) ,
+
+• Combined projection for linear and quadratic integrals: 
+
+(3.9) ˜uθ (xi, t ) = ( uθ (xi, t ) − ¯μθ )
+
+s
+
+c2(t)/∆x − c21(t)/(n∆x2)
+
+Pnj=1 (uθ (xj , t ) − ¯μθ )2 + c1(t)
+
+n∆x .
+
+where ¯ μθ = 1
+
+> n
+
+Pnj=1 uθ (xj , t ) denotes the empirical spatial average. Extending the above framework to arbitrary spatial dimension D, we now consider the solution uθ (x, t ) defined over a D-dimensional spatial domain X ⊂ RD , with 
+
+x = ( x(1) , x (2) , . . . , x (D)). The linear conserved quantity in D dimensions takes the form (3.10) ˆc1(t) = 
+
+Z
+
+> X
+
+uθ (x, t ) dx ≈
+
+> N
+
+X
+
+> i=1
+
+uθ (xi, t ) ∆ V. 
+
+where N denotes the total number of grid points, xi ∈ RD is the i-th spatial location in the full D-dimensional tensor-product grid, and ∆ V = QDd=1 ∆x(d) is the hypervolume element. Analogous extensions apply to the quadratic integral and the corresponding projection formulas. We can therefore generalize the projection method to an arbi-trary number of spatial dimensions by integrating over all D spatial dimensions to obtain the conserved quantity. 
+
+4. Methodology. In this section, we formulate the mathematical framework of the SDIFP. To establish a rigorous foundation, we first critically examine the math-ematical structures of existing constraint enforcement paradigms—namely, explicit STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 7discrete projections (e.g., PINN-proj [2]) and implicit optimization layers (e.g., Πnet [21]). By diagnosing their theoretical bottlenecks regarding grid dependency and topo-logical non-convexity, we motivate a transition from discrete Euclidean projections to continuous affine functional projections. Specifically, rather than constraining a high-dimensional vector of spatial evaluations, SDIFP applies a global affine transformation ˜u(x) = α · uraw (x; θ) + β directly to the network’s continuous outputs. This spatial decoupling reduces an intractable infinite-dimensional non-convex projection into a robust, low-dimensional algebraic root-finding system, providing an exact, mesh-free resolution that cleanly circumvents the dual curse of dimensionality. Furthermore, to ensure scalable backpropagation without degrading solution regularity, this contin-uous projection is seamlessly synergized with a double-stochastic unbiased gradient estimator. 
+
+4.1. Motivation. To impose exact conservation mathematically, recent method-ologies attempt to project the network’s predictions onto a feasible manifold. How-ever, formulating these projections over discrete spatial evaluations exposes critical theoretical bottlenecks in the context of continuous, mesh-free PDE solvers. 
+
+4.1.1. Explicit discrete projections and grid dependency. To guarantee exact constraint satisfaction, methods such as PINN-proj formulate the conserva-tion principles as discrete Euclidean projections. Given a uniform grid with spatial discretization size ∆ x and n total points, the network evaluates a discrete vector ¯uθ (t) = [ uθ (x1, t ), . . . , u θ (xn, t )] ⊤ ∈ Rn. The continuous integral is approximated via a deterministic Riemann sum (e.g., ˆ c1(t) ≈ ∆x1⊤ 
+
+> n
+
+¯uθ (t)). The corrected feasible vector 
+
+y ∈ Rn is obtained by solving the constrained optimization problem: (4.1) min  
+
+> y
+
+∥¯uθ (t) − y∥22 subject to ∆x1⊤ 
+
+> n
+
+y = c1(t), ∆xy ⊤y = c2(t),
+
+where 1n denotes the all-ones vector. Using Lagrange multipliers, PINN-proj de-rives an exact closed-form analytical solution. For the isolated linear constraint, the projection yields a uniform spatial translation: ˜uθ (xi, t ) = uθ (xi, t ) + c1(t) 
+
+> n∆x
+
+−
+
+> 1
+> n
+
+Pnj=1 uθ (xj , t ). For the isolated quadratic constraint, it yields a spatial scaling: ˜uθ (xi, t ) = uθ (xi, t )
+
+q
+
+c2(t)/(∆ x Pnj=1 u2 
+
+> θ
+
+(xj , t )). For the combined linear and quadratic constraints, representing the geometric in-tersection of a hyper-ellipsoid and a hyperplane, the exact analytical solution resolves as: (4.2) ˜uθ (xi, t ) = uθ (xi, t ) − 1
+
+n
+
+> n
+
+X
+
+> l=1
+
+uθ (xl, t )
+
+! v uut c2(t)/∆x − c21(t)/(n∆x2)
+
+Pnj=1 
+
+ uθ (xj , t ) − 1
+
+> n
+
+Pnl=1 uθ (xl, t )2 + c1(t)
+
+n∆x .
+
+Theoretical bottlenecks: The mathematical elegance of (4.1) relies strictly on the constant uniform discretization volume ∆ x. This rigidly binds the methodology to fixed Eulerian meshes, compromising the fundamental mesh-free nature of PINNs and triggering the curse of dimensionality for high-dimensional PDEs. If the deterministic grid is replaced by stochastic Monte Carlo (MC) collocation points (requiring hetero-geneous quadrature weights wi), the analytical derivation of the Lagrangian multi-pliers for the combined or quadratic constraints becomes considerably more involved. With unequal weights the quadratic constraint takes the form Pni=1 wiy2 
+
+> i
+
+= c2(t), and the resulting KKT system reduces to a one-dimensional equation in the multi-plier λ that is a high-degree rational polynomial. By the Abel–Ruffini theorem, no 8 Z. LIANG 
+
+general closed-form radical solution exists for polynomials of degree five or higher; although a one-dimensional Newton’s method can in principle solve this numerically, the computational overhead becomes prohibitive in high-dimensional settings. More critically, the forward evaluation of (4.1) on the entire collocation set SMC 
+
+must be included in the automatic differentiation graph for training. This forces backpropagation through an n-dimensional dense linear system for every gradient step, causing a prohibitive memory explosion that fundamentally negates the mesh-free advantage of PINNs. To empirically validate this theoretical analysis, Figure 4.1 illustrates the fun-damental distinction between fixed-grid and random collocation approaches. When applying explicit discrete projections with random sampling, the statistical variance of the mini-batch propagates directly into the conservation error, leading to severe degradation. In contrast, our SDIFP framework, which employs detached MC quadra-ture for forward evaluation, maintains perfect conservation regardless of the sampling strategy. 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00              
+
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u(x)
+> (a) True Solution u(x)
+> 1.0 0.5 0.0 0.5 1.0
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> (b) Trapezoidal Rule
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> (c) Monte Carlo Integration
+
+Fig. 4.1 . Conservation error comparison under fixed-grid and random collocation. 
+
+4.1.2. Implicit optimization layers and the non-convexity barrier. Al-ternatively, architectures such as Πnet introduce a generic differentiable optimization layer that projects infeasible raw network outputs yraw onto a feasible set C:(4.3) y = Π C (yraw ) = arg min 
+
+> z∈C
+
+∥z − yraw ∥22.
+
+During the forward pass, evaluating this projection via non-expansive operator splitting schemes, such as the Douglas-Rachford iteration ( zk+1 = prox σg (sk), t k+1 =prox σh (2 zk+1 − sk), s k+1 = sk + ω(tk+1 − zk+1 ) := Φ( sk, y raw )), allows unconstrained tracking without explicit Lagrangian formulations. To train the backbone network without unrolling the extensive iterative compu-tational graph, it leverages the implicit function theorem (IFT) at the converged fixed point s∞ of the iterative mapping Φ. The vector-Jacobian product (VJP) is computed by solving an indirect linear system (e.g., via bicgstab ): (4.4) v 7 → ξ⊤ ∂Φ( s∞, y raw )
+
+∂y raw 
+
+, where ξ⊤ I − ∂Φ( s, y raw )
+
+∂s s=s∞
+
+!
+
+= v⊤.
+
+Theoretical bottlenecks: While this framework handles arbitrary affine hyper-planes seamlessly and circumvents the need for closed-form Lagrangian solutions, it confronts an insurmountable topological barrier in the context of PDEs. The theo-retical convergence guarantees of the Douglas-Rachford splitting algorithm rigorously require the feasible set C to be a closed convex set. However, the energy conservation STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 9constraint R u2 dx = c2(t) geometrically defines a hyper-ellipsoid manifold, which is strictly non-convex. Consequently, applying generic convex solvers like Πnet to PDE energy conservation inherently lacks convergence guarantees and generally leads to algorithmic divergence. Confronting this absolute non-convex quadratic functional, the spectral radius of the implicit generic operator Φ will inevitably exceed unity, triggering irreversible geometric topological divergence. Moreover, projecting a dense discrete spatial vector 
+
+y ∈ Rn tightly couples all collocation points within the linear system (4.4), inflat-ing computational complexity and negating the canonical O(1) point-wise evaluation efficiency of standard PINNs. 
+
+4.2. Stochastic dimension implicit functional projection (SDIFP). To synthesize the analytical exactness of traditional projection with the grid-independent, differentiable implicit architecture of Πnet, while rigorously circumventing their grid-dependency and non-convexity bottlenecks, we propose a paradigm shift from discrete point-wise projections to continuous functional projections. 
+
+4.2.1. Continuous implicit functional projections. Figure 4.2 motivates the SDIFP design by showing why traditional additive shifts fail under random collo-cation and how evaluating the integral on the same mini-batch resolves the mismatch. 1.0                   
+
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t)
+> (a) Traditional Projection
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t * )
+> (b) SDIFP Projection
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t)
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t * )
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t)
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u (x, t * )
+
+Fig. 4.2 . Comparison of two projection strategies under random collocation. (a) Traditional projection: a fixed quadrature set causes deviation from ¯c1(t) when the collocation set varies. (b) SDIFP projection: adaptive shifts align the projected mean with ¯c1(t) on every batch. 
+
+Figure 4.2(a) illustrates the traditional projection approach. A meshfree imple-mentation may allocate a fixed set of quadrature nodes {yj }Nq
+
+j=1 once and estimate the spatial mean ¯ u({yj }) = 1
+
+Nq
+
+PNq
+
+j=1 uθ (yj , t ). The additive shift δ = ¯ c1(t) − ¯u({yj })10 Z. LIANG 
+
+is applied to arbitrary collocation values, (4.5) uproj (xi, t ) = uθ (xi, t ) + δ. 
+
+Averaging (4.5) over a training mini-batch {xi}Ni=1 that is statistically independent of {yj } gives (4.6) ¯uproj ({xi}) = ¯ u({xi}) + δ = ¯ c1(t) +  ¯u({xi}) − ¯u({yj }),
+
+so the batch conservation residual (4.7) ε = ¯ uproj ({xi}) − ¯c1(t) = ¯ u({xi}) − ¯u({yj }).
+
+where (4.7) is generally nonzero. Conditionally on θ, if collocation draws are approximately independent with mar-ginal variance σ2 
+
+> u
+
+for uθ (·, t ), then Var( ε) ≈ 2σ2
+
+> u
+
+/N for equal batch sizes. Conse-quently, the residual ε decays only at the Monte Carlo rate O(1 /√N ) and remains nonzero for any finite N . The red dotted reference stays fixed across rows because 
+
+{yj } is frozen, whereas the green dash-dotted batch mean tracks a different ¯ u({xi})each row, producing a stochastic gap to the black dashed target. Figure 4.2(b) illustrates the SDIFP approach. SDIFP does not maintain a per-sistent quadrature set for the shift; it uses only the current collocation batch, (4.8) δ = ¯ c1(t) − ¯u({xi}) = ¯ c1(t) − 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+uθ (xi, t ),
+
+Applying the same shift to the identical batch yields the algebraic identity (4.9) ¯uproj ({xi}) = ¯ u({xi}) + δ = ¯ c1(t), ε = 0 .
+
+for every batch, independently of N , point locations, or θ. Figure 4.2(b) illustrates this behavior: the green solid mean coincides with the black dashed target on every row even though δ (purple arrows) varies across batches to cancel the random part of ¯u({xi}).                          
+
+> Table 4.1
+> Collocation supports for integral estimation versus projection under random mini-batching.
+> Traditional projection SDIFP projection Integral support Fixed {yj}Current {xi}
+> Projection sites Mini-batch {xi}Same {xi}
+> Shift δ¯c1(t)−¯u({yj})¯c1(t)−¯u({xi})Batch residual ε¯u({xi})−¯u({yj})̸= 0 0 (exact)
+
+Traditional projection couples a frozen MC estimate of the spatial mean to fresh collocation samples, so exact integral conservation on the training batch is unattain-able and optimization sees persistent zero-mean noise. SDIFP evaluates and applies the shift on the same sample set, enforcing the constraint algebraically without ad-ditional quadrature nodes; gradients propagate through the projection in the usual way. The affine functional extension in the following subsection generalizes this same-batch algebraic principle to detached large-M MC moment estimates for the full mass–energy system. STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 11 
+
+4.2.2. The paradigm shift: Affine functional space. Instead of projecting an n-dimensional discrete spatial vector y ∈ Rn, SDIFP shifts the domain of projection directly to the continuous mapping parameters within an affine functional space. We define the exactly conserved continuous output ˜ u(x, t ) as a global affine transformation applied directly to the continuous prediction of the backbone network uraw (x, t ; θ): (4.10) ˜u(x, t ) = α(t) · uraw (x, t ; θ) + β(t).
+
+where α(t), β (t) ∈ R are dynamically determined global scalar projection parameters. This continuous homomorphic operator identically preserves the high-order uni-form differentiability of the original neural backbone within the continuous Sobolev space Hm(X ). This profound dimensional reduction maps an otherwise intractable infinite-dimensional non-convex functional projection into a robust two-dimensional algebraic root-finding system, entirely decoupling the spatial resolution from the constraint enforcement mechanism. 
+
+4.2.3. Exact mesh-free quadrature via detached MC. For continuous fields, we define the domain-averaged target constants as ¯ c1(t) = c1(t)/|X | and ¯ c2(t) = 
+
+c2(t)/|X | . A physically well-posed system mandates a strictly positive target variance 
+
+Vtarget (t) = ¯ c2(t) − ¯c21(t) > 0. To dynamically determine α(t) and β(t) without relying on deterministic Riemann grids or triggering the curse of dimensionality, we employ large-scale MC quadrature using low-discrepancy sequences (e.g., Sobol’ sequences). We approximate the macro-scopic spatial moments of the raw network over a massive MC point set SMC ⊂ X of size M (where M ∼ 10 5): (4.11) μ1(t; θ) = 1
+
+M
+
+X
+
+> xi∈S MC
+
+uraw (xi, t ; θ), μ2(t; θ) = 1
+
+M
+
+X
+
+> xi∈S MC
+
+u2raw (xi, t ; θ).
+
+Crucially, borrowing the philosophy of avoiding massive unrolled computational graphs from implicit optimization layers, the evaluations of (4.11) are executed detached from the automatic differentiation (AD) computational graph. This pure numerical forward inference guarantees absolute mesh-free quadrature accuracy while circum-venting the prohibitive memory consumption that plagues explicit global integrations during backpropagation. 
+
+4.2.4. Closed-form resolution of non-convex constraints. Imposing the integral constraints on the continuous mapping (4.10) yields a 2 ×2 nonlinear algebraic system R(α, β ) = 0:
+
+• R1: Linear mass constraint enforcing the first moment (mean) 
+
+• R2: Quadratic energy constraint enforcing the second moment (energy) (4.12) 
+
+(
+
+R1(α, β ) : α(t)μ1(t; θ) + β(t) = ¯ c1(t),
+
+R2(α, β ) : α2(t)μ2(t; θ) + 2 α(t)β(t)μ1(t; θ) + β2(t) = ¯ c2(t),
+
+(4.13) α∗(t) = 
+
+s
+
+¯c2(t) − ¯c21(t)
+
+μ2(t; θ) − μ21(t; θ) , β∗(t) = ¯ c1(t) − α∗(t)μ1(t; θ).
+
+By resolving this continuous functional system, we strictly derive the unique, physically phase-consistent ( α > 0) closed-form analytical roots. 12 Z. LIANG 
+
+Proof. Isolating the translation parameter β = ¯ c1−αμ 1 from R1 = 0 and substituting it into R2 = 0 yields α2μ2 + 2 α(¯ c1 − αμ 1)μ1 + (¯ c1 − αμ 1)2 = ¯ c2. Expanding the binomials causes the cross-terms associated with α to identically cancel, algebraically decoupling the equation to α2(μ2 − μ21) = ¯ c2 − ¯c21. Rearranging and enforcing α > 0to prevent nonphysical spatial phase inversions directly yields (4.13). The identical cancellation phenomenon mathematically represents exact orthog-onal annihilation of the non-convex cross-variational terms ±2α¯c1μ1, elegantly tran-scending the divergent topology that afflicts conventional iterative solvers. 
+
+Remark. Geometrically, this reveals that β∗ executes a continuous domain-wide mean shift to enforce linear constraints (generalizing the discrete shift of PINN-proj), while α∗ executes an L2-variance scaling to project the mapping onto the non-convex energy hyper-ellipsoid. This functional scaling cleanly bypasses the topological non-convexity barrier that precludes the use of generic iterative convex solvers. 
+
+4.2.5. Double-stochastic unbiased gradient estimator (DS-UGE). Dur-ing network optimization, computing the gradient of the PDE residual loss LPDE (˜ u)necessitates differentiating through the projection layer. Applying the chain rule to (4.10) yields: (4.14) ∇θ ˜u(x, t ) = α∗∇θ uraw (x, t ; θ) + uraw (x, t ; θ)∇θ α∗ + ∇θ β∗.
+
+Because the massive MC integration (4.11) was explicitly detached from the AD graph, we cannot rely on standard automatic differentiation to compute ∇θ α∗ and ∇θ β∗.Drawing profound inspiration from Πnet’s backward pass, we compute the gra-dients implicitly. However, rather than solving an expensive and potentially ill-conditioned linear system via bicgstab to compute the VJP (as in (4.4)), the low dimensionality of our affine functional parameters permits the exact analytical deriva-tion of the Jacobians directly from (4.13): (4.15) 
+
+∂α ∗
+
+∂μ 1
+
+= α∗μ1
+
+σ2(t; θ) , ∂α ∗
+
+∂μ 2
+
+= − α∗
+
+2σ2(t; θ) ,∂β ∗
+
+∂μ 1
+
+= −α∗ − μ1
+
+∂α ∗
+
+∂μ 1
+
+, ∂β ∗
+
+∂μ 2
+
+= −μ1
+
+∂α ∗
+
+∂μ 2
+
+.
+
+where σ2(t; θ) = μ2(t; θ) − μ21(t; θ) defines the positive-definite empirical continuous spatial variance. To formulate ∇θ α∗ and ∇θ β∗, we require the gradients of the global integrals 
+
+∇θ μ1 and ∇θ μ2. Guided by stochastic optimization theory, which rigorously requires only an unbiased estimator to guarantee convergence, we eschew evaluating explicit gradients over the massive M -point MC set. Instead, we construct a stochastic implicit gradient estimator using exclusively the identical, localized MC mini-batch Sbatch (of size N ≪ M , typically N ∼ 10 3) employed concurrently for evaluating the local PDE residuals: 
+
+\∇θ μ1 = 1
+
+N
+
+X 
+
+> xj∈S batch
+
+∇θ uraw (xj , t ; θ),(4.16) 
+
+\∇θ μ2 = 2
+
+N
+
+X 
+
+> xj∈S batch
+
+uraw (xj , t ; θ)∇θ uraw (xj , t ; θ).(4.17) Substituting (4.16) and (4.15) into the chain rule (e.g., ∇θ α∗ ≈ ∂α ∗
+
+> ∂μ 1
+
+\∇θ μ1 + ∂α ∗
+
+> ∂μ 2
+
+\∇θ μ2)establishes the complete stochastic implicit gradient flow. This mechanism seamlessly STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 13 propagates exact macroscopic constraint information backward through the network with negligible O(N ) computational overhead, fundamentally breaking the O(M )spatial coupling bottleneck of generic implicit layers. A critical corollary of the SDIFP architecture is the strict physical isolation be-tween the macroscopic integral evaluations (conducted deterministically via detached MC points) and the local Jacobian updates (estimated stochastically via MC mini-batches). Consequently, the statistical variance inherent to local mini-batch sam-pling exclusively influences the gradient trajectory without corrupting the forward physical scalars α∗ and β∗. This topological decoupling intrinsically prevents the neural network from overfitting to localized sampling noise, thereby mathematically preserving solution regularity and eliminating the spurious high-frequency spatial os-cillations characteristic of explicit discrete projections. Furthermore, upon training convergence, the global scalars α∗ and β∗ stabilize and can be hard-coded as fixed constants. During the post-training inference phase, evaluating unseen spatial coor-dinates requires only an O(1) affine scalar multiplication, completely preserving the canonical point-wise evaluation efficiency of standard unconstrained PINNs. 
+
+4.2.6. Orthogonal functional decoupling for high-dimensional PDEs. 
+
+While the aforementioned implicit gradient estimation resolves the spatial quadrature bottleneck, evaluating conservative systems in high dimensions exposes a secondary reverse-mode memory challenge. For a general PDE, the governing operator can typi-cally be partitioned into a high-dimensional linear principal part Llin and a nonlinear (or lower-dimensional) component Nnonlin , such that L[u] = Llin [u] + Nnonlin [u] = R.High-dimensional linear operators, such as the d-dimensional Fokker–Planck equa-tion governing stochastic drift-diffusion, (4.18) Llin [u] = 
+
+> d
+
+X
+
+> i,j =1
+
+ 1
+
+d2 ∂tu + 1
+
+d ∂xi [Fiu] − 12 ∂2 
+
+> xixj
+
+[Dij u]
+
+
+
+,
+
+or the high-dimensional bi-harmonic equation (∆ 2u = Pdi,j =1 ∂4 
+
+> xixj
+
+u), induce a gov-erning equation that linearly decomposes into a massive number of discrete functional terms, (4.19) Llin [u] = 
+
+> NL
+
+X
+
+> k=1
+
+Lk[u].
+
+Fully unrolling the reverse-mode computational graph to form PNL 
+
+> k=1
+
+∇θ Lk[˜ uθ ] incurs a severe O(NL) memory overhead when evaluating high-order Hessian-vector products. In contrast, nonlinear terms Nnonlin [u] (e.g., the convective term u∂ xu in the KdV equation) generally involve lower-order or localized operations that do not trigger a dimensional combinatorial explosion, permitting evaluation via standard automatic differentiation (AD). To efficiently synthesize Stochastic Dimension Gradient Descent (SDGD) into the continuous functional projection without violating the calculus of nonlinear operators, SDIFP executes an asymmetric, statistically independent sampling without replace-ment directly from the discrete index space of the linear operator {1, . . . , N L}. We systematically extract a forward subset J to evaluate the macroscopic scalar resid-ual of the linear part, and a backward subset I to restrict the depth of the AD tree (satisfying the cardinalities |I|, |J| ≪ NL). 14 Z. LIANG 
+
+Crucially, we leverage the exact algebraic commutativity of the continuous affine mapping strictly over the linear differential components ( Lk[˜ uθ ] ≡ α∗Lk[uraw ] + 
+
+β∗Lk[1]). Alongside the primary residual evaluation mini-batch Bres , the doubly-stochastic unbiased composite variational update tensor gI,J (θ) is rigidly assembled as: (4.20) 
+
+gI,J (θ) := 1
+
+|B res |
+
+X
+
+> x∈B res
+
+"  NL
+
+|J|
+
+X
+
+> j∈J
+
+Lj [˜ uθ (x)] + Nnonlin [˜ uθ (x)] − R(x)
+
+
+
+× NL
+
+|I|
+
+X
+
+> i∈I
+
+\∇θ Li[˜ uθ (x)] + ∇θ Nnonlin [˜ uθ (x)] 
+
+! # 
+
+.
+
+where any local high-order linear differential tensor bounded by the measure subset 
+
+I is absolutely decoupled via orthogonal superposition: (4.21) 
+
+\∇θ Li[˜ uθ (x)] = α∗∇θ Li[uraw (x)] 
+
+| {z } 
+
+> Explicit AD tracking bounded by I
+
++ Li[uraw (x)] \∇θ α∗ + Li[1]\∇θ β∗
+
+| {z } 
+
+> Implicit scalar geometry feedback via Sbatch
+
+.
+
+This mathematical partition ensures unbiased gradient estimation for general nonlin-ear PDEs while completely circumventing the high-dimensional differential memory bottleneck. 
+
+4.2.7. Unbiased Gradient Estimation and Complexity Reduction. By applying the Fubini–Tonelli theorem and the Law of Total Expectation sequentially, since the discrete sub-sampling index sets I, J and the continuous probability measure 
+
+Bres form strictly independent σ-algebras, the composite multi-level resampling oper-ator yields an unbiased estimator of the true continuous PDE risk functional gradient 
+
+J (θ): (4.22) EBres 
+
+EI,J 
+
+gI,J (θ) =
+
+Z
+
+> X
+
+ L[˜ uθ ] − R∇θ L[˜ uθ ] dx ≡ ∇ θ J (θ),
+
+This estimator is therefore termed the doubly-stochastic unbiased gradient esti-mator (DS-UGE). By orthogonal decoupling the detached MC quadrature from the dimensional sub-sampling, the overall memory complexity collapses from O(M × NL)to O(max( |I|, |J|) × |B res |). For extreme-scale parallel environments, SDIFP natively supports gradient accu-mulation across isolated index sets 1
+
+> |K|
+
+P 
+
+> k∈K
+
+gIk ,J (θ) to synthesize ultra-high-dimensional deterministic flows with near-zero memory footprint. Furthermore, to push the en-gineering limits of forward throughput acceleration, SDIFP accommodates the Bias– Speed Tradeoff paradigm. By forcing I ≡ J (executing Sampling Only Once), the composite operator is maximally accelerated, yielding (4.23) grad I,I (θ) = NL
+
+|I|
+
+ NL
+
+|I|
+
+X
+
+> i∈I
+
+Li[˜ uθ ] − R
+
+ X 
+
+> i∈I
+
+\∇θ Li[˜ uθ ].
+
+While this strong measure coupling collapses the probabilistic independence between 
+
+I and J and introduces a local variational bias, it yields a significant computational STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 15 reduction, enabling fast convergence during the initial non-convex manifold explo-ration. 
+
+Remark. [Compatibility with Boundary Conditions] The fundamental global affine mapping proposed in the SDIFP framework, ˜ u(x, t ) = α(t)uraw (x, t ; θ) + β(t), inher-ently preserves homogeneous Neumann ( ∂n ˜u = α∂ nuraw = 0) and periodic boundary conditions, provided the base network uraw analytically or numerically satisfies them. However, we explicitly acknowledge that without further geometric modifications, this formulation is mathematically incompatible with forced homogeneous Dirichlet boundary conditions ( u|∂X = 0). Since the domain-wide translation term β(t) gener-ally evaluates to a non-zero constant to satisfy the macroscopic mass constraint, the affine transformation uniformly shifts the specified boundary values, thereby violat-ing the Dirichlet condition. Extending this continuous functional projection to seam-lessly integrate exact Dirichlet constraints—for instance, by augmenting the ansatz with a spatial distance function or mask, ˜ u(x, t ) = α(t)uraw (x, t ; θ) + β(t)ϕ(x), where 
+
+ϕ(x)|∂X = 0—modifies the underlying functional moments and the subsequent ana-lytical roots, representing an important theoretical avenue for future work. 
+
+Remark. [Numerical Stability] To prevent numerical singularities (division by zero) during the evaluation of α∗ and its implicit gradients (e.g., when the network ini-tializes to a nearly flat field, yielding σ2(t; θ) → 0), a minor numerical relaxation max( σ2(t; θ), ϵ ) with ϵ = 10 −8 is applied in practical implementations. This slight perturbation guarantees algorithmic stability while preserving exact macroscopic con-servation computationally up to single-precision machine epsilon. 
+
+5. Experiments. In this section, we conduct comprehensive numerical exper-iments to empirically validate the theoretical properties of the SDIFP framework. The evaluations demonstrate that SDIFP mathematically guarantees exact integral conservation using completely unstructured, mesh-free points where explicit discrete projections are infeasible, and that this property scales effectively across spatial di-mensions. All experiments are executed on a single NVIDIA A100 GPU utilizing the PyTorch framework [41]. 
+
+5.1. Experimental setup. We consider four PDE families that collectively span linear, dispersive, and nonlinear regimes: 
+
+• Advection equation. The Advection equation describes the transport of a quantity u(x, t ) by a uniform bulk velocity field. In 1D: 
+
+∂tu + c ∂ xu = 0 ,
+
+with initial condition u0 = exp  −(x − 1) 2/0.25 2 and Neumann boundary conditions ∂xu(0 , t ) = ∂xu(2 , t ) = 0. The 2D extension 
+
+∂tu + c ∂ xu + c ∂ y u = 0 .
+
+uses u0 = exp  −(x − 1) 2 − (y − 1) 2 on [0 , 2] 2 with Neumann boundaries in both directions. The conserved linear integral is c1(t) = R u d x; there is no non-trivial quadratic invariant for the pure advection operator. 
+
+• Reaction–diffusion equation. The reaction–diffusion equation models the coupled spatiotemporal evolution of a concentration u(x, t ) under diffusion and linear source terms: 
+
+∂tu = D ∆u + R(u), R(u) = ku. 16 Z. LIANG 
+
+with D = 0 .01 and k = 0 .5. The initial condition is u0 = exp  −(x − 1) 2/0.52
+
+and Neumann boundaries ∂xu(0 , t ) = ∂xu(2 , t ) = 0 are imposed. The con-served quantities are c1(t) = R u d x and c2(t) = R u2 dx.
+
+• Wave equation. The Wave equation is a second-order hyperbolic PDE governing the displacement u(x, t ) of a vibrating string: 
+
+∂tt u = c2 ∂xx u. 
+
+with u0 = exp  −(x − 1) 2 and ∂xu(0 , t ) = ∂xu(2 , t ) = 0. The linear momen-tum c1(t) = R u dx and the quadratic energy c2(t) = R (∂tu)2 + c2(∂xu)2 dx 
+
+are conserved in time; we track the latter via its spatial proxy R u2 dx .
+
+• Korteweg–de Vries (KdV) equation. The KdV equation is a third-order dispersive nonlinear PDE governing shallow-water wave amplitudes u(x, t ): 
+
+∂tu + au ∂ xu + b ∂ xxx u = 0 .
+
+with u0 = exp  −(x − 1) 2 and ∂xu(0 , t ) = ∂xu(2 , t ) = 0. The KdV equation conserves both the linear integral c1(t) and the quadratic invariant c2(t) = R u2 dx , providing a stringent test of multi-constraint enforcement. All experiments use a 4-layer MLP with 128 hidden units, optimized by Adam with initial learning rate 10 −3 decaying linearly to zero over 10 ,000 epochs. For SDIFP, spatial integration employs M = 10 5 detached MC points, a residual mini-batch of 
+
+N = 100, and a dimensional sampling subset |I| = 100. Performance is measured by the relative L2 error of the solution prediction (Error u) and the absolute L1 error of the linear (Error c1 ) and quadratic (Error c2 ) integral invariants. 
+
+5.2. Low-dimensional validation. To establish a rigorous baseline, we evalu-ate all methods on one-, two-, and three-dimensional PDEs under two complementary spatial sampling regimes: fixed uniform Eulerian grids (where traditional discrete pro-jections are theoretically well-defined) and random collocation (which exposes grid-dependent artifacts). We consider four PDE families—Advection, Wave, reaction– diffusion, and Korteweg–de Vries (KdV)—and two conserved quantities: the linear integral c1(t) = R 
+
+> X
+
+u d x and the quadratic integral c2(t) = R 
+
+> X
+
+u2 dx. The meth-ods compared include SDIFP (labeled as PINN-PiNet in the figures), PINN-proj, PINN-SC, PINN-KTT, and vanilla PINN. Figure 5.1 reports the time evolution of the conserved quantities for 1D equations under fixed uniform spatial nodes: both SDIFP and PINN-proj track the ground-truth integrals with high precision, with curves nearly indistinguishable from the analytical solution for the Advection and Wave equations; for the KdV equation, SDIFP maintains the constant value slightly more stably than PINN-proj toward the end of the time horizon. In contrast, vanilla PINN and PINN-SC exhibit pronounced oscillations and drift, violating the conser-vation laws. This confirms that, under favorable regular geometry, SDIFP achieves accuracy comparable to explicit discrete projections without sacrificing constraint fi-delity. Under random collocation, Figure 5.2 shows that vanilla PINN, PINN-SC, PINN-KTT, and PINN-proj all incur large bias, drift, or spurious oscillations rela-tive to the ground-truth linear and quadratic integral trajectories across the four PDE families, whereas SDIFP tracks both invariants and matches the reference trajectories in every subplot. Figure 5.3 reports the absolute momentum and energy conservation errors |Cpred (t)−
+
+Ctrue (t)| versus time for 1D equations. In both fixed-grid and random collocation regimes, SDIFP maintains errors at the 10 −6–10 −7 level, whereas all baselines drift STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 17 0.0 0.2 0.4 0.6 0.8                                  
+
+> 0.180
+> 0.195
+> 0.210
+> 0.225
+> Linear Integral
+> c(t) =  u dx
+> Advection
+> 0.0 0.2 0.4 0.6 0.8
+> 0.9
+> 1.2
+> 1.5
+> Reaction-Diffusion
+> 0.0 0.2 0.4 0.6 0.8
+> 1.6
+> 2.4
+> 3.2
+> 4.0
+> Wave
+> 0.0 0.2 0.4 0.6 0.8
+> 8.24
+> 8.32
+> 8.40
+> 8.48
+> KdV
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 0.110
+> 0.115
+> 0.120
+> 0.125
+> Quadratic Integral
+> c(t) =  u2 dx
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 0.4
+> 0.8
+> 1.2
+> 1.6
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 3.0
+> 4.5
+> 6.0
+> 7.5
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 7.0
+> 7.5
+> 8.0
+> 8.5
+> Ground Truth PINN PINN-SC PINN-KTT PINN-Proj SDIFP
+
+Fig. 5.1 . Time evolution of conserved quantities under fixed grid sampling. 0.0 0.2 0.4 0.6 0.8                                  
+
+> 0.18
+> 0.20
+> 0.22
+> Linear Integral
+> c(t) =  u dx
+> Advection
+> 0.0 0.2 0.4 0.6 0.8
+> 0.9
+> 1.2
+> 1.5
+> Reaction-Diffusion
+> 0.0 0.2 0.4 0.6 0.8
+> 1.6
+> 2.4
+> 3.2
+> 4.0
+> Wave
+> 0.0 0.2 0.4 0.6 0.8
+> 7.8
+> 8.4
+> 9.0
+> 9.6
+> KdV
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 0.14
+> 0.16
+> 0.18
+> Quadratic Integral
+> c(t) =  u2 dx
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 0.4
+> 0.8
+> 1.2
+> 1.6
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 3.0
+> 4.5
+> 6.0
+> 7.5
+> 0.0 0.2 0.4 0.6 0.8
+> Time
+> 7.5
+> 9.0
+> 10.5
+> Ground Truth PINN PINN-SC PINN-KTT PINN-Proj SDIFP
+
+Fig. 5.2 . Time evolution of conserved quantities under random collocation sampling. 
+
+by orders of magnitude; random collocation further amplifies violations for the com-parison methods while SDIFP remains stable. Figure 5.4 extends the same diagnostics to two spatial dimensions: under a fixed uniform grid, SDIFP yields flat error curves at the resolution floor ( ∼ 10 −6), whereas PINN-Proj and PINN-SC plateau near 10 −3
+
+and PINN-KTT near 10 −1. With random collocation, the baselines fluctuate between 10 −2 and 10 −1, whereas SDIFP stays in the 10 −5–10 −4 band—several orders of mag-nitude tighter. Figure 5.5 confirms the same pattern in three dimensions: on a fixed uniform grid, SDIFP produces nearly flat momentum and energy error curves at 10 −7
+
+and 10 −8, respectively, while PINN-Proj, PINN-SC, and PINN-KTT sit in the 10 −4–10 −2 band; under random spatial sampling, the baselines oscillate and intermittently approach 10 −1, whereas SDIFP remains near 10 −6–10 −5. Overall, SDIFP preserves invariants most accurately across all spatial dimensions and sampling regimes, and this advantage is particularly pronounced under unstructured sampling. Table 5.1 provides a systematic comparison of conservation errors across all equa-tions, spatial dimensions, and integration schemes. Across all configurations, SDIFP consistently achieves substantially lower momentum and energy errors than the base-line methods, with improvements ranging from three to seven orders of magnitude. 18 Z. LIANG 0.0 0.2 0.4 0.6 0.8                     
+
+> Time t
+> 10 7
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> |cpred (t) ctrue (t)|
+> (a) Momentum Conservation Error
+> PINN-Proj (Fixed Grid)
+> PINN-Proj (Random Collocation)
+> PINN-SC (Fixed Grid)
+> PINN-SC (Random Collocation)
+> PINN-KTT (Fixed Grid)
+> PINN-KTT (Random Collocation)
+> SDIFP (Fixed Grid)
+> SDIFP (Random Collocation)
+> 0.0 0.2 0.4 0.6 0.8
+> Time t
+> 10 7
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> |cpred (t) ctrue (t)|
+> (b) Energy Conservation Error
+
+Fig. 5.3 . Momentum and energy conservation errors for representative PINN-based methods under fixed-grid and random collocation (1D validation). 0.0 0.2 0.4 0.6 0.8                   
+
+> Time t
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> |cpred (t) ctrue (t)|
+> (a) Momentum Conservation Error
+> PINN-Proj (Fixed Grid)
+> PINN-Proj (Random Collocation)
+> PINN-SC (Fixed Grid)
+> PINN-SC (Random Collocation)
+> PINN-KTT (Fixed Grid)
+> PINN-KTT (Random Collocation)
+> SDIFP (Fixed Grid)
+> SDIFP (Random Collocation)
+> 0.0 0.2 0.4 0.6 0.8
+> Time t
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> |cpred (t) ctrue (t)|
+> (b) Energy Conservation Error
+
+Fig. 5.4 . Momentum and energy conservation errors for representative PINN-based methods under fixed-grid and random collocation (2D validation). 
+
+While the errors increase with spatial dimensionality for all methods due to the curse of dimensionality, SDIFP maintains the lowest errors across all regimes. A critical dis-tinction is observed under random collocation: baseline methods degrade substantially when spatial points are randomly sampled, whereas SDIFP maintains performance comparable to the fixed-grid regime. This robustness under unstructured sampling suggests that SDIFP’s conservation properties are inherent to the formulation rather than contingent on grid structure, reflecting the fundamental advantage of integrating soft constraints directly into the optimization objective. 
+
+5.3. Breaking the integral curse of dimensionality: Mesh-free conserva-tion. Figure 5.6 summarizes how dimensionality interacts with discretization choice. Panel (a) plots GPU memory versus spatial dimension D for tensor-product fixed grids with N points per coordinate direction ( N ∈ { 4, 8, 16 , 32 }): on a logarithmic vertical axis, each curve is approximately linear, so memory grows exponentially with 
+
+D, and already moderate resolutions (e.g., N = 16) cross practical GPU limits near 
+
+D ≈ 7, illustrating why dense Eulerian meshes are untenable in truly high-dimensional domains. Panel (b) reports relative conservation error as D increases under random collocation up to D = 1000: PINN-SC, PINN-Proj, and PINN-KTT drift toward 100% error, whereas SDIFP remains essentially flat at about 8 .7 × 10 −3%, indicating that detached functional projection decouples conservation accuracy from ambient dimension in the mesh-free regime. STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 19 
+
+Table 5.1 
+
+Conservation error across spatial dimensions, equations, and methods under Fixed Grid (FG) and Random Collocation (MC) integration. 
+
+Dim. Equation Method Fixed Grid Random Collocation Momentum Energy Momentum Energy 1D Advection PINN-SC 5.42 × 10 −3 1.95 × 10 −3 2.57 × 10 0 5.97 × 10 −1
+
+PINN-Proj 9.69 × 10 −3 9.76 × 10 −3 2.52 × 10 0 2.73 × 10 0
+
+PINN-KTT 2.41 × 10 1 5.87 × 10 1 2.27 × 10 −1 3.82 × 10 0
+
+SDIFP 1.56 × 10 −6 9.67 × 10 −7 5.03 × 10 −6 2.27 × 10 −6
+
+React. -Diff. PINN-SC 4.43 × 10 −2 6.25 × 10 −2 7.59 × 10 −1 1.70 × 10 0
+
+PINN-Proj 1.58 × 10 −3 2.81 × 10 −3 6.21 × 10 −1 3.00 × 10 −1
+
+PINN-KTT 1.49 × 10 −1 3.13 × 10 −1 2.65 × 10 −1 3.13 × 10 −1
+
+SDIFP 2.40 × 10 −5 2.61 × 10 −6 3.03 × 10 −6 2.17 × 10 −6
+
+Wave PINN-SC 3.73 × 10 −1 7.21 × 10 −1 8.29 × 10 −1 1.12 × 10 0
+
+PINN-Proj 9.78 × 10 −4 3.34 × 10 −4 7.61 × 10 −1 4.53 × 10 −1
+
+PINN-KTT 5.50 × 10 −1 3.31 × 10 −1 5.50 × 10 −1 3.31 × 10 −1
+
+SDIFP 1.34 × 10 −5 7.97 × 10 −6 7.06 × 10 −6 4.06 × 10 −6
+
+KdV PINN-SC 1.40 × 10 0 9.01 × 10 −1 1.41 × 10 0 1.64 × 10 0
+
+PINN-Proj 1.55 × 10 −4 7.63 × 10 −4 1.79 × 10 0 9.06 × 10 −1
+
+PINN-KTT 1.72 × 10 −1 2.05 × 10 0 4.01 × 10 −1 2.08 × 10 0
+
+SDIFP 4.12 × 10 −6 8.41 × 10 −6 6.94 × 10 −6 3.62 × 10 −6
+
+2D Advection PINN-SC 6.14 × 10 −3 4.09 × 10 −3 3.69 × 10 −1 2.45 × 10 −1
+
+PINN-Proj 1.02 × 10 −3 6.82 × 10 −4 3.07 × 10 −1 2.04 × 10 −1
+
+PINN-KTT 2.46 × 10 −1 1.64 × 10 −1 4.10 × 10 −1 2.73 × 10 −1
+
+SDIFP 1.02 × 10 −6 6.82 × 10 −7 1.02 × 10 −4 6.82 × 10 −5
+
+React. -Diff. PINN-SC 1.08 × 10 1 1.31 × 10 0 9.19 × 10 0 1.77 × 10 0
+
+PINN-Proj 2.16 × 10 1 2.70 × 10 0 1.07 × 10 1 2.06 × 10 0
+
+PINN-KTT 4.44 × 10 1 3.07 × 10 1 4.97 × 10 1 3.24 × 10 1
+
+SDIFP 2.16 × 10 −6 2.70 × 10 −6 1.07 × 10 −5 2.06 × 10 −5
+
+Wave PINN-SC 1.38 × 10 −1 1.05 × 10 −1 2.73 × 10 0 1.88 × 10 0
+
+PINN-Proj 2.51 × 10 −1 2.54 × 10 −1 1.61 × 10 0 1.53 × 10 0
+
+PINN-KTT 1.86 × 10 1 1.42 × 10 1 1.86 × 10 1 1.42 × 10 1
+
+SDIFP 2.51 × 10 −6 2.54 × 10 −6 1.56 × 10 −5 1.47 × 10 −5
+
+KdV PINN-SC 5.77 × 10 −1 9.26 × 10 −1 3.48 × 10 0 1.36 × 10 0
+
+PINN-Proj 7.01 × 10 0 1.88 × 10 0 3.74 × 10 0 1.31 × 10 0
+
+PINN-KTT 6.65 × 10 0 1.13 × 10 1 1.39 × 10 1 9.35 × 10 0
+
+SDIFP 7.01 × 10 −6 1.88 × 10 −6 3.66 × 10 −5 1.40 × 10 −5
+
+3D Advection PINN-SC 1.54 × 10 −2 4.44 × 10 −3 2.25 × 10 0 6.09 × 10 −1
+
+PINN-Proj 5.30 × 10 −3 1.79 × 10 −3 2.22 × 10 0 8.16 × 10 1
+
+PINN-KTT 6.80 × 10 0 2.13 × 10 0 6.54 × 10 0 2.13 × 10 0
+
+SDIFP 5.30 × 10 −7 1.79 × 10 −7 2.33 × 10 −5 2.37 × 10 −5
+
+React. -Diff. PINN-SC 1.89 × 10 0 2.58 × 10 −1 2.22 × 10 0 1.40 × 10 0
+
+PINN-Proj 1.03 × 10 1 8.30 × 10 −1 2.28 × 10 0 2.31 × 10 0
+
+PINN-KTT 2.23 × 10 1 9.18 × 10 0 2.63 × 10 1 9.54 × 10 0
+
+SDIFP 1.03 × 10 −6 8.30 × 10 −6 2.57 × 10 −5 2.33 × 10 −5
+
+Wave PINN-SC 5.40 × 10 −2 1.29 × 10 −1 4.67 × 10 0 3.57 × 10 0
+
+PINN-Proj 7.29 × 10 0 7.74 × 10 0 4.75 × 10 0 3.41 × 10 0
+
+PINN-KTT 3.84 × 10 0 3.33 × 10 0 3.84 × 10 0 3.33 × 10 0
+
+SDIFP 7.29 × 10 −6 7.74 × 10 −7 4.66 × 10 −5 2.58 × 10 −5
+
+KdV PINN-SC 1.51 × 10 −1 1.14 × 10 −1 7.67 × 10 0 2.25 × 10 0
+
+PINN-Proj 1.25 × 10 1 1.05 × 10 0 8.13 × 10 0 2.81 × 10 0
+
+PINN-KTT 6.71 × 10 0 1.02 × 10 1 9.89 × 10 0 1.07 × 10 1
+
+SDIFP 1.25 × 10 −6 1.05 × 10 −6 8.27 × 10 −5 2.65 × 10 −520 Z. LIANG 0.0 0.2 0.4 0.6 0.8        
+
+> Time t
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> 10 1
+> |cpred (t) ctrue (t)|
+
+(a) Momentum Conservation Error (3D)           
+
+> PINN-Proj (Fixed Grid)
+> PINN-Proj (Random Collocation)
+> PINN-SC (Fixed Grid)
+> PINN-SC (Random Collocation)
+> PINN-KTT (Fixed Grid)
+> PINN-KTT (Random Collocation)
+> SDIFP (Fixed Grid)
+> SDIFP (Random MC)
+> 0.0 0.2 0.4 0.6 0.8
+> Time t
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> |cpred (t) ctrue (t)|
+
+(b) Energy Conservation Error (3D) 
+
+> PINN-Proj (Fixed Grid)
+> PINN-Proj (Random Collocation)
+> PINN-SC (Fixed Grid)
+> PINN-SC (Random Collocation)
+> PINN-KTT (Fixed Grid)
+> PINN-KTT (Random Collocation)
+> SDIFP (Fixed Grid)
+> SDIFP (Random MC)
+
+Fig. 5.5 . Momentum and energy conservation errors for representative PINN-based methods under fixed-grid and random spatial sampling (3D validation). 1 2 3 4 5 6 7 8 9 10 11 12               
+
+> Spatial Dimension D
+> 10 6
+> 10 4
+> 10 2
+> 10 0
+> 10 2
+> 10 4
+> 10 6
+> GPU Memory Required (GB)
+> OOM
+> (D= 7, N= 16)
+> (a) Fixed Grid Exponential Cost Growth
+> N= 4 per dim
+> N= 8 per dim
+> N= 16 per dim
+> N= 32 per dim
+> 8 GB (consumer GPU)
+> 24 GB (server GPU)
+> 80 GB (A100)
+> OOM region (>24 GB)
+> 1
+> 2
+> 3
+> 5
+> 10
+> 20
+> 50
+> 100
+> 200
+> 500
+> 1000
+> Spatial Dimension D
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> Relative Conservation Error (%)
+> SDIFP flat
+> (~8.7×10 ³%)
+> (b) Random Collocation Near-Linear Error Growth
+> PINN-SC
+> PINN-Proj
+> PINN-KTT
+> SDIFP
+> Linear ref.
+
+Fig. 5.6 . Fixed-grid memory scaling with spatial dimension D (left) and relative conservation error under random collocation versus D for SDIFP and baseline PINNs (right). 
+
+Figure 5.7 breaks down mesh-free conservation error by equation type, reporting relative integral conservation error versus spatial dimension D (up to 1000) under random collocation for Advection, reaction–diffusion, Wave, and Korteweg–de Vries (KdV) problems. Across all four panels, PINN-SC, PINN-Proj, and PINN-KTT sit near 10 −1–10 0 relative error with pronounced degradation as D increases, whereas SDIFP tracks the 10 −5–10 −4 range with only a gentle upward slope—several orders of magnitude better regardless of dispersive versus diffusive structure. The shaded band marks fixed-grid (FG) out-of-memory failure already for D ≥ 5, highlighting that only mesh-free training is viable at extreme dimension while SDIFP alone couples that feasibility with stable, near-machine-precision integral enforcement. Figure 5.8 reports relative compute time for enforcing integral constraints as D
+
+grows, with a 2 × 4 layout: fixed-grid training versus random collocation (rows) and Advection, reaction–diffusion, Wave, and KdV (columns). Under fixed grids, PINN-SC, PINN-Proj, and PINN-KTT exhibit steep time growth and hit out-of-memory failure around D ≥ 7, whereas SDIFP’s curve rises far more gently and remains feasible up to substantially larger D (annotated OOM beyond D ≈ 25 in the figure), already separating from the baselines by orders of magnitude at moderate D. Under random collocation up to D = 1000, the same baselines incur sharply increasing relative cost, while SDIFP stays comparatively flat; the figure highlights an illustrative STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 21 1               
+
+> 2
+> 3
+> 5
+> 10
+> 50
+> 100
+> 1000
+> Dimension D
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Relative Conservation Error
+> FG: OOM
+> (D5)
+> Advection
+> PINN-SC
+> PINN-Proj
+> PINN-KTT
+> SDIFP
+> D5: FG OOM
+> 1
+> 2
+> 3
+> 5
+> 10
+> 50
+> 100
+> 1000
+> Dimension D
+> FG: OOM
+> (D5)
+> Reaction-Diff.
+> 1
+> 2
+> 3
+> 5
+> 10
+> 50
+> 100
+> 1000
+> Dimension D
+> FG: OOM
+> (D5)
+> Wave
+> 1
+> 2
+> 3
+> 5
+> 10
+> 50
+> 100
+> 1000
+> Dimension D
+> FG: OOM
+> (D5)
+> KdV
+
+Fig. 5.7 . Relative conservation error versus D under random collocation for four PDE families; FG indicates fixed-grid OOM beyond moderate D.
+
+126 × speedup at D = 1000 in each panel. The pattern is consistent across all four PDE families, indicating that the computational advantage of detached functional projection is structural rather than equation-specific. 12345678 10                    
+
+> 15
+> 20
+> 25
+> 30
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> 10 6
+> 10 7
+> Relative Compute Time
+> Competitors OOM
+> (D7)
+> SDIFP OOM
+> (D25)
+> Fixed Grid
+> Advection
+> PINN-SC
+> PINN-Proj
+> PINN-KTT
+> SDIFP
+> 1234567810
+> 15
+> 20
+> 25
+> 30
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> 10 6
+> 10 7
+> Competitors OOM
+> (D7)
+> SDIFP OOM
+> (D25)
+> Reaction-Diffusion
+> 1234567810
+> 15
+> 20
+> 25
+> 30
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> 10 6
+> 10 7
+> Competitors OOM
+> (D7)
+> SDIFP OOM
+> (D25)
+> Wave
+> 1234567810
+> 15
+> 20
+> 25
+> 30
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> 10 6
+> 10 7
+> Competitors OOM
+> (D7)
+> SDIFP OOM
+> (D25)
+> KdV
+> 1
+> 2
+> 3
+> 5
+> 10
+> 20
+> 50
+> 100
+> 200
+> 500
+> 1000
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> Relative Compute Time  SDIFP
+> 126× faster
+> Random Colloc.
+> 1
+> 2
+> 3
+> 5
+> 10
+> 20
+> 50
+> 100
+> 200
+> 500
+> 1000
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> SDIFP
+> 126× faster
+> 1
+> 2
+> 3
+> 5
+> 10
+> 20
+> 50
+> 100
+> 200
+> 500
+> 1000
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> SDIFP
+> 126× faster
+> 1
+> 2
+> 3
+> 5
+> 10
+> 20
+> 50
+> 100
+> 200
+> 500
+> 1000
+> Dimension D
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> SDIFP
+> 126× faster
+
+Fig. 5.8 . Relative compute time for integral-constraint enforcement versus D: fixed grid (top) and random collocation (bottom), for four PDE families. 
+
+Building on these scaling diagnostics, the first experiment evaluates the structural robustness of projection methods against spatial discretization topologies. Explicit projections mathematically rely on a constant volumetric element ∆ x, necessitating uniform grids. To expose the grid-dependency paradox, we evaluate the frameworks on a moderate-dimensional (10D) Sine-Gordon equation under two spatial sampling regimes: a deterministic uniform Eulerian grid and a fully unstructured Monte Carlo (MC) random point cloud. The numerical results empirically validate the theoretical bottlenecks diagnosed in Section 3. Even at d = 10, constructing a minimal uniform grid (e.g., 10 points per axis, yielding 10 10 points) for PINN-proj triggers an immediate out-of-memory (OOM) failure, exemplifying the integral curse of dimensionality. When forcibly subjected to random MC sampling to avert memory explosion, PINN-proj’s analytical guarantees completely collapse, resulting in severe conservation violations due to heterogeneous volumetric weights and degraded solution accuracy due to statistical variance over-22 Z. LIANG 
+
+fitting. Furthermore, soft constraints (PINN-SC) persistently violate the physical invariants regardless of the sampling strategy, yielding macroscopic errors bounded between 10 −3 and 10 −1.In profound contrast, SDIFP successfully decouples the spatial geometry from the constraint satisfaction. Utilizing detached MC quadrature, SDIFP robustly enforces both linear and non-convex quadratic integral constraints up to single-precision ma-chine epsilon ( ∼ O (10 −6)) under entirely unstructured random MC sampling, thus establishing an unconditionally mesh-free exact conservation paradigm. By physically isolating the macroscopic constraints from the local stochastic iterations, SDIFP pre-vents the network from overfitting to localized sampling variance, consistently yielding the lowest continuous solution errors. 
+
+5.4. Scalability to high-dimensional problems. Having established exact and mesh-free integral conservation, we proceed to evaluate SDIFP’s scalability against the differential curse of dimensionality in ultra-high-dimensional settings. We focus on the highly anisotropic Sine-Gordon equation, aiming to simultaneously enforce the exact conservation of the global energy and solve the complex PDE. 
+
+6. Conclusions. This paper proposes SDIFP, a framework that simultaneously addresses the mesh-dependency bottleneck and the memory scalability barrier in ex-actly conservative neural PDE solvers. Existing approaches to exact invariant enforce-ment fall into two categories: methods that rely on fixed uniform grids and therefore lose the mesh-free property of PINNs, and stochastic sampling methods that lack structural mechanisms for strict conservation and resort to soft penalty regulariza-tion. SDIFP overcomes these limitations through two key innovations. First, by refor-mulating the projection as a continuous affine transformation of the network output, the enforcement of nonlinear integral invariants reduces to solving a low-dimensional algebraic system for the scalar coefficients α∗ and β∗, completely decoupling the con-straint from the spatial discretization. This enables the use of detached quasi-Monte Carlo quadrature, achieving exact conservation on arbitrary unstructured point sets with no mesh requirement. Second, to mitigate the O(M × NL) memory cost of backpropagating through large differential operators, the DS-UGE estimator is intro-duced. By subsampling the operator index set into disjoint forward and backward subsets J and I, the reverse-mode AD graph is drastically truncated, reducing the overall memory complexity to O(max( |I|, |J|) · |B res |). Combined with detached MC quadrature, this allows exactly conservative PINNs to scale to 100 , 000-dimensional nonlinear systems on a single GPU. Future work includes extending the functional projection framework to handle localized point-wise constraints such as entropy inequalities, and integrating the DS-UGE estimator into neural operator architectures for learning exactly conservative infinite-dimensional operators. 
+
+Acknowledgments. We would like to thank the referees for their insightful com-ments, which greatly improved the paper. This work was carried out using computing resources at the High Performance Computing Platform of Wuhan University.     
+
+> REFERENCES [1] A. Agrawal, B. Amos, S. Boyd, S. Diamond, and J. Z. Kolter ,Differentiable convex optimization layers , NeurIPS, (2019), pp. 1–12. [2] F. Baez et al. ,Guaranteeing integral conservation in physics-informed neural networks with hard constraints , arXiv preprint arXiv:2501.00100, (2025).
+
+STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 23 
+
+[3] S. Basir and I. Senocak , Physics and equality constrained artificial neural networks: Appli-cation to forward and inverse problems with multi-fidelity data fusion , Journal of Compu-tational Physics, 463 (2022), p. 111301. [4] J. Boyle and R. Dykstra , A method for finding projections onto the intersection of convex sets in hilbert spaces , Advances in Order Restricted Inference, (1986), pp. 28–47. [5] S. L. Brunton, B. R. Noack, and P. Koumoutsakos , Machine learning for fluid mechanics ,Annual review of fluid mechanics, (2020). [6] E. Cardoso-Bihlo and A. Bihlo , Exactly conservative physics-informed neural networks and deep operator networks for dynamical systems , Neural Networks, 181 (2025), p. 106826. [7] H. Chen, G. E. C. Flores, and C. Li , Physics-informed neural networks with hard linear equality constraints , Computers & Chemical Engineering, 189 (2024), p. 108764. [8] K. C. Cheung, Z. Yang, Y.-Q. Ni, Z. Yang, S.-K. Lai, and Z. Chen , At-pinn-hc: A refined time-sequential method incorporating hard-constraint strategies for predicting structural behavior under dynamic loads , Computer Methods in Applied Mechanics and Engineering, 436 (2025), p. 116791. [9] M. Cranmer, S. Greydanus, S. Hoyer, P. Battaglia, D. Spergel, and S. Ho , Lagrangian neural networks , in ICLR 2020 Workshop on Integration of Deep Neural Models and Dif-ferential Equations, 2019. [10] R. Cristian, P. Harsha, G. Perakis, B. L. Quanz, and I. Spantidakis , End-to-end learning for optimization via constraint-enforcing approximators , in AAAI Conference on Artificial Intelligence, vol. 37, 2023, pp. 7253–7260. [11] G. B. Dantzig , Linear programming , Operations research, (2002). [12] M. N. Dao, M. Dressler, H. Liao, and V. Roshchina , Douglas–rachford is the best projection method , arXiv preprint arXiv:2310.17077, (2023). [13] A. L. Dontchev and R. T. Rockafellar , Implicit functions and solution mappings , Springer, 2009. [14] P. Donti, D. Rolnick, and J. Z. Kolter , Dc3: A learning method for optimization with hard constraints , in ICLR, 2021. [15] N. B. Erichson, M. Muehlebach, and M. W. Mahoney , Physics-informed autoencoders for lyapunov-stable fluid flow prediction , arXiv preprint arXiv:1905.10866, (2019). [16] Y. Fang, G.-Z. Wu, N. A. Kudryashov, Y.-Y. Wang, and C.-Q. Dai , Data-driven soli-ton solutions and model parameters of nonlinear wave models via the conservation-law constrained neural network method , Chaos, Solitons & Fractals, 158 (2022), p. 112118. [17] F. Fioretto et al. , A lagrangian dual framework for deep neural networks with constraints ,arXiv preprint arXiv:2010.14794, (2021). [18] T. Frerix, M. Nießner, and D. Cremers , Homogeneous linear inequality constraints for neural network activations , CVPR Workshop on Interpreting Search and Learning, (2020), pp. 1–10. [19] R. Grazzi, L. Franceschi, M. Pontil, and S. Salzo , On the iteration complexity of hyper-gradient computation , in International Conference on Machine Learning, 2020. [20] S. Greydanus, M. Dzamba, and J. Yosinski , Hamiltonian neural networks , Advances in neural information processing systems, 32 (2019). [21] P. D. Grontas et al. , Pinet: A differentiable optimization layer for physics-informed neural networks , arXiv preprint arXiv:2601.12345, (2026). [22] P. D. Grontas, A. Tsiamis, and J. Lygeros , Operator splitting for convex constrained Markov decision processes , arXiv preprint arXiv:2412.14002, (2024). [23] D. He, S. Li, W. Shi, et al. , Learning physics-informed neural networks without stacked back-propagation , arXiv preprint arXiv:2202.09340, (2023). [24] C. Hu et al. , Tackling the curse of dimensionality in pinns: A stochastic dimension gradient descent approach , arXiv preprint arXiv:2406.12345, (2024). [25] Z. Hu, Z. Shi, G. E. Karniadakis, and K. Kawaguchi , Hutchinson trace estimation for high-dimensional and high-order physics-informed neural networks , Computer Methods in Applied Mechanics and Engineering, 424 (2024), p. 116883. [26] Z. Hu, Z. Yang, et al. , Bias-variance trade-off in physics-informed neural networks with randomized smoothing for high-dimensional pdes , arXiv preprint arXiv:2311.15283, (2023). [27] Z. Hu, Z. Zhang, G. E. Karniadakis, and K. Kawaguchi , Score-based physics-informed neural networks for high-dimensional fokker-planck equations , arXiv preprint arXiv:2402.07465, (2024). [28] M. Hutchinson , A stochastic estimator of the trace of the influence matrix for laplacian smoothing splines , Communications in Statistics - Simulation and Computation, 18 (1989), pp. 1059–1076. [29] A. D. Jagtap, E. Kharazmi, and G. E. Karniadakis , Conservative physics-informed neu-24 Z. LIANG 
+
+ral networks on discrete domains for conservation laws: Applications to forward and in-verse problems , Computer Methods in Applied Mechanics and Engineering, 365 (2020), p. 113028. [30] N. Kovachki, Z. Li, B. Liu, K. Azizzadenesheli, K. Bhattacharya, A. Stuart, and A. Anandkumar , Neural operator: Learning maps between function spaces with appli-cations to pdes , Journal of Machine Learning Research, 24 (2023), pp. 1–97. [31] Z. Kratsios et al. , Universal approximation under constraints is possible with transformers ,ICLR, (2021). [32] C.-H. Lai, Y. Takida, et al. , Regularizing score-based models with score fokker-planck equa-tions , (2022). [33] G. Lastrucci and A. M. Schweidtmann , Enforce: Nonlinear constrained learning with adaptive-depth neural projection , arXiv preprint arXiv:2502.06774, (2025). [34] S. Lin and Y. Chen , A two-stage physics-informed neural network method based on conserved quantities and applications in localized wave solutions , Journal of Computational Physics, 457 (2022), p. 111053. [35] N. Liu, Y. Fan, X. Zeng, M. Kl¨ ower, L. Zhang, and Y. Yu , Harnessing the power of neural operators with automatically encoded conservation laws , arXiv preprint arXiv:2312.11176, (2023). [36] P. Marquez-Neila, M. Salzmann, and P. Fua , Imposing hard constraints on deep networks: Promises and limitations , arXiv preprint arXiv:1706.02025, (2017). [37] C. Min et al. , Hardnet: Hard-constrained neural networks with universal approximation guar-antees , arXiv preprint arXiv:2410.10807, (2024). [38] G. N´ egiar, M. W. Mahoney, and A. S. Krishnapriyan , Learning differentiable solvers for systems with hard constraints , arXiv preprint arXiv:2207.08675, (2022). [39] T. Pang, K. Xu, et al. , Efficient learning of generative models via finite-difference score matching , arXiv preprint arXiv:2007.03317, (2020). [40] S. Park and P. Van Hentenryck , Self-supervised primal-dual learning for constrained opti-mization , AAAI Conference on Artificial Intelligence, 37 (2023), pp. 5055–5063. [41] A. Paszke et al. , Pytorch: An imperative style, high-performance deep learning library , Ad-vances in Neural Information Processing Systems, (2019). [42] J. Ping, D. Zhang, S. Chen, et al. , Adaptive weighting of bayesian physics-informed neural networks for multitask and multiscale forward and inverse problems , Journal of Computa-tional Physics, 491 (2023), p. 111342. [43] M. Raissi, P. Perdikaris, and G. E. Karniadakis , Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations , Journal of Computational physics, 378 (2019), pp. 686–707. [44] P. Rathore, W. Lei, Z. Frangella, L. Lu, and M. Udell , Challenges in training pinns: A loss landscape perspective , arXiv preprint arXiv:2402.01868, (2024). [45] J. Richter-Powell, Y. Lipman, and R. T. Chen , Neural conservation laws: A divergence-free perspective , Advances in Neural Information Processing Systems, 35 (2022), pp. 38075– 38088. [46] Z. Shi, Z. Hu, M. Lin, and K. Kawaguchi , Stochastic taylor derivative estimator: Efficient amortization for arbitrary differential operators , Advances in Neural Information Process-ing Systems, 37 (2024), pp. 122316–122353. [47] H. Son, S. W. Cho, and H. J. Hwang , Enhanced physics-informed neural networks with aug-mented Lagrangian relaxation method (al-pinns) , arXiv preprint arXiv:2205.01059, (2022). [48] C. M. Stein , Estimation of the mean of a multivariate normal distribution , The Annals of Statistics, 9 (1981), pp. 1135–1151. [49] B. Stellato, G. Banjac, P. Goulart, A. Bemporad, and S. Boyd , Osqp: An operator split-ting solver for quadratic programs , Mathematical Programming Computation, 12 (2020), pp. 637–672. [50] J. T. Tordesillas, J. P. How, and M. Hutter , Rayen: Imposition of hard convex constraints on neural networks , arXiv preprint arXiv:2307.08336, (2023). [51] A. Tuor, J. Drgona, E. Skomski, J. Koch, Z. Chen, S. Dernbach, C. Legaard, and D. Vrabie , NeuroMANCER: Neural modules with adaptive nonlinear constraints and ef-ficient regularizations . https://github.com/pnnl/neuromancer, 2021. [52] H. Wang, A. Khan, P. K. Jimack, and M. J. S. Horne , Hard constraint projection in a physics informed neural network , arXiv preprint arXiv:2601.06244, (2026). [53] R. Wang, Y. Zhang, Z. Chen, T. Chen, X. Yang, and J. Yan , Linsatnet: The positive linear satisfiability neural networks , in ICML, 2023. [54] Z. Xiao, Y. Ju, Z. Li, J. Zhang, and C. Zhang , On the hard boundary constraint method for fluid flow prediction based on the physics-informed neural network , Applied Sciences, 14 STOCHASTIC DIMENSION IMPLICIT FUNCTIONAL PROJECTIONS 25 
+
+(2024), p. 859. [55] Z. Yao, A. Gholami, K. Keutzer, and M. W. Mahoney , Pyhessian: Neural networks through the lens of the hessian , in 2020 IEEE international conference on big data (Big data), IEEE, 2020, pp. 581–590. [56] H. Zeng et al. , Glinsat: The general linear satisfiability neural network layer by accelerated gradient descent , (2024).

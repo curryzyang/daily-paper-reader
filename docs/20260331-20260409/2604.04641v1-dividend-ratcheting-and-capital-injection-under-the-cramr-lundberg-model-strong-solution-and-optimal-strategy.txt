@@ -1,0 +1,3348 @@
+Title: Dividend ratcheting and capital injection under the Cram\'er-Lundberg model: Strong solution and optimal strategy
+
+URL Source: https://arxiv.org/pdf/2604.04641v1
+
+Published Time: Tue, 07 Apr 2026 01:43:14 GMT
+
+Number of Pages: 38
+
+Markdown Content:
+# Dividend ratcheting and capital injection under the Cram´ er-Lundberg model: Strong solution and optimal strategy 
+
+Chonghu Guan ∗ Zuo Quan Xu †
+
+Abstract 
+
+We consider an optimal dividend payout problem for an insurance company whose surplus follows the classical Cram´ er-Lundberg model. The dividend rate is subject to a ratcheting con-straint (i.e., it must be nondecreasing over time), and the company may inject capital at a proportional cost to avoid ruin. This problem gives rise to a stochastic control problem with a self-path-dependent control constraint, costly capital injections, and jump-diffusion dynam-ics. The associated Hamilton-Jacobi-Bellman (HJB) equation is a partial integro-differential variational inequality featuring both a nonlocal integral term and a gradient constraint. We develop a systematic probabilistic and PDE-based approach to solve this HJB equation. By discretizing the space of admissible dividend rates, we construct a sequence of approximating regime-switching systems of ordinary integro-differential equations. Through careful a priori es-timates and a limiting argument, we prove the existence and uniqueness of a strong solution in a suitable space. This regularity result is fundamental: it allows us to characterize the optimal dividend policy via a switching free boundary and to construct an explicit optimal feedback con-trol strategy. To the best of our knowledge, this is the first complete solution — comprising both the value function and an implementable optimal strategy — for a dividend ratcheting problem with capital injection under the Cram´ er-Lundberg model. Our work advances the mathematical theory of optimal stochastic control beyond the standard viscosity solution framework, providing a rigorous foundation for dividend policy design in economics. 
+
+Keywords. Dividend ratcheting, capital injection, Cram´ er-Lundberg model, free boundary problem, variational inequality, integro-differential equation. 
+
+2010 Mathematics Subject Classification. 35R35; 35Q93; 91G10; 91G30; 93E20; 45K05. 
+
+# Contents 
+
+1 Introduction 22 Problem formulation and preliminaries 4
+
+> ∗
+
+School of Mathematics, Jiaying University, Meizhou 514015, Guangdong, China. Email: gchonghu@163.com 
+
+> †
+
+Department of Applied Mathematics, The Hong Kong Polytechnic University, Kowloon, Hong Kong SAR, China. Email: maxu@polyu.edu.hk 
+
+1
+
+> arXiv:2604.04641v1 [math.OC] 6 Apr 2026
+
+3 Solution to the problem (2) 64 Solvability of the HJB equation on Q+ 
+
+> ∞
+
+13 5 On the free boundary X (·) and the equivalent maximum rate M(·, ·) 22 A Appendix 29 
+
+# 1 Introduction 
+
+The optimal dividend payout problem has been a cornerstone of actuarial science and financial mathematics since the seminal works of De Finetti [4] and Gerber [5]. At its core, the problem seeks a dynamic strategy for distributing surplus to shareholders that maximizes the expected present value of future dividends, balancing the immediate reward against the risk of premature bankruptcy. The literature has extensively explored various facets of this problem, including different surplus processes (e.g., compound Poisson [7], Brownian motion [3, 15, 6]), control types (e.g., impulse, barrier), and operational constraints. A more recent and practically relevant line of inquiry incorporates path-dependent constraints on the dividend policy itself. Notably, the ratcheting constraint requires the dividend payout rate to be non-decreasing over time, reflecting the managerial reluctance or contractual inability to cut dividends. This problem, under Brownian motion setting, was tackled by Albrecher, Azcue, and Muler [1, 2] using viscosity solution theory, and later resolved completely by Guan and Xu [8] using a novel PDE method that yielded a strong solution and an explicit optimal feedback strategy. This PDE approach was further extended to incorporate a more flexible drawdown constraint by Guan, Fan, and Xu [9], where the dividend rate is allowed to decrease but not below a fixed proportion of its historical maximum. That work resulted in a strong solution for a nonlinear HJB variational inequality. In this paper, we build upon this established PDE framework to study a more comprehen-sive and realistic model. We consider an insurance company whose surplus process is governed by the classical Cram´ er-Lundberg model , which incorporates both a deterministic income stream and random losses from a compound Poisson process. This is a more accurate representation of insurance risk than the pure diffusion models used in our previous works. Furthermore, to ensure the company’s solvency and prevent ruin, we allow for costly capital injections . This feature allows the surplus to be replenished from external sources (e.g., issuing new equity) at a premium cost, making the model more applicable in practice. The literature on optimal dividend problems with capital injection is extensive. Early works by Sethi and Taksar [13] and Sethi, Taksar, and Yan [14] studied dividend and capital injection problems in a diffusion setting, establishing that a barrier strategy is optimal. Kulenko and Schmidli [12] extended this to the Cram´ er-Lundberg model, showing that the optimal policy involves paying dividends at a barrier and injecting capital to keep the surplus nonnegative. Later, He, Liang, and Yuan [10] considered a problem with both dividend and capital injection under a spectrally 2negative L´ evy process. More recently, Keppo, Reppen, and Soner [11] examined discrete dividend payments with capital injections, highlighting the trade-off between distribution and solvency. In all these works, the dividend policy is typically a barrier strategy without path-dependent constraints. Our work differs fundamentally by imposing a ratcheting constraint on the dividend rate, which introduces a self-path-dependent element that, when combined with capital injections and a jump-diffusion surplus, leads to a substantially more complex stochastic control problem. The integration of these three features — a jump surplus process, costly capital injections, and a ratcheting dividend constraint — leads to a significantly more complex optimal control problem. The associated Hamilton-Jacobi-Bellman (HJB) equation is a new type of variational inequality that combines a partial integro-differential operator with two gradient constraints. This is markedly different from the linear differential operator in [8] and the nonlinear differential operator in [9] under Brownian motion setting. The non-local nature of the integral term, caused by the presence of compound Poisson process, introduces substantial analytical challenges, particularly in establishing comparison principles and proving the regularity of the solution. Our primary contribution is to show that, despite these difficulties, the HJB equation admits a unique strong solution . This represents a crucial improvement over the viscosity solution approach, which — while powerful for existence — does not suffice for constructing an implementable optimal feedback strategy. The strong regularity of our solution enables us to: 
+
+• Provide a complete characterization of the optimal strategy; 
+
+• Show that the optimal dividend policy is governed by a free boundary separating the state space into regions where the dividend rate should be increased versus kept constant; 
+
+• Explicitly incorporate the gradient constraint arising from costly capital injections; and 
+
+• Construct a feedback control, via the explicitly determined switching free boundary, that is both admissible and optimal. Our method follows a similar spirit to our previous works [8, 9]. We first analyze a boundary case to determine the terminal condition for the HJB equation. We then discretize the problem by considering a finite set of possible dividend rates, leading to a regime-switching system of ordinary integro-differential equations (OIDEs). By establishing uniform estimates for this approximating system and passing to the limit, we construct a strong solution to the original HJB variational inequality. This approach, which is more systematic than the guess-and-verify methods prevalent in stochastic control, yields a wealth of qualitative properties of the value function, including its concavity and boundedness of its derivatives. Ultimately, these properties allow us to prove the existence and continuity of the optimal switching boundary and to verify that the candidate strategy is indeed optimal. The remainder of this paper is organized as follows. Section 2 formulates the optimal dividend ratcheting problem with capital injection under the Cram´ er–Lundberg model. Section 3 derives the associated HJB variational inequality and presents the optimal strategy via a free boundary. 3Section 4 presents the core technical contribution of the paper: the construction of a strong solution to the HJB equation via a regime-switching approximation and a limiting argument. Section 5 establishes the regularity properties of the free boundary and the equivalent maximum rate function. Finally, Appendix A contains the technical proofs and auxiliary results. 
+
+Notation. We use R to denote the set of real numbers, and R+ the set of non-negative real numbers. For any measurable set D ⊆ R and positive integer n, define the space 
+
+W n, ∞(D) = 
+
+n
+
+u : D 7 → R ess sup 
+
+> x∈D
+
+dku
+
+dxk < +∞, k = 0 , 1, · · · , n 
+
+o
+
+,
+
+where dk u 
+
+> dxk
+
+is the k-order weak derivative of u, and define the space 
+
+Cn(D) = 
+
+n
+
+u ∈ W n, ∞(D) dku
+
+dxk ∈ C(D), k = 0 , 1, · · · , n 
+
+o
+
+,
+
+where C0(D) = C(D) is the set of continuous functions on D.
+
+# 2 Problem formulation and preliminaries 
+
+Our model is established in a filtered complete probability space (Ω , F, P, {F t}t⩾0) satisfying the usual conditions. The surplus Xt of an insurance company is an {F t}t⩾0-adapted process satisfying the Cram´ er-Lundberg model with controls of dividend payout and capital injection: 
+
+Xt = x +
+
+Z t
+
+> 0
+
+(μ − Cs) d s −
+
+> Nt
+
+X
+
+> i=1
+
+Zi + Dt, t ⩾ 0. (1) Here, x is the initial surplus, μ > 0 is the constant income rate, Ct is the dividend payout rate at time t, Dt is the accumulated capital injection until time t, {Nt}t⩾0 is a Poisson process with a constant intensity λ > 0, {Zi}∞ 
+
+> i=1
+
+is a a series of independent random variables with a common distribution function F , all of which are independent of {Nt}t⩾0.We use Π x,c to denote the set of admissible dividend-capital injection strategies {(Ct, D t)}t⩾0
+
+that satisfy the following properties. 1. First, both the dividend payout process {Ct}t⩾0 and the cumulated capital injection process 
+
+{Dt}t⩾0 shall be {F t}t⩾0-adapted and c` adl` ag (right-continuous with left limits). 2. Second, the dividend rate process {Ct}t⩾0 satisfies c ⩽ Ct ⩽ c for all t ⩾ 0 and obeys the 
+
+ratcheting constraint : it is non-decreasing. The constant c ∈ (0 , μ ) serves as an upper bound on the dividend payout rate. Clearly, shareholders expect to receive positive dividend payouts, at least in the maximal payout scenario; it is therefore economically natural to assume c > 0. The upper bound c < μ is equally natural from an economic perspective. Indeed, if c ⩾ μ,the surplus would lack a positive drift — even at the maximal dividend rate — to offset 4incoming claims. This would force frequent, costly capital injections and ultimately diminish the company’s performance. Hence, the condition c ∈ (0 , μ ) is both economically reasonable and necessary for a nontrivial dividend optimization problem. 3. Third, the cumulated capital injection process {Dt}t⩾0 shall be nonnegative and non-decreasing; for ease of presentation, we take the convention that Dt = 0 for all t < 0. 4. Last, the surplus process X in (1) under the strategy {(Ct, D t)}t⩾0 shall not go bankrupt, i.e., it holds that Xt ⩾ 0 for all t ⩾ 0. For any ( x, c ) ∈ R × (−∞ , c ], one can verify that ( c, PNt 
+
+> i=1
+
+Zi + |x|)t⩾0 is an admissible strategy; hence Π x,c is nonempty. Note that we allow the initial surplus x to be negative, as capital injection can immediately render the surplus positive. We also permit c to take negative values, which may be interpreted as the company issuing bonds at a positive return rate, albeit with an adverse effect on performance. This flexibility, together with the ratcheting constraint, broadens the model’s scope and enhances its alignment with real-world financial practices. The company’s objective is to find an admissible dividend-capital injection strategy {(Ct, D t)}t⩾0 ∈
+
+Πx,c to maximize the expectation of future discounted cumulative dividend payouts after reducing the cost of capital injection: 1
+
+V (x, c ) = sup 
+
+> {(Ct,D t)}t⩾0∈Πx,c
+
+E
+
+" Z ∞
+
+> 0
+
+e−rt Ct dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dDt
+
+#
+
+, (x, c ) ∈ R × (−∞ , c ], (2) where r > 0 represents a constant discount factor and ℓ represents the cost per unit of capital injection. We assume ℓ > 1 throughout this paper. This condition is economically natural: raising external capital entails transaction costs, underwriting fees, and adverse selection, making it more expensive than retaining internal surplus. If ℓ ⩽ 1, external capital would be cheaper than or equal to retained earnings, leading to degenerate behavior (e.g., unbounded value functions or collapse of the free boundary). Mathematically, ℓ > 1 ensures the gradient constraint vx ⩽ ℓ is non-trivial and guarantees the well-posedness of the HJB variational inequality. We also take the following technical assumption throughout the paper: dF (x) = p(x) d x, where p is positive, bounded and non-increasing on (0 , ∞), (3)                     
+
+> 1Here and hereafter, we adopt the notation that
+> Z∞
+> 0
+> e−rt dDt:=
+> Z
+> [0 ,∞)
+> e−rt dDt,
+> which is also equal to Z
+> (0 ,∞)
+> e−rt dDt+D0=
+> Z
+> (0 ,∞)
+> e−rt dDct+X
+> t⩾0
+> e−rt ∆Dt,
+> where Dcis the continuous part of the process Dand ∆ Dt=Dt−Dt−.
+
+5and 0 < γ := E[Z1] = 
+
+Z ∞
+
+> 0
+
+xp (x) d x < ∞.
+
+The boundedness and positivity assumptions on p are not essential and are imposed only to avoid unnecessary technicalities, as the slight increase in generality would not justify the added complexity in the proofs. The remainder of this paper is devoted to the study of problem (2). We begin by establishing several fundamental properties of the value function. These properties, in turn, inspire and guide our subsequent analysis of the associated HJB equation. 
+
+Lemma 2.1 The value function V defined in (2) is monotonically decreasing in c, concave in x
+
+and satisfies 
+
+0 ⩽ V (y, c ) − V (x, c ) ⩽ ℓ(y − x), if x ⩽ y, c ⩽ c;
+
+V (x, c ) = V (0 , c ) + ℓx, if x ⩽ 0, c ⩽ c;
+
+c − λℓγ r ⩽ V (x, c ) ⩽ cr , if x ⩾ 0, c ⩽ c. 
+
+Moreover, for any x < 0, a strategy {(Ct, D t)}t⩾0 is an optimal for V (0 , c ) if and only if {(Ct, D t −
+
+x)}t⩾0 is optimal for V (x, c ); in particular, it suffices to find an optimal solution for V (0 , c ) so as to solve V (x, c ).
+
+Its proof is given in Appendix A.1. Observe that this result yields the key estimate 0 ⩽ Vx ⩽ ℓ. As will become evident, this bound is essential for our subsequent investigation of the HJB equation. Finally, we note that it suffices to study problem (2) in the region 
+
+Q+ 
+
+> ∞
+
+:= R+ × (−∞ , c ],
+
+since the behavior for x < 0 can be transformed to the case x = 0 by Lemma 2.1. 
+
+# 3 Solution to the problem (2) 
+
+The goals of this section are twofold. First, we introduce the HJB equation for problem (2) and establish the uniqueness of its solution in a strong sense. Second, assuming the existence of such a solution and the properties of an associated free boundary, we provide a complete characterization of the optimal strategy, thereby solving problem (2). The existence proof and the detailed analysis of the free boundary, which are more involved, are deferred to Sections 4 and 5, respectively. We will apply PDE method to study the problem (2). To this end, we need first to establish a comparison principle. It will be critical for the subsequent analysis, and many results of this paper will relay on it. 63.1 A comparison principle 
+
+Throughout the paper, we use the following three linear operators on functions v(x, c ) : R ×
+
+(−∞ , c ] → R:
+
+Lcv := − (μ − c)vx + ( r + λ)v, 
+
+T v := λ
+
+Z x
+
+> 0
+
+v(x − y, c ) d F (y) + λv (0 , c )(1 − F (x)) = λE[v(( x − Z1)+, c )] ,
+
+Iv := λ
+
+Z x
+
+> 0
+
+v(x − y, c ) d F (y).
+
+Notice we have ∂x(T v) = Ivx. For any function f (x) : R → R, we shall interpret f (x) as f (x, c )when applying the above operators. 
+
+Lemma 3.1 (Comparison principle) Let D be a measurable subset of R+, c ⩽ c, η ∈ W 1,∞(R+),
+
+J : C(R+) 7 → C(R+) be a linear operator satisfying 
+
+J f (x) ⩽ λ max  
+
+> y∈[0 ,x ]
+
+f +(y), x ∈ R+, (4) 
+
+and H(x, y ) : R+ × R+ → R be a non-decreasing function in y.Suppose ψ1, ψ 2 ∈ W 1,∞(R+) satisfy 
+
+
+
+Lcψ1 − J ψ1 + H(x, ψ 1) ⩽ Lcψ2 − J ψ2 + H(x, ψ 2) a.e. in D,ψ1 ⩽ ψ2 in R+ \ D,
+
+or 
+
+min Lcψ1 − J ψ1 + H(x, ψ 1), ψ 1 − η ⩽ min Lcψ2 − J ψ2 + H(x, ψ 2), ψ 2 − η a.e. in R+,
+
+then ψ1 ⩽ ψ2 in R+.
+
+Its proof is given in Appendix A.2. Notice 
+
+T f (x) = λ
+
+Z x
+
+> 0
+
+f (x − y) d F (y) + λf (0)(1 − F (x)) 
+
+⩽ λ max  
+
+> y∈[0 ,x ]
+
+f +(y) ·
+
+ Z x
+
+> 0
+
+1 d F (y) + (1 − F (x)) 
+
+
+
+= λ max  
+
+> y∈[0 ,x ]
+
+f +(y)and 
+
+If (x) ⩽ λ max  
+
+> y∈[0 ,x ]
+
+f (y) ·
+
+Z x
+
+> 0
+
+1 d F (y) ⩽ λ max  
+
+> y∈[0 ,x ]
+
+f +(y), x ∈ R+,
+
+so we can apply Lemma 3.1 with J = I and J = T .73.2 Boundary problem: V (x, c )
+
+Different from classical control problems, the boundary value of the problem (2) is not immediately known. To introduce the HJB equation, we need first to solve the boundary problem: V (x, c ). Define 
+
+h(x) := λℓ E[( Z1 − x)+] = λℓ 
+
+Z ∞
+
+> x
+
+(1 − F (y)) d y = λℓ 
+
+Z ∞
+
+> x
+
+(y − x)p(y) d y, x ∈ R+. (5) 
+
+Lemma 3.2 The following OIDE on g:
+
+Lcg − T g + h − c = 0 , x ∈ R+, (6) 
+
+has a unique bounded solution g ∈ C1(R+) which satisfies 
+
+c − λℓγ r ⩽ g ⩽ cr , (7) 0 ⩽ g′ ⩽ ℓ, (8) 
+
+g′′ ⩽ 0, (9) 
+
+in R+ and 
+
+g(+ ∞) := lim  
+
+> x→+∞
+
+g(x) = cr , (10) 
+
+g′(+ ∞) := lim  
+
+> x→+∞
+
+g′(x) = 0 . (11) Its proof is given in Appendix A.3. From now on we let g be the solution given in the above result. It is indeed the optimal value for the problem (2) when c = c.
+
+Theorem 3.3 (Optimal strategy in the boundary case) We have V (x, c ) = g(x) for x ∈ R+
+
+and V (x, c ) = g(0) + ℓx for x ⩽ 0, where g is given in Lemma 3.2 . Given x ∈ R, then {(c, D t)}t⩾0
+
+is an optimal strategy for V (x, c ), where 
+
+Dt = sup 
+
+> 0⩽s⩽t
+
+ NsX
+
+> i=1
+
+Zi − x − (μ − c)s
+
++
+
+, t ⩾ 0.
+
+Its proof is given in Appendix A.4. 
+
+3.3 HJB equation on Q+
+
+> ∞
+
+The HJB equation for the problem (2) on Q+ 
+
+> ∞
+
+is a variational inequality (VI) on v(x, c ): 
+
+
+
+min {L cv − T v + h − c, ℓ − vx, −vc} = 0 , (x, c ) ∈ Q +
+
+> ∞
+
+,v(x, c ) = g(x), x ∈ R+,
+
+(12) 8with bounded growth condition. We will show (12) admits a strong solution , stronger than viscosity solution (see [16]). This allows us to give a complete answer to the problem (2) later. In words, a strong solution to (12) must: (i) be continuously differentiable in x; (ii) be non-increasing in c; (iii) satisfy the variational inequality point-wisely; (iv) have the gradient constraint active only when the dividend rate is not at its maximum. The precise definition is given as follows. 
+
+Definition 3.4 (Strong solution to (12) ) We call v is a strong solution to the VI (12) if the follows hold: 1. v ∈ A ∞ := 
+
+n
+
+u : Q+ 
+
+> ∞
+
+7 → R u ∈ C(Q+
+
+> ∞
+
+) and u(·, c ) ∈ C1(R+) for every c ∈ (−∞ , c ]
+
+o
+
+;2. v is non-increasing w.r.t. c;3. For each c ∈ (−∞ , c ],
+
+Lcv − T v + h − c ⩾ 0 and vx ⩽ ℓ in R+;
+
+4. If for some (x, c ) ∈ R+ × (−∞ , c ), we have v(x, c ) > v (x, s ) for all c < s ⩽ c, then 
+
+ Lcv − T v + h − c(x, c ) = 0 or vx(x, c ) = ℓ;
+
+5. For all x ∈ R+, v(x, c ) = g(x).
+
+Lemma 3.5 (Uniqueness of strong solution to (12) ) The bounded strong solution to the VI 
+
+(12) , if it exists, is unique. 
+
+Its proof is given in Appendix A.5. The main results of this paper is to show that the VI (12) admits a strong solution with nice properties. This solution will be shown to be the value function of the problem (2). 
+
+Theorem 3.6 (Existence of strong solution to (12) ) There exists a unique bounded strong so-lution v to the VI (12) . The solution satisfies 
+
+c − λℓγ r ⩽ v ⩽ cr , 0 ⩽ vx ⩽ ℓ, − λℓ μ − c ⩽ vxx ⩽ 0 a .e., − ℓ − 1
+
+r ⩽ vc ⩽ 0 a .e.. 
+
+Furthermore, it is also the unique bounded strong solution (in the sense of Definition 4.1 ) to the problem 
+
+
+
+min {L cv − T v + h − c, −vc} = 0 , (x, c ) ∈ Q +
+
+> ∞
+
+,v(x, c ) = g(x), x ∈ R+,
+
+9i.e., if v(x, c ) > v (x, s ) holds for all s ∈ (c, c ] at a point (x, c ) ∈ Q +
+
+> ∞
+
+, then 
+
+ Lcv − T v + h − c(x, c ) = 0 . (13) We will construct such a solution through a regime switching system. Since the proof is very delicate, we defer it to Section 4. 
+
+3.4 Optimal strategy to (2) .
+
+To find an optimal strategy for the problem (2), we divided the domain R+ × (−∞ , c ) into a 
+
+switching region :
+
+S := {(x, c ) ∈ R+ × (−∞ , c ) | v(x, c ) = v(x, s ) for some c < s ⩽ c}
+
+and a non-switching region :
+
+N S := {(x, c ) ∈ R+ × (−∞ , c ) | v(x, c ) > v (x, s ) for all c < s ⩽ c}.
+
+By (13), we have Lcv − T v + h − c = 0 in N S .The following shows they are separated by the following curve (free boundary) 
+
+X (c) := inf {x ∈ R+ | (x, c ) ∈ S} , c ∈ (−∞ , c ).
+
+Proposition 3.7 (Property of the free boundary X (·)) The limit X (c) := lim c→c− X (c) ex-ists and finite. The curve X (·) is continuous in (−∞ , c ]. The regions S and N S are separated by it in the following sense: 
+
+{(x, c ) ∈ R+ × (−∞ , c ) | x > X (c)} ⊆ S ⊆ { (x, c ) ∈ R+ × (−∞ , c ) | x ⩾ X (c)}, (14) 
+
+and 
+
+{(x, c ) ∈ R+ × (−∞ , c ) | x < X (c)} ⊆ N S ⊆ { (x, c ) ∈ R+ × (−∞ , c ) | x ⩽ X (c)}. (15) We will establish this result in Section 5. To solve the problem (2), we also define the equivalent maximum rate as 
+
+M(x, c ) := max 
+
+n
+
+c′ ∈ [c, c ] v(x, c ′) = v(x, c )
+
+o
+
+, (x, c ) ∈ Q +
+
+> ∞
+
+. (16) The following property is needed. 
+
+Lemma 3.8 (Property of the equivalent maximum rate M(·)) For every c < c , the map 
+
+x → M(x, c ) is non-decreasing and right-continuous on R+. Moreover, 
+
+vc(x, M(x, c )) = 0 if c < M(x, c ) < c, x ∈ R+. (17) 10 Its proof is given in Section 5.3. Together with Lemma 2.1, we now provide a complete answer to the problem (2). 
+
+Theorem 3.9 (Optimal strategy in Q+
+
+> ∞
+
+) Let v be the unique bounded strong solution to (12) 
+
+given in Theorem 3.6 . Then v coincides with the optimal value to the problem (2) on Q+
+
+> ∞
+
+. Moreover, given (x, c ) ∈ Q +
+
+> ∞
+
+, {(C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+)}t⩾0 is an optimal strategy for the problem (2) , where the triple 
+
+{(X∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+)}t⩾0 is defined by 
+
+
+
+X∗ 
+
+> t
+
+= x +
+
+Z t
+
+> 0
+
+(μ − C∗ 
+
+> s
+
+) d s −
+
+> Nt
+
+X
+
+> i=1
+
+Zi + D∗ 
+
+> t
+
+,C∗ 
+
+> t
+
+= M
+
+
+
+max  
+
+> s∈[0 ,t ]
+
+X∗ 
+
+> s
+
+, c 
+
+
+
+,D∗ 
+
+> t
+
+= sup 
+
+> 0⩽s⩽t
+
+ NsX
+
+> i=1
+
+Zi − x −
+
+Z s
+
+> 0
+
+(μ − C∗ 
+
+> θ
+
+) d θ
+
++
+
+.
+
+The optimal strategy has an intuitive interpretation: The dividend rate C∗ 
+
+> t
+
+is increased only when the running maximum surplus max  
+
+> s∈[0 ,t ]
+
+X∗ 
+
+> s
+
+reaches a new high, and it is raised precisely to the level M
+
+
+
+max  
+
+> s∈[0 ,t ]
+
+X∗ 
+
+> s
+
+, c 
+
+
+
+. Since the transaction cost ℓ > 1, one shall always use the minimum effect to avoid bankruptcy. Thus, capital injections ∆ D∗ 
+
+> t
+
+occur only when a claim would otherwise drive surplus negative, and they are injected just enough to keep surplus nonnegative. This reflects a “barrier-type” policy modulated by the ratcheting constraint. 
+
+Proof of Theorem 3.9 The proof is divided into four steps. Since several arguments are analogous to those in the proof of Theorem 3.3, we omit them for brevity. 
+
+Step 1 (Upper bound: v ⩾ V ). Given any ( x, c ) ∈ Q + 
+
+> ∞
+
+and any strategy {(Ct, D t)}t⩾0 ∈ Πx,c ,we get 
+
+v(x, c ) = E
+
+"
+
+e−cT v(XT , C T )
+
+#
+
+− E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+v(Xt, C t) − v
+
+
+
+Xt − (∆ Dt − ∆′Dt), C t−
+
+i #
+
++ E
+
+" Z T
+
+> 0
+
+e−rt  Lcv − T v + h − c(Xt−, C t−) d t
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt vc(Xt−, C t−) d Cct
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt vx(Xt−, C t−) d Dct
+
+#
+
+− ℓE
+
+" X
+
+> 0⩽t⩽T
+
+e−rt ∆′Dt
+
+#
+
++ E
+
+" Z T
+
+> 0
+
+e−rt Ct− dt
+
+#
+
+, (18) where ∆′Dt := ( ZNt ∆Nt − Xt−)+ = ( ZNt − Xt−)+∆Nt.
+
+11 Using (12), d Cct ⩾ 0 and ∆ Dt ⩾ ∆′Dt, we obtain 
+
+v(x, c ) ⩾ E
+
+"
+
+e−cT v(XT , C T )
+
+#
+
++ E
+
+" Z T
+
+> 0
+
+e−rt Ct− dt
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt ℓ dDt
+
+#
+
+. (19) Now sending T → +∞ yields 
+
+v(x, c ) ⩾ E
+
+" Z ∞
+
+> 0
+
+e−rt Ct dt −
+
+Z ∞
+
+> 0
+
+e−rt ℓ dDt
+
+#
+
+.
+
+Since {Ct, D t}t⩾0 ∈ Πx,c is arbitrary, we conclude v(x, c ) ⩾ V (x, c ). 
+
+Step 2 (Admissibility). We show that {(C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+)} ∈ Πx,c .
+
+• By Lemma 3.8, the mapping y 7 → M(y, c ) is non-decreasing and right-continuous. Since 
+
+Y ∗ 
+
+> t
+
+:= max 0⩽s⩽t X∗ 
+
+> s
+
+is non-decreasing and right-continuous, C∗ 
+
+> t
+
+= M(Y ∗ 
+
+> t
+
+, c ) inherits these properties and satisfies C∗ 
+
+> t
+
+∈ [c, c ]. 
+
+• The process D∗ 
+
+> t
+
+is defined as the minimal reflection that keeps X∗ 
+
+> t
+
+⩾ 0; it is non-decreasing, right-continuous. Hence {(C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+)} ∈ Πx,c .
+
+Step 3 (Lower bound and optimality: v ⩽ V ). We now prove that inequality (19) is an equality when {Ct, D t}t⩾0 = {C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+}t⩾0, which will complete the proof of the theorem. Recall Y ∗ 
+
+> t
+
+= max  
+
+> s∈[0 ,t ]
+
+X∗ 
+
+> s
+
+. We first prove 
+
+ Lcv − T v + h − c(X∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+) = 0 . (20) If C∗ 
+
+> t
+
+< c , then by the definition of C∗ 
+
+> t
+
+, we have ( Y ∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+) ∈ N S . Since X∗ 
+
+> t
+
+⩽ Y ∗ 
+
+> t
+
+, it follows from (15) that ( X∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+) ∈ N S , so (20) holds by (13). If C∗ 
+
+> t
+
+= c, then v(·, C ∗ 
+
+> t
+
+) = g(·) on R+, and (20) still holds by virtue of (6). Second, it is easy to verify that ∆D∗ 
+
+> t
+
+= ∆ ′D∗ 
+
+> t
+
+, D ∗ 
+
+> t c
+
+= 0 , t ⩾ 0. (21) Third, we prove 
+
+−vc(X∗
+
+> t−
+
+, C ∗
+
+> t−
+
+) d C∗ct = 0 , t̸ = τ1, τ 2, (22) where τ1 = inf {t ⩾ 0 | C∗ 
+
+> t
+
+> c } and τ2 = inf {t ⩾ 0 | C∗ 
+
+> t
+
+= c}. For t < τ 1 or t > τ 2, we have C∗ 
+
+> t
+
+= c or C∗ 
+
+> t
+
+= c, respectively, which implies dC∗ 
+
+> t
+
+= 0, so (22) holds trivially. We now assume τ1 < t < τ 2, so that c < C ∗ 
+
+> t
+
+< c . Note that (21) implies ∆ X∗ 
+
+> t
+
+= ∆ ′D∗ 
+
+> t
+
+− ZNt ∆Nt ⩽ 0. 12 If X∗ 
+
+> t
+
+< Y ∗ 
+
+> t
+
+, then there exists a random time δ > 0 such that X∗ 
+
+> s
+
+< Y ∗ 
+
+> t
+
+for s ∈ [t, t + δ). It then follows Y ∗ 
+
+> s
+
+= Y ∗ 
+
+> t
+
+and C∗ 
+
+> s
+
+= C∗ 
+
+> t
+
+for s ∈ [t, t + δ), so (22) holds. If X∗ 
+
+> t
+
+= Y ∗ 
+
+> t
+
+, then since 
+
+X∗ 
+
+> t
+
+⩽ X∗ 
+
+> t−
+
+⩽ Y ∗ 
+
+> t−
+
+⩽ Y ∗ 
+
+> t
+
+, we have X∗ 
+
+> t−
+
+= X∗ 
+
+> t
+
+= Y ∗ 
+
+> t
+
+. Moreover, by the definition of C∗ 
+
+> t
+
+and (17) we have vc(Y ∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+) = 0. This together with C∗ 
+
+> t
+
+⩾ C∗ 
+
+> t−
+
+⩾ c and v(Y ∗ 
+
+> t
+
+, s ) = v(Y ∗ 
+
+> t
+
+, c ) for all s ∈ [c, C ∗ 
+
+> t
+
+)implies vc(X∗
+
+> t−
+
+, C ∗
+
+> t−
+
+) = vc(Y ∗ 
+
+> t
+
+, C ∗
+
+> t−
+
+) = 0, so (22) also holds. Fourth, we prove 
+
+v(X∗ 
+
+> t
+
+, C ∗ 
+
+> t
+
+) = v(X∗ 
+
+> t
+
+, C ∗
+
+> t−
+
+). (23) This is trivial when C∗ 
+
+> t
+
+= C∗
+
+> t−
+
+. Now suppose C∗ 
+
+> t
+
+> C ∗
+
+> t−
+
+, then the preceding discussion shows that 
+
+X∗ 
+
+> t
+
+= Y ∗ 
+
+> t
+
+. By the definition of C∗ 
+
+> t
+
+, we also have v(Y ∗ 
+
+> t
+
+, s ) = v(Y ∗ 
+
+> t
+
+, c ) for all s ∈ [c, C ∗ 
+
+> t
+
+). Combining above gives (23) as C∗ 
+
+> t
+
+> C ∗ 
+
+> t−
+
+⩾ c.Combining (20), (21), (22), and (23), we see (18) becomes 
+
+v(x, c ) = E
+
+"
+
+e−cT v(X∗ 
+
+> T
+
+, C ∗ 
+
+> T
+
+)
+
+#
+
++ E
+
+" Z T
+
+> 0
+
+e−rt C∗ 
+
+> t
+
+dt
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt ℓ dD∗
+
+> t
+
+#
+
+.
+
+By sending T → +∞, we obtain 
+
+v(x, c ) = E
+
+" Z ∞
+
+> 0
+
+e−rt C∗ 
+
+> t
+
+dt −
+
+Z ∞
+
+> 0
+
+e−rt ℓ dD∗
+
+> t
+
+#
+
+.
+
+This establishes v(x, c ) ⩽ V (x, c ). 
+
+Step 4 (Conclusion). Combining Steps 2 and 3 yields v(x, c ) = V (x, c ) and confirms the opti-mality of {C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+}t⩾0. □
+
+# 4 Solvability of the HJB equation on Q+
+
+∞
+
+This whole section is devoted to the proof of Theorem 3.6. To construct a solution to (12) with nice properties, we first introduce a sequence of regime switching problems which can be regarded as a sequence of option pricing problems. We then study its properties in subsection 4.2. In subsection 4.3, we pass to the limit to get a solution to (12) and complete the proof of Theorem 3.6. 13 4.1 Local HJB equation 
+
+Since the domain Q+ 
+
+> ∞
+
+is unbounded, it is not easy to study (12) directly. We now introduce a simpler local version (called local HJB equation) of (12): 
+
+
+
+min {L cv − T v + h − c, −vc} = 0 , (x, c ) ∈ Q + 
+
+> c
+
+:= R+ × [c, c ],v(x, c ) = g(x), x ∈ R+.
+
+(24) We emphasis that this VI looks simpler than (12) since the requirement vx ⩽ ℓ is removed in above. Similar to Definition 3.4, we define the strong solution to (24). 
+
+Definition 4.1 (Strong solution to (24) ) We call v is a strong solution to the VI (24) if the follows hold: 1. v ∈ A c := 
+
+n
+
+u : Q+ 
+
+> c
+
+7 → R u ∈ C(Q+ 
+
+> c
+
+) and u(·, c ) ∈ C1(R+) for every c ∈ [c, c ]
+
+o
+
+;2. v is non-increasing w.r.t. c;3. For each c ∈ [c, c ],
+
+Lcv − T v + h − c ⩾ 0 in R+; (25) 
+
+4. If v(x, c ) > v (x, s ) holds for all s ∈ (c, c ] at a point (x, c ) ∈ Q + 
+
+> c
+
+, then 
+
+ Lcv − T v + h − c(x, c ) = 0; (26) 
+
+5. For all x ∈ R+, v(x, c ) = g(x).
+
+The main result of this section is 
+
+Proposition 4.2 For any c < c , there exists a unique bounded strong solution v to the VI (24) .On Q+ 
+
+> c
+
+, it satisfies 
+
+c − λℓγ r ⩽ v ⩽ cr , (27) 0 ⩽ vx ⩽ ℓ, (28) 
+
+− λℓ μ − c ⩽ vxx ⩽ 0 a.e., (29) 
+
+− ℓ − 1
+
+r ⩽ vc ⩽ 0 a.e.. (30) 
+
+Moreover, the solution does not relay on the choice of c.
+
+Clearly, the solution given in Proposition 4.2 solves (12) on Q+ 
+
+> c
+
+, so by uniqueness it coincides with the solution of (12). Since the solution does not relay on the choice of c, we can uniquely extend it to the domain Q+
+
+> ∞
+
+, giving a solution to (12). Therefore, Proposition 4.2 implies Theorem 3.6. From now on, we focus on the construction of a solution to (24) and the proof of Proposition 4.2. 14 4.2 Approximation by a regime switching system 
+
+We omit the proof of uniqueness for (24) since it is similar to that of Lemma 3.5. Due to uniqueness, one can solve (24) backwardly along the c direction. In the rest part of this section, we will construct a strong solution to the local HJB equation (24) with the desired properties in Proposition 4.2. Suppose the dividend payout rate can only take the following discrete values 
+
+ci = c − (i − 1)∆ c, i = 1 , 2, · · · , n, 
+
+where ∆ c = 1 
+
+> n
+
+(c − c). We consider the following regime switching system, 
+
+
+
+min {L ci vi − T vi + h − ci, v i − vi−1} = 0 , x ∈ R+, i = 1 , 2, · · · , n, v0(x) = g(x), x ∈ R+.
+
+(31) Here, vi(x) can be regarded as an approximation of v(x, c i). 
+
+Lemma 4.3 For i = 1 , 2, · · · , n, the system (31) has a unique solution vi ∈ W 1,∞(R+), which satisfies 
+
+c − λℓγ r ⩽ vi ⩽ cr , (32) 0 ⩽ v′ 
+
+> i
+
+⩽ ℓ. (33) Lemma 4.3 establishes that the discrete approximation (31) is well-posed and that the solutions inherit the same qualitative properties as the conjectured value function: uniform bounds and 
+
+x-Lipschitz continuity with constant ℓ. These uniform estimates are essential for the subsequent limiting argument. These properties are inspired by Lemma 2.1. 
+
+Proof of Lemma 4.3 . The uniqueness is a consequence of Lemma 3.1. We now show the existence. From Theorem 3.2 we know v0(x) = g(x) satisfies (32) and (33). We next prove the results by mathematical induction. Suppose vj−1 ∈ W 1,∞(R+) (for some 1 ⩽ j < n ) satisfies (32) and (33), we are going to prove the VI in (31) admits a unique bounded solution vj ∈ W 1,∞(R+) which still satisfies (32) and (33). This will complete the proof. Consider the penalty approximation problem for 0 < ε < 1: 
+
+Lcj vεj − T vεj + h − cj + βε(vεj − vj−1) = 0 in R+, (34) where βε(·) is a sequence of penalty functions indexed by 0 < ε < 1 satisfying 
+
+βε(·) ∈ C∞(R), βε(0) = −(c + λ2ℓγ/r + λℓγ ) < 0, βε(x) = 0 for x ⩾ ε > 0,
+
+15 βε(·) ⩽ 0, β′
+
+> ε
+
+(·) ⩾ 0, β′′  
+
+> ε
+
+(·) ⩽ 0, lim  
+
+> ε→0+
+
+βε(x) = 
+
+
+
+0, if x > 0,
+
+−∞ , if x < 0.
+
+The existence of a unique C1-smooth bounded solution to the equation (34) can be obtained by constructing the approximation problem in bounded interval and applying the Leray-Schauder fixed point theorem (see [17] Theorem 4 on page 539), we leave it to the interested readers. We come to prove 
+
+vj−1 ⩽ vεj ⩽ c/r + ε. (35) By the induction hypothesis, we have 0 ⩽ cj ⩽ c < μ, c − λℓγ r ⩽ vj−1 ⩽ cr , 0 ⩽ v′ 
+
+> j−1
+
+⩽ ℓ, 0 ⩽ h ⩽ λℓγ, 
+
+so 
+
+Lcj vj−1 − T vj−1 + h − cj + βε(vj−1 − vj−1) ⩽ (r + λ) cr − λ c − λℓγ r + λℓγ + βε(0) = 0 .
+
+By Lemma 3.1, we obtain vεj ⩾ vj−1. Let Φ( x) = c/r + ε. Since vj−1 ⩽ c/r , we have 
+
+Lcj Φ − T Φ + h − cj + βε(Φ − vj−1) ⩾ c + εr + h − cj + βε(ε) ⩾ 0.
+
+By Lemma 3.1, we obtain vεj ⩽ Φ, completing the proof of (35). We next prove 0 ⩽ (vεj )′ ⩽ ℓ (36) Differentiating (34) yields 
+
+Lcj
+
+ (vεj )′ − I  (vεj )′ + β′
+
+> ε
+
+(vεj − vj−1)( vεj )′ = λℓ (1 − F ) + β′
+
+> ε
+
+(vεj − vj−1)v′ 
+
+> j−1
+
+in R+.
+
+Since ( vεj )′, v′
+
+> j−1
+
+, F and β′
+
+> ε
+
+(vεj −vj−1) are continuous and bounded in R+, so ( vεj )′′ is also continuous and bounded in R+. For ψ(x) = 0 and Ψ( x) = ℓ, one has 
+
+Lcj ψ − I ψ + β′
+
+> ε
+
+(vεj − vj−1)ψ = 0 ⩽ λℓ (1 − F ) + β′
+
+> ε
+
+(vεj − vj−1)v′
+
+> j−1
+
+⩽ rl + λℓ (1 − F ) + β′
+
+> ε
+
+(vεj − vj−1)ℓ
+
+= Lcj Ψ − I Ψ + β′
+
+> ε
+
+(vεj − vj−1)Ψ .
+
+Applying Lemma 3.1, we get (36). Since ( vεj )0<ε< 1 is a bounded sequence in W 1,∞(R+), it has a subsequence converges to some 
+
+vj ∈ W 1,∞(R+) uniformly in C([0 , L ]) and weakly in W 1,∞([0 , L ]) for any L > 0. It is easy to check 16 that vj is a W 1,∞(R+) solution to min {L cj vj − T vj + h − cj , v j − vj−1} = 0 , x ∈ R+.
+
+Moreover, by Lemma 3.1, this solution is unique in W 1,∞(R+). Finally, we can derive easily (32) and (33) from (35) and (36) respectively. □
+
+From now on, we use vi, 0 ⩽ i ⩽ n, to denote the unique solution to (31) in W 1,∞(R+). And define Di = {vi > v i−1} for 1 ⩽ i ⩽ n.
+
+Lemma 4.4 For i = 0 , 1, · · · , n, the function vi satisfies 
+
+v′′  
+
+> i
+
+⩾ − λℓ μ − c (37) 
+
+in the viscosity sense, which implies that vi(x) + 12 
+
+> λℓ μ−c
+
+x2 is a convex function. 
+
+Lemma 4.4 provides a uniform lower bound on the second derivative, independent of the dis-cretization parameter n. Such concavity-type estimates are crucial for establishing the regularity of the limiting value function and for analyzing the free boundary in Section 5. 
+
+Proof of Lemma 4.4 . By the equation (62) and the estimate (7) we have (μ − c)g′′ = ( r + λ)g′ − I (g′) − λℓ (1 − F ) ⩾ 0 − λℓF − λℓ (1 − F ) = −λℓ, 
+
+so (37) holds for i = 0. Now suppose (37) holds for some i = j − 1 (1 ⩽ j < n ). Differentiating the equation in (31) and using the estimate (33) we get (μ − cj )v′′  
+
+> j
+
+= ( r + λ)v′ 
+
+> j
+
+− I (v′ 
+
+> j
+
+) − λℓ (1 − F ) ⩾ 0 − λℓF − λℓ (1 − F ) = −λℓ in Dj ,
+
+which implies v′′  
+
+> j
+
+⩾ − λℓ μ−c in Dj . On the other hand, since vj − vj−1 attains its minimum value 0 in R \ Dj , we have v′′  
+
+> j
+
+⩾ v′′  
+
+> j−1
+
+⩾ − λℓ μ−c in R \ Dj by the induction hypothesis, so (37) also holds for 
+
+i = j. This completes the proof. □
+
+Define 
+
+ui := vi − vi−1
+
+∆c , i = 1 , 2, · · · , n. 
+
+Lemma 4.5 For i = 1 , 2, · · · , n , we have 
+
+0 ⩽ ui ⩽ ℓ − 1
+
+r . (38) The quantity ui approximates −vc (the partial derivative with respect to the dividend rate) in the discrete setting. The uniform bound (38) shows that the value function’s sensitivity to changes 17 in c is bounded, a property that will be preserved in the limit and is essential for verifying the HJB conditions. 
+
+Proof of Lemma 4.5 . We only need to prove the second inequality. Let vi = vi−1 + ℓ−1 
+
+> r
+
+∆c, since 
+
+v′ 
+
+> i−1
+
+⩽ ℓ, we have 
+
+Lci vi − T vi + h − ci =Lci vi−1 − T vi−1 + h − ci + ( ℓ − 1)∆ c
+
+=Lci−1 vi−1 − T vi−1 + h − ci−1 + ( ℓ − v′
+
+> i−1
+
+)∆ c ⩾ 0.
+
+Applying Lemma 3.1 we get vi ⩽ vi, which implies (38) holds. □
+
+Lemma 4.6 For i = 1 , 2, · · · , n , we have 
+
+− (r + λ)( ℓ − 1) 
+
+r(μ − c) ⩽ u′ 
+
+> i
+
+⩽ (r + λ)( ℓ − 1) + rr(μ − c) a.e. in Di−1. (39) This lemma controls the spatial derivative of the divided differences on the region where the dividend rate is actively increasing. These bounds are critical for establishing the differentiability with respect to x of the limiting value function and the continuity of the free boundary later. 
+
+Proof of Lemma 4.6 . Since ui = 0 in R \ Di, we have u′ 
+
+> i
+
+= 0 in the inner set of R \ Di, note that 
+
+Di is an open set, so its boundary set is a countable set whose Lebesgue measure is 0, therefore, we have u′ 
+
+> i
+
+= 0 a.e. in R \ Di satisfying (39). We only need to prove (39) holds a.e. in Di ∩ Di−1.
+
+The difference between the equations of vi and vi−1 in Di ∩ Di−1 satisfies 
+
+Lci−1 ui − T ui + 1 − v′ 
+
+> i
+
+= 0 a.e. in Di ∩ Di−1.
+
+Applying (33), (38) and ui ⩾ 0, we get (μ − ci−1)u′ 
+
+> i
+
+= ( r + λ)ui − T ui + 1 − v′
+
+> i
+
+∈
+
+h
+
+− ( λr + 1)( ℓ − 1) , (r + λ) ℓ − 1
+
+r + 1 
+
+i
+
+in Di ∩ Di−1,
+
+which implies (39) holds a.e. in Di ∩ Di−1. The proof is complete. □
+
+Lemma 4.7 For i = 2 , 3, · · · , n , we have 
+
+ui−1 ⩽ ui + B∆c, (40) 
+
+where 
+
+B = 2( r + λ)( ℓ − 1) 
+
+r2(μ − c) .
+
+18 This lemma establishes a one-side bound for the second-order difference of the solution with respect to c, which is crucial for proving the continuity of the free boundary. 
+
+Proof of Lemma 4.7 . Since ui−1 = 0 in R \ Di−1 and ui ⩾ 0, we only need to prove (40) holds in Di−1. Notice 
+
+Lci−1 vi−1 − T vi−1 + h − ci−1 = 0 in Di−1,
+
+Lci vi − T vi + h − ci ⩾ 0 a.e. in Di−1,
+
+Lci−2 vi−2 − T vi−2 + h − ci−2 ⩾ 0 a.e. in Di−1,
+
+so we have 
+
+Lci−1 ui − T ui + 1 − v′ 
+
+> i
+
+⩾ 0 a.e. in Di−1,
+
+Lci−2 ui−1 − T ui−1 + 1 − v′ 
+
+> i−1
+
+⩽ 0 a.e. in Di−1,
+
+Let φ = ( ui − ui−1)/∆c + B, then 
+
+Lci−2 φ − T φ ⩾ 2u′ 
+
+> i
+
++ rB ⩾ 0 a.e. in Di−1,
+
+where the last inequality is due to the first inequality of (39). Moreover, noting that φ ⩾ 0 in 
+
+R+ \ Di−1, so by Lemma 3.1 we have φ ⩾ 0 in Di−1. Consequently, (40) is established. □
+
+For each positive integer N , let vNi , i = 1 , · · · , 2N be the solution to (31) with n = 2 N and ∆c = 2 −N (c − c). Let cNi = c − i∆c. Since ( vNi )′ ⩽ ℓ, vNi satisfies 
+
+
+
+min {L cNi vNi − T vNi + h − cNi , ℓ − (vNi )′, v Ni − vNi−1} = 0 , x ∈ R+, i = 1 , 2, · · · , 2N ,vN 
+
+> 0
+
+(x) = g(x), x ∈ R+,
+
+(41) which is the HJB equation connected to the value function w.r.t. finite ratcheting strategy: 
+
+vNi (x) = sup  
+
+> Sx,i,N ∈ΠNx,i
+
+J(Sx,i,N ),
+
+where ΠNx,i =
+
+n
+
+{(Ct, D t)}t⩾0 ∈ Πx,c Ni Ct ∈ { cNi , c Ni−1, · · · , c N 
+
+> 0
+
+}, t ⩾ 0
+
+o
+
+,
+
+and for Sx,i,N = {(Ct, D t)}t⩾0 ∈ Πx,c Ni , we define 
+
+J(Sx,i,N ) = E
+
+" Z ∞
+
+> 0
+
+e−rt Ct dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dDt
+
+#
+
+.
+
+19 Lemma 4.8 For any x ∈ R+ and i = 1 , 2, · · · , n , we have 
+
+vNi (x) ⩽ vN +1 2i (x). (42) 
+
+Proof: Note that Π Nx,i ⊆ ΠN +1  
+
+> x, 2i
+
+, we have sup  
+
+> Sx,i,N ∈ΠNx,i
+
+J(Sx,i,N ) ⩽ sup   
+
+> Sx, 2i,N +1 ∈ΠN+1
+> x, 2i
+
+J(Sx, 2i,N +1 ),
+
+which is (42). □
+
+Lemma 4.9 For any x1, x 2 ∈ R+ and every i = 1 , 2, · · · , n , we have 
+
+vNi (x1) + vNi (x2)2 ⩽ vN +1 2i
+
+ x1 + x2
+
+2
+
+
+
+. (43) Inequalities (42) and (43) reflect fundamental properties of the discrete approximations. In-equality (43) is a convexity-type property inherited from the concavity of the value function in the surplus variable (Lemma 2.1) and the linearity of the dynamics. Passing to the limit yields the concavity of v(·, c ). This concavity is essential for the free boundary analysis in Section 5, where it guarantees the existence of a well-defined switching boundary X (·). 
+
+Proof of Lemma 4.9 . For any ε > 0, let Sx1,i,N ε = {(Cx1 
+
+> t
+
+, D x1 
+
+> t
+
+)}t⩾0 with Cx1 
+
+> 0−
+
+= cNi (resp., 
+
+Sx2,i,N ε = {(Cx2 
+
+> t
+
+, D x2 
+
+> t
+
+)}t⩾0 with Cx2 
+
+> 0−
+
+= cNi ) an ε-optimal strategy corresponding to initial surplus 
+
+x1 (resp., x2) such that 
+
+J(Sx1,i,N ε ) > v Ni (x1) − ε, J(Sx2,i,N ε ) > v Ni (x2) − ε. 
+
+Then, the strategy 12 Sx1,i,N ε + 12 Sx2,i,N ε = {( 12 Cx1 
+
+> t
+
++ 12 Cx2 
+
+> t
+
+, 12 Dx1 
+
+> t
+
++ 12 Dx2 
+
+> t
+
+)}t⩾0 with 12 Cx1 
+
+> 0−
+
++ 12 Cx2 
+
+> 0−
+
+=
+
+cNi = cN +1 2i belongs to Π N +1 (x1+x2)/2, 2i. Therefore 
+
+vN +1 2i
+
+ x1 + x2
+
+2
+
+
+
+⩾ J
+
+ 12 Sx1,i,N ε + 12 Sx2,i,N ε
+
+
+
+= 12 J(Sx1,i,N ε ) + 12 J(Sx2,i,N ε ) > 12 vNi (x1) + 12 vNi (x2) − ε. 
+
+Then letting ε → 0 we get (43). □
+
+4.3 Construction of the solution to (24) 
+
+Now we are ready to prove Proposition 4.2. As earlier mentioned, we only need to construct a bounded strong solution to the local HJB equation (24). 20 Let vN (x, c ) be the linear interpolation function of vNi (x). Then (32), (33) and (38) imply vN is uniform bounded and uniform Lipschitz continuous in Q+ 
+
+> c
+
+. Apply the Arzela-Ascoli theorem, there exists a Lipschitz continuous function v in Q+ 
+
+> c
+
+, and a subsequence vNk such that, for each L > 0, 
+
+vNk −→ v in C([0 , L ] × [c, c ]) . Moreover, (27), (28), the first inequality of (29), (30) are derived from (32), (33), (37) and (38), respectively. Now, we prove the second inequality of (29). For any fixed x1, x 2 ∈ R+ and c = c−i02−Nk0 (c−c)with i0, k0 ∈ N. Let ik = 2 Nk −Nk0 i0 for k ⩾ k0. Then c = c − ik2−Nk (c − c) for any k ⩾ k0. Thanks to (43) and (42), we have 
+
+vNk 
+
+> ik
+
+(x1) + vNk 
+
+> ik
+
+(x2)2 ⩽ vNk +1 2ik
+
+ x1 + x2
+
+2
+
+
+
+⩽ vNk+1 
+
+> ik+1
+
+ x1 + x2
+
+2
+
+
+
+.
+
+Letting k → ∞ gives 
+
+v(x1, c ) + v(x2, c )2 ⩽ v
+
+ x1 + x2
+
+2 , c 
+
+
+
+.
+
+Since v is continuous in Q+ 
+
+> c
+
+, we conclude v(·, c ) is concave for each c ∈ [c, c ]. In addition, (27)-(29) imply v(·, c ) ∈ W 2,∞(R+) ⊆ C1(R+) for each c ∈ [c, c ], so we have v ∈ A c.We come to prove v satisfies the third and forth properties in Definition 3.4. For each c ∈ [c, c ], by the construction of v, there exists ck = c − ik2−Nk (c − c) such that ck → c and vNk 
+
+> ik
+
+(·) −→ v(·, c )in C[0 , L ] for any L > 0. Moreover, from (33) we also have 
+
+vNk 
+
+> ik
+
+(·)(or its subsequence) −→ v(·, c ) weakly in W 1,∞([0 , L ]) for any L > 0. Letting k → ∞ in the inequality Lck vNk 
+
+> ik
+
+− T vNk 
+
+> ik
+
++ h − ck ⩾ 0, we get (25). On the other hand, if v(x, c ) > v (x, s ) for any c < s ⩽ c, then for any n ∈ N, there exists a sufficiently large kn ∈ N and skn = c − jkn 2−Nkn (c − c) ∈ [c, c + 1 /n ] such that vNkn  
+
+> jkn
+
+(x) > v Nkn  
+
+> jkn −1
+
+(x). As a consequence, 
+
+Lskn vNkn  
+
+> jkn
+
+− T vNkn  
+
+> jkn
+
++ h
+
+
+
+(x) − skn = 0 ,
+
+i.e. (vNkn  
+
+> jkn
+
+)′(x) = 1
+
+μ − skn
+
+
+
+(λ + r)vNkn  
+
+> jkn
+
+− T vNkn  
+
+> jkn
+
++ h
+
+
+
+(x) − skn .
+
+Denote Kn = ( vNkn  
+
+> jkn
+
+)′(x). Since skn → c and vNkn  
+
+> jkn
+
+(·) → v(·, c ) in C([0 , x ]) when n → ∞ , we have lim  
+
+> n→∞
+
+Kn = 1
+
+μ − c
+
+
+
+(λ + r)v(x, c ) − T v(x, c ) + h(x)
+
+
+
+− c. 
+
+Moreover, due to (37), we have 
+
+vNkn  
+
+> jkn
+
+(y) ⩾ vNkn  
+
+> jkn
+
+(x) + Kn(y − x) − 12
+
+λℓ μ − c (y − x)2, y ∈ R+.
+
+21 Letting n → ∞ in the above inequality yields 
+
+v(y, c ) ⩾ v(x, c ) + ( lim  
+
+> n→∞
+
+Kn)( y − x) − 12
+
+λℓ μ − c (y − x)2, y ∈ R+.
+
+This implies 
+
+vx(x, c ) = lim  
+
+> n→∞
+
+Kn = 1
+
+μ − c
+
+
+
+(λ + r)v(x, c ) − T v(x, c ) + h(x)
+
+
+
+− c, 
+
+and (26) follows. The proof of Proposition 4.2 is complete. Since Proposition 4.2 implies Theorem 3.6, we complete the proof of Theorem 3.6 as well. From now on we use v to denote the solution given in Theorem 3.6. 
+
+# 5 On the free boundary X (·) and the equivalent maximum rate 
+
+# M(·, ·)
+
+In this section, we prove Proposition 3.7 and Lemma 3.8. 
+
+5.1 Separated regions S and N S 
+
+To this end, we need the following technical result. 
+
+Lemma 5.1 For any (x0, c 0) ∈ N S S(R+ × { c}), if there exists d0 < c 0 such that v(x0, d 0) = 
+
+v(x0, c 0), then we have 
+
+(c0 − c)(1 − vx(x0, c 0)) − [T v(x0, c ) − T v(x0, c 0)] ⩾ 0, c ∈ [d0, c 0), (44) 
+
+and 
+
+v(x, c ) = v(x, c 0), (x, c ) ∈ [x0, +∞) × [d0, c 0]. (45) 
+
+Proof: For any c ∈ [d0, c 0), note that v(·, c ) − v(·, c 0) attains its minimum value 0 at x0 > 0, so we have vx(x0, c ) = vx(x0, c 0). Combining 
+
+Lcv(x0, c ) − T v(x0, c ) + h(x0) − c ⩾ 0and 
+
+Lc0 v(x0, c 0) − T v(x0, c 0) + h(x0) − c0 = 0 we get (44). Now, we prove (45). Note that v(x, c ) satisfies the following problem on u in the domain 22 [x0, +∞) × [d0, c 0], 
+
+
+
+min {L cu − K u + f (x, c ) − c, −uc} = 0 , (x, c ) ∈ [x0, +∞) × [d0, c 0],u(x, c 0) = v(x, c 0), x > x 0,
+
+(46) where 
+
+f (x, c ) = −λ
+
+Z xx−x0
+
+v(x − y, c ) d F (y) − λv (0 , c )(1 − F (x)) + h(x),
+
+and K is a linear operator, defined as 
+
+Ku(x) = λ
+
+Z x−x0
+
+> 0
+
+u(x − y, c ) d F (y).
+
+On the other hand, let w(x, c ) = v(x, c 0), ( x, c ) ∈ [x0, +∞) × [d0, c 0], then wc = 0 in [ x0, +∞) ×
+
+[d0, c 0]. For any ( x, c ) ∈ [x0, +∞) × [d0, c 0] we have, 
+
+ Lcw − K w + f (x, c ) − c
+
+=  Lc0 v − K v + f (x, c 0) − c0 + ( c0 − c)(1 − vx(x, c 0)) + ( f (x, c ) − f (x, c 0)) 
+
+⩾ (c0 − c)(1 − vx(x, c 0)) + ( f (x, c ) − f (x, c 0)) = ( c0 − c)(1 − vx(x, c 0)) 
+
+− λ
+
+Z x0
+
+> 0
+
+[v(z, c ) − v(z, c 0)] p(x − z) d z − λ[v(0 , c ) − v(0 , c 0)](1 − F (x)) 
+
+⩾ (c0 − c)(1 − vx(x0, c 0)) 
+
+− λ
+
+Z x0
+
+> 0
+
+[v(z, c ) − v(z, c 0)] p(x0 − z) d z − λ[v(0 , c ) − v(0 , c 0)](1 − F (x0)) = ( c0 − c)(1 − vx(x0, c 0)) − [T v(x0, c ) − T v(x0, c 0)] 
+
+⩾ 0,
+
+where the second inequality is due to vx(x, c 0), p(x − z), 1 − F (x) are non-increasing in x and 
+
+v(z, c ) − v(z, c 0) ⩾ 0 for all z ∈ [0 , x 0], and the last inequality is due to (44). So w also satisfies (46). Similar to the proof of Lemma 3.5, we can prove the solution to the problem (46) is unique, so we have v(x, c ) = w(x, c ) = v(x, c 0), ( x, c ) ∈ [x0, +∞) × [d0, c 0]. □
+
+The following result shows that S and N S are separated by X (·). 
+
+Lemma 5.2 If (x, c ) ∈ S , then (y, c ) ∈ S for all y ⩾ x.
+
+Proof: Denote c0 = sup {s ∈ (c, c ] | v(x, s ) = v(x, c )}. Since ( x, c ) ∈ S , we know c0 > c . Note that (x, c 0) ∈ N S S(R+ ×{ c}), apply Lemma 5.1 we have v(y, s ) = v(y, c ) for all ( y, s ) ∈ [x, +∞)×[c, c 0], which implies ( y, c ) ∈ S for all y ⩾ x. □
+
+23 5.2 Properties of the free boundary X (·)
+
+In this section we prove that the curve X (·) is continuous on ( −∞ , c ]. 
+
+Lemma 5.3 For any c0 ∈ (−∞ , c ), the following three claims are equivalent. 1. X (c0) = 0 .
+
+2. vx(0 , c 0) ⩽ 1.
+
+3. X (c) = 0 for all c ∈ (−∞ , c 0].
+
+Proof: Trivially, the third claim implies the first one. Noting that (44) implies vx ⩽ 1 in S and thus for each c ∈ (−∞ , c ), we have vx(X (c), c ) ⩽ 1. Hence, the first claim implies the second one as well. Now, suppose the second claims holds, then we only need to show the third claim. From (29) we know vx(·, c 0) is non-increasing, so vx(x, c 0) ⩽ 1 for all x ∈ R+. Let u(x, c ) = v(x, c 0). Then u
+
+satisfies uc = 0 and 
+
+ Lcu − T u + h(x, c ) − c =  Lc0 v − T v + h(x, c 0) − c0 + ( c0 − c)(1 − vx(x, c 0)) ⩾ 0,
+
+for any ( x, c ) ∈ R+ × (−∞ , c 0], so u is a strong solution to 
+
+
+
+min {L cu − T u + h − c, −uc} = 0 , x ∈ R+, c ∈ (−∞ , c 0],u(x, c 0) = v(x, c 0), x ∈ R+.
+
+(47) On the other hand, v(x, c ) also satisfies this problem, by the uniqueness of solution, we prove 
+
+v(x, c ) = v(x, c 0) for all ( x, c ) ∈ R+ × (−∞ , c 0], which implies the third claim. □
+
+In the following we show that X (·) is continuous on ( −∞ , c ]. To prove the continuity, we need the following estimate. 
+
+Lemma 5.4 For c∗ < c ∗ + ∆ c∗ ⩽ c∗ − ∆c∗ < c ∗ ⩽ c, we have 
+
+v(x, c ∗ − ∆c∗) − v(x, c ∗)∆c∗ ⩽ v(x, c ∗) − v(x, c ∗ + ∆ c∗)∆c∗
+
++ B(c∗ − c∗), (48) 
+
+where B is given in Lemma 4.7 .
+
+Proof: Denote 
+
+uNi = vNi − vNi−1
+
+∆cN ,
+
+24 where vNi (x), i = 1 , · · · , 2N is the solution to (31) and ∆ cN = ( c − c)/(2 N ) for a fixed c < c ∗.Lemma 4.7 implies 
+
+uNi−k ⩽ uNi+j+l+1 + ( k + j + l + 1) B∆cN
+
+for k, l, j ∈ N, so 1
+
+n
+
+> n−1
+
+X
+
+> k=0
+
+uNi−k ⩽ 1
+
+m
+
+> m−1
+
+X
+
+> l=0
+
+uNi+j+l+1 + ( n + m + j + 1) B∆cN ,
+
+for n, m ∈ N, i.e. 
+
+vNi − vNi−n
+
+n∆cN ⩽ vNi+j+m − vNi+j
+
+m∆cN + ( n + m + j + 1) B∆cN .
+
+Denote cNi = c − i∆cN and suppose 
+
+c∗ ∈ [cNi+j+m+1 , c Ni+j+m], c ∗ + ∆ c∗ ∈ [cNi+j , c Ni+j−1], c ∗ − ∆c∗ ∈ [cNi , c Ni−1], c ∗ ∈ [cNi−n+1 , c Ni−n],
+
+for suitable j, n, m ∈ N. Since vN (x, c )(the linear interpolation function of vNi (x)) is non-increasing w.r.t. c, we have 
+
+vN (x, c ∗ − ∆c∗) − vN (x, c ∗)∆c∗ ⩽ vN (x, c Ni ) − vN (x, c Ni−n)(n − 2)∆ cN
+
+⩽ nn − 2
+
+" vN (x, c Ni+j+m) − vN (x, c Ni+j )
+
+m∆cN + ( n + m + j + 1) B∆cN
+
+#
+
+⩽ nn − 2
+
+"
+
+m + 2 
+
+m · vN (x, c ∗) − vN (x, c ∗ + ∆ c∗)∆c∗
+
++ n + m + j + 1 
+
+n + m + j − 1 B(c∗ − c∗)
+
+#
+
+.
+
+Sending N → ∞ , and observing that n, m, i, and j also tend to infinity simultaneously, we deduce (48) and complete the proof. □
+
+Lemma 5.5 The curve X (·) is continuous in (−∞ , c ).
+
+Proof: We fix an arbitrary c ∈ (−∞ , c ). We first prove lim inf  
+
+> s→c+
+
+X (s) = lim sup 
+
+> s→c+
+
+X (s). (49) Suppose on the contrary, there exist x∗, x∗ such that lim inf  
+
+> s→c+
+
+X (s) < x ∗ < x ∗ < lim sup 
+
+> s→c+
+
+X (s).
+
+25 Note there exist a sequence ( cn, ∆cn) → (c+, 0+) such that 
+
+v(x, c n + ∆ cn) = v(x, c n), x ⩾ x∗, (50) and a sequence s1 > s 2 > · · · > s n → c such that 
+
+Lsn v(x, s n) − T v(x, s n) + h(x) − sn = 0 , x < x ∗. (51) Let 
+
+un(x) = v(x, s n) − v(x, s n−1)
+
+sn−1 − sn
+
+⩾ 0.
+
+Due to (30), un is bounded. Note un(x) satisfies 
+
+Lsn un(x) − T un(x) = vx(x, s n−1) − 1, x ∈ [0 , x ∗], (52) so we further know un is bounded in W 1,∞([0 , x ∗]). Therefore, it has a subsequence converges to some u ∈ W 1,∞([0 , x ∗]) weekly in W 1,∞([0 , x ∗]) and uniformly in C([0 , x ∗]). Differentiating both sides of (52) w.r.t. x gives 
+
+Lsn (un)′(x) − I (un)′(x) = vxx (x, s n−1) ⩽ 0, x ∈ (0 , x ∗),
+
+and note that ( un)′(x) = 0 for x ⩾ x∗, by Lemma 3.1 we have ( un)′ ⩽ 0 in R+. It hence follows 
+
+u′ ⩽ 0 in (0 , x ∗). On the other hand, applying Lemma 5.4 and (50) yields 0 ⩽ un(x) ⩽ B(sn −c) −→ 0 for x > x ∗,
+
+so u(x) = 0 for all x ∈ [x∗, x ∗]. Moreover, (29) implies v(·, s n−1) is bounded in W 2,∞([0 , x ∗]). Since v(·, s n−1) converges to v(·, c ) in C([0 , x ∗]), it has a subsequence converges to v(·, c ) weekly in 
+
+W 2,∞([0 , x ∗]) and uniformly in C1([0 , x ∗]). Then letting n → ∞ (along a suitable subsequence) in (52), we get 
+
+vx(x, c ) = −λ
+
+Z x
+
+> 0
+
+u(x − z)p(z) d z − λu (0)(1 − F (x)) + 1 , x ∈ (0 , x ∗). (53) Differentiating both sides w.r.t. x gives 
+
+vxx (x, c ) = −λ
+
+Z x
+
+> 0
+
+u′(x − z)p(z) d z, x ∈ (x∗, x ∗).
+
+Since u′ ⩽ 0, p > 0 and vxx ⩽ 0, we conclude u′ = 0 in (0 , x ∗). Combining u = 0 in ( x∗, x ∗), we get 
+
+u = 0 in (0 , x ∗). It implies vx(·, c ) = 1 by (53), so v(·, c ) = x + a0 in (0 , x ∗) for some constant a0.Sending n → ∞ in (51) and using the above two expressions, we obtain 
+
+−(μ − c) + ( r + λ)( x + a0) − λ
+
+Z x
+
+> 0
+
+(x − y)p(y) d y − λa 0 + h(x) − c = 0 , x ∈ (0 , x ∗).
+
+Differentiating both sides w.r.t. x twice gives λ(ℓ − 1) p(x) = 0 for x ∈ (0 , x ∗), which contracts (3). 26 So the claim (49) follows. In a similar way, we can prove lim inf  
+
+> s→c−
+
+X (s) = lim sup 
+
+> s→c−
+
+X (s) and lim inf  
+
+> s→c−
+
+X (s) ⩾ lim sup 
+
+> s→c+
+
+X (s).
+
+Thus lim  
+
+> s→c−
+
+X (s) ⩾ lim  
+
+> s→c+
+
+X (s).
+
+To prove the reverse inequality, we suppose, on the contrary, there exist x∗, x ∗ such that lim  
+
+> s→c+
+
+X (s) < x ∗ < x ∗ < lim  
+
+> s→c−
+
+X (s).
+
+Since X (·) ⩾ 0, we have x∗, x ∗ > 0. Notice 
+
+Lcv(x, c ) − T v(x, c ) + h(x) − c = 0 , x ∈ [x∗, x ∗]. (54) Since lim  
+
+> s→c+
+
+X (s) < x ∗, there exists ε ∈ (0 , c − c) such that X (s) < x ∗ for all s ∈ (c, c + ε) and thus [x∗, ∞) × (c, c + ε) ⊂ S , by the continuity of v we have ( x∗, c ) ∈ S . Let 
+
+c0 = sup {c′ ∈ [c, c ] | v(x∗, c ) = v(x∗, c ′)}.
+
+Then we have either c < c 0 < c , ( x∗, c 0) ∈ N S or c0 = c. Due to Lemma 5.1 we have (c0 − c)(1 − vx(x∗, c 0)) − [T v(x∗, c ) − T v(x∗, c 0)] ⩾ 0, v(x, c ) = v(x, c 0), x ⩾ x∗. (55) Thus, for x ⩾ x∗,
+
+T v(x, c ) − T v(x, c 0)= λ
+
+Z x
+
+> 0
+
+[v(z, c ) − v(z, c 0)] p(x − z) d z + λ[v(0 , c ) − v(0 , c 0)](1 − F (x)) = λ
+
+Z x∗
+
+> 0
+
+[v(z, c ) − v(z, c 0)] p(x − z) d z + λ[v(0 , c ) − v(0 , c 0)](1 − F (x)) .
+
+If v(0 , c ) − v(0 , c 0) = 0, then X (c) = 0. By Lemma 5.3, it follows X (s) = 0 for all s ∈ (−∞ , c ], which contradicts lim  
+
+> s→c−
+
+X (s) > x ∗ > 0. So we have v(0 , c ) − v(0 , c 0) > 0. Combining F ′ > 0 and 
+
+p′ ⩽ 0, we have T v(x, c ) − T v(x, c 0) is strictly decreasing in x ⩾ x∗. Hence, by (55), we have 
+
+ Lcv(x, c ) − T v(x, c ) + h(x) − c
+
+−  Lc0 v(x, c 0) − T v(x, c 0) + h(x) − c0
+
+
+
+= ( c − c0)vx(x, c 0) + T v(x, c 0) − T v(x, c ) + c0 − c > 0, x > x ∗,
+
+contradicting to (24) and (54). We now conclude lim  
+
+> s→c−
+
+X (s) = lim  
+
+> s→c+
+
+X (s).
+
+It is only left to prove lim  
+
+> s→c+
+
+X (s) = X (c). Firstly, for any x > X (c), by the definition of X (c)27 and Lemma 5.1, there exists s > c such that 
+
+v(y, s ) = v(y, c ), (y, s ) ∈ [x, +∞) × [c, s ].
+
+This implies X (s) ⩽ x for s ∈ [c, s ). Consequently, it follows lim  
+
+> s→c+
+
+X (s) ⩽ X (c). On the other hand, for each x > lim  
+
+> s→c+
+
+X (s), there exists s > c such that x > X (s) for s ∈ (c, s ]. Hence, [x, +∞) × (c, s ] ⊆ S , and v(x, s ) = v(x, s ) for s ∈ (c, s ]. By the continuity of v, it follows 
+
+v(x, c ) = v(x, s ), which implies X (c) ⩽ x. Hence, X (c) ⩽ lim  
+
+> s→c+
+
+X (s). The proof is complete. 
+
+□
+
+Lemma 5.6 The curve X (c) is bounded near c.
+
+Proof: Suppose X , on the contrary, is not bounded near c. Since it is continuous, there exists a strictly increasing sequence cn → c such that X (cn) → +∞.Let 
+
+un(x) = v(x, c n) − v(x, c )
+
+c − cn
+
+⩾ 0.
+
+Since v(·, c ) = g(·) satisfies Lcg(·) − T g(·) + h − c = 0 in R+, and 
+
+Lcn v(·, c n) − T v(·, c n) + h − cn = 0 in [0 , X (cn)] ,
+
+we have 
+
+Lcn un − T un = g′ − 1 in [0 , X (cn)] . (56) By (30) and (56), un is uniformly bounded for all n, and un is bounded in W 1,∞([0 , L ]) for any L > 0when X (cn) > L , so it has a subsequence converges to a u ∈ W 1,∞(R+) weekly in W 1,∞([0 , L ]) and uniformly in C([0 , L ]) for any L > 0 which satisfies 
+
+Lcu − T u = g′ − 1 in R+. (57) Differentiating it leads to Lcu′ − I u′ = g′′ ⩽ 0 in R+. Applying Lemma 3.1 yields u′ ⩽ 0. Since u
+
+is bounded, the following limits exist 
+
+u(+ ∞) = lim  
+
+> x→+∞
+
+u(x), lim sup 
+
+> x→+∞
+
+u′(x) = 0 .
+
+So there exists a sequence xn → +∞ such that − 1 
+
+> n
+
+⩽ u′(xn) ⩽ 0. Noticing (11), by taking x = xn
+
+in (57) and sending n → ∞ , we conclude u(+ ∞) = −1/r . But this contradicts 0 ⩽ un → u. □
+
+28 5.3 Proof of Lemma 3.8 
+
+First, the monotonicity of x 7 → M(x, c ) follows from Lemma 5.1 immediately. We now show the right-continuity property. Since M(x, c ) is non-decreasing w.r.t. x, we only need to prove 
+
+M(x, c ) ⩾ c∗ := lim sup 
+
+> y→x+
+
+M(y, c ).
+
+Let {yn} be a sequence such that yn → x+ and M(yn, c ) → c∗ as n → ∞ . By definition, we have 
+
+v(yn, M(yn, c )) = v(yn, c ), so it follows from the continuity of v that v(x, c ∗) = v(x, c ) which by definition gives M(x, c ) ⩾ c∗.We now prove the equation (17). Suppose c < s := M(x, c ) < c . Thanks to Lemma 5.4 and monotonicity, we have 0 ⩽ v(x, s ) − v(x, s + ∆ s)∆s ⩽ v(x, s − ∆s) − v(x, s )∆s + 2 B∆s = 2 B∆s. 
+
+for 0 < ∆s < min {s − c, c − s}, since v(x, ξ ) = v(x, c ) for all ξ ∈ [c, s ]. Sending ∆ s → 0+, we get 
+
+vc(x, s ) = 0. 
+
+# A Appendix 
+
+A.1 Proof of Lemma 2.1 
+
+The monotonicity in c and x is due to Π x,c ⊆ Πx,c ′ for c′ < c ⩽ c and Π x,c ⊆ Πy,c for x ⩽ y.Suppose x ⩽ y. For any {(Ct, D t)}t⩾0 ∈ Πy,c , let D∗ 
+
+> t
+
+= ( Dt + ( y − x)) 1t⩾0, then {(Ct, D ∗ 
+
+> t
+
+)}t⩾0 ∈
+
+Πx,c , and 
+
+E
+
+" Z ∞
+
+> 0
+
+e−rt Ct dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dDt
+
+#
+
+= E
+
+" Z ∞
+
+> 0
+
+e−rt Ct dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dD∗ 
+
+> t
+
++ ℓ(y − x)
+
+#
+
+⩽ V (x, c ) + ℓ(y − x),
+
+which implies V (y, c ) ⩽ V (x, c ) + ℓ(y − x). When x < 0, we have that {(Ct, D t)}t⩾0 ∈ Π0,c if and only if {(Ct, D t − x)}t⩾0 ∈ Πx,c , which hence implies a strategy {(Ct, D t)}t⩾0 is an optimal for V (0 , c ) if and only if {(Ct, D t − x)}t⩾0 is optimal for V (x, c ). This together with the above argument leads to V (x, c ) = V (0 , c ) + ℓx for x ⩽ 0. To show the concavity w.r.t x, suppose {(Cxt , D xt )}t⩾0 ∈ Πx,c and {(Cyt , D yt )}t⩾0 ∈ Πy,c . Then one can check {(C∗ 
+
+> t
+
+, D ∗ 
+
+> t
+
+)}t⩾0 ∈ Π x+y  
+
+> 2,c
+
+where C∗ 
+
+> t
+
+= 12 (Cxt + Cyt ) and D∗ 
+
+> t
+
+= 12 (Dxt + Dyt ), so 12 E
+
+" Z ∞
+
+> 0
+
+e−rt Cxt dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dDxt
+
+#
+
+29 + 12 E
+
+" Z ∞
+
+> 0
+
+e−rt Cyt dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dDyt
+
+#
+
+= E
+
+" Z ∞
+
+> 0
+
+e−rt C∗ 
+
+> t
+
+dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dD∗
+
+> t
+
+#
+
+⩽ V
+
+ x + y
+
+2 , c 
+
+
+
+.
+
+By taking supremes over all {(Cxt , D xt )}t⩾0 ∈ Πx,c and {(Cyt , D yt )}t⩾0 ∈ Πy,c in order, we get the desired concavity. Since Ct ⩽ c and Dt ⩾ 0 is non-decreasing for any admissible {(Ct, D t)}t⩾0 ∈ Πx,c , it follows 
+
+V (x, c ) ⩽ sup 
+
+> {(Ct,D t)}t⩾0∈Πx,c
+
+E
+
+" Z ∞
+
+> 0
+
+e−rt c dt
+
+#
+
+= cr ,
+
+which gives a global bound for V on R × (−∞ , c ]. To establish a lower bound for V on R+ × (−∞ , c ], we let D∗ 
+
+> t
+
+= PNt 
+
+> i=1
+
+Zi, then E[D∗ 
+
+> t
+
+] = λγt .By integration by parts, 
+
+E
+
+" Z ∞
+
+> 0
+
+e−rt dD∗
+
+> t
+
+#
+
+= E
+
+"
+
+e−rt D∗ 
+
+> t
+> ∞
+> 0−
+
++ r
+
+Z ∞
+
+> 0
+
+e−rt D∗ 
+
+> t
+
+dt
+
+#
+
+= λγ r .
+
+When x ⩾ 0, one can check that {(c, D ∗ 
+
+> t
+
+)}t⩾0 ∈ Πx,c , so 
+
+V (x, c ) ⩾ E
+
+" Z ∞
+
+> 0
+
+e−rt c dt − ℓ
+
+Z ∞
+
+> 0
+
+e−rt dD∗
+
+> t
+
+#
+
+= c − λℓγ r .
+
+This establishes the boundedness of V on R+ × (−∞ , c ] and completes the proof of Lemma 2.1. 
+
+A.2 Proof of Lemma 3.1 
+
+We assume the first case holds, that is, ψ1, ψ 2 ∈ W 1,∞(R+) satisfy 
+
+
+
+Lcψ1 − J ψ1 + H(x, ψ 1) ⩽ Lcψ2 − J ψ2 + H(x, ψ 2) a.e. in D,ψ1 ⩽ ψ2 in R+ \ D.
+
+Let ϕ(x) = e rμ−c x. Then 
+
+Lcϕ(x) − J ϕ(x) ⩾ Lcϕ(x) − λϕ (x) = 0 , x ∈ R+. (58) The claim will follow if we can show, for any ε > 0, 
+
+ψ1 ⩽ ψ2 + εϕ in R+.
+
+30 We now establish the above by contradiction. Assume, on the contrary, 
+
+M := sup 
+
+> x∈R+
+
+ ψ1 − ψ2 − εϕ (x) > 0for some ε > 0. Clearly, it implies M = sup x∈R+
+
+ ψ1 − ψ2 − εϕ +(x).
+
+Note that ψ1 − ψ2 − εϕ tends to −∞ as x → +∞, so it attains its maximum M at some point 
+
+x0 ∈ R+. By continuity and rr+λ M < M , there exists a sufficiently small δ > 0 such that 
+
+ψ1 − ψ2 − εϕ > rr + λ M in [x0, x 0 + δ]. (59) This implies ψ1 > ψ 2, so [ x0, x 0 + δ] ⊂ D, whence 
+
+Lcψ1 − J ψ1 + H(x, ψ 1) ⩽ Lcψ2 − J ψ2 + H(x, ψ 2) a.e. in [x0, x 0 + δ]. (60) Moreover, since H(x, y ) is non-decreasing in y and ψ1 > ψ 2, we have 
+
+H(x, ψ 1(x)) ⩾ H(x, ψ 2(x)) , x ∈ [x0, x 0 + δ]. (61) Since both Lc and J are linear operators, we deduce from (58), (60), (61) and (4) that 
+
+Lc(ψ1 − ψ2 − εϕ ) ⩽ J (ψ1 − ψ2 − εϕ ) ⩽ λ sup 
+
+> y∈R+
+
+ ψ1 − ψ2 − εϕ +(y) = λM a.e. in [x0, x 0 + δ].
+
+It follows 
+
+−(μ − c)( ψ1 − ψ2 − εϕ )′ ⩽ −(r + λ)( ψ1 − ψ2 − εϕ ) + λM < 0 a.e. in [x0, x 0 + δ],
+
+where the last inequality is due to (59). Thus, ( ψ1 − ψ2 − εϕ )′ > 0 a.e. in [ x0, x 0 + δ], contradicting that x0 is a maximizer of ( ψ1 − ψ2 − εϕ ). This completes the proof for the first case. We now consider the second case: min Lcψ1 − J ψ1 + H(x, ψ 1), ψ 1 − η ⩽ min Lcψ2 − J ψ2 + H(x, ψ 2), ψ 2 − η a.e. in R+.
+
+Suppose D = {ψ1 > ψ 2} is not empty. Then the above leads to 
+
+Lcψ1 − J ψ1 + H(x, ψ 1) ⩽ Lcψ2 − J ψ2 + H(x, ψ 2) a.e. in D.
+
+This means ψ1 and ψ2 satisfy the first case, so by the previous result, we have ψ1 ⩽ ψ2 in R+.But this clearly contradicts to that D = {ψ1 > ψ 2} is not empty. This completes the proof of Lemma 3.1. 31 A.3 Proof of Lemma 3.2 
+
+The existence of a C1-smooth bounded solution to the equation (6) can be proved by constructing the approximation problem in bounded interval and applying the Leray-Schauder fixed point theo-rem (see [17] Theorem 4 on page 539), we leave it to the interested readers. The uniqueness of the solution is a consequence of Lemma 3.1. Next, we prove (7). Let ϕ = c−λℓγ r and Φ = cr . Since 0 ⩽ h(x) = λℓ 
+
+Z ∞
+
+> x
+
+(1 − F (y)) d y ⩽ λℓ 
+
+Z ∞
+
+> 0
+
+(1 − F (y)) d y = λℓγ, 
+
+it follows 
+
+Lcϕ − T ϕ + h − c = h − λℓγ ⩽ 0 ⩽ h = LcΦ − T Φ + h − c in R+.
+
+Applying Lemma 3.1, we obtain (7). We come to prove (8). Differentiating (6) we have 
+
+Lc
+
+ g′ − I  g′ = λℓ (1 − F ) in R+, (62) Let ψ = 0 and Ψ = ℓ, then 
+
+Lcψ − I ψ = 0 ⩽ λℓ (1 − F ) ⩽ rℓ + λℓ (1 − F ) = LcΨ − I Ψ in R+.
+
+Applying Lemma 3.1 to (62), we have (8). We now prove (9). Differentiating (62) yields 
+
+Lc
+
+ g′′  − I  g′′  = λ(g′(0) − ℓ)p a.e. in R+.
+
+Since g′, g′′ and p are bounded in R+, it follows g′′ ∈ W 1,∞(R+). Also, since g′ ⩽ ℓ and λp ⩾ 0, we have 
+
+Lc
+
+ g′′  − I  g′′  ⩽ 0 a.e. in R+.
+
+Applying Lemma 3.1, we obtain (9). Finally, we prove (10) and (11). From (7)-(9) we know the limits g(+ ∞) and g′(+ ∞) exist and (11) holds. Let x → +∞ in (6) and using the dominated convergence theorem we get (10) and complete the proof of Lemma 3.2. 
+
+A.4 Proof of Theorem 3.3 
+
+The proof consists of two steps. 32 Step 1 (Upper bound: g(x) ⩾ V (x, c )). Let x ∈ R+ and {(Ct, D t)}t⩾0 ∈ Πx,c be any admissible control. In the boundary case, we have Ct ≡ c. For any subset K of R with zero Lebesgue measure, one can show through a change of measure argument that R T 
+
+> 0
+
+P(Xt ∈ K) d t = 0 for any T > 0. Applying the general Itˆ o’s formula (see [19] Theorem 33 on page 81) to e−rt g(Xt) and then taking expectation yields 
+
+g(x) = E
+
+"
+
+e−cT g(XT )
+
+#
+
+− E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g(Xt) − g(Xt−)
+
+i#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt h
+
+(μ − c)g′ − rg 
+
+i
+
+(Xt−) d t
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt g′(Xt−) d Dct
+
+#
+
+. (63) Since ∆ Dt = Xt − Xt− + ZNt ∆Nt and Xt, ∆ Dt ⩾ 0, we get ∆Dt ⩾ ∆′Dt := ( ZNt ∆Nt − Xt−)+ = ( ZNt − Xt−)+∆Nt,
+
+where the second equality holds since ∆ Nt ∈ { 0, 1} and Xt− ⩾ 0. As a consequence, we have 
+
+Xt − (∆ Dt − ∆′Dt) = Xt− − ZNt ∆Nt + ∆ ′Dt = Xt−(1 − ∆Nt) + ( Xt− − ZNt )+∆Nt.
+
+The second expectation on the right-hand side of (63) can then be decomposed as 
+
+E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g(Xt) − g
+
+
+
+Xt − (∆ Dt − ∆′Dt)
+
+i #
+
++ E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g
+
+
+
+Xt−(1 − ∆Nt) + ( Xt− − ZNt )+∆Nt
+
+
+
+− g(Xt−)
+
+i#
+
+.
+
+Since ∆ Nt ∈ { 0, 1}, the second term in above can be rewritten as 
+
+E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g
+
+
+
+Xt−(1 − ∆Nt) + ( Xt− − ZNt )+∆Nt
+
+
+
+− g(Xt−)
+
+i#
+
+= E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g
+
+
+
+(Xt− − ZNt )+
+
+− g(Xt−)
+
+i
+
+∆Nt
+
+#
+
+= E
+
+" Z T
+
+> 0
+
+e−rt h
+
+g
+
+
+
+(Xt− − ZNt )+
+
+− g(Xt−)
+
+i
+
+λ dt
+
+#
+
+= E
+
+" Z T
+
+> 0
+
+e−rt 
+
+Et,X t−
+
+h
+
+g
+
+
+
+(Xt− − ZNt )+i 
+
+− g(Xt−)
+
+
+
+λ dt
+
+#
+
+= E
+
+" Z T
+
+> 0
+
+e−rt h
+
+T g(Xt−) − λg (Xt−)
+
+i
+
+dt
+
+#
+
+,
+
+33 where the second equality follows from the martingale property of the compensated Poisson pro-cess {Nt − λt }t⩾0 (see [20]), and the third equality follows from the law of iterated expectations. Substituting these expressions into (63) yields 
+
+g(x) = E
+
+"
+
+e−rT g(XT )
+
+#
+
+− E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g(Xt) − g
+
+
+
+Xt − (∆ Dt − ∆′Dt)
+
+i #
+
++ E
+
+" Z T
+
+> 0
+
+e−rt 
+
+Lcg − T g
+
+
+
+(Xt−, t ) d t
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt g′(Xt−) d Dct
+
+#
+
+. (64) Observe that 
+
+ℓE
+
+" X
+
+> 0⩽t⩽T
+
+e−rt ∆′Dt
+
+#
+
+= ℓE
+
+" X
+
+> 0⩽t⩽T
+
+e−rt (ZNt − Xt−)+∆Nt
+
+#
+
+= ℓE
+
+" Z T
+
+> 0
+
+e−rt (ZNt − Xt−)+λ dt
+
+#
+
+= ℓλ E
+
+" Z T
+
+> 0
+
+e−rt Et,X t−
+
+h
+
+(ZNt − Xt−)+i
+
+dt
+
+#
+
+= E
+
+" Z T
+
+> 0
+
+e−rt h(Xt−) d t
+
+#
+
+.
+
+Then (64) becomes 
+
+g(x) = E
+
+"
+
+e−rT g(XT )
+
+#
+
+− E
+
+" X
+
+> 0⩽t⩽T
+
+e−rt h
+
+g(Xt) − g
+
+
+
+Xt − (∆ Dt − ∆′Dt)
+
+i #
+
++ E
+
+" Z T
+
+> 0
+
+e−rt 
+
+Lcg − T g + h − c
+
+
+
+(Xt−) d t
+
+#
+
+− E
+
+" Z T
+
+> 0
+
+e−rt g′(Xt−) d Dct
+
+#
+
+− ℓE
+
+" X
+
+> 0⩽t⩽T
+
+e−rt ∆′Dt
+
+#
+
++ E
+
+" Z T
+
+> 0
+
+e−rt c dt
+
+#
+
+. (65) The definition of g implies that the third expectation vanishes. Combining 0 ⩽ g′ ⩽ ℓ and ∆ Dt −
+
+∆′Dt ⩾ 0, we obtain 
+
+g(x) ⩾ E
+
+"
+
+e−rT g(XT )
+
+#
+
++ E
+
+" Z T
+
+> 0
+
+e−rt c dt −
+
+Z T
+
+> 0
+
+e−rt ℓ dDt
+
+#
+
+Since g is bounded in R+, by the dominated convergence theorem and monotone convergence theorem, sending T → +∞ yields 
+
+g(x) ⩾ E
+
+" Z ∞
+
+> 0
+
+e−rt c dt −
+
+Z ∞
+
+> 0
+
+e−rt ℓ dDt
+
+#
+
+.
+
+Therefore, we conclude g(x) ⩾ V (x, c ). 34 Step 2 (Lower bound and optimality: g(x) ⩽ V (x, c )). We now prove the opposite inequality and verify that the candidate capital injection strategy 
+
+Dt = sup 
+
+> 0⩽s⩽t
+
+ NsX
+
+> i=1
+
+Zi − x − (μ − c)s
+
++
+
+, t ⩾ 0.
+
+that proposed in Theorem 3.3 is indeed optimal. Since Dt is non-decreasing and the surplus 
+
+Xt = x + ( μ − c)t −
+
+> Nt
+
+X
+
+> i=1
+
+Zi + Dt ⩾ 0, t ⩾ 0,
+
+we see {(c, D t)}t⩾0 ∈ Πx,c . We next show ∆Dt = ∆ ′Dt, t ⩾ 0. (66) Indeed, there are two cases. 
+
+• ∆Dt > 0. In this case, we have Dt = PNt 
+
+> i=1
+
+Zi − x − (μ − ¯c)t, so ∆Dt = ( Dt − Dt−)+
+
+=
+
+" NtX
+
+> i=1
+
+Zi − x − (μ − c)t
+
+
+
+−
+
+
+
+Xt− − x − (μ − c)t +
+
+> Nt−
+
+X
+
+> i=1
+
+Zi
+
+#+
+
+= ( ZNt ∆Nt − Xt−)+ = ∆ ′Dt.
+
+• ∆Dt = 0. In this case, we have Xt − Xt− = −ZNt ∆Nt, so ∆′Dt = ( ZNt ∆Nt − Xt−)+ = ( −Xt)+ = 0 = ∆ Dt.
+
+Thus, we proved (66). Moreover, it is straightforward to verify that Dct ≡ 0. Taking these into (65) yields 
+
+g(x) = E e−rT g(XT ) + E
+
+Z T
+
+> 0
+
+e−rt ¯c dt −
+
+Z T
+
+> 0
+
+e−rt ℓ dDt
+
+
+
+.
+
+By sending T → ∞ , we obtain 
+
+g(x) = E
+
+Z ∞
+
+> 0
+
+e−rt ¯c dt −
+
+Z ∞
+
+> 0
+
+e−rt ℓ dDt
+
+
+
+.
+
+Now we conclude {(c, D t)}t⩾0 is an optimal strategy and g is the value function for the boundary case. This completes the proof of Theorem 3.3. 35 A.5 Proof of Lemma 3.5 
+
+Suppose v, w ∈ A ∞ are two bounded strong solutions to the VI (12), and v > w at some point in 
+
+Q+
+
+> ∞
+
+. Then by continuity, there exist ε > 0 and c < c such that 
+
+M := sup 
+
+> (x,c )∈R+×[c,c ]
+
+ (1 + ε)v − w − εϕ (x, c ) > 0,
+
+where ϕ(x) = x + a with a > (c + μ − c)/r . Clearly, 
+
+M = sup 
+
+> (x,c )∈R+×[c,c ]
+
+ (1 + ε)v − w − εϕ +(x, c ).
+
+Note that (1 + ε)v − w − εϕ is continuous and tends to −∞ as x → +∞, and  (1 + ε)v − w −
+
+εϕ (x, c ) = ε(g(x) − ϕ(x)) ⩽ ε(c/r − a) < 0 for x ∈ R+, so (1 + ε)v − w − εϕ attains its maximum value at some point ( x0, c 0) ∈ R+ × [c, c ). It hence follows 
+
+∂x
+
+ (1 + ε)v − w − εϕ (x0, c 0) ⩽ 0. (67) This together with μ ⩾ c and 
+
+T  (1 + ε)v − w − εϕ (x0, c 0) ⩽ λ (1 + ε)v − w − εϕ +(x0, c 0) = λM, 
+
+implies 
+
+Lc0
+
+ (1 + ε)v − w − εϕ (x0, c 0) − T  (1 + ε)v − w − εϕ (x0, c 0)
+
+⩾ (r + λ) (1 + ε)v − w − εϕ (x0, c 0) − λM = rM > 0. (68) On the other hand, we may assume c0 satisfies 
+
+ (1 + ε)v − w − εϕ (x0, c ) < M =  (1 + ε)v − w − εϕ (x0, c 0), c0 < c ⩽ c. 
+
+Since w + εϕ is non-increasing w.r.t. c, it follows 
+
+v(x0, c 0) > v (x0, c ), c0 < c ⩽ c. 
+
+Then by Definition 3.4, we have 
+
+Lc0 v(x0, c 0) − T v(x0, c 0) + h(x0) − c0 = 0 or vx(x0, c 0) = ℓ. 
+
+Notice 
+
+Lc0 ϕ(x0) − T ϕ(x0) ⩾ Lc0 ϕ(x0) − λϕ (x0)= rx 0 + ra − μ + c0 ⩾ ra − μ + c0 > c. 
+
+36 If Lc0 v(x0, c 0) − T v(x0, c 0) + h(x0) − c0 = 0, using Lcw − T w + h − c ⩾ 0 and above, we get 
+
+Lc0
+
+ (1 + ε)v − w − εϕ (x0, c 0) − T  (1 + ε)v − w − εϕ (x0, c 0) < −ε(h(x0) − c0 + c) < 0,
+
+which contradicts (68). If vx(x0, c 0) = ℓ, combining wx(x0, c 0) ⩽ ℓ and ϕx(x0, c 0) = 1, we have 
+
+∂x
+
+ (1 + ε)v − w − εϕ (x0, c 0) ⩾ ε(ℓ − 1) > 0, which contradicts (67). This completes the proof of Lemma 3.5. 
+
+# References 
+
+[1] H. Albrecher, P. Azcue, and N. Muler, Optimal ratcheting of dividends in insurance , SIAM J. Control Optim., 58 (2020), pp. 1822–1845. [2] H. Albrecher, P. Azcue, and N. Muler, Optimal ratcheting of dividends in a Brownian risk model , SIAM J. Financial Math., 13 (2022), pp. 657–701. [3] S. Asmussen and M. Taksar, Controlled diffusion models for optimal dividend payout , Insurance Math. Econom., 20 (1997), pp. 1–15. [4] B. De Finetti, Su un’impostazione alternativa della teoria collettiva del rischio , in Transactions of the XVth International Congress of Actuaries, Vol. 2, New York, 1957, pp. 433–443. [5] H. U. Gerber, Entscheidungskriterien f¨ ur den zusammengesetzten Poisson-Prozess , Ph.D. the-sis, ETH Zurich, 1969. [6] H. U. Gerber and E. S. W. Shiu, Optimal dividends: Analysis with Brownian motion , N. Am. Actuar. J., 8 (2004), pp. 1–20. [7] H. U. Gerber and E. S. W. Shiu, On optimal dividend strategies in the compound Poisson model , N. Am. Actuar. J., 10 (2006), pp. 76–93. [8] C. Guan and Z. Q. Xu, Optimal ratcheting of dividend payout under Brownian motion surplus ,SIAM J. Control Optim., 62 (2024), pp. 2590–2620. [9] C. Guan, J. Fan, and Z. Q. Xu, Optimal dividend payout with path-dependent drawdown con-straint , Appl Math Opt., 93, 64 (2026) [10] L. He, Z. Liang, and Y. Yuan, Optimal dividend and capital injection problem with a terminal value , J. Ind. Manag. Optim., 11 (2015), pp. 1203–1221. [11] J. Keppo, A. M. Reppen, and H. M. Soner, Discrete dividend payments in continuous time ,Math. Oper. Res., 46 (2021), pp. 895–911. [12] N. Kulenko and H. Schmidli, Optimal dividend strategies in a Cram´ er-Lundberg model with capital injections , Insurance Math. Econom., 43 (2008), pp. 270–278. 37 [13] S. P. Sethi and M. I. Taksar, Optimal financing of a corporation subject to random returns ,Math. Finance, 12 (2002), pp. 155–172. [14] S. P. Sethi, M. I. Taksar, and M. Yan, Optimal financing and dividend policies of a corporation with random returns , Math. Finance, 15 (2005), pp. 561–581. [15] M. Taksar, Optimal risk and dividend distribution control models for an insurance company ,Mathematical Methods of Operations Research, 51 (2000), pp. 1–42. [16] J. Yong and X. Zhou, Stochastic controls: Hamiltonian systems and HJB equations , Applica-tions of Mathematics (New York) 43, Springer-Verlag, New York, 1999. [17] L. C. Evans, Partial differential equations , Interscience Publishers, 2016. [18] W. Wang, R. Xu, and K. Yan, Optimal ratcheting of dividends with capital injection , Mathe-matics of Operations Research, 50(3) (2024), pp. 2073–2111. [19] P. Protter, Stochastic Integration and Differential Equations , Springer-Verlag, 1990. [20] S. E. Shreve, Stochastic Calculus for Finance II , Springer, 2004. 38

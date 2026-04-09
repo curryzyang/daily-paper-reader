@@ -1,0 +1,509 @@
+Title: Sampling-Horizon Neural Operator Predictors for Nonlinear Control under Delayed Inputs
+
+URL Source: https://arxiv.org/pdf/2603.29119v1
+
+Published Time: Wed, 01 Apr 2026 00:21:39 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# Sampling-Horizon Neural Operator Predictors for Nonlinear Control under Delayed Inputs 
+
+Luke Bhan 1,∗
+
+, Peter Quawas 1, Miroslav Krstic 1, and Yuanyuan Shi 1
+
+Abstract — Modern control systems frequently operate under input delays and sampled state measurements. A common delay-compensation strategy is predictor feed-back; however, practical implementations require solving an implicit ODE online, resulting in intractable computa-tional cost. Moreover, predictor formulations typically as-sume continuously available state measurements, whereas in practice measurements may be sampled, irregular, or temporarily missing due to hardware faults. In this work, we develop two neural-operator predictor-feedback designs for nonlinear systems with delayed inputs and sampled measurements. In the first design, we introduce a sampling-horizon prediction operator that maps the current measurement and input history to the predicted state trajectory over the next sampling interval. In the second design, the neural operator approximates only the delay-compensating predictor, which is then composed with the closed-loop flow between measurements. The first approach requires uniform sampling but yields residual bounds that scale directly with the operator approximation error. In contrast, the second accommodates non-uniform, but bounded sampling schedules at the cost of amplified approximation error, revealing a practical tradeoff between sampling flexibility and approximation sensitivity for the control engineer. For both schemes, we establish semi-global practical stability with explicit neural operator error-dependent bounds. Numerical experiments on a 6-link nonlinear robotic manipulator demonstrate accurate tracking and substantial computational speedup of 25 ×
+
+over a baseline approach. 
+
+I. I NTRODUCTION 
+
+In practical control systems, input delays are unavoid-able. Further, measurements are often available only at discrete sampling instants due to sensing and commu-nication bandwidth limitations. Thus, controllers must operate reliably under delayed inputs and sparse mea-surements while remaining computationally efficient. In this work, we develop a predictor feedback frame-work for nonlinear systems with input delay and sam-pled measurements using neural operators. We propose two approaches for handling measurement updates: one assuming uniform sampling and one allowing bounded, non-uniform sampling intervals yielding two different operator feedback designs. For both instances, we estab-lish semi-global practical stability using Lyapunov anal- 
+
+> *Corresponding author
+> 1The authors are with the University of California San Diego,
+> {lbhan, pquawas, mkrstic, yyshi }@ucsd.edu
+
+ysis, with performance bounds explicitly characterized in terms of the neural operator approximation error. 
+
+a) Predictor feedback designs: Predictor feedback has been extensively studied for systems with input delays [1], [2]. The central idea is to compensate the delay by predicting the future system state over the delay horizon and applying the nominal feedback law to this prediction [3]. However, the predictor is an implicit ODE requiring numerical integration + successive approxi-mations to implement. As such, numerical approaches rely on state-dependent discretizations [4] or truncated predictor expansions requiring higher-order derivatives of the dynamics [5]. While these methods provide strong stability guarantees, they can incur significant and un-predictable computational cost. More recently, neural operator–based predictors have been proposed as a data-driven alternative that learns the predictor mapping directly from trajectory data [6], [7], [8]. In these approaches, the predictor is approx-imated offline using a neural operator [9], [10]—a neural architecture designed to approximate mappings between function spaces—and then deployed online for fast inference. However, existing formulations assume continuously available state measurements, whereas in practice measurements are often available only at dis-crete sampling instants. Motivated by this gap, we study predictor feedback under sampled measurements, where state propagation between updates leads to a hybrid feedback law requiring a new operator design. 
+
+b) Notation: We write |x| for the Euclidean norm. For v : [0 , D ] → Rm, let ∥v∥L∞[0 ,D ] =sup x∈[0 ,D ] |v(x)|, and similarly ∥u[t]∥L∞[0 ,D ] := sup x∈[0 ,D ] |u(x, t )|. At sampling time Ti, denote the input history by Ui(θ) = {U (Ti + θ); θ ∈ [−D, 0) }.II. P ROBLEM FORMULATION AND CONTROL DESIGN 
+
+Consider the delayed-input nonlinear system 
+
+˙X(t) = f (X(t), U (t − D)) , t ∈ [0 , ∞) (1) where X(t) ∈ Rn, f : Rn × Rm → Rn, and D > 0
+
+is a constant, but arbitrarily long delay. State measure-ments are available only at discrete sampling instants 
+
+{Ti}∞ 
+
+> i=0
+
+with T0 = 0 . Further, we impose the following assumptions on the system.                                                           
+
+> arXiv:2603.29119v1 [eess.SY] 31 Mar 2026 Plant
+> ˙X=f(X(t), U (t−D))
+> Multi-step predictor
+> ˆZ(s) = ˆM(X(Ti), U i)( s)
+> s∈[Ti, T i+1 )
+> State predictor
+> Pi(s) = ˆP(X(Ti), U i)( s)
+> s∈[−D, 0]
+> Continuous feedback over horizon
+> ˙ˆZ(s) = f( ˆZ(s), κ ( ˆZ(s))) ˆZ(Ti) = ˆPi(0) , s ∈[Ti, T i+1 )
+> Offline learning
+> Neural operators approximate Mor P.
+> Updates at each Ti
+> System measurement X(Ti)
+> Case 1 Uniform sampling
+> Ti+1 −Ti=h
+> Case 2 Bounded sampling
+> Ti+1 −Ti≤h
+> Input U(t) = κ( ˆZ(t)) Input U(t) = κ( ˆZ(t))
+> ˆPi(0)
+> Operator horizons
+> TiTi+1 Ti+DTi+1 +D
+> ˆZ(t)≈ˆM(X(Ti), U i)( t)
+> ˆMpredicts X(t+D)directly
+> Case 1:
+> TiTi+1 Ti+DTi+1 +D
+> Sample-Horizon Flow
+> ˙ˆZ(s) = f( ˆZ(s), κ ( ˆZ(s))) ,
+> ˆZ(Ti) = ˆP(X(Ti), U i)(0) .
+> ˆPconstructs IC for flow
+> ˆP(·)(0) ≈X(Ti+D)
+> Case 2:
+
+Fig. 1: Approximate predictor-feedback implementations under uniform and bounded sampling. 
+
+Assumption 1: Let f (X, U ) be as in (1) and let X ⊂ 
+
+Rn and U ⊂ Rm be compact domains with bounds in the supremum norm given by X and U respectively. Then, there exists a constant Cf (X , U) > 0 such that f
+
+satisfies the Lipschitz condition 
+
+|f (X1, u 1) − f (X2, u 2)| ≤ Cf (|X1 − X2| + |u1 − u2|) ,
+
+(2) for all X1, X 2 ∈ X and u1, u 2 ∈ U .
+
+Assumption 2: ˙X = f (X, ω ) in (1) is strongly for-ward complete (See [11, Def. 6.1] for definition). 
+
+Assumption 3: There exists a control law κ ∈
+
+C1(Rn; Rm) such that under the closed loop feed-back U (t) = κ(X(t)) , the delay-free system ˙X(t) = 
+
+f (X(t), U (t)) is globally asymptotically stable. 
+
+Assumption 4: The system ˙X = f (X, κ (X) + ω) in (1) is input-to-state stable (ISS). (See [12] for definition). Assumptions 1–4 are standard in nonlinear delay compensation and are satisfied by a broad class of nonlinear systems including many control-affine systems and mechanical systems derived from Lagrangian mod-els. The role of the compact sets in Assumption 1 will become clear in Section III. To handle the delay, consider the hybrid predictor-based control law introduced by [13] 
+
+U (s) = κ(Z(s)) , s ∈ [Ti, T i+1 ) (3a) 
+
+˙Z(s) = f (Z(s), κ (Z(s))) , s ∈ [Ti, T i+1 ) (3b) 
+
+Z(Ti) = Pi(0) , (3c) where Pi(θ) is the predictor trajectory defined over the delay horizon θ ∈ [−D, 0] for the ith sample measurement as the solution of 
+
+Pi(θ) = X(Ti) + 
+
+Z θ
+
+> −D
+
+f (Pi(τ ), U (Ti + τ )) dτ , (4) At T0 = 0 , the predictor is initialized using the preset input history for θ ∈ [−D, 0] as 
+
+P0(θ) = X(0) + 
+
+Z θ
+
+> −D
+
+f (P0(τ ), U (τ )) dτ . (5) The hybrid law requires two online computations: evaluating the predictor to obtain Pi(0) the initial Ti +D
+
+future state estimate and integrating (3b)–(3c) over each sampling interval. Both can be costly for large delays or stiff dynamics. To address this, we reformulate the hybrid feedback law as an operator and approximate it using neural operators. As illustrated in Fig. 1, we consider two implementations: in Case 1 a neural op-erator directly approximates the entire predicted state 
+
+ˆZ over the sampling horizon, while in Case 2 only the predictor is approximated and used as an initial condition in (3b), (3c) which is then solved to obtain the prediction trajectory between sampling times. Case 
+
+2 allows one to work with non-uniform measurements while case 1 requires uniform sampling. However, as proven in Section IV, Case 2 will require a better neural operator approximation for stability. III. M ULTI -STEP NEURAL OPERATOR PREDICTORS 
+
+We begin by defining the predictor operator as the solution to the implicit differential equation in (4): 
+
+Definition 1: (Predictor operator ) Let X ∈ Rn, U ∈
+
+C1([ −D, 0]; Rm). Then, we define the predictor opera-tor mapping as P : ( X, U ) → P where P maps from 
+
+Rn × C1([ −D, 0]; Rm) to C1([ −D, 0]; Rn) and where 
+
+P (s) = P(X, U )( s) satisfies for all s ∈ [−D, 0] ,
+
+P (s) −
+
+Z s
+
+> −D
+
+f (P (θ), U (θ)) dθ − X = 0 . (6) Note, that this operator is Lipschitz following the Lemma given in [6]. 
+
+Lemma 1: ([6, Lemma 4] ) Let Assumption 1 hold and let X ⊂ Rn, U ⊂ Rm be bounded domains as in Assumption 1. Then, for any X1, X 2 ∈ X and input signals U1, U 2 ∈ C1([ −D, 0]; U), the predictor operator 
+
+P defined in (6) satisfies 
+
+∥P (X1, U 1) − P (X2, U 2)∥L∞[−D, 0] 
+
+≤ CP
+
+ |X1 − X2| + ∥U1 − U2∥L∞[−D, 0] 
+
+ ,
+
+(7) with Lipschitz constant 
+
+CP (D, C f ) = max(1 , DC f )eDC f , (8) where D is the delay and Cf is the system Lipschitz constant defined in Assumption 1. To complete the full feedback law, consider now the continuous part of (3a), (3b): 
+
+Definition 2: (Sample-horizon flow operator ) Let 
+
+P ∈ Rn and h > 0. Then, define the sample-horizon flow operator Z : P → Z where Z maps from Rn to 
+
+C1([0 , h ); Rn) and satisfies for all s ∈ [0 , h )
+
+Z(s) −
+
+Z s
+
+> 0
+
+f (Z(τ ), κ (Z(τ ))) dτ − P = 0 . (9) Naturally, the sample-horizon flow operator is Lips-chitz: 
+
+Lemma 2: (Lipschitz continuity of the sample-horizon flow operator ) Let Assumption 1, 3 hold and let X ⊂ 
+
+Rn. Fix h > 0 and consider Z defined in Definition 2. Then, for any P1, P 2 ∈ X , the operator Z satisfies 
+
+∥Z (P1) − Z (P2)∥L∞[0 ,h ) ≤ CZ |P1 − P2| , (10) where the Lipschitz constant is 
+
+CZ (h, C f , C κ) = ehC f (1+ Cκ), (11) Here Cf is the Lipschitz constant of f on X × U from Assumption 1 and Cκ is the Lipschitz constant of κ on 
+
+X (which exists since κ ∈ C1 on the bounded set X ). The proof is given in Appendix A. Further, the full feedback operator is given by: 
+
+Definition 3: (Sampling-horizon prediction operator) Let Assumption 1 hold and let X ⊂ Rn, U ⊂ Rm
+
+be bounded domains as in Assumption 1 with h > 0.Then, define the full multi-step prediction operator as the composed mapping M : Rn × C1([ −D, 0]; Rm) →
+
+C1([0 , h ); Rn) satisfying M(X, U ) = Z(P(X, U )(0)) .We now state our first result - namely the existence of a neural operator approximation of M which relies on [14, Theorem 2.1] and the fact that composed operator 
+
+M is continuous given Lemmas 1 and 2. 
+
+Lemma 3: Let X ∈ X ⊂ Rn and U ∈
+
+C1([ −D, 0]; U) where X and U ⊂ Rm are bounded domains as in Assumption 1. Additionally, let h > 0. Fix a compact set K ⊂ X × C1([ −D, 0]; U). Then, for all 
+
+X , U, ϵ > 0, there exists a neural operator approximation 
+
+ˆM : K → C1([0 , h ); Rn) such that ∀θ ∈ [0 , h )sup  
+
+> (X,U )∈K
+
+|M (X, U )( θ) − ˆM(X, U )( θ)| < ϵ . (12) Notice, the lemma guarantees the existence of a neural operator achieving accuracy ϵ, but does not specify an explicit architecture; see [15, Prop. 1] for further discussion. In practice, the engineer can use their neural network testing error as an estimate for ϵ. Furthermore, 
+
+M, by definition, requires uniformly spaced measure-ments ( Ti+1 − Ti = h). As mentioned, Case 2 addresses this setting by approximating the predictor operator at each sampling instant and propagating the dynamics between updates. The following estimate will be useful in this case. 
+
+Corollary 1: (To Lemma 2) Let X ⊂ Rn and U ⊂ 
+
+Rm be bounded sets as in Assumption 1. Suppose the predictor operator approximation satisfies ∀θ ∈
+
+[−D, 0] , K 1 compact 
+
+sup  
+
+> (X,U )∈K1⊂X ×U
+
+|P (X, U )( θ) − ˆP(X, U )( θ)| ≤ ϵ . 
+
+(13) Let Z(·) and ˆZ(·) denote the solutions of (3b)–(3c) with initializations Z(Ti) = P(X(Ti), U i)(0) and ˆZ(Ti) = ˆP(X(Ti), U i)(0) , respectively. Then for any sampling interval satisfying Ti+1 − Ti ≤ h,
+
+| ˆZ(s) − Z(s)| ≤ ϵe hC f (1+ Cκ), ∀s ∈ [Ti, T i+1 ) .
+
+(14) The existence of a predictor satisfying (13) is a direct consequence of Lemma 1 and [14, Theorem 2.1]. IV. S TABILITY ANALYSIS 
+
+We now present our main result: closed-loop semi-global practical stability under two neural operator pre-dictor feedback schemes. In the first scheme, we ap-proximate the entire sampling-horizon predictor operator 
+
+M, which requires uniform sampling. In the second scheme, we approximate the predictor operator P and propagate the resulting state through the continuous ODE describing ˆZ. Hence, the second approach requires a stronger approximation of the operator, but allows for nonuniform sampling times subject to a uniform bound. In both cases, stability is achieved with a residual bound depending on the neural operator approximation error ϵ.
+
+Case 1 (Uniform sampling, sampling-horizon predic-tion operator approximation). If Ti+1 − Ti = h and 
+
+ˆZ is generated using a neural operator approximation of the multi-step prediction operator 
+
+U (Ti + s) = κ( ˆZ(Ti + s)) , s ∈ [0 , h ), (15) 
+
+ˆZ(Ti + s) = ˆM(X(Ti), U i)( s), (16) for all i, then define the error by the function: 
+
+δ(ϵ) = ϵ . (17) 
+
+Case 2 (Bounded sampling, predictor approxima-tion). If Ti+1 − Ti ≤ h and ˆZ is generated by approxi-mating the predictor operator P at each sampling instant and propagating the ODE as in Corollary 1: 
+
+U (s) = κ( ˆZ(s)) , s ∈ [Ti, T i+1 ), (18a) 
+
+˙ˆZ(s) = f ( ˆZ(s), κ ( ˆZ(s))) , (18b) 
+
+ˆZ(Ti) = ˆP(X(Ti), U i)(0) , (18c) for all i, then define the error function: 
+
+δ(ϵ) = ϵe Cf (1+ Cκ)h . (19) Then, in both cases, with the respective choice of δ(ϵ),the following theorem holds: 
+
+Theorem 1: Suppose Assumptions 1-4 hold, and let 
+
+κ denote the stabilizing feedback from Assumption 3 with sampling times {Ti}∞ 
+
+> i=0
+
+of R+. Let R > 0 be given. Then there exist functions α∗ ∈ K ∞ and β∗ ∈KL , ϵ ∗(R) > 0 such that the following holds. If 
+
+ϵ < ϵ ∗(R), ϵ∗(R) := δ−1 (α∗)−1(R), (20) and the initial condition satisfies 
+
+|X(0) |+ sup 
+
+> −D≤θ≤0
+
+|U (θ)| ≤ Ω( ϵ, R ), (21) 
+
+Ω( ϵ, R ) := ¯ α−1 R − α∗(δ(ϵ))  , ¯α(r) := β∗(r, 0) ,
+
+(22) then the resulting closed-loop system satisfies ∀t ≥ 0
+
+|X(t)|+ sup 
+
+> t−D≤θ≤t
+
+|U (θ)|≤β∗
+
+
+
+|X(0) | + sup 
+
+> −D≤θ≤0
+
+|U (θ)|, t 
+
+
+
++ α∗(δ(ϵ)) ,
+
+(23) Hence the closed-loop system is semi-globally practi-cally stable with residual bound α∗(δ(ϵ)) .The proof is available in Appendix B. Theorem 1 establishes that both neural operator implementations preserve the stabilizing properties of the nominal pre-dictor feedback law up to an approximation error de-termined by ϵ. In particular, the result highlights a trade-off for the engineer: as the approximation error decreases, the admissible region of attraction increases. However, achieving smaller approximation errors on a larger region typically requires more accurate models or larger training data, making sizable regions of attraction harder to guarantee in practice. The result also highlights a structural difference between the two approaches: in Case 1 the residual bound scales directly with the operator approximation error, whereas in Case 2 the bound is amplified by the propagation factor eCf (1+ Cκ)h
+
+due to the continuous ODE evolution between sampling instants, but makes no assumption of uniform sampling. Hence, the neural network design must account for the available sampling guarantees: weaker sampling condi-tions require more accurate neural network approxima-tions to maintain the stability certificate. V. N UMERICAL RESULTS 
+
+All code/data is available at [16]. We consider delayed torque control of a telerobotic manipulator: 
+
+M (X(t)) ¨X(t) + C(X(t), ˙X(t)) + G(X(t)) = τ (t − D),
+
+(24) where M , C, and G denote the inertia, Coriolis, and gravitational terms, X(t) ∈ Rnq is the vector of joint angles, and τ is the applied torque. The delay is induced by the telerobotic signal time and note the dynamics are a challenging system in which we consider an xArm6 (6-link) robot leading to a full state size of [X, ˙X] ∈ R12 
+
+(position and velocity for each link). We consider tracking the reference trajectory 
+
+Xdes (t) = X0 + A sin( ωt + ϕ),
+
+where X0 is a starting configuration, A, ω > 0 are the amplitude and frequency, and ϕ ∈ R6 are phase offsets. For both approaches, we use the Fourier Neural Op-erator [10] (which satisfies Lemma 3) and generate 20 ktraining pairs by rolling out noisy trajectories with a numerical predictor solved to machine precision under the standard computed-torque controller [17]. Both op-erators achieve an L2 validation error of 10 −4 and full hyperparameters are provided in [16]. In Fig. 2, we highlight an example trajectory of our system where system measurements are sampled under Gaussian noise N (0 , 0.01) . We consider three feedback approaches: a neural operator approximation over a fixed horizon as in Case 1, a numerical implementation of the predictor [13] as in case 2, and a neural operator approximation of the predictor as in case 2. In all three approaches, the system successfully tracks the desired trajectory; furthermore, note in panel (c), how the resets of measurements directly affect the predictor error. Fi-nally, consistent with prior work [7], [8], the neural oper-ator approximations provide a significant computational advantage. Using GPU acceleration (Nvidia 4070), the neural operators require approximately 1 ms per evalu-ation, whereas the numerical predictor requires approx-imately 25 ms when solved to a tolerance of 10 −6.VI. C ONCLUSION 
+
+We introduced two neural-operator predic-tor–feedback architectures for nonlinear systems with delayed inputs and sampled measurements. For both cases, we showed semi-global practical stability estimates whose robustness directly depends on sampling assumptions and the neural operator training error. Lastly, numerical experiments on a 6-link robotic manipulator demonstrate the computational advantages of the approach. APPENDIX 
+
+A. Proof of Lemma 2 Proof: Let P1, P 2 ∈ X and denote Z1(·) =
+
+Z(P1)( ·) and likewise Z2(·) = Z(P2)( ·). Then, we have that ∀s ∈ [0 , h )
+
+|Z (P1)( s) − Z (P2)( s)|≤| P1 − P2| +
+
+Z s
+
+> 0
+
+|f (Z1(τ ), κ (Z1(τ ))) 
+
+− f (Z2(τ ), κ (Z2(τ ))) | dτ. (25) Using the Lipschitz properties of κ and f , we have that 
+
+|Z (P1)( s) − Z (P2)( s)| ≤| P1 − P2| + Cf (1 + Cκ)
+
+×
+
+Z s
+
+> 0
+
+|Z1(τ ) − Z2(τ )|dτ . 
+
+(26) 0 2 4 6 8 10 
+
+> −0.2
+> 0.0
+> 0.2
+> Angle [rad]
+
+(a) Joint 5 tracking      
+
+> 0.00.20.40.60.81.0Numerical Case 1 Case 2
+
+(b) Measurement schedule      
+
+> 0246810
+
+Time [s] 
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> |X(t) − Xdes (t)|
+
+(c) State tracking error      
+
+> 0.00.20.40.60.81.0
+
+Time [s] 
+
+> 0.00
+> 0.02
+> 0.04
+> | ˆZ(t) − X(t+D)|
+
+(d) Prediction error    
+
+> Desired Numerical Case 1 Case 2
+
+Fig. 2: (a) Joint 5 tracking with delay D = 0 .2s. (b) Measurement sampling schedules: numerical and Case 2 use randomized intervals in [0 .02 , 0.1] , while Case 1 uses fixed sampling h = 0 .05 . Measurements include Gaussian noise N (0 , 0.01) . (c) Moving average ( 0.25 s) of the L2 tracking error. (d) Prediction error - zoomed to the first 1s. Applying Gronwall’s yields ∀s ∈ [0 , h ) ,
+
+|Z (P1)( s) − Z (P2)( s)| ≤ | P1 − P2|es(Cf (1+ Cκ)) . (27) The supremum over s ∈ [0 , h ) completes the result. 
+
+B. Proof of Theorem 1 Proof: First, the hybrid feedback law is well-posed following [18, Claim 1]. From here, the proof has three parts: (a) a transport PDE estimate for delay compensation (b) a Lyapunov-based estimate on X(t),and (c) bounding | ˆZ(t) − X(t + D)| for each case. 
+
+(a) A bound on the transport PDE System (1) is equivalent to 
+
+˙X(t) = f (X(t), u (0 , t )) , (28a) 
+
+ut(x, t ) = ux(x, t ) x ∈ [0 , D ) , (28b) 
+
+u(D, t ) = U (t) , (28c) Then, using the backstepping transform 
+
+w(x, t ) = u(x, t ) − κ(X(t + x)) , (29) we obtain the system 
+
+˙X(t) = f (X(t), κ (X(t)) + w(0 , t )) , (30a) 
+
+wt(x, t ) = wx(x, t ) x ∈ [0 , D ) , (30b) 
+
+w(D, t ) = κ( ˆZ(t)) − κ(X(t + D)) . (30c) It follows from [19] that the transport PDE system (30b)–(30c) satisfies 
+
+∥w[t]∥L∞[0 ,D ] ≤∥ w[0] ∥L∞[0 ,D ]ec(D−t)
+
++ ecD sup  
+
+> 0≤τ≤t
+
+|w(D, τ )| , (31) for any c > 0. Using κ ∈ C1(·) on the bounded set, we have 
+
+|w(D, t )| ≤ Cκ| ˆZ(t) − X(t + D)|. (32) Therefore, the transport estimate yields 
+
+∥w[t]∥L∞[0 ,D ] ≤∥ w[0] ∥L∞[0 ,D ]ec(D−t) + ecD Cκ
+
+× sup  
+
+> 0≤τ≤t
+
+| ˆZ(τ ) − X(τ + D)|, (33) 
+
+(b) Stability of the closed-loop system By Assump-tion 4, there exist a Lyapunov function ˘V (X(t)) that is proper and radially unbounded for the delay-free system and class K∞ functions α1, α 2, α 3, α 4 such that 
+
+α1(|X(t)|) ≤ ˘V (X(t)) ≤ α2(|X(t)|), (34) and 
+
+∂ ˘V (X(t)) 
+
+∂X f  X(t), κ (X(t)) + w(0 , t )
+
+≤ − α3(|X(t)|) + α4(|w(0 , t )|). (35) Using the estimate in (33), we obtain 
+
+˙˘V ≤ − α3(|X(t)|) + α4
+
+ ∥w[0] ∥L∞[0 ,D ]ec(D−t)
+
++ ecD Cκ sup  
+
+> 0≤τ≤t
+
+| ˆZ(τ ) − X(τ + D)| , (36) which using [20, Lemma C.3], implies that there exists 
+
+β1 ∈ KL , α5 ∈ K 
+
+˘V (t) ≤β1(| ˘V (0) |, t ) + α5
+
+ ∥w[0] ∥L∞[0 ,D ]ec(D−t)+ ecD Cκ sup  
+
+> 0≤τ≤t
+
+| ˆZ(τ ) − X(τ + D)| , (37) Using properties of K, KL functions, we have 
+
+˘V (t) ≤β2(|X(0) | + ∥w[0] ∥L∞[0 ,D ], t )+ α5(2 ecD Cκ sup  
+
+> 0≤τ≤t
+
+| ˆZ(τ ) − X(τ + D)| ,
+
+(38) with β2 ∈ KL . To complete the proof in terms of an estimate on u, notice that the backstepping transform is invertible and hence there exists α6, α 7 ∈ K such that 
+
+|X(t)| + ∥w[t]∥L∞[0 ,D ] ≤α6
+
+ |X(t)| + ∥u[t]∥L∞[0 ,D ]
+
+ ,
+
+(39) 
+
+|X(t)| + ∥u[t]∥L∞[0 ,D ] ≤α7
+
+ |X(t)| + ∥w[t]∥L∞[0 ,D ]
+
+ .
+
+(40) Hence, using the bounds (33), (34), (38), (39), (40), and properties of class K functions, we obtain 
+
+|X(t)| + ∥u[t]∥L∞[0 ,D ]
+
+≤β∗(|X(0) | + ∥u[0] ∥L∞[0 ,D ], t )+ α∗( sup  
+
+> 0≤τ≤t
+
+| ˆZ(τ ) − X(τ + D)|) , (41) 
+
+β∗(s, t ) := α7
+
+ 2α−11 (2 β2(α6(s), t )) 
+
++ α7
+
+
+
+2α6(s)ec(D−t)
+
+, (42) 
+
+α∗(s) := α7
+
+ 2α−11 (2 α5(2 ecD Cκs)) 
+
++ α7
+
+ 2ecD Cκs . (43) 
+
+(c) Bounding the predicted state difference The final estimate for δ is obtained in two cases: (i) Case 1: Fixed sample measurements. For all t ∈
+
+[Ti, T i+1 ),
+
+| ˆZ(t) − X(t + D)| ≤ ϵ, (44) since under the exact predictor feedback law Z(t) = 
+
+X(t + D)[13] and Lemma 3 holds. Because the approx-imation bound also holds at Ti and Z(Ti) = X(Ti + D)
+
+exactly, recomputing ˆZ at sampling times preserves the 
+
+ϵ bound. Hence the estimate holds for all t ≥ 0.(ii) Case 2: Nonuniform sampling with uniformly bounded inter-sample times. Since only the predictor is approximated, from Corollary 1 and the fact Z(t) = 
+
+X(t + D) under exact implementation, we have for all 
+
+t ∈ [Ti, T i+1 ),
+
+| ˆZ(t) − X(t + D)| ≤ ϵe Cf (1+ Cκ)h . (45) Note that since the approximation holds at Ti, the reset jump for each sampled measurement will be a maximum of size ϵ and hence the result holds. Lastly, notice that the neural operator approximation theorem’s hold only on compact sets. Substituting (41) and using the definitions of Ω and ϵ∗, the stability bound implies that all trajectories remain in the compact set determined by R, and hence the approximation bounds remain valid for all t ≥ 0 by a standard continuation argument, completing the semi-global result. REFERENCES [1] N. Bekiaris-Liberis and M. Krstic, Nonlinear Control Under Nonconstant Delays . Philadelphia: SIAM, 2013. [2] E. Fridman, Introduction to Time-Delay Systems: Analysis and Control , ser. Systems & Control: Foundations & Applications. Cham: Birkh¨ auser / Springer, 2014. [3] M. Krstic, Delay Compensation for Nonlinear, Adaptive, and PDE Systems . Boston: Birkh¨ auser, 2009. [4] I. Karafyllis and M. Krstic, Predictor Feedback for Delay Systems: Implementations and Approximations , ser. Systems & Control: Foundations & Applications. Cham: Birkh¨ auser, 2017. [5] B. Zhou, Truncated Predictor Feedback for Time-Delay Systems ,ser. Lecture Notes in Control and Information Sciences. Berlin / Heidelberg: Springer, 2014. [6] L. Bhan, P. Qin, M. Krstic, and Y. Shi, “Neural operators for predictor feedback control of nonlinear delay systems,” in 
+
+Proceedings of the 7th Annual Learning for Dynamics &amp; Control Conference , ser. Proceedings of Machine Learning Research, N. Ozay, L. Balzano, D. Panagou, and A. Abate, Eds., vol. 283. PMLR, 04–06 Jun 2025, pp. 179–193. [Online]. Available: https://proceedings.mlr.press/v283/bhan25a.html [7] L. Bhan, M. Krstic, and Y. Shi, “Stabilization of nonlinear systems with unknown delays via delay-adaptive neural operator approximate predictors,” 2025. [Online]. Available: https://arxiv.org/abs/2509.26443 [8] F. Bajraktari, L. Bhan, M. Krstic, and Y. Shi, “Delay compen-sation of multi-input distinct delay nonlinear systems via neural operators,” in Proceedings of the American Control Conference (ACC) , 2026, to appear. [9] L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis, “Learning nonlinear operators via DeepONet based on the uni-versal approximation theorem of operators,” Nature Machine Intelligence , vol. 3, pp. 218–229, 2021. [10] Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar, “Fourier neural operator for para-metric partial differential equations,” International Conference on Learning Representations , 2021. [11] M. Krstic, “Input delay compensation for forward complete and strict-feedforward nonlinear systems,” IEEE Transactions on Automatic Control , vol. 55, no. 2, pp. 287–303, 2010. [12] E. D. Sontag and Y. Wang, “On characterizations of the input-to-state stability property,” Systems & Control Letters , vol. 24, no. 5, pp. 351–359, 1995. [13] I. Karafyllis and M. Krstic, “Numerical schemes for nonlinear predictor feedback,” Mathematics of Control, Signals, and Sys-tems , vol. 26, no. 4, pp. 519–546, 2014. [14] S. Lanthaler, Z. Li, and A. M. Stuart, “Nonlocality and Nonlinearity Implies Universality in Operator Learning,” 2024. [Online]. Available: https://arxiv.org/abs/2304.13221 [15] L. Bhan, Y. Shi, and M. Krstic, “Neural operators for bypass-ing gain and control computations in pde backstepping,” IEEE Transactions on Automatic Control , vol. 69, no. 8, pp. 5310– 5325, 2024. [16] L. Bhan, “Neural operator predictors for sampled mea-surements,” 2026, gitHub repository. [Online]. Available: github.com/lukebhan/NOPredictors. [17] M. W. Spong, S. Hutchinson, and M. Vidyasagar, Robot Model-ing and Control . Hoboken, NJ: Wiley, 2006. [18] I. Karafyllis and M. Krstic, “Numerical schemes for nonlinear predictor feedback,” Mathematics of Control, Signals, and Systems , vol. 26, no. 4, pp. 519–546, Dec 2014. [Online]. Available: https://doi.org/10.1007/s00498-014-0127-9 [19] L. Bhan, P. Qin, M. Krstic, and Y. Shi, “Neural operators for predictor feedback control of nonlinear delay systems,” 2025. [Online]. Available: https://arxiv.org/abs/2411.18964 [20] M. Krstic, P. V. Kokotovic, and I. Kanellakopoulos, Nonlinear and Adaptive Control Design , 1st ed. USA: John Wiley & Sons, Inc., 1995.

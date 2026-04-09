@@ -1,0 +1,1212 @@
+Title: Reach-Avoid Model Predictive Control with Guaranteed Recursive Feasibility via Input Constrained Backstepping
+
+URL Source: https://arxiv.org/pdf/2604.03407v1
+
+Published Time: Tue, 07 Apr 2026 00:11:27 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Reach-Avoid Model Predictive Control with Guaranteed Recursive Feasibility via Input Constrained Backstepping 
+
+Jianqiang Ding 1∗, Nishant Jayesh Bhave 2 and Shankar A. Deka 1∗, Member, IEEE 
+
+Abstract — This letter proposes a novel sampled-data model predictive control framework for continuous control-affine non-linear systems that provides rigorous reach-avoid and recursive feasibility guarantees under physical constraints. By propagat-ing both input and output constraints through backstepping process, we present a constructive approach to synthesize a reach-avoid invariant set that complies with control input limits. Using this reach-avoid set as a terminal set, we prove that the proposed sampled-data MPC framework recursively admits feasible control inputs that safely steer the continuous system into the target set under fast sampling conditions. Numerical results demonstrate the efficacy of the proposed approach. 
+
+I. I NTRODUCTION 
+
+Model predictive control (MPC) framework is distin-guished by its ability to enforce constraints on system outputs and control inputs, while accommodating a broad class of system dynamics, e.g., [1] [2]. Although the framework has proven effective in mitigating model mismatches and ex-ternal disturbances by incorporating real-time measurements as control feedback, the increasing complexity of modern systems and stricter requirements for operational safety and stability have introduced new challenges. Motivated by these demands, designing MPC-based controllers with rigorous formal guarantees has emerged as a critical research focus at the intersection of control theory and formal methods. In the context of safety-critical applications, controller synthesis typically requires that the system avoid undesired states during operation while simultaneously converging to, or remaining within, a target state set. These two fundamental properties are formally characterized as safety and reacha-bility. Structurally, the MPC framework achieves guarantee on these properties by enforcing specific state constraints within the optimization problem. For instance, Control Lya-punov Functions (CLFs) are frequently adapted to formulate constraints that guarantee closed-loop stability [3]. Com-plementarily, safety is typically preserved by incorporating Control Barrier Functions (CBFs) with MPC frameworks [4]. However, the mere formulation of such constraints is insuf-ficient to guarantee that the MPC controller can consistently generate valid control signals throughout the system opera-tion. A more fundamental prerequisite of MPC is recursive feasibility, which states that if the optimization problem is feasible at the initial time, then it remains feasible at all future time steps. Conventionally, such feasibility is secured by constructing a control invariant set for the terminal states as investigated by [5]. Nevertheless, constructing such a set           
+
+> *We acknowledge the financial support of the Finnish Ministry of Education and Culture through the Intelligent Work Machines Doctoral Education Pilot Program (IWM VN/3137/2024-OKM-4).
+> 1Department of Electrical Engineering, Aalto University, Finland. Email:
+
+{jianqiang.ding, shankar.deka }@aalto.fi.   
+
+> 2Department of Electrical Engineering, Indian Institute of Technology Bombay, India. Email:
+
+nishant.bhave @iitb.ac.in. 
+
+is itself a nontrivial task, especially for nonlinear cases, as studied in [6]–[9]. In this paper, we propose a novel MPC framework tailored for control-affine nonlinear systems that provides rigorous reach-avoid guarantees. The main contributions are summa-rized as below:  
+
+> •
+
+We firstly present an approach that combines Expo-nential Control Guidance Barrier Functions (ECGBFs) along with backstepping procedure to construct reach-avoid sets for nonlinear systems based on the solution to a simplified optimization problem.  
+
+> •
+
+Specifically, we show how input constraints on the origi-nal system can be systematically propagated through the backstepping process, while preserving the structure of the simplified problem.  
+
+> •
+
+Secondly, we demonstrate how our constructed reach-avoid set maintains its property under additional re-strictions on the continuous time controller (zero-order hold).  
+
+> •
+
+This finally allows us to utilize the control-constrained reach-avoid set as the terminal set, along with sampled-data MPC framework to synthesize reach-avoid con-trollers in a recursively feasible manner. 
+
+Notations: Rn and N denote the n−dimensional Euclidean space and the set of natural numbers, respectively. Vectors and matrices are represented by boldface lowercase and uppercase letters (e.g., v and M ). S denotes closure of a set S. The space of n− times differentiable functions over a domain S is represented by Cn(S). R[x] denotes the ring of multivariate polynomials in the variable x, and P[x] .
+
+= {Pki=1 q2 
+
+> i
+
+| qi ∈ R[x], k ∈ N} is the set of sum-of-squares (SOS) polynomials. The rth order Lie derivative of a function h w.r.t vector field f is denoted by Lrf h.II. P RELIMINARY 
+
+We consider a control-affine nonlinear system of the form 
+
+dx
+
+dt = f (x) + 
+
+> m
+
+X
+
+> j=1
+
+gj (x)uj ; y = h(x), (1) where the states x ∈ X ⊆ Rn and control inputs u .
+
+=[u1, . . . , u m]⊤ belong to the set of admissible inputs, U ⊆ 
+
+Rm. The functions f : X → Rn and gj : X → Rn, j ∈{1, · · · , m } are assumed to be locally Lipschitz, and h :
+
+X → Rm is considered to be a C∞(X ) function. We are interested in safe control of the system (1), while guaranteeing convergence to a target set. We formalise the notion of safe set XS and target set XT using C1 functions 
+
+ψ : Rm → R and ϕ : Rm → R as follows: 
+
+XS
+
+.
+
+= {x ∈ X | ψ(y) > 0, y = h(x)},
+
+XT
+
+.
+
+= {x ∈ X | ϕ(y) < 0, y = h(x)}. (2) 
+
+> arXiv:2604.03407v1 [math.OC] 3 Apr 2026
+
+Assumption 1. We assume that XT ∩ X S is non-empty, and that XS has no isolated points. ψ(y) is C1(XS ), and possesses a unique global maximum x∗ ∈ X T ∩ X S .
+
+Problem 1. Given a safe set XS and a target set XT
+
+satisfying Assumption 1, the objective is to synthesize a continuous-time control policy u(t) ∈ U for system 1 such that, from an initial state x0 ∈ X S \ X T , the corresponding closed-loop trajectory enters the target set XT at a finite time 
+
+τ := inf {t > 0 | x(t) ∈ X T } while remaining safe, i.e., 
+
+x(τ ) ∈ X T and x(t) ∈ X S ∀t ∈ [0 , τ ]. The synthesis of such a control policy over a predictive time interval [t, t + Tp] can be formally posed as the following optimization problem: 
+
+min  
+
+> ˆu(·| t)
+
+J(x(t), ˆu(·| t)) 
+
+s.t. 
+
+  
+
+> ∂ˆx(s|t)
+> ∂s
+
+= f ( ˆ x(s|t)) + Pmj=1 gj ( ˆ x(s|t))ˆ u(s|t),
+
+ˆx(t|t) = x(t), ˆu(s|t) ∈ U , ˆx(s|t) ∈ X S ,
+
+ˆx(t + Tp|t) ∈ X T .
+
+(3) where ˆx(s|t) and ˆu(s|t) denote the predicted state and control signal at future time s ∈ [t, t +Tp]. The cost function 
+
+J(x(t), ˆu(·| t)) is suitably chosen to encourage the model predictive states ˆx to progressively approach the target set 
+
+XT over the MPC time horizon of Tp. For example, a candidate cost function can be formulated as 
+
+J(x(t), ˆu(·| t)) = dist XT ( ˆ x(t + Tp|t)) + 
+
+Z t+Tp
+
+> t
+
+∥ ˆu(s|t)∥2ds, 
+
+where dist XT : X → R denotes the signed distance function from the target set XT .Although such an MPC-based controller can perform rea-sonably well in specific scenarios, it is generally known not to produce closed-loop behavior with rigorous guarantees. Firstly, the convergence of states to the target set XT is not strictly enforced. One could consider a terminal constraint 
+
+ˆx(t + Tp|t) ∈ X T , potentially requiring a large MPC horizon 
+
+Tp, which can be computationally expensive. Secondly, the closed-loop system with the MPC controller u∗ may steer the closed-loop states x(t) into parts of the state-space X
+
+from which the MPC problem may no longer be feasible. To ensure the system operates safely and eventually entering the given target set XT , the optimization problem (3) must satisfy the property of recursive feasibility [10]–[12], which can be formally defined as follows. 
+
+Definition 1. (Recursive Feasibility) The MPC optimization problem (3) is recursively feasible if it is initially feasible at time t = 0 for a given initial state x0 ∈ X S \ X T , and remains feasible for all subsequent continuous times t > 0
+
+before entering XT .To address these coupled challenges, we propose to con-struct a tailored reach-avoid set XRA , defined below, as the terminal set integrated into the MPC optimization problem (3) to guarantee both the reach-avoid objective and recursive feasibility. 
+
+Definition 2. (Reach-avoid set) Consider a safe set XS and a target set XT , and the controlled system (1). We call a set 
+
+XRA ⊆ X S a reach-avoid set if for every state x0 ∈ X RA ,there exists a time τ > 0 and control signal ˆu(·) mapping 
+
+[0 , τ ] 7 → Rm, such that x(t) ∈ X S for all t ∈ [0 , τ ] and 
+
+x(τ ) ∈ X T , whenever x(0) = x0.
+
+As a foundational step toward synthesizing such terminal set, we first revisit the definition of the Exponential Control Guidance-barrier Function (ECGBF) as presented below. 
+
+Definition 3. (ECGBF 1) Given the safe set XS and target set 
+
+XT satisfying assumption 1, the real-valued function ψ(y)
+
+is an ECGBF if there exists λ > 0 such that 
+
+sup 
+
+> u∈U
+
+ddt ψ(y) ≥ λψ (y), ∀x ∈ X S \ X T . (4) Notably, the zero-superlevel set of the ECGBF inherently satisfies the formal properties of a reach-avoid set. Specifi-cally, it guarantees that for any state x0 within this set, there exists a unconstrained control input ˆu(·) ∈ Rm ensuring the closed-loop system operates safely in XS and eventually enters the prescribed target set XT . While the standard ECGBF explicitly assumes that the control input u must directly influence ˙ψ(y(t)) , we do not impose this restrictive requirement in this paper. To handle multi-input multi-output (MIMO) systems of the form (1) that may possess arbitrary vector relative degree, we introduce the foundational result from our previous work [14] in the following lemma. 
+
+Lemma 1. (Theorem 2 in [14]) Given the system (1) with safe and target sets satisfying the Assumption 1, suppose there exists locally Lipschitz continuous function k1(y(x)) = 
+
+k11 (y(x)) · · · km 
+
+> 1
+
+(y(x)) ⊤ ∈ Rm for some λ > 0 such that, 
+
+> m
+
+X
+
+> i=1
+
+∂ψ ∂y i
+
+· ki
+
+> 1
+
+(y(x)) ≥ λψ (y(x)) , ∀x ∈ X S \ X T . (5) 
+
+Let {γ1, · · · , γ m} be the vector relative degree for system 
+
+(1) with the i−the output yi ∈ R denoted by γi, and ηi =[ηi
+
+> 1
+
+, . . . , η iγi ]⊤ = [ yi(x), . . . , Lri−1 
+
+> f
+
+yi(x)] ⊤. Then, 
+
+Ψ( y(x)) = ψ(y(x)) −
+
+> m
+
+X
+
+> i=1
+> γi−1
+
+X
+
+> l=1
+
+12μil
+
+∥ηil+1 − kil (zil )∥22 (6) 
+
+is an ECGBF for system (1) w.r.t. safe set X ′
+
+> S
+
+.
+
+= {x ∈X | Ψ( y(x)) > 0, y = h(x)} and target set XT , where 
+
+zil = (ηi
+
+> 1
+
+, · · · , η il ), μil > 0 ∀l ∈ {1, · · · , γ i − 1}, i ∈{1, · · · , m }. kil (zil ) are functions recursively defined as 
+
+ki
+
+> 2
+
+(zi
+
+> 2
+
+) = μi
+
+> 1
+
+∂ψ (y(x)) 
+
+∂y i
+
++
+
+> 1
+
+X
+
+> s=1
+
+∂k i
+
+> 1
+
+∂η is
+
+ηis+1 + λ
+
+2 (ηi 
+
+> 2
+
+− ki
+
+> 1
+
+),
+
+kil (zil ) = − μil−1(ηil−1 − kil−2)
+
+μil−2
+
++
+
+> i−1
+
+X
+
+> s=1
+
+∂k il−1
+
+∂η s
+
+ηis+1 
+
++ λ
+
+2 (ηil − kil−1), ∀l ∈ { 3, · · · , γ i − 1}.
+
+Lemma 1 provides a systematic approach to construct an ECGBF for the MIMO system (1) by leveraging backstep-ping procedure. Its zero-superlevel set X ′ 
+
+> S
+
+explicitly defines a reach-avoid set XRA for the system, which is a subset of 
+
+XS since Ψ( y(x)) ≤ ψ(y(x)) by construction. The key to constructing the reach-avoid set X ′ 
+
+> S
+
+fundamentally lies in     
+
+> 1We adapt this definition from [13] to functions of outputs yrather than states x. One major advantage of doing so is that we are able to employ SOS optimization to compute ECGBFs even for cases when the dynamics, safe set and target set are non-polynomial in x, for example, robotic manipulators with end-effector constraints.
+
+synthesizing a controller k1(y(x)) that satisfies constraint (5). This can be achieved via the following SOS program: 
+
+k1(y(x)) = arg min  
+
+> v(y)
+
+δ
+
+s.t. 
+
+[∇y ψ(y)] ⊤v − λψ + δ − s0ψ − s1ϕ ∈ Σ[ y],δ > 0, λ > ϵ ; s0(y), s 1(y) ∈ Σ[ y].
+
+(7) However, the above construction of the reach-avoid set 
+
+X ′ 
+
+> S
+
+inherently assumes unbounded actuation. Section III-A extends the above result to rigorously incorporate the given control input constraints u ∈ U , enabling the constructed set to serve as a valid terminal set with the MPC framework to guarantee both the reach-avoid property and recursive feasibility under input constraints. III. R ECURSIVE FEASIBLE REACH -AVOID MPC This section details of the establishment of the proposed reach-avoid MPC framework. First, by transforming the control bounds into linear constraints that can be directly integrated into the optimization problem (7), section III-A formulates an augmented SOS optimization problem to synthesize k1(y(x)) that compatible with the given physical actuation limits, thereby achieving the constructing of the input-constrained reach-avoid set. Building upon this foun-dation, section III-B transforms the continuous-time reach-avoid MPC problem (3) into a practically implementable sampled-data reach-avoid MPC problem. We prove that the sampled-data reach-avoid MPC problem is also recursively feasible under a sufficient small sampling interval. 
+
+A. Construction of Input-Constrained Reach-avoid Set 
+
+Beyond providing a constructive approach to define the reach-avoid set XRA , Lemma 1 actually yields, as a fun-damental byproduct, a reach-avoid state-feedback controller 
+
+ˆu(x) for the system (1). This ˆu(x) can be systematically ex-tracted from k1(y(x)) through output feedback linearization and backstepping techniques [14]. Under the action of ˆu(x),the system state x is guaranteed to evolve safely within the given safe set XS and ultimately enter the target set XT . Let vector b(x) = [ b1(x), . . . , b m(x)] ⊤ with 
+
+bi(x) = −L γi 
+
+> f
+
+yi(x) − μiγi−1(ηiγi−1 − kiγi−2)
+
+μγ−2
+
++
+
+> γi−1
+
+X
+
+> s=1
+
+∂k iγi−1
+
+∂η is
+
+ηis+1 + λ
+
+2 (ηiγi − kiγi−1),
+
+the reach-avoid controller is given by ˆu(x) = A−1b(x) with 
+
+A(x) = 
+
+
+
+Lg1 Lr1−1 
+
+> f
+
+y1(x) · · · Lgm Lr1−1 
+
+> f
+
+y1(x)
+
+... . . . ...
+
+Lg1 Lrm−1 
+
+> f
+
+ym(x) · · · Lgm Lrm−1 
+
+> f
+
+ym(x)
+
+. (8) We observe that this backstepping framework establishes an explicit mapping from k1(y(x)) controller to the actual control input ˆu(x), allowing us to backpropagate the hard constraints imposed on the actual control input ˆu(x) back into synthesizing of k1(y(x)) . We summarize this critical theoretical extension in the following theorem. 
+
+Theorem 1. Suppose each component of k1(y(x)) is lin-early parameterized as ki
+
+> 1
+
+(y(x)) = θ⊤ 
+
+> i
+
+B(y) for all i ∈{1, · · · , m }, where θi is a coefficient vector and B(y) is a vector of basis functions. Then, any reach-avoid controller 
+
+ˆu(x) induced by Lemma 1 is affine w.r.t. the aggregated coefficient matrix Θ = θ⊤ 
+
+> 1
+
+· · · θ⊤
+
+> m
+
+⊤.Proof. By assumption, each ki
+
+> 1
+
+(y(x)) takes the affine form 
+
+ki
+
+> 1
+
+(zi
+
+> 1
+
+) = θ⊤ 
+
+> i
+
+Gi
+
+> 1
+
+(y(x)) + Hi
+
+> 1
+
+(y(x)) with Gi 
+
+> 1
+
+= B and 
+
+Hi 
+
+> 1
+
+= 0 . Throughout the recursive backstepping formulation, this affine structure is preserved under linear operations and partial differentiations. By induction assuming that at step 
+
+l ∈ { 3, · · · , γ i − 1}, the previous two controllers kil−2(zil−2)
+
+and kil−1(zil−1) are both affine in θi such that kij (zij ) = 
+
+θ⊤ 
+
+> i
+
+Gij (x) + Hij (x) for j ∈ { l − 1, l − 2}, the subsequent controller kil (zil ) yields kil (zil ) = θ⊤ 
+
+> i
+
+Gil (x) + Hil (x) with 
+
+Gil (x) = μil−1
+
+μil−2
+
+Gil−2(x) + 
+
+> l=1
+
+X
+
+> s=1
+
+∂Gil−1(x)
+
+∂η s
+
+ηis+1 − λ
+
+2 Gil−1(x)
+
+Hil (x) = − μil−1[ηil−1 − H l−2(x)] 
+
+μil−2
+
++
+
+> l=1
+
+X
+
+> s=1
+
+∂Hil−1(x)
+
+∂η s
+
+ηis+1 
+
++ λ[ηil − H il−1(x)] 2 .
+
+Then, we have bi(x) = θ⊤ 
+
+> i
+
+Ui(x)+ Vi(x) = U⊤ 
+
+> i
+
+(x)θi +Vi(x)
+
+where Ui(x) and Vi(x) aggregate the respective recursive elements alongside the unactuated dynamics −L γi 
+
+> f
+
+hi(x).Given Θ = θ⊤ 
+
+> 1
+
+· · · θ⊤
+
+> m
+
+⊤ ∈ RPms=1 |θi|× 1, the actual controller u(x) can be written as, 
+
+ˆu(x) = A−1(x)b(x) = A−1(x)U(x)Θ + A−1(x)V(x),
+
+with U(x) = diag [U⊤ 
+
+> 1
+
+(x), · · · , U⊤
+
+> m
+
+(x)] and V(x) =[V1(x), · · · , Vm(x)] ⊤, which completes the proof. Theorem 1 implies that when fixing all μil and λ as chosen constants, the actual control input ˆu(x) remains strictly affine in the coefficient vector Θ. Therefore, any constraint on ˆu(x) that preserves this affine structure can be directly translated into linear constraints in the SOS program (7) for solving the corresponding input-constrained 
+
+k1(y(x)) controller. Specifically, we consider the control input constraints taking the form, 
+
+P(x)u(x) ≤ Q (x) ∀x ∈ X S \ X T , (9) where P(x) and Q(x) represent a state-dependent polyno-mial matrix and vector, respectively. By incorporating such bounds into the problem (7), we formulate an augmented SOS optimization problem as below to synthesize a valid controller ˆk1(y(x)) which ultimately results in a reach-avoid controller ˆu(x) that satisfies the contraint (9): 
+
+ˆΘ = arg min  
+
+> Θ,δ,λ
+
+δ
+
+s.t. 
+
+
+
+[∇y ψ(y)] ⊤BΘ − λψ + δ − s0ψ − s1ϕ ∈ Σ[ y],
+
+PAdj (A) UΘ + V − det (A)Q − S2ψ(h(x)) 
+
+−S3ϕ(h(x)) ∈ Σ[ x],δ > 0, λ > ϵ ; s0(y), s 1(y) ∈ Σ[ y],S2(x), S 3(x) ∈ Σ[ x],
+
+(10) where S2, S 3 are SOS polynomial vectors of length m.
+
+Remark 1. While Theorem 1 enables enforcing constraints on the reach-avoid controller via the SOS program (10), solving such a formulation directly inevitably incurs pro-hibitive computational costs if the state dimensions are large. To circumvent this bottleneck, we employ a sampling-based relaxation strategy that converts the second con-straint of program (10) into a linear constraint (as opposed to a semi-definite program). This implementational detail can be found in https://github.com/Aalto-Nonlinear-Systems-and-Control/reach avoid backstepping MPC.git 
+
+B. Reach-avoid MPC with Recursive Feasibility Guarantees 
+
+In practice, directly solving the continuous-time MPC problem (3) is intractable due to infinite-dimensional de-cision space and continuous state constraints. We thus transition to a tractable sampled-data MPC paradigm by parameterizing the control input as piecewise constant over sampling intervals. Before formulating the equivalent MPC framework, we adapt the methodology from [15] to show that the continuous-time reach-avoid controller u(x) preserves the reach-avoid guarantee under a zero-order hold (ZOH) implementation given appropriate sampling conditions. We formalize this result in the following lemma. 
+
+Lemma 2. Suppose the system (1) with safe set XS and target set XT satisfying Assumption 1, and actuated by a ZOH implementation of the continuous-time reach-avoid controller, uc(x), such that for any t ∈ [tk, t k + T ), the resulting closed-loop dynamic are given by: 
+
+dx
+
+dt = f (x(t)) + 
+
+> m
+
+X
+
+> j=1
+
+gj (x(t)) ucj (tk); y = h(x(t)) . (11) 
+
+Then there exists a sampling period upper bound T ∗ > 0
+
+such that for any T ∈ (0 , T ∗), all trajectories of the closed-loop system (11) originating from the corresponding reach-avoid set XRA remain within XS before eventually entering 
+
+XT .Proof. Let ˙Ψc(t) and ˙Ψs(t) denote the time derivative of Ψ(y) in (6) driven by the continuous-time reach-avoid controller uc(x) and its ZOH implementation such that: 
+
+˙Ψc(t) = ∂Ψ( x(t)) 
+
+∂x
+
+
+
+f (x(t)) + 
+
+> m
+
+X
+
+> j=1
+
+gj (x(t)) ucj (t)
+
+
+
+.
+
+By applying the Cauchy-Schwarz inequality, we have: 
+
+˙Ψs(t) = ˙Ψc(t) + 
+
+> m
+
+X
+
+> j=1
+
+∂Ψ( x(t)) 
+
+∂x gj (x(t)) 
+
+
+
+ucj (tk) − ucj (t)
+
+
+
+≥ ˙Ψc(t) −
+
+> m
+
+X
+
+> j=1
+
+Mgj Mucj ∥x(t) − x(tk)∥
+
+where positive constants Mucj and Mgj strictly bound the magnitudes |ucj (x)| and ∂Ψ( x(t))  
+
+> ∂x
+
+gj (x(t)) respectively over the compact domain X . Integrating the sampled-data dynamics from tk to t, we have 
+
+x(t) − x(tk) = 
+
+Z ttk
+
+
+
+f (x(s)) + 
+
+> m
+
+X
+
+> j=1
+
+gj (x(s)) ucj (tk)
+
+
+
+ds. 
+
+Let ℓf and ℓgj be the Lipchitz constants of f (x) and each corresponding gj (x), by taking the norm of the integrand, then apply the triangle inequality and the Gr¨ onwall–Bellman inequality, the state drift can be bounded as, 
+
+∥x(t) − x(tk)∥ ≤ 
+
+Z ttk
+
+
+
+ℓf ∥x(s) − x(tk)∥ + ∥ ˙x(tk)∥
+
++
+
+> m
+
+X
+
+> j=1
+
+ℓgj Mucj ∥x(s) − x(tk)∥
+
+
+
+ds
+
+≤ e    
+
+> 
+> ℓf+Pmj=1 ℓgjMucj
+> 
+> T
+
+− 1
+
+ℓf + Pmj=1 ℓgj Mucj
+
+∥ ˙x(tk)∥ .
+
+Then we have, 
+
+˙Ψs(x(t)) ≥ ˙Ψc(x(t)) −
+
+> m
+
+X
+
+> j=1
+
+Mgj ℓuj ∥x(t) − x(tk)∥≥ λΨc(x(t)) − β(T ), ∀t ∈ [tk, t k + T ],
+
+where β(T ) =
+
+Pmj=1 Mgj Muj
+
+ eℓsysT −1 
+
+> ℓsys
+
+∥ ˙x(tk)∥ and 
+
+ℓsys = ℓf + Pmj=1 ℓgj Mucj . Using comparison lemma [16] over t ∈ [tk, t k + T ) we have, 
+
+Ψs(x(t)) ≥ eλ(t−tk )Ψc(x(tk)) + β(T )
+
+λ
+
+
+
+1 − eλ(t−tk )
+
+.
+
+Let T ∈ (0 , T ∗) such that Ψc(x(tk)) − β(T ∗) 
+
+> λ
+
+> 0. We obtain 
+
+Ψs(x(tk+1 )) − Ψs(x(tk )) ≥ (eλT − 1) 
+
+
+
+Ψc(x(tk )) − β(T )
+
+λ
+
+
+
+> 0, ∀x ∈ X RA \ X T .
+
+Suppose a sampled-data trajectory with sampling period T ∈
+
+(0 , T ∗) originates in XRA but never enters XT . The trajectory would then remain permanently within the compact set XRA \ X T
+
+where Ψ( x) strictly increases. This strict monotonic increase im-plies lim k→∞ Ψ( x(tk )) → +∞ over infinite sampling steps which contradicts the boundedness of the continuous function Ψ( x) on the compact set XRA . Therefore, all sampled-data trajectories must remain within XRA ⊆ X S before eventually reaching XT .
+
+Lemma 2 demonstrates that sufficiently fast sampling preserves the reach-avoid 2 guarantees for sampled-data con-trol. Building upon this theoretical foundation, the following theorem establishes the complete sampled-data reach-avoid MPC framework with guaranteed recursive feasibility. 
+
+Theorem 2. Given the continuous-time dynamical system 
+
+(1) with safe set XS and target set XT both satisfying Assumption 1, suppose the sampling condition established in Lemma 2 holds. If the sampled-data reach-avoid MPC problem formulated below is feasible at the initial step 
+
+k = 0 , then there exists a sampled-data control policy that rigorously guarantees recursive feasibility for all subsequent steps k ∈ N and successfully achieves the reach-avoid objective for the corresponding closed-loop system: 
+
+min 
+
+> Uk
+
+J(xk, Uk)
+
+s.t. 
+
+   
+
+> ∂ˆx(τ|k)
+> ∂τ
+
+= f ( ˆ x(τ |k)) + Pmj=1 gj ( ˆ x(τ |k)) ui|k,
+
+∀τ ∈ [iT, (i + 1) T ); ˆx(0 |k) = xk; ui|k ∈ U , ∀i ∈ { 0, . . . , N − 1};ˆx(τ |k) ∈ X S , ∀τ ∈ [0 , N T ]; ˆx(N T |k) ∈ X RA ;
+
+(12)   
+
+> 2Note that the exponential convergence rate is generally lost under sampled-data execution as illustrated in the proof of Lemma 2. (a) Vanilla MPC with 245/300. (b) Unconstrained reach-avoid with 275/300.
+> (c) Our method with 288/300. (d) Control inputs comparison
+
+Fig. 1: (a), (b) & (c) show controller success rates for 300 random initial states. Blue dots indicate successful states achieving the reach-avoid objective, while red crosses represent failed ones. A closed-loop trajectory (dashed line from orange dot to green cross) is included for visualization. Initial angles are omitted for clarity. (d) represents control inputs comparison between unconstrained reach-avoid controller (blue) and the proposed MPC controller (purple). 
+
+where xk = x(kT ) is the sampled state at step k and 
+
+Uk = {u0|k · · · , uN −1|k} represents the optimal control sequence over the prediction horizon N . τ ∈ [0 , N T ] denotes the relative continuous prediction time instant, and ˆx(τ |k)
+
+defines the predicted continuous state trajectory driven by the piecewise constant control input. Proof. By assumption, the sampled-data MPC problem (12) is feasible at the initial step k = 0 . Let XRA denotes the reach-avoid set synthesized from a valid k1(y(x)) controller of the SOS problem (10), and u(x) represents the corre-sponding continuous-time reach-avoid controller extracted from k1(y(x)) via backstepping. Suppose an optimal control sequence U∗ 
+
+> k
+
+= {u∗ 
+
+> 0|k
+
+· · · , u∗ 
+
+> N−1|k
+
+} exists at step k. We define the candidate control sequence for step k + 1 as 
+
+Uk+1 = {u∗
+
+> 1|k
+
+, · · · , u∗ 
+
+> N−1|k
+
+, u( ˆ x∗(N T |k)) }. Since the first 
+
+N − 1 control inputs of Uk+1 are inherited from U∗
+
+> k
+
+,they naturally satisfy the required reach-avoid properties by assumption. Given that u( ˆ x∗(N T |k)) is essentially a sampled control input of the continuous-time reach-avoid controller u(x) at time time N T |k. According to Lemma 2, given a sufficiently small sampling period T , the closed-loop trajectory under the control of u( ˆ x∗(N T |k)) over the prediction interval τ ∈ [( k + N )T, (k + N + 1) T ]
+
+remains strictly within the safe set XS and the terminal state 
+
+x(N T |k + 1) stays inside XRA . Therefore the candidate control sequence Uk+1 constitutes a feasible solution at step k + 1 . By induction this establishes strict recursive feasibility for the proposed sampled-data reach-avoid MPC framework across all discrete steps k ∈ N+, which completes the proof. IV. E XPERIMENTS 
+
+In this section, we demonstrate the proposed method-ology on two under actuated dynamical systems. We use SOSTOOLS [17] toolbox with Mosek [18] solver to formulate and solve SOS optimization problems. The complete source code and simulation configurations are available at https://github.com/Aalto-Nonlinear-Systems-and-Control/reach avoid backstepping MPC.git 
+
+Example 1. Consider the modified Dubins car model 
+
+˙x =
+
+
+
+˙x1
+
+˙x2
+
+˙θ
+
+˙v
+
+ =
+
+
+
+v cos θv sin θ
+
+00
+
+ +
+
+
+
+0 00 01 00 1
+
+ ωa
+
+
+
+, (13) with x = [ x1, x 2, θ, v ]⊤ ∈ R4, where (x1, x 2) denotes the planar location, θ represents the heading angle, and v is the forward velocity. The vehicle is actuated by the angular velocity ω and forward acceleration a as control inputs 
+
+u = [ ω, a ]⊤ ∈ R2. Given the system output y = [ y1, y 2]⊤ =[x1, x 2]⊤, the control objective is to safely steer the initial states within the safe set XS = {x ∈ R4 | ψ(y) > 0}
+
+into the target set XT = {x ∈ R4 | ϕ(y) < 0} where 
+
+ϕ(y) = y21 + 4( y2 + 1 .7) 2 − 0.4 and ψ(y) = 10 −3(ϕ(y) −
+
+300)( y41 + y42 − 16)( y41 + y42 − 4) . We compare three distinct methods namely vanilla MPC, the unconstrained reach-avoid controller and the proposed constrained reach-avoid MPC to accomplish this task on 300 safe initial states randomly sampled outside the target set. Both vanilla MPC and the proposed framework minimize quadratic cost under actuator limits |u1,2| ≤ 5 with prediction horizon N = 25 and sampling step T = 0.05 s. Unlike vanilla MPC which utilizes the target set as terminal constraint, the proposed framework leverages the computed constrained reach-avoid set. As shown in Fig. 1c, the proposed MPC achieves a significantly broader feasible domain than vanilla MPC in Fig. 1a under identical prediction horizons due to the computed XRA as terminal set. Furthermore, compared to the unconstrained reach-avoid controller in Fig. 1b, our MPC optimization yields smoother trajectories with minimal con-trol energy. Fig. 1d demonstrates that while the unconstrained reach-avoid controller guarantees the reach-avoid property, it severely violates physical actuator bounds and requires more time to reach the target despite starting closer. Conversely the proposed reach-avoid MPC reach the target faster with less control effort while maintaining all control inputs strictly within the limits throughout the entire evolution. 
+
+Example 2. Consider the two-link planar robotic arm 
+
+˙q =
+
+" ˙q1
+
+˙q2
+
+−M −1(C ˙q + G)
+
+#
+
++
+
+ 02×2
+
+M −1
+
+  τ1
+
+τ2
+
+
+
+. (14) with q = [ q1, q 2, ˙q1, ˙q2]⊤ ∈ R4, and [q1, q 2]⊤ as the joint angles, and [ ˙ q1, ˙q2]⊤ denoting the joint velocities. The inertia matrix M is defined as M =
+
+M11 M12 
+
+M21 M22 
+
+
+
+where M11 =
+
+I1 + I2 + m2(l21 + l2 
+
+> c2
+
++ 2 l1lc2 cos ( q2)) + m1l2 
+
+> c1
+
+, M12 =(a) Vanilla MPC with 50/100. (b) Unconstrained reach-avoid with 67/100. 
+
+(c) Our method with 100/100. (d) Control inputs comparison 
+
+Fig. 2: (a), (b) & (c) show controller success rates for 100 random initial states. Trajectories starting from blue dots achieved the reach-avoid objective while the ones starting at the red crosses led to infeasibility. A feasible closed-loop trajectory (dashed line from orange dot to green cross) is included for visualization. (d) represents control inputs comparison between unconstrained reach-avoid controller (blue) and the proposed MPC controller (purple). 
+
+M21 = I2 + m2(l2 
+
+> c2
+
++ l1lc2 cos ( q2)) , M22 = m2l2 
+
+> c2
+
++ I2.
+
+C =
+
+−m2l1lc2 sin( q2) ˙ q2 −m2l1lc2 sin( q2)( ˙ q1 + ˙ q2)
+
+m2l1lc2 sin( q2) ˙ q1 0
+
+
+
+is the Coriolis matrix. The gravity vector is 
+
+G =
+
+(m1gl c1 + m2gl 1) cos( q1) + m2gl c2 cos( q1 + q2)
+
+m2gl c2 cos( q1 + q2)
+
+
+
+τ ∈ R2 is the joint torque as control inputs. Specific values of link parameters (mass, inertia, etc.) can be found in our code link. Given safe set C = {q ∈ R4 | − (4( y1(q) − 2) −
+
+2y2(q)3)2 + 0 .8y2(q)3 + 10 > 0} and target set X r = {q ∈
+
+R4 | (( y1(q) − 5.5) 2/1.22) + (( y2(q) − 1.8) 2/0.42) − 2 < 0},we aim to design a controller that enables the robotic arm to execute its motion within the specified workspace bounds, ultimately achieving predefined terminal configurations while respecting control input limits |τ1,2| ≤ 500 . Both vanilla MPC and the proposed MPC framework with prediction horizon N = 20 and sampling step T = 0 .01 . From Fig. 2, as in our previous example, the reach-avoid MPC once again shows higher success rates in achieving the reach-avoid objective compared to both vanilla MPC and the unconstrained reach-avoid feedback controller, while having smoother trajectories compared to 2b. The reach-avoid MPC inputs remain bounded while the trajectories reach the target in a much shorter time, as seen from Fig. 2c. V. C ONCLUSION 
+
+This paper proposed a sampled-data MPC framework for continuous control-affine systems that synthesizes controllers with rigorous reach-avoid guarantees. Under sufficiently fast sampling, the framework is shown to recursively admit fea-sible constrained control inputs that safely steer the system into the target set. Future work will focus on extending the framework to systems with external disturbances. REFERENCES [1] I. Batkovic, A. Gupta, M. Zanon, and P. Falcone, “Experimental vali-dation of safe mpc for autonomous driving in uncertain environments,” 
+
+IEEE Transactions on Control Systems Technology , vol. 31, no. 5, pp. 2027–2042, 2023. [2] F. Kennel, D. G¨ orges, and S. Liu, “Energy management for smart grids with electric vehicles based on hierarchical mpc,” IEEE Transactions on industrial informatics , vol. 9, no. 3, pp. 1528–1537, 2012. [3] M. V. Minniti, R. Grandia, F. Farshidian, and M. Hutter, “Adaptive clf-mpc with application to quadrupedal robots,” IEEE Robotics and Automation Letters , vol. 7, no. 1, pp. 565–572, 2021. [4] J. Zeng, B. Zhang, and K. Sreenath, “Safety-critical model predictive control with discrete-time control barrier function,” in 2021 American Control Conference (ACC) , pp. 3882–3889, IEEE, 2021. [5] E. C. Kerrigan and J. M. Maciejowski, “Invariant sets for constrained nonlinear discrete-time systems with application to feasibility in model predictive control,” in Proceedings of the 39th IEEE conference on decision and control (Cat. No. 00CH37187) , vol. 5, pp. 4951–4956, IEEE, 2000. [6] J. M. Bravo, D. Lim´ on, T. Alamo, and E. F. Camacho, “On the computation of invariant sets for constrained nonlinear systems: An interval arithmetic approach,” Automatica , vol. 41, no. 9, pp. 1583– 1589, 2005. [7] B. Decardi-Nelson and J. Liu, “Computing robust control invariant sets of constrained nonlinear systems: A graph algorithm approach,” 
+
+Computers & Chemical Engineering , vol. 145, p. 107177, 2021. [8] B. Legat, P. Tabuada, and R. M. Jungers, “Computing controlled invariant sets for hybrid systems with applications to model-predictive control,” IFAC-PapersOnLine , vol. 51, no. 16, pp. 193–198, 2018. [9] Z. Zhao, A. Girard, and S. Olaru, “Nonlinear model predictive control based on k-step control invariant sets,” European journal of control ,vol. 80, p. 101040, 2024. [10] A. Katriniok, E. Shakhesi, and W. Heemels, “Discrete-time control barrier functions for guaranteed recursive feasibility in nonlinear mpc: An application to lane merging,” in 2023 62nd IEEE Conference on Decision and Control (CDC) , pp. 3776–3783, IEEE, 2023. [11] V. N. Behrunani, P. Heer, R. S. Smith, and J. Lygeros, “Recursive feasibility guarantees in multi-horizon mpc,” in 2024 IEEE 63rd Conference on Decision and Control (CDC) , pp. 297–302, IEEE, 2024. [12] X. Fang and W.-H. Chen, “Model predictive control with preview: Recursive feasibility and stability,” IEEE Control Systems Letters ,vol. 6, pp. 2647–2652, 2022. [13] B. Xue, “Reach-avoid controllers synthesis for safety critical systems,” 
+
+IEEE Transactions on Automatic Control , vol. 69, no. 12, pp. 8892– 8899, 2024. [14] J. Ding, D. Yuan, and S. A. Deka, “Backstepping reach-avoid con-troller synthesis for multi-input multi-output systems with mixed relative degrees,” arXiv preprint arXiv:2505.03612 , 2025. [15] B. Wu and Z. Ding, “Semi-global asymptotic stability of a class of sampled-data nonlinear systems in output feedback form,” in 2008 47th IEEE Conference on Decision and Control , pp. 5420–5425, IEEE, 2008. [16] H. K. Khalil and J. W. Grizzle, Nonlinear systems , vol. 3. Prentice hall Upper Saddle River, NJ, 2002. [17] A. Papachristodoulou, J. Anderson, G. Valmorbida, S. Prajna, P. Seiler, and P. A. Parrilo, SOSTOOLS: Sum of squares optimization toolbox for MATLAB . http://arxiv.org/abs/1310.4716 , 2013. [18] M. ApS, “Mosek optimization toolbox for matlab,” User’s Guide and Reference Manual, Version , vol. 4, no. 1, p. 116, 2019. APPENDIX 
+
+A. Additional details for the proof of Lemma 2 
+
+∥x(t) − x(tk)∥ ≤ 
+
+Z ttk
+
+f (x(s)) + 
+
+mX
+
+j=1 
+
+gj (x(s)) ucj (tk) ds
+
+≤
+
+Z ttk
+
+
+
+ℓf ∥x(s) − x(tk)∥ + ∥ ˙x(tk)∥
+
++
+
+mX
+
+j=1 
+
+ℓgj Mucj ∥x(s) − x(tk)∥
+
+
+
+ds
+
+=
+
+Z ttk
+
+
+
+(ℓf +
+
+mX
+
+j=1 
+
+ℓgj Mucj ) ∥x(s) − x(tk)∥
+
+
+
+ds
+
++ ( t − tk) ∥ ˙x(tk)∥
+
+Let ℓsys = ℓf + Pmj=1 ℓgj Mucj and Ck = ∥ ˙x(tk)∥, by applying the Gr¨ onwall–Bellman inequality, we obtain, 
+
+∥x(t) − x(tk)∥ ≤ (t − tk)Ck +
+
+Z ttk
+
+(s − tk)Ckℓsys eℓsys (t−s)ds
+
+= ( t − tk)Ck + Ckℓsys 
+
+Z ttk
+
+(s − tk)eℓsys (t−s)ds
+
+Let u = s − tk, dv = e−ℓsys ds, we have du = d s, v =
+
+− 1
+
+ℓsys e−ℓsys s, then 
+
+Z ttk
+
+(s − tk)eℓsys (t−s)ds = eℓsys t
+
+
+
+− s − tk
+
+ℓsys 
+
+e−ℓsys s
+
+ ttk
+
+−
+
+Z ttk
+
+
+
+− 1
+
+ℓsys 
+
+e−ℓsys s
+
+
+
+du
+
+
+
+= eℓsys t
+
+− t − tk
+
+ℓsys 
+
+e−ℓsys t + 1
+
+ℓsys 
+
+
+
+− 1
+
+ℓsys 
+
+e−ℓsys s
+
+ ttk
+
+
+
+= eℓsys t
+
+
+
+− t − tk
+
+ℓsys 
+
+e−ℓsys t − 1
+
+ℓ2
+
+sys 
+
+e−ℓsys t − e−ℓsys tk
+
+
+
+= − t − tk
+
+ℓsys 
+
+− 1
+
+ℓ2
+
+sys 
+
++ 1
+
+ℓ2
+
+sys 
+
+eℓsys (t−tk )
+
+= 1
+
+ℓ2
+
+sys 
+
+
+
+eℓsys (t−tk ) − 1
+
+
+
+− t − tk
+
+ℓsys 
+
+Thus, 
+
+∥x(t) − x(tk)∥ ≤ (t − tk)Ck + Ckℓsys 
+
+ 1
+
+ℓ2
+
+sys 
+
+
+
+eℓsys (t−tk ) − 1
+
+
+
+− t − tk
+
+ℓsys 
+
+
+
+=Ck
+
+eℓsys (t−tk ) − 1
+
+ℓsys 
+
+= eℓsys (t−tk ) − 1
+
+ℓsys 
+
+∥ ˙x(tk)∥
+
+= e
+
+
+
+ℓf +Pmj=1 ℓgj Mucj
+
+
+
+(t−tk ) − 1
+
+ℓf + Pmj=1 ℓgj Mucj
+
+∥ ˙x(tk)∥
+
+= e
+
+
+
+ℓf +Pmj=1 ℓgj Mucj
+
+
+
+(t−tk ) − 1
+
+ℓf + Pmj=1 ℓgj Mucj
+
+∥ ˙x(tk)∥≤ e
+
+
+
+ℓf +Pmj=1 ℓgj Mucj
+
+
+
+T − 1
+
+ℓf + Pmj=1 ℓgj Mucj
+
+∥ ˙x(tk)∥

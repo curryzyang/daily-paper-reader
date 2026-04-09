@@ -1,0 +1,964 @@
+Title: Observer-Based Performance-Barrier Event-Triggered Control of $2\times2$ Linear Hyperbolic PDEs
+
+URL Source: https://arxiv.org/pdf/2604.02508v1
+
+Published Time: Mon, 06 Apr 2026 00:09:31 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Observer-Based Performance-Barrier Event-Triggered Control of 2 × 2
+
+# Linear Hyperbolic PDEs 
+
+Eranda Somathilake 1 and Mamadou Diagne 1
+
+Abstract — Performance-barrier event-triggered control (P-ETC) is a methodology implemented to increase the dwell-times between events while still preserving a prescribed performance of the system under event-triggered control (ETC). This is achieved by considering the performance residual of the system, which is a measure of the system performance with respect to the prescribed performance. This allows the Lyapunov function candidate to deviate from decreasing monotonically. In order to determine the performance residual, it is required to know the full-state information, leading to all work related to P-ETC to be under full-state feedback. In this article, we propose a novel dynamic performance-barrier under output feedback with an exponentially convergent observer. We consider event-triggered boundary control of a class of 2×2 linear hyperbolic PDEs with anti-collocated measurements with the control input. Under the proposed P-ETC mechanism, we prove the existence of a minimum dwell-time, and show the global exponential stability of the spatial L2 norm of the solution of the system. Simulation results are presented to validate the theoretical claims. 
+
+I. I NTRODUCTION 
+
+Event-triggered control (ETC) is a feedback control strat-egy in which the control input is updated aperiodically at discrete instants, referred to as events , rather than at fixed sampling times [20], [8]. The control input is applied in a zero-order hold (ZOH) fashion between events; that is, the control input remains constant until the next triggering instant. This framework enables the implementation of feed-back control on digital platforms while reducing unnecessary updates. Increasing inter-event times (dwell-times) yields practical benefits. These include communication bandwidth requirements, lower power consumption in networked or remote components, and decreased actuator wear due to fewer updates. Consequently, ETC is particularly attractive for large-scale and networked control systems. The events under ETC are determined by monitoring if triggering function defined by the measured states, and user-defined tuning parameters satisfy a particular condition. The triggering condition under ETC can be dynamic or static. In static ETC, the triggering rule depends directly on the system states whereas in dynamic ETC, the triggering rule is based on an auxiliary dynamic variable whose evolution depends on the system’s states, providing additional design flexibility and often longer dwell-times [7]. In this article, we consider a class of 2 × 2 linear hyperbolic partial differential equations (PDEs) with anti-                 
+
+> *This work was supported by the NSF CAREER Award CMMI-2302030 and the NSF grant CMMI-2222250.
+> 1Eranda Somathilake and Mamadou Diagne are with the Depart-ment of Mechanical and Aerospace Engineering, University of Cali-fornia San Diego, CA 92093, USA
+
+esomathilake@ucsd.edu, mdiagne@ucsd.edu 
+
+collocated boundary actuation and boundary measurements under a dynamic ETC framework. Hyperbolic PDEs arise in the modeling of transport processes including open channel fluid flow[2], [12], [5], [19], [18], traffic systems [23], and gas pipeline systems [17], among others. In such systems, actuation and sensing are typically restricted to the spatial boundaries, while the state evolves over a distributed domain. As a result, full-state measurements are generally unavail-able, and control implementation relies on limited bound-ary information. Moreover, these systems often span large spatial domains, leading to geographically separated sensors and actuators that communicate over bandwidth-constrained networks. Therefore, output-feedback ETC provides a practi-cally motivated framework for hyperbolic PDEs, as it reduces communication and actuation updates. ETC mechanisms can be designed in two ways: by emulation and by co-design. The former samples a pre-designed continuous control signal at each event while the latter designs the triggering mechanism and the control input simultaneously. The emulation approach is selected under the framework proposed in this paper. Continuous-time boundary control design of linear hyperbolic PDEs has been an area that has been studied extensively with the backstepping method being one of the most prominent methods used [21]. Some examples of the PDE backstepping method applied to first order linear hyperbolic PDEs include [11] for a single PDE and [22] for coupled 2 × 2 linear hyperbolic PDEs with boundary measurements. These results were extended to more general classes of linear hyperbolic PDEs in [4], [9]. We refer the reader to [1] for results on adaptive control of linear hyperbolic PDEs using the backstepping method. The continuous-time control design considered here is based on [22] while making necessary adjustments for the anti-collocated actuation and measurement which is the focus here. Dynamic ETC via emulation has been applied to systems of PDEs in works such as [16], [6], [14]. Notably, [14] provides an ETC condition that provides global expo-nential stability (GES) of the spatial L2 norm of the sys-tem states compared to the global exponential convergence (GEC) results in previous work. This has been achieved by incorporating switching dynamics to the dynamic variable in the triggering function. Under ETC, the event times are determined by a triggering condition designed to preserve desired stability and perfor-mance properties. By updating the control input only when required by the observed system’s state, ETC can increase dwell-times compared to periodic control where the input is updated periodically [8]. In periodic control, the sam-
+
+> arXiv:2604.02508v1 [math.OC] 2 Apr 2026
+
+pling frequency must be chosen to accommodate worst-case scenarios, often leading to conservative and unnecessarily frequent updates. In contrast, ETC adapts the update instants to the current system behavior, allowing longer dwell-times whenever the system operates away from critical conditions. In this article, we propose an observer-based dynamic 
+
+performance-barrier ETC (P-ETC) methodology that further increases dwell-times, based on the work in [13], [15], [24]. In [13], the authors introduced the concept of a performance residual, which quantifies how well the system satisfies a prescribed performance specification and allows for longer dwell-times accordingly. The performance criterion is de-fined by requiring the Lyapunov function to remain bounded by an exponentially decaying function determined by the initial condition. This decaying bound is referred to as the performance-barrier , and the performance residual is defined as the difference between the value of the Lyapunov function and this barrier. The framework was developed for ordinary differential equations (ODEs) in [13] and later extended to a class of reaction-diffusion PDEs in [14] and to a class of linear hyperbolic PDEs in [24]. By incorpo-rating the performance residual into a dynamic triggering condition, the requirement for the Lyapunov function to decrease monotonically can be relaxed, thereby allowing longer dwell times. However, evaluating the performance residual requires knowledge of the Lyapunov function at all times. Consequently, existing P-ETC results are restricted to full-state feedback systems. In this paper, we propose a novel dynamically evolving performance-barrier applica-ble to systems with measurement-only feedback. Hence, we obtain an estimated performance barrier based on the measured states to be used in the triggering function. We incorporate the results in [14] to present an observer-based P-ETC methodology that achieves GES of the spatial L2
+
+norm, as opposed to prior state-feedback P-ETC designs for PDEs in [15], [24] with GEC of the spatial L2 norm. The paper is structured as follows. Section II presents the system under consideration and the preliminaries required for the following sections. In Section III, the P-ETC mechanism is presented along with the stability results under the pro-posed control mechanism. Finally, numerical simulations and conclusions are presented in Sections II and V respectively. 
+
+A. Notations 
+
+Let R, R>0, and R≥0 be the set of real numbers, the set of real positive numbers, and the set of nonnegative real numbers respectively. Let N be the set of natural numbers including zero. By L2((0 , 1); R) we denote the equivalence class of Lebesgue measurable functions f : [0 , 1] → R such that ‖f ‖L2((0 ,1); R) =
+
+(∫ 10 |f (x)|2dx 
+
+)1/2
+
+< ∞. Let ‖f ‖ =
+
+‖f ‖L2((0 ,1); R) and ‖f ‖∞ = ‖f ‖L∞((0 ,1); R). u[t] denotes the profile of u at a certain t ≥ 0, i.e. , (u[t])( x) = u(x, t ), for all x ∈ [0 , 1] . Define C0(I; L2((0 , 1); R)) as the space of continuous functions u[t] for an interval I ⊆ R≥0 such that 
+
+I ∋ t → u[t] ∈ L2((0 , 1); R).II. P RELIMINARIES AND PROBLEM STATEMENT 
+
+We consider a 2 × 2 linear hyperbolic system in the canonical form. The independent variables t ≥ 0 and x ∈
+
+[0 , 1] denote the temporal and spatial domains, respectively. The distributed states are defined as (u, v )T . The system is given by 
+
+∂tu(x, t ) = −λ1(x)∂xu(x, t ) + c1(x)v(x, t ), (1) 
+
+∂tv(x, t ) = λ2(x)∂xv(x, t ) + c2(x)u(x, t ), (2) 
+
+u(0 , t ) = qv (0 , t ), v(1 , t ) = ρu (1 , t ) + U (t), (3) along with the available measurement y(t) = v(0 , t ). Here, 
+
+λ1(x), λ 2(x) ∈ C 1((0 , 1); R>0) are the transport velocities, 
+
+c1(x), c 2(x) ∈ C 0((0 , 1); R) are the spatially varying cou-pling coefficients, q 6 = 0 and ρ 6 = 0 are boundary param-eters, and U (t) is the control input to be determined. The initial conditions are assumed to be such that (u0, v 0)T ∈
+
+L2((0 , 1); R2). The boundary parameters are assumed to satisfy the following dissipative property. 
+
+Assumption 1: We assume that the boundary parameters are small enough such that 
+
+|ρq | ≤ 0.5. (4) In addition, define 
+
+φ1(x) = 
+
+∫ x  
+
+> 01
+> λ1(ξ)
+
+dξ, φ2(x) = 
+
+∫ x  
+
+> 01
+> λ2(ξ)
+
+dξ, (5) We aim to determine the control input U (t) applied in a zero-order hold fashion between events times. This increasing sequence of event times is denoted by I = {tj }j∈N, t 0 = 0 .The stabilizing control input U (t) is obtained via emulation of a continuous-time stabilizing control signal as defined subsequently. 
+
+A. Continuous-Time Output Feedback Control and its Emu-lation 
+
+Let an observer be designed with the states (ˆ u, ˆv)T , with initial conditions (ˆ u0, ˆv0)T ∈ L2((0 , 1); R2). The observer error defined as (˜ u, ˜v)T = ( u, v )T − (ˆ u, ˆv)T such that 
+
+∂t ˆu(x, t ) = −λ1(x)∂x ˆu(x, t ) + c1(x)ˆ v(x, t ) + p1(x)˜ v(0 , t ),
+
+(6) 
+
+∂t ˆv(x, t ) = λ2(x)∂x ˆv(x, t ) + c2(x)ˆ u(x, t ) + p2(x)˜ v(0 , t ),
+
+(7) 
+
+ˆu(0 , t ) = qv (0 , t ), ˆv(1 , t ) = ρˆu(1 , t ) + U (t). (8) Hence the error dynamics satisfy the equations 
+
+∂t ˜u(x, t ) = −λ1(x)∂x ˜u(x, t ) + c1(x)˜ v(x, t ) − p1(x)˜ v(0 , t ),
+
+(9) 
+
+∂t ˜v(x, t ) = λ2(x)∂x ˜v(x, t ) + c2(x)˜ u(x, t ) − p2(x)˜ v(0 , t ),
+
+(10) 
+
+˜u(0 , t ) = 0 , ˜v(1 , t ) = ρ˜u(1 , t ). (11) Consider the backstepping transformation 
+
+˜u(x, t ) = ˜ α(x, t ) −
+
+∫ x
+
+> 0
+
+P αα (x, ξ )˜ α(ξ, t )dξ 
+
+−
+
+∫ x
+
+> 0
+
+P αβ (x, ξ ) ˜β(ξ, t )dξ, (12) 
+
+˜v(x, t ) = ˜β(x, t ) −
+
+∫ x
+
+> 0
+
+P βα (x, ξ )˜ α(ξ, t )dξ 
+
+−
+
+∫ x
+
+> 0
+
+P ββ (x, ξ ) ˜β(ξ, t )dξ, (13) and its inverse 
+
+˜α(x, t ) =˜ u(x, t ) + 
+
+∫ x
+
+> 0
+
+Ruu (x, ξ )˜ u(ξ, t )dξ 
+
++
+
+∫ x
+
+> 0
+
+Ruv (x, ξ )˜ v(ξ, t )dξ, (14) 
+
+˜β(x, t ) =˜ v(x, t ) + 
+
+∫ x
+
+> 0
+
+Rvu (x, ξ )˜ u(ξ, t )dξ 
+
++
+
+∫ x
+
+> 0
+
+Rvv (x, ξ )˜ v(ξ, t )dξ, (15) along with the output gains terms as 
+
+p1(x) = − λ2(0) P αβ (x, 0) , (16) 
+
+p2(x) = − λ2(0) P ββ (x, 0) . (17) to obtain the following target system: 
+
+∂t ˜α(x, t ) = −λ1(x)∂x ˜α(x, t ), (18) 
+
+∂t ˜β(x, t ) = λ2(x)∂x ˜β(x, t ), (19) 
+
+˜α(0 , t ) = 0 , ˜β(1 , t ) = ρ˜α(1 , t ). (20) The backstepping transformation kernels in (12)-(15) defined over the triangular domain 0 ≤ ξ ≤ x ≤ 1 satisfy 
+
+Λ( x)∂xP (x, ξ ) + ∂ξ(P (x, ξ )Λ( ξ)) = C(x)P (x, ξ ),P αα (1 , ξ ) = 1 
+
+> ρ
+
+P βα (1 , ξ ), P αβ (x, x ) = − c1(x)  
+
+> λ1(x)+ λ2(x)
+
+,P ββ (1 , ξ ) = ρP αβ (1 , ξ ), P βα (x, x ) = c2 (x)   
+
+> λ1(x)+ λ2(x)
+
+.
+
+Λ( x)∂xR(x, ξ ) + ∂ξ(R(x, ξ )Λ( ξ)) = −R(x, ξ )C(x),Ruu (1 , ξ ) = 1 
+
+> ρ
+
+Rvu , R uv (x, x ) = − c1(x)  
+
+> λ1(x)+ λ2(x)
+
+,Rvv (1 , ξ ) = ρP uv (1 , ξ ), R vu (x, x ) = c2(x)  
+
+> λ1(x)+ λ2(x)
+
+,
+
+where,                          
+
+> Λ( x) =
+> [λ1(x)00−λ2(x)
+> ]
+> ,C(x) =
+> [0c1(x)
+> c2(x)0
+> ]
+> ,P(x, ξ ) =
+> [Pαα (x,ξ )Pαβ (x,ξ )
+> Pβα (x,ξ )Pββ (x,ξ )
+> ]
+> , R (x, ξ ) =
+> [Ruu (x,ξ )Ruv (x,ξ )
+> Rvu (x,ξ )Rvv (x,ξ )
+> ]
+> .
+
+In contrast to [22], the kernel equations above are derived under an anti-collocated sensing and actuation framework, leading to a distinct formulation. The control input is deter-mined by sampling a continuous-time signal U c(t) at times 
+
+tj ∈ I, j ∈ N, that is we have 
+
+U (t) := U c(tj ), t ∈ [tj , t j+1 ), j ∈ N. (21) Let the input holding error be defined as 
+
+d(t) = U (t) − U c(t). (22) Subsequently, consider the following backstepping transfor-mation 
+
+ˆα(x, t ) =ˆ u(x, t ) −
+
+∫ x
+
+> 0
+
+Kuu (x, ξ )ˆ u(ξ, t )dξ 
+
+−
+
+∫ x
+
+> 0
+
+Kuv (x, ξ )ˆ v(ξ, t )dξ, (23) 
+
+ˆβ(x, t ) =ˆ v(x, t ) −
+
+∫ x
+
+> 0
+
+Kvu (x, ξ )ˆ u(ξ, t )dξ 
+
+−
+
+∫ x
+
+> 0
+
+Kvv (x, ξ )ˆ v(ξ, t )dξ, (24) and its inverse 
+
+ˆu(x, t ) = ˆ α(x, t ) + 
+
+∫ x
+
+> 0
+
+Lαα (x, ξ )ˆ α(ξ, t )dξ 
+
++
+
+∫ x
+
+> 0
+
+Lαβ (x, ξ ) ˆβ(ξ, t )dξ, (25) 
+
+ˆv(x, t ) = ˆβ(x, t ) + 
+
+∫ x
+
+> 0
+
+Lβα (x, ξ )ˆ α(ξ, t )dξ 
+
++
+
+∫ x
+
+> 0
+
+Lββ (x, ξ ) ˆβ(ξ, t )dξ, (26) along with U c(t) defined as 
+
+U c(t) = 
+
+∫ 10
+
+N α(ξ)ˆ α(ξ, t )dξ +
+
+∫ 10
+
+N β (ξ) ˆβ(ξ, t )dξ, (27) where 
+
+N α(ξ) = Lβα (1 , ξ ) − ρL αα (1 , ξ ), (28) 
+
+N β (ξ) = Lββ (1 , ξ ) − ρL αβ (1 , ξ ). (29) Which results in the following target system 
+
+∂t ˆα(x, t ) = −λ1(x)∂x ˆα(x, t ) + ¯ p1(x) ˜β(0 , t ), (30) 
+
+∂t ˆβ(x, t ) = λ2(x)∂x ˆβ(x, t ) + ¯ p2(x) ˜β(0 , t ), (31) 
+
+ˆα(0 , t ) = q ˆβ(0 , t ) + q ˜β(0 , t ), ˆβ(1 , t ) = ρˆα(1 , t ) + d(t),
+
+(32) where 
+
+¯p1(x) = p1(x) −
+
+∫ x
+
+> 0
+
+Kuu (x, ξ )p1(ξ)dξ 
+
+−
+
+∫ x
+
+> 0
+
+Kuv (x, ξ )p2(ξ)dξ, (33) 
+
+¯p2(x) = p2(x) −
+
+∫ x
+
+> 0
+
+Kvu (x, ξ )p1 (ξ)dξ 
+
+−
+
+∫ x
+
+> 0
+
+Kvv (x, ξ )p2 (ξ)dξ. (34) We refer the reader to [22] for the definition of the backstep-ping transformation kernels in (23)-(26) over the triangular domain 0 ≤ ξ ≤ x ≤ 1. The following proposition addresses the well-posedness issues under the proposed control input. 
+
+Proposition 1: Let j ∈ N, and U (t) ∈ R be constant for 
+
+t ∈ [tj , t j+1 ). For a given (u[tj ], v [tj ]) T ∈ L2((0 , 1); R2)
+
+and (ˆ u[tj ], ˆv[tj ]) T ∈ L2((0 , 1); R2), there exist unique so-lutions such that (u, v )T ∈ C 0([ tj , t j+1 ]; L2((0 , 1); R2)) and 
+
+(ˆ u, ˆv)T ∈ C 0([ tj , t j+1 ]; L2((0 , 1); R2)) to the systems (1)-(3) and (6)-(8) respectively. Plant 
+
+Observer ˆu[t], ˆv[t] Controller 
+
+Triggering mechanism 
+
+U c(t)
+
+y(t)
+
+U c(t)
+
+U (t)
+
+{tj }j∈N 
+
+> Fig. 1. Schematic of the proposed P-ETC mechanism
+
+Proof: Consider the systems (1)-(3), and (6)-(8) for time t ∈ [tj , t j+1 ] for a fixed j ∈ N with U (t) ∈ R constant for t ∈ [tj , t j+1 ) and (u[tj ], v [tj ]) T ∈ L2((0 , 1); R2),
+
+(ˆ u[tj ], ˆv[tj ]) T ∈ L2((0 , 1); R2). Then, considering the so-lution along the characteristics, and following [3, Ap-pendix A], it can be shown that there exists unique solu-tions (u, v )T ∈ C 0([ tj , t j+1 ]; L2((0 , 1); R2)) and (ˆ u, ˆv)T ∈C0([ tj , t j+1 ]; L2((0 , 1); R2)) to the systems (1)-(3) and (6)-(8) respectively. 
+
+The following lemma holds for the input holding error 
+
+d(t).
+
+Lemma 1: The input holding error d(t) defined in (22) satisfy the following inequality: 
+
+˙d(t)2 ≤ε0d(t) + ε1‖ ˆα[t]‖2 + ε2‖ ˆβ[t]‖2
+
++ ε3 ˆα(1 , t )2 + ε4 ˜β(0 , t )2, (35) where 
+
+ε0 =5( λ2(1) N β (1)) 2, (36) 
+
+ε1 =5 
+
+∫ 10
+
+(∂ξ λ1(ξ)N α(ξ) + λ1(ξ)∂ξ N α(ξ)) 2dξ, (37) 
+
+ε2 =5 
+
+∫ 10
+
+(∂ξ λ2(ξ)N β (ξ) + λ2(ξ)∂ξ N β (ξ)) 2dξ, (38) 
+
+ε3 =5( λ1(1) N α(1) − ρλ 2(1) N β (1)) 2, (39) 
+
+ε4 =5 
+
+( ∫ 10
+
+(N α(ξ)¯ p1(ξ) + N β (ξ)¯ p2(ξ)) dξ 
+
++ λ1(0) qN α(0) 
+
+)2
+
+. (40) The proof is similar to [6, Lemma 2] and hence omitted. III. P ERFORMANCE -B ARRIER EVENT -T RIGGERED 
+
+CONTROL 
+
+In this section, we present the novel observer-based P-ETC strategy and the stability of the closed-loop system. A performance residual term based only on observer states is incorporated with the ETC mechanism in [14] to achieve increased dwell-times for a control input applied in ZOH between events. Therefore, unlike [13], [15], [24], full state information is not required for P-ETC design presented here. The proposed P-ETC mechanism is illustrated in Fig. 1. The increasing sequence of times at which events occur is defined according to the definition given below. 
+
+Definition 1: The increasing sequence of times I at which events are generated is defined according to the following rule: 
+
+tj+1 := inf {t ≥ tj + τ }| m(t) < 0, j ∈ N}. (41) The dynamic variable m(t) is defined as 
+
+˙m(t) = − ηm (t) + κ1‖ ˆα[t]‖2 + κ2‖ ˆβ[t]‖2
+
++ κ3 ˆα(1 , t )2 + κ4 ˜β(0 , t )2 + cW (t), (42) for t ∈ (tj , t j + τ ), j ∈ N and 
+
+˙m(t) = − ηm (t) − θd (t)2 + κ1‖ ˆα[t]‖2 + κ2‖ ˆβ[t]‖2
+
++ κ3 ˆα(1 , t )2 + κ4 ˜β(0 , t )2 + cW (t), (43) for t ∈ (tj + τ, t j+1 ), j ∈ N. In addition, define m(0) = 0 ,
+
+m(tj ) = ω0d(t− 
+
+> j
+
+)2, j ∈ N>0, and m(tj + τ ) = m(( tj +
+
+τ )−), j ∈ N. The minimum dwell-time τ is defined such that 
+
+˙f (t) = 
+
+{
+
+−a2f (t)2 − a1f (t) − a0 t ∈ (tj , t j + τ )0 t ∈ (tj + τ, t j+1 ) ,
+
+(44) with f (tj ) = ω1, f (( tj + τ )−) = f (tj + τ ) = ω0 and 
+
+τ =
+
+∫ ω1
+
+> ω0
+
+1
+
+a2s2 + a1s + a0
+
+ds. (45) The estimated performance residual, W (t) is defined as 
+
+W (t) = e −γt ̺ (t) − ˆV (t), (46) where ̺
+
+(t) = max 
+
+> s∈[0 ,t ]
+
+{
+
+eγs ˆV (s)
+
+}
+
+, (47) 
+
+V1(t) = 
+
+∫ 10
+
+( A
+
+λ1(x) e−μφ 1 (x) ˆα(x, t )2
+
++ B
+
+λ2(x) eμφ 2(x) ˆβ(x, t )2
+
+)
+
+dx, (48) 
+
+ˆV (t) = V1(t) + f (t)d(t)2 + m(t). (49) The values η, κ1, κ2, κ3, κ4, c, ω1 > ω 0, and γ ≤ ν are positive design parameters. The constants A,B,μ, θ , and ν
+
+are to be specified subsequently. Note that, ˆV (t) ∈ C0(R≥0; R≥0) given that 
+
+(ˆ α, ˆβ)T ∈ C0(R≥0; L2((0 , 1); R2)) . Hence, ̺ (t), W (t) ∈C0(R≥0; R≥0). In addition, by (47), ̺ (t) is a non-decreasing function of time t. The following lemma holds for the dynamic variable m(t), and the estimated performance residual W (t) in Definition 1. 
+
+Lemma 2: Consider an increasing sequence of event times 
+
+I = {tj }j∈N, t0 = 0 , satisfying lim j→∞ tj = + ∞ deter-mined by the triggering rule (41)-(49). Then the estimated performance residual W (t), satisfies W (t) ≥ 0 ∀t ≥ 0. Sub-sequently, the dynamic variable m(t) governed by (42),(43) with m(0) = 0 , m(tj ) ≥ 0, j ∈ N>0, m(( tj + τ )−) = 
+
+m(tj + τ ), j ∈ N, where τ is the MDT, it holds that 
+
+m(t) ≥ 0 ∀t ≥ 0.
+
+Proof: Under Definition 1, I is an increasing sequence due to the existence of a MDT τ . Therefore, from (47) and (46), we have 
+
+W (t) = e −γt max 
+
+> s∈[0 ,t ]
+
+{
+
+eγs ˆV (s)
+
+}
+
+− ˆV (t) ≥ 0, ∀t ≥ 0.κ1‖ ˆα[t]‖2
+
++κ2‖ ˆβ[t]‖2
+
++κ3 ˆα(1 , t )+κ4 ˜β(0 , t )
+
++ ∫ m(t)
+
+W (t)
+
+c
+
+−η+−θd(t)2
+
+t ∈ (tj + τ, t j+1 ), j ∈ N  
+
+> Fig. 2. Schematic of the dynamics of m(t)
+
+Let m(0) = 0 , m(tj ) ≥ 0, j ∈ N>0, m(( tj + τ )−) = m(tj +
+
+τ ), j ∈ N, then from (42) we have 
+
+m(t) = e −η(t−tj )m(tj ) + 
+
+∫ ttj
+
+e−η(t−ξ)(κ1‖ ˆα[ξ]‖2
+
+κ2‖ ˆβ[ξ]‖2 + κ3 ˆα(1 , ξ )2 + κ4 ˜β(0 , ξ )2 + cW (t))dξ, 
+
+(50) 
+
+∀t ∈ (tj , t j +τ ], j ∈ N. Hence m(t) ≥ 0 ∀t ∈ [tj , t j +τ ], j ∈
+
+N Subsequently, for t ∈ (tj +τ, t j+1 ), j ∈ N, m(t) evolves as in (43) with tj+1 selected according to (41) to ensure m(t) ≥
+
+0, ∀t ∈ (tj + τ, t j+1 ), j ∈ N. Applying the aforementioned reasoning for each tj ∈ I starting with t0 = 0 , it can be shown that m(t) ≥ 0, ∀t ≥ 0.
+
+Under Definition 1, the evolution of the dynamic variable 
+
+m(t) associated with the triggering condition (41) is shown in Fig 2. Where an event time tj , j ∈ N occurs when 
+
+m(t) < 0, with m(0) = 0 , m(tj ) = ω0d(t− 
+
+> j
+
+)2, j ∈ N>0, and 
+
+m(tj +τ ) = m(( tj +τ )−), j ∈ N. Compared to the triggering condition in [14], a positive estimated performance residual term W (t) is introduced into the dynamics of m(t) allowing 
+
+m(t) to stay positive longer, resulting in longer dwell-times. The following stability condition holds under the proposed ETC mechanism. 
+
+Theorem 1: Under the event-triggering rule (41)-(49) and Assumption 1, consider a set of increasing sequence of event times I = {tj }j∈N, t0 = 0 such that lim j→∞ tj = + ∞.For each (u0, v 0, ˆu0, ˆv0)T ∈ L2((0 , 1); R4)) , there exists a unique solution (u, v, ˆu, ˆv)T ∈ C 0(R>0; L2((0 , 1); R4)) to (1)-(3), (6)-(8). Let η, κ1, κ2, κ3, κ4, a1, a2, c, and ω1 > ω 0
+
+be free positive parameters to be selected. In addition, let a0,
+
+θ, and γ be 
+
+a0 =4 Aq 2eμφ 2 (1) + ǫ0
+
+a2
+
+, θ = a2ω20 + a1ω0 + a0, (51) 
+
+γ ≤ν, ν = min {ν0, a 1, η } (52) 
+
+ν0 =μ − δ − r 
+
+> A
+
+max 
+
+{ ǫ1 
+
+> a2
+
++ κ1, ǫ2 
+
+> a2
+
++ κ2
+
+}
+
+(53) 
+
+μ ∈
+
+(
+
+0, 2
+
+φ1(1) + φ2(1) ln 
+
+( 1
+
+2|ρq |
+
+)) 
+
+, δ < μ, (54) 
+
+r = min 
+
+{ e−μφ 1  
+
+> φ1(1)
+
+, 2q2 
+
+> φ2(1)
+
+}−1
+
+, (55) 
+
+A > max 
+
+{  
+
+> eμφ 1 (1)
+> 1−4ρ2q2eμ(φ1(1)+ φ2 (1))
+
+( ǫ3 
+
+> a2
+
++ κ3
+
+) 
+
+> r
+> μ−δ
+
+max { ǫ1 
+
+> a2
+
++ κ1, ǫ2 
+
+> a2
+
++ κ2}
+
+}
+
+. (56) then the solution of the closed-loop system (1)-(3), (6)-(8) with the control input U (t) given by (21) updated at each 
+
+tj ∈ I, is globally exponentially stable in the spatial L2
+
+norm. 
+
+Proof: By the existence of a MDT τ imposed by the triggering condition (41) along with Proposi-tion 1, the existence of a unique solution (u, v, ˆu, ˆv)T ∈C0(R>0; L2((0 , 1); R4)) to (1)-(3), (6)-(8) can be shown. Subsequently, consider the following Lyapunov function candidate 
+
+V (t) = ˆV (t) + V2(t), (57) 
+
+V2(t) = 
+
+∫ 10
+
+( C
+
+λ1(x) e−μφ 1 (x) ˜α(x, t )2 (58) 
+
++ D
+
+λ2(x) eμφ 2(x) ˜β(x, t )2
+
+)
+
+dx, (59) where ˆV (t) is defined in (49). Taking the derivative of (57) with respect to time t ∈ (tj , t j + τ ) ∪ (tj + τ, t j+1 ), j ∈
+
+N along the solution of (18)-(20),(30)-(32), using Young’s inequality, and (35), we have 
+
+˙V (t) ≤ − 
+
+(
+
+Ae−μφ 1 (1) − 2Bρ 2eμφ 2 (1) − ǫ3 
+
+> a2
+
+− κ3
+
+)
+
+ˆα(1 , t )2
+
+− (B − 2Aq 2) ˆβ(0 , t )2 −
+
+(
+
+Ce−μφ 1(1) − Dρ 2eμφ 2 (1) )
+
+˜α(1 , t )2
+
+−
+
+(
+
+D − 2Aq 2 − A‖ ¯p1 ‖2 
+
+> λ1δ
+
+− Beμφ 2 (1) ‖ ¯p2 ‖2 
+
+> λ2δ
+
+− ǫ4 
+
+> a2
+
+− κ4
+
+) ˜β(0 , t )2
+
+− (μ − δ)V1(t) − μV 2(t)+ max 
+
+{ ǫ1 
+
+> a2
+
++ κ1, ǫ2 
+
+> a2
+
++ κ2
+
+}
+
+(‖ ˆα[t]‖2 + ‖ ˆβ[t]‖2)+
+
+( ˙f (t) + a2f (t)2 + ǫ0 
+
+> a2
+
++ 2 Be−μφ 2 (1) )
+
+d(t)2 + ˙ m(t)
+
+− κ1‖ ˆα[t]‖2 − κ2‖ ˆβ[t]‖2 − κ3 ˆα(1 , t )2 − κ4 ˜β(0 , t )2,
+
+for some δ > 0 and a2 > 0. Selecting B = Aq 2, C =
+
+Dρ 2eμ(φ1 (1)+ φ2(1)) , ν0 as in (53), and r as in (55), the following expression holds: 
+
+˙V (t) ≤ − ν0V1(t) − μV 2(t) −
+
+(
+
+D − 2Aq 2 − A‖ ¯p1 ‖2
+
+> λ1δ
+
+− Beμφ 2(1) ‖ ¯p2‖2  
+
+> λ2δ
+
+− ǫ4 
+
+> a2
+
+− κ4
+
+) ˜β(0 , t )2
+
+−
+
+(
+
+A
+
+(
+
+e−μφ 1(1) − 4ρ2q2eμφ 2(1) )
+
+− ǫ3 
+
+> a2
+
+− κ3
+
+)
+
+ˆα(1 , t )2
+
++
+
+( ˙f (t) + a2f (t)2 + ǫ0 
+
+> a2
+
++ 2 Be−μφ 2 (1) )
+
+d(t)2
+
++ ˙ m(t) − κ1‖ ˆα[t]‖2 − κ2‖ ˆβ[t]‖2 − κ3 ˆα(1 , t )2 − κ4 ˜β(0 , t )2.
+
+Under Assumption 1, let μ satisfy (54). Subsequently, let δ
+
+be such that δ < μ , A as in (56), and D as 
+
+D = 2 Aq 2 + A‖ ¯p1 ‖2  
+
+> λ1δ
+
++ Beμφ 2(1) ‖ ¯p2 ‖2 
+
+> λ2δ
+
++ ǫ4 
+
+> a2
+
++ κ4.
+
+Hence, we obtain the following expression for t ∈ (tj , t j +
+
+τ ) ∪ (tj + τ, t j+1 ), j ∈ N:
+
+˙V (t) ≤ − ν0V1(t) − μV 2(t)+
+
+( ˙f (t) + a2f (t)2 + ǫ0 
+
+> a2
+
++ 2 Be−μφ 2(1) )
+
+d(t)2 + ˙ m(t)
+
+− κ1‖ ˆα[t]‖2 − κ2‖ ˆβ[t]‖2 − κ3 ˆα(1 , t )2 − κ4 ˜β(0 , t )2. (60) Consider (60) for t ∈ (tj , t j + τ ), j ∈ N. Using (42) and (44) with a0, ν as in (51),(52) respectively, the following expression holds: 
+
+˙V (t) ≤ − νV (t) + cW (t). (61) Similarly, consider (60) for t ∈ (tj + τ, t j+1 ), j ∈ N. Using (43) and (44) with θ, ν as in (51),(52) respectively, the following expression holds: 
+
+˙V (t) ≤ − νV (t) + cW (t). (62) Let γ ≤ ν as in (52). To simplify the subsequent derivations, define 
+
+V3(t) = e γt ˆV (t), V4(t) = e γt V2(t). (63) Consequently, from (46),(61),(62), and (63) the following expression holds for t ∈ (tj , t j + τ ) ∪ (tj + τ, t j+1 ), j ∈ N:
+
+˙V3(t) + ˙V4(t) ≤ c̺ (t) − cV 3(t). (64) Note that we have (ˆ α, ˆβ)T ∈ C 0(R≥0; L2((0 , 1); R2)) and 
+
+(˜ α, ˜β)T ∈ C 0(R≥0; L2((0 , 1); R2)) . Therefore, V3, V 4,̺ ∈C0(R≥0; R≥0).Taking the derivative of (59) with respect to time t ≥ 0,it can be shown that 
+
+˙V4(t) ≤0,V4(t) ≤V4(0) . (65) Now consider times t∗ ∈ (tj , t j + τ ) ∪ (tj + τ, t j+1 ), j ∈ N
+
+at which ̺ (t∗) increases. Note that by definition of ̺ (t) in (47), ̺ (t∗) = V3(t∗). From (64) 
+
+˙V3(t∗) ≤ − ˙V4(t∗), (66) since (66) is holds when ̺ (t) is updated and ̺ (t) is constant otherwise, the following exists for t ∈ (tj , t j + τ ) ∪ (tj +
+
+τ, t j+1 ), j ∈ N:
+
+D+̺ (t) ≤ − ˙V4(t), (67) where we denote D+ as the upper right Dini derivative. Using [10, Lemma 3.4] for each interval in (tj , t j + τ ) ∪
+
+(tj + τ, t j+1 ), j ∈ N, the following holds: ̺
+
+(t) −̺ (0) ≤V4(0) − V4(t),̺ 
+
+(t) ≤V3(0) + V4(0) − V4(t),̺ 
+
+(t) ≤V3(0) + V4(0) .
+
+Hence we have 
+
+V3(t) ≤ V3(0) + V4(0) , ∀t ≥ 0. (68) Using (63) and (65), (68), we have 
+
+ˆV (t) + V2(t) ≤ e−γt ( ˆV (0) + 2 V2(0)) , (69) Finally, using (69) and the invertibility of the backstepping transformations, it can be shown that the solution of the closed-loop system (1)-(3), (6)-(8) with the control input 
+
+U (t) given by (21) updated at each tj ∈ I, is globally exponentially stable in the spatial L2 norm. 
+
+IV. N UMERICAL SIMULATIONS 
+
+We consider the system (1)-(3) with plant parameters 
+
+λ1(x) = 1, λ2(x) = 1, c1(x) = 1 and c2(x) = 1.5
+
+∀x ∈ [0 , 1] , and q = 0 .5, ρ = 0 .5 to satisfy Assumption 1. The initial conditions are selected as u0(x) = qv 0(x),
+
+v0(x) = 10(1 − x) and ˆu0(x) = 0 , ˆv0(x) = 0 , ∀x ∈ [0 , 1] .The free triggering parameters are selected as η = 1 , a1 =1, a2 = 1 , κ1 = 1 , κ2 = 1 , κ3 = 1 , κ4 = 1 , ω0 = 1 ,
+
+ω1 = 10 , and c = 1 . We select μ = 0 .173 such that (54) is satisfied and δ = 0 .17 such that δ < μ . Subsequently, 
+
+A = 253 .75 is defined such that (56) holds. Finally, we select 
+
+γ = 0 .1236 such that γ ≤ ν. Under the proposed system and the parameters selected, the MDT is τ = 0 .0137 s.Fig. 3 shows the evolution of the spatial L2 norm of the states over time under the P-ETC input (21) presented in Fig. 4. The resulting dwell-times are shown in Fig. 5. Figures 3,4,5 also show the evolution of the system under ETC, that is, without the effect of the performance residual (with c = 0 ). The evolution of ˆV (t) in (49) together with the performance barrier e−γt ̺ (t) is illustrated in Fig. 6. The design parameter c in (42),(43) provides a means to increase the dwell-times at the expense of the convergence rate of 
+
+ˆV (t) to zero. Fig. 7 compares the evolution of ˆV (t) with time for various values of c.It can be observed that the dwell-times under P-ETC are significantly shorter and coincidences with the dwell-times under ETC initially compared to the later stages. This behavior can be explained by examining Fig. 6 together with the performance residual W (t) in (46) and the performance-barrier e−γt ̺ (t) for ̺ (t) in (47). Due to the selected initial values of the observer states, ̺ (t) initially increases. During this phase, the performance residual satisfies W (t) = 0 ,causing the system to behave similarly to the standard observer-based ETC scheme. Once ̺ (t) is sufficiently large and its growth ceases, the performance residual becomes non-zero and influences the evolution of the dynamic trig-gering variable m(t), producing longer dwell-times. Time( s)
+
+0 10 20 30 40 50 60 
+
+> ‖u[t]‖ + ‖v[t]‖
+
+0246810 P-ETC ETC 
+
+Fig. 3. Variation of the spatial L2 norm of the states with time 
+
+Time( s)
+
+0 10 20 30 40 50 60 
+
+> U (t)
+
+-6 -4 -2 024 P-ETC ETC 
+
+Fig. 4. Variation of the control input with time 
+
+V. C ONCLUSION 
+
+We present a novel observer-based P-ETC framework for a class of 2 × 2 linear hyperbolic PDEs. The proposed trig-gering condition guarantees GES of the spatial L2 norm of the solution of the system while substantially increasing the dwell-times between consecutive events compared to ETC that do not incorporate a performance barrier. Simulation results are provided to support the theoretical findings. The proposed P-ETC framework can be extended to existing dynamic observer-based ETC approaches, provided that the observer converges exponentially to the system states and operates independently of the triggering condition. Investi-gating such extensions constitutes an interesting direction for future research. REFERENCES [1] H. Anfinsen and O. M. Aamo, Adaptive control of hyperbolic PDEs .Springer, 2019. [2] J.-M. Coron, B. d’Andrea Novel, and G. Bastin, “A strict Lyapunov function for boundary control of hyperbolic systems of conservation laws,” IEEE Transactions on Automatic Control , vol. 52, no. 1, pp. 2–11, 2007. [3] J.-M. Coron, L. Hu, G. Olive, and P. Shang, “Boundary stabilization in finite time of one-dimensional linear hyperbolic balance laws with coefficients depending on time and space,” Journal of Differential Equations , vol. 271, pp. 1109–1170, 2021. [4] F. Di Meglio, R. Vazquez, and M. Krstic, “Stabilization of a system of n + 1 coupled first-order hyperbolic linear PDEs with a single boundary input,” IEEE Transactions on Automatic Control , vol. 58, no. 12, pp. 3097–3111, 2013. [5] A. Diagne, M. Diagne, S. Tang, and M. Krstic, “Backstepping sta-bilization of the linearized Saint-Venant-Exner model,” Automatica ,vol. 76, pp. 345–354, 2017. 
+
+Time( s)
+
+0 10 20 30 40 50 60 
+
+> Dwell-time ( s)
+
+01234 P-ETC ETC 
+
+Fig. 5. Dwell-times under the proposed triggering condition 
+
+Time( s)
+
+0 10 20 30 40 50 60 
+
+> ˆV (t)
+
+02000 4000 6000 8000 e−γt̺ (t)ˆV (t)
+
+Fig. 6. Variation of ˆV (t) with time [6] N. Espitia, “Observer-based event-triggered boundary control of a linear 2 × 2 hyperbolic systems,” Systems & Control Letters , vol. 138, p. 104668, 2020. [7] A. Girard, “Dynamic triggering mechanisms for event-triggered con-trol,” IEEE Transactions on Automatic Control , vol. 60, no. 7, pp. 1992–1997, 2015. [8] W. P. Heemels, K. H. Johansson, and P. Tabuada, “An introduction to event-triggered and self-triggered control,” in 2012 IEEE Conference on Decision and Control (CDC) , 2012, pp. 3270–3285. [9] L. Hu, F. Di Meglio, R. Vazquez, and M. Krstic, “Control of ho-modirectional and general heterodirectional linear coupled hyperbolic PDEs,” IEEE Transactions on Automatic Control , vol. 61, no. 11, pp. 3301–3314, 2016. [10] H. K. Khalil and J. W. Grizzle, Nonlinear systems . Prentice hall Upper Saddle River, NJ, 2002, vol. 3. [11] M. Krstic and A. Smyshlyaev, “Backstepping boundary control for first-order hyperbolic PDEs and application to systems with actuator and sensor delays,” Systems & Control Letters , vol. 57, no. 9, pp. 750–758, 2008. [12] X. Litrico and V. Fromion, “Boundary control of hyperbolic conser-vation laws using a frequency domain approach,” Automatica , vol. 45, no. 3, pp. 647–656, 2009. [13] P. Ong and J. Cort´ es, “Performance-barrier-based event-triggered control with applications to network systems,” IEEE Transactions on Automatic Control , vol. 69, no. 7, pp. 4230–4244, 2024. [14] B. Rathnayake and M. Diagne, “Global exponential stabilization of 2 × 2 linear hyperbolic PDEs via dynamic event-triggered backstepping control,” Automatica , vol. 183, p. 112617, 2026. [15] B. Rathnayake, M. Diagne, J. Cort´ es, and M. Krstic, “Performance-barrier event-triggered control of a class of reaction–diffusion PDEs,” 
+
+Automatica , vol. 174, p. 112181, 2025. [16] B. Rathnayake, M. Diagne, N. Espitia, and I. Karafyllis, “Observer-based event-triggered boundary control of a class of reaction-diffusion PDEs,” IEEE Transactions on Automatic Control , vol. 67, no. 6, pp. 2905–2917, 2022. [17] B. Rathnayake, A. Zlotnik, S. Tokareva, and M. Diagne, “Setpoint tracking and disturbance attenuation for gas pipeline flow subject to Time( s)
+
+0 10 20 30 40 50 60 
+
+> ˆV (t)
+
+02000 4000 6000 8000 ˆV (t) ( c = 0) ˆV (t) ( c = 0 .1) ˆV (t) ( c = 1) ˆV (t) ( c = 10) ˆV (t) ( c = 100) 
+
+Fig. 7. Variation of ˆV (t) with time for different values of c
+
+uncertainties using backstepping,” in 2025 American Control Confer-ence (ACC) , 2025, pp. 996–1001. [18] E. Somathilake and M. Diagne, “Output feedback control of suspended sediment load entrainment in water canals and reservoirs,” IFAC-PapersOnLine , vol. 58, no. 28, pp. 983–988, 2024, the 4th Modeling, Estimation, and Control Conference – 2024. [19] E. Somathilake, B. Rathnayake, and M. Diagne, “Output feedback periodic event-triggered and self-triggered boundary control of coupled 
+
+2× 2 linear hyperbolic PDEs,” Automatica , vol. 179, p. 112433, 2025. [20] P. Tabuada, “Event-triggered real-time scheduling of stabilizing control tasks,” IEEE Transactions on Automatic control , vol. 52, no. 9, pp. 1680–1685, 2007. [21] R. Vazquez, J. Auriol, F. Bribiesca-Argomedo, and M. Krstic, “Back-stepping for partial differential equations: A survey,” Automatica , vol. 183, p. 112572, 2026. [22] R. Vazquez, M. Krstic, and J.-M. Coron, “Backstepping boundary stabilization and state estimation of a 2 × 2 linear hyperbolic system,” in 2011 50th IEEE Conference on Decision and Control and European Control Conference , 2011, pp. 4937–4942. [23] H. Yu and M. Krstic, “Traffic congestion control for Aw–Rascle– Zhang model,” Automatica , vol. 100, pp. 38–51, 2019. [24] P. Zhang, B. Rathnayake, M. Diagne, and M. Krstic, “Performance-barrier event-triggered PDE control of traffic flow,” IEEE Transactions on Automatic Control , 2025.
