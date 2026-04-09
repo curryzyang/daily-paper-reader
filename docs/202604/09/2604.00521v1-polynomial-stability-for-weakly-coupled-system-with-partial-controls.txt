@@ -1,0 +1,2356 @@
+Title: Polynomial Stability for Weakly Coupled System with Partial Controls
+
+URL Source: https://arxiv.org/pdf/2604.00521v1
+
+Published Time: Thu, 02 Apr 2026 00:41:53 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+POLYNOMIAL STABILITY FOR WEAKLY COUPLED SYSTEM WITH PARTIAL CONTROLS ∗
+
+BOPENG RAO † AND QIONG ZHANG ‡
+
+Abstract. We study the stability of general weakly coupled systems subject to a reduced number of local or boundary controls. We show that, under Kalman’s rank condition, the exponential stability of the underlying scalar equation implies polynomial stability of the full coupled system. Moreover, the decay rate remains unchanged regardless of the number of equations in the system. The proof relies on resolvent estimates and a clever exploitation of Kalman’s rank condition to ensure effective transmission of damping across the coupled equations. The abstract result is applied to several concrete models, including systems of wave equations with local viscous, local viscoelastic, or boundary damping; systems of plate equations with internal damping; and thermoelastic systems of type III. Moreover, the optimality of the decay rate is established via spectral analysis. 
+
+Keywords. coupled partial differential equations, control, stability, Kalman’s rank conditions 
+
+MSC (2010) : 35B65, 35E99, 35K90, 35L90, 47D03, 93B07, 93D05 
+
+1. Introduction and the main result. Let H1 ⊂ H0 be two separable Hilbert spaces equipped with the inner products ⟨⟨· , ·⟩⟩ H0 and ⟨⟨· , ·⟩⟩ H1 , respectively. We assume that the embeddings H1 ⊂ H0 are dense and compact. Taking H0 as the pivot space, we denote by H−1 the dual of H1. In particular, the canonical duality pairing between H−1 and H1 satisfies 
+
+⟨⟨ ϕ, ψ ⟩⟩ H−1;H1 = ⟨⟨ ϕ, ψ ⟩⟩ H0 , ∀ψ ∈ H1, ϕ ∈ H0.
+
+Define L : H1 → H−1 as the duality mapping 
+
+⟨⟨ Lϕ, ψ ⟩⟩ H−1;H1 = ⟨⟨ ϕ, ψ ⟩⟩ H1 , ∀ ϕ, ψ ∈ H1. (1.1) Let g : H1 → Z ⊆ H−1 be a bounded linear operator into another Hilbert space Z, with adjoint operator g∗
+
+defined by 
+
+⟨⟨ g∗gϕ, ψ ⟩⟩ H−1;H1 = ⟨⟨ gϕ, gψ ⟩⟩ Z , ∀ ϕ, ψ ∈ H1. (1.2) We consider the scalar evolution equation with λ ⩾ 0: 
+
+( u′′ + Lu + λu + g∗gu ′ = 0 , t > 0
+
+u(0) = u0, u′(0) = u1, (1.3) where “ ′ ” denotes the time derivative. Assume that the initial data ( u0, u 1) ∈ H1 × H0. Since the damping operator g∗g is non-negative, this abstract formulation encompasses a wide variety of partial differential equations, including models with global, local, or boundary damping, as well as coupled systems such as thermoelastic models. Well-posedness of such systems follows from standard arguments (see [22]). Moreover, we assume that the system (1.3) is exponentially stable, i.e., there exists positive constants M, ω 
+
+such that the solution satisfies 
+
+∥(u(t), u ′(t)) ∥H1×H0 ⩽ M e −ωt ∥(u0, u 1)∥H1×H0 , t > 0.
+
+We analyze the stability of weakly coupled systems consisting of N scalar equations of the form described above, where the coupling occurs through the displacement terms and controls are applied to only a subset of the state components: The stabilization and control of coupled systems is a fundamental problem in control theory. In finite-dimensional systems, the classical Kalman’s rank condition ensures exponential stability with arbitrary decay rates. For infinite-dimensional systems, however, the situation is more subtle. This paper introduces a systematic methodology that combines known exponential stability for scalar PDE with algebraic arguments to achieve polynomial stability for weakly coupled systems with a reduced number of controls. Our framework provides a 
+
+> ∗
+
+This work is supported by the National Natural Science Foundation of China (grants No. 12271035, 12131008) and Hebei Natural Science Foundation (grant No. A2025105012). 
+
+> †
+
+Institut de Recherche Math´ ematique Avanc´ ee, Universit´ e de Strasbourg, Strasbourg 67084, France (email: bopeng.rao@math.unistra.fr). 
+
+> ‡
+
+Corresponding Author. School of Mathematics and Statistics, Beijing Key Laboratory on MCAACI, Beijing Institute of Technology, Beijing 100081, China (email: zhangqiong@bit.edu.cn) 1
+
+> arXiv:2604.00521v1 [math.OC] 1 Apr 2026
+
+simple criterion to verify polynomial stability in a broad class of coupled PDEs, including coupled hyperbolic PDEs with local or boundary controls, coupled plate equations with local or boundary controls, and coupled thermo-elastic systems. In the most cases, the obtained polynomial decay rates are sharp. This problem has a long history. Russell [43], inspired by thermo-elastic systems, introduced an abstract framework for indirectly damped systems, in which the damping arises from the thermal conduction, that may follow Fourier’s law, Cattaneo’s law or the Gurtin-Pipkin’s law. His work showed that damping applied to one component of the state can be transmitted to others through coupling, thereby stabilizing the entire system. Since then, many works have sought conditions under which damping and coupling operators guarantee system stabilization, yielding results ranging from exponential to polynomial decay (see, e.g., [11, 18, 19]). A related direction concerns the stabilization of coupled systems using a reduced number of controls, where the key goal is to determine the minimal set of equations requiring actuation. For instance, coupled wave-wave models with control applied to a single equation have been studied in [34], where weak coupling leads to polynomial decay. In contrast, strong coupling yields exponential stability, as shown in [3]. In [2, 17], the authors introduced an abstract framework for weakly coupled systems of two second-order evolution equations and analyzed their polynomial stability. Their results apply to classical coupled models-such as wave-wave, wave-Petrovsky, and Petrovsky-Petrovsky systems with single internal or boundary damping. Further contributions on controllability and synchronization can be found in [13, 14, 29, 38, 44, 28] and references therein, while more recent works extend these results to nonlinear, degenerate, or star-shaped systems [1, 25, 35]. For PDE models such as wave and plate equations, stabilization via local or boundary damping has been well studied under the geometric control condition (see, e.g.,[4, 23, 24]). Furthermore, for abstract systems governed by a single equation with global damping, stability and regularity properties have been thoroughly investigated (see, e.g., [8, 9, 12, 36]). However, for abstract systems with local damping, the corresponding theory remains less developed. Existing approaches (e.g., [7, 8, 22]) establish exponential or polynomial stability by carefully analyzing the damping operator on eigenspaces. In this work, we introduce a general framework to study weakly coupled PDE systems with partial local or boundary damping. Our aim is to characterize how the algebraic structures of the coupling and control terms influence system stabilization and decay rates. By introducing a Kalman’s rank condition to ensure sufficient coupling strength, and assuming the control can exponentially stabilizing the corresponding scalar problem, we establish polynomial stability for the full coupled system. Our approach combines PDE stability theory with algebraic arguments, providing a simple and effective criterion. We apply our main results on coupled wave equations with local or boundary damping, coupled plate equations with internal damping, and coupled thermoelastic systems. For specific cases, the optimality of the decay rates is confirmed using spectral analysis. The remainder of the paper is organized as follows. Section 2 states the main results and recalls basic properties of the Kalman’s rank condition. Section 3 contains the proofs. Section 4 applies the abstract results to several PDE models, including coupled wave, plate, and thermoelastic systems. Section 5 establishes the sharpness of the results and discusses directions for future research. 
+
+2. Polynomial stability and preliminaries. In what follows, we consider coupled systems composed of scalar equations of the form (1.3). Let H0, Z, H1 denote the product spaces associated with H0, H 1, Z ,respectively: 
+
+H0 = ( H0)N , H1 = ( H1)N , Z = ZN . (2.1) For a vector U = ( u(1) , . . . , u (N ))T , we define the vector-value operators L and G as 
+
+LU =
+
+
+
+Lu (1) 
+
+...
+
+Lu (N )
+
+ , GU =
+
+
+
+gu (1) 
+
+...
+
+gu (N )
+
+ . (2.2) We consider the following second-order evolution system: 
+
+( U ′′ + LU + AU + DG∗GU ′ = 0 , t > 0,U (0) = U0, U ′(0) = U1, (2.3) where the initial data ( U0, U 1) ∈ H 1 × H 0, and the matrices A = ( aij )N and D = ( dij )N are symmetric positive semi-definite, representing the coupling matrix and the control matrix, respectively. Define the linear operator A by 
+
+A(U, V ) = ( V, −L U − AU − DG∗GV ) (2.4) with domain 
+
+D(A) = (U, V ) ∈ H 1 × H 1 : LU + AU + DG∗GV ∈ H 0 . (2.5) 
+
+> 2
+
+Then system (2.3) can be rewritten in the abstract form: 
+
+( (U, U ′)′ = A(U, U ′), t > 0,
+
+(U (0) , U ′(0)) = ( U0, U 1) ∈ H 1 × H 0. (2.6) Due to the presence of the coupling term AU , system (2.3) may be referred to as a weakly coupled system, particularly in contrast to systems with velocity or higher-order coupling. It is clear that the rank of D determines the number of effective controls. It is known that system (2.3) is not exponentially stable when rank( D) < N 
+
+(see [26, 35]). This is to be expected, since in this case the number of controls is reduced relative to the number of state components. Our goal is to analyze the polynomial stability properties of the system under certain assumptions on the matrices A and D. We thus introduce the following Kalman’s rank condition ([28]) rank( D, AD, . . . , A N −1D) = N. (2.7) The following result gives the polynomial stability of the coupled system (2.3). 
+
+Theorem 2.1. Assume that the following conditions hold: 
+
+(i) Let A and D be symmetric and positive semi-definite matrices. Assume that A, D satisfy the Kalman’s rank condition (2.7) and ∥AD − DA ∥ is sufficiently small; 
+
+(ii) The scalar problem (1.3) is exponentially stable in the space H1 × H0;
+
+(iii) For any function u ∈ H1, the following regularity condition holds: 
+
+∥gu ∥Z ⩽ c∥u∥rH1 ∥u∥1−rH0 , 0 ⩽ r ⩽ 1. (2.8) 
+
+Then there exists a constant M > 0, such that for any initial data (U0, U 1) ∈ D(A), the solution U to system 
+
+(2.3) satisfies the following polynomial decay estimate: 
+
+∥(U, U ′)∥H1×H 0 ⩽ Mt1/2(1+ r) ∥(U0, U 1)∥D(A), t ⩾ 1. (2.9) 
+
+Remark 2.1. Several remarks are in order: 
+
+(i) Theorem 2.1 can be interpreted as follows: under suitable assumptions, the uniform stability of the scalar equation (1.3) implies the polynomial stability of the coupled system (2.3) . This result provides a simple and effective approach to a problem that is otherwise difficult-namely, establishing the polynomial stability of a system consisting of N coupled partial differential equations. 
+
+(ii) An important feature of the Kalman’s rank condition (2.7) is that the rank of D can be very small (see Lemma 2.5). Even if only a small subset of equations is directly damped, the coupled system (2.3) still enjoys a polynomial decay of the total energy. Moreover, this decay rate is independent of the number 
+
+N of equations, depending instead on the regularity properties of the damping operator. This is a typical characteristic of polynomial stability (see [20, 41]). 
+
+(iii) As demonstrated in [28, Theorem 8.11], merely satisfying Kalman rank condition (2.7) is insufficient to guarantee the uniqueness of (3.7) . If A and D commute, Kalman rank condition yields rank( D) = N ,and consequently, by Holmgren’s uniqueness theorem, the uniqueness of (3.7) follows. However, this is of little significance, as we desire rank( D) to take a small value. Instead of AD − DA = 0 , we require that ∥AD − DA ∥ is sufficiently small. In this case, there exist matrices bA and bD that commute and are respectively close to A and D and the matrices A and D are termed ”almost commutative” [42]. Furthermore, the rank of D in the Kalman rank condition (2.7) can be very small, which is what we hope for. Therefore, the smallness of ∥AD − DA ∥ appears to be a natural and appropriate complement to Kalman rank condition (2.7) to guarantee the uniqueness of (3.7) .
+
+(iv) The class of damping operators g ∈ C(H1, Z ) considered here covers a broad range of mechanisms, in-cluding viscous damping, Kelvin-Voigt damping, boundary damping, and type III thermoelastic damping. 
+
+(v) As mentioned in Section 1, since the introduction of the concept of indirect stabilization by Russell [43], a substantial body of work has been devoted to the polynomial stability of indirectly damped systems. However, relatively few studies have addressed such problems for systems consisting of N PDEs with local or boundary damping. Furthermore, our framework can also be applied to analyze the long time behavior of the coupled system of N thermoelastic equations (4.36). 
+
+> 3
+
+(vi) As will be shown in Section 5, the optimality of the decay rate in (2.9) can be established for several special cases, including the weakly coupled wave system with viscous, viscoelastic, or boundary damping in one-dimention. 
+
+To prove Theorem 2.1, we shall use the following result, which characterizes the polynomial energy decay rate of a C0-semigroup of contractions in terms of the growth of the resolvent of its infinitesimal generator on the imaginary axis. 
+
+Lemma 2.1. ([5, 33]) Let A generate a bounded C0-semigroup etA on Hilbert space H. Assume that 
+
+i R ⊂ ρ(A). (2.10) 
+
+Then the semigroup etA decays polynomially at a rate of order θ, i.e., there exists a constant M > 0, independent of U , such that 
+
+∥eAtU ∥H ⩽ Mtθ ∥U ∥D(A), ∀ t ⩾ 1, (2.11) 
+
+if and only if 
+
+lim  
+
+> λ∈R,|λ|→ +∞
+
+|λ|−1/θ ∥(i λI − A )−1∥ < +∞. (2.12) The next result is frequently used to determine the optimal decay rate for a C0-semigroup. 
+
+Lemma 2.2. ([37]) Let (βn)n⩾1 be a sequence of eigenvalues of A such that 
+
+Re (βn) ∼ − 1
+
+|Im (βn)|1/θ , θ > 0. (2.13) 
+
+Then, the decay rate of the semigroup etA cannot exceed O(t−θ ).
+
+The Kalman’s rank condition (2.7) characterizes the coupling structure in system (2.3) and is of central importance in the analysis of control and synchronization for distributed parameter systems (see, for instance, [28] and the references therein). For the convenience of the reader, we briefly review key aspects of the Kalman’s rank condition below and refer to [28] for a more comprehensive treatment and applications. We first recall a fundamental property of the Kalman’s rank condition. 
+
+Lemma 2.3. ([26, Lemma 2.5]) Let A, D be symmetrical matrices of order N . Then Kalman’s rank condition 
+
+rank( D, AD, . . . , A N −1D) = N − p (2.14) 
+
+holds if and only if p is the dimension of the largest A-invariant subspace contained in Ker( D).
+
+Since A is symmetric and positive semidefinite, there exists an orthogonal matrix P such that P AP −1 is diagonal. Under the change of variables eU = P U , system (2.3) preserves its structure, and Kalman’s condition (2.7) remains unchanged, since it is invariant under orthogonal transformations. Therefore, without loss of generality, we may assume that A is diagonal of the form 
+
+A = diag (
+
+> σ1
+
+z }| {
+
+λ1, . . . , λ 1, · · · . . . , 
+
+> σm
+
+z }| {
+
+λm, . . . , λ m), (2.15) where each λl ⩾ 0 is an eigenvalue of A with multiplicity σl (l = 1 , . . . , m ). Define 
+
+μ0 = 0 , μl = μl−1 + σl, l = 1 , . . . , m 
+
+and write the matrix D as 
+
+D = ( d1, . . . , d μ1 , . . . . . . , d μm−1+1 , . . . , d μm ),
+
+where di ∈ RN denotes the i-th column vector of D.The next result relates the structure of D to that of A.
+
+Lemma 2.4. ([28]) Kalman’s rank condition (2.7) holds if and only if for each 1 ⩽ l ⩽ m, the set of column vectors {dμl−1+1 , . . . , d μl } is linearly independent. 
+
+The following result further clarifies the dependence of rank( D) on the structure of matrix A under the Kalman’s rank condition (2.7). In particular, if A has distinct eigenvalues, it is possible to choose D such that rank( D) = 1. 
+
+Lemma 2.5. ([28]) Assume that in (2.15) the multiplicities satisfy 
+
+σ1 ⩾ . . . ⩾ σm > 0.
+
+> 4
+
+Then there exists a symmetrical positive semi-definite matrix D such that rank( D) = σ1 and the Kalman’s rank condition (2.7) holds. 
+
+Finally, we recall a basic property related to the Kalman’s rank condition. 
+
+Lemma 2.6. ([28]) Let 
+
+Dl = ( dμl−1+1 , . . . , d μl ), D = ( D1, . . . , D m), (2.16) 
+
+and 
+
+Ul =
+
+
+
+u(μl−1+1) 
+
+...
+
+u(μl)
+
+ , U =
+
+
+
+U1
+
+...
+
+Um
+
+ . (2.17) 
+
+Assume that the Kalman’s rank condition (2.7) holds. Then 
+
+c∥U ∥2 
+
+> RN
+
+⩽ ∥DU ∥2 
+
+> RN
+
+− X 
+
+> k̸=l
+
+⟨DlUl, D k Uk ⟩RN (2.18) 
+
+where ⟨· , ·⟩ RN denotes the standard inner product in RN and c = min {σl : l = 1 , · · · , m }.Proof . From 
+
+DU =
+
+> m
+
+X
+
+> l=1
+
+DlUl, (2.19) we obtain 
+
+∥DU ∥2 
+
+> RN
+
+=
+
+> m
+
+X
+
+> l=1
+
+∥DlUl∥2 
+
+> RN
+
++ X 
+
+> k̸=l
+
+⟨DlUl, D k Uk ⟩RN . (2.20) By Lemma 2.4, the vectors dμl−1+1 , . . . , d μl are linearly independent. Hence, the matrix DTl Dl is symmetric positive definite. Thus, there exists c > 0 such that 
+
+> m
+
+X
+
+> l=1
+
+∥DlUl∥2 
+
+> RN
+
+=
+
+> m
+
+X
+
+> l=1
+
+⟨Ul, D Tl DlUl⟩Rσl ⩾ c
+
+> m
+
+X
+
+> l=1
+
+∥Ul∥2 
+
+> Rσl
+
+= c∥U ∥2 
+
+> RN
+
+.
+
+Combining this with (2.20) yields (2.18). 
+
+3. Proof of the main result. In this section, we prove the polynomial stability of system (2.3). We begin by defining the energy space H1 × H 0 equipped with the inner product 
+
+⟨⟨ (U, V ), ( bU , bV )⟩⟩ H1×H 0 = ⟨⟨ U, bU ⟩⟩ H1 + ⟨⟨ AU, bU ⟩⟩ H0 + ⟨⟨ V, bV ⟩⟩ H0 , (3.1) where U =  u(1) , · · · , u (N )T ∈ H 1 and V =  v(1) , · · · , v (N )T ∈ H 0, respectively, bU =  bu(1) , · · · , bu(N )T ∈ H 1
+
+and bV =  bv(1) , · · · , bv(N )T ∈ H 0.We first give the well-posedness of system (2.3). 
+
+Proposition 3.1. The operator A generates a C0 semigroup of contractions on the space H1 ×H 0. Moreover, 
+
+0 ∈ ρ(A), and if g is compact from H1 into Z, then A−1 is compact on H1 × H 0.Proof . For any ( U, V ) ∈ D(A), using the norm defined in (3.1) we compute 
+
+Re ⟨⟨A (U, V ), (U, V )⟩⟩ H1×H 0
+
+= Re  ⟨⟨ V, U ⟩⟩ H1 + ⟨⟨ AV, U ⟩⟩ H0 + ⟨⟨−L U − AU − DG∗GV, V ⟩⟩ H0
+
+
+
+= −⟨⟨ DGV, GV ⟩⟩ Z ⩽ 0.
+
+(3.2) Hence A is dissipative. Next, for any ( F, G ) ∈ H 1 × H 0, consider the equation A(U, V ) = ( F, G ), which is equivalent to 
+
+V = F ∈ H 1,
+
+−L U − AU − DG∗GV = G ∈ H 0. (3.3) 
+
+5Taking the inner product of the second equation in (3.3) with U in H0 and using the first equation, we obtain 
+
+⟨⟨L U + AU, U ⟩⟩ H−1;H1 = −⟨⟨ DG∗GF + G, U ⟩⟩ H−1;H1 . (3.4) This admits a unique solution U ∈ H 1. Together with (3.3), it follows that ( U, V ) ∈ D(A) and therefore 0 ∈ ρ(A). If g is compact from H1 to Z, then the mapping (F, G ) → (U, V ) = (( L + A)−1(−DG∗GF − G), F )is compact on H1 × H 0, which implies the compactness of A−1.
+
+Proposition 3.2. Suppose that conditions (i) and (ii) in Theorem 2.1 are satisfied. Then 
+
+iR ⊂ ρ(A). (3.5) 
+
+Proof . (i) Let ( U, V ) be an eigenvector of A associated with a pure imaginary eigenvalue iβ , i.e., 
+
+(
+
+iβU = V in H1,iβV = −L U − AU − DG∗GV in H0. (3.6) Eliminating V in (3.6) gives 
+
+β2U − L U − AU − iβD G∗GU = 0 .
+
+Since L is symmetric and β̸ = 0, we deduce 
+
+β2U − L U − AU = 0 and DG∗GU = 0 . (3.7) Noting the diagonal form of A in (2.15), we obtain that each component u(i) satisfies 
+
+β2u(i) − Lu (i) − λk u(i) = 0 , i = μk−1 + 1 , . . . , μ k , k = 1 , . . . , m. (3.8) For i = μk−1 + 1 , . . . , μ k , j = μl−1 + 1 , . . . , μ l, k ̸ = l, taking the inner product of i-th equation with u(j), j-th equation with u(i), and then subtracting shows (λk − λl)⟨⟨ u(i), u (j)⟩⟩ H0 = 0 . (3.9) Let Dl and Ul be defined by (2.16) and (2.17). Then 
+
+⟨⟨ Dk Uk , D lUl⟩⟩ H0 = 0 (3.10) By Lemma 2.6, 
+
+∥U ∥2 
+
+> H0
+
+⩽ c∥DU ∥2 
+
+> H0
+
+. (3.11) Now multiplying (3.6) by D yields 
+
+
+
+iβDU − DV = 0 in H1,iβDV + LDU + ADU + G∗GDV = ( AD − DA )V in H0.
+
+(3.12) Let us write 
+
+DU = ( bu1, · · · , buN ), DV = ( bv1, · · · , bvN ), (AD − DA )V = ( bf1, · · · , bfN ). (3.13) Noting the diagonal form of A in (2.15), we split the abstract system (3.12) by component for 1 ⩽ i ⩽ N :
+
+(
+
+iβ bui − bvi = 0 in H1,iβ bvi + Lbui + λi bui + g∗gbvi = bfi in H0. (3.14) Then applying the estimate (3.26), we deduce 
+
+∥bui∥2 
+
+> H1
+
++ ∥bvi∥2 
+
+> H0
+
+⩽ c∥ bfi∥2 
+
+> H0
+
+. (3.15) Noting (3.13) and taking the sum of (3.15) for 1 ⩽ i ⩽ N , we get 
+
+∥DU ∥2 
+
+> H1
+
++ ∥DV ∥2 
+
+> H0
+
+⩽ c′∥AD − DA ∥2∥V ∥2 
+
+> H0
+
+. (3.16) With (3.11) remaining valid for V , this gives 
+
+∥V ∥2 
+
+> H0
+
+⩽ c∥DA − AD ∥2∥V ∥2 
+
+> H0
+
+. (3.17) 
+
+6When ∥AD − DA ∥ is sufficiently small, we get U = V = 0. Hence A has no eigenvalues on iR.(ii) Let ( F, G ) ∈ H 1 × H 0. We look for ( U, V ) ∈ D(A) solving (iβI − A )( U, V ) = ( F, G ), (3.18) i.e., 
+
+iβU − V = F, iβV + LU + AU + DG∗GV = G. (3.19) Eliminating V yields 
+
+V = iβU − F, (3.20) 
+
+−β2U + LU + AU + iβD G∗GU = G + iβF + DG∗GG. (3.21) Define the linear operator A0 : H1 → H −1 by 
+
+A0U = LU + AU + iβD G∗GU. (3.22) By the Lax-Milgram’s Lemma [6], A0 is a continuous isomorphism from H1 onto H−1. Equation (3.21) rewrites as (I − β2A−10 )U = A−10 (G + iβF + DG∗GG). (3.23) If U ∈ Ker( I − β2A−10 ), then 
+
+β2U = LU + AU + iβD G∗GU. (3.24) Setting V = iβU gives again system (3.6), whose uniqueness implies U = 0. Thus Ker( I − β2A−10 ) = {0}.
+
+Furthermore, noting that A0 is a continuous isomorphism from H1 onto H−1. Due to the compact embedding (2.4), A−10 is compact from H−1 onto H1. Fredholm’s alternative ([6]) implies that (3.23) has a unique solution 
+
+U ∈ H0. Setting V by (3.20), we obtain a unique ( U, V ) solving (3.18). The proof is complete. 
+
+Proposition 3.3. Assume that the corresponding scalar problem (1.3) is exponentially stable in H1 × H0.Then there exists a constant c > 0, such that for all β ∈ R and (f1, f 0) ∈ H1 × H0, the solution (u, v ) to the system (
+
+iβu − v = f1 in H1,iβv + Lu + λu + g∗gv = f0 in H0
+
+(3.25) 
+
+satisfies the estimate 
+
+∥u∥2 
+
+> H1
+
++ ∥v∥2 
+
+> H0
+
+⩽ c(∥f1∥2 
+
+> H1
+
++ ∥f0∥2 
+
+> H0
+
+). (3.26) 
+
+Proof . By the classic theory on semi-groups (see [21, 40]), the resolvent of the infinitesimal generator 
+
+eA(u, v ) = ( v, −Lu − λu − g∗gv ) (3.27) is uniformly bounded on the imaginary axis: sup 
+
+> β∈R
+
+∥(iβI − eA)−1∥ ⩽ c < +∞.
+
+Writing (iβI − eA)( u, v ) = ( f1, f 0),
+
+we immediately obtain the estimate (3.26). 
+
+Remark 3.1. Before giving the proof of the main theorem 2.1, we recall some algebraic preliminaries. Let 
+
+p1, p 2, . . . , p N be an orthonormal basis of RN . Let 
+
+0 < δ 1 ⩽ . . . ⩽ δd
+
+such that 
+
+Dp j = δj pj , j = 1 , . . . , d and Dp j = 0 , j = d + 1 , . . . , N. 
+
+Define 
+
+M =
+
+ cM 00 0
+
+ 
+
+> N×N
+
+and cM =
+
+
+
+δ1
+
+. . .
+
+δd
+
+
+
+> d×d
+
+.
+
+Setting P = ( p1, p 2, . . . , p N ) such that D = P M P T , we write 
+
+P = ( bP , eP ) with bP = ( p1, . . . , p d) and eP = ( pd+1 , . . . , d N ).
+
+> 7
+
+For U = ( u(1) , . . . , u (N ))T , we have 
+
+P T U = bP T U
+
+eP T U
+
+!
+
+= bU
+
+eU
+
+!
+
+.
+
+Then, 
+
+DU = P M P T U = P
+
+ cM 00 0
+
+ bU
+
+eU
+
+!
+
+= P
+
+ cM bU
+
+0
+
+
+
+,
+
+which implies 
+
+∥DU ∥2 
+
+> RN
+
+= ∥ cM bU ∥2 
+
+> Rd
+
+⩽ δ2 
+
+> d
+
+∥ bU ∥2 
+
+> Rd
+
+. (3.28) We now turn to the proof of Theorem 2.1, which relies on the characterization in Lemma 2.1. 
+
+Proof of Theorem 2.1. The condition (2.10) follows directly from Proposition 3.2. Suppose, by contradiction, that (2.12) fails with θ = 1 /2(1 + r). By the uniform boundedness theorem, there exists a sequence of {βn} ∈ R
+
+with βn → +∞ (assume βn > 0 without loss of generality) and a sequence of elements ( Un, V n) ∈ D(A) such that 
+
+∥(Un, V n)∥H1×H 0 = 1 , n ⩾ 1 (3.29) and lim  
+
+> βn→+∞
+
+β2(1+ r) 
+
+> n
+
+∥(iβ nI − A )( Un, V n)∥H1×H 0 = 0 . (3.30) We shall show that ∥(Un, V n)∥H1×H 0 = o(1), which contradicts (3.29). For clarity, the proof is divided into several steps. (i) Since Wn = ( Un, V n) is bounded in H1 × H 0, it follows from (3.30) that 
+
+β2(1+ r) 
+
+> n
+
+⟨⟨ iβ nWn − A Wn, W n⟩⟩ H1×H 0
+
+= β2(1+ r)
+
+> n
+
+ iβ n∥Wn∥2 
+
+> H1×H 0
+
+− ⟨⟨A Wn, W n⟩⟩ H1×H 0
+
+ = o(1) .
+
+Using (3.2), we deduce 
+
+⟨⟨ DGVn, GVn⟩⟩ Z = o(1) 
+
+β2(1+ r)
+
+> n
+
+, (3.31) namely, 
+
+∥DGVn∥Z = o(1) 
+
+β1+ rn
+
+. (3.32) (ii) We rewrite (3.30) as 
+
+
+
+β2(1+ r) 
+
+> n
+
+(iβ nUn − Vn) = Fn → 0 in H1,β2(1+ r) 
+
+> n
+
+(iβ nVn + LUn + AU n + DG∗GVn) = Gn → 0 in H0.
+
+(3.33) From the first equation in (3.33) 
+
+Vn = iβ nUn − Fn
+
+β2(1+ r)
+
+> n
+
+in H1. (3.34) Combining this with (3.29) yields 
+
+∥Un∥H1 = O(1) , ∥Un∥H0 = O(1) 
+
+βn
+
+. (3.35) Therefore, due to the regularity assumption (2.8) together with (3.35), we conclude 
+
+∥G Un∥Z ⩽ c∥Un∥r 
+
+> H1
+
+∥Un∥1−r 
+
+> H0
+
+= O(1) 
+
+β1−rn
+
+, 0 ⩽ r ⩽ 1. (3.36) Eliminating Vn in (3.33) gives 
+
+β2
+
+> n
+
+Un − L Un − AU n − DG∗GVn = − Gn
+
+β2(1+ r)
+
+> n
+
+− iF n
+
+β1+2 rn
+
+. (3.37) Taking the inner product of (3.37) with Un in H0 and using (3.35), we obtain 
+
+β2
+
+> n
+
+⟨⟨ Un, U n⟩⟩ H0 − ⟨⟨L Un + DG∗GVn, U n⟩⟩ H0 − ⟨⟨ AU n, U n⟩⟩ H0 = o(1) 
+
+β2(1+ r)
+
+> n
+
+. (3.38) 
+
+8Finally, by (3.32) and (3.36), 
+
+|⟨⟨L Un + DG∗GVn, U n⟩⟩ H0 |
+
+⩽ ⟨⟨L Un, U n⟩⟩ H−1;H1 + |⟨⟨ DG∗GVn, U n⟩⟩ H−1;H1 |
+
+= ⟨⟨ Un, U n⟩⟩ H1 + |⟨⟨ DGVn, GUn⟩⟩ Z |
+
+⩽ ⟨⟨ Un, U n⟩⟩ H1 + o(1) 
+
+β2
+
+> n
+
+.
+
+Then substituting this into (3.38) yields 
+
+∥βnUn∥2 
+
+> H0
+
+− ∥ Un∥2 
+
+> H1
+
+= o(1) 
+
+β2
+
+> n
+
+. (3.39) (iii) Recalling the diagonal form of A in (2.15), we rewrite (3.37) as 
+
+β2
+
+> n
+
+u(i) 
+
+> n
+
+− Lu (i) 
+
+> n
+
+− g∗(DGVn)(i) − λk u(i) 
+
+> n
+
+= o(1) 
+
+β1+2 rn
+
+in H0, (3.40) where i = μk−1 + 1 , . . . , μ k , k = 1 , . . . , m . Here, ( DGVn)(i) denotes the i-th composent of DGVn, and o(1) is a quantity vanishing in H0 as n → ∞ .For i = μk−1 + 1 , . . . , μ k and j = μl−1 + 1 , . . . , μ l with k̸ = l, we take the inner product of the i-th equation in (3.40) with u(j) 
+
+> n
+
+in H0, and of the j-th equation with u(i) 
+
+> n
+
+. Since both terms are of order β−1 
+
+> n
+
+in H0, we obtain 
+
+β2
+
+> n
+
+⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H0 − λk ⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H0 = ⟨⟨ Lu (i) 
+
+> n
+
++ g∗(DGVn)(i), u (j) 
+
+> n
+
+⟩⟩ H0 + o(1) 
+
+β2(1+ r)
+
+> n
+
+, (3.41) and 
+
+β2
+
+> n
+
+⟨⟨ u(j) 
+
+> n
+
+, u (i) 
+
+> n
+
+⟩⟩ H0 − λl⟨⟨ u(j) 
+
+> n
+
+, u (i) 
+
+> n
+
+⟩⟩ H0 = ⟨⟨ Lu (j) 
+
+> n
+
++ g∗(DGVn)(j), u (i) 
+
+> n
+
+⟩⟩ H0 + o(1) 
+
+β2(1+ r)
+
+> n
+
+. (3.42) It is clear that 
+
+⟨⟨ Lu (i) 
+
+> n
+
++ g∗(DGVn)(i), u (j) 
+
+> n
+
+⟩⟩ H0
+
+=⟨⟨ Lu (i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H−1;H1 + ⟨⟨ g∗(DGVn)(i), u (j) 
+
+> n
+
+⟩⟩ H−1;H1
+
+=⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H1 + ⟨⟨ (DGVn)(i), gu (j) 
+
+> n
+
+⟩⟩ Z .
+
+By (3.32) and (3.36), 
+
+⟨⟨ (DGVn)(j), gu (i) 
+
+> n
+
+⟩⟩ Z = o(1) 
+
+β2
+
+> n
+
+.
+
+Substituting these into (3.41)-(3.42), we obtain 
+
+β2
+
+> n
+
+⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H0 − ⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H1 − λk ⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H0 = o(1) 
+
+β2
+
+> n
+
+, (3.43) 
+
+β2
+
+> n
+
+⟨⟨ u(j) 
+
+> n
+
+, u (i) 
+
+> n
+
+⟩⟩ H0 − ⟨⟨ u(j) 
+
+> n
+
+, u (i) 
+
+> n
+
+⟩⟩ H1 − λl⟨⟨ u(j) 
+
+> n
+
+, u (i) 
+
+> n
+
+⟩⟩ H0 = o(1) 
+
+β2
+
+> n
+
+. (3.44) Then, the difference of (3.43) and (3.44) gives (λk − λl)⟨⟨ u(i) 
+
+> n
+
+, u (j) 
+
+> n
+
+⟩⟩ H0 = o(1) 
+
+β2
+
+> n
+
+, k̸ = l. (3.45) For l = 1 , · · · , m , let Dl and Unl be defined by (2.16) and (2.17) respectively. Hence (3.45) implies 
+
+X 
+
+> k̸=l
+
+β2
+
+> n
+
+⟨⟨ DlUnl , D k Unk ⟩⟩ H0 = o(1) .
+
+Therefore, applying Lemma 2.6, we obtain 
+
+∥βnUn∥2 
+
+> H0
+
+⩽ c∥Dβ nUn∥2 
+
+> H0
+
++ o(1) . (3.46) 
+
+9(iv) Multiplying (3.33) by pTj , which is defined in Remark 3.1 and setting 
+
+bu(j) 
+
+> n
+
+= pTj Un, bv(j) 
+
+> n
+
+= pTj Vn, j = 1 , · · · , d, (3.47) we obtain 
+
+iβ n bu(j) 
+
+> n
+
+− bv(j) 
+
+> n
+
+= pTj Fn
+
+β2(1+ r)
+
+> n
+
+,iβ nbv(j) 
+
+> n
+
++ Lbu(j) 
+
+> n
+
++ δj bu(j) 
+
+> n
+
++ g∗gδ j bv(j) 
+
+> n
+
+= pTj (D − A)Un + pTj Gn
+
+β2(1+ r)
+
+> n
+
+.
+
+(3.48) Applying the estimate (3.26), we deduce 
+
+∥bu(j) 
+
+> n
+
+∥2 
+
+> H1
+
++ ∥bv(j) 
+
+> n
+
+∥2 
+
+> H0
+
+⩽ c∥pTj (D − A)Un∥2 
+
+> H0
+
++ o(1) , j = 1 , . . . , d. 
+
+Hence, 
+
+∥ bUn∥2(H1)d + ∥ bVn∥2(H0)d ⩽ c∥D − A∥2∥Un∥2 
+
+> H0
+
++ o(1) .
+
+Using (3.28), we further obtain 1
+
+δ2
+
+> d
+
+∥DV n∥2 
+
+> H0
+
+⩽ c∥D − A∥2∥Un∥2 
+
+> H0
+
++ o(1) . (3.49) Combining this with (3.34) yields 1
+
+δ2
+
+> d
+
+∥βnDU n∥2 
+
+> H0
+
+⩽ c∥D − A∥2∥Un∥2 
+
+> H0
+
++ o(1) . (3.50) Thus, from (3.46) and (3.50), 
+
+∥βnUn∥2 
+
+> H0
+
+⩽ cδ 2 
+
+> d
+
+∥D − A∥2∥Un∥2 
+
+> H0
+
++ o(1) .
+
+Therefore, by (3.35) and the fact that βn → +∞, we conclude that 
+
+∥βnUn∥2 
+
+> H0
+
+= o(1) ,
+
+which, together with (3.39) implies 
+
+∥βnUn∥2 
+
+> H0
+
++ ∥Un∥2 
+
+> H1
+
+= o(1) .
+
+This yields the desired contradiction, completing the proof. □
+
+Remark 3.2. From (3.36) in the above proof, the polynomial estimate in Theorem 2.1 also holds if the regularity assumption (2.8) is replaced by the following condition: 
+
+∥G U ∥Z ⩽ cβ1−rn
+
+ ∥(U, V )∥H1×H 0 + ∥( eF , eG)∥H1×H 0
+
+, 0 ⩽ r ⩽ 1, (3.51) 
+
+where β ∈ R is sufficiently large, and (U, V ), ( eF , eG) ∈ H 1 × H 0 satisfy 
+
+(
+
+iβU − V = eF in H1,iβV + LU + AU + DG∗GV = eG in H0. (3.52) 
+
+4. Examples of application. In this section, we present several examples to illustrate the abstract result. Throughout, we assume that Ω ⊂ Rn is a bounded domain with smooth boundary Γ, and that the matrices A and D satisfy conditions in Theorem 2.1. 
+
+Example 4.1. Coupled wave equations with local viscous damping. 
+
+
+
+U ′′ − ∆U + AU + Dχ ω U ′ = 0 in R+ × Ω,U = 0 on R+ × Γ,U (0) = U0, U ′(0) = U1 in Ω .
+
+(4.1) We set 
+
+Z = H0 = L2(Ω) , H1 = H10 (Ω) , H−1 = H−1(Ω) . (4.2) Multiplying system (4.1) by Φ ∈ (H10 (Ω)) N and integrating by parts, we obtain the variational formulation: 
+
+Z
+
+> Ω
+
+ ⟨U ′′ , Φ⟩ + ⟨∇ U, ∇Φ⟩ + ⟨AU, Φ⟩dx +
+
+Z
+
+> ω
+
+⟨DU ′, Φ⟩dx = 0 , (4.3) 
+
+10 here and hereafter, the symbol ⟨· , ·⟩ denotes the inner product in the Euclidean space Rm with the dimension m
+
+chosen appropriately depending on the context. Define the linear operator L : H10 (Ω) → H−1(Ω) by 
+
+⟨⟨ Lu, ϕ ⟩⟩ H−1(Ω); H10 (Ω) =
+
+Z
+
+> Ω
+
+⟨∇ u, ∇ϕ⟩dx, ∀ u, ϕ ∈ H10 (Ω) . (4.4) The damping operator g = χω I is continuous from H10 (Ω) into L2(Ω) and satisfies 
+
+⟨⟨ g∗gv, ϕ ⟩⟩ H−1(Ω); H10 (Ω) = ⟨⟨ gv, gϕ ⟩⟩ L2(Ω) =
+
+Z
+
+> ω
+
+vϕdx, ∀ v, ϕ ∈ H10 (Ω) .
+
+Then the variational problem (4.3) can be written in the form (2.3). Let A be defined by (2.4)-(2.5) with D(A) = (( H2(Ω)) N ∩ (H10 (Ω)) N ) × (H10 (Ω)) N . By Proposition 3.1, the operator A generates a C 0 semigroup of contractions on ( H10 (Ω)) N × (L2(Ω)) N .
+
+Theorem 4.1. Assume that ω ⊂ Ω is a subdomain containing a neighborhood of the boundary Γ. Assume furthermore that the matrices A and D satisfy Kalman’s rank condition (2.7) and ∥AD −DA ∥ is sufficiently small. Then there exists a constant M > 0 such that, for any initial data (U0, U 1) ∈ D(A), the solution U to system 
+
+(4.1) satisfies the polynomial decay estimate: 
+
+∥(U, U ′)∥(H10 (Ω)) N ×(L2(Ω)) N ⩽ Mt1/2 ∥(U0, U 1)∥(H2(Ω)) N ×(H1(Ω)) N , t > 1. (4.5) 
+
+Proof . The damping operator g = χω I satisfies the regularity condition (2.8) with r = 0: 
+
+∥gu ∥L2(Ω) = ∥u∥L2(ω) ⩽ ∥u∥L2(Ω) .
+
+Moreover, when the subdomain ω contains a neighborhood of Γ, the following problem 
+
+(
+
+u′′ − ∆u + λu + χω u′ = 0 in R+ × Ω,u = 0 on R+ × Γ (4.6) is exponentially stable for any λ ≥ 0 (see [4, 7, 45]). Therefore, by applying Theorem 2.1 with r = 0, we obtain the polynomial decay rate (4.5), whose optimality will be further examined in Example 5.1. 
+
+Example 4.2. Coupled plate equations with local viscous damping. 
+
+
+
+U ′′ + ∆ 2U + AU + Dχ ω U ′ = 0 in R+ × Ω,U = ∂ν U = 0 in R+ × Γ
+
+U (0) = U0, U ′(0) = U1 in Ω .
+
+(4.7) We set 
+
+Z = H0 = L2(Ω) , H1 = H20 (Ω) , H−1 = H−2(Ω) . (4.8) Multiplying system (4.7) by Φ ∈ (H20 (Ω)) N and integrating by parts, we obtain the following variational formu-lation: Z
+
+> Ω
+
+ ⟨U ′′ , Φ⟩ + ⟨∆U, ∆Φ ⟩ + ⟨AU, Φ⟩dx +
+
+Z
+
+> ω
+
+⟨DU ′, Φ⟩dx = 0 . (4.9) Define the linear operator L : H20 (Ω) → H−2(Ω) by 
+
+⟨⟨ Lu, ϕ ⟩⟩ H−2(Ω); H20 (Ω) =
+
+Z
+
+> Ω
+
+⟨∇ u, ∇⟩ ϕdx, ∀ u, ϕ ∈ H20 (Ω) . (4.10) The damping operator g = χω I is continuous from H20 (Ω) into L2(Ω) and satisfies 
+
+⟨⟨ g∗gv, ϕ ⟩⟩ H−2(Ω); H20 (Ω) = ⟨⟨ gv, gϕ ⟩⟩ L2(Ω) =
+
+Z
+
+> ω
+
+vϕdx, ∀ v, ϕ ∈ H20 (Ω) .
+
+Then the variational problem (4.9) can be rewritten in the form (2.3). Let A be defined by (2.4)-(2.5) with D(A) = (( H4(Ω)) N ∩ (H20 (Ω)) N ) × (H20 (Ω)) N . By Proposition 3.1, A
+
+generates a C 0 semigroup of contractions on ( H20 (Ω)) N × (L2(Ω)) N .
+
+Theorem 4.2. Assume that ω ⊂ Ω is a subdomain containing a neighborhood of the boundary Γ. Assume furthermore that the matrices A and D satisfy Kalman’s rank condition (2.7) and ∥AD − DA ∥ is sufficiently 
+
+11 small. Then, there exists a constant M > 0 such that for any given initial data (U0, U 1) ∈ D(A), the solution U
+
+to system (4.7) satisfies the polynomial decay estimate 
+
+∥(U, U ′)∥(H2(Ω)) N ×(L2(Ω)) N ⩽ Mt1/2 ∥(U0, U 1)∥(H4(Ω)) N ×(H2(Ω)) N , t ⩾ 1. (4.11) 
+
+Proof . The damping operator g = χω I satisfies the regularity condition (2.8) with r = 0: 
+
+∥gu ∥L2(Ω) = ∥u∥L2(ω) ⩽ ∥u∥L2(Ω) .
+
+Since the subdomain ω contains a neighborhood of Γ, the following problem 
+
+(
+
+u′′ + ∆ 2u + λu + χω u′ = 0 in R+ × Ω,∂ν u = u = 0 on R+ × Γ (4.12) is uniformly stable for any λ ≥ 0 ([31]). Applying Theorem 2.1 with r = 0 yields the decay estimate (4.11), whose optimality will be further examined in Example 5.1. 
+
+Example 4.3. Coupled wave equations with local Kelvin-Voigt damping. 
+
+
+
+U ′′ − ∆U + AU − adiv( D∇aU ′) = 0 in R+ × Ω,U = 0 on R+ × Γ,U (0) = U0, U ′(0) = U1 in Ω ,
+
+(4.13) 
+
+where a ∈ C2(Ω) is non-negative and its support contains a neighborhood of Γ.
+
+We set 
+
+Z = H1(Ω) , H0 = L2(Ω) , H1 = H10 (Ω) , H−1 = H−1(Ω) . (4.14) Multiplying system (4.13) by Φ ∈ (H10 (Ω)) N and integrating by parts, we obtain the following variational formu-lation: Z
+
+> Ω
+
+ ⟨U ′′ , Φ⟩ + ⟨∇ U, ∇Φ⟩ + ⟨AU, Φ⟩dx +
+
+Z
+
+> Ω
+
+⟨D∇aU ′, ∇aΦ⟩dx = 0 . (4.15) Let the linear operator L be defined as (4.4). The damping operator g = ( −∆) 1/2a is continuous from H10 (Ω) into L2(Ω) and satisfies 
+
+⟨⟨ g∗gv, ϕ ⟩⟩ H−1(Ω); H10 (Ω) = ⟨⟨ gv, gϕ ⟩⟩ L2(Ω) =
+
+Z
+
+> Ω
+
+⟨∇ (av ), ∇(aϕ )⟩dx, ∀ v, ϕ ∈ H10 (Ω) .
+
+The variational problem (4.13) can be written as (2.3). Let A be defined by (2.4)-(2.5) with 
+
+D(A) = {(U, V ) ∈ (H10 (Ω)) N × (H10 (Ω)) N : A(U, V ) ∈ (H10 (Ω)) N × (L2(Ω)) N }.
+
+By Proposition 3.1, A generates a C 0 semigroup of contractions on the space ( H10 (Ω)) N × (L2(Ω)) N .
+
+Theorem 4.3. Assume that the support of the function a contains a neighborhood of the boundary Γ. Assume furthermore that the matrices A and D satisfy Kalman’s rank condition (2.7) and ∥AD −DA ∥ is sufficiently small. Then, there exists a constant M > 0 such that for any given initial data (U0, U 1) ∈ D(A), the solution U to system 
+
+(4.13) has a polynomial decay rate: 
+
+∥(U, U ′)∥(H10 (Ω)) N ×(L2(Ω)) N ⩽ Mt1/4 ∥(U0, U 1)∥(H2(Ω)) N ×(H10 (Ω)) N , t ⩾ 1. (4.16) 
+
+Proof . The operator g = ( −∆) 1/2a satisfies the regularity condition (2.8) with r = 1: 
+
+∥gu ∥L2(Ω) = ∥au ∥H10 (Ω) ⩽ c∥u∥H10 (Ω) . (4.17) On the other hand, when the support of a contains a neighborhood of Γ, the following scalar problem 
+
+(
+
+u′′ − ∆u + λu + adiv( ∇(au ′)) = 0 in R+ × Ω,u = 0 on R+ × Γ (4.18) is uniformly exponentially stable for all λ ≥ 0 (see [32]). Applying Theorem 2.1 with r = 1, we obtain the decay rate (4.16), whose optimality will be proved in Exemple 5.2. 
+
+12 Example 4.4. Coupled wave equations with boundary damping. 
+
+
+
+U ′′ − ∆U + AU = 0 in R+ × Ω,∂ν U + DU ′ = 0 on R+ × Γ,U (0) = U0, U ′(0) = U1 in Ω ,
+
+(4.19) where ν denotes unit outer normal vector on the boundary. Let 
+
+Z = L2(Γ) , H0 =
+
+n
+
+f ∈ L2(Ω) : 
+
+Z
+
+> Ω
+
+f dx = 0 
+
+o
+
+, H1 = H1(Ω) ∩ H0, H−1 = ( H1)′. (4.20) Multiplying system (4.19) by Φ ∈ H 1 and integrating by parts, we obtain the following variational formulation: 
+
+Z
+
+> Ω
+
+ ⟨U ′′ , Φ⟩ + ⟨∇ U, ∇Φ⟩ + ⟨AU, Φ⟩dx +
+
+Z
+
+> Γ
+
+⟨DU ′, Φ⟩dΓ = 0 . (4.21) Let L be a linear operator from H1(Ω) into H−1(Ω) defined by 
+
+⟨⟨ Lu, ϕ ⟩⟩ H−1(Ω); H1(Ω) =
+
+Z
+
+> Ω
+
+⟨∇ u, ∇ϕ⟩dx, ∀ u, ϕ ∈ H1.
+
+and let g = δΓ be the trace operator from H1(Ω) into L2(Γ) such that 
+
+⟨⟨ g∗gv, ϕ ⟩⟩ H−1(Ω); H1(Ω) = ⟨⟨ gv, gϕ ⟩⟩ L2(Γ) =
+
+Z
+
+> Γ
+
+vϕ d Γ, ∀ v, ϕ ∈ H1. (4.22) Then the variational problem (4.21) can be written as (2.3). Let A be defined by (2.4)-(2.5). By Proposition 3.1, the operator A generates a C0 semi-group of contractions on H1 × H 0.
+
+Theorem 4.4. Assume that Ω satisfies the usual geometrical multiplier condition. Assume furthermore that the matrices A and D satisfy Kalman’s rank condition (2.7) and ∥AD − DA ∥ is sufficiently small. Then, there exists a constant M > 0 such that for any given initial data (U0, U 1) ∈ D(A), the solution U to system (4.19) has a polynomial decay rate: 
+
+∥(U, U ′)∥H1×H 0 ⩽ Mt1/3 ∥(U0, U 1)∥D(A), t ≥ 1. (4.23) 
+
+Proof . By Sobolev interpolation theorem, the damping operator g = δΓ satisfies the regularity condition (2.8) with r = 1 /2: 
+
+∥gu ∥L2(Γ) = ∥u∥L2(Γ) ⩽ c∥u∥1/2
+
+> H1(Ω)
+
+∥u∥1/2
+
+> L2(Ω)
+
+. (4.24) On the other hand, when Ω satisfies the geometrical control condition, the following scalar system with λ ⩾ 0: 
+
+(
+
+u′′ − ∆u + λu = 0 in R+ × Ω,∂ν u + u′ = 0 on R+ × Γ (4.25) is exponentially stable (see [23]). We can therefore apply Theorem 2.1 with r = 1 /2 to complete the proof. 
+
+Remark 4.1. Our result improves upon the earlier work in [2], where the decay rate of 1 
+
+> t1/4
+
+was established for two weakly coupled wave equations with a single boundary damping. Moreover, the following result improves further the decay rate (4.23) for one-dimensional problem. 
+
+Example 4.5. One-dimensional coupled wave equations with boundary damping. We now examine in detail the one-dimensional case of (4.19) and refine the decay rate in (4.23) , improving it from 1/t 3 to 1/t 2.
+
+
+
+U ′′ − Uxx + AU = 0 in R+ × (0 , 1) ,U (0) = 0 in R,
+
+Ux(1) + DU ′(1) = 0 in R.
+
+(4.26) Let 
+
+Z = R, H0 = L2(0 , 1) , H1 = {f ∈ H1(0 , 1) : f (0) = 0 }, H−1 = H−1(0 , 1) .
+
+Multiplying system (4.26) by Φ ∈ (H1(0 , 1)) N and integrating by parts, we obtain the following variational formulation: Z 10
+
+ ⟨U ′′ , Φ⟩ + ⟨Ux, Φx⟩ + ⟨AU, Φ⟩dx + ⟨DU ′(1) , Φ(1) ⟩ = 0 . (4.27) 
+
+> 13
+
+Define a linear operator L : H1 → H−1 by 
+
+⟨⟨ Lu, ϕ ⟩⟩ H−1(0 ,1); H1(0 ,1) =
+
+Z 10
+
+uxϕxdx, ∀ u, ϕ ∈ H1.
+
+The Dirac’s mass g = δ1 is continuous from H1(0 , 1) into R, satisfying 
+
+⟨⟨ g∗gv, ϕ ⟩⟩ H−1(0 ,1); H1(0 ,1) = v(1) ϕ(1) . (4.28) Hence, the variational problem (4.27) can be written in the abstract form (2.3). Let A be defined by (2.4)-(2.5). By Proposition 3.1, the operator A generates a C 0 semigroup of contractions on H1 × H 0.
+
+Theorem 4.5. Assume that the matrices A and D satisfy Kalman’s rank condition (2.7) and ∥AD − DA ∥ is sufficiently small. Then, there exists a constant M > 0 such that for any given initial data (U0, U 1) ∈ D(A), the solution U to system (4.26) satisfies the polynomial decay estimate: 
+
+∥(U, U ′)∥(H1(0 ,1)) N ×(L2(0 ,1)) N ⩽ Mt1/2 ∥(U0, U 1)∥(H2(0 ,1)) N ×(H1(0 ,1)) N , t ≥ 1. (4.29) 
+
+Proof . It is known that the following scalar problem is exponentially stable: 
+
+(
+
+u′′ − uxx + λu = 0 in R+ × (0 , 1) , λ ≥ 0,u(0) = 0 , ux(1) + u′(1) = 0 in R+. (4.30) Note that a sharper estimate for the operator G can be obtained with r = 0, even though the regularity condition (2.8) with r = 0, ∥gu ∥Z = |u(1) | ⩽ c∥u∥L2(0 ,1) , does not hold for all functions u ∈ H1(0 , 1). Nevertheless, an estimate based on hidden regularity can be established, and Remark 3.2 can be applied to obtain the desired result. In fact, multiplying two equations in (3.52) by xU x and add the results up, we get 
+
+∥V (1) ∥2 
+
+> RN
+
++ ∥Ux(1) ∥2 
+
+> RN
+
++ ∥A 12 U (1) ∥2
+
+> RN
+
+=
+
+Z 10
+
+(∥V ∥2 
+
+> RN
+
++ ∥Ux∥2 
+
+> RN
+
+− ∥ A 12 U ∥2 
+
+> RN
+
+)dx − 2
+
+Z 10
+
+x(⟨ eFx, V ⟩RN + ⟨ eG, U x⟩RN )dx. 
+
+Substituting iβU − V = eF into the above equality and using the assumption that β is sufficiently large, we conclude that there exists a positive constant c such that 
+
+∥G U ∥Z = ∥U (1) ∥RN ⩽ cβ
+
+ ∥(U, V )∥H1×H 0 + ∥( eF , eG)∥H1×H 0
+
+. (4.31) Then we apply Remark 3.2 with r = 0 to obtain (4.29), whose optimality will be assessed in Example 5.3 later. 
+
+Example 4.6. Coupled systems of thermo-elasticity. The asymptotic behavior the system of thermo-elasticity has been intensively analyzed in recent years. The classical thermo-elasticity model is based on Fourier’s law, where the heat flux is proportional to the gradient of temperature. In this case, a sudden temperature change at one point propagates instantaneously throughout the medium, which is physically unrealistic. To address this issue, Green and Naghdi introduced the so-called thermo-elasticity model of type III [15, 16], given by 
+
+
+
+w′′ − μ∆w − (λ + μ)∇div ( w) + ∇θ′ = 0 in R+ × Ω,θ′′ − ∆θ′ − ∆θ + div ( w′) = 0 in R+ × Ω,w = 0 , θ = 0 on R+ × Γ,
+
+(4.32) where w = ( w1, w 2, w 3)T represents the displacement and θ denotes the temperature. For any given test function ϕ = ( ϕ1, ϕ 2, ϕ 3)T ∈ (H10 (Ω)) 3 and η ∈ H10 (Ω), we have the following variational formulation 
+
+Z
+
+> Ω
+
+(⟨w′′ , ϕ ⟩ + μ⟨∇ w, ∇ϕ⟩ + div( w) × div( ϕ) + ⟨∇ θ′, ϕ ⟩)dx = 0 ,
+
+Z
+
+> Ω
+
+(θ′′ η + ⟨∇ θ, ∇η⟩ + ⟨∇ θ′, ∇η⟩ + div( w′) × η)dx = 0 ,
+
+(4.33) Let 
+
+u =
+
+
+
+w1
+
+w2
+
+w3
+
+θ
+
+ , φ =
+
+
+
+ϕ1
+
+ϕ2
+
+ϕ3
+
+η
+
+ ,
+
+14 and 
+
+H0 = ( L2(Ω)) 4, H1 = ( H10 (Ω)) 4, H−1 = ( H−1(Ω)) 4.
+
+Define the linear mapping L from H1 onto H−1 by 
+
+⟨⟨ Lu, φ ⟩⟩ H1,H −1 =
+
+Z
+
+> Ω
+
+(μ⟨∇ w, ∇ϕ⟩ + div( w) × div( ϕ) + ⟨∇ θ, ∇η⟩)dx, 
+
+the linear dampings g and g0 from H1 to H0 by 
+
+gu =
+
+ 0(−∆) 1/2θ
+
+
+
+and g0u =
+
+ ∇θ
+
+div( w)
+
+
+
+.
+
+Then we write (4.33) into the following form 
+
+u′′ + Lu + g∗gu ′ + g0u′ = 0 in H−1, (4.34) which is exponentially stable (see [46]) when Ω satisfies the geometry control condition. Now let 
+
+U =
+
+
+
+u(1) 
+
+u(2) 
+
+...
+
+u(N )
+
+ where u(i) =
+
+
+
+w(i)1
+
+w(i)2
+
+w(i)3
+
+θ(i)
+
+ , i = 1 , · · · , N 
+
+Denote by L, G and G0 the vector-value operators of L, g and g0 in the space 
+
+H0 = ( L2(Ω)) 4N , H1 = ( H10 (Ω)) 4N , H−1 = ( H−1(Ω)) 4N .
+
+Construct the enlarged matrices eA and eD by 
+
+eA = ( aij I4), eD = ( dij I4), (4.35) where A = ( aij ) and D = ( dij ) are symmetric and positive semi-definite matrices of order N and I4 is the identity of order 4. We consider the coupled system consisting of N thermo-elastic subsystems (4.34): 
+
+U ′′ + LU + eAU + eDG∗GU ′ + eDG0U ′ = 0 in H−1, (4.36) Due to the specific form of the matrices in (4.35), we have ( eAU )(i) =
+
+> N
+
+X
+
+> j=1
+
+aij u(j), ( eDG∗GU )(i) =
+
+> N
+
+X
+
+> j=1
+
+dij g∗gu (j), ( eDG0U )(i) =
+
+> N
+
+X
+
+> j=1
+
+dij g0u(j), i = 1 , 2, . . . , N. 
+
+In this context, the vector u(j) is treated as a single entity, there is no interaction between the components u(i)
+
+> k
+
+and u(j) 
+
+> l
+
+for k̸ = l, that is, cross-component dependencies are not modeled. On the other hand, we have 
+
+∥gu ∥H0 = ∥θ∥H1(Ω) ⩽ ∥u∥H1 and ∥g0u∥H0 ⩽ ∥u∥H1 .
+
+Therefore, the operators g and g0 are continuous from ( H10 (Ω)) 4 to ( L2(Ω)) 4 and satisfy the regularity condition (2.8) with r = 1. Moreover, it is easy to check that 
+
+⟨⟨ g0u, u ⟩⟩ H0 = 0 , ∀u ∈ H1.
+
+So the coupling term eDG 0U ′ in (4.36) has no impact on the system’s dissipation. Consequently, Theorem 2.1 is still applicable to system (4.36). 
+
+Theorem 4.6. Assume Ω satisfies the geometry control condition. Assume furthermore that the matrices A
+
+and D satisfy Kalman’s rank condition (2.7) and ∥AD − DA ∥ is sufficiently small. Then, there exists a constant 
+
+M > 0 such that for any given initial data (U0, U 1) ∈ D(A), the solution U to system (4.36) satisfies the polynomial decay estimate 
+
+∥(U, U ′)∥(H10 (Ω)) 4N ×(L2(Ω)) 4N ⩽ Mt1/4 ∥(U0, U 1)∥(H2(Ω)) 4N ×(H10 (Ω)) 4N , t ⩾ 1. (4.37) 
+
+15 Proof . Clearly, the smallness of ∥AD − DA ∥ implies that of ∥ eA eD − eD eA∥. We next show that Kalman’s rank condition (2.7) implies rank( eD, eA eD, . . . eA4N −1 eD) = 4 N. 
+
+Otherwise, let eE ∈ R4N given by 
+
+eE =
+
+
+
+E(1) 
+
+...
+
+E(N )
+
+ , where E(i) ∈ R4, i = 1 , . . . , N 
+
+be an eigenvector of eA contained in Ker( eD), namely, 
+
+> N
+
+X
+
+> j=1
+
+aij E(j) = λE (i) and 
+
+> N
+
+X
+
+> j=1
+
+dij E(j) = 0 , i = 1 , . . . , N. (4.38) Let E(k)̸ = 0 for some 1 ⩽ k ⩽ N . By taking a scalar product on (4.38) with E(k), and setting 
+
+xi = ⟨E(k), E (i)⟩, i = 1 , . . . , N, 
+
+we get NX
+
+> j=1
+
+aij xj = λx i and 
+
+> N
+
+X
+
+> j=1
+
+dij xj = 0 , i = 1 , . . . , N. 
+
+Since xk̸ = 0, then x = ( x1, . . . , x N )N ∈ RN would be an eigenvector of A contained in Ker( D). By Lemma 2.3 with p = 0, this contradicts Kalman’s rank condition (2.7). Then applying Theorem 2.1 to system (4.36), we obtain the polynomial decay rate (4.37). Moreover, similarly to the decay rate (4.16) in Theorem 4.3, the decay rate (4.37) is indeed sharp. 
+
+5. Optimality by spectral analysis. 5.1. Optimality. We proceed to analyze the optimality of the results obtained in the previous section by means of spectral analysis. In fact, Lemma 2.2 asserts that the decay rate 1 
+
+> tθ
+
+is optimal whenever the resolvent estimate (2.12) is established and condition (2.13) is fulfilled for at least one branch of the spectrum ([36]). 
+
+Example 5.1. Let 
+
+A =
+
+1 00 2
+
+
+
+, D =
+
+1 22 4
+
+
+
+, U =
+
+uv
+
+
+
+. (5.1) 
+
+We consider a special case of system (4.1) with these matrices. 
+
+
+
+u′′ − ∆u + u + u′ + 2 v′ = 0 in R+ × Ω,v′′ − ∆v + 2 v + 2 u′ + 4 v′ = 0 in R+ × Ω,u = v = 0 on R+ × Γ.
+
+(5.2) It is clear that assumption (i) of Theorem 2.1 is satisfied since det( D) = 0 , rank( D, AD ) = 2 , ∥AD − DA ∥ = 2 . (5.3) Furthermore, the damping operator g = I satisfies the regularity condition (2.8) with r = 0. We now verify that the decay rate O(t−1/2) in (4.5) is in fact optimal. For β ∈ R, consider the corresponding eigenvalue problem: 
+
+
+
+β2u − ∆u + u + βu + 2 βv = 0 in Ω ,β2v − ∆v + 2 v + 2 βu + 4 βv = 0 in Ω ,u = v = 0 on Γ .
+
+(5.4) Let (
+
+−∆ϕ = ν2
+
+> n
+
+ϕ in Ω ,u = v = 0 on Γ . (5.5) Setting 
+
+u = aϕ, v = bϕ (5.6) 
+
+> 16
+
+in (5.4), we obtain (
+
+(β2 + ν2 
+
+> n
+
++ 1 + β)a + 2 bβ = 0 ,
+
+2aβ + ( β2 + ν2 
+
+> n
+
++ 2 + 4 β)b = 0 , (5.7) which admits a nontrivial solution if and only if (β2 + ν2 
+
+> n
+
++ 1 + β)( β2 + ν2 
+
+> n
+
++ 2 + 4 β) − 4β2 = 0 . (5.8) Let z = β2 + ν2
+
+> n
+
+. Equation (5.8) becomes 
+
+z2 + (3 + 5 β)z + (2 + 6 β) = 0 . (5.9) A straightforward calculation yields 2z = −(3 + 5 β) ± (25 β2 + 6 β + 1) 1/2
+
+= −(3 + 5 β) + 5 β
+
+
+
+1 + 625 β + 125 β2
+
+1/2
+
+= − 12 5 + 8125 β + o(1) 
+
+β2 .
+
+It follows that 
+
+βn = iν n
+
+
+
+1 + 65ν2
+
+> n
+
+− 4125 ν2
+
+> n
+
+βn
+
++ o(1) 
+
+β2
+
+> n
+
+ν2
+
+> n
+
+1/2
+
+(5.10) = iν n
+
+
+
+1 + 35ν2
+
+> n
+
+− 2125 ν2
+
+> n
+
+βn
+
++ o(1) 
+
+β2
+
+> n
+
+ν2
+
+> n
+
+
+
+= iν n + 3i
+
+5νn
+
+− 2i
+
+125 νnβn
+
++ o(1) 
+
+β2
+
+> n
+
+νn
+
+.
+
+Substituting 
+
+βn = iν n + o(1) 
+
+νn
+
+into (5.10), we obtain the asymptotic expansion of a branch of eigenvalues: 
+
+βn = i
+
+
+
+νn + 35νn
+
+
+
+− 2125 ν2
+
+> n
+
++ o(1) 
+
+ν2
+
+> n
+
+. (5.11) By Lemma 2.2, the decay rate of system (5.2) cannot exceed O(t−1/2). Thus, the decay rate O(t−1/2) in (4.5), predicted by Theorem 4.1, is indeed optimal. This example confirms also the optimality of the decay rate in (4.11). 
+
+Example 5.2. Consider the following special case of system (4.13) :
+
+
+
+u′′ − ∆u + u − ∆u′ − 2∆ v′ = 0 in R+ × Ω,v′′ − ∆v + 2 v − 2∆ u′ − 4∆ v′ = 0 in R+ × Ω,u = v = 0 on R+ × Γ.
+
+(5.12) It clear the coupling matrix A and damping matrix D are defined by (5.1) and satisfy assumption (i) of Theorem 2.1. The damping operator g = ( −∆) 1/2 satisfies the regularity condition (2.8) with r = 1 by (4.17). We now verify the optimality of the decay rate O(t−1/4) in (4.16). For β ∈ R, consider the eigenvalue problem 
+
+
+
+β2u − ∆u + u − β∆u − 2β∆v = 0 in Ω ,β2v − ∆v + 2 v − 2β∆u − 4β∆v = 0 in Ω ,u = v = 0 on Γ .
+
+(5.13) Let u = aϕ, v = bϕ as in (5.6). Then 
+
+(
+
+(β2 + ν2 
+
+> n
+
++ 1 + βν 2
+
+> n
+
+)a + 2 bβν 2 
+
+> n
+
+= 0 ,
+
+2aβν 2 
+
+> n
+
++ ( β2 + ν2 
+
+> n
+
++ 2 + 4 βν 2
+
+> n
+
+)b = 0 ,
+
+17 which has a nontrivial solution iff (β2 + ν2 
+
+> n
+
++ 1 + βν 2
+
+> n
+
+)( β2 + ν2 
+
+> n
+
++ 2 + 4 βν 2
+
+> n
+
+) − 4β2ν4 
+
+> n
+
+= 0 . (5.14) Let 
+
+z = β2 + ν2
+
+> n
+
+.
+
+Equation (5.14) reduces to 
+
+z2 + (3 + 5 βν 2
+
+> n
+
+)z + (2 + 6 βν 2
+
+> n
+
+) = 0 .
+
+Proceeding as in the analysis of (5.9), we find 2z = −(3 + 5 βν 2
+
+> n
+
+) ± (25 β2ν4 
+
+> n
+
++ 6 βν 2 
+
+> n
+
++ 1) 1/2
+
+= −(3 + 5 βν 2
+
+> n
+
+) ± 5βν 2
+
+> n
+
+
+
+1 + 625 βν 2
+
+> n
+
++ 125 β2ν4
+
+> n
+
+1/2
+
+= − 12 5 + 8125 βν 2
+
+> n
+
++ o(1) 
+
+β2ν2
+
+> n
+
+.
+
+A direct computation gives 
+
+βn = iν n
+
+
+
+1 + 35ν2
+
+> n
+
+− 4125 ν4
+
+> n
+
+βn
+
++ o(1) 
+
+β2
+
+> n
+
+ν4
+
+> n
+
+1/2
+
+(5.15) = iν n
+
+
+
+1 + 35ν2
+
+> n
+
+− 2125 βnν4
+
+> n
+
++ o(1) 
+
+β2
+
+> n
+
+ν4
+
+> n
+
+
+
+= iν n + 3i
+
+5νn
+
+− 2i
+
+125 βnν2
+
+> n
+
++ o(1) 
+
+β2
+
+> n
+
+ν2
+
+> n
+
+.
+
+Substituting 
+
+βn = iν n + o(1) 
+
+νn
+
+into (5.15), we obtain the asymptotic expansion of a branch of eigenvalues: 
+
+βn = i
+
+
+
+νn + 35νn
+
+
+
+− 2125 ν4
+
+> n
+
++ o(1) 
+
+ν5
+
+> n
+
+. (5.16) By Lemma 2.2, the decay rate of system (5.12) cannot exceed O(t−1/4). Hence, the decay rate O(t−1/4) predicted by Theorem 4.3 is sharp. 
+
+Example 5.3. Let 
+
+A =
+
+1 00 0
+
+
+
+, D =
+
+ 1 −1
+
+−1 1
+
+
+
+, U =
+
+uv
+
+
+
+.
+
+Consider the following special case of system (4.19) :
+
+
+
+u′′ − uxx + u = 0 in R+ × (0 , 1) ,v′′ − vxx = 0 in R+ × (0 , 1) ,u(0) = v(0) = 0 in R+,ux(1) + u′(1) − v′(1) = 0 in R+,vx(1) − u′(1) + v′(1) = 0 in R+.
+
+(5.17) It is clear that det( D) = 0 , rank( D, AD ) = 2 , ∥AD − DA ∥ = 1 .
+
+Then assumption (i) of Theorem 2.1 is true. Moreover, by Theorem 4.5, the Dirac mass g = δ1 satisfies the weaker regularity condition (4.31). We now verify the optimality of the decay rate O(t−1/2) in (4.29). For β ∈ R, consider the eigenvalue problem 
+
+
+
+β2u − uxx + u = 0 , 0 < x < 1,β2v − vxx = 0 , 0 < x < 1,u(0) = v(0) = 0 ,ux(1) + β(u(1) − v(1)) = 0 ,vx(1) + β(−u(1) + v(1)) = 0 .
+
+(5.18) 
+
+18 Let 
+
+β1 = pβ2 + 1 , u = a sinh( β1x), v = b sinh( βx ).
+
+The boundary conditions then yield 
+
+(
+
+a(β1 cosh β1 + β sinh β1) − bβ sinh β = 0 ,
+
+−aβ sinh β1 + bβ (sinh β + cosh β) = 0 ,
+
+which admits a nontrivial solution iff 
+
+β1
+
+β cosh( β1)(sinh β + cosh β) + cosh β sinh( β1) = 0 . (5.19) Using 
+
+β1
+
+β = 1 + 12β2 + o(1) 
+
+β4 , β1 = β + 12β + o(1) 
+
+β3 ,
+
+we expand equation (5.19) asymptotically in 1 /β . This yields 
+
+
+
+2 + 12β + 14β2 + o(1) 
+
+β3
+
+
+
+cosh β sinh β +
+
+ 12β + o(1) 
+
+β3
+
+
+
+sinh 2 β +
+
+
+
+1 + 12β + 58β2 + o(1) 
+
+β3
+
+
+
+cosh 2 β = 0 .
+
+Passing to eβ , we obtain 
+
+
+
+3 + 32β + 11 8β2 + o(1) 
+
+β3
+
+
+
+e4β +
+
+
+
+2 + 54β2 + o(1) 
+
+β3
+
+
+
+e2β −
+
+
+
+1 + 18β2
+
+
+
+= o(1) 
+
+β3 .
+
+It follows that 
+
+e2β = −1 + 14β − 516 β2 + o(1) 
+
+β3 .
+
+Then, 2β = ln( −1) + ln 
+
+
+
+1 − 14β + 516 β2 + o(1) 
+
+β3
+
+
+
+= ln( −1) − 14β + 932 β2 + o(1) 
+
+β3 .
+
+From this we deduce the asymptotic expansion of a branch of eigenvalues: 
+
+βn =
+
+
+
+n + 12
+
+
+
+πi − 18βn
+
++ 964 β2
+
+> n
+
++ o(1) 
+
+β3
+
+> n
+
+=
+
+
+
+nπ + π
+
+2 + 18nπ 
+
+
+
+i − 964 n2π2 + o(1) 
+
+n3 .
+
+Another branch of eigenvalues possesses a negative real part. Therefore, the decay rate O(t−1/2) predicted by Theorem 4.5 is indeed optimal. 
+
+5.2. Conclusion. In this paper, we have developed a general framework for analyzing the polynomial stability of weakly coupled systems with a reduced number of feedback damping mechanisms. The abstract results have been applied to various models, including wave equations with local viscous or viscoelastic damping, and plate equations with local damping. In these cases, the derived decay rates are shown to be sharp. Furthermore, we have established the decay rates for wave equations with boundary damping. However, the optimality of the obtained decay rates remains an open question in the general case. Despite these advances, a number of natural questions remain open for future research: 1. What are the necessary and sufficient conditions for stability of the strongly coupled system 
+
+U ′′ + LU + ALβ U + DG∗GU ′ = 0 ,
+
+where β > 0, U, L are defined in (2.2) and A, D denote the coupling and control matrices? 2. Can one determine necessary and sufficient conditions for the stability of the more general system 
+
+U ′′ + LU + AU + DLγ U ′ = 0 ,
+
+where γ ≥ 0, U, L are defined in (2.2) and A, D again represent coupling and control matrices? 3. We aim to consider the coupled system of wave equations with different speeds of propagation and develop a general theory for the polynomial stability of second order evolutional equations. 4. How can the present analysis be extended to more general coupled systems, in which the coupling and control matrices are not necessarily symmetric or positive semidefinite, while still guaranteeing stability? 
+
+> 19
+
+REFERENCES [1] E. M. Ait Ben Hassi, M. Fadili, L. Maniar, Controllability of a system of degenerate parabolic equations with non-diagonalizable diffusion matrix, Math. Control Relat. Fields. 10 (2020), 623–642. [2] F. Alabau-Boussouira, Indirect boundary stabilization of weakly coupled hyperbolic systems, SIAM J. Control Optim. 
+
+41 (2002), 511–541. [3] F. Alabau-Boussouira, Z. Q. Wang, L. X. Yu, A one-step optimal energy decay formula for indirectly nonlinearly damped hyperbolic systems coupled by velocities. ESAIM Control Optim. Calc. Var. 23 (2017), 721–749. [4] C. Bardos, L. Lebeau, J. Rauch, Sharp sufficient conditions for the observation, control and stabilization of waves from the boundary, SIAM J. Control Optim. 30 (1992), 1024–1065. [5] A. Borichev, Y. Tomilov, Optimal polynomial decay of functions and operator semigroups, Math. Ann. 347 (2010), 455–478. [6] H. Br´ ezis, Functional Analysis, Sobolev Spaces and Partial Differential Equations, Springer, New York, London, 2011. [7] G. Chen, S. A. Fulling, F. J. Narcowich, S. Sun, Exponential decay of energy of evolution equation with locally distributed damping, SIAM J. Appl. Math. 51 (1991), 266–301. [8] S. Chen, R. Triggiani, Proof of extensions of two conjectures on structural damping for elastic systems, Pac. J. Math. 
+
+136 (1989), 15–55. [9] S. Chen, R. Triggiani, Gevrey class semigroups arising from elastic systems with gentle dissipation: the case 0 < α < 12 ,Proc. Am. Math. Soc. 110 (1990), 401–415. [10] Y. Cui, C. Laurent, Z. Q. Wang, On the observability inequality of coupled wave equations: the case without boundary, ESAIM Control Optim. Calc. Var. 26 (2020), 37. [11] F. Dell ´Oro, J. E. Mu˜ noz Rivera, V. Pata, Stability properties of an abstract system with applications to linear thermoelastic plates, J. Evol. Equ. 13 (2013), 777–794. [12] F. Dell ´Oro, V. Pata, Second order linear evolution equations with general dissipation, Appl. Math. Optim. 83 (2021), 1877–1917. [13] M. Duprez, P. Lissy, Indirect controllability of some linear parabolic systems of m equations with m − 1 controls involving coupling terms of zero or first order, J. Math. Pures Appl. 106 (2016), 905–934. [14] E. Fern´ andez-Cara, M. Gonz´ alez-Burgos, L. de Teresa, Boundary controllability of parabolic coupled equations, J. Funct. Anal. 259 (2010), 1720–1758. [15] A. E. Green, P. M. Naghdi, A re-examination of the basic postulates of thermo-mechanics, Proc. Roy. Soc. London Ser. A 432 (1991), 171–194. [16] A. E. Green, P. M. Naghdi, On undamped heat waves in an elastic solid, J. Thermal Stresses 15 (1992), 253–264. [17] R. Guglielmi, Indirect stabilization of hyperbolic systems through resolvent estimates. Evol. Equ. Control Theory, 6
+
+(2017), 59–75. [18] Z. Han, Z. Kuang, Q. Zhang, Stability analysis for abstract thermoelastic systems with Cattaneo’s law and inertial terms, Math. Control Relat. Fields. 13 (2023), 1639–1673. [19] J. Hao, Z. Liu, J. Yong, Regularity analysis for an abstract system of coupled hyperbolic and parabolic equations, J. Differ. Equ. 259 (2015), 4763–4798. [20] J. Hao, B.P. Rao, Influence of the hidden regularity on the stability of partially damped systems of wave equations, J. Math. Pures Appl. 143 (2020), 257–286. [21] F. Huang, Characteristic condition for exponential stability of linear dynamical systems in Hilbert spaces, Ann. Differ. Equ. 1 (1985), 43–56. [22] O. Kavian, Q. Zhang, Polynomial stability of an abstract system with local damping, J. Math. Anal. Appl. 512 (2022), 126–133. [23] V. Komornik, Exact controllability and stabilization: The multiplier method, Research in Applied Mathematics, John Wiley & Sons, New York, 1994. [24] J. E. Lagnese, Boundary Stabilization of Thin Plates, SIAM, Study in applied mathematics, Philadelphia, 1989. [25] C.-G. Lefter, E.-A. Melnig, Internal controllability of parabolic systems with star- and tree-like couplings, SIAM J. Control Optim. 60 (2022), 3100–3126. [26] T. Li, B. Rao, Criteria of Kalman’s type to the approximate controllability and the approximate synchronization for a coupled system of wave equations with Dirichlet boundary controls, SIAM J. Control Optim. 54 (2016), 49–72. [27] T. Li, B. Rao, Exactly synchronizable state and approximate controllability for a coupled system of wave equations with locally distributed controls, SIAM J. Control Optim. 61 (2023), 1460–1471. [28] T. Li, B. Rao, Boundary Synchronization for Hyperbolic Systems, Progress in Non Linear Differential Equations, Subseries in Control, Birkh¨ auser, 2019. [29] T. Liard, P. Lissy, A Kalman’s rank condition for the indirect controllability of coupled systems of linear operator groups, Math. Control Signals Systems. 29 (2017), 35. [30] P. Lissy, E. Zuazua, Internal observability for coupled systems of linear partial differential equations, SIAM J. Control Optim. 57 (2019), 832–853. [31] K. Liu, Locally distributed control and damping for the conservative systems, SIAM J. Control Optim. 35 (1997), 1574–1590. 20 [32] K. Liu, B. Rao, Exponential stability for the wave equation with local Kelvin-Voigt damping, C. R. Acad. Sci. Paris 
+
+339 (2004), 769–774. [33] Z. Liu, B. Rao, Characterization of polynomial decay rate for the solution of linear evolution equation, Z. Angew. Math. Phys. 56 (2005), 630–644. [34] Z. Liu, B. Rao, Frequency domain approach for the polynomial stability of a system of partially damped wave equations, J. Math. Anal. Appl. 335 (2007), 860–881. [35] Z. Liu, B. Rao, Q. Zhang, Polynomial stability of the Rao-Nakra beam with a single internal viscous damping, J. Differ. Equ. 269 (2020), 6125–6162. [36] Z. Liu, Q. Zhang, A note on the polynomial stability of a weakly damping elastic abstract system, Z. Angew. Math. Phys. 66 (2015), 1799–1804. [37] P. Loreti, B. Rao, Optimal energy decay rate for partially damped systems by spectral compensation, SIAM J. Control Optim. 45 (2006), 1612–1632. [38] K. Mauffrey, On the null controllability of a 3 × 3 parabolic system with non-constant coefficients by one or two control forces, J. Math. Pures Appl. 99 (2013), 187–210. [39] A. Pazy, Semigroups of Linear Operators and Applications to Partial Differential Equations, Applied Mathematical Sciences, 44 . Springer-Verlag, New York, 1983. [40] J. Pr¨ uss, On the spectrum of C 0-semigroups, Trans. Amer. Math. Soc. 284 (1984), 847–857. [41] B. P. Rao, On the sensitivity of the transmission of boundary dissipation for strongly coupled and indirectly damped systems of wave equations, Z. Angew. Math. Phys. 70 (2019), 75. [42] P. Rosenthal, Are quasi-commuting matrices near commuting matrices? Amer. Math. Month., 76 (1969), 925-926, DOI 10.2307/2317951. [43] D. L. Russell, A general framework for the study of indirect damping mechanisms in elastic systems, J. Math. Anal. Appl. 173 (1993), 339–358. [44] D. Steeves, B. Gharesifard, A.-R. Mansouri, Controllability of coupled parabolic systems with multiple under actua-tions, Part 1: Algebraic solvability, SIAM J. Control Optim. 57 (2019), 3272–3296. [45] L. Tebou, Stabilization of the wave equation with localized nonlinear damping, J. Differ. Equ. 145 (1998), 502–524. [46] X. Zhang, E. Zuazua, Decay of solutions of the system of thermoelasticity of type III, Commun. Contemp. Math. 5
+
+(2003), 1–59. 21

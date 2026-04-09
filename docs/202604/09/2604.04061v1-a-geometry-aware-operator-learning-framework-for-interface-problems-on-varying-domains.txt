@@ -1,0 +1,1257 @@
+Title: A Geometry-Aware Operator Learning Framework for Interface Problems on Varying Domains
+
+URL Source: https://arxiv.org/pdf/2604.04061v1
+
+Published Time: Tue, 07 Apr 2026 00:59:51 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# A Geometry-Aware Operator Learning Framework for Interface Problems on Varying Domains 
+
+Shanshan Xiao a, Ye Li b, Zhongyi Huang a, ∗, Hao Wu a
+
+> aDept. of Mathematical Sciences, Tsinghua University, Beijing, 100084, China
+> bCollege of Computer Science and Technology, Nanjing University of Aeronautics and Astronautics, Nanjing, 211106, China
+
+Abstract 
+
+Solving Partial Differential Equation (PDE) interface problems on varying domains is a critical task in design and optimization, yet it remains compu-tationally prohibitive for traditional solvers. Although operator learning has shown promise on fixed geometries, its potential for geometry-dependent in-terface problems has been largely unexplored. To bridge this gap, we propose an extension-based neural operator framework applicable to general linear in-terface problems. A key innovation of our method is the integration of the Tailored Finite Point Method (TFPM) with our base network, which reduces memory consumption and effectively alleviates the curse of dimensionality. On the theoretical front, we establish the continuity of the Helmholtz op-erator with respect to domain perturbations and provide rigorous error es-timates for the proposed encodings. Comprehensive numerical experiments demonstrate that our framework achieves state-of-the-art accuracy and ro-bustness. Consequently, this work provides a powerful, data-efficient tool for varying-domain simulations, offering new possibilities for real-time shape optimization. 
+
+Keywords: Operator learning, Interface problems, Varying domains, Error estimates 
+
+1. Introduction 
+
+Linear interface problems are ubiquitous in science and engineering. They play a pivotal role in modeling complex physical systems where distinct ma-
+
+> ∗Corresponding author. E-mail: zhongyih@tsinghua.edu.cn
+> arXiv:2604.04061v1 [math.NA] 5 Apr 2026
+
+terials or phases interact, such as in heat conduction through composite materials, multi-phase flow dynamics, and electromagnetic field propagation in heterogeneous media[1, 2, 3, 4]. These problems are mathematically char-acterized by the existence of coupling conditions between solutions across different interfaces, along with discontinuous coefficients or source terms at possible interface boundaries. This leads to non-smooth or jump solutions, posing significant challenges for numerical simulations. To address this complex problem, researchers have proposed numerous numerical algorithms. The finite element method (FEM)[11, 12, 13] han-dles interfaces naturally by aligning meshes with the interface, though this often requires mesh updates for moving interfaces. To circumvent mesh re-strictions, embedded or immersed methods such as the immersed bound-ary method (IBM) and the immersed interface method (IIM) have been developed[14, 15]; these methods modify the numerical stencil or add forcing terms to account for solution jumps on a fixed Cartesian grid. The dis-continuous Galerkin (DG) method[16, 17, 18] offers high-order accuracy and flexibility in handling discontinuities by allowing basis functions to be discon-tinuous across elements. Finite difference methods[7], often combined with interface-tracking techniques, provide simplicity and efficiency, particularly when adapted with correction terms to maintain accuracy across interfaces. More recent approaches, such as the Voronoi interface method (VIM)[19, 20], leverage computational geometry to discretize irregular domains with robust accuracy. Together, these methods form a comprehensive toolkit for solving interface problems, each offering distinct advantages in terms of accuracy, geometric flexibility, and computational efficiency. Building upon the success of neural networks in computational mathe-matics, researchers have recently extended their application to solving inter-face problems for PDEs. For example, Wang[33] combined a shallow neural network for boundary condition approximation with the Deep Ritz Method to address variational formulations of interface problems, and He[32] use one NN structure to capture the non-smooth or even discontinuous solu-tions. Similarly, Liu[34] developed a multi-scale neural network to solve the Poisson-Boltzmann equation using variational principles. A prominent direc-tion in this area is the fusion of domain decomposition with deep learning. Dwivedi’s Distributed PINN (DPINN)[36] method partitions the domain into disjoint subregions, each handled by a separate subnet trained via a compos-ite loss function. He[32] extended this idea by introducing static weights into the loss and an adaptive sampling scheme to boost accuracy. Jagtap and 2colleagues further advanced the field with XPINNs[37], which apply domain decomposition to solve nonlinear PDEs in complex domains. These develop-ments have inspired subsequent methods such as DeepDDM[39] and Interface Neural Networks (INN)[38], reinforcing the integration of deep learning and domain decomposition for interface problems. But in some applications, such as geometric optimization and inverse ma-terial identification[5, 6], we frequently encounter scenarios where the compu-tational domain, interface location, or physical parameters vary continuously. For these problems, relying on traditional numerical methods (e.g., FEM or FDM) is computationally prohibitive, as they necessitate mesh regeneration and iterative solving for every new configuration. Similarly, conventional neural network approaches are often restricted to a fixed setting; any change in the geometry or parameters typically requires retraining the network from scratch, which incurs significant time and computational costs. To overcome these bottlenecks, Operator Learning has emerged as a trans-formative paradigm[21, 22]. Currently, there have been some research ad-vancements in operator learning for interface problems on fixed domains[27, 28, 29]. Building upon these, we aim to explore interface problems on vary-ing domains. In existing studies, approaches to handling varying domains primarily fall into two categories: extension-based methods and deformation-based methods. Among them, deformation-based methods aim to map ir-regular domains to a reference domain, thereby establishing a mapping to the Banach space on the reference domain. Based on this, existing operator learning architectures (such as DeepONet, FNO, etc.) can be applied. Repre-sentative deformation-based approaches include Geo-FNO, D2D & D2E, and DIMON[23, 24, 25]. Another approach is extension-based methods, which seek to cover all varying domains within a larger fixed domain and extend functions defined on different domains to this larger domain. This transforms functions originally defined on different domains into elements of the Banach space on the extended domain. For example, GINO is an extension-based method[26]. Building upon this, we consider the more complex varying-domain inter-face problems, addressing cases where both the domain and possibly multiple interfaces undergo changes. Given the complexity of simultaneous variations in the domain and interfaces, as well as the presence of multiple interfaces, we adopt an extension-based approach to handle changes in both the domain 3and interfaces. For the following general linear interface PDE: 
+
+
+
+Lu = f, in Ω\Γ,
+
+Bu = g, on ∂Ω,
+
+F1(u+, u −, ∂u + 
+
+> ∂n
+
+, ∂u − 
+
+> ∂n
+
+) = 0 , on Γ,
+
+F2(u+, u −, ∂u + 
+
+> ∂n
+
+, ∂u − 
+
+> ∂n
+
+) = 0 , on Γ,
+
+(1) we first transformed the complex solution mapping into a mapping from a Banach space to a Banach space via zero extension, enabling the use of neural operators for learning. Subsequently, we proposed an encoding method based on a standard rectangular grid, proved the sensitivity of the Helmholtz equa-tion to variations in the domain and interface, and provided a simple error estimate for encoding the domain using the characteristic function and the signed distance function (SDF). In addition, we improved the basic method by incorporating the Tailored Finite Point Method (TFPM)[7, 8, 9, 10] ba-sis, which reduces the storage requirements during training and achieves good predictive performance while saving GPU memory. Also we conducted a se-ries of experiments to demonstrate the accuracy of our proposed method. The remainder of this paper is organized as follows. In Section 2, we provide the mathematical formulation of the interface problems on variable domains and introduce the necessary notations. Section 3 details our pro-posed methodology, describing the neural operator architecture, the specific encoding schemes, and the novel framework integrating the Tailored Finite Point Method. Section 4 is devoted to the theoretical analysis, where we establish the shape sensitivity of the Helmholtz equation with respect to domain and interface perturbations and derive error estimates for the do-main encoding. In Section 5, we present extensive numerical experiments to validate the accuracy and robustness of the proposed method. Finally, concluding remarks are given in Section 6. 
+
+2. Problem setup 
+
+First of all, we consider the interface problem as following: 
+
+
+
+Lu = f, in Ω\Γ,
+
+Bu = g, on ∂Ω,
+
+F1(u+, u −, ∂u + 
+
+> ∂n
+
+, ∂u − 
+
+> ∂n
+
+) = 0 , on Γ,
+
+F2(u+, u −, ∂u + 
+
+> ∂n
+
+, ∂u − 
+
+> ∂n
+
+) = 0 , on Γ,
+
+(2) 4Here, L is a linear PDE operator, B is a linear boundary operator, and F1 and 
+
+F2 are linear interface condition operators. And we assume that all domains 
+
+Ω under consideration are bounded and that all interfaces Γ are curves lying in the interior of Ω.To better handle the abstract operator L, B, F1, F2 introduced above, we can consider a case of the most common Helmholtz equation interface problem as follows: 
+
+
+
+−∇ (a(x)∇u(x)) + b(x)u(x) = f (x), for x ∈ Ω\Γ,u|∂Ω = g(x),
+
+[u]|Γ = α, 
+
+[a∇u · n]|Γ = β, 
+
+(3) and n denotes the unit normal vector pointing from the internal toward the external of the interface. We aim to learn the solution mapping of (3) on varying domains, contains both the outer boundary Ω and the interface Γ,i.e., the mapping 
+
+G : a(x)Ω × b(x)Ω × f (x)Ω × g(x)∂Ω × αΓ × βΓ → u(x). (4) After introducing the problem to be solved, we will propose a general method for learning the mapping G.
+
+3. Methods 
+
+For varying-domain problems, two principal methodologies are prevalent: the extension method and the deformation method. In light of the complexity arising from the interface conditions and the variation of the interface Γ, we favor the extension-based approach in the present study. Inspired by GINO, we employ the aforementioned specialized encoding approach and adopt an FNO-based network architecture to learn G.
+
+3.1. Neural network architecture 
+
+Back to the original problem, we aim to learn the mapping 
+
+G : a(x)Ω × b(x)Ω × f (x)Ω × g(x)∂Ω × αΓ × βΓ → u(x). (5) However, here αΓ, β Γ and a(x)Ω, b (x)Ω, f (x)Ω, g (x)∂Ω do not constitute Banach space. Therefore, we first perform an extension of these functions, 5based on the assumption that all Ω are bounded domain in Rd, and Γ ⊂ ¯Ω,we can find a large square [s, t ]d that covers all Ω.Based on this, taking a(x)Ω and αΓ as example we perform zero extension on these functions to [s, t ]d as following: 
+
+ˆa(x) = 
+
+(
+
+a(x) if x ∈ Ω,
+
+0 if x / ∈ Ω, ˆα(x) = 
+
+(
+
+α(x) if x ∈ Γ,
+
+0 if x / ∈ Γ. (6) Similarily, u(x)Ω, b (x)Ω, f (x)Ω, g (x)∂Ω, β Γ can be extended as the same method. Thus, we obtain the extended function, denoted as ˆα, ˆβ and ˆa(x), ˆb(x), ˆf (x),
+
+ˆu(x), ˆg(x). Indeed, the extended functions lose information about the origi-nal domain. To address this, we additionally extend the domain Ω and the interface Γ by representing them as functions on [s, t ]d, we denote them as ϕΩ
+
+and ϕΓ. Here, there are many choices for the extension method; we employ two of them based on the characteristic function and the signed distance function respectively. Based on this, we define the extended operator ˆG:
+
+ˆG : ϕΩ × ϕΓ × ˆa(x) × ˆb(x) × ˆf (x) × ˆg(x) × ˆα × ˆβ → ˆu(x). (7) Note that here ˆG is an operator from tensor of several Banach space to one Banach space, and it satisfies 
+
+G(aΩ, b Ω, f Ω, g Ω, α Γ, β Γ) = ˆG(ϕΩ, ϕ Γ, ˆa, ˆb, ˆf , ˆg, ˆα, ˆβ)|Ω.
+
+Below, we provide a detailed definition of the extension operator. 
+
+Definition 1. Suppose Ω is a bounded domain in Rn, Γ is an interface within Ω, and a, b, f are piecewise continuous functions on Ω, while g, α, β 
+
+are piecewise continuous functions on ∂Ω and Γ, respectively. Then, for the mapping 
+
+G : a(x)Ω × b(x)Ω × f (x)Ω × g(x)∂Ω × αΓ × βΓ → u(x),
+
+where u(x) is the solution to the equation (3) , we have the extended operator 
+
+ˆG as defined above. The relationship between G and ˆG satisfies: 
+
+G(aΩ, b Ω, f Ω, g Ω, α Γ, β Γ) = ˆG(ϕΩ, ϕ Γ, ˆa, ˆb, ˆf , ˆg, ˆα, ˆβ)|Ω. (8) 6After defining the extension operator, we will next demonstrate that this extended operator is unique. 
+
+Theorem 1 (Uniqueness) . The operator ˆG defined by G in Definition 1 is unique, i.e., if there exists another operator ˆG2 satisfying equation (8) , then 
+
+ˆG = ˆG2.
+
+Theorem 1 is clearly valid, so we omit its proof. Then after transforming the problem into learning the operator ˆG, we can employ neural operators[22, 21] for learning. Therefore, in the next subsection, we will briefly introduce the architecture of the neural operator we use. 
+
+3.2. Neural operator 
+
+After obtaining ˆG, we proceed to approximate it using a neural operator, which we denote as Gθ. To this end, we opt for the Fourier Neural Operator (FNO) as our specific approximant. And Gθ can be represent as 
+
+Gθ = Q ◦ (WL + KL + bL) ◦ · · · ◦ σ(W1 + K1 + b1) ◦ P , (9) here P : Rdinput → Rd1 are pointwise neural networks that encode the input functions into higher dimensional space and Q : RdL → Rdu the decode neural networks. And KL : {D → RdL+1 } are Fourier integral kernel operators, 
+
+bL : D → RdL+1 area the bias term of L-th layer, and σ are activate functions. 
+
+Fourier integral operator 
+
+The Fourier integral operator is defined as 
+
+(K(ϕ)vt)( x) = F−1(Rϕ · (Fvt))( x), ∀x ∈ D, (10) and here Rϕ is the Fourier tranform of periodic function κ : ˜D → Rdv ×dv
+
+parameterized by ϕ ∈ ΘK.After introducing the network architecture, we will present the methods for encoding the input functions and the domain. 
+
+3.3. Encoder domains and functions 
+
+Under our assumptions, for a set of bounded domains {Ωi ∈ Rd}I , we can choose a big square domain [s, t ]d that covers all Ωi, Then we obtain a uniform grid of size n × n × · · · × n on [s, t ]d. Next, we’ll introduce how to 7encode our input. 
+
+Encode domain and interface 
+
+First, we encode the domain and interface information. Without loss of generality, we assume that the domain Ω ⊂ [s, t ]d contains m non-intersecting closed interfaces Γi. Following the extension assumption introduced earlier, we now have m + 1 functions ϕΩ, ϕ Γi defined on [s, t ]d, encoding the domain and each distinct interface, respectively. Next, depending on whether the characteristic function or the signed distance function (SDF) is used for the extension of domain information functions, we have two encoding approaches. For the extension based on the characteristic function, we only need an 
+
+nd-dimensional matrix for encoding, and the encoding method is as follows: 
+
+ΦK =
+
+
+
+0, pK in [s, t ]d\Ω,
+
+1, pK in Ω\ ∪ Γj , j = 1 , 2, · · · , m, i + 1 , pK in int (Γ i),
+
+(11) where pk denotes the grid point indexed by K = ( k1, · · · , k d), and int (Γ i)
+
+represents the bounded open set enclosed by the closed curve Γi.For the extension based on the signed distance function (SDF), our repre-sentation differs slightly. Although the SDF offers higher accuracy, we need to use a larger (m + 1) × nd-dimensional matrix for encoding in order to preserve distance information. The encoding method is as follows: 
+
+Φj, K =
+
+(
+
+ϕΩ(pK), j = 1 ,ϕΓj−1 (pK), j > 1, j = 1 , 2, · · · , m, (12) where Φj, K represents the value at grid point pk in the j-th nd-dimensional matrix, ϕΩ, ϕ Γj are signed distance function of Ω, Γj respectively. It is evident that there is a trade-off between the two encoding strategies. While the signed distance function (SDF) provides superior accuracy (we will later establish the relationship between the encoding error and the grid point density), it demands substantially more encoding capacity in scenarios involving multiple internal interfaces, in contrast to the characteristic func-tion encoding which remains compact. 
+
+Encode functions defined on Ω
+
+8For functions defined on the entire domain Ω, we have already performed zero extension, so the encoding can be simply defined as the values of the extended function at the grid points. For example, a function f (x) is encoded into an nd-dimensional matrix with: 
+
+FK =
+
+(
+
+f (pK) if pK ∈ Ωi,
+
+0 if pK /∈ Ωi. (13) 
+
+Encode functions defined on a low-dimensional manifold 
+
+For the encoding of functions defined on low-dimensional manifolds—spec-ifically, in our problem, the boundary conditions on ∂Ω and the interface conditions defined on Γi—these functions are defined on lower-dimensional manifolds. Simply taking the extended function values at grid points would result in a loss of information. Therefore, we introduce two encoding methods different from those mentioned above. First, we present a simple encoding approach based solely on the function values at the nearest grid points, consider the boundary ∂Ω (For functions defined on the internal interface Γ, the encoding approach is completely anal-ogous.), g is a piecewise continuous function defined on the boundary, we encode the function g as follows: 
+
+GK = g(P∂Ω(pK)) · exp( −sdf ∂Ω(pK)/(2 σ2)) , (14) here P∂Ω(pK) denotes the projection of point pK onto ∂Ω, and we multiply by a Gaussian weight. This Gaussian weight depends on the distance from the grid point to the low-dimensional manifold ∂Ω: as the distance increases, the weight decays to zero, while on ∂Ω itself, the weight equals one. At the same time, in a simple case—for example, when g is a constant function—we may omit the Gaussian weighting part. 
+
+3.4. Neural operator with TFPM basis 
+
+As proposed earlier, ˆG(·) outputs a function value c = {cij } at each node of an n × n grid. This function can be interpreted as the coefficients of the first-order finite element basis functions on the grid. Specifically, if we consider the finite element basis functions ϕij defined over the grid, the finite element approximation of the equation’s solution on the grid can be expressed as u = P 
+
+> i,j
+
+cij ϕij .
+
+9On this basis, if we consider replacing ϕij with other global or local basis functions, we may obtain better properties. For instance, global basis func-tions can simplify the structure of the neural operator, while the Tailored Finite Point Method (TFPM)-based basis functions—introduced later—can outperform finite element basis functions in certain aspects due to their ex-cellent approximation capability within small domains. To introduce the TFPM basis, we first briefly outline the core idea of the TFPM. 
+
+Tailored Finite Point Method 
+
+First, we briefly introduce the fundamental idea of the Tailored Finite Point Method (TFPM). Consider the Helmholtz equation interface problem as shown in Equation (3), and perform the following variable substitution: 
+
+y(x) = 
+
+Z xx
+
+1
+
+a(ξ)dξ, for x ∈ Ω
+
+c(y) ≡ a(x(y)) b(x(y)) , F (y) ≡ a(x(y)) f (x(y)) ,
+
+(15) then, the transformed variable U (y) ≡ u(x(y)) satisfies the following PDE: 
+
+− U ′′ 
+
+(y) + c(y)U (y) = F (y), for x ∈ Ω\Γ
+
+u|∂Ω = g(x),
+
+[u]|Γ = α, [au ′]|Γ = β. 
+
+(16) Thus, equation (16) can be handled using TFPM. First, we partition the domain Ω into a collection of small subregions {Ωi}. Then, within each subregion Ωi, TFPM approximates the parameter c(y), F (y) as a constant 
+
+cj = μ2 
+
+> j
+
+, F j , so that on each small subregion, the equation simplifies to: 
+
+−∆u + μ2 
+
+> j
+
+u = Fj , x ∈ Ωj . (17) Thus, on each Ωj , the solution to this equation can be expanded in the following form: 
+
+uj = Fj /μ 2 
+
+> j
+
++ c0j eμj x + c1j e−μj x + c2j eμj y + c3j e−μj y. (18) Based on this, for each subdomain Ωj , the TFPM considers the connec-tion conditions between the midpoints of the four edges of the small square and other subdomains (or boundaries/interfaces). This leads to a corre-sponding system of linear equations Ax = B, from which the values of 10 Input              
+
+> f(x)
+> Encoder
+> FEM Basis
+> TFPM Basis
+> Soluti on
+> Coe fficien ts
+> Reconstruction
+> u(x)
+> c
+> Fourier Neural Operator Block
+> Do main
+> PQ
+> Encoder Decoder
+> Four ier
+> layer
+> Minimize Loss
+> N
+> iuG
+> N
+> L1
+> 2
+> )(ˆ)(ˆ1
+> )(
+> 
+> 
+
+Figure 1: Neural network architecture 
+
+the parameters {c0j , c 1j , c 2j , c 3j } are obtained. In addition, the local bases 
+
+{eμj x, e −μj x, e μj y, e −μj y} here are referred to as the TFPM basis in this paper. 
+
+Neural operator architecture with TFPM basis 
+
+Given the characteristic of TFPM, which can represent the solution of the equation using parameterized formulations (18) within subdomains, we propose a learning method that incorporates TFPM basis. In this method, we learn the coeffients of (18) rather than solution u,therefore the operator G becomes 
+
+GT F P M : a(x)Ω × b(x)Ω × f (x)Ω × g(x)∂Ω × αΓ × βΓ → c, (19) here c is the coeffients of TFPM. Besides, we can also define a reconstruction mapping Re that maps co-effients c to solution u based on (18), then the map Re ◦ G T F P M becomes: 
+
+a(x)Ω × b(x)Ω × f (x)Ω × g(x)∂Ω × αΓ × βΓ → u(x). (20) Thus, we have derived a neural operator based on the TFPM basis, and we will later demonstrate that the TFPM basis can reduce the required GPU memory during training. Moreover, since this method reduces the size of the training dataset, it can alleviate the computational and storage burdens associated with increasing dimensionality to some extent. 
+
+3.5. Loss Function 
+
+For networks using two different basis functions, we compute the end-to-end loss in each case. Specifically, for the finite element basis, the loss function is 
+
+L(θ) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+∥ ˆGθ(·) − ˆu(·)∥2
+
+> L2([ s,t ]d)
+
+,
+
+11 and for the TFPM basis, the loss function is 
+
+L(θ) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+∥R e ◦ ˆGθ(·) − ˆu(·)∥2
+
+> L2([ s,t ]d)
+
+.
+
+Finally, we present our network architecture in Figure 1. 
+
+4. Theoretical analysis 
+
+In this section, we primarily conduct a theoretical analysis of the previ-ously proposed network architecture, encoding methods, and properties of the PDE. First, we will prove the continuity of the solution to the Helmholtz equation with respect to the interface and the domain as variables. 
+
+4.1. Continuity of the Helmholtz equation operator 
+
+Here, we consider the Helmholtz equation in the following specific form with b ∈ C and Im( b) > 0 :
+
+∆u + b2u(x) = f (x), for x ∈ Ω\Γ
+
+u|∂Ω = g(x),
+
+[u]|Γ = α, [u′]|Γ = β. 
+
+(21) Based on the previous continuity assumption for the operator G, we need to prove that the aforementioned Helmholtz operator is continuous with respect to variations in both the functions and the domain. Consider the extended operator: 
+
+ˆG : ϕΩ × ϕΓ × ˆb(x) × ˆf (x) × ˆg(x) × ˆα × ˆβ → ˆu(x), (22) the continuity of the operator ˆG with respect to the input functions is straight-forward. Here, we focus solely on proving that ˆG is continuous with respect to variations of domain Ω and the interface Γ, i.e., ϕΩ and ϕΓ.
+
+Theorem 2 (Continuity of interface under constant interface conditions) .
+
+For the operator ˆG defined above, assume Ω is a bounded domain in Rn(n = 2 or 3), moreover, all interfaces considered here are smooth closed hypersur-faces within Ω, then given constants α and β, it follows that ˆG is continuous with respect to variation Γ. That is, for any prescribed Γ, Γr, assume that there exists of a transformation τr from Γ to Γr:
+
+τr : x 7 → x + r(x), (23) 12 then for arbitrary ε > 0, there exists δ > 0 such that if ∥r∥∞ < δ , then the following inequality holds: 
+
+ˆG(ϕΓ, . . . ) − ˆG(ϕΓr , . . . ) 2 < ε, (24) 
+
+here, all other input functions remain unchanged. Since α and β are con-stants, the interface conditions are given by ˆαΓ, ˆαΓr and ˆβΓ, ˆβΓr , respectively. Proof. First, based on the transformation τr, for any function ψ defined on 
+
+Γ and ψr defined on Γr, there exists a transformation τr that maps it to Γr,along with an inverse transformation, satisfying 
+
+τr(ψr(x)) = ψr(x + r(x)) , τ −1 
+
+> r
+
+(ψ)( x + r(x)) = ψ(x). (25) Since both α and β are constants here, we have: 
+
+ˆαΓr = \αΓ ◦ τ −1 
+
+> r
+
+, ˆβΓr = \βΓ ◦ τ −1 
+
+> r
+
+.
+
+Next, we express the solution to the interface problem as an integral function of fundamental solutions of Helmholtz equation Φ, i.e., 
+
+u(x) = 
+
+Z
+
+> Ω
+
+Φ( x, y )f (y)dy +
+
+Z
+
+> ∂Ω
+
+(∂Φ( x, y )
+
+∂n y
+
+g(y) − Φ( x, y )∂u (y)
+
+∂n )dS y+
+
+Z
+
+> Γ
+
+(Φ( x, y )β − Φ( x, y )
+
+∂n y
+
+α)dS y.
+
+(26) The three integral terms here can be viewed as the source term, the boundary correction term, and the interface correction term, respectively. Therefore, we only need to focus on the interface correction term related to the interface 
+
+Γ, denoted as uΓ. Therefore, we only need to prove 
+
+∥uΓ − uΓr ∥2 < ε. 
+
+To prove this conclusion, we cite a theorem from the literature by Martin Costabel[30]. First, in Example 2.4, it is shown that the fundamental solution 
+
+Φ is pseudo-homogeneous of class −1. Based on this, according to Theorem 4.8 in the same reference, the mapping 
+
+r 7 → P rτ −1 
+
+> r
+
+(27) 13 is infinitely Gâteaux differentiable, and thus continuous. Here, Pr are poten-tial operators defined by 
+
+(Prur)( x) = 
+
+Z
+
+> Γr
+
+kr(yr, x − yr)ur(yr)ds (yr). (28) Moreover, according to Example 4.10 in the literature, both the single-layer and double-layer potential functions of the Helmholtz equation belong to the previously defined class Pr, and thus are also infinitely Gâteaux differentiable. More specifically, here we define the potential operator as: 
+
+(PΓr ϕ)( x) = 
+
+Z
+
+> Γr
+
+(Φ( x, y )β − Φ( x, y )
+
+∂n y
+
+α)dS y.
+
+Finally, since the interface correction part of the solution is composed of single-layer and double-layer potentials, we conclude that 
+
+ˆG(χΓ, . . . ) − ˆG(χΓr , . . . ) 2 = ∥uΓ − uΓr ∥L2(Ω) = ∥(PΓr − PΓ0 )ϕ∥L2(Ω) < C ∥r∥∞
+
+(29) for some constant C. Thus, if we choose δ = εC our theorem can be proven. 
+
+Theorem 3 (Continuity of interface under general interface conditions) .
+
+For the operator ˆG defined above, Ω is a bounded domain in Rn(n = 2 or 3), moreover, all interfaces considered here are smooth closed hypersurfaces within Ω, assume α(x) ∈ H1/2(Γ) and β(x) ∈ H−1/2(Γ) , it follows that ˆG
+
+is continuous with respect to variation Γ. That is, for any prescribed Γ, Γr,assume that there exists of a transformation τr from Γ to Γr:
+
+τr : x 7 → x + r(x), (30) 
+
+then for arbitrary ε > 0, there exists δ > 0 such that if ∥r∥∞ < δ , then the following inequality holds:                   
+
+> ˆG(ϕΩ, ϕ Γ,ˆb(x),ˆf(x),ˆg(x),ˆαΓ(x),ˆβΓ(x)) −ˆG(ϕΩ, ϕ Γr,ˆb(x),ˆf(x),ˆg(x),ˆαΓr(x),ˆβΓr(x)) 2< δ,
+> (31)
+
+here ˆαΓr (x), ˆβΓr (x) is defined as follows: 
+
+ˆαΓr = \αΓ ◦ τ −1 
+
+> r
+
+, ˆβΓr = \βΓ ◦ τ −1 
+
+> r
+
+.
+
+14 Proof. Note that the only distinction here from Theorem 2 is that α and β
+
+are no longer constant functions. Since the theorem in Martin Costabel’s work[30] already covers this case, it suffices to define ˆαΓr (x), ˆβΓr (x) following the method outlined in the theorem to meet the required conditions. The remaining steps of the proof are identical to those of Theorem 2. 
+
+Theorem 4 (Continuity of domain of Dirichlet zero boundary condition) .
+
+For the operator ˆG defined above, assume Ω, Ωr are bounded domains in Rn(n = 2 or 3) with boundary ∂Ω, ∂ Ωr of class C2, and Γ is smooth closed hy-persurfaces within both Ω, Ωr. Then if f (x) is a continuous function de-fined on Ω ∪ Ωr, assume there exists a transformation from Ω to Ωr with 
+
+τr(x) = x + r(x), and assume that τr is a bijection with r ∈ C2, then for any 
+
+ε > 0, there exists δ > 0 such that if ∥r∥C2 < δ , the following holds: 
+
+ˆG(ϕΩ, ϕ Γ, ˆf|Ω(x), . . . ) − ˆG(ϕΩr , ϕ Γ, ˆf|Ωr (x), . . . ) 2 < ε, (32) 
+
+here, all other input functions remain unchanged, with gΩ = 0 , g Ωr = 0 , and the interface conditions are both set to 0. Proof. First, we verify some properties of the Helmholtz operator and the domain mapping. For the Helmholtz operator A(u) = −∆u − k2u, since the Helmholtz operator is a linear operator, its differentiability with respect to u in the weak sense is trivial. Moreover, since we adopt the same definition of r as in Example 6.2 of J. Simon’s paper [31], it follows from the proofs therein that the remaining conditions in Theorem 3.3 are also satisfied. Next, we further cite Theorem 3.3 from J. Simon’s paper, r 7 → u(r)◦(I +r)
+
+is differentiable. And from this, we can prove that: 
+
+ˆG(χΩ, ˆf|Ω(x), . . . ) − ˆG(χΩr , ˆf|Ωr (x), . . . ) 2
+
+=∥ˆu(r) − ˆu(0) ∥L2
+
+=
+
+Z
+
+> Ω
+
+|u(r) ◦ (I + r) − u(0) |2dx. 
+
+(33) Based on the properties of the mapping r 7 → u(r) ◦ (I + r), there exists a constant M > 0 such that: 
+
+∥u(r) ◦ (I + r) − u(0) ∥H1(Ω) ≤ M ∥θ∥C2 ,
+
+15 Using the continuous embedding properties of Sobolev spaces, we have: 
+
+∥u(r) ◦ (I + r) − u(0) ∥L2(Ω) ≤ M ′∥θ∥C2 .
+
+Then, the inequality becomes: 
+
+Z
+
+> Ω
+
+|u(r) ◦ (I + r) − u(0) |2dx = ∥u(r) ◦ (I + r) − u(0) ∥2 
+
+> L2(Ω)
+
+≤ (M ′)2∥θ∥2 
+
+> C2
+
+.
+
+Therefore, by choosing δ = √εM ′ , the proof is complete. 
+
+4.2. Domain encoding analysis 
+
+As we mentioned earlier, we will analyze the error in encoding the domain and interface based on the characteristic function and the signed distance function (SDF). To simplify the problem, we consider the following scenario: assume the domain Ω is the rectangle [0 , 1] 2, and the interface Γ is the bound-ary of a closed region within the domain. For the encoding of this domain, we analyze the errors of two encoding methods. Here, we assume that a uniform n × n grid is used for encoding in both cases, and the extension to higher dimensional cases is similar. 
+
+4.2.1. Error of characteristic function domain encode 
+
+First, the exact representation of the domain Ω is given by the char-acteristic function χΩ. Based on this, we also define a piecewise constant approximation function grid Ω through grid point sampling. Thus, we have: 
+
+ERM SE =
+
+sZ
+
+> Ω
+
+|χΩ(x) − grid Ω(x)|2dx. (34) Since the characteristic function can only take the values 0 or 1, the value of the integral here strictly equals the area of the geometric discrepancy, i.e., MSE = Area (Ω true ⊕ Ωgrid ).
+
+Considering that Ω is the boundary of an interior region, the area dis-crepancy here can only arise from the grid cells intersected by the boundary of Ω, denote as Mboundary .16 First, we have the following estimate: 
+
+Mboundary ≤ N (x) 
+
+> crossings
+
++ N (y) 
+
+> crossings
+
++ Cstart ,
+
+here, N (x) 
+
+> crossings
+
+represents the number of times the curve crosses the vertical grid lines, N (y) 
+
+> crossings
+
+the number of times it crosses the horizontal grid lines, and Cstart the cell containing the starting point of the curve. Assume the curve is given by the parametric equations (x(s), y (s)) , and the length of ∂Ω is L, we estimate each of these components separately: 
+
+N (x) 
+
+> crossings
+
+≤ ⌈ 
+
+R L 
+
+> 0
+
+|x′(s)|ds 
+
+1/n − 1 ⌉ = ⌈(n − 1) 
+
+Z L
+
+> 0
+
+| cos θ(s)|ds ⌉,N (y) 
+
+> crossings
+
+≤ ⌈ 
+
+R L 
+
+> 0
+
+|y′(s)|ds 
+
+1/n − 1 ⌉ = ⌈(n − 1) 
+
+Z L
+
+> 0
+
+| sin θ(s)|ds ⌉,Mboundary ≤ ⌈ (n − 1) 
+
+Z L
+
+> 0
+
+(| cos θ(s)| + | sin θ(s)|) ds ⌉ + C, 
+
+(35) Considering the worst-case scenario for vertices and the maximum value of the kernel (| cos θ| + | sin θ|) is √2, we take C = 4 , leading to the following: 
+
+Mboundary ≤ ⌈ √2 · L · (n − 1) ⌉ + 4 .
+
+From this, we calculate the previous ERMSE :
+
+ERM SE ≤
+
+s
+
+⌈√2 · L · (n − 1) ⌉ + 4 (n − 1) 2 ∝ n− 12 . (36) 
+
+4.2.2. Error of SDF encode 
+
+We still adopt the same notation as above, the only difference is that we use ϕ to denote the SDF. then 
+
+ERM SE =
+
+sZ
+
+> Ω
+
+|ϕΩ(x) − grid Ω(x)|2dx, (37) here grid Ω is a function based on bilinear interpolation of grid values from SDF. Similarly, for each grid cell, we first categorize them into two types: smooth cells and singular cells. Cells that do not contain the medial axis 17 are considered smooth cells, while the rest are singular cells. First, we focus on the smooth cell portion. For a smooth cell, we first define local coordinates x, y ∈ [0 , h ] within the cell. Then, the true Signed Distance Function ϕΩ is expanded using a second-order Taylor series around the bottom-left corner (0 , 0) of the cell, yielding: 
+
+ϕΩ(x, y ) = ϕΩ(0 , 0) + xϕ x + yϕ y + xyϕ xy + 12x2ϕxx + 12y2ϕyy + O(h3).
+
+Meanwhile, the encoded function grid Ω, after bilinear interpolation, takes the following form within each cell: 
+
+grid Ω(x, y ) = A + Bx + Cy + Dxy. 
+
+Thus, for the function error within each cell, we have: 
+
+E(x, y ) = ϕΩ(x, y ) − grid Ω(x, y ) = 12x2ϕxx (ξ) + 12y2ϕyy (η) + O(h3)
+
+≤ h2
+
+2 (|ϕxx | + |ϕyy |) + O(h3).
+
+(38) For the singular cells, if the grid is sufficiently fine, the portion of the medial axis intersected by each grid cell can be approximated as a straight line. Thus, we simplify the interior of each singular cell as follows: assume the local coordinates of the grid cell are [−h 
+
+> 2
+
+, h 
+
+> 2
+
+]2, and the equation of the medial axis within the cell is nxx + nyy + d = 0 . We introduce normalized coordinates u, v ∈ [−1/2, 1/2] such that x = hu and y = hv .Thus, within this cell, the SDF function becomes: 
+
+ϕΩ(x, y ) = |nxx + nyy + d| = h · | nxu + nyv + dh|
+
+i.e., ϕΩ(x, y ) = h · ˆϕΩ(u, v ). Denoting the bilinear interpolation operator as 
+
+Π, the encoded function is: 
+
+grid Ω(x, y ) = Π( ϕΩ) = h · Π( ˆϕΩ(u, v )) .
+
+Therefore, we calculate the integral over a single singular grid cell as follows: 
+
+Z Z 
+
+> Ωcell
+
+(ϕ − ˜ϕ)2dxdy =
+
+Z Z 1/2
+
+> −1/2
+
+(h ˆϕ − hΠ ˆϕ)2 · (h2dudv )= h4 ·
+
+Z Z 1/2
+
+> −1/2
+
+ ˆϕδ(u, v ) − Π ˆϕδ(u, v )
+
+2
+
+dudv 
+
+| {z }
+
+> C(θ,δ )
+
+, (39) 18 here, C(θ, δ ) is an integral value independent of h.Next, we estimate the overall error across the entire domain. Assuming the medial axis length of the internal interface Ω is L, based on the estima-tion from the characteristic function part, the number of grid cells it passes through Msingular satisfies: 
+
+Msingular ≤ ⌈ √2 · L · (n − 1) ⌉ + 4 = Mmax .
+
+Since the error contributed by singular grid cells is greater than that of smooth grid cells, we have the following estimate:                                 
+
+> ∥E∥2
+> L2=
+> Z
+> Ω
+> E2dxdy =X
+> i∈Singular
+> Z
+> Ωi
+> E2+X
+> j∈Smooth
+> Z
+> Ωj
+> E2
+> ≤Mmax ·h4·max {C(θ, δ )}+ (( n−1) 2−Mmax )·max {(|ϕxx |+|ϕyy |
+> 2)2} · h4·h2
+> =C1(n−1) −3+C2(n−1) −4.
+> (40)
+
+Finally, we obtain: 
+
+ERM SE =
+
+sZ
+
+> Ω
+
+|ϕΩ(x) − grid Ω(x)|2dx ∝ n− 32
+
+From this, we can see that when representing a domain with a single inter-face, the SDF offers higher accuracy. However, in certain special cases—such as when the interface aligns perfectly with a standard grid or when multiple interfaces are present—the characteristic function representation proves to be more advantageous. 
+
+5. Experiments 
+
+Finally, we conducted a series of experiments to validate the proposed method, demonstrating its generality and accuracy. 
+
+5.1. Change the external region. 
+
+First, we consider the scenario where only the domain Ω has been changed. Here, we let Ω be a varying star-shaped domain, while the interface is fixed at x = 0 . We examine the following Poisson equation interface problem: 
+
+−∆u = f (x), for x ∈ Ω\Γ
+
+u|∂Ω = 0 ,
+
+[u]|Γ = α, [au ′]|Γ = β. 
+
+(41) 19 Normal derivative jump function value jump Our method 1.41e-2 6.43e-2 
+
+Geo-FNO 5.14e-2 19.94e-2 
+
+> Table 1: The comparison with the deformation-based method Geo-FNO at randomly gen-erated non-training grid. It can be observed that, our method achieves better performance than Geo-FNO at randomly generated non-training grid points.
+
+We constructed a dataset consisting of N = 4000 samples. Each sample 
+
+i contains a pair of geometric, source and interface parameters, denoted as 
+
+(r(i), f (i), p(i), u(i)).
+
+• Geometry : The domain Ω(i) is a star-shaped region within [−0.5, 0.5] 2.It is parameterized by M = 100 boundary points sampled in polar coordinates, represented by the radial vector r(i) ∈ R100 .
+
+• Source functions : The source function is a random function gener-ated by a Gaussian process on [−0.5, 0.5] 2. It is parameterized using a standard 100 × 100 grid, resulting in a matrix f (i) ∈ R100 ×100 .
+
+• Interface conditions : The jump conditions are scalar values β(i),independently and uniformly sampled from the interval [0 , 0.5] .
+
+• Reference solution : The ground truth solution u(i) is obtained by solving the governing equation using FEniCS. This field serves as the target for calculating the training loss. 
+
+Grid Encoding : To facilitate processing by the neural operator, we map the raw boundary data onto a uniform 100 × 100 Cartesian grid over the domain. We employ characteristic function encoding to represent interface parameters, and finally resulting in an input tensor of size 3 × 100 × 100 .
+
+Network parameter settings : The FNO architecture is configured with a depth of L = 5 layers. Within each Fourier layer, the width of the feature map is set to dv = 64 . We apply a low-pass filter in the frequency domain by truncating the spectrum at kmax = 12 modes. 
+
+Training Details : The network parameters are optimized using the Adam algorithm. We set learning rate to be η = 10 −3 and employ a batch size of Nb = 5 . The model is trained for 2000 epochs until convergence. We also tested cases where the interface function value jump is non-zero. For this discontinuous scenario, aside from fixing the source term f
+
+20 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normal derivative jump
+
+Groud Truth      
+
+> 0.006
+> 0.004
+> 0.002
+> 0.000
+> 0.002
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Prediction      
+
+> 0.006
+> 0.004
+> 0.002
+> 0.000
+> 0.002
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Error                
+
+> 0.0001
+> 0.0002
+> 0.0003
+> 0.0004
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Function value jump
+> 0.06
+> 0.04
+> 0.02
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0.06
+> 0.04
+> 0.02
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0.002
+> 0.004
+> 0.006
+> 0.008
+> 0.010
+
+Figure 2: Prediction results when only the external region is varied. The relative L2 errors for the two experiments are 1.07% and 2.69%, respectively 
+
+and setting β = 0 with α chosen uniformly at random, all other settings remained identical to the previous ones. We present the results of this experiment in Figure 2. The first row corresponds to the case with only a jump in the normal derivative, while the second row corresponds to the case with a jump in the function value. The relative L2 errors for the two experiments are 1.07% and 2.69%, respectively. Finally, we conducted an additional comparative experiment, comparing our method with the deformation-based Geo-FNO. The experimental results are presented in Table 1. Since the original training grids of the two methods are different, we consider the predicted values on another set of randomly generated grid points. For both methods, bilinear interpolation is used to obtain the values at non-training grid points. It can be seen that on the random grid points, our method performs significantly better than Geo-FNO. 
+
+5.2. Change the interface. 
+
+In this experiment, we consider an example where only the internal inter-face is varied. Here, we set the domain Ω as [0 , 1] 2, with the internal interface being a star-shaped region that changes within [0 , 1] 2. We still consider the Poisson equation shown in Equation (41). 21 We constructed a dataset consisting of N = 4000 samples. Each sample i
+
+contains a pair of geometric configurations and interface parameters, denoted as (r(i), p(i), u (i)).
+
+• Geometry : The interface Γ(i) is a star-shaped region within [0 , 1] 2.It is parameterized by M = 100 boundary points sampled in polar coordinates, represented by the radial vector r(i) ∈ R100 .
+
+• Interface parameters : The jump conditions consist of two scalar values, α(i) and β(i), which are independently and uniformly sampled from the interval [0 , 0.1] . Collectively, we denote the interface vector as p(i) = [ α(i), β (i)].
+
+• Reference solution : The ground truth solution u(i) is obtained by solving the governing equation using FEniCS. 
+
+Grid Encoding : To facilitate processing by the neural operator, we map the raw boundary data onto a uniform 100 × 100 Cartesian grid over the domain. We tested both encoding methods—the characteristic function and the SDF—and will present a comparison of their results. This results in an input tensor of size 3 × 100 × 100 .In this experiment, the network and training parameters are all identical to those in the previous experiment, so they are not listed separately. We present the prediction results for this experiment in Figure 3, where the first row shows the grid point plot and the second row shows the triangular mesh plot. The relative L2 error for this experiment is 2.20%. 
+
+5.3. 2D TFPM basis 
+
+In the first two experiments, we separately verified that our method can effectively handle variations in both internal interfaces and external domains. Here, we will conduct a two-dimensional experiment to demonstrate the su-periority of the TFPM basis-based approach. We consider the Helmholtz equation 3. For simplicity, we set a = b = 1 ,
+
+f (x) = 1 , g(x) = 0 . The solution domain Ω is [0 , 1] 2, and the interface 
+
+Γ is a small square with side length 0.4 inside Ω. In this experiment, we prescribe the interface conditions as α = 0 .02 and β = 0 .02 , while allowing the interface geometry Γ to vary. To validate the superiority of the TFPM basis, we constructed a dataset consisting of N = 2000 samples. Each sample i contains a pair of geometric configurations and interface parameters, denoted as (Ω (i), p(i), u (i)).22 0.0 0.2 0.4 0.6 0.8 1.0 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Prediction      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Ground truth      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Error      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Prediction(Mesh)      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Ground truth(Mesh)      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Error(Mesh) 
+
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.004
+> 0.003
+> 0.002
+> 0.001
+> 0.000
+> 0.001
+> 0.002
+> 0.003
+> 0.004
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.00
+> 0.01
+> 0.02
+> 0.03
+> 0.04
+> 0.004
+> 0.002
+> 0.000
+> 0.002
+> 0.004
+
+Figure 3: Prediction results for the star-shaped internal interface. The relative L2 error for this experiment is 2.20%. 
+
+Square( 50 × 50 ) Square( 20 × 20 ) 3D( 21 × 21 × 21 )FEM_basis 2.65e-2 9.81e-2 1.26e-2 TFPM_basis 5.23e-3 4.60e-2 6.04e-3 
+
+Table 2: L2 Error of different basis 
+
+• Geometry : The interface Γ(i) is small square with side length 0.4 inside [0 , 1] 2. It is explicitly parameterized by the coordinates of its four vertices, denoted as v(i) = {(xk, y k)}4
+
+k=1 .
+
+• Interface parameters : The jump conditions consist of two scalar val-ues, α(i) and β(i), which are independently and uniformly sampled con-stants. Collectively, we denote the interface vector as p(i) = [ α(i), β (i)].
+
+• Reference solution : The ground truth solution u(i) is obtained by solving the governing equation using TFPM. 
+
+Multi-resolution Downsampling : To demonstrate the resolution-inde-pendence and superiority of the TFPM basis, we perform systematic down-sampling on the raw 100 × 100 data. By selecting grid points at fixed strides 23 0.0  
+
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Ground truth (Scatter plot)  
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Prediction (Scatter plot)      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Ground truth (x = 0.5)      
+
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+
+Prediction (x = 0.5) 
+
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> 3.0
+
+Figure 4: Prediction of 3D Example on TFPM basis. First row: 3D grid point distribution map; Second row: Cross-sectional view at x = 0 .5.
+
+(subsampling), we generate three additional low-resolution datasets with grid sizes of 50 × 50 , 20 × 20 , and 10 × 10 , respectively. 
+
+Grid Encoding : To facilitate processing by the neural operator, we map the raw boundary data onto a uniform m × m (where m < 100 ) Cartesian grid over the domain. And we use the signed distance function (SDF) to encode the domain. 
+
+Output Reconstruction : In the standard FNO architecture, the spatial resolution remains consistent; an input grid of size m × m (where m < 
+
+100 ) yields a raw prediction on the identical m × m grid. To evaluate the solutions at the original high resolution, we apply two distinct upsampling strategies: for the finite element basis method, we recover the resolution through standard bilinear interpolation, whereas for the TFPM approach, 24 we explicitly compute the fine grid values within each coarse cell utilizing Equation (18). In this experiment, the network and training parameters are all identical to those in the previous experiment, so they are not listed separately. Instead of presenting the results of this experiment separately, we have included them together with the subsequent 3D experiment in Table 2. It can be observed that in the 2D case, replacing the basis with the TFPM basis leads to a significant improvement in prediction performance. 
+
+5.4. 3D Example 
+
+Next, to more clearly demonstrate the advantages of the TFPM basis and illustrate that our network can handle high-dimensional cases, we present a three-dimensional experiment. Here, we again consider the Helmholtz equa-tion as in (18). In this experiment, we set b = 1 .0, α = 0 .2, β = 0 , g(x) = sin( x + y + z),and the interface is defined as z = κ, where κ is a random constant between 
+
+0.2 and 0.8.To evaluate the model’s capability in handling moving interfaces, we con-structed a dataset consisting of N = 2000 samples. Out of the total datasets, we randomly partitioned 1000 samples for training and 1000 for testing. Each sample i is characterized by its specific interface configuration, denoted as 
+
+(Ω (i), u (i)).
+
+• Geometry : The moving interface Γ(i) within the domain is explic-itly defined by the equation z = κ(i). The location of the interface is governed by a single scalar value κ(i), which is a random constant independently and uniformly sampled from the interval [0 .2, 0.8] .
+
+• Reference solution : The ground truth solution u(i) is obtained by solving the governing equation using FEniCS. In this experiment, the network, training parameters and output recon-struction methods are all identical to those in the 2D TFPM basis experi-ment, so they are not listed separately. We present the experimental results in Figure 4. The first row shows the 3D scatter plots, while the second row displays a 2D cross-sectional view. The L2 errors for this experiment are listed in the third column of Table 2. In the 3D case, we reduced the geom-etry term input resolution from 2000 × 41 × 41 × 41 to 2000 × 21 × 21 × 21 .With a coarser grid, the TFPM-based results show a significant improvement over the baseline. 25 out  
+
+> 
+> in
+> 
+> 0
+
+ttime   
+
+> INITAIL STATE DIFFUSION STEADY STATE Figure 5: Schematic diagram of transport.
+
+5.5. Transport kinetics across interfaces 
+
+Finally, we simulated a problem with a specific physical background. We simulated the time-dependent inward diffusion of a solute from a reservoir (matrix) into a solute-free domain (inclusion) across a stationary interface Γ. The transport kinetics were modeled using the sharp-interface limit framework proposed by Hubatsch et al.[3]. The governing dynamics in the bulk sub-domains Ωin and Ωout follow the standard diffusion equation 
+
+∂tϕ = ∇· (D∇ϕ). A key feature of our setup is the non-equilibrium boundary condition at the interface. Instead of assuming continuous chemical poten-tial (perfect contact), we incorporated an interface resistance parameter ρ,which creates a barrier to transport. The mass flux j across the interface is proportional to the deviation from the equilibrium partition, governed by: 
+
+j · n = 1
+
+ρ(ϕin − Γ∗ϕout )
+
+where Γ∗ is the equilibrium partition coefficient. The system was initialized with a uniform external concentration ϕout (t = 0) = ϕ0 and an empty interior 
+
+ϕin (t = 0) = 0 . We observed the relaxation process as the internal concentra-tion gradually increased towards the equilibrium state ϕeq in = Γ ∗ϕeq out , impeded by the interface resistance ρ.In the experiment, our setup is as follows: the inner region is an ellipse 
+
+Ω, the outer region is [0 , 1] 2 \ Ω, and the interface is the elliptical boundary 
+
+∂Ω. The parameters are set as ρ = 0 .2, with interior and exterior diffusion coefficients of 0.1 and 0.5, respectively. We constructed a dataset consisting of N = 2000 samples. Each sample 
+
+i contains a pair of geometric configurations and initial states, denoted as 26 0.0 0.2 0.4 0.6 0.8 1.0           
+
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> y
+> Initial State
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> y
+> Prediction(t = 0.1)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> y
+> Ground Truth(t = 0.1)
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 0.3
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+
+Figure 6: Prediction of transport kinetics of L2 Error 0.31%. 
+
+(g(i), u (i)
+
+init , u (i)
+
+t ).
+
+• Geometry : The interface Γ(i) is defined as an ellipse centered at 
+
+(0 .5, 0.5) , satisfying the equation (x − 0.5) 2/(a(i))2 + ( y − 0.5) 2/(b(i))2 =1. It is parameterized by the semi-major and semi-minor axes, denoted as g(i) = [ a(i), b (i)], which are randomly sampled. 
+
+• Initial states : The initial field u(i)
+
+init is generated as a piecewise function based on the elliptical interface. The values in the interior region Ωin 
+
+are strictly set to 0, while the exterior region Ωout is initialized with a random function generated by a Gaussian process. 
+
+• Reference solution : The ground truth solution u(i)
+
+t at t = 0 .1 is obtained by solving the governing equation using FEniCS and time step of 0.01. In this experiment, the network and training parameters are all identical to those in the previous experiment, so they are not listed separately. We present the prediction results in Figure 6. In the comparison plot, we have drawn white contour lines, from which it can be seen that the model achieves good predictive performance, with an average L2 error of 0.31%. 
+
+6. Conclusions 
+
+In this work, we have presented a novel neural operator framework for solving linear interface problems on variable domains. We propose a general extension-based framework for linear PDE interface problems with varying domains, integrated with a TFPM basis-based approach to minimize GPU memory usage, particularly in high dimensions. We establish a rigorous theoretical foundation by proving the continuity of the Helmholtz operator 27 under geometric variations and deriving error estimates for our encoding strategies. The resulting method is broadly applicable, handling complex interface geometries with minimal restrictions. The main contributions of this paper are as follows: 
+
+• We propose an extension-based framework for solving interface prob-lems involving variations in both the domain and interfaces, along with encoding strategies suitable for general problems with multiple inter-faces. 
+
+• We integrate the baseline method with the Tailored Finite Point Method (TFPM), introducing a TFPM basis-based approach for varying-domain interface problems. This approach effectively reduces GPU memory consumption for input data and is particularly advantageous in high-dimensional problems. 
+
+• Theoretically, we conduct a series of theoretical analyses, including proving the continuity of the Helmholtz operator with respect to vari-ations in the domain and interfaces under specific conditions, as well as providing error estimates for two domain encoding strategies. While the proposed method demonstrates robust performance in different scenarios, extending it to higher dimensions still presents a significant chal-lenge. A critical bottleneck is the reliance on standard grid-based encoding, which suffers from the curse of dimensionality; as the dimension increases, the size of the encoding tensor grows exponentially, imposing severe compu-tational and memory overheads. Consequently, our future work will focus on developing more efficient, low-rank, or sparse encoding schemes. Our goal is to represent high-dimensional functions and domains with significantly less data, thereby ensuring both scalability and superior performance in high-dimensional applications. 
+
+Acknowledgments 
+
+This research is supported by National Natural Science Foundation of China (Grant Nos. 12025104, Nos. 62106103) and the basic research project (ILF240021A25). 28 References 
+
+[1] C.Y. Wang and Venkat Srinivasan, Computational battery dynamics (CBD)—electrochemical/thermal coupled modeling and multi-scale mod-eling , Journal of power sources, vol. 110, no. 2, pp. 364–376, 2002. [2] Zvi Hashin, Thermoelastic properties of fiber composites with imperfect interface , Mechanics of Materials, vol. 8, no. 4, pp. 333–348, 1990. [3] Lars Hubatsch, Stefano Bo, Tyler S Harmon, Anthony A Hyman, Christoph A Weber, and Frank Jülicher, Transport kinetics across in-terfaces between coexisting liquid phases , eLife, vol. 14, 2025. [4] Adam Z Weber and John Newman, Modeling transport in polymer-electrolyte fuel cells , Chemical reviews, vol. 104, no. 10, pp. 4679–4726, 2004. [5] Alan Edelman, Tomás A Arias, and Steven T Smith, The geometry of algorithms with orthogonality constraints , SIAM journal on Matrix Analysis and Applications, vol. 20, no. 2, pp. 303–353, 1998. [6] P-A Absil, Robert Mahony, and Rodolphe Sepulchre, Optimization al-gorithms on matrix manifolds , Princeton University Press, 2008. [7] Zhongyi Huang, Tailored finite point method for the interface problem ,Networks Heterog. Media, vol. 4, no. 1, pp. 91–106, 2009. [8] Houde Han, Zhongyi Huang, and R Bruce Kellogg, A tailored finite point method for a singular perturbation problem on an unbounded domain ,Journal of Scientific Computing, vol. 36, no. 2, pp. 243–261, 2008. [9] Houde Han and Zhongyi Huang, Tailored finite point method for a sin-gular perturbation problem with variable coefficients in two dimensions ,Journal of Scientific Computing, vol. 41, no. 2, pp. 200, 2009. [10] Houde Han and Zhongyi Huang, A tailored finite point method for the Helmholtz equation with high wave numbers in heterogeneous medium ,Journal of Computational Mathematics, vol. 26, no. 5, pp. 728–739, 2008. 29 [11] Ivo Babuška, Solution of problems with interfaces and singularities , in Mathematical aspects of finite elements in partial differential equations, pp. 213–277, 1974. [12] John W Barrett and Charles M Elliott, Fitted and unfitted finite-element methods for elliptic equations with smooth interfaces , IMA journal of numerical analysis, vol. 7, no. 3, pp. 283–300, 1987. [13] Zhiming Chen and Jun Zou, Finite element methods and their conver-gence for elliptic and parabolic interface problems , Numerische Mathe-matik, vol. 79, no. 2, pp. 175–202, 1998. [14] Charles S Peskin, The immersed boundary method , Acta numerica, vol. 11, pp. 479–517, 2002. [15] Randall J LeVeque and Zhilin Li, The immersed interface method for elliptic equations with discontinuous coefficients and singular sources ,SIAM Journal on Numerical Analysis, vol. 31, no. 4, pp. 1019–1044, 1994. [16] Ralf Massjung, An unfitted discontinuous Galerkin method applied to elliptic interface problems , SIAM Journal on Numerical Analysis, vol. 50, no. 6, pp. 3134–3162, 2012. [17] Lin Mu, Junping Wang, Xiu Ye, and Shan Zhao, A new weak Galerkin finite element method for elliptic interface problems , Journal of Compu-tational Physics, vol. 325, pp. 157–173, 2016. [18] Robert I Saye, Efficient multigrid solution of elliptic interface problems using viscosity-upwinded local discontinuous Galerkin methods , Commu-nications in Applied Mathematics and Computational Science, vol. 14, no. 2, pp. 247–283, 2019. [19] Arthur Guittet, Mathieu Lepilliez, Sebastien Tanguy, and Frédéric Gi-bou, Solving elliptic problems with discontinuities on irregular domains– the Voronoi interface method , Journal of Computational Physics, vol. 298, pp. 747–765, 2015. [20] Ásdís Helgadóttir, Arthur Guittet, and Frédéric Gibou, On solving the Poisson equation with discontinuities on irregular interfaces: GFM and 
+
+30 VIM , International Journal of Differential Equations, vol. 2018, no. 1, pp. 9216703, 2018. [21] Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis, Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators , Nature machine intelli-gence, vol. 3, no. 3, pp. 218–229, 2021. [22] Zongyi Li, Nikola Borislavov Kovachki, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar, 
+
+Fourier Neural Operator for Parametric Partial Differential Equations ,in International Conference on Learning Representations, 2021. [23] Zongyi Li, Daniel Zhengyu Huang, Burigede Liu, and Anima Anand-kumar, Fourier neural operator with learned deformations for pdes on general geometries , Journal of Machine Learning Research, vol. 24, no. 388, pp. 1–26, 2023. [24] Shanshan Xiao, Pengzhan Jin, and Yifa Tang, A deformation-based framework for learning solution mappings of PDEs defined on varying domains , arXiv preprint arXiv:2412.01379, 2024. [25] Minglang Yin, Nicolas Charon, Ryan Brody, Lu Lu, Natalia Trayanova, and Mauro Maggioni, Dimon: Learning solution operators of partial dif-ferential equations on a diffeomorphic family of domains , arXiv preprint arXiv:2402.07250, 2024. [26] Zongyi Li, Nikola Kovachki, Chris Choy, Boyi Li, Jean Kossaifi, Shourya Otta, Mohammad Amin Nabian, Maximilian Stadler, Christian Hundt, Kamyar Azizzadenesheli, and others, Geometry-informed neural opera-tor for large-scale 3d pdes , Advances in Neural Information Processing Systems, vol. 36, pp. 35836–35854, 2023. [27] Sidi Wu, Aiqing Zhu, Yifa Tang, and Benzhuo Lu, Solving parametric elliptic interface problems via interfaced operator network , Journal of Computational Physics, vol. 514, pp. 113217, 2024. [28] Ye Li, Ting Du, and Zhongyi Huang, Tailored Finite Point Operator Networks for Interface Problems , in International Conference on Artifi-cial Neural Networks, pp. 60–72, 2024. 31 [29] Ting Du, Xianliang Xu, Wang Kong, Ye Li, and Zhongyi Huang, 
+
+Physics-Informed Tailored Finite Point Operator Network for Paramet-ric Interface Problems , arXiv preprint arXiv:2409.10284, 2024. [30] Martin Costabel and Frédérique Le Louër, Shape derivatives of bound-ary integral operators in electromagnetic scattering. Part I: Shape differ-entiability of pseudo-homogeneous boundary integral operators , Integral Equations and Operator Theory, vol. 72, no. 4, pp. 509–535, 2012. [31] Jacques Simon, Differentiation with respect to the domain in boundary value problems , Numerical Functional Analysis and Optimization, vol. 2, no. 7-8, pp. 649–687, 1980. [32] Cuiyu He, Xiaozhe Hu, and Lin Mu, A mesh-free method using piecewise deep neural network for elliptic interface problems , Journal of Compu-tational and Applied Mathematics, vol. 412, pp. 114358, 2022. [33] Zhongjian Wang and Zhiwen Zhang, A mesh-free method for interface problems using the deep learning approach , Journal of Computational Physics, vol. 400, pp. 108963, 2020. [34] Ziqi Liu, Wei Cai, and Zhi-Qin John Xu, Multi-scale deep neural net-work (MscaleDNN) for solving Poisson-Boltzmann equation in complex domains , arXiv preprint arXiv:2007.11207, 2020. [35] Wei-Fan Hu, Te-Sheng Lin, and Ming-Chih Lai, A discontinuity cap-turing shallow neural network for elliptic interface problems , Journal of Computational Physics, vol. 469, pp. 111576, 2022. [36] Vikas Dwivedi, Nishant Parashar, and Balaji Srinivasan, Distributed physics informed neural network for data-efficient solution to partial dif-ferential equations , arXiv preprint arXiv:1907.08967, 2019. [37] Ameya D Jagtap and George Em Karniadakis, Extended physics-informed neural networks (XPINNs): A generalized space-time domain decomposition based deep learning framework for nonlinear partial dif-ferential equations , Communications in Computational Physics, vol. 28, no. 5, 2020. 32 [38] Sidi Wu and Benzhuo Lu, INN: Interfaced neural networks as an acces-sible meshless approach for solving interface PDE problems , Journal of Computational Physics, vol. 470, pp. 111588, 2022. [39] Wuyang Li, Xueshuang Xiang, and Yingxiang Xu, Deep domain de-composition method: Elliptic problems , in Mathematical and Scientific Machine Learning, pp. 269–286, 2020. [40] Maziar Raissi, Paris Perdikaris, and George E Karniadakis, Physics-informed neural networks: A deep learning framework for solving for-ward and inverse problems involving nonlinear partial differential equa-tions , Journal of Computational physics, vol. 378, pp. 686–707, 2019. 33

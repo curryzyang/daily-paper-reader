@@ -1,0 +1,1041 @@
+Title: Simple yet Effective: Low-Rank Spatial Attention for Neural Operators
+
+URL Source: https://arxiv.org/pdf/2604.03582v1
+
+Published Time: Tue, 07 Apr 2026 00:26:28 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+## Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+Zherui Yang 1 Haiyang Xin 1 Tao Du 2 3 Ligang Liu 1
+
+Abstract 
+
+Neural operators have emerged as data-driven sur-rogates for solving partial differential equations (PDEs), and their success hinges on efficiently modeling the long-range, global coupling among spatial points induced by the underlying physics. In many PDE regimes, the induced global inter-action kernels are empirically compressible, ex-hibiting rapid spectral decay that admits low-rank approximations. We leverage this observation to unify representative global mixing modules in neural operators under a shared low-rank template: compressing high-dimensional pointwise features into a compact latent space, processing global in-teractions within it, and reconstructing the global context back to spatial points. Guided by this view, we introduce Low-Rank Spatial Attention (LRSA) as a clean and direct instantiation of this template. Crucially, unlike prior approaches that often rely on non-standard aggregation or normal-ization modules, LRSA is built purely from stan-dard Transformer primitives, i.e., attention, nor-malization, and feed-forward networks, yielding a concise block that is straightforward to implement and directly compatible with hardware-optimized kernels. In our experiments, such a simple con-struction is sufficient to achieve high accuracy, yielding an average error reduction of over 17% relative to second-best methods, while remaining stable and efficient in mixed-precision training. 
+
+1. Introduction 
+
+Solving partial differential equations (PDEs) is fundamen-tal for modeling physical and engineering systems, with applications ranging from weather forecasting to fluid dy-namics and structural analysis (Bonev et al., 2023; Horie & Mitsume, 2024; Li et al., 2022b). Traditional numerical solvers (e.g., finite element methods) discretize the domain     
+
+> *Equal contribution 1University of Science and Technology of China 2Tsinghua University 3Shanghai Qi Zhi Institute. Corre-spondence to: Ligang Liu <lgliu@ustc.edu.cn >.Preprint.
+
+and solve large algebraic systems, whose computational costs grow rapidly with the number of degrees of freedom as resolution increases. Recently, learning-based surrogates, in particular, neural operators (Kovachki et al., 2023; Lu et al., 2019; Azizzadenesheli et al., 2024), have emerged as a promising alternative by learning mappings between function spaces and enabling fast inference after training. A central challenge in neural operator design is to capture the long-range, global dependencies inherent to physical phenomena, while keeping computation and memory costs scalable with the number of spatial points. The community has explored several directions. Spectral and basis-based operators perform global mixing through a compact set of modes. Fourier Neural Operator (FNO) and its variants (Li et al., 2020b; 2022b; Kossaifi et al., 2023) employ Fourier bases with high-frequency truncation to achieve global mix-ing. On irregular geometries, Fourier bases are replaced by Laplace eigenfunctions to obtain geometry-aware global representations (Yue et al., 2025; Chen et al., 2024). While effective, these methods fundamentally rely on predefined analytical bases, which often necessitate specific discretiza-tions or geometric priors to function correctly. Attention mechanisms (Vaswani et al., 2017) provide a flex-ible, data-driven way to model global correlations, but full attention scales quadratically in the number of points, which is prohibitive for dense prediction and motivates efficient variants. Linear attention variants reduce complexity by reordering computations or approximating the attention ker-nel (Cao, 2021), and structured designs further exploit sep-arable patterns in spatial interactions (Li et al., 2023b). A complementary direction introduces an explicit latent bottle-neck. Transolver and follow-up work (Wu et al., 2024; Hu et al., 2025) learn a data-driven compression by explicitly slicing and aggregating pointwise features into a fixed num-ber of latent tokens, enabling accurate global mixing with near-linear scaling when the latent size is fixed. However, ensuring stable, well-conditioned global mixing in these attention-based designs often requires extra non-standard mechanisms to avoid degeneracies (Luo et al., 2025; Li et al., 2022a), departing from purely standard attention operations. Notably, an intrinsic low-rank structure unifies both the physical nature of PDE interactions and the architectural design of efficient neural operators. From a physics per-1
+
+> arXiv:2604.03582v1 [cs.LG] 4 Apr 2026
+
+Simple yet Effective: Low-Rank Spatial Attention for Neural Operators Neural Operators Global Mix 
+
+Compress Process Reconstruct 
+
+Basis Projection 
+
+Feature Mapping 
+
+Latent Aggregation 
+
+…
+
+Basis Expansion 
+
+Kernel Product 
+
+Broadcasting 
+
+… 
+
+> <latexit sha1_base64="Aqh7z2wi6b1ySMXyNtp3NNJQwzU=">AAACuXicdVHLbhMxFPUMrxJeKSzZWK0QSEjRDIuA1E0Em6xQeSStGk9HHudOYuqxR/YdaGTNX/BhiF3/Bk9SJGjaK1k6Ovee4+vjolbSYZJcRPGt23fu3tu533vw8NHjJ/3dp1NnGitgIowy9rjgDpTUMEGJCo5rC7wqFBwVZx+6/tF3sE4a/RVXNWQVX2hZSsExUHn/15gyqSmrOC6Lwn9uT/3HlvbYuZWLJXJrzY8ZZQjn6IWpgrVzLc08neb2lKGpaRg+2bKwN1jU1oi/DuyLXFQ8t50DQ6nm4E9ukFkQRju0jcC1dLJRjV9es3ve308GybroNkgvwf5oj73+eTFaHeb932xuRFOBRqG4c7M0qTHz3KIUCtoeaxzUXJzxBcwC1LwCl/l18i19EZg5LY0NRyNds/8qPK+cW1VFmOy2dFd7HXldb9Zg+S7zUtcNghabi8pGUTS0+0Y6lyEUVKsAuLAy7ErFklsuMHx2L4SQXn3yNpi+GaTDwfBTSOM92dQOeU72yCuSkrdkRMbkkEyIiIYRiyAq44OYx8v422Y0ji41z8h/Fbs/kZjcLQ==</latexit>
+
+H → RN V →
+
+r
+
+↑↑↑↑↑↑↓
+
+compress Z → Rr !r
+
+↑↑↑↑↓
+
+process 
+
+˜Z Ur
+
+↑↑↑↑↑↑↑↓
+
+reconstruct H→ → RN
+
+Numerical Low Rank Approximation  
+
+> <latexit sha1_base64="bnbGsH9cvPgMCPTEqRUy4jYc6u0=">AAAB7XicbVA9TwJBEJ3DL8Av1NJmIzGxIncWakm0scREPiIQsrfswcre3mV3zkgu/AcbC4yxtfS/2PlrdPkoFHzJJC/vzWRmnh9LYdB1v5zMyura+kY2l9/c2t7ZLezt10yUaMarLJKRbvjUcCkUr6JAyRux5jT0Ja/7g6uJX3/g2ohI3eIw5u2Q9pQIBKNopVoLRchNp1B0S+4UZJl4c1Is5+Lx3cfjd6VT+Gx1I5aEXCGT1Jim58bYTqlGwSQf5VuJ4TFlA9rjTUsVtUva6fTaETm2SpcEkbalkEzV3xMpDY0Zhr7tDCn2zaI3Ef/zmgkGF+1UqDhBrthsUZBIghGZvE66QnOGcmgJZVrYWwnrU00Z2oDyNgRv8eVlUjsteWelsxubxiXMkIVDOIIT8OAcynANFagCg3t4gjG8OJHz7Lw6b7PWjDOfOYA/cN5/ANjwkw0=</latexit>
+
+→ <latexit sha1_base64="bnbGsH9cvPgMCPTEqRUy4jYc6u0=">AAAB7XicbVA9TwJBEJ3DL8Av1NJmIzGxIncWakm0scREPiIQsrfswcre3mV3zkgu/AcbC4yxtfS/2PlrdPkoFHzJJC/vzWRmnh9LYdB1v5zMyura+kY2l9/c2t7ZLezt10yUaMarLJKRbvjUcCkUr6JAyRux5jT0Ja/7g6uJX3/g2ohI3eIw5u2Q9pQIBKNopVoLRchNp1B0S+4UZJl4c1Is5+Lx3cfjd6VT+Gx1I5aEXCGT1Jim58bYTqlGwSQf5VuJ4TFlA9rjTUsVtUva6fTaETm2SpcEkbalkEzV3xMpDY0Zhr7tDCn2zaI3Ef/zmgkGF+1UqDhBrthsUZBIghGZvE66QnOGcmgJZVrYWwnrU00Z2oDyNgRv8eVlUjsteWelsxubxiXMkIVDOIIT8OAcynANFagCg3t4gjG8OJHz7Lw6b7PWjDOfOYA/cN5/ANjwkw0=</latexit> 
+
+→ 
+
+> <latexit sha1_base64="7/wA68++bOg3bV/rqODFdN/6hUw=">AAACC3icbVC7SgNBFJ2Nrxhfq5Y2Q4KQKuxaJJZBG8EmopsEsnGZncwmQ2Z3hplZMYT0Nn6B/2BjoYitha2d6Mc4eRQaPXDhcM693HtPKBhV2nE+rMzC4tLySnY1t7a+sbllb+/UFU8lJh7mjMtmiBRhNCGeppqRppAExSEjjbB/PPYbV0QqypMLPRCkHaNuQiOKkTZSYOdPAwl9JITk19ALpH9OuzEyWj2Ql77mAsLALjglZwL4l7gzUqjmi1+flbe7WmC/+x2O05gkGjOkVMt1hG4PkdQUMzLK+akiAuE+6pKWoQmKiWoPJ7+M4L5ROjDi0lSi4UT9OTFEsVKDODSdMdI9Ne+Nxf+8Vqqjw/aQJiLVJMHTRVHKoOZwHAzsUEmwZgNDEJbU3ApxD0mEtYkvZ0Jw51/+S+oHJbdcKp+ZNI7AFFmwB/KgCFxQAVVwAmrAAxjcgHvwCJ6sW+vBerZepq0ZazazC37Bev0G3qyeDA==</latexit>
+
+Kr → Ur !r V →
+
+r
+
+Figure 1. Compressibility of PDE interactions and the unified low-rank paradigm. Left: (a) original dense kernel, i.e., the Green function of 1D Poisson; (b–d) underlying low-rank properties, including: reconstructed kernel, fast spectral decay, and approximation error, derived from the numerical factorization illustrated in the middle. Middle: numerical low-rank approximation of global interactions via 
+
+Kr ≈ Ur Σr V ⊤
+
+r . Right: diverse neural-operator global-mixing modules unified as a learnable compress–process–reconstruct template. 
+
+spective, dense PDE interaction kernels (e.g., Green’s func-tions) often exhibit rapidly decaying singular values, making them well-approximated by low-rank factorizations (Fig. 1, Left/Middle). From a modeling perspective, many operator backbones implicitly mirror this structure (Fig. 1, Right): they either utilize truncated spectral bases, factorize the dense attention kernel via feature maps (as in linear atten-tion), or route information through a compact set of latent tokens. This dual observation motivates a unified view of global mixing as a compress–process–reconstruct template. However, realizing this structure often imposes structural constraints, such as prescribed bases or symmetries, which may complicate the implementation and hinder the direct use of hardware-optimized kernels (Dao et al., 2022). This raises a natural question: Can we realize such a low-rank global mixing using only standard Transformer primitives, without relying on specialized components? 
+
+In this work, we propose Low-Rank Spatial Attention (LRSA) as a direct answer. Restricting our design space strictly to standard Transformer primitives, i.e., scaled dot-product attention, normalization, and feed-forward networks (FFNs), we derive a concise architecture that mirrors the structure of low-rank factorization. LRSA first compresses global information from spatial point features into a compact set of latent tokens via cross-attention between learnable latent queries and the point features, forming a data-driven basis that adapts across discretizations and geometries. It then processes global information within this bottleneck via standard self-attention and FFNs, learning latent-to-latent interactions that capture couplings in the compressed sub-space. Finally, a second cross-attention reconstructs spatial point features from the processed latent bottleneck. This decouples reconstruction from compression, thereby im-proving flexibility. Despite its simplicity, LRSA attains competitive accuracy across diverse PDE benchmarks while remaining robust and efficient under mixed-precision train-ing. Our contributions are summarized as follows: • We unify global mixing modules in PDE operator learn-ing under a low-rank perspective, interpreting repre-sentative neural operators within this shared template. • Building on this view, we present Low-Rank Spatial Attention (LRSA), a concise global mixing block in-stantiated purely with standard Transformer primitives, which makes it amenable to optimized fused kernels. • We validate LRSA on diverse PDE problems, demon-strating its improved accuracy over existing baselines, together with superior training stability and efficiency under mixed-precision regimes. 
+
+2. Related Work 
+
+We position LRSA within the broader landscape of neural operators, specifically focusing on spectral and basis-based methods and scalable attention mechanisms for modeling global physical dependencies. 
+
+Spectral and Basis-based Neural Operators. A promi-nent paradigm in operator learning approximates solution operators via spectral transformations or basis expansions. Fourier Neural Operators (FNO) (Li et al., 2020b) and follow-ups (Kossaifi et al., 2023; Wen et al., 2022; Tran et al., 2023) achieve efficient global mixing by truncating frequencies and using FFT-based convolutions, leading to strong accuracy and favorable scaling on structured grids. To extend these ideas beyond regular grids, recent works incorporate geometric information through learned deforma-tions (Li et al., 2022b), direct spectral evaluations (Lingsch et al., 2024), and hybrid GNN-spectral designs such as GINO (Li et al., 2023c). Conceptually, these methods rely on a fixed global basis (e.g., Fourier modes) to capture long-range dependencies. Methods tailored to irregular domains, such as NORM (Chen et al., 2024) and HPM (Yue et al., 2025), replace Fourier modes with eigenfunctions of the Laplace–Beltrami operator to obtain geometry-aware spec-2Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+tral bases. We opt for learnable bases over fixed spectral ones, enabling an adaptive, data-driven representation for irregular, mesh-free geometries. 
+
+Efficient Attention for Operator Learning. While stan-dard Transformers (Vaswani et al., 2017) offer a flexible alternative for global modeling, their quadratic complexity poses a bottleneck for dense physical fields. To mitigate this, Galerkin Transformers (Cao, 2021) and Linear Attention variants (Katharopoulos et al., 2020; Li et al., 2022a) re-duce complexity by reordering matrix multiplications or ap-proximating the attention kernel with explicit feature maps. Other designs exploit structural assumptions for efficiency, such as axial factorization in Fact-Former (Li et al., 2023b). While these methods improve scalability, their approxima-tion strategies often compromise the sharp, non-linear focus provided by the full softmax attention mechanism (Qin et al., 2022). In contrast, LRSA routes global mixing through a compact latent bottleneck, retaining standard attention’s expressiveness while maintaining near-linear complexity. 
+
+Latent-Token and Bottleneck Architectures. Our work is most closely aligned with architectures that decouple com-putational cost from input resolution via latent bottlenecks. In computer vision, Perceiver IO (Jaegle et al., 2021) pio-neered the use of a fixed latent array to scale attention to massive multimodal inputs. Unlike Perceiver architectures, where the latent tokens constitute the backbone represen-tation, LRSA treats latents as an internal low-rank routing mechanism for global coupling within each layer. This design preserves the neural-operator convention that the spatial points are the primary state on which local chan-nel mixing and supervision are defined. In scientific ML, Transolver (Wu et al., 2024) aggregates spatial features into slices and broadcasts information back to points, achiev-ing near-linear complexity when the number of slices is fixed. Subsequent works like Transolver++ (Luo et al., 2025) introduce complex stochastic sampling mechanisms (e.g., Gumbel-Softmax) to enhance the assignments, while LinearNO (Hu et al., 2025) simplifies the module by reinter-preting the aggregation as a linear attention kernel. However, these approaches often rely on heuristic slice definitions or strictly couple the projection and reconstruction weights to approximate physical states. In contrast, LRSA is built from strictly standard Transformer primitives, which can simplify implementation and enable hardware-optimized kernels. 
+
+3. Method 
+
+3.1. Problem Setup 
+
+We study learning PDE solution operators on a bounded domain Ω ⊂ Rdphys . The inputs are given as an unordered point set {(xi, f i)}Ni=1 , with coordinates xi and features 
+
+fi. We predict target values {ui}Ni=1 on the same points (or query points), without assuming a grid or mesh connectivity. To process points, we lift coordinates and inputs into a 
+
+d-dimensional feature space. Let PE( ·) be a positional encoding (e.g., Fourier features) and Lift( ·) be a pointwise feed-forward network (FFN): 
+
+h(0)  
+
+> i
+
+= Lift  [fi, PE( xi)]  ∈ Rd,H(0) = [ h(0) 1 , . . . , h (0)  
+
+> N
+
+]⊤ ∈ RN ×d. (1) We then apply L pre-norm blocks to update point features, separating global spatial coupling from pointwise channel mixing (via FFNs). Concretely, each block takes the form 
+
+G(ℓ) = H(ℓ) + GlobalMix 
+
+
+
+Norm( H(ℓ)), X 
+
+
+
+,H(ℓ+1) = G(ℓ) + FFN 
+
+
+
+Norm( G(ℓ))
+
+
+
+,
+
+(2) where X = [ x1, . . . , x N ]⊤ and Norm denotes pointwise normalization, such as LayerNorm or RMSNorm (Ba et al., 2016; Jiang et al., 2023). We use GlobalMix to abstract the global coupling in neural operators. Since many PDE operators admit the integral form 
+
+(Kh)( x) = 
+
+Z
+
+> Ω
+
+κ(x, y ) h(y) dy, 
+
+GlobalMix( ·) serves as its discretization on sampled points. 
+
+3.2. Compressibility of Global Interaction Maps 
+
+For a given layer, we associate GlobalMix with an induced interaction map K(H, X ) ∈ RN ×N such that 
+
+GlobalMix( H, X ) ≈ K(H, X ) H, (3) with K(H, X ) typically dense, representing all-to-all inter-actions among spatial points, and potentially conditioned on both the current features H and the coordinates X. Materi-alizing or applying K explicitly leads to O(N 2) complexity, which is prohibitive at high resolutions. Empirically, the dense interaction maps induced by PDE operators often exhibit fast spectral decay, aligning with classical compres-sion results for integral operators (Bebendorf, 2008). This suggests that global coupling can be mediated through a small set of latent modes. Accordingly, we parameterize 
+
+GlobalMix using the low-rank factorization 
+
+K ≈ U GV ⊤, U, V ∈ RN ×M , G ∈ RM ×M , M ≪ N. 
+
+(4) Unlike standard SVD, we do not require orthogonality of 
+
+U, V , nor do we assume G is diagonal. Instead, we view Eq. (4) as a structural template: (i) Compression (V ⊤)maps high-dimensional point features to M compact latent tokens; (ii) Processing (G) mixes global information within 3Simple yet Effective: Low-Rank Spatial Attention for Neural Operators Cross 
+
+Attention 
+
+> Input Point
+> Features
+> Query
+> Learnable Queries
+> N×
+> M×
+
+Compression 
+
+> Global Latent
+> Representation
+> Value
+> Key
+
+Cross 
+
+Attention 
+
+Reconstruction 
+
+> Key
+> Value
+> Query
+> Output Point
+> Features
+
+Latent Processing  
+
+> Low-Rank
+> Spatial Attn.
+> Norm Norm
+
++ FFN + 
+
+> Input Output
+
+×L
+
+> Project
+> FFN FFN
+> Lifting
+
+FFN 
+
+FFN 
+
+Self Attention  
+
+> Figure 2. Overview of the neural operator backbone and the Low-Rank Spatial Attention (LRSA) block. LRSA routes global information through a compact latent bottleneck using only standard Transformer primitives.
+
+this efficient latent space; and (iii) Reconstruction (U )broadcasts the refined global context back to the spatial domain. Next, we use Eq. (4) to make explicit the choices of compression/reconstruction ( U, V ) and latent mixing ( G)in representative neural operators, thereby clarifying the design space targeted by LRSA. 
+
+3.3. A Unified Low-Rank View of Global Mixing Spectral / Basis-based Operators: Fixed Bases Let Φ ∈
+
+RN ×M be the evaluation matrix of M basis functions on the sampled points. A generic layer is 
+
+H′ = Φ G Φ⊤H, (5) which is a low-rank GlobalMix with compression and re-construction fixed by a prescribed basis , i.e., U = V = Φ .FNO (Li et al., 2020b) corresponds to choosing Φ as trun-cated low-frequency Fourier modes on regular grids (with FFT-based compression/reconstruction). On irregular ge-ometries, NORM (Chen et al., 2024) and HPM (Yue et al., 2025) replace Fourier modes with Laplace–Beltrami eigen-functions, yielding geometry-aware but still fixed compres-sion and reconstruction once the discretization is given. 
+
+Attention-based Operators: Data-driven Compression. 
+
+A broad family of operator learners constructs compres-sion/reconstruction from data, i.e., U (H, X ) and V (H, X )
+
+are feature-dependent: 
+
+Z = V (H, X )⊤H ∈ RM ×d, H′ = U (H, X ) eZ, (6) where U, V ∈ RN ×M are learned compression and recon-struction maps. Linear attention variants (Cao, 2021; Li et al., 2022a) approximate attention with a feature-map kernel ϕ(Q)ϕ(K)⊤ and compute it in linear time via as-sociative reordering; in our template, this corresponds to 
+
+U = ϕ(Q), V = ϕ(K) and a simplified latent mixer. Fact-Former (Li et al., 2023b) constrains U, V via axial factoriza-tion, projecting features onto decoupled 1D axes to approxi-mate high-dimensional integrals. Recent latent-token operators such as Transolver (Wu et al., 2024) implement the compression map V ⊤ via slicing : they first construct an N × M soft assignment (slice) matrix that partitions spatial points into M slices, and then aggregate features within each slice to form latent tokens. The slicing weights are produced by a learnable linear map and can be interpreted as attention scores induced by a set of learnable latent queries (see Appendix B for an explicit mapping to standard attention). Transolver reuses the slice assignment for broadcasting latents back to points, which implicitly ties reconstruction and compression (enforcing a symme-try where U ∝ V ). LinearNO (Hu et al., 2025) keeps the slicing-based design but decouples U and V and restricts the latent mixing G to a simplified form. To avoid slice degener-ation, additional mechanisms such as learnable temperatures and Gumbel-Softmax are introduced. Although effective, these approaches typically require explicitly materializing the N × M weights and applying extra normalization and aggregation outside standard dot-product attention, which makes them difficult to directly leverage optimized compute kernels and tends to be more fragile under half-precision. Overall, Eq. (4) highlights the desired design: (i) data-driven 
+
+U, V for diverse geometries, (ii) a powerful latent mixer 
+
+G for nonlinear correlations, and (iii) an implementation expressed entirely with standard primitives. LRSA is a minimal instantiation of this design. 
+
+3.4. Low-Rank Spatial Attention (LRSA) 
+
+LRSA instantiates the low-rank template in Eq. (4) with a data-driven basis learned via standard Transformer primi-4Simple yet Effective: Low-Rank Spatial Attention for Neural Operators   
+
+> Figure 3. Qualitative performance comparison across diverse discretizations. From top-left to bottom-right: Navier-Stokes (regular grid), Elasticity (point cloud), Airfoil and Plasticity (structured grid). Error maps are visualized on the same scale for each task. LRSA yields lower relative errors and preserves sharper physical patterns in high-frequency regions compared to Transolver.
+
+tives, while keeping the latent operator G expressive. We use standard scaled dot-product attention (SDPA): 
+
+Attn( Q, K, V ) = softmax 
+
+
+
+QK ⊤/pdh
+
+
+
+V, (7) where the softmax is taken over the key dimension. In prac-tice, we employ multi-head attention and the head indices are omitted for clarity. All parameters, including the latent queries defined below, are layer-specific. 
+
+Compression ( V ⊤). LRSA compresses point features into 
+
+M latent tokens using cross-attention between a set of learn-able latent queries P ∈ RM ×d and spatial points: 
+
+Z = Attn 
+
+
+
+P W ↓
+
+> Q
+
+, HW ↓ 
+
+> K
+
+, HW ↓
+
+> V
+
+
+
+∈ RM ×d. (8) This produces a compact set of latent tokens as global latent representations, implementing the compression map V ⊤.
+
+Latent Mixing ( G). We apply a standard Transformer (self-attention and FFN) on the compact tokens: 
+
+˜Z = Z + FFN in (Norm (Z)) ,
+
+ˆZ = ˜Z + SelfAttn( Norm ( ˜Z)) ,Z′ = ˆZ + FFN out (Norm ( ˆZ)) .
+
+(9) Self-attention enables token mixing across latents to capture global correlations, while the FFNs allow the channel mix-ing within each token. By keeping M ≪ N , we afford an expressive operator G at low cost. 
+
+Reconstruction ( U ). We propagate the processed latents back to all points via another cross-attention: 
+
+∆H = Attn 
+
+
+
+HW ↑
+
+> Q
+
+, Z ′W ↑ 
+
+> K
+
+, Z ′W ↑
+
+> V
+
+
+
+∈ RN ×d, (10) followed by a residual update H′ = H + ∆ H. Impor-tantly, LRSA parameterizes compression and reconstruction with two independent attentions, avoiding tying constraints between writing into and reading from the latent space. 
+
+Complexity and Engineering Advantages. LRSA re-places pointwise all-to-all interactions with two cross-attentions of width M and a latent self-attention over M
+
+tokens. Ignoring constant factors (heads and model width) and noting that the rank M can be kept small regard-less of resolution, the computational cost O(N M + M 2)
+
+scales near-linearly in N . Crucially, LRSA replaces slicing-based tokenization (which explicitly materializes an N ×
+
+M assignment matrix and performs additional aggrega-tion/renormalization steps outside the attention primitive) with two standard cross-attention calls and a latent self-attention block. As a result, all aggregation, broadcasting, and normalization are handled inside SDPA, enabling di-rect use of highly-optimized kernels (e.g., FlashAttention-2 (Dao, 2024), Liger-Kernel (Hsu et al., 2025)). 
+
+4. Experiments 
+
+We evaluate LRSA on a diverse suite of benchmarks span-ning regular grids, structured meshes, and irregular point clouds. Our experiments aim to verify whether LRSA achieves competitive or superior accuracy across varying geometries compared to strong spectral and attention-based baselines. We also evaluate LRSA’s numerical stability and efficiency under mixed-precision, a regime in which existing attention-based operators often fail (Figure 4). Un-less otherwise specified, we report the test relative L2 error (∥ˆu − u∥2/∥u∥2). To ensure a fair comparison, we align baselines by parameter budget and training configurations. Details on the experiments are provided in Appendix D. 
+
+4.1. Model Accuracy Standard Benchmarks. We evaluate LRSA on six stan-dard PDE benchmarks spanning regular grids (Darcy, Navier–Stokes) and structured meshes/point clouds (Airfoil, Plasticity, Pipe, Elasticity). These tasks represent small-to-medium scale regimes with spatial resolutions ranging from ∼ 1k to ∼ 16 k points; full dataset specifications 5Simple yet Effective: Low-Rank Spatial Attention for Neural Operators     
+
+> Table 1. Standard benchmarks. Comparison of test relative L2errors on six standard PDE benchmarks. Bold indicates the best result, and an underscore indicates the second-best result. “–” indicates the method is not applicable.
+
+Method STRUCTURED MESH REGULAR GRID POINT CLOUD 
+
+AIRFOIL PIPE PLASTICITY NAVIER –S TOKES DARCY ELASTICITY 
+
+FNO (2020b) – – – 0.1556 0.018 –F-FNO (2023) 0.0078 0.0050 0.0047 0.2231 0.0077 0.0263 LSM (2023) 0.0059 0.0050 0.0025 0.1535 0.0065 0.0218 HPM (2025) 0.0047 0.0030 0.0008 0.0734 0.0046 –LNO (2024) 0.0053 0.0031 0.0028 0.0734 0.0063 0.0066 Transolver (2024) 0.0053 0.0030 0.0013 0.0882 0.0055 0.0065 Transolver++ (2025) 0.0051 0.0027 0.0014 0.1010 0.0056 0.0064 LinearNO (2025) 0.0049 0.0024 0.0011 0.0699 0.0050 0.0050 Ours 0.0042 0.0023 0.0005 0.0484 0.0043 0.0033 
+
+are provided in Appendix C. We compare against two dis-tinct categories of baselines: (i) Spectral-based methods, including FNO variants (Li et al., 2020b; Tran et al., 2023), LSM (Wu et al., 2023), and HPM (Yue et al., 2025), which rely on global frequency or eigen-decompositions; and (ii) Attention-based methods, including Transolver (Wu et al., 2024), LNO (Wang & Wang, 2024), and LinearNO (Hu et al., 2025), which approximate global attention via vary-ing compression strategies. A qualitative comparison across diverse discretizations is illustrated in Figure 3. Results in Table 1 demonstrate that LRSA achieves the best performance across all six tasks. While the performance gap is narrower on simpler, quasi-static problems (e.g., Pipe and Darcy) where baselines already achieve low errors, LRSA exhibits advantages especially on tasks involving irregular domains or complex dynamics (e.g., Elasticity and Navier– Stokes) compared to the next-best competitors. This im-provement suggests that standard, unconstrained attention primitives suffice to achieve high accuracy on complex phys-ical dynamics, without relying on handcrafted heuristics. 
+
+Irregular Benchmarks. We further evaluate LRSA on a suite of irregular domain benchmarks (Chen et al., 2024): Irregular Darcy, Pipe Turbulence, Heat Transfer, and Com-posite. These tasks feature complex, industrial-style ge-ometries where traditional FFT-based spectral methods are inapplicable. We compare against GraphSAGE (Hamil-ton et al., 2017), DeepONet (Lu et al., 2019), and two geometry-specialized operators, NORM (Chen et al., 2024) and HPM (Yue et al., 2025). As shown in Table 2, LRSA achieves the best results on most tasks and remains compet-itive on Irregular Darcy. These findings demonstrate that a purely learnable latent bottleneck can rival specialized baselines like NORM and HPM, suggesting that explicit ge-ometric priors (e.g., Laplace eigenfunctions) are not strictly necessary to achieve high accuracy on irregular domains.     
+
+> Table 2. Irregular domain benchmarks. Relative L2error is reported in the table.
+
+Method Irregular Pipe Heat Comp.   
+
+> Darcy Turbulence Transfer
+
+GraphSAGE 6.73e-2 2.36e-1 – 2.09e-1 DeepONet 1.36e-2 9.36e-2 7.20e-4 1.88e-2 NORM 1.05e-2 1.01e-2 1.11e-3 1.00e-2 HPM 7.36e-3 8.26e-3 1.84e-4 9.34e-3 Ours 7.56e-3 4.89e-3 1.49e-4 8.71e-3 
+
+Industrial Cases with Large Geometries. We assess the model’s capability on large-scale aerodynamic simulations using the AirfRANS (Bonnet et al., 2022) and ShapeNet Car (Umetani & Bickel, 2018) datasets. These benchmarks feature high-resolution discretizations ( ∼ 32 k points) and demand precise estimation of derived engineering quan-tities—such as drag/lift coefficients ( CD , C L), which are often more critical than pointwise errors for design opti-mization. As reported in Table 3, LRSA matches or exceeds strong baselines across most metrics. On ShapeNet Car, LRSA achieves comparable performance to the best com-peting methods on both field errors and drag-related metrics. In particular, on AirfRANS, LRSA reduces surface-field error while maintaining near-perfect rank correlation, high-lighting its practical reliability on complex, high-resolution airfoil geometries. 
+
+4.2. Generalization Capabilities Zero-shot Resolution Generalization. We assess the dis-cretization invariance of LRSA by training on a fixed resolu-tion ( 221 × 51 ) and evaluating on unseen grids with varying densities. As illustrated in Table 4, while all models natu-rally degrade on unseen resolutions, LRSA demonstrates superior stability, confirming its capability to approximate the underlying continuous operator rather than overfitting to 6Simple yet Effective: Low-Rank Spatial Attention for Neural Operators       
+
+> Table 3. Performance comparison on AirfRANS and ShapeNet Car datasets. In addition to the field-level MSE for Volume and Surface quantities, we report the relative errors for lift ( CL) and drag ( CD) coefficients, along with their Spearman’s rank correlations (ρL, ρ D). A correlation close to 1.0indicates that the model correctly preserves design rankings, which is critical for optimization tasks. Lower values ( ↓) are better for error metrics, while higher values ( ↑) are better for correlation coefficients.
+
+Model AIRF RANS (B ONNET ET AL ., 2022) SHAPE NET CAR (U METANI & B ICKEL , 2018) Volume ↓ Surface ↓ CL ↓ ρL ↑ Volume ↓ Surface ↓ CD ↓ ρD ↑
+
+GraphSAGE (2017) 0.0087 0.0184 0.1476 0.9964 0.0461 0.1050 0.0270 0.9695 GraphUNet (2019) 0.0076 0.0144 0.1677 0.9949 0.0471 0.1102 0.0226 0.9725 MeshGraphNet (2020) 0.0214 0.0387 0.2252 0.9945 0.0354 0.0781 0.0168 0.9840 GNO (2020a) 0.0269 0.0405 0.2016 0.9938 0.0383 0.0815 0.0172 0.9834 GEO-FNO (2022b) 0.0361 0.0301 0.6161 0.9257 0.1670 0.2378 0.0664 0.8280 LNO (2024) 0.0214 0.0268 0.1480 0.9744 0.0269 0.0870 0.0174 0.9781 Transolver (2024) 0.0023 0.0085 0.1230 0.9978 0.0221 0.0785 0.0117 0.9914 LinearNO (2025) 0.0011 0.0077 0.0491 0.9992 0.0194 0.0754 0.0106 0.9925 Ours 0.0011 0.0010 0.0396 0.9997 0.0166 0.0719 0.0106 0.9925 
+
+the specific training grid structure.         
+
+> Table 4. Relative L2error ( ×10 −2) comparison across different spatial resolutions. The models were trained on the 221 ×51 mesh.
+> Bold indicates the best performance.
+
+Model 221 ×51 111 ×51 221 ×26 111 ×26 Transolver 0.524 7.850 1.260 7.680 HPM 0.438 0.537 1.690 1.740 Ours 0.423 0.468 0.644 0.673 
+
+Limited Training Data. We assess sample efficiency by training on subsets of the Darcy and Navier–Stokes prob-lems, as presented in Table 5. On Navier–Stokes with 200 training samples, HPM achieves lower error than LRSA. This outcome is consistent with the use of stronger heuristic geometric and spectral priors in HPM, which may be advan-tageous in the extreme low-data regime. As the training set increases, LRSA improves more rapidly and achieves the best performance among the compared methods, indicating favorable scaling with available supervision. 
+
+4.3. Ablation Study Component Analysis. We ablate two design choices in LRSA to isolate their contributions while keeping the over-all structure unchanged. (i) w/o Intra Attn : we replace the latent processing blocks with an MLP, removing the self-attention. (ii) Symmetric : we tie the keys in the compres-sion step and queries in the reconstruction step, enforcing a shared subspace basis (analogous to Transolver). The results are summarized in Figure 5 (Bottom). Across bench-marks, removing the latent blocks consistently increases errors, particularly in time-dependent problems, suggest-   
+
+> Table 5. Relative L2errors ( ×10 −2) with limited training samples.
+
+Prob. Training Transolver LNO HPM Ours Number Darcy 200 1.75 5.62 1.10 0.97 
+
+600 0.69 4.40 0.60 0.50 
+
+1000 0.52 0.63 0.44 0.43 
+
+NS 200 37.6 40.0 18.1 26.2 600 31.4 25.0 11.7 7.50 
+
+1000 9.60 7.34 7.44 4.84 
+
+ing that explicit mixing in the latent space is necessary for capturing complex dynamic correlations. Furthermore, enforcing symmetry results in comparable or even higher errors than removing latent self-attention. This suggests that the optimal subspace for compressing input features differs inherently from the basis required for reconstruction, vali-dating our choice to decouple the encoding and decoding transformations. 
+
+Latent Rank. We study the effect of the latent rank M ,i.e., the bottleneck width in LRSA (number of latent queries) and the number of slices in Transolver (Figure 5, Top). Em-pirically, the error typically saturates once M exceeds a moderate value on several benchmarks, suggesting that the layer-wise global coupling can be captured by a compact set of latent modes (i.e., low effective rank) in practice. This provides direct experimental support for the low-rank bottleneck assumption underlying LRSA, without requir-ing explicit kernel materialization. On complex dynamics (Navier–Stokes), LRSA scales more effectively with M :increasing M yields a steep error reduction, whereas Tran-solver improves much more slowly with additional slices. 7Simple yet Effective: Low-Rank Spatial Attention for Neural Operators FP32 BF16 FP16             
+
+> 0.30
+> 0.40
+> 0.50
+> 0.60
+> 0.70
+> 0.80
+> Rel.  L2 Error ( ×10 −2)
+> Airfoil
+> ×
+> FP32 BF16 FP16
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> Navier Stokes
+> ×
+> FP32 BF16 FP16
+> 6.0
+> 7.0
+> 8.0
+> 9.0
+> ShapeNet Car (Surface)
+> NS Airfoil Car
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Normalized Time
+> 0.30
+> 0.21
+> 0.31
+> Training Latency
+> NS Airfoil Car
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> Normalized Memory
+> 0.63
+> 0.35
+> 0.47
+> Memory Saving
+> Transolver-FP32 Transolver-FP16 Ours-FP16 Forward Backward
+
+Figure 4. Training stability and efficiency. Left: relative L2 error under FP32/BF16/FP16; × denotes divergence. Right: per-step training latency (forward+backward, normalized to Transolver-FP32) and peak memory (ratio relative to Transolver-FP32; smaller is better) on three representative tasks. Memory Saving is calculated as the ratio of peak training memory consumption of the evaluated model to that of the baseline model (Transolver-FP32). A lower factor indicates better memory efficiency. 8 16 32 64 128 256                
+
+> Rank ( M)
+> 0.40
+> 0.50
+> 0.60
+> 0.70
+> 0.80
+> Rel.  L2 Error ( ×10 −2)
+> Airfoil
+> 0.43
+> 0.41
+> 816 32 64 128 256
+> Rank ( M)
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> Darcy
+> 0.49
+> 0.42
+> 816 32 64 128 256
+> Rank ( M)
+> 0.30
+> 0.40
+> 0.50
+> 0.60
+> 0.70
+> 0.80
+> 0.90
+> Elasticity
+> 0.54
+> 0.33
+> 816 32 64 128 256
+> Rank ( M)
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+> 10
+> Navier-Stokes
+> 7.83
+> 3.19
+> Airfoil
+> Rel.  L2 Error ( ×10 −2)
+> 0.41
+> 0.43
+> 0.46
+> Darcy
+> 0.43
+> 0.45
+> 0.46
+> Elasticity
+> 0.33
+> 0.36
+> 0.47
+> Navier-Stokes
+> 4.84
+> 5.44
+> 5.93
+> Transolver Ours
+> Full (Ours) w/o Intra Attn Symmetric
+
+Figure 5. Rank and component ablations. Top: sensitivity to latent size M . Bottom: component variants of LRSA (Full, w/o latent self-attention, and enforcing symmetric compression and reconstruction). 
+
+Conversely, on simpler static fields, LRSA reaches near-optimal performance with few latents ( M ≈ 32 ); further increasing M shows diminishing returns and mild overfit-ting, while Transolver typically needs larger M to match the same accuracy. 
+
+Training Stability & Efficiency. Compatibility with stan-dard hardware-optimized kernels gives LRSA a decisive advantage in both numerical stability and computational efficiency. As shown in Figure 4 (Left), the baseline Tran-solver is highly sensitive to numerical precision: it suffers from significant error increases in BFloat16 (BF16) and frequently diverges in Float16 (FP16). We attribute this instability to its explicit slice normalization, which requires a high dynamic range to prevent denominator underflow. In contrast, LRSA leverages standard Transformer primi-tives supported by robust fused attention kernels, maintain-ing near-consistent accuracy across FP32, BF16, and FP16. This stability unlocks the full potential of mixed-precision training (Figure 4, Right). While Transolver is effectively confined to FP32 for reliable convergence, LRSA in FP16 achieves substantial gains. On the industrial-scale ShapeNet Car task ( N ≈ 32 k), LRSA-FP16 reduces training latency by 3.2× and peak memory usage by 2.1× compared to the stable Transolver-FP32 baseline. Breaking down the latency reveals that our streamlined architecture significantly accel-erates both forward and backward passes, validating LRSA as a scalable solution for high-resolution operator learning. 
+
+5. Conclusion 
+
+We presented a unified low-rank view of global mixing in neural operators, connecting spectral/basis approaches and latent-token attention models under a common tem-plate. Building on this perspective, we introduced Low-Rank Spatial Attention (LRSA), a minimal block that routes global interactions through a compact set of learnable latents using only standard Transformer primitives. This design directly benefits from hardware-optimized computational kernels, enabling robust mixed-precision training without custom routing or normalization components. Across reg-ular grids, structured meshes, and irregular point clouds, LRSA achieves strong accuracy and improves over compet-itive neural-operator baselines. One remaining challenge is to better understand how to allocate model capacity between the latent processing and pointwise updates as resolution and task complexity increase. Exploring principled capac-ity allocation strategies, potentially guided by profiling and large-scale multi-physics pretraining, is a promising direc-tion for making operator learning even more practical. 
+
+Impact Statement 
+
+This work aims to advance neural operator learning for scien-tific simulation. There are no specific societal consequences that require individual highlighting here. 8Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+References 
+
+Azizzadenesheli, K., Kovachki, N., Li, Z., Liu-Schiaffini, M., Kossaifi, J., and Anandkumar, A. Neural opera-tors for accelerating scientific simulations and design. 
+
+Nature Reviews Physics , 6, 04 2024. doi: 10.1038/ s42254-024-00712-5. Ba, J., Kiros, J. R., and Hinton, G. E. Layer normalization. 
+
+ArXiv , abs/1607.06450, 2016. Bebendorf, M. Hierarchical matrices: a means to efficiently solve elliptic boundary value problems . Springer, 2008. Bonev, B., Kurth, T., Hundt, C., Pathak, J., Baust, M., Kashinath, K., and Anandkumar, A. Spherical fourier neural operators: Learning stable dynamics on the sphere. In International Conference on Machine Learning , 2023. Bonnet, F., Mazari, J., Cinnella, P., and Gallinari, P. Airfrans: High fidelity computational fluid dynamics dataset for approximating reynolds-averaged navier–stokes solutions. 
+
+Advances in Neural Information Processing Systems , 35: 23463–23478, 2022. Cao, S. Choose a transformer: Fourier or galerkin. In 
+
+Neural Information Processing Systems , 2021. Chang, A. X., Funkhouser, T., Guibas, L., Hanrahan, P., Huang, Q., Li, Z., Savarese, S., Savva, M., Song, S., Su, H., et al. Shapenet: An information-rich 3d model repository. arXiv preprint arXiv:1512.03012 , 2015. Chen, G., Liu, X., Meng, Q., Chen, L., Liu, C., and Li, Y. Learning neural operators on riemannian manifolds. 
+
+National Science Open , 3(6):20240001, 2024. Dao, T. FlashAttention-2: Faster attention with better paral-lelism and work partitioning. In International Conference on Learning Representations (ICLR) , 2024. Dao, T., Fu, D. Y., Ermon, S., Rudra, A., and R ´e, C. FlashAt-tention: Fast and memory-efficient exact attention with IO-awareness. In Advances in Neural Information Pro-cessing Systems (NeurIPS) , 2022. Deng, J., Li, X., Xiong, H., Hu, X., and Ma, J. Geometry-guided conditional adaption for surrogate models of large-scale 3d PDEs on arbitrary geometries. In IJCAI , 2024. Gao, H. and Ji, S. Graph u-nets. In international conference on machine learning , pp. 2083–2092. PMLR, 2019. Hamilton, W., Ying, Z., and Leskovec, J. Inductive repre-sentation learning on large graphs. Advances in neural information processing systems , 30, 2017. Hao, Z., Wang, Z., Su, H., Ying, C., Dong, Y., Liu, S., Cheng, Z., Song, J., and Zhu, J. Gnot: A general neural operator transformer for operator learning. In Interna-tional Conference on Machine Learning, ICML 2023, 23-29 July 2023, Honolulu, Hawaii, USA , volume 202 of 
+
+Proceedings of Machine Learning Research , pp. 12556– 12569. PMLR, 2023. Horie, M. and Mitsume, N. Graph neural PDE solvers with conservation and similarity-equivariance. In Salakhut-dinov, R., Kolter, Z., Heller, K., Weller, A., Oliver, N., Scarlett, J., and Berkenkamp, F. (eds.), Proceedings of the 41st International Conference on Machine Learning , vol-ume 235 of Proceedings of Machine Learning Research ,pp. 18785–18814. PMLR, 21–27 Jul 2024. Hsu, P.-L., Dai, Y., Kothapalli, V., Song, Q., Tang, S., Zhu, S., Shimizu, S., Sahni, S., Ning, H., Chen, Y., and Wang, Z. Liger-kernel: Efficient triton kernels for LLM training. In Championing Open-source DEvelop-ment in ML Workshop @ ICML25 , 2025. URL https: //openreview.net/forum?id=36SjAIT42G .Hu, W., Liu, S., Qiao, P., Sun, Z., and Dou, Y. Tran-solver is a linear transformer: Revisiting physics-attention through the lens of linear attention, 2025. URL https: //arxiv.org/abs/2511.06294 .Jaegle, A., Borgeaud, S., Alayrac, J.-B., Doersch, C., Ionescu, C., Ding, D., Koppula, S., Zoran, D., Brock, A., Shelhamer, E., et al. Perceiver io: A general archi-tecture for structured inputs & outputs. arXiv preprint arXiv:2107.14795 , 2021. Jiang, Z., Gu, J., Zhu, H., and Pan, D. Pre-rmsnorm and pre-crmsnorm transformers: Equivalent and efficient pre-ln transformers. In Oh, A., Naumann, T., Globerson, A., Saenko, K., Hardt, M., and Levine, S. (eds.), Advances in Neural Information Processing Systems , volume 36, pp. 45777–45793. Curran Associates, Inc., 2023. Katharopoulos, A., Vyas, A., Pappas, N., and Fleuret, F. Transformers are rnns: Fast autoregressive transformers with linear attention. In International conference on ma-chine learning , pp. 5156–5165. PMLR, 2020. Kossaifi, J., Kovachki, N. B., Azizzadenesheli, K., and Anandkumar, A. Multi-grid tensorized fourier neural op-erator for high-resolution pdes. ArXiv , abs/2310.00120, 2023. Kovachki, N., Li, Z., Liu, B., Azizzadenesheli, K., Bhat-tacharya, K., Stuart, A., and Anandkumar, A. Neural operator: Learning maps between function spaces with applications to pdes. Journal of Machine Learning Re-search , 24(89):1–97, 2023. 9Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Stuart, A., Bhattacharya, K., and Anandkumar, A. Multipole graph neural operator for parametric partial differential equations. Advances in Neural Information Processing Systems , 33:6755–6766, 2020a. Li, Z., Meidani, K., and Farimani, A. B. Transformer for partial differential equations’ operator learning. Trans. Mach. Learn. Res. , 2023, 2022a. Li, Z., Huang, D. Z., Liu, B., and Anandkumar, A. Fourier neural operator with learned deformations for pdes on general geometries. Journal of Machine Learning Re-search , 24(388):1–26, 2023a. Li, Z., Shu, D., and Barati Farimani, A. Scalable trans-former for pde surrogate modeling. In Oh, A., Naumann, T., Globerson, A., Saenko, K., Hardt, M., and Levine, S. (eds.), Advances in Neural Information Processing Sys-tems , volume 36, pp. 28010–28039. Curran Associates, Inc., 2023b. Li, Z.-Y., Kovachki, N. B., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A. M., and Anandkumar, A. Fourier neural operator for parametric partial differential equations. ArXiv , abs/2010.08895, 2020b. Li, Z.-Y., Huang, D. Z., Liu, B., and Anandkumar, A. Fourier neural operator with learned deformations for pdes on general geometries. J. Mach. Learn. Res. , 24: 388:1–388:26, 2022b. Li, Z.-Y., Kovachki, N. B., Choy, C., Li, B., Kossaifi, J., Otta, S. P., Nabian, M. A., Stadler, M., Hundt, C., Azizzadenesheli, K., and Anandkumar, A. Geometry-informed neural operator for large-scale 3d pdes. ArXiv ,abs/2309.00583, 2023c. Lingsch, L. E., Michelis, M. Y., De Bezenac, E., M. Per-era, S., Katzschmann, R. K., and Mishra, S. Beyond regular grids: Fourier-based neural operators on arbitrary domains. In Salakhutdinov, R., Kolter, Z., Heller, K., Weller, A., Oliver, N., Scarlett, J., and Berkenkamp, F. (eds.), Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pp. 30610–30629. PMLR, 21–27 Jul 2024. Loshchilov, I. and Hutter, F. Decoupled weight decay reg-ularization. In International Conference on Learning Representations , 2017. Lu, L., Jin, P., Pang, G., Zhang, Z., and Karniadakis, G. E. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3:218 – 229, 2019. Luo, H., Wu, H., Zhou, H., Xing, L., Di, Y., Wang, J., and Long, M. Transolver++: An accurate neural solver for pdes on million-scale geometries. In Forty-second International Conference on Machine Learning , 2025. McCormick, B. W. Aerodynamics, aeronautics, and flight mechanics . John Wiley & Sons, 1994. Pfaff, T., Fortunato, M., Sanchez-Gonzalez, A., and Battaglia, P. Learning mesh-based simulation with graph networks. In International conference on learning repre-sentations , 2020. Qin, Z., Han, X., Sun, W., Li, D., Kong, L., Barnes, N., and Zhong, Y. The devil in linear transformer. In Goldberg, Y., Kozareva, Z., and Zhang, Y. (eds.), Proceedings of the 2022 Conference on Empirical Methods in Natural Lan-guage Processing , pp. 7025–7041, Abu Dhabi, United Arab Emirates, December 2022. Association for Compu-tational Linguistics. doi: 10.18653/v1/2022.emnlp-main. 473. URL https://aclanthology.org/2022. emnlp-main.473/ .Smith, L. N. and Topin, N. Super-convergence: very fast training of neural networks using large learning rates. In 
+
+Defense + Commercial Sensing , 2018. Spearman, C. The proof and measurement of association between two things. 1961. Tran, A., Mathews, A., Xie, L., and Ong, C. S. Factor-ized fourier neural operators. ArXiv , abs/2111.13802, 2023. URL https://api.semanticscholar. org/CorpusID:244714159 .Umetani, N. and Bickel, B. Learning three-dimensional flow for interactive aerodynamic design. ACM Transactions on Graphics (TOG) , 37(4):1–10, 2018. Vaswani, A., Shazeer, N. M., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A. N., Kaiser, L., and Polosukhin, I. Attention is all you need. In Neural Information Process-ing Systems , 2017. Wang, T. and Wang, C. Latent neural operator for solving forward and inverse pde problems. In Advances in Neural Information Processing Systems , 2024. Wen, G., Li, Z., Azizzadenesheli, K., Anandkumar, A., and Benson, S. M. U-fno—an enhanced fourier neural operator-based deep-learning model for multiphase flow. 
+
+Advances in Water Resources , 163:104180, 2022. ISSN 0309-1708. doi: https://doi.org/10.1016/j.advwatres. 2022.104180. Wu, H., Hu, T., Luo, H., Wang, J., and Long, M. Solving high-dimensional pdes with latent spectral models. arXiv preprint arXiv:2301.12664 , 2023. 10 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+Wu, H., Luo, H., Wang, H., Wang, J., and Long, M. Tran-solver: A fast transformer solver for PDEs on general geometries. In Salakhutdinov, R., Kolter, Z., Heller, K., Weller, A., Oliver, N., Scarlett, J., and Berkenkamp, F. (eds.), Proceedings of the 41st International Conference on Machine Learning , volume 235 of Proceedings of Machine Learning Research , pp. 53681–53705. PMLR, 21–27 Jul 2024. Xiao, Z., Hao, Z., Lin, B., Deng, Z., and Su, H. Improved operator learning by orthogonal attention. In ICML , 2024. Yue, X., Zhu, L., and Yang, Y. Holistic physics solver: Learning pdes in a unified spectral-physical space. In International Conference on Machine Learning ,2025. URL https://api.semanticscholar. org/CorpusID:273350739 .11 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+A. LRSA as a Low-Rank Integral Operator 
+
+We provide an intuitive operator-level interpretation of LRSA under uniform spatial sampling. Let Ω ⊂ Rdphys be a bounded domain, and let the (lifted) feature field be a function h : Ω → Rd. We assume the input points {xi}Ni=1 are uniformly sampled in Ω, so that a simple quadrature rule applies: 
+
+Z
+
+> Ω
+
+ϕ(y) dy ≈ |Ω|
+
+N
+
+> N
+
+X
+
+> i=1
+
+ϕ(xi), for sufficiently regular ϕ. (11) Below we interpret each LRSA stage as a continuous operator, with the discrete implementation being its numerical (quadrature) approximation. 
+
+Continuous Softmax Attention For a fixed query vector q ∈ Rdh and key/value fields k(·), v (·), define the continuous softmax attention operator: 
+
+Attn Ω(q; k, v ) = 
+
+Z
+
+> Ω
+
+aq (y) v(y) dy, aq (y) = exp( ⟨q, k (y)⟩)
+
+R 
+
+> Ω
+
+exp( ⟨q, k (z)⟩) dz . (12) This defines a well-posed mapping from an input function v(·) to an output vector, and is independent of any discretization. 
+
+Step 1 (Down): Compression as a Continuous Projection In LRSA, the compression uses M learnable latent queries 
+
+{pm}Mm=1 and cross-attention from latents to points. Absorbing linear projections into the definitions k↓(y) = h(y)W ↓ 
+
+> K
+
+and 
+
+v↓(y) = h(y)W ↓ 
+
+> V
+
+, the continuous counterpart of the m-th latent token is: 
+
+Lm = Attn Ω(pm; k↓, v ↓) = 
+
+Z
+
+> Ω
+
+αm(y; h) v↓(y) dy, (13) where αm(·; h) is the normalized exponential weight in Eq. (12) . The discrete compression in implementation is exactly Eq. (13) with the integral replaced by the quadrature in Eq. (11) . Hence, as sampling changes, the discrete LRSA compression step approximates the same continuous mapping. 
+
+Step 2 (Latent Processing): Resolution-Invariant Mixing in a Fixed Latent Space The latent processing stage applies a standard Transformer (self-attention + FFN) on the M tokens: 
+
+L′ = Tθ (L), Tθ : RM ×d → RM ×d. (14) Crucially, Eq. (14) depends only on M (fixed) and does not depend on the spatial resolution N . Thus it defines a resolution-invariant nonlinear map on a compact set of global coefficients. 
+
+Step 3 (Up): Reconstruction as a Finite Expansion over M Latent Modes The reconstruction broadcasts latent information back to any query location x ∈ Ω via cross-attention from points to latents. Let q↑(x) = h(x)W ↑ 
+
+> Q
+
+and define latent keys/values k↑(m) = L′
+
+> m
+
+W ↑ 
+
+> K
+
+, v↑(m) = L′
+
+> m
+
+W ↑ 
+
+> V
+
+. Then the continuous update at location x is: 
+
+∆h(x) = 
+
+> M
+
+X
+
+> m=1
+
+βm(x; L′) v↑(m), βm(x; L′) = exp( ⟨q↑(x), k ↑(m)⟩)
+
+PMr=1 exp( ⟨q↑(x), k ↑(r)⟩) . (15) This is a finite expansion over M latent modes, valid for any continuous coordinate x (no discretization is required for defining Eq. (15)). 
+
+Overall Operator and Low-Rank Structure Composing Eq. (13) , (14) , and (15) , LRSA defines an operator Gθ acting on the function h(·):
+
+(Gθ h)( x) = h(x) + ∆ h(x), ∆h(x) = 
+
+> M
+
+X
+
+> m=1
+
+βm(x; Tθ (L)) v↑(m), Lm =
+
+Z
+
+> Ω
+
+αm(y; h) v↓(y) dy. (16) 12 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+To make the low-rank nature explicit, consider the induced interaction between an output location x and input location y.LRSA routes all global coupling through only M latent channels, yielding an effective (input-dependent) kernel of the form: 
+
+κθ (x, y ; h) ≈
+
+> M
+
+X
+
+> m=1
+> M
+
+X
+
+> k=1
+
+βm(x; h) Gmk (h) αk(y; h), (17) where Gmk (h) summarizes the latent-space mixing induced by Tθ . Equation (17) is a separable expansion in (x, y ) with at most M latent modes, i.e., a finite-rank (low-rank) approximation of a dense global interaction map. In summary, under uniform sampling, the discrete LRSA block is a numerical (quadrature) approximation of the continuous operator in Eq. (16) . Its global coupling is mediated by M ≪ N latent modes, leading to a low-rank induced kernel and near-linear complexity in the number of spatial samples. 
+
+B. A Unified Low-Rank View for Neural Operators 
+
+B.1. Spectral / Basis-based Operators 
+
+We show that spectral and basis-expansion neural operators can be interpreted as a special case of the low-rank template in Eq. (4) . The key observation is that truncating to M ≪ N basis functions induces a rank-M (or low effective-rank) approximation of a dense global interaction map. 
+
+From integral operators to truncated basis expansions. Many PDE solution operators can be written as an integral operator 
+
+(Kf )( x) = 
+
+Z
+
+> Ω
+
+κ(x, y ) f (y) dy, (18) where κ is a (typically smooth) kernel. A classical approximation expands κ (or the solution field) in a basis {ϕm}∞ 
+
+> m=1
+
+and truncates to the first M modes: 
+
+κ(x, y ) ≈
+
+> M
+
+X
+
+> m=1
+> M
+
+X
+
+> n=1
+
+ϕm(x) Gmn ϕn(y). (19) This yields the separable form that directly corresponds to a low-rank factorization. 
+
+Discrete low-rank factorization. Given N sample points {xi}Ni=1 , define the basis evaluation matrix Φ ∈ RN ×M with 
+
+Φi,m = ϕm(xi). Discretizing Eq. (19) gives a global mixing layer 
+
+H′ = Φ G Φ⊤H, (20) which matches Eq. (4) with 
+
+U = Φ , V = Φ , and G ∈ RM ×M . (21) Therefore, spectral/basis-based operators realize global coupling by (i) projecting to a compact basis ( Φ⊤), (ii) mixing in the basis space ( G), and (iii) reconstructing back to the spatial domain ( Φ). When M ≪ N , the induced interaction map is (at most) rank-M .
+
+Instantiation in representative operators. FNO. On regular grids, the basis Φ corresponds to the discrete Fourier transform (DFT) matrix. Frequency truncation in FNO keeps only M low-frequency modes, making Eq. (20) efficient. The latent operator G is implemented by learnable channel mixing on the retained Fourier coefficients (often parameterized per frequency). 
+
+Geometry-induced spectral methods (e.g., NORM/HPM). On irregular domains, Φ can be constructed from the first 
+
+M eigenfunctions of the Laplace–Beltrami operator evaluated on the mesh/point set. This again yields a low-rank global mixing of the form Eq. (20), where the projection and reconstruction are determined by a geometry-dependent prior basis. 
+
+Relation to LRSA. Eq. (20) highlights a key difference between basis operators and LRSA. Basis operators use an analytic 
+
+(Fourier) or geometry-induced (eigenfunction) Φ that is fixed once the discretization/geometry is chosen. In contrast, LRSA learns a data-driven analogue of such a compact basis via latent queries and standard attention, without requiring FFT structure, mesh connectivity, or precomputed eigenbases. 13 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+B.2. Attention-based Operators 
+
+To contextualize our proposed Low-Rank Spatial Attention (LRSA) within the literature, we explicitly map the Physics-Attention mechanism from Transolver (Wu et al., 2024) into our generalized low-rank template K ≈ U GV ⊤. We demonstrate that Transolver can be viewed as a restricted instance of LRSA characterized by (i) specific parameter tying and (ii) a symmetric constraint on the factorization. 
+
+Slicing as Latent-Query Attention. In Transolver, the compression of spatial points X ∈ RN ×d into M latent tokens (slices) L ∈ RM ×d is defined by learnable projection weights Wslice ∈ RM ×d. The assignment scores A ∈ RN ×M are computed as: 
+
+A = Softmax (XW ⊤
+
+> slice
+
+), (22) where the softmax is typically applied across the slice dimension M . Let us interpret the rows of Wslice as a set of latent queries P ∈ RM ×d. If we formulate a standard cross-attention where P queries the points X, the attention score matrix 
+
+S ∈ RM ×N would be: 
+
+S = Softmax 
+
+ P X ⊤
+
+√d
+
+
+
+. (23) Note that Transolver’s scores A are simply (P X ⊤)⊤ with a different normalization axis. Consequently, the ”Physics-aware Token Generation” in Transolver: 
+
+zj =
+
+PNi=1 wi,j xi
+
+PNi=1 wi,j 
+
+(24) is mathematically equivalent to an attention operation where query-projection, key-projection, and value-projection are all identity mappings of Wslice and X, and the softmax is normalized per query. Thus, Transolver’s slicing is a manual realization of Step 1 in LRSA (compression), but with fewer learnable degrees of freedom. 
+
+Symmetry vs. Decoupling. The structural template K ≈ U GV ⊤ reveals the core limitation of Transolver’s reconstruction (De-Slicing). Transolver broadcasts latent information back to spatial points using the same assignment matrix A calculated during the compression: 
+
+∆X = A ˆL, (25) where ˆL are the processed latent tokens. In our low-rank framework, this corresponds to enforcing a symmetric constraint 
+
+on the factorization, such that: 
+
+U = V ∝ A. (26) This implies that the affinity of a spatial point xi to a latent token lj must be identical for both writing information to and 
+
+reading information from the latent space. In contrast, LRSA decouples these operators using two independent cross-attentions. Step 1 learns the compression basis 
+
+V ⊤, while Step 3 learns a separate reconstruction basis U :
+
+∆H = Attn (Q = HW up  
+
+> Q
+
+, K = L′W up  
+
+> K
+
+, V = L′W up  
+
+> V
+
+). (27) This decoupling allows the model to interpret latent tokens differently at each stage—for example, a token might capture high-frequency features in the compression step but distribute them selectively based on global context in the reconstruction stage. 
+
+Engineering Consequences. Beyond the mathematical formulation, Transolver’s manual implementation of A =
+
+Softmax (XW ⊤) and the subsequent normalization and up projection requires materializing the dense N × M weight matrix and necessitating FP32 precision to maintain numerical stability. By reformulating these interactions as strictly standard attention blocks, LRSA (i) inherits the numerical stability improvements and (ii) achieves higher throughput via out-of-the-box compatibility with hardware-optimized kernels like FlashAttention, which are not designed for the specific weight-tying required by Transolver. 14 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+Relation to LinearNO: The Collapse of Latent Mixing. LinearNO (Hu et al., 2025) reformulates the token-based operator as a kernelized linear attention mechanism. In our low-rank framework K ≈ U GV ⊤, LinearNO can be interpreted as a factorization where the latent processing operator G is restricted to be linear or identity, effectively removing the non-linear mixing capability within the latent space. Specifically, LinearNO computes the output as: LinearNO (X) = ϕ(XW Q)
+
+| {z }
+
+> U
+
+·
+
+
+
+ψ(XW K )⊤
+
+| {z } 
+
+> V⊤
+
+·(XW V )
+
+
+
+, (28) where ϕ(·) and ψ(·) are kernel functions (e.g., softmax normalized along specific axes). • Decoupling (Step 1 & 3): Unlike Transolver, LinearNO employs separate projections for ϕ and ψ, meaning it successfully decouples the compression basis V ⊤ from the reconstruction basis U . This aligns with LRSA’s design and avoids the symmetric constraint. • Latent Collapse (Step 2): The critical distinction lies in the intermediate term. In LRSA, the latent features L = V ⊤X
+
+undergo a deep, non-linear transformation via Self-Attention and FFNs ( Gnonlinear ) before reconstruction. LinearNO, aiming for maximum efficiency, performs the reconstruction directly after aggregation. This implies G ≈ I (identity) or a simple linear map. Our ablation study demonstrates that while this linearization is sufficient for simple static problems, retaining the non-linear Latent Transformer ( G) is essential for capturing complex, time-dependent dynamics (e.g., Navier-Stokes), justifying our choice to keep the bottleneck expressive. 
+
+C. Dataset and Evaluation Metrics 
+
+C.1. Standard Benchmarks 
+
+Consider the boundary-value problem given by: 
+
+Lu = f, in Ω,u = g, on ∂Ω. (29) Our experiments cover variables including: (1) coefficients in L, describing material properties; (2) external forcing f ; (3) domain geometry Ω; and (4) boundary shape ∂Ω. We also consider time-dependent problems where current states determine future evolution. A summary of the datasets is provided in Table 6.   
+
+> Table 6. Overview of Standard Benchmarks. Details on geometry type, spatial dimension, discretization size, dataset splits, and input features.
+
+Test Case Geometry #Dim Mesh Size Dataset Split Input Type Train Test Elasticity (Li et al., 2020b) Point Cloud 2 972 1000 200 Domain Shape Darcy (Li et al., 2020b) Regular Grid 2 85 × 85 1000 200 Coefficients Navier Stokes (Li et al., 2020b) Regular Grid 2+1 64 × 64 1000 200 Previous States Plasticity (Li et al., 2022b) Structured Mesh 2+1 101 × 31 900 80 External Force Airfoil (Li et al., 2022b) Structured Mesh 2 221 × 51 1000 200 Boundary Shape Pipe (Li et al., 2022b) Structured Mesh 2 129 × 129 1000 200 Domain Shape 
+
+Elasticity. This benchmark estimates the inner stress of an elastic material based on its structure, discretized into 972 points (Li et al., 2020b). The input is a tensor of shape 972 × 2 containing the 2D coordinates of the discretized points. The output is the stress value at each point ( 972 × 1). 
+
+Darcy. This measures fluid flow through a porous medium: 
+
+−∇ · (a(x)∇u(x)) = f (x), x ∈ (0 , 1) 2,u(x) = 0 , x ∈ ∂(0 , 1) 2, (30) 15 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+where a(x) is the diffusion coefficient (input) and u(x) is the solution (output). The original resolution is 421 × 421 ; we perform 5× downsampling to 85 × 85 .
+
+Navier–Stokes. This models incompressible viscous flow: 
+
+∂tw(x, t ) + u(x, t ) · ∇ w(x, t ) = ν∇w(x, t ) + f (x), x ∈ (0 , 1) 2, t ∈ (0 , T ],
+
+∇ · u(x, t ) = 0 , x ∈ (0 , 1) 2, t ∈ (0 , T ],w(x, 0) = w0(x), x ∈ (0 , 1) 2,
+
+(31) where u is velocity and w = ∇ × u is vorticity. We use ν = 10 −5. The dataset contains vorticity fields over 20 time steps. The model takes 10 previous steps to predict the next step. 
+
+Plasticity. The task is to predict the deformation of a plastic material under impact. Since the initial state is static, the model takes time t and top-boundary conditions as input to predict the deformation field. 
+
+Airfoil. The Euler equation models transonic flow over an airfoil. The input consists of the mesh grid coordinates representing the airfoil geometry, and the output is the Mach number field defined on the same structured mesh. 
+
+Pipe. The goal is to predict the x-component of fluid velocity in variable-shaped pipes. The input is the structured mesh coordinates of the deformed pipe, and the output is the velocity field. 
+
+C.2. Irregular Domains 
+
+These benchmarks involve complex geometries where standard regular grids are inapplicable (Table 7). Irregular Darcy.                                 
+
+> Table 7. Overview of Irregular Domain Benchmarks.
+> Test Case Geometry # Dim Num. Nodes ( N)Dataset Split Input Type Train Test Irregular Darcy Chen et al. (2024) Point Cloud 22290 1000 200 Coefficients Pipe Turbulence Chen et al. (2024) Point Cloud 22673 300 100 Previous State Heat Transfer Chen et al. (2024) Point Cloud 37199 100 100 Boundary Shape Composite Chen et al. (2024) Point Cloud 38232 400 100 Temperature
+
+This problem involves solving the Darcy Flow equation within an irregular domain. The function input is a(x), representing the diffusion coefficient field, and the output u(x) represents the pressure field. The domain is represented by a triangular mesh with 2290 nodes. The neural operators are trained on 1000 trajectories and tested on an extra 200 trajectories. 
+
+Pipe Turbulence. Pipe Turbulence system is modeled by the Navier-Stokes equation, with an irregular pipe-shaped computational domain represented as 2673 triangular mesh nodes. This task requires the neural operator to predict the next frame’s velocity field based on the previous one. As in Chen et al. (2024), we utilize 300 trajectories for training and then test the models on 100 samples. 
+
+Heat Transfer. This problem is about heat transfer events triggered by temperature variances at the boundary. Guided by the Heat equation, the system evolves over time. The neural operator strives to predict 3-dimensional temperature fields after 3 seconds given the initial boundary temperature status. The output domain is represented by triangulated meshes of 7199 nodes. The neural operators are trained on 100 samples and evaluated on another 100 samples. 
+
+Composite. This problem involves predicting deformation fields under high-temperature stimulation, a crucial factor in composite manufacturing. The trained operator is anticipated to forecast the deformation field based on the input temperature field. The structure studied in this paper is an air-intake component of a jet composed of 8232 nodes, as referenced in (Chen et al., 2024). The training involved 400 data, and the test examined 100 data. 
+
+C.3. Industrial Cases with Large Geometries ShapeNet Car This benchmark focuses on the drag coefficient estimation for the driving car, which is essential for car design. Overall, 889 samples with different car shapes are generated to simulate the 72 km/h speed driving situation 16 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+Test Case Geometry #Dim Mesh Size Dataset Split Input Type Train Test ShapeNet Car (Umetani & Bickel, 2018) Unstructured Mesh 3 32186 789 100 Structure AirfRANS (Bonnet et al., 2022) Unstructured Mesh 2 32000 800 200 Structure  
+
+> Table 8. Datasets and their split used in our experiments.
+
+(Umetani & Bickel, 2018), where the car shapes are from the “car” category of ShapeNet (Chang et al., 2015). Concretely, they discretize the whole space into unstructured mesh with 32,186 mesh points and record the air around the car and the pressure over the surface. The input mesh of each sample is also preprocessed into the combination of mesh point position, signed distance function and normal vector. The model is trained to predict the velocity and pressure values for each point. Afterward, we can calculate the drag coefficient based on these estimated physics fields. 
+
+AirfRANS This dataset contains the high-fidelity simulation data for Reynolds-Averaged Navier–Stokes equations (Bonnet et al., 2022), which is also used to assist airfoil design. Different from Airfoil (Li et al., 2023a), this benchmark involves more diverse airfoil shapes under finer discretized meshes. Specifically, it adopts airfoils in the 4 and 5 digit series of the National Advisory Committee for Aeronautics, which have been widely used historically. Each case is discretized into 32,000 mesh points. By changing the airfoil shape, Reynolds number, and angle of attack, AirfRANS provides 1000 samples, where 800 samples are used for training and 200 for the test set. Air velocity, pressure and viscosity are recorded for the surrounding space and pressure is recorded for the surface. Note that both drag and lift coefficients can be calculated based on these physics quantities. However, as their original paper stated, air velocity is hard to estimate for airplanes, making all the deep models fail in drag coefficient estimation (Bonnet et al., 2022). Thus, in the main text, we focus on the lift coefficient estimation and the pressure quantity on the volume and surface, which is essential to the take-off and landing stages of airplanes. 
+
+C.4. Metrics 
+
+Since our experiment consists of standard benchmarks, Irregular Domains and Industrial Cases with Large Geometries, we also include several design-oriented metrics in addition to the mean squared error for physics fields. 
+
+Mean Squared Error for physics fields Given a dataset of N test samples, where the ground-truth physics field 
+
+u(i)(x) ∈ RC and the model-predicted field bu(i)(x) correspond to the i-th sample and are defined over the spatial domain 
+
+Ω, the mean squared error (MSE) is defined as 
+
+MSE = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+u(i) − bu(i) 22
+
+, (32) where ∥ · ∥ 2 denotes the ℓ2 norm over the spatial domain and physical channels. 
+
+Relative L2 for physics fields Given a dataset of N test samples, where the ground-truth physics field u(i)(x) ∈ RC and the model-predicted field bu(i)(x) correspond to the i-th sample and are defined over the spatial domain Ω, the relative L2
+
+error is computed as the average of per-sample relative errors: 
+
+Relative L2 = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+u(i) − bu(i)
+
+> 2
+
+u(i) 2
+
+, (33) where ∥ · ∥ 2 denotes the ℓ2 norm over the spatial domain and physical channels. For time-dependent problems, the reported metric is computed based on the rollout predictions over the entire temporal horizon. 
+
+Lg for physics fields Given a dataset of N test samples, where the ground-truth physics field u(i)(x) ∈ RC and the model-predicted field bu(i)(x) correspond to the i-th sample and are defined over the spatial domain Ω, the Lg error is computed as the average of per-sample relative errors: 
+
+Lg = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+∇u(i) − ∇ bu(i)
+
+> 2
+
+∇u(i) 2
+
+, (34) 17 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+where ∥ · ∥ 2 denotes the ℓ2 norm over the spatial domain and physical channels. 
+
+Relative L2 for drag and lift coefficients For Shape-Net Car and AirfRANS, we also calculated the drag and lift coefficients based on the estimated physics fields. For unit density fluid, the coefficient (drag or lift) is defined as follows: 
+
+C = 2
+
+v2A
+
+Z 
+
+> ∂Ω
+
+p(ξ)
+
+bn(ξ) · bi(ξ)
+
+
+
+dξ +
+
+Z
+
+> ∂Ω
+
+τ (ξ) · bi(ξ)d ξ
+
+
+
+, (35) where v is the speed of the inlet flow, A is the reference area, ∂Ω is the object surface, p denotes the pressure function, bn
+
+means the outward unit normal vector of the surface, bi is the direction of the inlet flow and τ denotes wall shear stress on the surface. τ can be calculated from the air velocity near the surface (McCormick, 1994), which is usually much smaller than the pressure term. Specifically, for the drag coefficient of Shape-Net Car, bi is set as (−1, 0, 0) and A is the area of the smallest rectangle enclosing the front of the car. As for the lift coefficient of AirfRANS, bi is set as (0 , 0, −1) . The relative L2 is defined between the ground truth coefficient and the coefficient calculated from the predicted velocity and pressure field. 
+
+Spearman’s rank correlations for drag and lift coefficients Given K samples in the test set with the ground truth coefficients C = {C1, · · · , C K } (drag or lift) and the model predicted coefficients bC = { bC1, · · · , bCK }, the Spearman correlation coefficient is defined as the Pearson correlation coefficient between the rank variables, that is: 
+
+ρ =cov 
+
+
+
+R(C)R( bC)
+
+
+
+σR(C)σR( bC)
+
+, (36) where R is the ranking function, cov denotes the covariance and σ represents the standard deviation of the rank variables. Thus, this metric is highly correlated to the model guide for design optimization. A higher correlation value indicates that it is easier to find the best design following the model-predicted coefficients (Spearman, 1961). 
+
+D. Full Experiments Details 
+
+D.1. Model Configurations 
+
+We employ input/output feature normalization for all tasks to ensure training stability. We use the AdamW opti-mizer (Loshchilov & Hutter, 2017) coupled with a OneCycle scheduler (Smith & Topin, 2018). Detailed hyperparameters are listed in Table 9. Note that model depth, width, and MLP width are chosen to match the parameter counts of baselines for fair comparison.        
+
+> Table 9. Training and model configurations of LRSA. Training configurations are directly from previous works without extra tuning (Bonnet et al., 2022; Hao et al., 2023; Deng et al., 2024). Here Lvand Lsrepresent the mse loss on volume and surface fields respectively. As for Darcy, we adopt an additional spatial gradient regularization term Lgfollowing ONO (Xiao et al., 2024).
+
+Problems Model Configurations Training Configurations Depth Width #Heads M #Params Max Lr Weight Decay Epochs Batch Size Loss Elasticity 8 128 8 64 2.1M 1e-3 1e-5 500 1Navier Stokes 8 256 8 32 12.0M 1e-3 1e-5 500 2 Relative Plasticity 8 128 8 64 2.8M 1e-3 1e-5 500 8 L2 Airfoil 8 128 4 64 2.8M 1e-3 1e-5 500 4Pipe 8 128 4 32 2.8M 1e-3 1e-5 500 4Darcy 8 128 8 64 2.8M 1e-3 1e-5 500 4 LrL2 + 0 .1Lg
+
+Irregular Darcy 4 64 4 32 363K 1e-3 1e-5 2000 16 Pipe Turbulence 4 64 4 32 363K 1e-3 1e-5 2000 16 Relative Heat Transfer 4 64 4 32 363K 1e-3 1e-5 2000 16 L2 Composite 4 64 4 32 363K 1e-3 1e-5 2000 16 ShapeNet Car 8 256 8 64 9.1M 1e-3 1e-5 400 1 Lv + 0 .5Ls
+
+AirfRANS 8 256 8 64 9.1M 3e-4 1e-5 400 1 Lv + Ls
+
+18 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators 
+
+D.2. Statistical Significance 
+
+To explicitly quantify the robustness of our method against initialization noise, we trained both LRSA and the strong baseline Transolver on all standard benchmarks using 5 different random seeds. The mean relative L2 error and standard deviation are reported in Table 10. LRSA demonstrates not only lower average error but also comparable or lower variance, indicating stable convergence.    
+
+> Table 10. Statistical Mean and Std : Relative L2error is reported in the table. ( ×10 −2)
+
+Dataset Airfoil Pipe Plasticity Navier-Stokes Darcy Elasticity Transolver 0.53 ±0.01 0.33 ±0.02 0.12 ±0.01 9.00 ±0.13 0.57 ±0.01 0.64 ±0.02 Ours 0.42 ±0.03 0.23 ±0.01 0.046 ± 0.001 4.84 ± 0.09 0.43 ± 0.01 0.33 ± 0.01 
+
+D.3. Efficiency Benchmark details 
+
+We conduct efficiency benchmarks on a single NVIDIA RTX4090 (48G) GPU using PyTorch 2.9 with CUDA 12.8. LRSA utilizes the native scaled dot product attention , which automatically dispatches to FlashAttention-2 kernels (Dao, 2024) when inputs are in FP16 or BF16. Transolver is implemented using its official open-source codebase. We report the peak memory usage (GB), average forward pass latency (ms), and backward pass latency (ms) averaged over 100 iterations after a warm-up period. The batch sizes are set to ensure the program is bound by the GPU: 20 for Navier–Stokes ( N = 64 2), 20 for Airfoil ( N = 221 × 51 ), and 8 for ShapeNetCar ( N = 32 , 186 ). 
+
+Analysis of Latency and Precision. Detailed results are presented in Table 11. In FP32 precision, LRSA offers comparable forward latency to Transolver. The primary efficiency gain of LRSA stems from its half-precision stability . Transolver involves explicit re-normalization and aggregation of physics-aware tokens ( softmax (·)/ P softmax (·)), an operation sensitive to the reduced dynamic range of FP16/BF16, leading to the instability (divergence) observed. Conversely, LRSA’s standard attention formulation integrates normalization within the fused kernel, preserving numerical stability. In FP32, FlashAttention is not available in our setup, so PyTorch SDPA falls back to non-Flash kernels (cuDNN SDPA or the math implementation). Once we switch to FP16/BF16, SDPA dispatches to FlashAttention, and SDPA becomes stable and efficient with no such fallback-related issues.     
+
+> Table 11. Detailed Efficiency Breakdown. Comparison of Peak Memory (Mem, in GB), Forward Latency (Fwd, in ms), and Backward Latency (Bwd, in ms) across different precisions. Entries marked with †indicate configurations that resulted in training divergence (NaN loss) or severe accuracy degradation.
+
+Method Navier–Stokes Airfoil ShapeNet Car Mem Fwd Bwd Mem Fwd Bwd Mem Fwd Bwd 
+
+Configurations N = 4096 , M = 64 , B = 20 N = 11271 , M = 64 , B = 20 N = 32186 , M = 64 , B = 8 
+
+Transolver-FP32 8.7 70.2 129.3 18.4 127.9 253.0 28.2 163.3 273.3 Transolver-BF16 † 6.9 43.2 85.3 17.1 84.7 214.3 20.5 88.2 206.4 Transolver-FP16 † 6.9 43.4 85.2 17.1 82.2 214.3 20.5 88.1 206.5 Ours-FP32 10.5 48.0 98.1 12.1 53.2 178.4 26.2 103.3 238.4 Ours-BF16 5.5 24.5 51.8 6.5 27.8 76.6 13.3 40.2 97.0 Ours-FP16 5.5 21.5 37.9 6.5 20.0 58.5 13.3 40.2 96.9 D.4. Extended Ablation Results 
+
+We provide the complete numerical results for the ablation studies discussed in the main text, including component analysis, rank sensitivity, and training precision impact (Table 12). 19 Simple yet Effective: Low-Rank Spatial Attention for Neural Operators     
+
+> Table 12. Full Ablation Results. Relative L2errors across standard benchmarks under various ablation settings.
+
+Variants \ Dataset Airfoil Pipe Plasticity Navier-Stokes Darcy Elasticity 
+
+Ablation: Components 
+
+w/o Intra Attention 4.30e-3 2.64e-3 7.09e-4 5.44e-2 4.46e-3 3.60e-3 Enforce Symmetric 4.60e-3 2.50e-3 4.71e-4 5.93e-2 4.63e-3 4.70e-3 
+
+Ablation: Latent Rank M
+
+8 4.32e-3 3.01e-3 4.87e-4 1.03e-2 4.85e-3 3.71e-3 16 4.47e-3 2.32e-3 4.74e-4 9.10e-2 4.75e-3 3.47e-3 32 4.31e-3 2.26e-3 4.73e-4 6.91e-2 4.31e-3 3.57e-3 64 4.23e-3 2.67e-3 4.65e-4 4.84e-2 4.52e-3 3.32e-3 
+
+128 4.15e-3 2.75e-3 4.45e-4 4.32e-2 4.16e-3 3.40e-3 256 4.86e-3 2.98e-3 4.43e-4 3.19e-2 4.28e-3 3.41e-3 
+
+Precision (Training & Evaluation) 
+
+Float 32 4.31e-3 2.26e-3 4.65e-4 4.84e-2 4.31e-3 3.32e-3 Float 16 4.45e-3 2.49e-3 4.73e-4 4.85e-2 4.32e-3 3.35e-3 BFloat 16 4.50e-3 2.89e-3 5.13e-4 5.12e-2 4.30e-3 3.58e-3 20

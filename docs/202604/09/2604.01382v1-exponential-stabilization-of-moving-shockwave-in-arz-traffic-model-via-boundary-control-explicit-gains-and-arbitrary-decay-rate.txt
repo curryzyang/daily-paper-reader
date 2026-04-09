@@ -1,0 +1,3802 @@
+Title: Exponential Stabilization of Moving Shockwave in ARZ Traffic Model via Boundary Control: Explicit Gains and Arbitrary Decay Rate
+
+URL Source: https://arxiv.org/pdf/2604.01382v1
+
+Published Time: Fri, 03 Apr 2026 00:08:35 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Exponential Stabilization of Moving Shockwave in ARZ Traffic Model via Boundary Control: Explicit Gains and Arbitrary Decay Rate 
+
+Mina Cao, Mamadou Diagne, Peipei Shang and Lei Yu 
+
+Abstract — This paper develops boundary feedback controls to stabilize traffic congestion toward a predefined shock equi-librium in the Aw-Rascle-Zhang (ARZ) traffic flow model. We transform the corresponding moving-boundary 2×2 hyperbolic system, covering free and congested flow regimes, respectively, into a shock-free 4 × 4 augmented system on a fixed domain via shock-location-based moving coordinates. By applying the modified Lyapunov functionals concerning shock perturbation, we show that the shock position and the state of the system in 
+
+H2-norm can be stabilized with an arbitrary exponential decay rate via the given feedback controls. Finally, the stabilization results are demonstrated by numerical simulations. 
+
+I. INTRODUCTION To overcome the drawbacks of the LWR model [1], [2], various studies have introduced an additional momentum conservation law to describe traffic flow acceleration, giving rise to the class of second-order macroscopic traffic flow models. The works in [3] and [4] independently developed representative models of this class. These two models are mathematically equivalent under some conditions (see [5]), yielding the unified ARZ model studied in this paper, which is formulated as a 2 × 2 nonlinear conservation laws: (∂t ρ + ∂x(z − ρ p(ρ)) = 0,
+
+∂t z + ∂x
+
+ z2 
+
+> ρ
+
+− zp (ρ)
+
+
+
+= 0, (1) where, ρ denotes the traffic density, p(ρ) denotes the traffic pressure, and z is the generalized momentum defined as z =
+
+ρ(v + p(ρ)) , where v is the flow velocity. The first equation is conservation of mass and the second one is conservation of generalized momentum. Most existing studies on the stability of hyperbolic traffic flow systems focus on smooth classical solutions, yet shock waves naturally emerge in practical traffic flow, as charac-teristic speeds rely on local traffic states such as density and velocity. Traffic congestion typically propagates in a pattern analogous to shock waves, making it critical to study boundary feedback control problems involving shock waves, with the goal of designing control to stabilize traffic flow and suppress shock wave propagation. Limited research has focused on shock stabilization for traffic flow models. One main reason is that it is rather difficult to describe the 
+
+> The work of Mina Cao, Peipei Shang and Lei Yu was funded by the National Natural Science Foundation of China (No. 12171368). The work of Mamadou Diagne was funded by the NSF CAREER Award CMMI-2302030 and the NSF grant CMMI-2222250. Mina Cao (2230913@tongji.edu.cn), Peipei Shang (shang@tongji.edu.cn) and Lei yu (yu lei@tongji.edu.cn) are with School of Mathematical Sci-ences, Key Laboratory of Intelligent Computing and Applications (Ministry of Education), Tongji University. Mamadou Diagne (mdiagne@ucsd.edu) is with Department of Mechanical and Aerospace Engineering, UC San Diego, 9500 Gilman Drive, La Jolla, CA, 92093-0411.
+
+boundary condition when shock solutions are considered for the hyperbolic systems, which makes the stabilization through boundary control much challenging. Recently, [6] realized shock steady-state stability for the Burgers equation via boundary feedback control using shock position and bilateral state information, by transforming the shock-involved system into a shock-free system via coordinate transformation and introducing a shock-dependent perturbation term. This framework has also been extended to the Saint-Venant equations for hydraulic jump control [7]. The method they used is the Lyapunov approach, initially proposed by Coron et al. [8] and then adapted to various kinds of problems related to stabilization of hyperbolic sys-tems, see [9] for a comprehensive study. Using this method, Zhang et al. [10] began to study a very relevant stop-and-go wave stabilization for the ARZ model and gave sufficient conditions for local exponential stabilization in terms of matrix inequalities; however, it is usually difficult to prove theoretically the existence of the parameters using LMIs, only numerical method can be applied. On the other hand, based on the LWR model, [11] studied stabilization of traffic flows when a shock has formed. Taking the system as a delayed control system, they achieved local stability with an arbitrary convergence rate. The main method they used is the backstepping method, initially proposed by Krstic [12], is a powerful tool to study the stabilization of hyperbolic systems with source terms with less controls, see [13] for a comprehensive introduction. However, the feedback control obtained by the backstepping method is full-state feedback, which is usually difficult to implement, although sometimes the observer can be designed [14]. Inspired by [6], in this paper, we target shock-based traffic congestion stabilization via straightforward static-feedback control by the Lyapunov approach, i.e., the boundary feed-back control we apply only needs the information from the boundaries, which is relatively simple to apply in practical applications. To that end, we transform the corresponding moving-boundary 2 × 2 hyperbolic system, covering free and congested flow regimes, respectively, into a shock-free 4 × 4augmented system on a fixed domain via shock-location-based moving coordinates. Different from the work in [10], where the system is formulated in terms of the evolution of the density and the velocity, in this work, we consider the density and the generalized momentum as two states. The reason is that the two quantities are conserved through the jump in the jump’s reference frame. In addition, we emphasize the main differences between the work [10] and our results. Firstly, the authors assume in [10] that the traffic 
+
+> arXiv:2604.01382v1 [math.OC] 1 Apr 2026
+
+pressure is linear with respect to the density ρ and has a very special precise form, which results in a relatively simple structure of hyperbolic systems and makes the analysis of dissipative boundary conditions easier to perform. By contrast, in this paper, we deal with general traffic pressure satisfying reasonable conditions, which include the special case studied in [10]. Secondly, by fully using the information contained in the shock, we can realize the exponential sta-bilization using only three controls rather than four controls that are designed in [10]. Thirdly, by choosing the feedback controls properly, we can prove theoretically the existence of the tuning parameters to stabilize the system with a shock and give an explicit range of the tuning parameters. Moreover, the decay rate can be made arbitrarily large. The remainder of this paper is structured as follows. Section II states the stabilization problem of the ARZ model with shock and proposes boundary feedback control strategy. Section III establishes the well-posedness of the system. Section IV proves the exponential stability of the closed-loop system. Numerical simulations in Section V verify the theoretical results. Section VI concludes the paper. II. P ROBLEM STATEMENT 
+
+Consider a road segment of length L, that is, the space domain involved in the problem is bounded, denoted as 
+
+[0, L]. We focus on the stabilizaiton of the ARZ model (1) with shock in this space domain. The pressure p ∈
+
+C2([ 0, +∞); [0, +∞)) satisfies the following assumptions: 
+
+p(0) = 0, p′(ρ) > 0, ρ → ρ p(ρ) is strictly convex . (2) To close the system we need to establish a relationship between ρ and z before and after the shock, since the solution 
+
+(ρ, z)⊤ of (1) exists a jump discontinuity on xs(t) ∈ (0, L).For any well-defined function f in the neighborhood of xs,the following notation is given: 
+
+[ f ]+ 
+
+> −
+
+= f (x+ 
+
+> s
+
+(t)) − f (x− 
+
+> s
+
+(t)) .
+
+By Rankine-Hugoniot condition we have, 
+
+[z − ρ p(ρ)] + 
+
+> −
+
+= ˙xs[ρ]+
+
+> −
+
+,
+
+h z2 
+
+> ρ
+
+− zp (ρ)
+
+i+ 
+
+> −
+
+= ˙xs[z]+
+
+> −
+
+, (3) where ˙xs denotes the time derivative of xs, which is the moving pace of the jump discontinuity. From (3), direct computations give that ˙xs = [z − ρ p(ρ)] +
+
+> −
+
+[ρ]+
+
+> −
+
+, (4) 
+
+ z
+
+ρ
+
++
+
+> −
+
+ z
+
+ρ − p(ρ)
+
++
+
+> −
+
+= 0. (5) One can easily check that the first characteristic field is genuinely nonlinear, the second is linearly degenerate. The points (ρ f , z f ) ∈ (R+)2 and (ρc, zc) ∈ (R+)2 are joined by a shock xs(t) if and only if the following holds 
+
+z f (t, x− 
+
+> s
+
+)
+
+ρ f (t, x− 
+
+> s
+
+) = zc(t, x+ 
+
+> s
+
+)
+
+ρc(t, x+ 
+
+> s
+
+) , ρ f (t, x− 
+
+> s
+
+) > ρc(t, x+ 
+
+> s
+
+), (6) see [15] for the details. Our aim is to stabilize the shock steady state  (ρ∗, z∗)⊤, x∗
+
+> s
+
+ of the system of (1) and (4)–(5). The steady state satisfies x∗ 
+
+> s
+
+∈ (0, L) and 
+
+ρ∗=
+
+(
+
+ρ∗ 
+
+> f
+
+, x ∈ [0, x∗ 
+
+> s
+
+),
+
+ρ∗ 
+
+> c
+
+, x ∈ (x∗ 
+
+> s
+
+, L], z∗=
+
+(
+
+z∗ 
+
+> f
+
+, x ∈ [0, x∗ 
+
+> s
+
+),
+
+z∗ 
+
+> c
+
+, x ∈ (x∗ 
+
+> s
+
+, L], (7) where ρ∗ 
+
+> f
+
+, ρ∗ 
+
+> c
+
+, z∗ 
+
+> f
+
+, z∗ 
+
+> c
+
+are positive constants satisfying 
+
+z∗ 
+
+> f
+
+ρ∗ 
+
+> c
+
+= z∗ 
+
+> c
+
+ρ∗ 
+
+> f
+
+. (8) By (4), ˙xs = 0 implies that the steady state   (ρ∗, z∗)⊤ , x∗
+
+> s
+
+
+
+satisfies 
+
+z∗ 
+
+> f
+
+− ρ∗ 
+
+> f
+
+p ρ∗
+
+> f
+
+ = z∗ 
+
+> c
+
+− ρ∗ 
+
+> c
+
+p (ρ∗ 
+
+> c
+
+) .
+
+The traffic flow is free before the shock and congested after the shock. Thus the eigenvalues of the system are both positive before the discontinuity, i.e., when x ∈ [0, x∗ 
+
+> s
+
+)
+
+λ1 = −p(ρ∗ 
+
+> f
+
+) + z∗
+
+> f
+
+ρ∗
+
+> f
+
+− ρ∗ 
+
+> f
+
+p′(ρ∗ 
+
+> f
+
+) > 0,
+
+λ2 = −p(ρ∗ 
+
+> f
+
+) + z∗
+
+> f
+
+ρ∗
+
+> f
+
+> 0,
+
+(9) while become one positive and one negative after the shock, i.e., when x ∈ (x∗ 
+
+> s
+
+, L]
+
+−λ3 = −p(ρ∗ 
+
+> c
+
+) + z∗
+
+> c
+
+ρ∗
+
+> c
+
+− ρ∗ 
+
+> c
+
+p′(ρ∗ 
+
+> c
+
+) < 0,
+
+λ4 = −p(ρ∗ 
+
+> c
+
+) + z∗
+
+> c
+
+ρ∗
+
+> c
+
+> 0.
+
+(10) Note that by the assumption of traffic pressure (2) and (8), equations (9)–(10) implies that ρ∗ 
+
+> f
+
+< ρ∗ 
+
+> c
+
+.We consider the following static feedback control: 
+
+
+
+ρ(t, 0)−ρ∗
+
+> f
+
+z(t, 0)−z∗
+
+> f
+
+z(t, L)−z∗
+
+> c
+
+= G
+
+
+
+z(t, x− 
+
+> s
+
+)−z∗
+
+> f
+
+z(t, x+ 
+
+> s
+
+)−z∗
+
+> c
+
+ρ(t, x− 
+
+> s
+
+)−ρ∗
+
+> f
+
+xs −x∗
+
+> s
+
+−
+
+ 00
+
+G4(ρ(t, L)−ρ∗ 
+
+> c
+
+)
+
+ ,
+
+(11) where G = ( G1, G2, G3)⊤ : R4 → R3, G ∈ C2, G4 : R →
+
+R, G4 ∈ C2, and 
+
+G(0) = 0, G4(0) = 0, G′
+
+> 4
+
+(0) = −λ4. (12) Note that the steady state  (ρ∗, z∗)⊤, x∗
+
+> s
+
+ satisfies the bound-ary conditions (11) obviously. In real case applications, the implementation of this boundary feedback control is rather easy since it only needs some pointwise measurements at 
+
+ρ(t, L), xs(t), ρ(t, x− 
+
+> s
+
+), z(t, x+ 
+
+> s
+
+) and z(t, x− 
+
+> s
+
+).Consider the following initial conditions that 
+
+ρ(0, x) = ρ0(x), z(0, x) = z0(x), xs(0) = x0 
+
+> s
+
+, (13) where x0 
+
+> s
+
+∈ (0, L) and (ρ0(x), z0(x)) ⊤∈H2  (0, x0 
+
+> s
+
+); R2∩
+
+H2  (x0 
+
+> s
+
+, L); R2 . Suppose that the initial conditions satisfy the first-order compatibility condition implied by (11) and (13), we make a definition as follows: 
+
+Definition 1 If there exists δ ∗ > 0, C∗ > 0, s.t. 
+
+∀ (ρ0(x), z0(x)) ⊤ ∈ H2  (0, x0 
+
+> s
+
+); R2 ∩ H2  (x0 
+
+> s
+
+, L); R2 ,
+
+∀ x0 
+
+> s
+
+∈ (0, L) satisfy 
+
+(ρ0 − ρ∗ 
+
+> f
+
+, z0 − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,x0 
+
+> s);R2
+
+)+ (ρ0 − ρ∗ 
+
+> c
+
+, z0 − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((x0 
+
+> s,L);R2
+
+) + x0 
+
+> s
+
+− x∗ 
+
+> s
+
+⩽ δ ∗,
+
+and the first-order compatibility condition given by (11) ,also for any T > 0, the system of (1), (4) –(5) , (11) ,
+
+(13 ) has a unique solution x s ∈ C1([ 0, T ]) and (ρ, z)⊤ ∈C0  [0, T ]; H2  (0, xs(t)) ; R2 ∩ H2  (xs(t), L); R2 satisfying 
+
+(ρ(t, ·) − ρ∗ 
+
+> f
+
+, z(t, ·) − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,xs(t)) ;R2)+ (ρ(t, ·) − ρ∗ 
+
+> c
+
+, z(t, ·) − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((xs(t),L);R2)+ |xs(t) − x∗ 
+
+> s
+
+|
+
+⩽C∗e−γt 
+
+(ρ0 − ρ∗ 
+
+> f
+
+, z0 − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,x0 
+
+> s);R2
+
+)+ (ρ0 − ρ∗ 
+
+> c
+
+, z0 − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((x0 
+
+> s,L);R2
+
+) + x0 
+
+> s
+
+− x∗
+
+> s
+
+
+
+(14) 
+
+for any t ∈ [0, T ], then we say the steady state  (ρ∗, z∗)⊤, x∗
+
+> s
+
+
+
+is locally exponentially stable with decay rate γ in H 2 norm. 
+
+Before introducing the main stability result in this article, we give the following notations and definitions: 
+
+D(x, γ) = diag si
+
+bi
+
+λi
+
+eλi
+
+− siλ4
+
+eλ4
+
+Ri
+
+!
+
+exp 
+
+γ (x∗ 
+
+> s
+
+− xs)
+
+xiλi
+
+!
+
+> i∈{ 1,2,3}
+
+,
+
+eD(μ) = diag 
+
+ 3
+
+# ∑
+
+> j=1
+
+exp 
+
+μx∗
+
+> s
+
+xiλi
+
+− μx∗
+
+> s
+
+x jλ j
+
+!
+
+λi
+
+eλi
+
+−siλ4
+
+eλ4
+
+Ri
+
+!2
+
+> i∈{ 1,2,3}
+
+.
+
+Let us denote by 
+
+K1 =
+
+
+
+> eλ1eλ2
+> eλ2−eλ1
+> −eλ1
+> eλ2−eλ1
+
+0
+
+> −eλ1eλ2
+> eλ2−eλ1
+> eλ2
+> eλ2−eλ1
+
+00 0 eλ3
+
+> eλ3+eλ4
+
+
+
+and define 
+
+K = K1G′(0)
+
+
+
+1 1 0        
+
+> ρ∗
+> c−z∗
+> c
+> eλ1
+> ρ∗
+> f−z∗
+> f
+> eλ4
+> ρ∗
+> c−z∗
+> c
+> eλ2
+> ρ∗
+> f−z∗
+> f
+> eλ4
+
+−   
+
+> z∗
+> f
+> eλ3
+> +z∗
+> f
+> eλ4
+> ρ∗
+> f−z∗
+> f
+> eλ4
+> 1
+> eλ1
+> 1
+> eλ2
+
+00 0 0
+
+
+
+, (15) 
+
+(b1, b2, b3)⊤ = K1G′(0)( 0, 0, 0, 1)⊤, (16) where s1 = s2 = −s3 = 1, x1 = x2 = 1, x3 = −x4 = x∗ 
+
+> s
+> L−x∗
+> s
+
+,
+
+eλi = siλi + p(ρ∗
+
+> (i)
+
+) + ρ∗ 
+
+> (i)
+
+p′(ρ∗
+
+> (i)
+
+) and 
+
+ρ∗
+
+> (i)
+
+z∗
+
+> (i)
+
+!
+
+=
+
+
+
+ρ∗ 
+
+> f
+
+, z∗
+
+> f
+
+⊤
+
+, i = 1, 2,
+
+(ρ∗ 
+
+> c
+
+, z∗ 
+
+> c
+
+)⊤ , i = 3, 4,,
+
+Ri =
+
+ρ∗ 
+
+> (5−i)
+
+− z∗
+
+> (5−i)
+> eλi
+
+ρ∗ 
+
+> f
+
+− z∗
+
+> f
+> eλ4
+
+, i = 1, 2, 3.
+
+(17) On the basis of Definition 1, we have the main results: 
+
+Theorem 1 Consider system (1) with boundary conditions 
+
+(11 ), for any given steady state  (ρ∗, z∗)⊤, x∗
+
+> s
+
+, denote by Li = 1
+
+ρ∗ 
+
+> c
+
+− ρ∗
+
+> f
+
+− λi
+
+eλi
+
++ siλ4
+
+eλ4
+
+Ri
+
+!
+
+, i = 1, 2, 3.
+
+For any γ > 0, suppose b i, i = 1, 2, 3 satisfy  
+
+> •
+
+If L i > 0, then bi∈
+
+ −γ exp 
+
+
+
+− γx∗
+
+> s
+> xiλi
+
+
+
+3Li
+
+
+
+1−exp 
+
+
+
+− γx∗
+
+> s
+> xiλi
+
+ ,
+
+−γ exp 
+
+
+
+− γx∗
+
+> s
+> x1λ1
+
+
+
+3Li
+
+ , (18)  
+
+> •
+
+If L i < 0, then bi∈
+
+−γ exp 
+
+
+
+− γx∗
+
+> s
+> xiλi
+
+
+
+3Li
+
+,
+
+−γ exp 
+
+
+
+− γx∗
+
+> s
+> xiλi
+
+
+
+3Li
+
+
+
+1−exp 
+
+
+
+− γx∗
+
+> s
+> x1λ1
+
+  , (19) 
+
+and the matrix D (x∗ 
+
+> s
+
+, γ) − K⊤D (0, γ) K−
+
+
+
+> 3
+
+# ∑
+
+> k=1
+
+−2bksk
+
+γ2
+
+
+
+ρ∗ 
+
+> c
+
+−ρ∗
+
+> f
+
+2
+
+λi
+
+eλi
+
+−siλ4
+
+eλ4
+
+Ri
+
+! 
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+
+
+−1
+
+eD(γ)
+
+(20) 
+
+is positive definite, then the steady state  (ρ∗, z∗)⊤, x∗
+
+> s
+
+ is locally y exponentially stable with the decay rate of γ 
+
+> 4
+
+in H 2
+
+norm. 
+
+The existence of the control function G such that K and 
+
+(b1, b2, b3)⊤ defined in (15)–(16) satisfying (18)–(20) is discussed in Remark 2. III. W ELL -POSEDNESS OF THE SYSTEM 
+
+In this section, we will prove the well-posedness of the system of the ARZ model (1) with shock (5), boundary feedback control (11) and the initial condition (13). Firstly, we state the following well-posedness theorem. 
+
+Theorem 2 For any T > 0, ∃ δ (T ) > 0 such that for any given initial condition (13 ) satisfies 
+
+(ρ0 − ρ∗ 
+
+> f
+
+, z0 − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,x0 
+
+> s);R2
+
+)+ (ρ0 − ρ∗ 
+
+> c
+
+, z0 − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((x0 
+
+> s,L);R2
+
+) + x0 
+
+> s
+
+− x∗ 
+
+> s
+
+⩽ δ (T ),
+
+(21) 
+
+and the first-order compatibility conditions, the system (1), (4) –5), (11),(13) has a unique solution 
+
+(ρ, z)⊤∈C0 [0, T ]; H2  (0, xs(t)) ; R2∩H2  (xs(t), L); R2 ,
+
+xs ∈ C1([ 0, T ]) ,
+
+and the following inequality 
+
+(ρ(t, ·) − ρ∗ 
+
+> f
+
+, z(t, ·) − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,xs(t)) ;R2)+ (ρ(t, ·) − ρ∗ 
+
+> c
+
+, z(t, ·) − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((xs(t),L);R2)+|xs(t) − x∗ 
+
+> s
+
+|
+
+⩽C(T )
+
+
+
+(ρ0 − ρ∗ 
+
+> f
+
+, z0 − z∗ 
+
+> f
+
+)⊤
+
+> H2
+
+((0,x0 
+
+> s);R2
+
+)+ (ρ0 − ρ∗ 
+
+> c
+
+, z0 − z∗ 
+
+> c
+
+)⊤
+
+> H2
+
+((x0 
+
+> s,L);R2
+
+) + x0 
+
+> s
+
+− x∗
+
+> s
+
+
+
+holds for any t ∈ [0, T ].Proof: We use following change of variables 
+
+ρ f (t, x) = ρ
+
+
+
+t, x xs
+
+x∗
+
+> s
+
+
+
+, z f (t, x) = z
+
+
+
+t, x xs
+
+x∗
+
+> s
+
+
+
+,
+
+ρc(t, x) = ρ
+
+
+
+t, L + x xs − Lx∗
+
+> s
+
+
+
+,
+
+zc(t, x) = z
+
+
+
+t, L + x xs − Lx∗
+
+> s
+
+
+
+,
+
+(22) in order to reduce the spatial domain to a fixed interval. Define the deviations 
+
+ρ f = ρ f −ρ∗ 
+
+> f
+
+, z f = z f −z∗ 
+
+> f
+
+, ρc = ρc −ρ∗ 
+
+> c
+
+, ρc = ρc −ρ∗ 
+
+> c
+
+. (23) Then the system (1), (4)–(5) becomes equivalent to the 4 × 4 system defined in R+ × [0, x∗ 
+
+> s
+
+]:
+
+
+
+∂t ρ f −
+
+
+
+x ˙xs 
+
+> x∗
+> s
+
++p(ρ f + ρ∗ 
+
+> f
+
+)+( ρ f +ρ∗ 
+
+> f
+
+)p′(ρ f +ρ∗ 
+
+> f
+
+)
+
+ x∗ 
+
+> s
+> xs
+
+∂xρ f + x∗ 
+
+> s
+> xs
+
+∂xz f = 0,
+
+∂t z f +
+
+ 2(z f+z∗   
+
+> f)
+> ρf+ρ∗
+> f
+
+−p(ρ f + ρ∗ 
+
+> f
+
+)−x ˙xs
+
+> x∗
+> s
+
+ x∗ 
+
+> s
+> xs
+
+∂xz f −
+
+ (z f+z∗    
+
+> f)2
+> (ρf+ρ∗
+> f)2
+
++( z f +z∗ 
+
+> f
+
+)p′(ρ f +ρ∗ 
+
+> f
+
+)
+
+ x∗ 
+
+> s
+> xs
+
+∂xρ f = 0,
+
+∂t ρc +
+
+
+
+x ˙xs 
+
+> x∗
+> s
+
++p(ρc +ρ∗ 
+
+> c
+
+)+( ρc +ρ∗ 
+
+> c
+
+)p′(ρc +ρ∗ 
+
+> c
+
+)
+
+ x∗ 
+
+> s
+> L−xs
+
+∂xρc − x∗ 
+
+> s
+> L−xs
+
+∂xzc = 0,
+
+∂t zc −
+
+ 2(zc+z∗  
+
+> c)
+> ρc+ρ∗
+> c
+
+−p(ρc +ρ∗ 
+
+> c
+
+)−x ˙xs
+
+> x∗
+> s
+
+ x∗ 
+
+> s
+> L−xs
+
+∂xzc +
+
+ (zc+z∗   
+
+> c)2
+> (ρc+ρ∗
+> c)2
+
++( zc +z∗ 
+
+> c
+
+)p′(ρc +ρ∗ 
+
+> c
+
+)
+
+ x∗ 
+
+> s
+> L−xs
+
+∂xρc = 0,
+
+(24) where ˙xs = 1
+
+ρc + ρ∗ 
+
+> c
+
+− ρ f − ρ∗
+
+> f
+
+h
+
+zc − z f + z∗ 
+
+> c
+
+−z∗
+
+> f
+
+− (ρc +ρ∗ 
+
+> c
+
+) p (ρc + ρ∗ 
+
+> c
+
+) + ( ρ f +ρ∗ 
+
+> f
+
+)p(ρ f + ρ∗ 
+
+> f
+
+)
+
+i
+
+,
+
+(25) the corresponding boundary condition (6) at x∗ 
+
+> s
+
+becomes 
+
+zc + z∗
+
+> c
+
+ρc + ρ∗
+
+> c
+
+= z f + z∗
+
+> f
+
+ρ f + ρ∗
+
+> f
+
+. (26) Next, we introduce the following Riemann coordinates: 
+
+u = ( u1, u2, u3, u4)⊤ =
+
+S1 00 S2
+
+
+
+(ρ f , z f , ρc, zc)⊤, (27) where 
+
+S1 =
+
+> 1
+> eλ1
+> 1
+> eλ2
+
+1 1
+
+!−1
+
+, S2 =
+
+> 1
+> eλ3
+> 1
+> eλ4
+
+1 1
+
+!−1
+
+.
+
+Then the system (24) can be rewritten as 
+
+ut + ( Λ(xs) + A(u, xs) + x ˙xsB(xs)) ux = 0, (28) where 
+
+Λ = diag 
+
+ x∗
+
+> s
+
+xs
+
+λ1, x∗
+
+> s
+
+xs
+
+λ2, x∗
+
+> s
+
+L − xs
+
+λ3, − x∗
+
+> s
+
+L − xs
+
+λ4
+
+
+
+(29) and A, B ∈ C2 can be acquired by calculation, A(0, xs) = 0.
+
+The time derivative of shock (25) becomes ˙xs = 1
+
+> u4
+> eλ4
+
++ u3
+
+> eλ3
+
++ρ∗ 
+
+> c
+
+− u1
+
+> eλ1
+
+−u2
+
+> eλ2
+
+−ρ∗
+
+> f
+
+h
+
+u3 +u4 −u1 −u2 +z∗ 
+
+> c
+
+−z∗
+
+> f
+
+− u4
+
+eλ4
+
++ u3
+
+eλ3
+
++ρ∗
+
+> c
+
+!
+
+p u4
+
+eλ4
+
++ u3
+
+eλ3
+
++ρ∗
+
+> c
+
+!
+
++
+
+u1
+
+eλ1
+
++ u2
+
+eλ2
+
++ρ∗
+
+> f
+
+
+
+p
+
+u1
+
+eλ1
+
++ u2
+
+eλ2
+
++ρ∗
+
+> f
+
+ i
+
+. (30) By (27), the boundary condition (26) on x = x∗ 
+
+> s
+
+becomes 
+
+ρ∗ 
+
+> f
+
+(u3 + u4) − ρ∗ 
+
+> c
+
+(u1 + u2)+z∗
+
+> c
+
+ u1
+
+eλ1
+
++ u2
+
+eλ2
+
+
+
+− z∗
+
+> f
+
+u4
+
+eλ4
+
++ u3
+
+eλ3
+
+!
+
+= O(|u(t, x∗ 
+
+> s
+
+)|2). (31) The boundary condition (11) can be rewritten as u1(t, 0)
+
+u2(t, 0)
+
+u3(t, 0)
+
+ = B
+
+u1(t, x∗ 
+
+> s
+
+)
+
+u2(t, x∗ 
+
+> s
+
+)
+
+u3(t, x∗ 
+
+> s
+
+)
+
+ , u4(t, 0), xs − x∗
+
+> s
+
+ , (32) by (22), (23), (27) and (31), where B = ( B1, B2, B3)⊤ :
+
+R3 × R × R → R3, B ∈ C2 and ∂2B(0, 0, 0) ≡ 0. Moreover, noticing (12) and using the Implicit Function Theorem, 
+
+B3 = F (u4(t, 0), G3(u(t, x∗ 
+
+> s
+
+), xs)) , (33) in the neighborhood of u = 0 and 
+
+F (0, 0) = 0, ∂1F (0, 0) = 0, ∂2F (0, 0) = eλ3
+
+eλ3 + eλ4
+
+. (34) The initial condition (13) can be transformed as 
+
+u0(x) =  u01(x), u02(x), u03(x), u04(x)⊤ , xs(0) = x0 
+
+> s
+
+, (35) satisfying the first-order compatibility condition determined by (32). Thus, we obtain that the well-posedness of the system (1), (4)–(5), (11) and (13) is equivalent to the well-posedness of the system (28), (30), (31), (32) and (35).To prove Theorem 2 and obtain the well-posedness of the system of (1), (4)–(5), (11) and (13), we just need to introduce the following lemma whose proof can be obtained by adaption of [9, Appendix B]. 
+
+Lemma 1 For each T > 0, there exists δ (T ) > 0 s.t. for arbitrary x 0 
+
+> s
+
+∈ (0, L), u0 ∈ H2(( 0, x∗ 
+
+> s
+
+); R4) satisfying the first-order compatibility condition and 
+
+|u0|H2((0,x∗ 
+
+> s);R4
+
+) + |x0 
+
+> s
+
+− x∗ 
+
+> s
+
+| ⩽ δ (T ), (36) 
+
+the system (28 ), (30 ), (31 ), (32 ) and (35 ) has a unique so-lution u ∈ C0  [0, T ]; H2  (0, x∗ 
+
+> s
+
+); R4 , x s ∈ C1 ([ 0, T ]) . More-over, for any t ∈ [0, T ] it is valid that 
+
+|u(t, ·)|H2((0,x∗ 
+
+> s);R4
+
+) + |xs(t) − x∗ 
+
+> s
+
+|
+
+⩽ C(T )
+
+
+
+|u0|H2((0,x∗ 
+
+> s);R4
+
+) + x0 
+
+> s
+
+− x∗
+
+> s
+
+
+
+. (37) This completes the proof of Theorem 2. 
+
+Remark 1 Obviously from (32 ), the value of B only de-pends on u i(t, x∗ 
+
+> s
+
+), i = 1, 2, 3, u4(t, 0) and x s − x∗ 
+
+> s
+
+, which is consistent with the former conclusion that u 4(t, x∗ 
+
+> s
+
+) can be regarded as a function of u i(t, x∗ 
+
+> s
+
+), i = 1, 2, 3 from (31 ).IV. T HE EXPONENTIAL STABILITY OF STEADY STATE IN 
+
+H2 NORM 
+
+This section is devoted to the proof of our main result– Theorem 1. Firstly we should point out that, it is only necessary to prove the exponential stability of the null-steady state of the system (28), (30), (31) and (32) in H2 as a result of the equivalence between the system (1), (4)–(5) and (11) and the system (28), (30), (31). Introduce the following Lyapunov functions 
+
+V (u, xs) = 
+
+> 3
+
+# ∑
+
+> i=1
+
+Vi(u) + 
+
+> 6
+
+# ∑
+
+> i=4
+
+Vi(u, xs), (38) where 
+
+V1 =
+
+Z x∗
+
+> s
+> 04
+
+# ∑
+
+> i=1
+
+pi exp 
+
+
+
+− μxxiλi
+
+
+
+u2 
+
+> i
+
+dx , (39) 
+
+V2 =
+
+Z x∗
+
+> s
+> 04
+
+# ∑
+
+> i=1
+
+pi exp 
+
+
+
+− μxxiλi
+
+
+
+u2 
+
+> it
+
+dx , (40) 
+
+V3 =
+
+Z x∗
+
+> s
+> 04
+
+# ∑
+
+> i=1
+
+pi exp 
+
+
+
+− μxxiλi
+
+
+
+u2 
+
+> itt
+
+dx , (41) 
+
+V4 =
+
+Z x∗
+
+> s
+> 03
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+λi
+
+exp 
+
+
+
+− μxxiλi
+
+
+
+(xs − x∗ 
+
+> s
+
+)uidx (42) 
+
++C0(xs − x∗ 
+
+> s
+
+)2,
+
+V5 =
+
+Z x∗
+
+> s
+> 03
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+λi
+
+exp 
+
+
+
+− μxxiλi
+
+
+
+˙xsuit dx +C0( ˙xs)2, (43) 
+
+V6 =
+
+Z x∗
+
+> s
+> 03
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+λi
+
+exp 
+
+
+
+− μxxiλi
+
+
+
+¨xsuitt dx +C0( ¨xs)2, (44) where pi, C0, p′ 
+
+> i
+
+are constants and pi > 0, C0 > 32 .In the following we denote for simplicity |u|H2 :=
+
+|u(t, ·)|H2(( 0,x∗  
+
+> s);R4)
+
+in the computations. We propose the following lemma of the equivalence between the Lyapunov functions V defined in (38)–(44) and (|u|H2 + |xs − x∗ 
+
+> s
+
+|)2.
+
+Lemma 2 The Lyapunov functions V defined in (38)–(44) is equivalent to the norm (|u|H2 +|xs − x∗ 
+
+> s
+
+|)2, if |u|H2 +|xs − x∗ 
+
+> s
+
+|
+
+is small enough and the constants p i, p′ 
+
+> i
+
+satisfy that 
+
+max 
+
+> i=1,2,3
+
+ p′2 
+
+> i
+
+xi
+
+μλ i pi
+
+
+
+1 − exp 
+
+
+
+− μx∗
+
+> s
+
+xiλi
+
+ 
+
+< 2. (45) The proof relies on using repeatedly Young’s Inquality and Cauchy-Schwarz Inequality, we omit the details here. It is worth noticing that we can separate the first three components of u under the feedback control condition (32) that are actually controlled as v = ( u1, u2, u3)⊤, since from (31) the boundary condition of u4 at x = x∗ 
+
+> s
+
+acquired by that of u1, u2 and u3. From (32) and the fact that B ∈ C2, we have 
+
+v(t, 0) = ∂1B(0, 0, 0)v (t, x∗ 
+
+> s
+
+) + ∂3B(0, 0, 0)( xs − x∗ 
+
+> s
+
+)+ O (|u|H2 + |xs − x∗ 
+
+> s
+
+|)2 . (46) By direct computations, we get 
+
+∂1B(0, 0, 0) = K, ∂3B(0, 0, 0) = ( b1, b2, b3)⊤, (47) where K and (b1, b2, b3)⊤ are given in (15)–(16). For given ¯T > 0, let x0 
+
+> s
+
+∈ (0, L), u0 ∈ H2  (0, x∗ 
+
+> s
+
+); R4
+
+satisfy the first-order compatibility condition and (36), and the solution of system (28), (30), (31), (32) and (35) is 
+
+u ∈ C0  [0, ¯T ]; H2  (0, x∗ 
+
+> s
+
+); R4 , xs ∈ C1 ([ 0, ¯T ]) . First we suppose that u ∈ C3, using integration by parts, then 
+
+dV 1
+
+dt = − μV1 −
+
+" 4
+
+# ∑
+
+> i=1
+
+pixiλi exp 
+
+
+
+− μxxiλi
+
+
+
+u2
+
+> i
+
+#x∗
+
+> s
+> 0
+
++ O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3 ,
+
+(48) Taking the derivative of (28) and through integration by parts, we have 
+
+dV 4
+
+dt = −μ  V4 −C0(xs − x∗ 
+
+> s
+
+)2+O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3
+
+− (xs − x∗ 
+
+> s
+
+)
+
+" 3
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+xi exp 
+
+
+
+− μxxiλi
+
+
+
+ui(t, x)
+
+#x∗
+
+> s
+> 0
+
++ ˙xs
+
+"
+
+2C0(xs −x∗ 
+
+> s
+
+)+ 
+
+Z x∗
+
+> s
+> 03
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+λi
+
+exp 
+
+
+
+− μxxiλi
+
+
+
+ui(t, x)dx 
+
+#
+
+,
+
+From (31) and using the notations defined in (17), the linearization of (30) can be written in the following compact form ˙xs =
+
+> 3
+
+# ∑
+
+> i=1
+
+− λi
+
+eλi
+
++ siλ4
+
+eλ4
+
+Ri
+
+!
+
+ui(x∗ 
+
+> s
+
+)
+
+ρ∗ 
+
+> c
+
+− ρ∗
+
+> f
+
+:=
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+),
+
+then we obtain 
+
+d(V1 +V4)
+
+dt = −μ  V1 +V4 −C0(xs − x∗ 
+
+> s
+
+)2
+
+−
+
+" 4
+
+# ∑
+
+> i=1
+
+pixiλi exp 
+
+
+
+− μxxiλi
+
+
+
+u2
+
+> i
+
+#x∗
+
+> s
+> 0
+
+− (xs − x∗ 
+
+> s
+
+)
+
+" 3
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+xi exp 
+
+
+
+− μxxiλi
+
+
+
+ui
+
+#x∗
+
+> s
+> 0
+
++
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+)
+
+!
+
+2C0(xs−x∗ 
+
+> s
+
+)+ 
+
+Z x∗
+
+> s
+> 03
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+λi
+
+exp 
+
+
+
+− μxxiλi
+
+
+
+uidx 
+
+!
+
++ O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3 .
+
+Using the boundary conditions (31), (46) and noticing (47), we obtain that 
+
+d(V1 +V4)
+
+dt = −μ(V1 +V4) + O
+
+
+
+(|u|H2 + |xs − x∗ 
+
+> s
+
+|)3
+
+−v⊤(x∗ 
+
+> s
+
+) F(x∗ 
+
+> s
+
+, μ)−K⊤F(0, μ)Kv(x∗ 
+
+> s
+
+)+ p4x4λ4u24(0)
+
+− p4x4λ4 exp 
+
+
+
+− μx∗
+
+> s
+
+x4λ4
+
+ 3
+
+# ∑
+
+> i=1
+
+Risiui(x∗ 
+
+> s
+
+)
+
+!2
+
++μC0(xs−x∗ 
+
+> s
+
+)2 3
+
+# ∑
+
+> i=1
+
+pixiλib2 
+
+> i
+
++2
+
+> 3
+
+# ∑
+
+> i=1
+
+pixiλibi(xs−x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> j=1
+
+ki j u j(x∗ 
+
+> s
+
+)+ ( xs − x∗ 
+
+> s
+
+)2 3
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+xibi−(xs − x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+xiui(x∗ 
+
+> s
+
+) exp 
+
+
+
+− μx∗
+
+> s
+
+xiλi
+
+
+
++ ( xs − x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> i=1
+
+p′
+
+> i
+
+xi
+
+> 3
+
+# ∑
+
+> j=1
+
+ki j u j(x∗ 
+
+> s
+
+) + 2C0(xs − x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+)+
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+)
+
+! Z x∗
+
+> s
+> 03
+
+# ∑
+
+> j=1
+
+p′j
+
+λ j
+
+exp 
+
+
+
+− μxx jλ j
+
+
+
+u jdx ,where F(x, μ) = diag 
+
+
+
+λi pixi exp 
+
+
+
+− μxxiλi
+
+ 
+
+> i∈{ 1,2,3}
+
+. Noting that except for the last term, other terms are all quadratic forms of  v⊤(x∗ 
+
+> s
+
+), u4(0), xs − x∗
+
+> s
+
+. Using Young’s Inequality and Cauchy-Schwarz Inequality successively, the following holds 
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+)
+
+! Z x∗
+
+> s
+> 0
+
+p′j
+
+λ j
+
+exp 
+
+
+
+− μxx jλ j
+
+
+
+u jdx 
+
+⩽ 12ε j
+
+> 3
+
+# ∑
+
+> i=1
+
+Θiui(x∗ 
+
+> s
+
+)
+
+!2
+
++ε j
+
+2
+
+Z x∗
+
+> s
+> 0
+
+p′j
+
+λ j
+
+exp 
+
+
+
+− μxx jλ j
+
+
+
+u jdx 
+
+!2
+
+⩽ ε j
+
+2μ
+
+" p′2 
+
+> j
+
+x j
+
+p jλ j
+
+
+
+1−exp 
+
+
+
+− μx∗
+
+> s
+
+x jλ j
+
+ #Z x∗
+
+> s
+> 0
+
+p jexp 
+
+
+
+− μxx jλ j
+
+
+
+u2 
+
+> j
+
+dx 
+
++ 12ε j
+
+" 3
+
+# ∑
+
+> i=1
+
+Θ2 
+
+> i
+
+u2 
+
+> i
+
+(x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> k=1
+
+exp 
+
+ μx∗
+
+> s
+
+xiλi
+
+− μx∗
+
+> s
+
+xkλk
+
+!# 
+
+.
+
+for each j = 1, 2, 3. Above all, we have 
+
+d(V1 +V4)
+
+dt ⩽ −μ(V1 +V4)+ O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3
+
+− v⊤(x∗ 
+
+> s
+
+) F(x∗ 
+
+> s
+
+, μ)−K⊤F(0, μ)K− ∑3
+
+> k=1 1
+> εk
+
+2(ρ∗ 
+
+> c
+
+− ρ∗ 
+
+> f
+
+)2 eD(μ)
+
+!
+
+v(x∗ 
+
+> s
+
+)+p4x4λ4u24(0) − p4x4λ4 exp 
+
+
+
+− μx∗
+
+> s
+
+xiλi
+
+ 3
+
+# ∑
+
+> i=1
+
+Risiui(x∗ 
+
+> s
+
+)
+
+!2
+
++ ( xs − x∗ 
+
+> s
+
+)2 μC0 +
+
+> 3
+
+# ∑
+
+> i=1
+
+xibi(piλi + p′
+
+> i
+
+)
+
+!
+
++ ( xs − x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> j=1
+
+"
+
+2C0θ j − p′jx j exp 
+
+
+
+− μx∗
+
+> s
+
+x jλ j
+
+
+
++
+
+> 3
+
+# ∑
+
+> i=1
+
+xiki j 
+
+ 2piλibi +p′
+
+> i
+
+#
+
+u j(x∗ 
+
+> s
+
+)+
+
+> 3
+
+# ∑
+
+> i=1
+
+
+
+1−exp 
+
+
+
+− μx∗
+
+> s
+
+xiλi
+
+ εi p′2 
+
+> i
+
+xi
+
+2μλ i pi
+
+Z x∗
+
+> s
+> 0
+
+pi exp 
+
+
+
+− μxxiλi
+
+
+
+u2 
+
+> i
+
+dx .
+
+To establish an exponential decay, denote by 1
+
+εi
+
+=
+
+p′2 
+
+> i
+
+xi
+
+
+
+1 − exp 
+
+
+
+− μx∗
+
+> s
+> xiλi
+
+ 
+
+μ2λi pi
+
+, i = 1, 2, 3. (49) Then we obtain that 
+
+d(V1 +V4)
+
+dt ⩽ −μ
+
+2 V1 −μV4 + O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3
+
+−v⊤(x∗ 
+
+> s
+
+) F(x∗ 
+
+> s
+
+, μ)−K⊤F(0, μ)K− ∑3
+
+> k=1 1
+> εk
+
+2(ρ∗ 
+
+> c
+
+−ρ∗ 
+
+> f
+
+)2 eD(μ)
+
+!
+
+v(x∗ 
+
+> s
+
+)+ p4x4λ4u24(0) − p4x4λ4 exp 
+
+
+
+− μx∗
+
+> s
+
+xiλi
+
+ 3
+
+# ∑
+
+> i=1
+
+Risiui(x∗ 
+
+> s
+
+)
+
+!2
+
++ ( xs − x∗ 
+
+> s
+
+)2 μC0 +
+
+> 3
+
+# ∑
+
+> i=1
+
+xibi(piλi + p′
+
+> i
+
+)
+
+!
+
++ ( xs − x∗ 
+
+> s
+
+)
+
+> 3
+
+# ∑
+
+> j=1
+
+2C0Θ j −p′jx j
+
++
+
+> 3
+
+# ∑
+
+> i=1
+
+xiki j 
+
+ 2piλibi +p′
+
+> i
+
+ exp 
+
+
+
+− μx∗
+
+> s
+
+x jλ j
+
+!
+
+u j(x∗ 
+
+> s
+
+).
+
+(50) It turns out that each term in (50) is a quadratic form of  v⊤(x∗ 
+
+> s
+
+), u4(0), xs − x∗
+
+> s
+
+, except the first two terms for exponential decay. Take 
+
+p′ 
+
+> i
+
+= 2C0Θi
+
+xi
+
+exp 
+
+μx∗
+
+> s
+
+xiλi
+
+
+
+, i = 1, 2, 3. (51) for further simplicity, and from (18)–(19) it comes out that 
+
+bixi p′ 
+
+> i
+
+< 0, i = 1, 2, 3. for arbitrary γ > 0. Thus, 
+
+pi = − p′
+
+> i
+
+2λibi
+
+> 0, i = 1, 2, 3. (52) Plug (51)–(52) into (50) and take Young’s inequality, 
+
+d(V1 +V4)
+
+dt ⩽ − μ
+
+2 V1 − μV4 + O  (|u|H2 + |xs − x∗ 
+
+> s
+
+|)3
+
+− v⊤(x∗ 
+
+> s
+
+)
+
+"
+
+F(x∗ 
+
+> s
+
+, μ) − K⊤F(0, μ)K − ∑3
+
+> k=1 1
+> εk
+
+2(ρ∗ 
+
+> c
+
+− ρ∗ 
+
+> f
+
+)2 eD(μ)
+
+− diag 
+
+
+
+3p4x4λ4R2 
+
+> i
+
+exp 
+
+ μx∗
+
+> s
+
+xiλi
+
+ 
+
+> i∈{ 1,2,3}
+
+#
+
+v(x∗ 
+
+> s
+
+)+ p4x4λ4u24(0) + ( xs − x∗ 
+
+> s
+
+)2 μC0 + 12
+
+> 3
+
+# ∑
+
+> i=1
+
+xibi p′
+
+> i
+
+!
+
+.
+
+(53) Since the inequality in (18)–(19) is strict, there exists μ >
+
+γ such that the inequality (53) also checks out to μ. Take such μ and use (51), 
+
+μC0 + 12
+
+> 3
+
+# ∑
+
+> i=1
+
+xibi p′ 
+
+> i
+
+< 0. (54) Moreover, by (47), (49), (51)–(52) and the positive definite condition of matrix (20), we have that the matrix 
+
+F(x∗ 
+
+> s
+
+, μ) − K⊤F(0, μ)K −
+
+
+
+∑3
+
+> k=1 1
+> εk
+
+
+
+2
+
+
+
+ρ∗ 
+
+> c
+
+− ρ∗
+
+> f
+
+2 eD(μ)
+
+is positive definite. Therefore, there exists p4 > 0 that the quadratic form of v(x∗ 
+
+> s
+
+) in (53) satisfying 
+
+v⊤(x∗ 
+
+> s
+
+)
+
+"
+
+F(x∗ 
+
+> s
+
+, μ)− K⊤F(0, μ)K − μ ∑3
+
+> k=1 1
+> εk
+
+2
+
+
+
+ρ∗ 
+
+> c
+
+− ρ∗
+
+> f
+
+2
+
+eD − diag 3p4x4λ4R2 
+
+> i
+
+exp 
+
+ μx∗
+
+> s
+
+xiλi
+
+
+
+> i∈{ 1,2,3}
+
+! # 
+
+v(x∗ 
+
+> s
+
+) < 0,
+
+and d(V1 +V4)
+
+dt ⩽−μ
+
+2 V1 −μV4 +O  (|u|H2 +|xs −x∗ 
+
+> s
+
+|)3 . (55) Since μ > γ, from Lemma 1, it can be ensured that |u|H2 +
+
+|xs − x∗ 
+
+> s
+
+| approaches to 0 infinitely if δ ( ¯T ) is small enough. Thus, 
+
+d(V1 +V4)
+
+dt ⩽ − γ
+
+2 (V1 +V4). (56) With the same process omitted here, we can also derive ˙ V2,˙V3, ˙ V5 and ˙ V6. It is worth noticing that from (39)–(44), both 
+
+V2 + V5 and V3 + V6 share a similar structure to V1 + V4, so we omit the details for the estimation of V2 +V5 and V3 +V6
+
+here. Under the assumption that each of (28), (30), (31) and (32) is C3, we obtain 
+
+dV dt ⩽ − γ
+
+2V. (57) By using the density argument similarly as in [6], and since 
+
+γ is independent of the C2 or C3 norm of u, (57) also satisfies for arbitrary 
+
+(u, xs) ∈ C0  [0, ¯T ] ; H2  (0, x∗ 
+
+> s
+
+); R4 ×C1 ([ 0, ¯T ] ; R) .
+
+By Lemma 2, the Lyapunov functions defined by (38)-(44) is equivalent with (|u|H2 + |xs − x∗ 
+
+> s
+
+|)2, when (|u|H2 + |xs − x∗ 
+
+> s
+
+|)2
+
+is small enough, and now we have already obtained that the null-steady state of the system (28), (30), (31) and (32) decays in a rate of γ 
+
+> 4
+
+in H2 norm. It is essential to check whether the assumptions (45) and (18)-(19) is valid under the values of (51) and (52). From (51), (52), max 
+
+> i
+
+ p′
+
+> i
+
+xi
+
+μλ i pi
+
+
+
+1 − exp 
+
+
+
+− μxxiλi
+
+ 
+
+< 4C0
+
+3 ,
+
+therefore take C0 < 32 then (45). We notice that up to now δ ( ¯T ) is dependent on ¯T ,compared to the Definition 1, it remains to prove that for arbitrary T > 0, there exists a consistent δ ∗ > 0 such that (57) holds on (0, T ). Assume that x0 
+
+> s
+
+∈ (0, L), u0 ∈ H2  (0, x∗ 
+
+> s
+
+); R4
+
+both satisfy the first-order compatibility condition, and 
+
+u0 
+
+> H2
+
++ x0 
+
+> s
+
+− x∗ 
+
+> s
+
+< ¯ρ, V  u0, x0
+
+> s
+
+ ⩽ ν (58) for any given ν > 0. Take ν small enough that for any t ∈
+
+[0, ¯T ], with (37), (57) and by the equivalence of V and the norm |u|H2 + |xs − x∗ 
+
+> s
+
+|, we have 
+
+|u|H2 + |xs − x∗ 
+
+> s
+
+| < ¯ρ, V (u(t), xs(t)) ⩽ ν. (59) It can be observed that (59) also hold for any t ∈ [ ¯T , 2 ¯ T ].Thus we deduce that 
+
+|u|H2 + |xs − x∗ 
+
+> s
+
+| < ¯ρ, t ∈ [( j − 1) ¯T , j ¯T ] , (60) and 
+
+V (u(t), xs(t)) ⩽ ν, t ∈ [( j − 1) ¯T , j ¯T ] , (61) And in the sense of distribution, 
+
+dV dt ⩽ − γ
+
+2V, t ∈ (0, j ¯T ) . (62) From (27), there exists δ ∗ such that (58) can be derived if (21) hold, also, for arbitrary T > 0 a corresponding 
+
+j ∈ N exists that (0, T ) ⊂ (0, j ¯T ). Thus, the steady state 
+
+(ρ∗, z∗)⊤ , x∗
+
+> s
+
+
+
+locally exponentially decay with a rate of  
+
+> γ
+> 4
+
+in H2 norm. This completes the proof of Theorem 1. 
+
+Remark 2 (Existence of the tuning parameters) Assume the matrix K is diagonal, i.e. K = diag (k1, k2, k3), then matrix (20) can be converted into diag (Di, i = 1, 2, 3),where Di =
+
+−Li
+
+
+
+ρ∗ 
+
+> c
+
+−ρ∗
+
+> f
+
+
+
+bi
+
+−−Li
+
+
+
+ρ∗ 
+
+> c
+
+−ρ∗
+
+> f
+
+
+
+bi
+
+exp 
+
+γx∗
+
+> s
+
+xiλi
+
+
+
+k2
+
+> i
+
++
+
+ 3
+
+# ∑
+
+> k=1
+
+2bkLk
+
+
+
+ρ∗ 
+
+> c
+
+−ρ∗
+
+> f
+
+
+
+γ2
+
+
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+
+
+− 1
+
+ ×
+
+L2
+
+> i
+> 3
+
+# ∑
+
+> j=1
+
+exp 
+
+ γx∗
+
+> s
+
+xiλi
+
+− γx∗
+
+> s
+
+x jλ j
+
+!
+
+.
+
+Note that we only need to prove k2 
+
+> i
+
+< exp 
+
+ −γx∗
+
+> s
+
+xiλi
+
+
+
+Ki, i = 1, 2, 3. (63) 
+
+to prove that the matrix (20) is positive definite, where Ki =1− biLi
+
+" 3
+
+# ∑
+
+> i=1
+
+2bkLk
+
+γ2
+
+
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+
+
+− 1
+
+
+
+> 3
+
+# ∑
+
+> j=1
+
+exp 
+
+ γx∗
+
+> s
+
+xiλi
+
+− γx∗
+
+> s
+
+x jλ j
+
+!# 
+
+.
+
+(64) 
+
+Plug the limit case in (18)–(19), which is b i = −γ exp   
+
+> 
+> −γx∗
+> sxiλi
+> 
+> 3Li
+
+,into (64), we have Ki = 1− 29
+
+3
+
+> 3
+
+# ∑
+
+> k=1
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+!
+
+−
+
+> 3
+
+# ∑
+
+> k=1
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+!2 . (65) 
+
+Denote by y =
+
+> 3
+
+# ∑
+
+> k=1
+
+exp 
+
+ γx∗
+
+> s
+
+xkλk
+
+
+
+, and (65) is equivalent to the quadratic equation 29 y2 − 23 y + 1, whose discriminant keeps negative and K i is always greater than 0. Therefore, the corresponding k 1, k2, k3 and b 1, b2, b3 defined by (15)– (16) can be found such that (18)–(19) holds and the positive definite matrix (20) exists. 
+
+V. S IMULATION 
+
+We simulate the movement of the shock as well as the distribution of density in a highway segment. Take the length of the highway segment as L = 500 m, and the road capacity is set as ρm = 180 veh/km. The initial traffic profile xs(0) = 
+
+200 m, ρ f (0, x) = 65 veh/km , ρc(0, x) = 130 veh/km , x ∈
+
+[0, L]. The desirable steady states of traffic flow are as follows: x∗ 
+
+> s
+
+= 120 m, ρ∗ 
+
+> f
+
+= 60 veh/km, ρ∗ 
+
+> c
+
+= 150 veh/km, 
+
+z∗ 
+
+> f
+
+= 220 veh/s, z∗ 
+
+> f
+
+= 587 .5 veh/s. Take the traffic pressure as p(ρ) = 24 .5( ρρm − 1). The control input ρ(t, 0) illustrated in Fig.1 is regulated from the initial data to the desired steady state ρ∗ 
+
+> f
+
+under closed-loop operation, while deviates away from ρ∗ 
+
+> f
+
+under open-loop operation. The system can be regulated from the initial profile to the reference profile using boundary feedback control (11), as shown in Fig.2. The instability of the open-loop system is further illustrated in Fig.3, where the norm of the deviation of the total density from equilibrium increases under open-loop operation, while it converges to zero in closed-loop operation. One can note that in the absence of control, the open-loop case exhibits upstream shock propagation, leading to the continuous spread of congestion. In contrast, the shock trajectory is regulated and converges towards the prescribed location when the boundary feedback control is applied. After a transient phase, the density approaches the given steady state characterized by two constant states separated by a stationary interface, which is exactly the shock. VI. C ONCLUSIONS 
+
+This paper studies boundary feedback stabilization of traffic flow with shocks in the ARZ model. By designing a shock-dependent boundary feedback law, the number of shock waves is prevented from increasing and the system energy is shown to decay exponentially at an arbitrary rate. To establish stability, a shock-dependent perturbation term is incorporated into the Lyapunov function, modifying Fig. 1: Control input ρ(t, 0) for the ARZ model under open-loop and closed-loop cases. 
+
+Fig. 2: Evolution of traffic density for the ARZ model under both open-loop and closed-loop cases. 
+
+Fig. 3: Evolution of H2-norm of the total density its classical structure. Analysis of the Lyapunov evolution proves H2-exponential energy decay. Numerical simulations based on the finite difference method further illustrate the effectiveness of the proposed feedback control. REFERENCES [1] M. J. Lighthill and G. B. Whitham, “On kinematic waves ii. a theory of traffic flow on long crowded roads,” Proceedings of the Royal Society of London. Series A. Mathematical and Physical Sciences , vol. 229, no. 1178, pp. 317–345, 1955. [2] P. I. Richards, “Shock waves on the highway,” Operations Research ,vol. 4, no. 1, pp. 42–51, 1956. [3] A. Aw and M. Rascle, “Resurrection of “Second Order” models of traffic flow,” SIAM Journal on Applied Mathematics , vol. 60, no. 3, pp. 916–938, 2000. [4] H. Zhang, “A non-equilibrium traffic model devoid of gas-like behav-ior,” Transportation Research Part B: Methodological , vol. 36, no. 3, pp. 275–290, 2002. [5] H. Yu and M. Krstic, “Traffic congestion control for Aw–Rascle–Zhang model,” Automatica , vol. 100, pp. 38–51, 2019. [6] G. Bastin, J.-M. Coron, A. Hayat, and P. Shang, “Exponential bound-ary feedback stabilization of a shock steady state for the inviscid burgers equation,” Mathematical Models and Methods in Applied Sciences , vol. 29, no. 02, pp. 271–316, 2019. [7] ——, “Boundary feedback stabilization of hydraulic jumps,” IFAC Journal of Systems and Control , vol. 7, p. 100026, 2019. [8] J. M. Coron, B. d’Andr´ ea Novel, and G. Bastia, “A lyapunov approach to control irrigation canals modeled by saint-venant equations,” in 
+
+1999 European Control Conference (ECC) , 1999, pp. 3178–3183. [9] G. Bastin and J.-M. Coron, Stability and Boundary Stabilisation of 1-D Hyperbolic Systems , ser. Number 88 in Progress in Nonlinear Differential Equations and Their Applications. Springer International, 2016. [10] L. Zhang, H. Luan, and J. Zhan, “Stabilization of stop-and-go waves in vehicle traffic flow,” IEEE Transactions on Automatic Control , vol. 69, no. 7, pp. 4583–4597, 2024. [11] H. Yu, M. Diagne, L. Zhang, and M. Krstic, “Bilateral boundary control of moving shockwave in LWR model of congested traffic,” 
+
+IEEE Transactions on Automatic Control , vol. 66, no. 3, pp. 1429– 1436, 2021. [12] M. Krstic and A. Smyshlyaev, “Backstepping boundary control for first-order hyperbolic PDEs and application to systems with actuator and sensor delays,” Systems Control Lett. , vol. 57, no. 9, pp. 750–758, 2008. [13] ——, Boundary Control of PDEs: A Course on Backstepping Designs ,ser. Advances in Design and Control. Society for Industrial and Applied Mathematics (SIAM), Philadelphia, PA, 2008, vol. 16. [14] A. Diagne, M. Diagne, S. Tang, and M. Krstic, “Backstepping sta-bilization of the linearized saint-venant-exner model,” Automatica J. IFAC , vol. 76, pp. 345–354, 2017. [15] S. Villa, “The Aw-Rascle-Zhang model with constraints,” Master’s Thesis, Universit` a degli Studi di Milano-Bicocca, 2016. [Online]. Available: https://arxiv.org/abs/1605.00632

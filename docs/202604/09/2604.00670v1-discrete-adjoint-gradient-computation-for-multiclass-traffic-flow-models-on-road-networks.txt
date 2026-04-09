@@ -1,0 +1,2459 @@
+Title: Discrete adjoint gradient computation for multiclass traffic flow models on road networks
+
+URL Source: https://arxiv.org/pdf/2604.00670v1
+
+Published Time: Thu, 02 Apr 2026 00:47:15 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# Discrete adjoint gradient computation for multiclass traffic flow models on road networks 
+
+## Paola Goatin 1, Axel Klar 2, Carmen Mezquita-Nieto 1,2* 
+
+1ACUMES, Universit´ e Cˆ ote d’Azur, Inria, CNRS, LJAD, 2004 route des Lucioles - BP 93, Sophia Antipolis Cedex, 06902, France. 
+
+2AGTM, Fachbereich Mathematik, RPTU Kaiserslautern, Gottlieb-Daimler-Str. 48, Kaiserslautern, 67663, Germany. *Corresponding author(s). E-mail(s): carmen.mezquitanieto@math.rptu.de; Contributing authors: paola.goatin@inria.fr; klar@rptu.de; 
+
+Abstract 
+
+This paper applies a discrete adjoint gradient computation method for a multi-class traffic flow model on road networks. Vehicle classes are characterized by their specific velocity functions, which depend on the total traffic density, result-ing in a coupled hyperbolic system of conservation laws. The system is discretized using a Godunov-type finite volume scheme based on demand and supply func-tions, extended to handle complex junction coupling conditions –such as merges and diverges– and boundary conditions with buffer lengths to account for conges-tion spillback. The optimization of different travel-related performance metrics, including total travel time and total travel distance, is formulated as a con-strained minimization problem and is accomplished through the use of an adjoint gradient approach, allowing for an efficient computation of sensitivities with respect to the chosen time-dependent control variables. Numerical simulations on a sample network demonstrate the efficiency of the proposed framework, par-ticularly as the number of control parameters increases. This approach provides a robust and computationally efficient solution, making it suitable for large-scale traffic network optimization. 
+
+Keywords: Multi-class macroscopic traffic flow models, hyperbolic systems of conservation laws, finite volume Godunov scheme, discrete adjoint gradient optimization, PDE-constrained optimization. 
+
+1
+
+> arXiv:2604.00670v1 [math.AP] 1 Apr 2026
+
+# 1 Introduction 
+
+Due to the rapid increase in the demand for efficient control of traffic flow on road networks, there is a strong need for models that can accurately and efficiently capture the behavior of the dynamics and interactions between different types of vehicles, while also providing robust tools for optimization and control. Since the introduction of the Lighthill-Whitham-Richards (LWR) model [24, 28] and its extensions to consider several classes of vehicles on road networks, starting from [1, 30], there have been significant advances leading to more refined descrip-tions capturing the interactions between these classes, including for example creeping behaviour [8, 11]. Specifically, the extension to road networks incorporates the dynamics of junctions, yielding complex models that can accurately describe urban transportation systems [6, 10, 19]. These advances naturally lead to the definitions of optimal control problems that can leverage these models to optimize traffic assignment. For an appropriate setting, it is important to specify the factors influencing traffic flow, establish an objective function that reflects the desired outcomes, and impose realistic constraints. Instead of relying on computationally expensive finite differences for the calculation of the gradient of the objective function, the adjoint method derives the gradient directly from the equations of the model; see, among others, [12, 15, 27, 29]. The choice of using the adjoint method over finite differences makes the difference in cases with a potential high number of control variables, as in the case in large road net-works of time-dependent controls. There exist two main strategies for computing the adjoint gradient: one may derive the continuous adjoint equations from the underlying model, and then discretize it, or alternatively, one can formulate the adjoint equations directly on the discretized model, see [15, 18] for a comparative description of the two approaches. We remark that, since no convergence result is currently available for finite volume approximations in the multi-class setting, the equivalence of the above methods cannot be addressed in this case. In this work, we therefore rely uniquely on the first discretize, then optimize technique, relying on the (discrete) multi-class traffic flow model on networks proposed in [19, 20]. The adjoint gradient computa-tion is then carefully implemented to take advantage of the sparsity of the involved lower triangular matrices [27], providing a computationally efficient mean of solving PDE-constrained traffic optimization problems by gradient descent methods. The article is organized as follows: in Section 2 the multi-class traffic flow model and its discretization are introduced, specifying the dynamics at junction nodes and the inflow and outflow boundary conditions. In Section 3, we describe the different cost functionals associated to road network performance, which we aim to optimize. Section 4 details the gradient computation and structure of the adjoint system. In Section 5, some numerical results are presented for a sample network with two vehicle classes to illustrate the effectiveness of the approach in optimizing the total travel time (TTT) and total travel distance (TTD) by controlling the distribution of each class of vehicles at road junctions. Finally, Section 6 discusses the results and future perspectives. 22 A multi-class traffic flow model on networks with general speed function 
+
+Multi-class macroscopic traffic models usually consist in systems of conservation equations, one for each vehicles class, which is characterized by its mean velocity func-tion. In turn, class-specific velocities depend on all class densities, thus coupling the equations. We refer to [25] for an overview of available descriptions. In this paper, for the sake of simplicity but without restriction, we refer to the model class developed in [1, 8, 20, 30], thus considering N ×N systems of conservation laws 
+
+ρt + F(ρ)x = 0 , (1) where 
+
+ρ = ( ρ1, . . . , ρ N )T , F(ρ) = ( v1(r)ρ1, . . . , v N (r)ρN )T , and r =
+
+> N
+
+X
+
+> c=1
+
+ρc. (2) Above, for c = 1 , . . . , N , ρc = ρc(x, t ) denotes the vehicle class density and vc denotes the class-specific velocity function, which depends on the total traffic density. We assume 
+
+v′
+
+> c
+
+(r) ≤ 0 (3) and 
+
+vc(0) = Vc, ∃ Rc s.t. vc(r) = 0 for r ≥ Rc (4) for c = 1 , . . . , N , where Rc is the maximal density for each class. Without loss of generality, we also assume that 
+
+V1 ≥ . . . ≥ VN . (5) System (1) is then defined on the n-dimensional polyhedron 
+
+S =
+
+(
+
+ρ ∈ RN : 0 ≤ ρc ≤ Rc and 
+
+> N
+
+X
+
+> c=1
+
+ρc ≤ R
+
+)
+
+,
+
+where R := max {R1, . . . , R N }. As shown in [20, Theorem 2.1], the system is hyperbolic. Following [2, 3, 19], we approximate system (1) by the Godunov-type finite volume scheme [13] 
+
+ρc,ν +1  
+
+> j
+
+= ρc,ν j − ∆t
+
+∆x
+
+h
+
+F c,ν j+1 /2 − F c,ν j−1/2
+
+i
+
+, j ∈ Z, ν ∈ N, c = 1 , . . . , N, (6) with 
+
+F c,ν j+1 /2 := ρc,ν j
+
+rνj
+
+min Dc(rνj ), S c(rνj+1 ) , (7) 3where Dc and Sc are respectively the demand and supply functions [21] of the total density relatively to the c-th class speed defined by setting Qc(r) := vc(r)r, rccr := arg max r Qc(r) and 
+
+Dc(r) := Qc(min {r, r ccr }), (8) 
+
+Sc(r) := Qc(max {r, r ccr }). (9) See also [23, Eq. (4)]. Other formulations of the demand and supply functions are presented in the literature, see [8, 17], but they may lead to non-physical numerical oscillations. Under a suitable Courant-Friedrichs-Lewy (CFL) [5] stability condition, the scheme (6) - (7) guarantees the invariance of the set S and therefore the fulfillment of the natural density bounds [20, Proposition 2.4]: 
+
+Lemma 1 Under the CFL condition 
+
+max 
+
+n
+
+max  
+
+> c
+
+∥vc∥∞, max  
+
+> c
+
+Q′ 
+
+> c∞
+
+o
+
+∆t ≤ ∆x, (10) 
+
+for any initial data ρ0 ∈ S , the approximate solutions computed by the Godunov scheme (6) 
+
+- (7) satisfy the following uniform bounds: 
+
+ρνj ∈ S ∀j ∈ Z, ν ∈ N.
+
+## 2.1 Coupling conditions at junctions 
+
+In the following, we provide a constructive definition of the solution of the Riemann Problem for general junctions (see [4, 7, 9]), i.e. for the case with n incoming roads and m outgoing roads for N classes of vehicles, as detailed in [20]. The junction must fulfill the property of mass-conservation at junctions, i.e. the sum of the fluxes ˆ γc,ν i,out 
+
+entering a junction has to be equal to the sum of the fluxes ˆ γc,ν j,in leaving it, for any fixed class c of vehicles and iteration ν,
+
+> n
+
+X
+
+> i=1
+
+ˆγc,ν i,out =
+
+> n+m
+
+X
+
+> j=n+1
+
+ˆγc,ν j,in . (11) For this Riemann Problem, we need to consider the subsequent rules to be able to determine a unique solution on the network: 
+
+(A) There is a class-specific distribution matrix Ac, c = 1 , . . . , N ,
+
+Ac =
+
+
+
+αcn+1 ,1 · · · αcn+1 ,n 
+
+... . . . ...
+
+αcn+m, 1 · · · αcn+m,n 
+
+ ,
+
+where the coefficients αcji ≥ 0 represent the percentage of vehicles of class c going from road i ∈ { 1, . . . , n } to road j ∈ { n + 1 , . . . , n + m}. In particular, to ensure 4Road 1
+
+Road 2
+
+...
+
+Road n
+
+e
+
+Road n + 1 
+
+Road n + 2 
+
+...
+
+Road n + mFig. 1 Structure of a general n × m junction e,
+
+mass conservation, we require that for any i ∈ { 1, . . . , n }, it holds 
+
+> n+m
+
+X
+
+> j=n+1
+
+αcji = 1 .
+
+(B) Respecting (A) , the sum of the fluxes through the junction is maximized, i.e. 
+
+> n
+
+X
+
+> i=1
+
+ˆγc,ν i,out is maximal, (12) and ˆγc,ν j,in =
+
+> n
+
+X
+
+> i=1
+
+αcji ˆγc,ν i,out , j = n + 1 , . . . , n + m. (13) Further assumptions are often required to ensure uniqueness of the solution, such as specific conditions on the distribution coefficients [9] or the introduction of priority parameters for the incoming roads [7]. In the case of simple junctions, i.e. for 1 × 1, M × 1 merges and 1 × M diverges, we can write explicitly the solutions of the Riemann Problem for N classes of vehicles. Below, the demand and supply function are given by equations (8) and (9), but they may refer to different fluxes Qc = Qcℓ on each road, thus depending on the index 
+
+ℓ = 1 , . . . , M + 1. 
+
+2.1.1 Solution for 1 × 1 junctions 
+
+The original numerical flux (7) is applied to the 1 × 1 junction between an incoming road ℓ = 1 and an outgoing road ℓ = 2, with corresponding discretized densities ρc,ν ℓ,j ,as ˆγc,ν  
+
+> 1,out
+
+= ˆ γc,ν  
+
+> 2,in
+
+= ρc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+min Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+), S c
+
+> 2
+
+(rν
+
+> 2,1
+
+) , c = 1 , . . . , N, 
+
+where j = N1 denotes the last cell of the incoming road and j = 1 the first cell of the outgoing road. 
+
+2.1.2 Solution for M × 1 (merge) junctions 
+
+In this case, we need to introduce a class-specific priority vector P c = ( pc
+
+> 1
+
+, . . . , p cM ) ∈
+
+RM , pci ≥ 0, PMi=1 pci = 1, so that ˆ γc,ν i,out = pci ˆγc,ν M +1 ,in for i = 1 , . . . , M .5The corresponding fluxes are: ˆγc,ν i,out = ρc,ν i,N i
+
+rνi,N i
+
+min 
+
+n
+
+Dci (rνi,N i ), max pci ScM +1 (rνM +1 ,1),ScM +1 (rνM +1 ,1) − X 
+
+> j̸=i
+
+Dcj (rνj,N j )
+
+o
+
+,
+
+ˆγc,ν M +1 ,in =
+
+> M
+
+X
+
+> i=1
+
+ˆγc,ν i,out ,
+
+(14) for c = 1 , . . . , N and i = 1 , . . . , M .Road 1
+
+Road 2
+
+...
+
+Road M
+
+e Road M + 1 
+
+Fig. 2 Structure of a M × 1 junction e.
+
+2.1.3 Solution for 1 × M (diverge) junctions 
+
+In this case, the class-specific distribution matrix Ac takes the form 
+
+Ac = ( αc
+
+> 2
+
+, . . . , α cM +1 )T ,
+
+with αci ≥ 0, PM +1  
+
+> i=2
+
+αci = 1. For the FIFO (first-in-first-out) version [9], the fluxes at the junction are defined as ˆγc,ν i,in = αci ˆγc,ν 
+
+> 1,out
+
+,
+
+ˆγc,ν  
+
+> 1,out
+
+= ρc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+min 
+
+
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+), Sc
+
+> 2
+
+(rν
+
+> 2,1
+
+)
+
+αc
+
+> 2
+
+, . . . , ScM +1 (rνM +1 ,1)
+
+αcM +1 
+
+
+
+, (15) for c = 1 , . . . , N and i = 2 , . . . , M +1. The limitation of this description consists in the fact that the whole traffic is blocked as soon as one outgoing road is fully congested. Since this may not be realistic in some situations, we also consider the non-FIFO version [12, 16, 22] below: ˆγc,ν i,in = ρc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+min αci Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+), S ci (rνi, 1) ,
+
+ˆγc,ν  
+
+> 1,out
+
+= 
+
+> M+1
+
+X
+
+> i=2
+
+ˆγc,ν i,in ,
+
+(16) 6for c = 1 , . . . , N and i = 2 , . . . , M + 1. For the numerical experiments presented in Section 5, the diverging junction used will be a FIFO (15) type. Road 2
+
+Road 3
+
+...
+
+Road M + 1 
+
+eRoad 1     
+
+> Fig. 3 Structure of a 1 ×Mjunction e.
+
+## 2.2 Boundary conditions 
+
+Let Fin = ( F 1
+
+> in
+
+, . . . , F Nin )T and Fout = ( F 1
+
+> out
+
+, . . . , F Nout )T , with F cin , F cout ≥ 0 for all 
+
+c = 1 , . . . , N , be the inflow boundary conditions at an origin node and the outflow boundary condition at a destination node, respectively. In order not to miss vehicle counting when congestion spills back to the incoming nodes of the network, a buffer of length lc(t) at the beginning of the entrance road is considered (see e.g. [12]). The length of the buffer must be updated at every time step in order to choose the correct demand function to calculate the flux at the beginning of the buffer. From (7), (14), we can define ˆγc,ν ℓ,in = min 
+
+
+
+Dcℓ (lc,ν ℓ ), max 
+
+n 1
+
+N Scℓ (rνℓ, 1), S cℓ (rνℓ, 1) − X 
+
+> g̸=c
+
+Dgℓ (lg,ν ℓ )
+
+o
+
+,
+
+ˆγc,ν ℓ,out = min 
+
+( ρc,ν ℓ,N ℓ
+
+rνℓ,N ℓ
+
+Dcℓ (rνℓ,N ℓ ), F cℓ,out 
+
+)
+
+,
+
+and 
+
+Dcℓ (lc,ν ℓ ) = 
+
+(
+
+Qcℓ (rcℓ,cr ) if lc,ν ℓ > 0,F cℓ,in if lc,ν ℓ = 0 .
+
+To update the length at every time step, we set 
+
+lc,ν +1  
+
+> ℓ
+
+= max {lc,ν ℓ + ∆ t(F cℓ,in − ˆγc,ν ℓ,in ), 0},
+
+# 3 Cost functionals 
+
+Cost functionals assess and regulate the performance of the traffic network searching to achieve different goals, which can be reducing time delays, improving traffic flow, etc. In the multi-class case, this approach evaluates as well the interactions and behaviors of different vehicle classes. To study these interactions and how to better regulate them via suitable control actions, we consider two metrics, the total travel time and 7the total travel distance, which will be later used in the optimization procedures analyzed in Section 5. It is possible to contemplate other metrics, such as the network throughput, i.e. the total number of vehicles of that class leaving the network [19], the CO 2 emissions [20] or the mean speed [26]. The total travel time (TTT) of a given class c, i.e. the space and time integral of the corresponding density, is defined as TTT( ρc) = X
+
+> ℓ
+
+Z Tf
+
+> 0
+
+Z bℓ
+
+> aℓ
+
+ρcℓ (x, t )dxdt + X
+
+> i
+
+Z Tf
+
+> 0
+
+lci (t)dt, 
+
+where [ aℓ, b ℓ] ⊂ R is the space interval corresponding to road ℓ, [0 , T f ] the time interval considered and i the origin nodes index. The discrete counterpart is then defined as TTT( ρc) = ∆ t∆x
+
+> Tf
+
+X
+
+> ν=0
+
+X
+
+> ℓNℓ
+
+X
+
+> j=0
+
+ρc,ν ℓ,j + ∆ t X
+
+> iTf
+
+X
+
+> ν=0
+
+lc,ν i , (17) where Nℓ denotes the number of cells in the road segment ℓ.The total travel distance (TTD) of the vehicle class c corresponds to the total distance travelled by the vehicles, TTD( ρc) = X
+
+> ℓ
+
+Z Tf
+
+> 0
+
+Z bℓ
+
+> aℓ
+
+F cℓ (x, t )dxdt, F cℓ (x, t ) := ρcℓ (x, t )vℓ,c (x, t ),
+
+or, discretized, TTD( ρc) = ∆ t∆x
+
+> Tf
+
+X
+
+> ν=0
+
+X
+
+> ℓNℓ
+
+X
+
+> j=0
+
+ρc,ν ℓ,j vℓ,c (rνℓ,j ). (18) By linearity, the global functionals are given by the sum of the corresponding class-specific quantities: TTT( r) = 
+
+> N
+
+X
+
+> c=1
+
+TTT( ρc), TTD( r) = 
+
+> N
+
+X
+
+> c=1
+
+TTD( ρc).
+
+The TTT and TTD are closely related. In uncongested settings with a constant speed throughout the network, the buffer lcℓ vanishes and therefore (17) and (18) are linearly dependent, with the quotient TTD /TTT providing a definition for the mean speed. However, in congested settings, the relationship between TTT and TTD becomes nonlinear, with smaller vehicle velocities leading to higher travel time values for the same travelled distance. Minimizing one of these quantities typically results in an increase of the other: reducing delay and congestion to minimize the TTT may lead to vehicles having to take a longer route, therefore increasing the TTD, while shortening travel distances may lead to a higher TTT due to a denser traffic. To solve this drawback and find a balanced situation for both functionals, it is typical to consider multi-objective optimization problems, which will be treated in Section 5.2. 84 Discrete adjoint gradient computation 
+
+Let J(u, y ) be a function to be minimized, where y is the vector of state variables containing the approximations of the densities ρ and the buffer lengths l, i.e., y =(l, ρ ), and u is a vector containing all the control variables. Both y and u satisfy the underlying model equations, denoted by E(u, y ) = 0. In the specific case of the traffic flow on a road network, the control variables generally consist of a vector u = ( V, A, P ), with 
+
+• V = {Vℓ}ℓ, Vℓ = ( Vℓ, 1, . . . , V ℓ,N ), where Vℓ,c ∈ [0 , V max  
+
+> c
+
+] corresponds to the (possibly time-dependent) class-specific speed limit on road segment ℓ (these controls are used to implement class-specific variable speed limits on the roads of the network); 
+
+• A = {Ae}e, Ae = ( A1
+
+> e
+
+, . . . , A Ne ), where Ace is the (time-dependent) class-specific distribution matrix at junction e (providing a routing control action specific for each class of vehicles); 
+
+• P = {Pe}e, Pe = ( P 1 
+
+> e
+
+, . . . , P Ne )T , where P ce is the (time-dependent) class-specific priority vector on junction e (which can be used to implement ramp metering or other regulations through traffic light signals). In this setting, a general traffic management problem can be rewritten as a PDE-constrained optimization problem: min  
+
+> u∈U
+
+J(u, y ), subject to E(u, y ) = 0 , (19) where U denotes the set of admissible controls, to be specified depending on the situation. Assuming E has a unique solution for each u, the reduced model J(u, y (u)) can be considered. The cost gradient is then computed as 
+
+ddu J(u, y (u)) = ∂uJ + ∂y J dy du .
+
+It can be deduced from the equation E(u, y (u)) = 0 that 
+
+ddu E(u, y (u)) = ∂uE + ∂y E dy du = 0 ⇒ dy du = −(∂y E)−1 ∂uE. 
+
+Therefore, substituting in the cost gradient, 
+
+ddu J(u, y (u)) = ∂uJ − ∂y J (∂y E)−1 ∂uE (20) = ∂uJ + ξT ∂uE, 
+
+where ξ, the adjoint variable, is the solution to the adjoint equation (∂y E)T ξ = −(∂y J)T . (21) 9J
+
+y1 yk yTFig. 4 Structure of the row vector ∂y J ∈ RN M T .
+
+To compute the gradient, the following partial derivatives must then be obtained: 
+
+∂J ∂y , ∂J ∂u , ∂E ∂y , ∂E ∂u . (22) Let now ν = 1 , . . . , T , where T = Tf is the number of time steps. We denote by L the set of indexes of all links, and by O ⊂ L the subset of indexes of incoming links with buffers. Then, the state variables for each road and class are 
+
+• (lc,ν ℓ , ρ c,ν ℓ, 1 , . . . , ρ c,ν ℓ,N ℓ ) for ℓ ∈ O ,
+
+• (ρc,ν ℓ, 1 , . . . , ρ c,ν ℓ,N ℓ ) for ℓ ∈ L \ O .Let M := P 
+
+> ℓ∈L
+
+Nℓ + |O| be the total number of cells in the network. Additionally, define U as the total number of control points considered, with U := |U| . For each state variable y, the corresponding cost function J is defined as 
+
+J : RN U T × RN M T → R
+
+(u, y ) 7 → J(u, y ),
+
+where y = ( y1, . . . , y T ), yν = ( y1,ν , . . . , y N,ν ). The update equations E are defined as 
+
+E : RN U T × RN M T → RN M T 
+
+(u, y ) 7 → E(u, y ) = 0 ,
+
+where each element of E is defined as Ec,ν ℓ , with 
+
+Ec,ν ℓ = ( Ec,ν ℓ,j )j=1 ,...,N ℓ , Eν =
+
+
+
+(E1,ν ℓ )ℓ∈L , . . . , (EN,ν ℓ )ℓ∈L 
+
+
+
+, E = ( E1, . . . , E T ).
+
+In particular, for c = 1 , . . . , N , ν = 1 , . . . , T and ℓ ∈ L ,0 = Ec,ν ℓ,j (u, y ) := 
+
+
+
+ρc,ν ℓ, 1 − ρc,ν −1 
+
+> ℓ, 1
+
++ λ
+
+h
+
+F c,ν −1 
+
+> ℓ, 3/2
+
+− ˆγc,ν −1
+
+> ℓ,in
+
+i
+
+, j = 1 ,ρc,ν ℓ,j − ρc,ν −1 
+
+> ℓ,j
+
++ λ
+
+h
+
+F c,ν −1 
+
+> ℓ,j +1 /2
+
+− F c,ν −1
+
+> ℓ,j −1/2
+
+i
+
+, j = 2 , . . . , N ℓ − 1,ρc,ν ℓ,N ℓ − ρc,ν −1 
+
+> ℓ,N ℓ
+
++ λ
+
+h
+
+ˆγc,ν −1 
+
+> ℓ,out
+
+− F c,ν −1
+
+> ℓ,N ℓ−1/2
+
+i
+
+, j = Nℓ,
+
+(23) and, for ℓ ∈ O ,0 = Ec,ν ℓ, 0 (u, y ) := lc,ν ℓ − max 
+
+n
+
+lc,ν −1 
+
+> ℓ
+
++ ∆ t(F cℓ,in − ˆγc,ν −1 
+
+> ℓ,in
+
+), 0
+
+o
+
+, (24) 10 with λ = ∆ t/ ∆x. The next step is to compute the partial derivatives in (22). The definition of ∂y E shows a structure similar to the one proposed in [27]. Ec,ν ℓ,j depends only on the previous time step, i.e. on the class density terms ρc,ν −1 
+
+> ℓ,j −1
+
+, ρc,ν −1 
+
+> ℓ,j
+
+, ρc,ν −1 
+
+> ℓ,j +1
+
+and the total density terms rν−1
+
+> ℓ,j −1
+
+, rν−1 
+
+> ℓ,j
+
+, rν−1 
+
+> ℓ,j +1
+
+(as well as lc,ν −1 
+
+> ℓ
+
+if ℓ ∈ O ), and the current time step, with ρc,ν ℓ,j (and lc,ν ℓ if ℓ ∈ O ). In particular, the terms of ∂y E on the main diagonal are equal to 1, while those values over it are equal to 0. Hence, the matrix 
+
+∂y E has a lower-triangular sparse structure and it is invertible, as seen in Figure 5, which is later used to compute the adjoint variable ξ, and its high sparsity reduces significantly the computational cost of the gradient. Due to this structure, solving the adjoint system (21) can be done efficiently through a backward substitution of the upper triangular matrix ( ∂y E)T .E1,ν        
+
+> Ec,ν
+> EN,ν
+> y1,k yg,k yN,k
+> Ec,ν ℓ,j
+> yg,k i
+> ∂E c,ν ℓ,j
+> ∂y g,k i
+> (a) Matrix ∂ykEν∈ M N M ×N M (R)
+
+y1 y2 y3 yT −2 yT −1 yT
+
+ET
+
+ET −1
+
+ET −2
+
+E3
+
+E2
+
+E1
+
+. . .
+
+· · · 
+
+...
+
+...
+
+· · · 
+
+I
+
+I
+
+I
+
+0 0
+
+0
+
+0
+
+I
+
+I
+
+I
+
+0
+
+00
+
+0             
+
+> (b) Matrix ∂yE∈ M N M T ×N M T (R)
+> Fig. 5 Partial derivative terms in ∂yEare ordered first by time and then by cell index. Blocks where time iteration k / ∈ { ν−1, ν }are 0.
+
+Obtaining the cost gradient (20) through the calculation of the adjoint variable ξ
+
+requires at most O(( N M T )2 +( N M T )( N U T )) steps: finding the solution of an upper-triangular N M T ×N M T system and a multiplication of two matrices of sizes N M T ×
+
+N M T and N M T × N U T . As long as N U T > 1, this would be more efficient than calculating the cost gradient (20) without solving the adjoint system, i.e. determining it instead through a direct forward substitution, which in turn requires solving lower-triangular N M T × N M T systems N U T times, with complexity O(( N M T )2(N U T )). Additional explanations regarding the computational costs for the one-class method can be found in [27], including a reduction of the complexity for the adjoint gradient. For a more detailed computation of the different derivatives of the discrete adjoint gradient, see Appendix A. 11 5 Numerical tests 
+
+A series of numerical tests are conducted for two classes of vehicles moving along the sample network proposed in Figure 6. The goal is to observe how varying the possible control variables influence the metrics defined in Section 3. In particular, two tests will be presented in this section. The first one compares the optimal minimal solutions of the TTT (17) obtained through central finite differences and through an adjoint gradient computation, while the second test generates Pareto fronts for a multi-objective optimization of TTT (17) and TTD (18). In both tests, we will introduce time-dependent control variables to address the changing conditions of traffic flow over time. All simulations are run on a laptop with a 13 th generation Intel (R) Core (TM) 
+
+i5-1335U 1.30 GHz processor. ℓ = 1                    
+
+> ℓ= 2
+> ℓ= 3
+> ℓ= 4
+> ℓ= 5
+> ℓ= 6
+> ℓ= 7 e= 1
+> e= 2
+> e= 3
+> e= 4
+> e= 5
+> e= 6 α2
+> α3
+> α4
+> α5
+> p3
+> p4
+> p5
+> p6
+> Fig. 6 Diagram of the test network showing the different roads and their associated parameters. Junctions e= 2 ,3 diverge and junctions e= 4 ,5 merge.
+
+For two classes of vehicles, the total density r equals the sum of the densities of the two classes ρ1 and ρ2, i.e. r = ρ1 + ρ2, with 
+
+F cℓ (ρ1, ρ 2) = vℓ,c (r)ρc and Qcℓ (r) = vℓ,c (r)r, c = 1 , 2.
+
+For the following results, we consider the Greenshields’ velocity function [14] given by 
+
+vℓ,c = Vℓ,c 
+
+
+
+1 − rRℓ,c 
+
+
+
+, ℓ = 1 , . . . , 7,
+
+where Vℓ, 1 ≥ Vℓ, 2 for each ℓ, assuming the first class travels generally faster than the second. This means that the critical density associated to a road ℓ and a class c is 
+
+rcℓ,cr = Rℓ,c /2, and thus Qcℓ,cr := Qcℓ (rcℓ,cr ) = Vℓ,c Rℓ,c /4. The lengths Lℓ, ℓ = 1 , . . . , 7, of the roads are set to 
+
+L1 = L2 = L4 = L6 = L7 = 3 , L3 = L5 = 6 ,
+
+12 so that each possible route from the origin node e = 1 to the destination node e = 6 (routes 1-2-5-7, 1-2-4-6-7, and 1-3-6-7) has length 15. The maximum velocities and maximum total densities on each road ℓ and class c are given by 
+
+V1 = (80 , 80 , 80 , 80 , 80 , 80 , 80) , V2 = (80 , 40 , 40 , 20 , 20 , 40 , 40) ,
+
+and Rℓ, 1 = Rℓ, 2 = R = 150, respectively. For the definition of the boundary conditions, the inflow Fin := F1,in = ( F 11,in , F 21,in ) is set as 
+
+Fin =
+
+(
+
+(Q11,cr , 23 Q21,cr ) if t ≤ Tf /2,
+
+(0 , 0) if t > T f /2,
+
+where Tf = 1 denotes the simulation time horizon and Fout := F7,out = ( F 17,out , F 27,out )maximizes the outflow of the network, i.e. 
+
+Fout = ( Q17,cr , Q 27,cr ).
+
+In the numerical tests, we choose the splitting parameters αc and βc as control vari-ables in the numerical tests, since they directly determine the distribution of the flow of each vehicle class at the diverging junctions e = 2 , 3 along the alternative routes of the network. From a practical perspective, these parameters can be interpreted as routing controls corresponding to real-life traffic management actions, where they can be used to divert vehicles away from potentially congested roads and thus reduce the formation of traffic jams. Therefore, the diverging parameters are suitable and effective for improving the overall network performance. The priority parameters for the merging junctions e = 4 , 5 are kept fixed for both classes c = 1 , 2, with values 
+
+pc 
+
+> 3
+
+= p = 1 /2, pc 
+
+> 5
+
+= q = 1 /3 (and pc 
+
+> 4
+
+= 1 − p = 1 /2, pc 
+
+> 6
+
+= 1 − q = 2 /3) .
+
+The initial conditions of the density and buffer length l := l1 = ( l11, l 21) on the roads are set equal to 0, and the number of gridpoints used to discretize each road is Nℓ = 10 Lℓ,
+
+ℓ = 1 , . . . , 7. The Godunov scheme (6)-(7) is implemented everywhere, except on the first and last cell of every road, where the fluxes ˆ γc,ν ℓ,in and ˆ γc,ν ℓ,out are defined as in Section 2.1. In particular, junctions e = 2 , 3 follow the FIFO fluxes (15), while (14) is applied for junctions e = 4 , 5. Let us concatenate the vectors ( ρcℓ,i )i, c = 1 , 2, and ( rℓ,i )i, ℓ = 1 , . . . , 7, i =1, . . . , N ℓ into vectors of size P7 
+
+> i=1
+
+Nℓ defined as 
+
+ρc = ( ρc
+
+> 1
+
+, . . . , ρ cN1+··· +N7 ) = (( ρc
+
+> 1,i
+
+)i, . . . , (ρc
+
+> 7,i
+
+)i),r = ( r1, . . . , r N1+··· +N7 ) = (( r1,i )i, . . . , (r7,i )i),
+
+where ρcj = ρcℓ,i , rj = rℓ,i , j = ( ℓ − 1) Nℓ + i, i = 1 , . . . , N ℓ.The state variables for each time iteration ν are defined as yν = ( y1,ν , . . . , y N,ν ), where yc,ν = ( lc,ν , ρ c,ν ), c = 1 , 2, are vectors of size M T , with M = 1 + P7 
+
+> i=1
+
+Nℓ. The 13 structure of the matrix ∂y E ∈ M N M T ×N M T (R) is as presented in Figure 5, where, in particular, ∂E c,ν 
+
+∂y c,ν = IM , ∂E c,ν 
+
+∂y g,ν = 0 for g̸ = c, 
+
+and 
+
+∂E c,ν 
+
+∂y g,ν −1 =
+
+
+
+∂E c,ν 
+
+> 0
+
+∂l g,ν −1
+
+∂E c,ν 
+
+> 0
+
+∂ρ g,ν −11
+
+0 0 · · · 0
+
+∂E c,ν 
+
+> 1
+
+∂l g,ν −1
+
+∂E c,ν 
+
+> 1
+
+∂ρ g,ν −11
+
+∂E c,ν 
+
+> 1
+
+∂ρ g,ν −12
+
+0 · · · 00 ∂E c,ν 
+
+> 2
+
+∂ρ g,ν −11
+
+∂E c,ν 
+
+> 2
+
+∂ρ g,ν −12
+
+∂E c,ν 
+
+> 2
+
+∂ρ g,ν −13
+
+· · · 0... ... ... ... . . . ...0 0 0 0 · · · ∂E c,ν N1+··· +N7
+
+∂ρ g,ν −1
+
+> N1+··· +N7
+
+
+
+.
+
+As mentioned above, the flow is controlled at junctions e = 2 and e = 3, where the control variables are the divergence parameters αci , shown in Figure 6. In particular, (a) Control variables α1 and β1
+
+1(b) Control variables α2 and β2
+
+1(c) Control variables α1 and α2
+
+1(d) Control variables β1 and β2
+
+1
+
+Fig. 7 Plot of the level curves for the TTT for two different control variables, where the fixed parameters have the values defined in (26). In (a) and (b), the class is fixed, while in (c) and (d), the junction is fixed. 
+
+14 we now set them as 
+
+αc 
+
+> 2
+
+= αc, αc 
+
+> 4
+
+= βc (and αc 
+
+> 3
+
+= 1 − αc, αc 
+
+> 5
+
+= 1 − βc), (25) with 0 ≤ αc, β c ≤ 1 for every class c, for c = 1 , 2. For the first numerical test, taking the control points αc and βc, c = 1 , 2, to be constant over the time interval [0 , T f ], we plot the two objective functions considered in Section 3 for two out of the four control variables in (25), where the other two parameters are considered to be fixed, with values for αc and βc, c = 1 , 2, when fixed, given as 
+
+α1 = 1 /2, α2 = 1 /3, β1 = 1 /2, β2 = 1 /3. (26) Figures 7 and 8 show the plots of the level curves for the total travel time (17) and total travel distance (18) functionals, depending on the class (7a, 7b, 8a, 8b) and on the junction (7c, 7d, 8c, 8d), respectively. Tables 1 and 2 present the minimum values obtained for the TTT and TTD in Figures 7 and 8, as well as the respective values of the different control parameters where such minimum is reached. These results show that the model identifies a different (a) Control variables α1 and β1          
+
+> 1(b) Control variables α2and β2
+> 1(c) Control variables α1and α2
+> 1(d) Control variables β1and β2
+> 1
+> Fig. 8 Plot of the level curves for the TTD for two different control variables, where the fixed parameters have the values defined in (26). In (a) and (b), the class is fixed, while in (c) and (d), the junction is fixed.
+
+15 Table 1 Minimum values obtained for J = TTT and J = TTD depending on the class.                                               
+
+> α1β1min Jα2β2min J
+> TTT 0.9310 0.2759 1409.0587 0.4828 0.1379 1413.6021 TTD 0b∈[0 ,1] 27623.8203 1020107.7678
+> Table 2 Minimum values obtained for J= TTT and J= TTD depending on the junction.
+> α1α2min Jβ1β2min J
+> TTT 0.8966 0.4483 1405.4970 001418.4881 TTD 1121472.1444 1127402.6890
+
+optimal performance under two control points for both functionals. In the following, we will consider the four control points in (25) as time-dependent to evaluate the benefits of a dynamic control strategy. 
+
+## 5.1 Gradient computation: discrete adjoint VS finite differences 
+
+This test aims to show that, for a sufficiently large number of control points, adjoint gradient computation becomes competitive with respect to finite differences. To this end, we consider time-dependent controls: given n ≥ 1, we divide the simulation horizon in subintervals as [0 , T f [= 
+
+> n
+
+[
+
+> j=1
+
+ j − 1
+
+n Tf , jn Tf
+
+
+
+,
+
+and define the control actions uj = ( u1 
+
+> j
+
+, u 2 
+
+> j
+
+), with ucj = ( αcj , β cj ), c = 1 , 2, to be piece-wise constant on each subinterval  j−1 
+
+> n
+
+Tf , jn Tf
+
+, j = 1 , . . . , n . Following (25), the matrix ∂uE can be reduced to ∂uE ∈ M N M T ×4n(R), with u = ( u1, . . . , u n), where 
+
+∂uE = ( ∂uj Eν )ν=1 ,...,T, j =1 ,...,n and 
+
+∂E ν
+
+∂u j
+
+=
+
+
+
+> ∂E 1,ν
+> ∂u 1
+> j
+
+00 ∂E 2,ν 
+
+> ∂u 2
+> j
+
+ ∈ M N M ×4(R), ∂E c,ν 
+
+∂u cj
+
+=
+
+ ∂E c,ν 
+
+∂α cj
+
+∂E c,ν 
+
+∂β cj
+
+
+
+∈ M M ×2(R).
+
+To solve the minimization problem (19) for the total travel time (17), we used the nonlinear optimization routine fmincon available in the Matlab R2024a library, with 
+
+sqp as the chosen optimization algorithm. The maximum number of function evalua-tions (fval) and iterations (iter) are set to 10 4 and 10 3, respectively. The optimality and constrain tolerances, denoted as TOL opt and TOL cons , are given a value of 10 −6,16 while the function and step tolerances, i.e., TOL fun and TOL step , are 10 −7. The initial values given to the control variables αc and βc, c = 1 , 2, are 
+
+α1 = 0 .7, α2 = 0 .4, β1 = 0 .1, β2 = 0 .7. (27) The goal is to compare the outcome of (19) when the gradient is calculated through central finite differences with respect to the discrete adjoint gradient method described in Section 4. As the definition of the total travel time (17) does not depend explicitly on the control parameters u, then ∂uTTT = 0, which reduces the cost gradient (20) to 
+
+ddu TTT( u, y (u)) = ξT ∂uE, 
+
+where ξ solves the adjoint equation (21). We set the number of time subintervals as n = 2 a, a ∈ N≥0, i.e. there are 2 a+2 
+
+control variables. For the numerical tests, the chosen values of a = log 2 n are a =0, . . . , 6. Figure 9 compares the performances of the discrete adjoint gradient method and the finite difference method in solving the optimization problem as the number of time-interval subdivisions n increases. In particular: 
+
+• Figure 9a displays the total travel time obtained for different values of a, where, for a higher number of time-interval subdivisions, the adjoint gradient provides in general a smaller value for the TTT compared to the finite differences. 
+
+• In Figure 9b we can see that the number of iterations required for convergence is smaller for the adjoint gradient that for the finite differences for every value of a;
+
+• Figure 9c presents the function evaluation count, where the adjoint gradient requires a significantly smaller number of function evaluations compared to finite differences; 
+
+• the computational time in seconds required by each method is shown in Figure 9d, where, for larger values of n, the adjoint gradient method is computationally more efficient than finite differences. The results show that the adjoint gradient method outperformas finite differences as the number of control points grows, while for small n the finite difference method yields better results. Although the finite-difference method may provide more opti-mal results for smaller values of n, it experiences a rapid increase in the number of iterations, function evaluations and overall computation time, which confirms it as undesirable method when considering a higher number of time-interval subdivisions. Moreover, for a > 5, the optimization process stops before obtaining an optimal result for the finite difference method. On the other hand, the discrete adjoint gradient main-tains a stable number of function evaluations and a small increase in computation time for any value of n.Therefore, in cases where a high number of time-dependent control points is required, the adjoint gradient is the more reliable and computationally efficient choice, as the exponential growth for the optimization considering the finite difference method is inefficient for large-scale problems. 17 0 1 2 3 4 5 6                  
+
+> 1,385
+> 1,390
+> 1,395
+> 1,400
+> a
+> TTT
+> Adj. grad.
+> Fin. diff.
+> (a) Total travel time 0123456
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> a
+> Iter
+> Adj. grad.
+> Fin. diff.
+> (b) Iterations 0123456
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> ·10 4
+> a
+> Fcount
+> Adj. grad.
+> Fin. diff.
+> (c) Fcount 0123456
+> 0
+> 1,250
+> 2,500
+> 3,750
+> 5,000
+> a
+> Time
+> Adj. grad.
+> Fin. diff.
+> (d) Computation time (in seconds)
+
+Fig. 9 Results comparing the discrete adjoint gradient and the finite difference computation for a 
+
+Matlab R2024a fmincon optimization with an sqp algorithm, with increasing values of a = log 2 n,
+
+a = 0 , . . . , 6, where n is the number of time-interval subdivisions. 
+
+These results have practical implications for real-time and large-scale traffic man-agement. Modern control systems rely on continuously updated data provided by sensors and GPS-equipped vehicles. Navigation systems, for example, dynamically adjust routes based on congestion levels and travel-time estimates, requiring a repeated and rapid optimization of control parameters. Consequently, the proposed adjoint-based optimization can be naturally integrated into real-time traffic control systems. In particular, the method can efficiently compute class-specific control adjustments, such as rerouting heavy vehicles or prioritizing faster lanes, within rapidly changing traffic environments, contributing directly to relieving congestion and improving network performance. 
+
+## 5.2 Pareto fronts 
+
+For better traffic management, it is also interesting to consider a multi-objective optimization approach to illustrate the potential of the proposed framework. In this 18 1,400 1,450 1,500 1,550 1,600      
+
+> 1.6
+> 1.9
+> 2.2
+> 2.5
+> 2.8
+> 3.1
+> 3.4·10 4
+> TTT
+> TTD
+> n= 2 0
+> n= 2 1
+> n= 2 2Fig. 10 Plot of the Pareto front of the TTT against the TTD for different time-interval subdivisions
+> n.
+
+setting, the total travel time (17) and the total travel distance (18) represent conflict-ing objectives: minimizing the TTT promotes faster circulation and reduced delays, while minimizing the TTD favors shorter routes, which may lead to increased conges-tion and longer travel times. To capture this trade-off, we compute the Pareto front, which represents the set of non-dominated optimal solutions, each corresponding to a different balance between these two functionals. The Pareto fronts are here computed using the Matlab routine gamultiobj , applied to the same network and control settings as in the previous subsection. Figure 10 presents a Pareto front plot where each plotted curve corresponds to a different number of time-interval subdivisions n, and the node represented by a triangle denotes the TTT and TTD obtained for the initial αc and βc values defined in (27), i.e. TTT = 1439 and TTD = 29865. Moreover, if we want to reduce both functionals compared to such initial point, the chosen solution must lie within the region bounded by the projections of the point onto the x and y-axis. Points lying “between” these projections correspond to configurations for which both TTT and TTD decrease, reflecting an overall improvement relative to the starting control values. When the value of n increases, the higher number of control points leads to a decrease in the ranks for the solutions of such n, enabling more refined adjustments of traffic over time and more control flexibility. This typically results in solutions that achieve a better balance between TTT and TTD. From a practical point of view, the Pareto front provides valuable insight for decision-making in traffic management. Points located towards the lower-left corner of the plot (smaller TTT and TTD) correspond to balanced strategies that reduce both congestion and travelled distance. In contrast, points with low TTT but higher TTD correspond to control actions prioritizing faster travel even if the chosen route is longer, while points with low TTD and higher TTT represent strategies minimizing total 19 (a) Predefined point (1439 , 29865) 
+
+1(b) Point (1393 , 32270) 
+
+1(c) Point (1407 , 26975) 
+
+1(d) Point (1536 , 19396) 
+
+1Fig. 11 Results comparing the total vehicle densities on roads 1, 2 and 6 of the network represented in Figure 6 for some of the points shown in Figure 10, together with the initial point (1439 , 29865). Point (b) minimizes TTT over TTD, point (c) minimizes both functionals and point (d) minimizes TTD over TTT. 
+
+mileage and route length, but at the cost of slower movement and potential conges-tion. This trade-off analysis can therefore assist transportation planners or automated systems in selecting control strategies that align with specific operational priorities. Figure 11 shows the time evolution of the total vehicular density on selected roads for different Pareto-optimal solutions. Only roads 1, 2, and 6 of the considered network are displayed, since these links exhibit the most significant variations in density across all the chosen Pareto points. In contrast, roads 3, 4, 5, and 7 show only marginal changes with respect to the initial configuration, and their inclusion would not provide additional insight into the effects of the optimization. The density changes observed on roads 1, 2, and 6 indicate that the optimization primarily redistributes traffic on these links. More precisely, the effects of the optimization can be observed differently on each road. On road 1, Pareto-optimal solutions prioritizing the minimization of TTT over TTD are associated with a reduction of the total density and a smoother temporal evolution, indicating a more efficient exit of vehicles from this link. On road 2, density 20 profiles corresponding to TTD-oriented solutions exhibit higher density levels, reflect-ing the tendency to concentrate traffic along shorter routes. Finally, road 6 appears to be particularly sensitive to the chosen Pareto point: balanced solutions moderate density peaks while maintaining temporal regularity, whereas more extreme trade-off choices produce sharper density accumulations or a faster exit, depending on the prioritized objective.                          
+
+> Table 3 Percentage change in TTT and TTD for several Pareto-optimal solutions for n= 4 in Figure 10 compared to the initial point of the optimization. The + and −signs denote a reduction or an increase of the value of the considered functional, respectively. Points %∆TTT %∆TTD (1393,32270) +3 .20% −8.05% (1395,29860) +3 .06% +0 .02% (1401,28650) +2 .64% +4 .07% (1407,26975) +2 .22% +9 .68% (1420,24776) +1 .34% +17 .04% (1428,23262) +0 .76% +22 .11% (1440,22805) −0.07% +23 .64% (1536,19396) −6.74% +35 .07% (1608,17344) −11 .74% +41 .93%
+
+Table 3 illustrates the practical trade-off captured by the Pareto front by comparing several optimal solutions for n = 4 against the initial optimization point, marked in Figure 10 by ×. The columns %∆TTT and %∆TTD represent the percentage change in total travel time and total travel distance, respectively, compared to the initial value given by (27). A positive value indicates an improvement (reduction) with respect to the original value, while a negative percentage represents a deterioration (increase). This interpretation is consistent with the geometric observation above: points that lie between the projections of the initial triangular marker on the Pareto plane are precisely those for which both %∆TTT and %∆TTD are positive, indicating a reduction in travel time and travelled distance. Points falling outside this region show the expected trade-off behaviour, with one metric improving at the expense of the other. For instance, the point (1407 , 26975) represents a balanced strategy, achieving a 2 .22% reduction in TTT and a 9 .68% in TTD. In contrast, (1608 , 17344) shows that the minimization of distance is prioritized over the minimization of time, as there is a significant 41 .93% reduction of TTD but an increase of 11 .74% for the TTT. However, we observed that increasing the number of time-interval subdivisions con-sidered beyond n = 4 deteriorates the precision of the algorithm. A moderate increase of n allows for more refined results, but exceeding an optimal threshold reduces the accuracy and consistency of the results, making the algorithm unable to converge to the expected solution. 21 This decrease in accuracy highlights the need for more performant Pareto front computation algorithms and an optimal selection of n. While more control points provide flexibility for adjusting traffic flow, taking an excessive number of subdivisions of [0 , T f ] can lead to over-parametrization, resulting in ill-conditioned optimization problems and an increase in numerical errors. 
+
+# 6 Conclusions 
+
+This article presented a discrete adjoint gradient computation method applied to a multi-class macroscopic traffic flow model on road networks. The model was formulated as a system of hyperbolic conservation laws, and was discretized using a Godunov-type finite volume scheme based on demand and supply functions, taking into account the traffic dynamics at junctions. The adjoint-based optimization framework was then employed to efficiently compute gradients to be used in optimization routines. Numerical tests demonstrated the effectiveness of the proposed approach in opti-mizing the total travel time and total travel distance, important traffic performance metrics. The comparison between adjoint gradient computation and finite differences showed that, while finite differences may perform well for a small number of control points, the adjoint method remains computationally efficient as the number of control parameters increases. Moreover, the computational efficiency of the discrete adjoint gradient approach makes it suitable for integration into real-time traffic management settings and GPS-based routing systems, where optimization must be repeated within short time periods for the changing traffic conditions. Additionally, the multi-objective optimization using Pareto front analysis showed the relationship between these different traffic performance metrics and the need for an optimal selection of number of time-dependent control points when considering several metrics. Future work could explore the extension of this method to larger and more complex networks, incorporating additional control variables and other cost functionals such as fuel consumption, network throughput or CO 2 emissions, as well as integrating real-time traffic data or adaptive control strategies. 
+
+# Statements and Declarations 
+
+Acknowledgements 
+
+The authors would like to thank the members of the Datahyking Doctoral Network for their valuable discussions and support throughout this research. 
+
+Funding 
+
+This work was funded by the European Union’s Horizon Europe research and inno-vation programme under the Marie Sklodowska-Curie Doctoral Network Datahyking (Grant No. 101072546). 22 Competing Interests 
+
+The authors declare that they have no competing interests. 
+
+Ethics Approval and Consent to Participate 
+
+This study does not involve human participants or animals and therefore does not require ethics approval or consent to participate. 
+
+Consent for Publication 
+
+Not applicable. 
+
+Data Availability 
+
+The data that support the findings of this study are available from the corresponding author, C. Mezquita-Nieto, upon reasonable request. 
+
+Code Availability 
+
+The numerical methods and algorithms used in this study are described in detail in the manuscript. The code implementation used to produce the numerical results is available from the corresponding author upon reasonable request. 
+
+Author Contributions 
+
+- Conceptualization: P. Goatin, C. Mezquita-Nieto. - Methodology: P. Goatin, A. Klar, C. Mezquita-Nieto. - Software: C. Mezquita-Nieto. - Formal analysis: P. Goatin, C. Mezquita-Nieto. - Validation: C. Mezquita-Nieto. - Writing – original draft: C. Mezquita-Nieto. - Writing – review and editing: P. Goatin, A. Klar, C. Mezquita-Nieto. All authors read and approved the final manuscript. 
+
+# Appendix A Details on DAG computation 
+
+## A.1 Update equation 
+
+Denote s as a variable that can be either a state or a control variable, s ∈ u ∪ y.Considering a particular update equation Ec,ν ℓ,j (23)-(24) and applying the chain rule, 23 its partial derivatives with respect to the state variables y are 
+
+∂sEc,ν ℓ,j =
+
+
+
+1 if s = ρc,ν ℓ,j , j = 1 , . . . , N ℓ,
+
+−1 + λ
+
+h
+
+∂sF c,ν −1 
+
+> ℓ,j +1 /2
+
+− ∂sF c,ν −1
+
+> ℓ,j −1/2
+
+i
+
+if s = ρc,ν −1 
+
+> ℓ,j
+
+, j = 2 , . . . , N ℓ − 1,λ
+
+h
+
+∂sF c,ν −1 
+
+> ℓ,j +1 /2
+
+− ∂sF c,ν −1
+
+> ℓ,j −1/2
+
+i
+
+if s = ρg,ν −1 
+
+> ℓ,j
+
+, j = 2 , . . . , N ℓ − 1, g ̸ = c, λ ∂ sF c,ν −1 
+
+> ℓ,j +1 /2
+
+if s = ρg,ν −1 
+
+> ℓ,j +1
+
+, j = 2 , . . . , N ℓ − 1, ∀g, 
+
+−λ ∂ sF c,ν −1 
+
+> ℓ,j −1/2
+
+if s = ρg,ν −1 
+
+> ℓ,j −1
+
+, j = 2 , . . . , N ℓ − 1, ∀g, 
+
+0 else, 
+
+∂sEc,ν ℓ, 0 =
+
+
+
+1 if s = lc,ν ℓ ,
+
+−1 if s = lc,ν −1 
+
+> ℓ
+
+, l c,ν −1 
+
+> ℓ
+
++ ∆ t(F cℓ,in − ˆγc,ν −1 
+
+> ℓ,in
+
+) > 0,
+
+∆t ∂ s ˆγc,ν −1 
+
+> ℓ,in
+
+if s = ρg,ν −1 
+
+> ℓ, 1
+
+, l c,ν −1 
+
+> ℓ
+
++ ∆ t(F cℓ,in − ˆγc,ν −1 
+
+> ℓ,in
+
+) > 0, ∀g, 
+
+0 else, while for the control variables u they are 
+
+∂sEc,ν ℓ,j =
+
+(λ
+
+h
+
+∂sF c,ν −1 
+
+> ℓ,j +1 /2
+
+− ∂sF c,ν −1
+
+> ℓ,j −1/2
+
+i
+
+if s ∈ u, j = 1 , . . . , N ℓ,
+
+0 else, 
+
+∂sEc,ν ℓ, 0 =
+
+(
+
+∆t ∂ s ˆγc,ν −1 
+
+> ℓ,in
+
+if s ∈ u, l c,ν −1 
+
+> ℓ
+
++ ∆ t(F cℓ,in − ˆγc,ν −1 
+
+> ℓ,in
+
+) > 0,
+
+0 else. 
+
+## A.2 Godunov scheme 
+
+Returning to the finite volume Godunov scheme (6), its partial derivatives with respect to the state variables are 
+
+∂sF c,ν ℓ,j +1 /2 =
+
+
+
+kc,ν ℓ,j ∂sScℓ (rνℓ,j +1 ) if s = ρc,ν ℓ,j +1 , ℓ ∈ S G2 , ∀g, 
+
+(kc,ν ℓ,j )′
+
+Dcℓ (rνℓ,j ) + kc,ν ℓ,j ∂sDcℓ (rνℓ,j ) if s = ρc,ν ℓ,j , ℓ ∈ S G1 ,kc,ν ℓ,j 
+
+"
+
+− Dcℓ (rνℓ,j )
+
+rνℓ,j 
+
++ ∂sDcℓ (rνℓ,j )
+
+#
+
+if s = ρg,ν ℓ,j , ℓ ∈ S G1 , g ̸ = c, 
+
+(kc,ν ℓ,j )′
+
+Scℓ (rνℓ,j +1 ) if s = ρc,ν ℓ,j , ℓ ∈ S G2 ,
+
+− kc,ν ℓ,j 
+
+rνℓ,j 
+
+Scℓ (rνℓ,j +1 ) if s = ρg,ν ℓ,j , ℓ ∈ S G2 , g ̸ = c, 
+
+0 else, 24 where kc,ν ℓ,j and ( kc,ν ℓ,j )′ are defined as 
+
+kc,ν ℓ,j := ρc,ν ℓ,j 
+
+rνℓ,j 
+
+and (kc,ν ℓ,j )′
+
+:= ∂k c,ν ℓ,j 
+
+∂ρ c,ν ℓ,j 
+
+= rνℓ,j − ρc,ν ℓ,j 
+
+(rνℓ,j )2 , (A1) and 
+
+SG1 := ℓ : Dcℓ (rνℓ,j ) ≤ Scℓ (rνℓ,j +1 ) ,
+
+SG2 := ℓ : Dcℓ (rνℓ,j ) > S cℓ (rνℓ,j +1 ) ,
+
+SG1 ∩ S G2 = ∅.
+
+Similarly, the derivatives with respect to the control variables are 
+
+∂sF c,ν ℓ,j +1 /2 =
+
+
+
+kc,ν ℓ,j ∂sDcℓ (rνℓ,j ) if s = Vℓ,c , ℓ ∈ S G1 ,kc,ν ℓ,j ∂sScℓ (rνℓ,j +1 ) if s = Vℓ,c , ℓ ∈ S G2 ,
+
+0 else. 
+
+## A.3 Demand and supply 
+
+The partial derivatives with respect to s of the demand and the supply functions are 
+
+∂sDcℓ (rνℓ,j ) = 
+
+
+
+vℓ,c (rνj ) + rνℓ,j ∂svℓ,c (rνℓ,j ) if s = ρg,ν ℓ,j , r νℓ,j ≤ rc,ν ℓ,j,cr , ∀g, 
+
+min {rνℓ,j , r c,ν ℓ,j,cr } ∂svℓ,c (min {rνℓ,j , r c,ν ℓ,j,cr }) if s = Vℓ,c ,
+
+0 else, 
+
+∂sScℓ (rνℓ,j ) = 
+
+
+
+vℓ,c (rνℓ,j ) + rνℓ,j ∂svℓ,c (rνℓ,j ) if s = ρg,ν ℓ,j , r νℓ,j > r c,ν ℓ,j,cr , ∀g, 
+
+max {rνℓ,j , r c,ν ℓ,j,cr } ∂svℓ,c (max {rνℓ,j , r c,ν ℓ,j,cr }) if s = Vℓ,c ,
+
+0 else. 
+
+## A.4 M × 1 merging junction 
+
+For junctions of the type M × 1, the flux ˆ γc,ν M +1 ,in is defined as ˆγc,ν M +1 ,in =
+
+> M
+
+X
+
+> i=1
+
+ˆγc,ν i,out , ˆγc,ν i,out = kc,ν i,N i βi
+
+> 1
+
+,
+
+where 
+
+βi 
+
+> 1
+
+:= min Dci (rνi,N i ), β i 
+
+> 2
+
+,βi 
+
+> 2
+
+:= max pci ScM +1 (rνM +1 ,1), S cM +1 (rνM +1 ,1) − X 
+
+> j̸=i
+
+Dcj (rνj,N j ) ,
+
+25 and kc,ν i,N i follows (A1). Let 
+
+Sm1 := i : βi 
+
+> 1
+
+= Dci (rνi,N i ) ,
+
+Sm2 := i : βi 
+
+> 1
+
+= βi 
+
+> 2
+
+= pci ScM +1 (rνM +1 ,1) ,
+
+Sm3 := i : βi 
+
+> 1
+
+= βi 
+
+> 2
+
+= ScM +1 (rνM +1 ,1) − X 
+
+> j̸=i
+
+Dcj (rνj,N j ) ,
+
+Sm 
+
+> i
+
+∩ S m 
+
+> j
+
+= ∅ ∀j̸ = i. 
+
+The partial derivatives of ˆ γc,ν M +1 ,in with respect to s are obtained as 
+
+∂s ˆγc,ν M +1 ,in =
+
+> M
+
+X
+
+> i=1
+
+∂s ˆγc,ν i,out ,
+
+and the derivatives of the fluxes ˆ γc,ν i,out with respect to the state variables are, for 
+
+i = 1 , . . . , M ,
+
+∂s ˆγc,ν i,out =
+
+
+
+(kc,ν i,N i )′
+
+Dci (rνi,N i ) + kc,ν i,N i ∂sDci (rνi,N i ) if s = ρc,ν i,N i , i ∈ S m1 ,kc,ν i,N i
+
+"
+
+− Dci (rνi,N i )
+
+rνi,N i
+
++ ∂sDci (rνi,N i )
+
+#
+
+if s = ρg,ν i,N i , i ∈ S m1 , g ̸ = c, 
+
+(kc,ν i,N i )′
+
+pci ScM +1 (rνM +1 ,1) if s = ρc,ν i,N i , i ∈ S m2 ,
+
+− kc,ν i,N i
+
+rνi,N i
+
+pci ScM +1 (rνM +1 ,1) if s = ρg,ν i,N i , i ∈ S m2 , g ̸ = c, 
+
+(kc,ν i,N i )′  ScM +1 (rνM +1 ,1) − X 
+
+> j̸=i
+
+Dcj (rνj,N j ) if s = ρc,ν i,N i , i ∈ S m3 ,
+
+− kc,ν i,N i
+
+rνi,N i
+
+ ScM +1 (rνM +1 ,1) − X 
+
+> j̸=i
+
+Dcj (rνj,N j ) if s = ρg,ν i,N i , i ∈ S m3 , g ̸ = c, 
+
+−kc,ν i,N i ∂sDj (rνj,N j ) if s = ρg,ν j,N j , i ∈ S m3 , j ̸ = i, ∀g, kc,ν i,N i pci ∂sScM +1 (rνM +1 ,1) if s = ρg,ν M +1 ,1, i ∈ S m2 , ∀g, kc,ν i,N i ∂sScM +1 (rνM +1 ,1) if s = ρg,ν M +1 ,1, i ∈ S m3 , ∀g, 
+
+0 else. 26 Similarly, its derivatives with respect to the control variables are 
+
+∂s ˆγc,ν i,out =
+
+
+
+kc,ν i,N i ScM +1 (rνM +1 ,1) if s = pci , i ∈ S m2 ,kc,ν i,N i ∂sDci (rνi,N i ) if s = Vi,c , i ∈ S m1 ,
+
+−kc,ν i,N i ∂sDcj (rνj,N j ) if s = Vj,c , i ∈ S m3 , j ̸ = i, kc,ν i,N i pci ∂sScM +1 (rνM +1 ,1) if s = VM +1 ,c , i ∈ S m2 ,kc,ν i,N i ∂sScM +1 (rνM +1 ,1) if s = VM +1 ,c , i ∈ S m3 ,
+
+0 else. 
+
+## A.5 1 × M FIFO diverging junction 
+
+Consider a 1 × M diverging junction. The FIFO flux ˆ γc,ν  
+
+> 1,out
+
+can be written as ˆγc,ν  
+
+> 1,out
+
+= kc,ν  
+
+> 1,N 1
+
+β, β := min 
+
+
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+), Sc
+
+> 2
+
+(rν
+
+> 2,1
+
+)
+
+αc
+
+> 2
+
+, . . . , ScM +1 (rνM +1 ,1)
+
+αcM +1 
+
+
+
+.
+
+Denoting the index over the M diverging nodes as i = 2 , . . . , M + 1, its partial derivatives with respect to the state variables would be 
+
+∂s ˆγc,ν  
+
+> 1,out
+
+=
+
+
+
+(kc,ν  
+
+> 1,N 1
+
+)′
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) + kc,ν  
+
+> 1,N 1
+
+∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = ρc,ν  
+
+> 1,N 1
+
+, β ∈ S F1 ,kc,ν 
+
+> 1,N 1
+
+"
+
+− Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+rν
+
+> 1,N 1
+
++ ∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+#
+
+if s = ρg,ν  
+
+> 1,N 1
+
+, β ∈ S F1 , g ̸ = c, 
+
+(kc,ν  
+
+> 1,N 1
+
+)′ Sci (rνi, 1)
+
+αci
+
+if s = ρc,ν  
+
+> 1,N 1
+
+, β / ∈ S F1 ,
+
+− kc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+· Sci (rνi, 1)
+
+αci
+
+if s = ρg,ν  
+
+> 1,N 1
+
+, β / ∈ S F1 , g ̸ = ckc,ν 
+
+> 1,N 1
+
+αci
+
+∂sSci (rνi, 1) if s = ρg,ν i, 1 , β ∈ S F 
+
+> i
+
+, ∀g, 
+
+0 else, where 
+
+SF1 := β : β = Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) ,
+
+SF 
+
+> i
+
+:= β : β = Sci (rνi, 1)/α ci ,
+
+SF 
+
+> i
+
+∩ S F 
+
+> j
+
+= ∅ ∀j̸ = i, 
+
+27 and with respect to the control variables 
+
+∂s ˆγc,ν  
+
+> 1,out
+
+=
+
+
+
+−kc,ν 
+
+> 1,N 1
+
+Sci (rνi, 1)(αci )2 if s = αci , β ∈ S F 
+
+> i
+
+,kc,ν  
+
+> 1,N 1
+
+∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = V1,c , β ∈ S F1 ,kc,ν 
+
+> 1,N 1
+
+αci
+
+∂sSci (rνi, 1) if s = Vi,c , β ∈ S F 
+
+> i
+
+,
+
+0 else. For a 1 × M junction, the flux for the outgoing roads has to be differentiated as well. For the FIFO flux, ˆγc,ν i,in = αci ˆγc,ν  
+
+> 1,out
+
+, i = 2 , . . . , M + 1 .
+
+Their partial derivatives with respect to the state variables would be, for fixed i =2, . . . , M + 1, 
+
+∂s ˆγc,ν i,in =
+
+
+
+αci
+
+h
+
+(kc,ν  
+
+> 1,N 1
+
+)′
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) + kc,ν  
+
+> 1,N 1
+
+∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+i
+
+if s = ρc,ν  
+
+> 1,N 1
+
+, β ∈ S F1 ,αci kc,ν 
+
+> 1,N 1
+
+"
+
+− Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+rν
+
+> 1,N 1
+
++ ∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+#
+
+if s = ρg,ν  
+
+> 1,N 1
+
+, β ∈ S F1 , g ̸ = c, αci
+
+αcj
+
+(kc,ν  
+
+> 1,N 1
+
+)′
+
+Scj (rνj, 1) if s = ρc,ν  
+
+> 1,N 1
+
+, β ∈ S F 
+
+> j
+
+, ∀j, 
+
+− αci
+
+αcj
+
+· kc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+Scj (rνj, 1) if s = ρg,ν  
+
+> 1,N 1
+
+, β ∈ S F 
+
+> j
+
+, ∀j, g ̸ = c, αci
+
+αcj
+
+kc,ν  
+
+> 1,N 1
+
+∂sSci (rνi, 1) if s = ρg,ν j, 1 , β ∈ S F 
+
+> j
+
+, ∀j, ∀g, 
+
+0 else, and with respect to the control variables 
+
+∂s ˆγc,ν i,in =
+
+
+
+kc,ν  
+
+> 1,N 1
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = αci , β ∈ S F1 ,kc,ν 
+
+> 1,N 1
+
+Scj (rνj, 1)
+
+αcj
+
+if s = αci , β ∈ S F 
+
+> j
+
+, j ̸ = i, αci kc,ν  
+
+> 1,N 1
+
+∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = V1,c , β ∈ S F1 ,αci
+
+αcj
+
+kc,ν  
+
+> 1,N 1
+
+∂sScj (rνj, 1) if s = Vj,c , β ∈ S F 
+
+> j
+
+, ∀j, 
+
+0 else. 28 A.6 1 × M non-FIFO diverging junction 
+
+The non-FIFO flux for link ˆ γc,ν  
+
+> 1,out
+
+of a 1 × M junction can be written as the sum of the links ˆ γc,ν i,in , i = 2 , . . . , M + 1, ˆγc,ν  
+
+> 1,out
+
+= 
+
+> M+1
+
+X
+
+> i=2
+
+ˆγc,ν i,in , ˆγc,ν i,in = kc,ν  
+
+> 1,N 1
+
+min αci Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+), S ci (rνi, 1) .
+
+Its partial derivatives with respect to s would therefore be 
+
+∂s ˆγc,ν  
+
+> 1,out
+
+= 
+
+> M+1
+
+X
+
+> i=2
+
+∂s ˆγc,ν i,in .
+
+The derivatives with respect to the state variables of the outgoing non-FIFO fluxes are, for i = 2 , . . . , M + 1, 
+
+∂s ˆγc,ν i,in =
+
+
+
+αci
+
+h
+
+(kc,ν  
+
+> 1,N 1
+
+)′
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) + kc,ν  
+
+> 1,N 1
+
+∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+i
+
+if s = ρc,ν  
+
+> 1,N 1
+
+, i ∈ S nF 1 ,αci kc,ν 
+
+> 1,N 1
+
+"
+
+− Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+rν
+
+> 1,N 1
+
++ ∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+)
+
+#
+
+if s = ρg,ν  
+
+> 1,N 1
+
+, i ∈ S nF 1 , g ̸ = c, 
+
+(kc,ν  
+
+> 1,N 1
+
+)′
+
+Sci (rνi, 1) if s = ρc,ν  
+
+> 1,N 1
+
+, i ∈ S nF 2 ,
+
+− kc,ν 
+
+> 1,N 1
+
+rν
+
+> 1,N 1
+
+Sci (rνi, 1) if s = ρg,ν  
+
+> 1,N 1
+
+, i ∈ S nF 2 , g ̸ = c, kc,ν  
+
+> 1,N 1
+
+∂sSci (rνi, 1) if s = ρg,ν i, 1 , i ∈ S nF 2 , ∀g, 
+
+0 else, where 
+
+SnF 1 := i : αci Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) ≤ Sci (rνi, 1) ,
+
+SnF 2 := i : αci Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) > S ci (rνi, 1) ,
+
+SnF 1 ∩ S nF 2 = ∅,
+
+and with respect to the control variables, 
+
+∂s ˆγc,ν i,in =
+
+
+
+kc,ν  
+
+> 1,N 1
+
+Dc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = αci , i ∈ S nF 1 ,kc,ν  
+
+> 1,N 1
+
+αci ∂sDc
+
+> 1
+
+(rν 
+
+> 1,N 1
+
+) if s = V1,c , i ∈ S nF 1 ,kc,ν  
+
+> 1,N 1
+
+∂sSci (rνi, 1) if s = Vi,c , i ∈ S nF 2 ,
+
+0 else. 29 A.7 Boundary conditions 
+
+Focusing on the derivatives for the boundary conditions, the inflows ˆ γc,ν ℓ,in , ℓ ∈ O , are defined as ˆγc,ν ℓ,in = min 
+
+
+
+Dcℓ (lc,ν ℓ ), max  1
+
+N Scℓ (rνℓ, 1), S cℓ (rνℓ, 1) − X 
+
+> g̸=c
+
+Dgℓ (lg,ν ℓ )
+
+
+
+.
+
+Defining 
+
+Sin  
+
+> 1
+
+:= ℓ : ℓ ∈ O , ˆγc,ν ℓ,in = Dcℓ (lc,ν ℓ ) ,
+
+Sin  
+
+> 2
+
+:= ℓ : ℓ ∈ O , ˆγc,ν ℓ,in = Scℓ (rνℓ, 1)/N ,
+
+Sin  
+
+> 3
+
+:= ℓ : ℓ ∈ O , ˆγc,ν ℓ,in = Scℓ (rνℓ, 1) − X 
+
+> g̸=c
+
+Dgj (lg,ν ℓ ) ,
+
+Sin i ∩ S in j = ∅ ∀j̸ = i, 
+
+the partial derivatives with respect to the state variables would therefore be 
+
+∂s ˆγc,ν ℓ,in =
+
+
+
+1
+
+N ∂sScℓ (rνℓ, 1) if s = ρg,ν ℓ, 1 , ℓ ∈ S in  
+
+> 2
+
+, ∀g, ∂sScℓ (rνℓ, 1) if s = ρg,ν ℓ, 1 , ℓ ∈ S in  
+
+> 3
+
+, ∀g, 
+
+0 else, and with respect to the control variables 
+
+∂s ˆγc,ν ℓ,in =
+
+
+
+∂sDcℓ (lc,ν ℓ ) if s = Vℓ,c , ℓ ∈ S in  
+
+> 1
+
+,
+
+1
+
+N ∂sScℓ (rνℓ, 1) if s = Vℓ,c , ℓ ∈ S in  
+
+> 2
+
+,∂sScℓ (rνℓ, 1) if s = Vℓ,c , ℓ ∈ S in  
+
+> 3
+
+,
+
+0 else, where 
+
+∂Vℓ,c Dcℓ (lc,ν ℓ ) = 
+
+(
+
+∂Vℓ,c Qcℓ (rcℓ,cr ) if lc,ν ℓ > 0,∂Vℓ,c F cℓ,in if lc,ν ℓ = 0 ,
+
+=
+
+(
+
+rcℓ,cr ∂Vℓ,c vℓ,c (rcℓ,cr ) if lc,ν ℓ > 0,
+
+0 if lc,ν ℓ = 0 .
+
+For the outflows ˆ γc,ν ℓ,out where ℓ is the index corresponding to a road leaving the network, ˆγc,ν ℓ,out = min 
+
+n
+
+kc,ν ℓ,N ℓ Dcℓ (rνℓ,N ℓ ), F cℓ,out 
+
+o
+
+.
+
+30 Their partial derivatives with respect to the state variables are 
+
+∂s ˆγc,ν ℓ,out =
+
+
+
+(kc,ν ℓ,N ℓ )′
+
+Dcℓ (rνℓ,N ℓ ) + kc,ν ℓ,N ℓ ∂sDcℓ (rνℓ,N ℓ ) if s = ρc,ν ℓ,N ℓ , ℓ ∈ S out ,kc,ν ℓ,N ℓ
+
+"
+
+− Dcℓ (rνℓ,N ℓ )
+
+rνℓ,N ℓ
+
++ ∂sDcℓ (rνℓ,N ℓ )
+
+#
+
+if s = ρg,ν ℓ,N ℓ , ℓ ∈ S out , g ̸ = c, 
+
+0 else, where 
+
+Sout := ℓ : kc,ν ℓ,N ℓ Dcℓ (rνℓ,N ℓ ) ≤ F cℓ,out ,
+
+while with respect to the control variables they are 
+
+∂s ˆγc,ν ℓ,out =
+
+(
+
+kc,ν ℓ,N ℓ ∂sDcℓ (rνℓ,N ℓ ) if s = Vℓ,c , ℓ ∈ S out ,
+
+0 else. 
+
+# References 
+
+[1] Benzoni-Gavage S, Colombo RM (2003) An n-populations model for traffic flow. European J Appl Math 14(5):587–612. https://doi.org/10.1017/S0956792503005 266 [2] Briani M, Cristiani E (2014) An easy-to-use algorithm for simulating traffic flow on networks: theoretical study. Netw Heterog Media 9(3):519–552. https://doi.or g/10.3934/nhm.2014.9.519 [3] B¨ urger R, Garc´ ıa A, Karlsen KH, et al (2008) A family of numerical schemes for kinematic flows with discontinuous flux. J Engrg Math 60(3-4):387–425. https: //doi.org/10.1007/s10665-007-9148-4 [4] Coclite GM, Garavello M, Piccoli B (2005) Traffic flow on a road network. SIAM J Math Anal 36(6):1862–1886. https://doi.org/10.1137/S0036141004402683 [5] Courant R, Friedrichs K, Lewy H (1928) ¨Uber die partiellen Differenzengle-ichungen der mathematischen Physik. Mathematische Annalen 100:32–74. https: //doi.org/10.1007/BF01448839 [6] Daganzo CF (1995) The cell transmission model, part II: network traffic. Trans-portation Research Part B: Methodological 29(2):79–93. https://doi.org/10.101 6/0191-2615(94)00022-R [7] Delle Monache ML, Goatin P, Piccoli B (2018) Priority-based Riemann solver for traffic flow on networks. Commun Math Sci 16(1):185–211. https://doi.org/10.4 310/CMS.2018.v16.n1.a9 [8] Fan S, Work DB (2015) A heterogeneous multiclass traffic flow model with creeping. SIAM J Appl Math 75(2):813–835. https://doi.org/10.1137/140977977 31 [9] Garavello M, Piccoli B (2006) Traffic Flow on Networks, AIMS Series on Applied Mathematics, vol 1. American Institute of Mathematical Sciences, Springfield, MO, USA [10] Garavello M, et al (2010) A review of conservation laws on networks. Networks Heterog Media 5(3):565–581. https://doi.org/10.3934/nhm.2010.5.565 [11] Gashaw S, Goatin P, H¨ arri J (2018) Modeling and analysis of mixed flow of cars and powered two-wheelers. Transportation Research Part C: Emerging Technologies 89:148–167. https://doi.org/10.1016/j.trc.2018.02.004 [12] Goatin P, G¨ ottlich S, Kolb O (2016) Speed limit and ramp meter control for traffic flow networks. Eng Optim 48(7):1121–1144. https://doi.org/10.1080/0305 215X.2015.1097099 [13] Godunov SK, Bohachevsky I (1959) Finite difference method for numerical computation of discontinuous solutions of the equations of fluid dynamics. Matematiˇ ceskij sbornik 47(89)(3):271–306. URL https://hal.science/hal-0162064 2[14] Greenshields BD (1935) A study of traffic capacity. In: Highway research board proceedings, Washington, DC, pp 448–477 [15] Gugat M, Herty M, Klar A, et al (2005) Optimal control for traffic flow networks. J Optim Theory Appl 126(3):589–616. https://doi.org/10.1007/s10957-005-5499-z [16] Herty M, Klar A (2003) Modeling, simulation, and optimization of traffic flow networks. SIAM Journal on Scientific Computing 25(3):1066–1087. https://doi. org/10.1137/S106482750241459X [17] Herty M, Kirchner C, Moutari S (2006) Multi-class traffic models on road net-works. Commun Math Sci 4(3):591–608. URL http://projecteuclid.org/euclid.c ms/1175797558 [18] Herty M, Kirchner C, Klar A (2007) Instantaneous control for traffic flow. Math Methods Appl Sci 30(2):153–169. https://doi.org/10.1002/mma.779 [19] Joumaa A, Goatin P, De Nunzio G (2023) A macroscopic model for multi-modal traffic flow in urban networks. In: 2023 IEEE 26th International Conference on Intelligent Transportation Systems (ITSC), pp 411–416, https://doi.org/10.110 9/ITSC57777.2023.10422168 [20] Joumaa A, Goatin P, De Nunzio G (2024) A macroscopic framework for modeling heterogeneous traffic flows on urban networks, preprint, https://hal.science/ha l-04960310 32 [21] Lebacque JP (1996) The Godunov scheme and what it means for first order traffic flow models. In: Proceedings of the 13th International Symposium on Transportation and Traffic Theory, Lyon, France [22] Lebacque JP, Khoshyaran MM (2002) First order macroscopic traffic flow models for networks in the context of dynamic assignment, Applied Optimization, vol 64, Springer US, Boston, MA, p 119–140. https://doi.org/10.1007/0-306-48220-7 8 [23] Levin MW, Boyles SD (2016) A multiclass cell transmission model for shared human and autonomous vehicle roads. Transportation Research Part C: Emerging Technologies 62:103–116. https://doi.org/doi.org/10.1016/j.trc.2015.10.005 [24] Lighthill MJ, Whitham GB (1955) On kinematic waves. II. A theory of traffic flow on long crowded roads. Proc Roy Soc London Ser A 229:317–345 [25] Logghe S, Immers L (2008) Multi-class kinematic wave theory of traffic flow. Transportation Research Part B: Methodological 42(6):523–541. https://doi.org/ 10.1016/j.trb.2007.11.001 [26] Piacentini G, ˇCiˇ ci´ c M, Ferrara A, et al (2019) VACS equipped vehicles for con-gestion dissipation in multi-class CTM framework. In: 17th European Control Conference, ECC 2019, Naples, Italy, June 25-28, 2019, IEEE, pp 2203–2208, https://doi.org/10.23919/ECC.2019.8796094 [27] Reilly J, Samaranayake S, Delle Monache ML, et al (2015) Adjoint-based opti-mization on a network of discretized scalar conservation laws with applications to coordinated ramp metering. J Optim Theory Appl 167(2):733–760. https: //doi.org/10.1007/s10957-015-0749-1 [28] Richards PI (1956) Shock waves on the highway. Operations Res 4:42–51 [29] Samaranayake S, Reilly J, Krichene W, et al (2018) Discrete-time system optimal dynamic traffic assignment (SO-DTA) with partial control for horizontal queuing networks. Transportation Science 52(4):982–1001. https://doi.org/10.1287/trsc.2 017.0800 [30] Wong GC, Wong S (2002) A multi-class traffic flow model - an extension of LWR model with heterogeneous drivers. Transportation Research Part A 36(9):827–841. https://doi.org/10.1016/S0965-8564(01)00042-8 33

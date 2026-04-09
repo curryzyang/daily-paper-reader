@@ -1,0 +1,376 @@
+Title: FNO$^{\angle \theta}$: Extended Fourier neural operator for learning state and optimal control of distributed parameter systems
+
+URL Source: https://arxiv.org/pdf/2604.05187v1
+
+Published Time: Wed, 08 Apr 2026 00:13:59 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# FNO ∠θ: Extended Fourier neural operator for learning state and optimal control of distributed parameter systems 
+
+Zhexian Li, Ketan Savla 
+
+Abstract — We propose an extended Fourier neural operator (FNO) architecture for learning state and linear quadratic addi-tive optimal control of systems governed by partial differential equations. Using the Ehrenpreis-Palamodov fundamental prin-ciple, we show that any state and optimal control of linear PDEs with constant coefficients can be represented as an integral in the complex domain. The integrand of this representation involves the same exponential term as in the inverse Fourier transform, where the latter is used to represent the convolution operator in FNO layer. Motivated by this observation, we modify the FNO layer by extending the frequency variable in the inverse Fourier transform from the real to complex domain to capture the integral representation from the fundamental principle. We illustrate the performance of FNO in learning state and optimal control for the nonlinear Burgers’ equation, showing order of magnitude improvements in training errors and more accurate predictions of non-periodic boundary values over FNO. 
+
+I. INTRODUCTION Distributed parameter systems, such as systems governed by partial differential equations, are of great importance in various scientific and engineering fields, including fluid dy-namics, climate modeling, and control of physical processes. The domain of such systems typically involves both temporal and spatial dimensions, making prediction and control tasks significantly harder than finite-dimensional systems. On the one hand, the state space of distributed parameter systems is infinite-dimensional, for which optimal control methods have been developed [1], [2], but often requiring significant computational resources even for small-scale systems. On the other hand, discretizing the spatial domain, also known as spatially lumping the system, leads to finite-dimensional approximation, for which a rich set of tools and methods have been developed for optimal control [3]. However, the tradeoff between accuracy and discretization size needs to be carefully investigated to balance the computational efficiency and approximation error for the lumped system. Recently, there has been a surge of interest in using neural operators to learn solution operators for PDEs, due to the potential in learning fast and accurate surrogate infinite-dimensional models. Neural operators are mappings between  
+
+> Z. Li is with the Sonny Astani Department of Civil and Environmental Engineering, University of Southern California, Los Angeles, CA 90089, USA.
+
+zhexianl@usc.edu  
+
+> K. Savla is with the Sonny Astani Department of Civil and Environmental Engineering, the Daniel Epstein Department of Industrial and Systems Engineering, and the Ming Hsieh Department of Electrical and Computer Engineering, University of Southern California, Los Angeles, CA 90089, USA.
+
+ksavla@usc.edu 
+
+> K. Savla has a financial interest in Xtelligent, Inc. The code is available at [Code]
+
+function spaces represented in the form of neural networks [4], e.g., from coefficient functions or boundary conditions to PDE solutions. Every layer in the neural network consists of an integral operator that varies between different types of neural operators. Among all different neural operators, the Fourier neural operator (FNO) [5] uses a convolution operator represented in the Fourier space. This simple archi-tecture has been found to provide the smallest approximation error for solutions of various PDEs [6] and to successfully reproduce complicated physical phenomena such as turbulent flows [5]. In addition to solving PDEs, neural operators have also been used to learn optimal control operators [7] and to assist in the control computation of PDEs such as boundary control with backstepping methods [8]. The key motivation for using the convolution operator in FNO is the fact that every linear PDE in Rn with constant coefficients has an elementary solution in convolution form, following the fundamental solution independently established by Ehrenpreis [9] and Malgrange [10]. However, solutions in bounded domains with non-periodic boundary conditions are not in convolution form. The limitation of the convolution operator becomes apparent when implemented as a Fourier series, which is inherently periodic. Nevertheless, this lim-itation can be mitigated in practice by using additional parameters in neural operators [5] or Fourier continuation methods [11]. Although the fundamental solution is for systems with-out boundaries, additional structures for solution representa-tions have been established for general convex (potentially bounded) domains. Specifically, the Ehrenpreis-Palamodov fundamental principle [12], [13] states that any solution to linear PDEs in a convex subset of Rn with constant coefficients can be represented as an integral of exponential functions multiplied by polynomials over structured subsets of Cn. The proof of this result is nonconstructive and explicit expressions for such an integral representation have been obtained only for one- or two-dimensional space using the Fokas method [14]–[16]. However, the structural insights provided by the integral representation can be leveraged in the design of neural operators. Our goal is to design a neural operator that uses the inte-gral representation of the Ehrenpreis-Palamodov fundamental principle in every neural layer to learn state and control operators for systems governed by PDEs. Despite its abstract nature, we observe that the exponential term in the integral representation from the fundamental principle is in the same form of the inverse Fourier transform, with the difference that 
+
+> arXiv:2604.05187v1 [cs.LG] 6 Apr 2026
+
+the former integral is over the complex domain. Since the inverse Fourier transform is used in the convolution operator in FNO, it is natural for the newly designed neural operator to inherit the structure of FNO and extend the frequency variable to the complex domain. The contribution of this paper is the following. First, we show that, in addition to solutions, linear quadratic optimal control for linear PDEs with constant coefficients can also be represented in a similar integral form as the fundamental principle. Then, we propose an extended FNO architecture, called FNO ∠θ , by introducing a new complex variable in the inverse Fourier transform, whose modulus is the original frequency variable in FNO and phase is a new parameter 
+
+θ to learn. When θ = 0, FNO ∠θ reduces to FNO and inherits the universal approximation property [17]. Beyond theoretical analysis for linear PDEs, we present numerical experiments to demonstrate the performance of FNO ∠θ in learning state and optimal control for the nonlinear Burgers’ equation, exhibiting order of magnitude improvements on training errors and more accurate predictions of non-periodic boundary values over FNO. We conclude this section by introducing key notations used in the paper. We use R, R+, C, Z, N to denote the sets of real numbers, positive real numbers, complex numbers, integers, and natural numbers, respectively. We use C ∞(Ω) and L 2(Ω) 
+
+to denote the set of infinitely differentiable functions and square-integrable functions defined on Ω, respectively. The convolution operator is denoted by ∗. The composition of two operators A and B is denoted by A ◦ B .II. PROBLEM FORMULATION In this paper, we consider linear quadratic optimal control for systems governed by linear PDEs with constant coeffi-cients. Let P denote a matrix with entries Pj,l , 1 ≤ j ≤
+
+p, 1 ≤ l ≤ q. Each entry Pj,l is a polynomial function in Cn.Let Dj = −i∂/∂ ξj , j = 1 , . . . , n , and let D = ( D1, . . . , D n)
+
+denote the (partial) differential operator. Then P (D) is a matrix of linear partial differential operators with constant coefficients. Following this notation, we consider the system of inhomogeneous PDEs in a convex and open domain 
+
+Ω ⊆ Rn, of the form 
+
+P (D)ϕ = u, (1) or, more explicitly, 
+
+> q
+
+X
+
+> l=1
+
+Pj,l (−i∂/∂ ξ1 , . . . , −i∂/∂ ξn )ϕl = uj , j = 1 , . . . , p, 
+
+(2) where ϕ is the state and u is the control input. In this paper, we focus on smooth functions uj and ϕl in L 2(Ω) ∩
+
+C∞(Ω) , j = 1 , . . . , p and l = 1 , . . . , q . Note that the system (1) has solutions in more general spaces, such as the space of distributions [18]. 
+
+Remark 1: In practice, the domain Ω can denote a spatial domain or a product of a spatial domain and a time interval, i.e., Ω = Ω x × Ωt where Ωx ⊆ Rn−1 and Ωt ⊆ R+. For brevity, we use a single variable ξ to denote a point in Ω and do not distinguish between spatial and temporal components. 
+
+Remark 2: Appropriate boundary conditions are needed to ensure the uniqueness of the solution to the system (1). We first focus on general solutions to (1) and postpone the discussion of boundary conditions to numerical experiments. 
+
+Example 1: Throughout the paper, we will use the follow-ing one-dimensional heat equation as a running example to illustrate the main results, 
+
+∂ϕ (x, t )
+
+∂t = ∂2ϕ(x, t )
+
+∂x 2 + u(x, t ). (3) In this example, P is a single polynomial and P (ξ) = iξ1 +
+
+ξ22 , where ξ = ( ξ1, ξ 2).The optimal control problem under consideration is to find a control input u that minimizes a cost functional J(ϕ, u ) of the following form subject to the system (1), 
+
+J(ϕ, u ) = 
+
+Z
+
+> Ω
+
+|ϕ(ξ) − ϕd(ξ)|2 + λ|u(ξ)|2dξ, (4) where ϕd is a given desired state and λ > 0 is a regularization parameter. When ϕd = 0 , this problem is a special case of the classical linear quadratic regulator (LQR) problem for PDEs [19]. For Ω = Ω x × Ωt, where Ωx = Rn−1 and Ωt = R+,explicit expressions for optimal control have been derived in [20]. The one-dimensional case where Ωx is a finite interval has been studied in [21]. However, explicit expressions for optimal control in a general (potentially bounded) domain Ω
+
+are not readily available. This is relevant for many practical applications where the spatial domain is typically bounded. In this paper, we propose to develop a neural operator for computing optimal control. Although we formulate the optimal control problem for linear PDEs, the neural operator can be applied to nonlinear PDEs as well. The key to our approach is to leverage an integral representation of state and optimal control in designing neural operator architecture. The integral representation is derived in the following section. III. INTEGRAL REPRESENTATION FOR OPTIMAL CONTROL To derive an integral representation for optimal control, we first present the first-order optimality conditions that are satisfied by any optimal control to (4) subject to (1). The optimality conditions consist of a coupled system of PDEs, whose solution can be represented in terms of integrals over the complex domain. Following the adjoint approach in [2, Section 1.6.3], we obtain the following result. 
+
+Lemma 1: Let u∗ be an optimal control for (4) subject to (1) and ϕ∗ be the corresponding optimal state. Then, there exists an adjoint state ψ∗ such that u∗ and ϕ∗ satisfy the following system of equations, 
+
+
+
+P (D)ϕ∗ = u∗,P (D)†ψ∗ = −(ϕ∗ − ϕd),u∗ = 1 
+
+> λ
+
+ψ∗,
+
+(5) where P (D)† denotes the adjoint of P (D).Substituting the last equation for u∗ into the first equation in (5), we observe that optimal control u∗ and state ϕ∗ can be represented as a solution to the following system of PDEs, 
+
+P (D) −II λP (D)†
+
+  ϕ∗
+
+u∗
+
+
+
+=
+
+ 0
+
+ϕd
+
+
+
+. (6) Note that (6) is a system of linear PDEs with constant coefficients and can be written in a similar form to (1). In the following, we aim to derive an integral representa-tion for optimal control u∗ and the corresponding state ϕ∗ in (6). We first present the existence of a solution to (1) in con-volution form. Then, we combine this convolution solution with the Ehrenpreis-Palamodov fundamental principle [12], [13] to derive an integral representation for optimal control. 
+
+Lemma 2 (Theorem 2.11 in [22]): Let Ω = Rn. Then, there exists a distribution ˜E such that P (D) ˜E = δ, where δ
+
+is the Dirac delta function. Moreover, the convolution of ˜E
+
+with the control input u, i.e., ˜ϕ = ˜E ∗ u, is a solution to (1). 
+
+Remark 3: FNO is inspired by the existence of a solution 
+
+˜ϕ in convolution form. The key ingredient in FNO is to learn the convolution operator in the Fourier space, which is equivalent to learning a multiplication parameter. The existence of ˜ϕ is for the case Ω = Rn. For a general open convex domain Ω ⊆ Rn, the Ehrenpreis-Palamodov fundamental principle states that any solution to (1) with u =0 can be represented as an integral of exponential functions multiplied by polynomials over structured subsets in Cn.
+
+Lemma 3 ( [12], [13], [23]): Let ¯ϕ denote a solution to the system (1) with u = 0 . Then, there exists zero sets of polynomials ¯Vj ⊂ Cn, j = 1 , . . . , s , polynomials ¯Qj,l , j =1, . . . , s, l = 1 , . . . , m j , and measures d¯μj,l whose support lies in ¯Vj , such that ¯ϕ can be represented as an integral of the following form, 
+
+¯ϕ =
+
+> s
+
+X
+
+> j=1
+> mj
+
+X
+
+> l=1
+
+Z
+
+> ¯Vj
+
+eik·ξ ¯Qj,l (ξ, k )d¯μj,l (k). (7) Moreover, the function eik·ξ ¯Qj,l (ξ, k ) satisfies the system of PDEs in (1) for each k ∈ ¯Vj .Applying Lemmas 2–3 to the coupled state-control system (6), we obtain the following result. 
+
+Theorem 1: Let u∗ denote an optimal control to (4) sub-ject to (1) and ϕ∗ denote the corresponding optimal state. Then, there exists a distribution E, zero sets of polynomials 
+
+Vj ⊂ Cn, j = 1 , . . . , s , functions Qj,l , j = 1 , . . . , s, l =1, . . . , m j , and measures dμ j,l whose support lies in Vj , such that u∗ and ϕ∗ can be represented in the following form, 
+
+ϕ∗
+
+u∗
+
+
+
+= E ∗
+
+ 0
+
+ϕd
+
+
+
++
+
+> s
+
+X
+
+> j=1
+> mj
+
+X
+
+> l=1
+
+Z
+
+> Vj
+
+eik·ξ Qj,l (ξ, k )dμ j,l (k). (8) Moreover, the function eik·ξ Qj,l (ξ, k ) satisfies the system of PDEs in (6) for each k ∈ V j .
+
+Proof: According to Lemma 2, there exists a distribu-tion E such that 
+
+P (D) −IλI P (D)†
+
+  
+
+E ∗
+
+ 0
+
+ϕd
+
+ 
+
+=
+
+ 0
+
+ϕd
+
+
+
+. (9) Combining (6) and (9), we have 
+
+P (D) −IλI P (D)†
+
+  ϕ∗
+
+u∗
+
+
+
+− E ∗
+
+ 0
+
+ϕd
+
+ 
+
+= 0 . (10) Applying Lemma 3 to (10), we obtain the integral represen-tation in (8). 
+
+Example 2: The proof of Lemma 3 is nonconstructive in obtaining the integral representation in (8). Following the construction in [20], we illustrate an example of this representation for the one-dimensional heat equation (3) with 
+
+Ωx = R, Ωt = R+, given the initial condition ϕ(x, 0) = 
+
+ϕ0(x). Let ϕd = 0 , λ = 1 . Following [20, Section V-B], the optimal state and control for the heat equation can be represented as follows, 
+
+ϕ∗(x, t ) = 
+
+Z
+
+> R
+
+eikxx−ω(kx)t ˆϕ0(kx) dk x
+
+2π ,u∗(x, t ) = 
+
+Z
+
+> R
+
+eikxx−ω(kx)t(k2 
+
+> x
+
+− ω(kx)) ˆϕ0(kx) dk x
+
+2π ,
+
+(11) where ω(kx) = pk4 
+
+> x
+
++ 1 and ˆϕ0(kx) is the Fourier trans-form of the initial condition ϕ0(x). Let k = kx kt
+
+. Then, the expression (11) can be represented in the form of (8) by letting s = 1 , m 1 = 1 , V1 = {k ∈ C2 : −k2 
+
+> t
+
++ k4 
+
+> x
+
++ 1 = 0 },
+
+Q1,1(x, t, k ) = 1 k2 
+
+> x
+
++ kt
+
+⊤, dμ 1,1(k) = 12π ˆϕ0(kx)dk if 
+
+kt ∈ R+, k x ∈ R and dμ 1,1(k) = 0 otherwise, where dk is the Lebesgue measure in R2.For the heat equation over R, it is sufficient to represent optimal control as an integral over R as in (11). Note that the integral representation in Theorem 1 is in general over the complex domain. For the heat equation over a finite interval, the real domain is not enough, and optimal control can be represented as an integral over well-constructed contours in 
+
+C of the form (8), see [21] for construction. IV. EXTENDED FOURIER NEURAL OPERATOR In this section, we first present the architecture of the Fourier Neural Operator (FNO). Then, we propose an ex-tended FNO architecture, called FNO ∠θ , that is inspired by the complex integral representation in (8). 
+
+A. Architecture of FNO 
+
+Let a, b denote an input and output function in Banach spaces A(Ω; Rna ), B(Ω; Rnb ), respectively. In this paper, we restrict our attention to the case where A and B are subspaces of L 2(Ω) ∩ C∞(Ω) , respectively. Following [5], [24], we consider a neural operator N (a) : A → B of the form 
+
+N (a) = Q ◦ L L ◦ L L−1 ◦ · · · ◦ L 1 ◦ R (a), (12) where L is a given length in N, R : A(Ω; Rna ) → B (Ω; Rnv )
+
+is a lifting operator with nv ≥ na, Q : B(Ω; Rnv ) →B(Ω; Rnb ) is a projection operator, and Ll : B(Ω; Rnv ) →B(Ω; Rnv ), l = 1 , . . . , L are nonlinear operator layers. The lifting and projection operators are typically linear transfor-mations implemented using multilayer perceptrons [24], and the nonlinear operator layer is of the form, 
+
+(Llvl)( ξ) = σ (Wlvl(ξ) + ( Klvl) ( ξ)) , (13) where vl ∈ B (Ω; Rnv ) is the output from the previous layer, 
+
+σ is a nonlinear activation function applied component-wise, 
+
+Wl ∈ Rnv ×nv is a weight matrix, and Kl : B(Ω; Rnv ) →B(Ω; Rnv ) is a bounded linear operator. Different types of neural operators vary by the choice of the linear operator Kl. To learn solution operators of PDEs, the linear operator Kl in FNO is defined as a convolution operator in the Fourier space motivated by the existence of a solution in convolution form by Lemma 2. Since the convolution operation can be transformed into multiplication in the Fourier space, the operator Kl in FNO is expressed as the inverse Fourier transform of a multiplication between two variables ˆKl(k) and ˆvl(k),
+
+(Klvl)( ξ) = 1(2 π)n
+
+Z
+
+> Rn
+
+eik·ξ ˆKl(k)ˆ vl(k)dk, (14) where ˆKl(k) ∈ Cnv ×nv is a neural operator parameter at frequency k, ˆvl(k) is the Fourier transform of vl.
+
+Remark 4: In practice, the value of input function a is typically only available at a finite number of discretized spatial locations in Ω. Also, the matrix ˆKl(k) is usually learned for a finite number of frequencies k in the Fourier space. Therefore, FNO is implemented in a discretized manner, where (14) is approximated as a finite sum. We refer readers to [5], [24] for more details on the discretized version of FNO and other practical implementation issues. In summary, the parameters to be learned in FNO include the weight matrices Wl and the Fourier space parameters 
+
+ˆKl(k) for all layers l = 1 , . . . , L . Despite the motivation from linear PDEs, FNO has been successfully applied to learning solution operators of all different types of nonlinear PDEs, with applications in various fields [5], [24]. This is partially due to the expressiveness of a neural operator architecture in (12), especially when the number of layers L
+
+(length) and the lifted dimension nv (width) are sufficiently large. In the following subsection, we introduce an extended FNO architecture, called FNO ∠θ , which will be shown to be more expressive than FNO when nv is close to the input dimension na in numerical experiments. 
+
+B. The Extended FNO 
+
+The key to the design of FNO is the convolution operator 
+
+Kl in (14) represented in the Fourier space, inspired by the existence of a solution in convolution form, see Lemma 2. However, not every solution to (1) can be represented in convolution form, which could potentially limit the expres-siveness of FNO. In Lemma 3 and Theorem 1, we show that any state and optimal control of (1) can be represented in a form involving a complex integral, see (7)–(8). Comparing (8) to (14), the integrands all contain the leading exponential term eik·ξ . This motivates us to design an extended FNO architecture, where the linear operator Kl in (13) is given by 
+
+(Kθl vl)( ξ) = 1(2 π)n
+
+Z
+
+> Rn
+
+eiz(k,θ l)·ξ ˆKl(k)ˆ vl(k)dk, (15) where θl = (θl, 1, . . . , θ l,n ), z j (k, θ l) = kj eiθl,j , j =1, . . . , n . In other words, the original frequency variable k
+
+is the modulus of the new frequency variable z, and we introduce a new parameter θl to be learned as the phase of the complex variable z. When the phase θl is zero, Kθl in (15) reduces to Kl in (14). In the following section, we present numerical experiments to show that introducing the new parameter θ greatly im-proves the expressiveness of the neural operator, especially when nv = na. Note that dimension of the new parameter 
+
+θ is equal to the number of frequency variables k used to evaluate the integral in (15), and is independent of the lifted dimension nv unlike the other parameters ˆKl(k) and ˆvl(k).V. N UMERICAL EXPERIMENTS 
+
+In this section, we present numerical results to compare the performance of FNO and FNO ∠θ in learning state and optimal control for the Burgers’ equation. Consider the domain Ω = Ω x × Ωt where Ωx = [0 , 1] and Ωt = [0 , 0.5] .The Burgers’ equation can be written in the form, 
+
+∂ϕ (x, t )
+
+∂t + ϕ(x, t ) ∂ϕ (x, t )
+
+∂x = ν ∂2ϕ(x, t )
+
+∂x 2 + u(x, t ), (16) where ν is the viscosity coefficient. We choose a small value of ν = 0 .05 that generates nonsmooth-like shock wave behavior to increase complexity for training neural operators. We impose the following initial and boundary conditions for (16) to ensure the uniqueness of the solution, 
+
+ϕ(x, 0) = ϕ0(x), x ∈ [0 , 1] . (17) 
+
+ϕ(0 , t ) = g(t), ϕ (1 , t ) = h(t), t ∈ [0 , 0.5] , (18) where ϕ0, g, h are given smooth functions. The Burgers’ equation (16) is a nonlinear PDE that has been widely used as a benchmark problem for testing the performance of neural operators [5], [6]. Note that (16) cannot be written in the form of (1) due to the nonlinearity. Therefore, the integral representation in Theorem 1 does not directly apply to (16). However, the expressiviness of the neural operator architecture in (12) allows us to learn ap-proximated representations for solution and optimal control operators of (16) using FNO and FNO ∠θ .
+
+A. Learning state operator 
+
+First, we train neural operators of the form (12) to learn the state operator of the Burgers’ equation, which takes the boundary conditions g, h as input a and gives the state ϕ
+
+as output b. We follow a supervised learning approach as in [5], where we minimize the mean squared error (MSE) between the predicted state and the true state over a training dataset. To generate the training dataset, we discretize the domain Ω with the grid size nx = 24 and nt = 30 for space and time domains Ωx and Ωt, respectively. We fix the initial condition as ϕ0(x) = sin( πx ) and randomly sample the boundary conditions g(t), h (t) from a Gaussian random field [25] with the length scale ℓ = 0.15 and standard deviation σ = 1. Then, we solve the Burgers’ equation (16) with the sampled boundary conditions using the finite difference method following [5] to obtain the corresponding state ϕ(x, t ) in Ω, which serves as the ground truth for (a) Learning state operator (b) Learning optimal control operator 
+
+Fig. 1: Comparison of relative mean squared errors (MSE) over all training data during the training phase of FNO and FNO ∠θ for the Burgers’ equation (16) . FNO ∠θ achieves order of magnitude improvement over FNO. 
+
+training. The training dataset consists of 50 state trajectories under different sampled boundary conditions. For both FNO and FNO ∠θ , we use the Gaussian Error Linear Unit (GELU) activation function for σ and batch normalization following [24]. The number of Fourier layers is set to L = 4 , according to the recommendation in [24, Section 4.3]. The lifted dimension is set to nv = na. The lifted dimension nv determines the expressive capacity of the neural operator. Increasing nv allows FNO to represent more complex relations in the data, but comes at the cost of increased computational complexity and memory usage [24]. In our experiments, we choose nv = na to evaluate how much performance improvement FNO ∠θ can achieve when FNO is not performing well. To implement the operators (14) and (15), we discretize the Fourier space and learn the parameters ˆKl(k) and θl(k) for a finite number of frequencies km, m = −M, −M +1 , . . . , M .Then, the integrals in (14) and (15) are approximated as sums over the discretized frequencies. To be consistent with [5], we choose the frequency km ∈ Z, which leads to the form of discrete Fourier series. In practice, a large value of 
+
+M typically introduces more errors during the training [24, Section 4.2], and we set M = 4 in our experiments, i.e., 
+
+km = m, m = −4, −3, . . . , 4.   
+
+> (a) FNO (b) FNO ∠θ
+
+Fig. 2: Learning state operator: comparison of the ab-solute error between the neural operator output and the training data for a particular boundary condition. The er-ror for FNO is concentrated on the boundaries, whereas FNO ∠θ generates more accurate boundary values. 
+
+Figure 1a compares the relative mean squared errors (MSE) during the training phase of FNO and FNO ∠θ for learning state operator. The values of relative MSE after training are 0.039 and 0.0089 for FNO and FNO ∠θ , re-spectively, showing an order of magnitude improvement with the phase parameter. To gain further insights on the improvement, Figure 2 shows the absolute error between the outputs from trained neural operators and the training data for a particular boundary condition. It can be seen from Figure 2a that most of the errors for FNO are concentrated on the four boundaries x = 0, x = 1, t = 0, t = 0.5.This is because discretizing the Fourier transform (14) with integer frequency km results in a Fourier series, and the Fourier series generates periodic boundary values that are inconsistent with the input boundary condition. It is possible for FNO to approximate non-periodic boundary conditions using the weight matrix Wl in the operator layer (13) [5]; however, a large value of the lifted dimension nv is needed to increase the expressivity of the neural operator. In contrast, Figure 2b shows that FNO ∠θ generates boundary values that are more consistent with the input boundary conditions than FNO. This is because extending the frequency k in (14) to complex variable z in (15) allows representing a richer class of PDE solutions in potentially bounded domains.    
+
+> (a) FNO (b) FNO ∠θ
+
+Fig. 3: Learning optimal control operator: comparison of the absolute error between the neural operator output and the training data for a particular boundary condition. The error for FNO is scattered across the domain, whereas the error for FNO ∠θ is mostly smaller. B. Learning optimal control operator 
+
+In addition to learning state operator, we also compare the performance of FNO and FNO ∠θ for learning optimal control operator of the burgers’ equation (16). Following the same setting in Section V-A, we generate the training dataset for learning operators that map boundary conditions to optimal control. The boundary conditions are sampled from the same Gaussian random field in Section V-A, and the corresponding optimal control is computed using the adjoint method in [26]. Figure 1b compares the relative MSE during the training phase of FNO and FNO ∠θ for learning optimal control operator. The values of relative MSE after training are 0.098 and 0.042 for FNO and FNO ∠θ , respectively. Figure 3 shows the absolute error between the trained operator output and the training data for a particular boundary condition. As shown in Figure 3a, the error is scattered across the space-time domain Ω, meaning that FNO is not able to capture the complex relation between the input boundary condition and the corresponding optimal control. For the FNO ∠θ , the absolute error is largely reduced for most part of the domain except for the top area close to the boundary x = 1 . Further investigation is needed to analyze the cause of this error. VI. CONCLUSIONS AND FUTURE WORKS 
+
+A. Conclusions 
+
+We analyze the representations for state and optimal con-trol of systems governed by linear partial differential equa-tions with constant coefficients. For this class of distributed parameter systems, we show that state and optimal control can be represented in terms of integrals over the complex domain involving the same exponential term as in the inverse Fourier transform. Therefore, such representations can be regarded as extending the Fourier frequency space from real to complex domains. We use this insight to redesign the convolution operator in FNO, originally represented using the inverse Fourier transform. We introduce a new complex variable in the inverse transform, where the modulus is the original real frequency, and the phase is a new neural operator parameter to be learned. Numerical experiments for learning state and optimal control operators of the non-linear burgers’ equation illustrate that order of magnitude improvement for the training error can be achieved by introducing the phase parameter. Higher consistency between output boundary values and the given non-periodic boundary conditions is also observed comparing FNO ∠θ to FNO. 
+
+B. Future Works 
+
+So far, we have only evaluated the performance of FNO ∠θ
+
+for a single one-dimensional PDE. We plan to test the performance on extensive benchmarks (see for example [6]) for various types of PDEs. Beyond supervised settings, it would also be interesting to investigate unsupervised training schemes since optimal control data are usually not available. REFERENCES [1] J.-L. Lions, Optimal Control of Systems Governed by Partial Differ-ential Equations . Springer Berlin, Heidelberg, 1971. [2] M. Hinze, R. Pinnau, M. Ulbrich, and S. Ulbrich, Optimization with PDE constraints . Springer Science & Business Media, 2008. [3] A. E. Bryson and Y.-C. Ho, Applied optimal control: optimization, estimation and control . Taylor & Francis Group, 1975. [4] N. Kovachki, Z. Li, B. Liu, K. Azizzadenesheli, K. Bhattacharya, A. Stuart, and A. Anandkumar, “Neural operator: Learning maps between function spaces with applications to PDEs,” Journal of Machine Learning Research , vol. 24, no. 89, pp. 1–97, 2023. [5] Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar, “Fourier neural operator for parametric partial differential equations,” arXiv preprint arXiv:2010.08895 , 2020. [6] M. Takamoto, T. Praditia, R. Leiteritz, D. MacKinlay, F. Alesiani, D. Pflüger, and M. Niepert, “PDEbench: An extensive benchmark for scientific machine learning,” Advances in neural information processing systems , vol. 35, pp. 1596–1611, 2022. [7] Y. Song, X. Yuan, H. Yue, and T. Zeng, “Learning to control: The iUzawa-Net for nonsmooth optimal control of linear PDEs,” arXiv preprint arXiv:2602.12273 , 2026. [8] L. Bhan, Y. Shi, and M. Krstic, “Neural operators for bypassing gain and control computations in PDE backstepping,” IEEE Transactions on Automatic Control , vol. 69, no. 8, pp. 5310–5325, 2023. [9] L. Ehrenpreis, “Solution of some problems of division: Part i. division by a polynomial of derivation,” American Journal of Mathematics ,vol. 76, no. 4, pp. 883–903, 1954. [10] B. Malgrange, “Existence et approximation des solutions des équations aux dérivées partielles et des équations de convolution,” in Annales de l’institut Fourier , vol. 6, 1956, pp. 271–355. [11] A. Ganeshram, H. Maust, V. Duruisseaux, Z. Li, Y. Wang, D. Lei-bovici, O. Bruno, T. Hou, and A. Anandkumar, “FC-PINO: High precision physics-informed neural operators via Fourier continuation,” 
+
+arXiv preprint arXiv:2211.15960 , 2022. [12] L. Ehrenpreis, Fourier analysis in several complex variables . New York: Wiley-Interscience Publ., 1970. [13] V. P. Palamodov, Linear differential operators with constant coeffi-cients . Springer, 1970, vol. 16. [14] A. S. Fokas, “A unified transform method for solving linear and certain nonlinear pdes,” Proceedings of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences , vol. 453, no. 1962, pp. 1411–1443, 1997. [15] ——, A unified approach to boundary value problems . SIAM, 2008. [16] B. Deconinck, T. Trogdon, and V. Vasan, “The method of fokas for solving linear partial differential equations,” SIAM Review , vol. 56, no. 1, pp. 159–186, 2014. [17] N. Kovachki, S. Lanthaler, and S. Mishra, “On universal approximation and error bounds for Fourier neural operators,” Journal of Machine Learning Research , vol. 22, no. 290, pp. 1–76, 2021. [18] F. Treves, “Ehrenpreis and the fundamental principle,” in From Fourier Analysis and Number Theory to Radon Transforms and Geometry: In Memory of Leon Ehrenpreis . Springer, 2012, pp. 491–507. [19] R. F. Curtain and H. Zwart, An introduction to infinite-dimensional linear systems theory . Springer Science & Business Media, 1995. [20] B. Bamieh, F. Paganini, and M. A. Dahleh, “Distributed control of spatially invariant systems,” IEEE Transactions on Automatic Control ,vol. 47, no. 7, pp. 1091–1107, 2002. [21] Z. Li, A. S. Fokas, and K. Savla, “A complex spatial frequency approach to optimal control of finite-extent linear evolution systems,” 
+
+Conditionally accepted by IEEE Transactions on Automatic Control ,2026. [22] E. M. Stein and R. Shakarchi, Functional analysis: introduction to further topics in analysis . Princeton University Press, 2011, vol. 4. [23] M. Harkonen, M. Lange-Hegermann, and B. Raita, “Gaussian process priors for systems of linear partial differential equations with con-stant coefficients,” in International conference on machine learning .PMLR, 2023, pp. 12 587–12 615. [24] V. Duruisseaux, J. Kossaifi, and A. Anandkumar, “Fourier neu-ral operators explained: A practical perspective,” arXiv preprint arXiv:2512.01421 , 2025. [25] C. E. Rasmussen, Gaussian Processes in Machine Learning . Berlin, Heidelberg: Springer Berlin Heidelberg, 2004, pp. 63–71. [Online]. Available: https://doi.org/10.1007/978-3-540-28650-9_4 [26] A. Fikl, V. Le Chenadec, T. Sayadi, and P. Schmid, “A comprehensive study of adjoint-based optimization of non-linear systems with appli-cation to burgers’ equation,” in 46th AIAA Fluid Dynamics Conference ,2016, p. 3805.
