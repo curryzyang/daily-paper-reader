@@ -1,0 +1,814 @@
+Title: Impulse-to-Peak-Output Norm Optimal State-Feedback Control of Linear PDEs
+
+URL Source: https://arxiv.org/pdf/2604.03399v1
+
+Published Time: Tue, 07 Apr 2026 00:07:40 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Impulse-to-Peak-Output Norm Optimal State-Feedback Control of Linear PDEs 
+
+Tristan Thomas 1, Sachin Shivakumar 2, and Javad Mohammadpour Velni 1
+
+Abstract — Impulse-to-peak response (I2P) analysis for state-space ordinary differential equation (ODE) systems is a well-studied classical problem. However, the techniques employed for I2P optimal control of ODEs have not been extended to partial differential equation (PDE) systems due to the lack of a universal transfer function and state-space representation. Re-cently, however, partial integral equation (PIE) representation was proposed as the desired state-space representation of a PDE, and Lyapunov stability theory was used to solve various control problems, such as stability and optimal H∞ control. In this work, we utilize this PIE framework, and associated Lyapunov techniques, to formulate the I2P response analysis problem as a solvable convex optimization and obtain provable bounds for the I2P-norm of linear PDEs. Moreover, by establishing strong duality between primal and dual formulations of the optimization problem, we develop a constructive method for I2P optimal state-feedback control of PDEs and demonstrate the effectiveness of the method on various examples. 
+
+I. I NTRODUCTION 
+
+Optimal control of partial differential equations (PDEs) is a well-studied topic [1]–[3] owing to their ubiquitous use in a range of practical applications. However, metrics used therein cannot certify safety-critical transient behaviors, e.g., instantaneous spikes in current or temperatures that often lead to failure/degradation in Lithium-ion batteries are not captured by H∞/LQR metrics [4]. Hence, one often uses adaptive controls [5], [6] to enforce such transient specifications. Although robust and widely used in ordinary differential equation (ODE) systems, adaptive methods are not optimal and often require forward simulation of the sys-tem dynamics—a computationally expensive step for PDEs. Since the goal is to design a computationally inexpensive control that can certify transient behavior, unlike H∞/LQR-optimal control, impulse-to-peak (I2P) norm optimal con-trol is a natural candidate. Hence, we aim to develop a computational method to design I2P optimal state-feedback controllers for a large class of PDEs. Due to simplicity and maturity of tools available for ODE optimal control, the standard approach for I2P optimal control of PDEs often involves approximating a PDE by an ODE (early-lumping ) and then using ODE methods, such as [7], to design an I2P-optimal control. However,  
+
+> 1Tristan Thomas {
+
+tthoma7@clemson.edu } and Javad Moham-madpour Velni {javadm@clemson.edu } are with the Department of Mechanical Engineering at Clemson University.  
+
+> 2Sachin Shivakumar {
+
+sshivakumar@lanl.gov } is with the Cen-ter for Nonlinear Studies, Los Alamos National Laboratory. This work is partly supported by the LDRD program (20250614CR-NLS) of Los Alamos National Laboratory. LA-UR-26-22329 Tristan Thomas is supported by the U.S. Department of Education through GAANN program P200A220075. 
+
+approximation methods often introduce truncation errors— resulting in spillover effects and a lack of closed-loop sta-bility or performance bounds [8]. Late-lumping approaches, on the other hand, use variational calculus, Hamilton-Jacobi-Bellman (HJB) equation, or a Riccati PDE and can pro-vide provable performance [9], but the controllers must be obtained by solving nonlinear PDEs with unbounded input operators, which cannot be solved exactly in all but the very simplest systems. While [10] developed Lyapunov characterization of this problem, and sidesteps the above limitations, it does not provide a constructive method to find controllers. Thus, existing approaches typically lack provable performance, generality, or both. Naturally, to develop a general algorithm that computes controllers with provable performance, we must first separate the method from the model, e.g., linear matrix inequality (LMI) methods for ODE analysis/control. Unfortunately, a similar method is not available for PDEs due to the lack of a universal state-space representation and presence of unbounded, non-algebraic operators. To overcome this, we use the partial integral equation (PIE) representation [11]— an equivalent and universal state-space-like representation for linear PDEs parameterized by bounded integral operators called partial integral (PI) operators. Moreover, like matrices, PI operators are closed under composition, addition, and ad-joint. Thus, unlike with PDEs, various LMI-style conditions with PI operator variables can analogously be defined and 
+
+solved for PIEs. This framework of using PIEs to represent PDEs, posing PDE optimal control problem as an equivalent PIE optimal control problem, and using associated computational machin-ery to solve the PIE control problems has been successfully demonstrated for H∞-optimal control problems of PDEs [12]. In this work, we will leverage the universality and computational benefits afforded by the PIE framework to solve I2P-optimal control problem. In that regard, the key contributions of this work are: 1) characterizing the I2P norm of a PDE in terms of its PIE representation, 2) proving equivalence of the I2P-norm for a PIE and its dual, 3) deriving solvable convex optimization formulations of the I2P-norm upper bounding and optimal control problem for linear PDEs using the PIE framework. The resulting analysis and synthesis conditions are computationally implemented using PIETOOLS [13] and has been demonstrated on various numerical examples. 
+
+> arXiv:2604.03399v1 [math.OC] 3 Apr 2026
+
+II. N OTATION AND PRELIMINARIES 
+
+We will use lowercase font for functions of time and space, e.g., x(t) and x(t, s ), and uppercase calligraphic font A for operators on functions. Given A, operator on a Hilbert space, we denote the adjoint operator w.r.t. canonical inner-product by A∗, i.e., 〈x, Ay〉 = 〈A ∗x, y 〉 for all x, y . Partial deriva-tives w.r.t. time and space are denoted by ∂t and ∂s. L2[X]
+
+denotes the space of Lebesgue square-integrable functions on 
+
+X and is equipped with the canonical inner-product 〈· , ·〉 X .For functions on R+, we define the supremum (peak) norm as ‖x‖∞ = sup t≥0 ‖x(t)‖ and associated Hilbert space as 
+
+L∞[R+]. Lastly, we abbreviate Rm × Ln 
+
+> 2
+
+[X] as RLm,n  
+
+> 2
+
+[X].Next, we introduce the Partial Integral (PI) operators, an alternative representation of PDE systems called Partial Integral Equations (PIEs), and convex optimization problems involving PI inequalities called Linear PI Inequalities (LPIs). Definitions in subsections below are similar to those given in [12]. 
+
+A. The Class of Partial Integral Operators 
+
+PI operators are used for the parameterization of PIEs, just as matrices are used for the parameterization of linear ODEs. 
+
+Definition 1. We say P : RLm1,n 1 
+
+> 2
+
+→ RLm2,n 2 
+
+> 2
+
+is a 4-PI operator if it can be parameterized as 
+
+(
+
+P
+
+[x
+
+x
+
+]) 
+
+(s) := 
+
+[P x + ∫ ba Q1(θ)x(θ)dθ Q2(s) + Rx(s)
+
+]
+
+,
+
+where 
+
+(Rx)( s)= R0(s)x(s)+ 
+
+∫ sa
+
+R1(s, θ )x(θ)dθ +
+
+∫ bs
+
+R2(s, θ )x(θ)dθ 
+
+for some matrix P and polynomials Q1, Q 2, R 0, R 1, and R2.Given the parameters P, Q i, R i, we denote 4-PI operators in the compact form P =
+
+[ P Q1
+
+Q2 {Ri}
+
+]
+
+. Additionally, we denote the class of PI operators as Π4.
+
+In the special case (m1, n 1) = ( m2, n 2), Π4 forms a ∗-subalgebra [11]. Notably, PI operators are always bounded due to the restriction on their kernels. 
+
+B. The Class of Partial Integral Equations 
+
+Next, we examine the class of dynamical systems that are parametrized by these PI operators. 
+
+Definition 2. Given PI operators {T , A, B, C, D} ⊂ Π4, we say x(t, ·) ∈ RLm,n  
+
+> 2
+
+, z : R+ → Rnz are governed by a 
+
+Partial Integral Equation (PIE) if {x, z } satisfies 
+
+∂t (T x) ( t) = Ax(t)+ Bw(t), z(t) = Cx(t)+ Dw(t), (1) 
+
+for some initial conditions T x(0) and w ∈ Lnw 
+
+> 2
+
+[R+].
+
+Since the PI operators are linear, bounded, and form a *-subalgebra (similar to matrices in finite dimensions), they are a natural extension of state-space ODE representation to infinite-dimensional spaces. In fact, various linear PDE and time-delay systems can be described using the form Eq. (1). For example, consider a transport equation, ∂tv(t, s ) = 
+
+∂sv(t, s ) with boundary condition v(t, 0) = 0 . By defining 
+
+x(t, s ) = ∂sv(t, s ) and using the Fundamental Theorem of Calculus, we get ∫ s 
+
+> 0
+
+x(t, ζ ) dζ = v(t, s ) − v(t, 0) , which reduces to v(t, s ) = ∫ s 
+
+> 0
+
+x(t, ζ ) dζ . This is of the form 
+
+∂t(T x)( t) = Ax(t) where T x = ∫ s 
+
+> 0
+
+x(t, ζ ) dζ , and A = 1 .In fact, a large class of PDEs admit such a representation [11], however, for brevity, we illustrate a smaller class in the following subsection. 
+
+C. The Class of Partial Differential Equations 
+
+Having presented a general class of PIEs, we next present the class of PDEs that admit such a representation. For illustration, we consider a class of 2nd -order PDEs in a single spatial variable on a compact domain, s ∈ [a, b ]. Given a PDE state x = [ x1, x2, x3]⊤, we can represent such PDEs as 
+
+∂tx(s, t ) = Apx(s, t ) + B21 (s)w(t) + B22 (s)u(t),z(t) = Cx(t) + D11 w(t) + D12 u(t),
+
+x(s, t ) = 
+
+x1(s, t )
+
+x2(s, t )
+
+x3(s, t )
+
+ , xc(s, t ) = 
+
+ x2(s, t )
+
+x3(s, t )
+
+∂sx3(s, t )
+
+ , (2) where the operators Ap and C are defined as 
+
+(Apx)( s, t ):= A0(s)x(s, t )+ A1(s)
+
+[∂sx2(s, t )
+
+∂sx3(s, t )
+
+]
+
++A2(s)∂2 
+
+> s
+
+x3(s, t ),
+
+(Cx)( t) := C10 
+
+[xc(a, t )
+
+xc(b, t )
+
+]
+
++
+
+∫ ba
+
+Ca(s)x(s, t )ds 
+
++
+
+∫ ba
+
+Cb(s)
+
+[∂sx2(s, t )
+
+∂sx3(s, t )
+
+]
+
+ds. 
+
+For all t ≥ 0, x(·, t ) lies in the generator of Ap, defined as: 
+
+D(Ap) := {x(s, t ) ∈ Ln1 
+
+> 2
+
+[a, b ] × W n2
+
+> 2,1
+
+[a, b ] × W n3
+
+> 2,2
+
+[a, b ] : 
+
+B
+
+[xc(a)
+
+xc(b)
+
+]
+
+= 0 
+
+}
+
+,
+
+where B defines boundary conditions on the x and W n 
+
+> 2,p
+
+is the canonical Sobolev space, i.e, x ∈ W n 
+
+> 2,p
+
+if ∂ks x ∈ Ln
+
+> 2
+
+for all k ≤ p. If the conditions of PIE-compatibility (see [11, Sec. IV-A]) are satisfied, any PDE parameterized in the above form can be equivalently represented as a PIE of the form (1). 
+
+D. Solving LPIs and PI Operator Inversion 
+
+Any PIE-compatible PDE of the form (2) can be rep-resented as PIEs using explicit formulae in [11] (or by using the open-source PIETOOLS toolbox [13]). Thus, we implicitly assume that the PDE is PIE compatible and the PIE parameters are obtained using available tools. In addition, the results herein are presented as linear PI inequality (LPI) optimization problems, which have the form 
+
+min 
+
+> P∈ Π4
+
+f (P), s.t., gi(P) = 0 , h j (P) ≤ 0, (3) where f , gi, and hj are linear functionals involving PI decision variables P. For example, given a PIE of the form ∂t(T x)( t) = Ax(t), Lyapunov stability test can be formulated as 
+
+P ≻ 0, T ∗PA + A∗PT  0.Problems of the above form are solved computationally by parameterizing positive operators using positive matrices. Specifically, one can parameterize P = Z∗P Z using matrix 
+
+P > 0 and constrain 
+
+T ∗Z∗P ZA + A∗Z∗P ZT = −Z ∗ 
+
+> d
+
+QZd,
+
+where Z and Zd are PI operator bases and matrix Q ≥
+
+0. Since, PI operator kernels are polynomials, the above constraint is merely a polynomial equality constraint, and thus, is equivalent to constraints on coefficients of polyno-mials stored in P and Q. Thus, infinite-dimensional LPI problem is transformed to finite-dimensional LMI problem and can be solved using interior-point methods. Details of the implementation and procedure of solving LPI constrained problems can be found in [13]. Lastly, controller synthesis problems often require inversion of PI operators, which can be calculated numerically using a variation of Gohberg’s inversion formulae for integral operators (see [12, Sec. VII]). The workflow of converting PDE to PIE, setting up and solving LPI optimization problem, and reconstruction of controller gains will be performed using PIETOOLS. III. D UALITY IN PIE S
+
+Every PIE-compatible PDE has an equivalent PIE repre-sentation, i.e., well-posedness, stability, and L2-gain bound of the PDE implies the same for its PIE representation. However, the properties of the dual system are more critical to controller synthesis problems as will be elucidated below. We first note that, unlike the dual of a PDE, the dual of a PIE is readily available and is defined below. 
+
+Definition 3. Given a PIE Eq. (1) defined by PI operators 
+
+{T , A, B, C, D} ⊂ Π4, we say ¯x : R+ → RLm,n  
+
+> 2
+
+, ¯z : R+ →
+
+Rnw are governed by the dual PIE , if {¯x, ¯z} satisfies 
+
+∂t(T ∗ ¯x)( t) = A∗ ¯x(t)+ C∗ ¯w(t), ¯z(t) = B∗ ¯x(t)+ D∗ ¯w(t),
+
+(4) 
+
+for some initial conditions T ∗ ¯x(0) and ¯w ∈ Lnz 
+
+> 2
+
+[R+].
+
+Since the PI parameters of the primal system, Eq. (1), lie in a *-subalgebra, one can see that the dual system, Eq. (4), is also parameterized by PI parameters and admits the same form. Moreover, one can show that a PIE and its dual possess the same stability property and L2-gain bound [12]— an attribute of PIE systems referred to as the duality in PIEs .Both the structural and behavioral equivalence between the primal and dual play a crucial role in the controller synthesis problems. The structural equivalence allows any computa-tional method developed for the primal to be applicable for the dual. The behavioral equivalence, on the other hand, allows one to indirectly establish properties of the primal by proving properties of its dual. For example, the state-feedback controller synthesis for primal is difficult since the Lyapunov stability conditions for the closed-loop system are bilinear (non-convex) in Lyapunov function parameter ( P)and controller gains ( K): 
+
+P ≻ 0, (A + BK )∗PT + T ∗P(A + BK )  0.
+
+However, since the dual is defined by the same class of parameters and inherits the same stability properties, one can instead find a stabilizing controller by examining Lyapunov conditions for the dual of the closed-loop system, which is a convex problem in decision variables ( P, Z = KP ): 
+
+P ≻ 0, (AP + BZ )T ∗ + T (PA ∗ + Z∗B∗)  0.
+
+By solving the dual constraints, one can find the controller gains K = ZP −1 and the associated Lyapunov function parameter P that proves the closed-loop stability of the primal system. Our objective in this paper is to extend this method for impulse-to-peak norm optimal controller synthesis, and this requires:  
+
+> •
+
+finding optimization-based characterization of the impulse-to-peak norm of a PIE Eq. (1).  
+
+> •
+
+showing that impulse-to-peak norm of the primal Eq. (1) and its dual Eq. (4) are equal. 
+
+A. Impulse-to-Peak Norm Calculation of a PIE 
+
+First, we will formally define the impulse-to-peak norm of a PIE and establish the equivalence of this system norm in primal and dual PIEs. 
+
+Definition 4. Given {T , A, B, C} , we use G(T , A, B, C) to denote a PIE with impulse inputs of the form 
+
+∂t(T x)( t) = Ax(t)+ Bw(t), T x(0) = 0 , z (t) = Cx(t),
+
+(5) 
+
+where x(t) ∈ RLm,n  
+
+> 2
+
+[a, b ] is the state, w(t) is an impulsive disturbance of the form w(t) = δ(t)v with v ∈ Rnw , and 
+
+z(t) ∈ Rnz is the output. 
+
+Then, we can define the impulse-to-peak norm using an auxiliary system where impulsive disturbance is replaced by an initial condition .
+
+Definition 5. Given {T , A, B, C} , define the auxiliary PIE as 
+
+∂t(T x(t)) = Ax(t), T x(0) = Bv, z(t) = Cx(t), (6) 
+
+where v ∈ Rnw . Then, the impulse-to-peak norm of system in Eq. (5) is given by 
+
+‖G(T , A, B, C)‖ip := sup   
+
+> z, xsatisfy (6)
+> ‖v‖=1
+
+‖z‖L∞ .
+
+In simpler words, impulse response of Eq. (5) is equal to initial condition response of Eq. (6). This equivalence can be established as follows: Let wn(t) ∈ L1[R+] with wn(t) →
+
+vδ (t) (converges in a distributional sense). Assuming well-posedness (and by continuity of the input to state map [14, Lemma 3.1.5]), we conclude that the sequence of weak solutions of (5) converges to the weak solution of (6). Similar to Def. 5, we can define an auxiliary PIE for the dual of Eq. (5) as 
+
+∂t(T ∗ ¯x)( t) = A∗ ¯x(t), T ∗ ¯x(0) = C∗ ¯v, ¯z(t) = B∗ ¯x(t),
+
+(7) and corresponding I2P norm of G(T ∗, A∗, C∗, B∗) as 
+
+‖G(T ∗, A∗, C∗, B∗)‖ip := sup  
+
+> ¯z, ¯xsatisfy (7)
+> ‖¯v‖=1
+
+‖¯z‖L∞ .B. Equivalence in Impulse-to-peak Norm 
+
+Since impulse response of a PIE and initial condition response of its auxiliary system have equivalent I2P-norms, we must now establish that initial condition responses of Eq. (6) and Eq. (7) are equivalent—implying impulse response of G(T , A, B, C) and G(T ∗, A∗, C∗, B∗) are equivalent. 
+
+Theorem 1. Given T , A, B, C ∈ Π4, if the PIE Eq. (6) and its dual have well-posed solutions, then 
+
+‖G(T , A, B, C)‖ip = ‖G(T ∗, A∗, C∗, B∗)‖ip .
+
+Proof. Suppose {x, z } satisfy the PIE, Eq. (6), and {¯x, ¯z}
+
+satisfy the dual PIE, Eq. (7). As in [12], we can apply integration by parts to get 
+
+I1 := 
+
+∫ t
+
+> 0
+
+〈¯x(t − s), ∂ s(T x(s)) 〉RL2 ds 
+
+= 〈¯x(0) , T x(t)〉RL2 − 〈 ¯x(t), T x(0) 〉RL2
+
+−
+
+∫ t
+
+> 0
+
+〈∂s ¯x(t − s), T x(s)〉RL2 ds 
+
+︸ ︷︷ ︸
+
+> := I2
+
+.
+
+Moreover, from the dynamics Eq. (6) and Eq. (7), we have 
+
+I1 =
+
+∫ t
+
+> 0
+
+〈¯x(t − s), Ax(s)〉 ds =
+
+∫ t
+
+> 0
+
+〈A ∗ ¯x(t − s), x(s)〉 dθ 
+
+= −
+
+∫ t
+
+> 0
+
+〈∂s(T ∗ ¯x)( t − s), x(s)〉 dθ = I2,
+
+if ¯x is differentiable. Therefore, 〈T ∗ ¯x(0) , x(t)〉RL2 =
+
+〈¯x(t), T x(0) 〉RL2 . Next, substituting the initial conditions 
+
+T ∗ ¯x(0) = C∗ ¯v and T x(0) = Bv, we get 
+
+〈C ∗ ¯v, x(t)〉RL2 = 〈¯x(t), Bv〉RL2 .
+
+This implies, for any t ≥ 0,
+
+〈¯v, z (t)〉R = 〈¯v, Cx(t)〉R = 〈C ∗ ¯v, x(t)〉RL2
+
+= 〈¯x(t), Bv〉RL2 = 〈B ∗ ¯x(t), v 〉R = 〈¯z(t), v 〉R .
+
+For clarity, let us make explicit the dependence of z and 
+
+¯z on v and ¯v, respectively, to rewrite the above identity as 
+
+〈¯v, z (t; v)〉R = 〈v, ¯z(t; ¯ v)〉R.By definition of the vector norm, we have 
+
+sup 
+
+> ‖¯v‖=1
+
+‖¯z(t; ¯ v)‖R = sup  
+
+> ‖¯v‖2=1 ,‖v‖=1
+
+〈v, ¯z(t; ¯ v)〉R
+
+= sup  
+
+> ‖¯v‖2=1 ,‖v‖=1
+
+〈¯v, z (t; v)〉R= sup 
+
+> ‖v‖=1
+
+‖z(t; v)‖R .
+
+Since this holds for any t ∈ R+, we have 
+
+sup 
+
+> ‖v‖=1
+
+‖z‖∞ = sup 
+
+> ‖v‖=1
+
+(
+
+sup 
+
+> t≥0
+
+‖z(t; v)‖R
+
+)
+
+= sup 
+
+> t≥0
+
+(
+
+sup 
+
+> ‖v‖=1
+
+‖z(t; v)‖R
+
+)
+
+= sup 
+
+> t≥0
+
+(
+
+sup 
+
+> ‖¯v‖=1
+
+‖¯z(t; ¯ v)‖R
+
+)
+
+= sup 
+
+> ‖¯v‖=1
+
+(
+
+sup 
+
+> t≥0
+
+‖¯z(t; ¯ v)‖R
+
+)
+
+= sup 
+
+> ‖¯v‖=1
+
+‖¯z‖∞ .
+
+IV. L INEAR PI I NEQUALITY FORMULATIONS 
+
+Having established the duality result for the impulse-to-peak norm of PIEs, we will next present a convex opti-mization based characterization of the norm using Lyapunov functions. 
+
+Theorem 2. Given PI operators T , A, B, C, let {x, z } satisfy a PIE of the form Eq. (6) . Suppose there exists a γ > 0 and a PI operator Q  0 such that one of the following two conditions hold: (i) B∗QB  I, A∗QT + T ∗QA  0, 1 
+
+> γ2
+
+C∗C  T ∗QT .(ii) CQC ∗  I, AQT ∗ + T QA ∗  0, 1 
+
+> γ2
+
+BB ∗  T QT ∗.Then, ‖G(T , A, B, C)‖ip ≤ γ.Proof of (i). Let {x, z }, satisfy Eq. (6) with initial condi-tions T x(0) = Bv. Define a storage function V (x) =
+
+〈T x, QT x〉 where Q  0 satisfies constraints in (i) . Then, 
+
+V (0) = 〈B v, QB v〉 = 〈v, B∗QB v〉 ≤ ‖ v‖2. Differentiating 
+
+V along the solutions of Eq. (6), we get 
+
+˙V = 〈∂tT x, QT x〉 + 〈T x, Q∂tT x〉
+
+= 〈A x, QT x〉+〈T x, QA x〉=〈x, (A∗ QT +T ∗QA )x〉 ≤ 0.
+
+Lastly, we have that 
+
+1
+
+γ2 ‖z(t)‖2 = 1
+
+γ2 〈C x(t), Cx(t)〉 =
+
+〈
+
+x(t), 1
+
+γ2 C∗Cx(t)
+
+〉
+
+≤ 〈 x, T ∗QT x〉 = V (x(t)) .
+
+Thus, ‖z(t)‖2 ≤ γ2V (t) ≤ γ2V (0) ≤ γ2‖v‖2 for all t > 0
+
+and hence, 
+
+‖G(T , A, B, C)‖ip = sup 
+
+> ‖v‖=1
+
+‖z‖∞ = sup 
+
+> ‖v‖=1
+
+sup 
+
+> t≥0
+
+‖z(t)‖ ≤ γ. 
+
+Alternatively, let Q satisfy the constraints in (ii) .Then, following the steps above one can show that 
+
+‖G(T ∗, A∗, C∗, B∗)‖ip ≤ γ where ¯x, ¯z satisfy Eq. (7) with initial conditions T ∗ ¯x(0) = C∗ ¯v. From Thm. 1, the primal also satisfies the same bound. 
+
+The feasibility problem in Thm. 2 provides sufficient con-ditions to find an upper bound on the impulse-to-peak norm; and as is often the case with sufficient conditions, it can be conservative. However, we can alleviate this conservatism by using a broader class of Lyapunov functions to derive the following LPI for upper bounding the norm. 
+
+Theorem 3. Given PI operators T , A, B, C, let {x, z } satisfy a PIE of the form Eq. (6). Suppose there exists a γ > 0 and a PI operator Q such that T ∗Q = Q∗T  0 and one of the following conditions hold: (i) A∗Q + Q∗A  0,
+
+[γ2I CC∗ Q∗T
+
+]
+
+ 0,
+
+[T ∗Q Q∗BB∗Q I
+
+]
+
+ 0
+
+(ii) AQ + Q∗A∗  0,
+
+[γ2I B∗
+
+B Q∗T ∗
+
+]
+
+ 0,
+
+[T Q Q∗C∗
+
+CQ I
+
+]
+
+ 0
+
+Then, ‖G(T , A, B, C)‖ip ≤ γ.Proof. We give a proof outline, since it is similar to the proof of Thm. 2. Let {x, z } satisfy the PIE Eq. (6) with initial conditions T x(0) = Bv. Next, define a storage function as 
+
+V (x) = 〈T x, Qx〉. Then, if Q satisfies the constraints in (i) ,we have ˙V (x(t)) ≤ 0 and ‖z(t)‖2 ≤ γ2V (t) for all t > 0.Lastly, for any v ∈ Rnw and T x(0) = Bv, we have 
+
+0 ≤
+
+〈[ x(0) 
+
+−v
+
+]
+
+,
+
+[T ∗Q Q∗BB∗Q I
+
+] [ x(0) 
+
+−v
+
+]〉 = 〈x(0) , T ∗Qx(0) 〉 − 2 〈x(0) , Q∗Bv〉 + ‖v‖2
+
+= 〈x(0) , Q∗T x(0) 〉 − 2 〈x(0) , Q∗T x(0) 〉 + ‖v‖2
+
+= ‖v‖2 − V (x(0)) .
+
+Since ‖z(t)‖2 ≤ γ2V (x(t)) ≤ γ2V (x(0)) ≤ γ2 ‖v‖2, we have ‖G(T , A, B, C)‖ip ≤ γ. Likewise, satisfaction of (ii) 
+
+implies the norm bound on the dual and the primal PIE response. 
+
+A. Optimal State-feedback Controller Synthesis 
+
+Now that we have established duality results and aLyapunov function-based characterization of the norm, we can consider the impulse-to-peak optimal control problem. Specifically, given a PIE of the form, 
+
+∂t(T x)( t) = Ax(t) + Bw(t) + B2u(t), T x(0) = 0 ,z(t) = Cx(t) + Du(t), (8) the goal is to design a state-feedback u(t) = Kx(t) such that impulse-input to peak-output norm is optimal. Substituting the control policy, one can see that the closed-loop system takes the form G(T , A+B2K, B, C+DK ) where 
+
+G is defined in Definition 4. Thus, the control task can be stated as given a closed-loop system G, find K minimizing 
+
+γ such that sup ‖v‖=1 ‖z‖∞ ≤ γ.Note that the auxillary system admits the form 
+
+∂t(T x)( t) = ( A + B2K)x(t), T x(0) = Bv, z(t) = ( C + DK )x(t). (9) If we apply Thm. 2 to the auxiliary system defined above, the constraints in (i) are bilinear in Q and K and intractable. However, contingent on the change of variable Z = KQ , the constraints in (ii) are linear and convex. Since (i) and (ii) are equivalent, we can solve (ii) to search for a controller K =
+
+ZQ −1 that achieves optimal γ for the closed-loop system. 
+
+Corollary 1. Given PI operators {T , A, B, B2, C, D} , let 
+
+{x, z } satisfy a PIE of the form Eq. (9). Suppose there exists a γ > 0 such that one of the following sets of conditions hold: (i) Q ≻ 0, AQT ∗ + B2ZT ∗ + T QA ∗ + T Z ∗B∗ 
+
+> 2
+
+ 0,
+
+[γ2I B∗
+
+B T QT ∗
+
+]
+
+ 0,
+
+[ I (CQ + DZ )(CQ + DZ )∗ Q
+
+]
+
+ 0.(ii) Q∗T ∗ = T Q , AQ + B2Z + Q∗A∗ + Z∗B∗ 
+
+> 2
+
+ 0,
+
+[γ2I B∗
+
+B Q∗T ∗
+
+]
+
+ 0,
+
+[ I (CQ + DZ )(CQ + DZ )∗ Q∗T ∗
+
+]
+
+ 0.Then, under the feedback control u(t) = Kx(t) where K =
+
+ZQ −1, we have sup ‖v‖=1 ‖z‖∞ ≤ γ.Proof. The proof follows the exact same steps as proofs of 
+
+(ii) in Thms. 2 and 3, with the additional change of variable 
+
+KQ = Z. If there exists a γ > 0, Q satisfying (i) or (ii) 
+
+above, and the solution {x, z } satisfies the closed-loop PIE under the feedback u(t) = Kx(t), then γ, Q satisfy the conditions in (ii) of Thm. 2 or 3, respectively, for the closed-loop PIE. Thus, the closed-loop PIE Eq. (9) satisfies the norm bound. 
+
+V. N UMERICAL RESULTS 
+
+In this section, we present numerical examples validating the above theoretical results. First, we present two PDE exam-ples for which impulse-to-peak norm bounds are computed using the LPIs described in Theorem 3. For the state feedback control design, we use the conditions in (i) of Cor. 1. As previously mentioned, all the steps required to solve the optimization problems in Thms. 2, 3 and Cor. 1, are implemented using the PIETOOLS toolbox in MATLAB. 
+
+A. Impulse-to-peak Norm Upper-bounding 
+
+Example 1. Consider the following transport PDE: 
+
+∂tx(t, s ) = ∂sx(t, s ) + ( s − s2)w(t), z (t) = 
+
+∫ 10
+
+x(t, s ) ds 
+
+where z is the regulated output and Dirichlet boundary condition x(t, 1) = 0 . For this PDE, we use PIETOOLS to obtain the PIE parameters and solve the optimization problems presented in Thm. 3 with γ2 as the objective to be minimized. The upper bounds on impulse-to-peak norm obtained from the primal and dual LPI solutions is γ =0.1684 and γ = 0 .1667 respectively, whereas the theoretical bound is 1/6.
+
+Example 2. Next, we consider the heat equation 
+
+∂tx(t, s ) = ∂2 
+
+> s
+
+x(t, s ) + sw (t), z(t) = 
+
+∫ 10
+
+x(t, s ) ds, 
+
+with boundary conditions x(t, 0) = ∂sx(t, 1) = 0 . We again solve the LPI problems in Thm. 3 minimizing γ2 and obtain 
+
+γ = 0 .5000 , which matches the theoretical bound 1/2.
+
+B. Impulse-to-peak Norm Optimal State Feedback Control 
+
+In the first example, we consider an unstable reaction-diffusion equation, and find an impulse-to-peak optimal control to stabilize the system. In the second example, we consider a transport equation and design a controller to reduce the peak output norm. 
+
+Example 3 (Unstable Reaction-Diffusion Equation) . Con-sider an unstable reaction-diffusion equation: 
+
+∂tx(t, s ) = 14 x(t, s ) + ∂2 
+
+> s
+
+x(t, s ) + ( s2 − 2s)w(t) + u(t),z(t) = 
+
+∫ 10
+
+2x(t, s ) ds, x(t, 0) = ∂sx(t, 1) = 0 .
+
+Since this PDE is unconditionally unstable, the impulse-to-peak gain is infinity. To find an optimal stabilizing control, we solve the LPI presented in (i) of Cor. 1 for fixed γ and applying bisection method to obtain the best achievable γ
+
+and the corresponding controller. In this case, we can find a stabilizing controller that achieves γ = 1 .375 . The closed-loop system response with the obtained controller are shown in Fig. 1. Additionally, the regulated output is shown in Fig. 2. 
+
+Example 4 (Transport Equation) . Next, we consider a trans-port equation with control as 
+
+∂tx(t, s ) = ∂sx(t, s ) + 10 s(s − 1)( s − 0.5) w(t) + u(t),Fig. 1. Evolution of the PDE state for the reaction-diffusion equation under state-feedback controller 
+
+t [seconds] 
+
+0 0.2 0.4 0.6 0.8 1
+
+> z
+
+-1.5 -1 -0.5 0
+
+Fig. 2. The regulated output, ∫ 10 x(t, s )ds , for the reaction-diffusion equation. The control stabilizes the system and satisfies peak output bounds. 
+
+z(t) = 
+
+∫ 10
+
+x(t, s ) ds, x(t, 1) = 0 .
+
+Although the transport equation is naturally stable, the con-trol action can be utilized to suppress vibrations. Similar to unstable reaction-diffusion PDE, we search for an optimal controller using LPIs in Cor. 1 by bisecting on the γ parame-ter. As seen in Fig. 3, we see that the stability is maintained. Moreover, the uncontrolled system has an impulse-to-peak bound of 0.1678 , whereas with control we can achieve an impulse-to-peak norm of 0.1247 (see Fig. 4). VI. C ONCLUSION 
+
+Despite its relevance in safe operations, a computational method to characterize impulse-to-peak norm for a suffi-ciently general class of PDEs was not available. In this work, we leveraged the PIE representation and PIE framework to 
+
+Fig. 3. Evolution of the PDE state for the transport equation under state-feedback controller      
+
+> t [seconds]
+> 00.5 11.5 22.5
+> z
+> -0.2 -0.15 -0.1 -0.05 00.05
+> Controlled Uncontrolled
+
+Fig. 4. The regulated output, ∫ 10 x(t, s )ds , for the controlled ( −− ) and uncontrolled ( −) transport equation. The control reduces the peak response under impulsive input in comparison to uncontrolled system. 
+
+develop Lyapunov-based convex optimization formulation of the impulse-to-peak norm bounding problem for arbitrary lin-ear PDEs. We showed that the bounds so obtained are prov-able and have no conservatism. Moreover, we showed that the dual optimization problem satisfies strong-duality con-dition. Using these formulations, we solved the impulse-to-peak norm upper-bounding and norm-optimal state-feedback control synthesis problem for linear PDEs and validated the solution for various numerical examples, for which analytical bounds are known. REFERENCES [1] S. J. Moura and H. K. Fathy, “Optimal Boundary Control of Re-action–Diffusion Partial Differential Equations via Weak Variations,” 
+
+Journal of Dynamic Systems, Measurement, and Control , vol. 135, no. 3, p. 034501, 2013. [2] B. van Keulen, “Redheffer’s Lemma and H∞-Control for Infinite-Dimensional Systems,” SIAM Journal on Control and Optimization ,vol. 32, no. 1, pp. 261–278, 1994. [3] F. Tr¨ oltzsch, Optimal Control of Partial Differential Equations: Theory, Methods, and Applications . American Mathematical Society, 2010, vol. 112. [4] S. Dey, H. E. Perez, and S. J. Moura, “Model-Based Battery Thermal Fault Diagnostics: Algorithms, Analysis, and Experiments,” IEEE Transactions on Control Systems Technology , vol. 27, no. 2, pp. 576– 587, 2019. [5] H. Shang, J. Forbes, and M. Guay, “Model Predictive Control for Quasilinear Hyperbolic Distributed Parameter Systems,” Industrial & Engineering Chemistry Research , vol. 43, no. 9, pp. 2140–2149, 2004. [6] J. Wang and M. Krstic, “Safe Adaptive Control of Hyperbolic PDE-ODE Cascades,” arXiv preprint arXiv:2309.05596 , 2023. [7] H. Tokunaga, T. Iwasaki, and S. Hara, “Analysis and Synthesis of the Robust Impulse-to-Peak Performance,” Automatica , vol. 34, no. 11, pp. 1473–1477, 1998. [8] M. Balas, “Feedback Control of Flexible Systems,” IEEE Transactions on Automatic Control , vol. 23, no. 4, pp. 673–679, 1978. [9] I. Lasiecka and R. Triggiani, Control Theory for Partial Differential Equations: Continuous and Approximation Theories , ser. Encyclopedia of Mathematics and its Applications. Cambridge University Press, 2000. [10] A. Mironchenko and C. Prieur, “Input-to-State Stability of Infinite-Dimensional Systems: Recent Results and Open Questions,” SIAM Review , vol. 62, no. 3, pp. 529–614, 2020. [11] S. Shivakumar, A. Das, S. Weiland, and M. Peet, “Extension of the Partial Integral Equation Representation to GPDE Input-Output Systems,” IEEE Transactions on Automatic Control , vol. 70, no. 5, pp. 3240–3255, 2024. [12] S. Shivakumar, A. Das, and M. Peet, “Dual Representations and H∞-Optimal Control of Partial Differential Equations,” arXiv preprint arXiv:2309.05596 , 2024. [13] S. Shivakumar, D. Jagt, D. Braghini, A. Das, Y. Peet, and M. Peet, “PIETOOLS 2024: User Manual,” arXiv preprint arXiv:2501.17854 ,2025. [14] R. F. Curtain and H. Zwart, An Introduction to Infinite-Dimensional Linear Systems Theory . Springer Science & Business Media, 2012, vol. 21.

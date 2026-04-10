@@ -1,0 +1,7482 @@
+Title: Generalization Bounds and Statistical Guarantees for Multi-Task and Multiple Operator Learning with MNO Networks
+
+URL Source: https://arxiv.org/pdf/2604.01961v1
+
+Published Time: Fri, 03 Apr 2026 00:52:26 GMT
+
+Number of Pages: 48
+
+Markdown Content:
+# Generalization Bounds and Statistical Guarantees for Multi-Task and Multiple Operator Learning with MNO Networks 
+
+Adrien Weihs 1 and Hayden Schaeffer 11Department of Mathematics, University of California Los Angeles, Los Angeles, CA 90095, USA. 
+
+Abstract 
+
+Multiple operator learning concerns learning operator families {G[α] : U → V }α∈W indexed by an oper-ator descriptor α. Training data are collected hierarchically by sampling operator instances α, then input functions u per instance, and finally evaluation points x per input, yielding noisy observations of G[α][ u]( x).While recent work has developed expressive multi-task and multiple operator learning architectures and approximation-theoretic scaling laws, quantitative statistical generalization guarantees remain limited. We provide a covering-number-based generalization analysis for separable models, focusing on the Multiple Neural Operator (MNO) architecture: we first derive explicit metric-entropy bounds for hypothesis classes given by linear combinations of products of deep ReLU subnetworks, and then combine these complexity bounds with approximation guarantees for MNO to obtain an explicit approximation-estimation tradeoff for the expected test error on new (unseen) triples (α, u, x ). The resulting bound makes the dependence on the hierarchical sampling budgets (nα, n u, n x) transparent and yields an explicit learning-rate statement in the operator-sampling budget nα, providing a sample-complexity characterization for generalization across operator instances. The structure and architecture can also be viewed as a general purpose solver or an example of a “small” PDE foundation model, where the triples are one form of multi-modality. 
+
+Keywords and phrases. Deep Neural Networks, Generalization Bounds, Neural Scaling Laws, Operator Learning, Multi-Operator Learning, Multi-Task Problems. 
+
+Mathematics Subject Classification. 41A99, 68T07 
+
+# 1 Introduction 
+
+Operator learning seeks to approximate maps between function spaces, typically of the form u 7 → G[u], where the input u is a function and the output is another function (see [35, 49] and references therein). In many applications, however, the object of interest is not a single operator but a family of related operators indexed by a parameter. This motivates the recent multiple operator learning problem (see [61, 62, 64] and references therein), which we formalize as learning a map 
+
+G : W −→ { G[α] : U → V }α∈W ,
+
+where W, U, V are function spaces, α ∈ W encodes the operator instance, and for each α, the corresponding operator G[α] maps inputs u ∈ U to outputs in V . We highlight three prototypical settings in which multiple operator learning is either intrinsic to the problem formulation or would benefits from this formulation. We refer to Section 2.1 for a detailed description of each example class. 1. Parameterized integral operators. A basic example is a family of integral operators (1) G[α][ u]( x) = 
+
+Z
+
+Kα(x, y )u(y) d y
+
+where the kernel Kα depends on a parametric function α. The problem is inherently a multi-operator learning task, as each parameter α induces a different (related) operator. 1
+
+> arXiv:2604.01961v1 [cs.LG] 2 Apr 2026
+
+2. Solution operators of parameterized PDEs. Many simulations or forward problems in the physical sci-ences are naturally expressed through PDE solution operators: for each parameter α encoding, for in-stance, coefficients, boundary data, geometry, or even the governing equation, the map G[α] takes an input u (e.g. a forcing term, initial condition, or source) to the corresponding solution G[α][ u].3. Operator families indexed by symbolic or textual descriptions. More broadly, the “operator index” α
+
+can encode a task specification: a symbolic form, a natural-language prompt, or a discrete task label. This viewpoint connects multiple operator learning to PDE foundation models [45, 61], where a shared representation is trained across many operator instances and queried on new tasks by conditioning on an explicit operator description. In such regimes, the ability to generalize in α is important since one aims to predict accurate operators that are not seen during training. Neural networks are a particularly well-suited approximation class for multiple operator learning because they combine high expressive power with architectural flexibility. Deep networks can capture nonlinear depen-dence on both the operator index α and the input function u, and they can be instantiated in forms that encode relevant inductive biases. At the same time, choosing an effective architecture is subtle: the network must allo-cate capacity between encoding how the operator varies with α and representing the action u 7 → G[α][ u], while also coping with discretization and the effective dimensionality of W × U × ΩV . A number of principled archi-tectures have been proposed recently to address these challenges. Among them, the Multiple Neural Operator (MNO) architecture introduced in [64] achieves strong empirical performance across diverse operator families and is accompanied by expressivity guarantees and explicit scaling laws, providing both practical effectiveness and theoretical guidance for design. Beyond approximation capabilities, it is important to understand how such architectures generalize when trained from finite data. Generalization bounds quantify how accurately a learned predictor will perform on unseen inputs drawn from the same data-generating process. They typically decompose into an approximation term, capturing the best achievable error within the chosen hypothesis class F, and an estimation term, which depends on the statistical complexity of that class together with the available sample size. In particular, when complexity is controlled via covering numbers (we write N (η, F, ∥·∥ ) for the η-covering number of a function class F with respect to a norm ∥·∥ ), the resulting estimation term involves the metric entropy log N (η, F, ∥·∥ )
+
+at scale η, combined with sample-size factors (e.g. 1/√n or 1/n ), reflecting how generalization improves as more data are collected. To the best of our knowledge, this work provides the first generalization bound of this kind for multiple operator learning or multi-task neural operators. In our setting, the generalization error concerns how a learned model achieves small expected error on new, unseen triples (α, u, x ) ∼ μα × μu × μx, thereby controlling transfer across operator instances, input functions, and evaluation points simultaneously. We obtain such a bound for the MNO architecture by com-bining an approximation term (controlling the best-in-class approximation error ε through the results in [64]) with covering-number complexity control of the induced ε-dependent hypothesis class, yielding a transparent approximation–estimation tradeoff that links target accuracy, architectural complexity, and the sampling bud-gets (nα, n u, n x) (numbers of sampled operators, inputs per operator, and evaluation points, respectively). In addition, the bound formalizes two practical benefits of the multiple operator learning viewpoint: (i) amorti-zation across operator instances , since a single conditional model can share representations across an operator family rather than training one model per α; and (ii) hierarchical sampling guidance , since the explicit de-pendence on (nα, n u, n x) clarifies how accuracy improves when increasing operator variability, inputs per operator, or evaluation resolution. 
+
+1.1 Contributions 
+
+Our main contributions are as follows: 1. We derive metric entropy bounds for function classes given by linear combinations of products of three deep ReLU subnetworks, which is precisely the separable structure underlying MNO. In particular, Proposition 3.1 provides an estimate as a function of the architectural parameters of each subnetwork class: depth Li, width pi, sparsity budget Ki, and parameter magnitude κi, as well as the product-structure multiplicities P, H, N .22. Under Lipschitz regularity of the map G, we prove an explicit scaling law for the expected gen-eralization error of the MNO architecture; see Theorem 3.5. The bound is stated for test triples 
+
+(α, u, x ) ∼ μα × μu × μx and makes explicit the dependence on the hierarchical sampling budgets 
+
+(nα, n u, n x), on a prescribed target accuracy ε > 0 (achieved by an explicit ε-dependent choice of the MNO hypothesis class), and on a covering scale η > 0 through the metric entropy log N (η). Specifi-cally, it takes the schematic form: 
+
+Eα,u,x [test error ] ≲ ε2 + η + η
+
+√nαnunx
+
+plog( N (η)) + 1
+
+nαnunx
+
+log( N (η)) + 1
+
+nα
+
+log( N (η)) 
+
+3. As a consequence of the scaling law, we derive an explicit sample-complexity rate in the operator-sampling budget nα; see Corollary 3.8. In particular, by selecting ε = ε(nα) and η = η(nα) to balance the approximation and estimation terms in Theorem 3.5, we obtain the rate 
+
+E[test error ] = O
+
+ log log( nα)log log log( nα)
+
+−2/d W
+
+!
+
+,
+
+with constants independent of nα, n u, n x.This perspective is closely connected to recent PDE foundation models, where a single conditional archi-tecture is trained across a broad family of PDEs and queried via an explicit operator descriptor. Our results provide indirect theoretical support for such approaches by establishing generalization guarantees and sample-complexity bounds for separable deep architectures that can themselves be approximated by PDE foundation models [45, 61]. 
+
+1.2 Informal Statement of the Main Results 
+
+For ease of presentation, we state an informal version of the main results (Theorem 3.5 and Corollary 3.8), highlighting the dependence of the expected test error on the operator sampling budget and on the complexity of the induced hypothesis class; all assumptions and precise results are specified in the formal statements in Section 3. 
+
+Theorem 1.1 (Generalization error for MNO) . Let G : W 7 → { G[α] : U 7 → W }α∈W be a Lipschitz multiple operator map from the function space W into Lipschitz operators from U to V . Assume that we observe sampled noisy data: 
+
+yℓij := G[αℓ][ uℓi ]( xℓij ) + ζℓij , 1 ≤ ℓ ≤ nα, 1 ≤ i ≤ nu, 1 ≤ j ≤ nx,
+
+where ζℓij denotes observation noise. For every ε > 0, there exists a MNO 
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θpkℓ lp(α) bk(u) τℓ(x),
+
+trained on {yℓij }, whose expected test error on unseen triples (α, u, x ) satisfies: 
+
+O
+
+
+
+ε2 + 1
+
+nα
+
+ε−δ1ε−δ2ε−dW
+
+log( nα)
+
+
+
+.
+
+Here θℓij ∈ R, δi > 0, dW denotes the dimension of the domain of functions in W and the ReLU subnetworks 
+
+lp, bk, and τℓ can be chosen with the following architectural scalings: 
+
+# networks width depth sparsity parameter magnitude 
+
+lp P ≲ ε−ε−dW O(1) ≲ ε−dW ≲ ε−dW ≲ ε−ε−dW
+
+bk H ≲ ε−ε−ε−dW
+
+O(1) ≲ ε−ε−dW ≲ ε−ε−dW ≲ ε−ε−ε−dW
+
+τℓ N ≲ ε−ε−dW O(1) ≲ ε−dW ≲ ε−dW ≲ ε−ε−dW
+
+3Moreover, choosing ε ≍
+
+ log log( nα)log log log( nα)
+
+− 1 
+
+> dW
+
+yields the generalization bound: 
+
+O
+
+ log log( nα)log log log( nα)
+
+−2/d W
+
+!
+
+.
+
+1.3 Related Works and Literature Review 
+
+Neural operator architectures Operator learning aim to approximate maps that take functions as inputs and return functions as outputs [4, 11, 27, 40, 42, 54, 58, 73]. Neural networks have proven effective for learning such mappings in a range of scientific and engineering settings [20,22,23,31,72]. A common design pattern in neural operator models is to split the processing of functional and spatial inputs across interacting subnetworks and recombine them via additive or bilinear/tensor-style contractions [13, 14]; DeepONet [48] is a canonical example, with a branch network that encodes the input function and a trunk network that produces a coordinate-dependent learned output basis. This “separable expansion” viewpoint connects operator networks to low-rank approximation ideas, where complex mappings are expressed as sums of simpler, lower-dimensional factors [52]; neural operators can be viewed as nonlinear, data-adaptive analogues of such decompositions. In the multiple-operator learning setting, MNO [64] adopts an analogous separable structure by separating operator identity (task/parameter) from input-function dependence through interacting subnetworks, enabling shared representations across a family of operators. Many other designs have emerged, including Fourier Neural Operators [42] (motivated by spectral representations), Green’s function-based approaches such as Deep Green Networks [6, 18], and graph-based variants (including multipole constructions) that exploit sparsity and multiscale structure to improve efficiency [2,41]. For additional architectures and broader perspectives, see the surveys and references in [19, 35]. 
+
+Multi-task and multiple operator learning Motivations for learning families of operators are twofold. In some settings, the underlying problem is naturally specified as a collection of related operators (e.g., indexed by physical parameters, geometries, or boundary conditions). In others, jointly learning multiple operators is a strategy for improving data efficiency and generalization by sharing structure across tasks. A growing body of recent work proposes multi-operator learning frameworks along these lines [3,8,24,29,46,47,53,61,64–69,71]. Notably, [47,61] demonstrate that multi-operator models can transfer to tasks beyond those encountered during training. At a high level, there are two common formulations. One may (i) train separate operator models indepen-dently, one per task/operator instance, or (ii) treat the target as a parameterized operator family {G[α]}, where a discrete or continuous descriptor α encodes the operator identity. The first approach does not condition on any explicit operator descriptor and therefore can struggle when the operator family varies substantially; in particular, it offers limited leverage for generalization to unseen operators. The second approach augments operator learning with an explicit operator encoding [45, 47, 55, 61, 64, 66], incorporating side information such as the governing equation, symbolic representation, textual description, or task label alongside the input functions. In this way, the second approach focuses on multi-task learning and general solvers. Providing this additional context typically strengthens transfer and has emerged as a key ingredient in recent PDE founda-tion model works. Conditioning on operator information enables zero-shot generalization to new PDE tasks, as demonstrated in [61], and such approaches have shown promising performance on out-of-distribution problems without expensive retraining. 
+
+Theoretical analyses of approximation and statistical generalization A central theoretical requirement in operator learning is expressivity, where universal approximation results ensure that a given architecture can approximate broad classes of operators to arbitrary accuracy. Early foundational work developing operator network constructions and proving universal approximation for mappings between spaces of scalar-valued functions was established in [13, 14]. Subsequent analyses extended these guarantees to widely used archi-tectures, including DeepONet [37, 44], the Fourier Neural Operator [32], and PCA-Net [4], among others. Further developments related to operator expressivity, discretization effects, and architectural refinements in-clude [9, 10, 26, 28, 33, 70, 72]. 4Beyond approximation-theoretic guarantees, scaling laws aim to quantify how error depends on data size, model capacity, and computational budget. Establishing a theoretical foundation for such laws provides a route to principled generalization estimates and predicts how performance should improve as resources increase [30]. Empirically, [15] studies cost–accuracy trade-offs across neural operator architectures, highlighting how network size and sampling budgets affect approximation error. On the theoretical side, [44] derives scaling laws and complexity estimates for deep ReLU networks and DeepONet. Related analyses for DeepONet and variants appear in [17, 25, 36–38, 50, 51, 59, 60]. Generalization error bounds for DeepONet and related models are developed in [39, 43, 44], while sample-complexity results are established in [1, 21, 34]. For multi-task and multiple operator learning, empirical evidence can be found in [29, 62]. Universal approximation results and expressivity scaling laws for MNO are derived in [64]; in this work, we establish generalization error estimates for MNO. The remainder of the paper is structured as follows. In Section 2, we extensively formalize the multi-task and multiple operator learning setting and the MNO architecture, and collect the mathematical background needed for our analysis. In Section 3, we present our main theoretical results. In Section 4, we provide detailed proofs. Finally, in Section 5, we conclude with a summary of our contributions and discuss directions for future work. 
+
+# 2 Background 
+
+This section is organized into three parts. We begin with a collection of illustrative examples that motivate the multiple operator learning viewpoint and clarify the distinct roles of the parametric function (operator descrip-tor), the input function, and the evaluation variable. In this context, we also recall the MNO architecture, which makes this separation explicit by modeling the dependencies on α, u, and x through distinct components. Next, we summarize the scaling-law results for the MNO architecture that underpin the approximation component of our generalization analysis. Finally, we recall the covering-number estimates for the neural network classes used in our construction, which provide the complexity bounds needed for the estimation part of the proof. 
+
+2.1 Multi-Task Problems, Multiple Operator Learning, and the MNO Architecture 
+
+We start by introducing a general and flexible network class used in all of our subsequent constructions. 
+
+Definition 2.1 (Feedforward ReLU network class) . Let q : Rd1 → R be a feedforward ReLU network defined as 
+
+q(x) = WL · ReLU ( WL−1 · · · ReLU( W1x + b1) + · · · + bL−1) + bL,
+
+where Wℓ are weight matrices, bℓ are bias vectors, and ReLU( a) = max {a, 0} is applied element-wise. We define the class of such feedforward networks with ReLU activations: 
+
+FNN (d1, d 2, L, p, K, κ, R ) = 
+
+
+
+[q1, q 2, . . . , q d2 ]⊤ ∈ Rd2
+
+each qk : Rd1 → R has the above form with 
+
+L layers, width bounded by p, 
+
+∥qk∥L∞ ≤ R, ∥Wℓ∥∞,∞ ≤ κ, ∥bℓ∥∞ ≤ κ, 
+
+PLℓ=1 (∥Wℓ∥0 + ∥bℓ∥0) ≤ K
+
+
+
+,
+
+where 
+
+• ∥q∥L∞ = sup x∈Ω |q(x)|,
+
+• ∥Wℓ∥∞,∞ = max i,j |[Wℓ]ij |,
+
+• ∥bℓ∥∞ = max i |[bℓ]i|,
+
+• ∥ · ∥ 0 denotes the number of nonzero elements. This network class consists of vector-valued functions with input dimension d1, output dimension d2, depth L,width at most p, at most K nonzero parameters, all bounded in magnitude by κ, and uniformly bounded output norm by R.
+
+5We recall our goal of approximating a multiple-operator map G : W → { G[α] : U → V }α∈W , where 
+
+W, U, V are function spaces (with underlying domains ΩW , ΩU , ΩV , respectively). The MNO architecture introduced in [64] provides an effective and structurally aligned model class for this problem. 
+
+Definition 2.2 (MNO Architecture) . For fixed positive integers P, H (p), 1 ≤ p ≤ P , we define a MNO as 
+
+MNO[ α][ u]( x) = 
+
+> P
+
+X
+
+> p=1
+> H(p)
+
+X
+
+> k=1
+
+lp(α)bpk (u)τpk (x)
+
+for α ∈ W , u ∈ U , and x ∈ ΩV , where lp, bpk , and τpk are neural networks in suitable classes FNN , and α,
+
+u denote discretizations of α and u, respectively. 
+
+It is shown in [64, Remark 3.20] that MNO is a special case of the more general fully separable architecture 
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θpkℓ lp(α) bk(u) τℓ(x), θpkℓ ∈ R.
+
+Our analysis is formulated for this fully separable class, since it is more convenient for approximation and covering-number estimates. The resulting bounds transfer to MNO by a standard re-indexing (equivalently, a rearrangement of subnetworks). We next revisit the three representative classes of examples from the introduction, now in a form that makes their connection to the MNO architecture explicit. Collectively, these examples illustrate the following recurring themes: • Distinct roles of the inputs. The operator descriptor α, the input function u, and the evaluation variable x
+
+play fundamentally different roles: α specifies the operator instance (task), u is the operand acted upon by that operator, and x is the query location at which the output is evaluated. • Shared structure and computational efficiency. Many operator families exhibit reusable structure across 
+
+α. Learning these families jointly allows one to represent common components once and reuse them across parameter regimes, amortizing training and reducing redundant approximation effort compared to training separate models per operator. • Generalization across operator instances. The objective in multiple operator learning is not merely to fit finitely many operators, but to learn a map α 7 → G[α] that generalizes to new (possibly unseen) α ∈ W ,enabling transfer to new coefficients, boundary conditions, or related tasks without retraining. • Breadth of applications. The same multiple operator learning viewpoint arises across diverse settings, including parameterized kernel operators, PDE solution operators, and task-conditioned operator fami-lies. These principles directly motivate the MNO architecture. MNO is built to respect the separation of roles of α,
+
+u, and x through a separable structure, in which shared subnetworks l, b, and τ encode the dependence on the operator descriptor, the input function, and the evaluation variable, respectively. In particular, generalization across α ∈ W is a natural requirement in this formulation, since α enters the model as an explicit input and the learned predictor is defined for any admissible α within the specified domain. 
+
+Parametrized integral operators 
+
+Example 2.3 (Homogeneous kernels with parameter-dependent interaction radius) . Assume that ΩW = Ω V
+
+and let α : Ω V → (0 , ∞) represent a spatially varying interaction length scale. Consider kernels of the form 
+
+Kα(x, y ) = 1
+
+α(x)d ρ
+
+ |x − y|
+
+α(x)
+
+
+
+,
+
+where ρ : [0 , ∞) → R is a prescribed radial profile. The associated operator is 
+
+G[α][ u]( x) = 
+
+Z
+
+> ΩU
+
+1
+
+α(x)d ρ
+
+ |x − y|
+
+α(x)
+
+
+
+u(y) d y. 
+
+Such parameterized kernel operators are a standard building block in nonlocal models (e.g. [63]), and, under appropriate scalings of the kernel profile ρ, they can be used to approximate local differential operators [7]. 6Example 2.4 (Variable-order fractional kernel operators) . Another important class of examples is provided by variable-order fractional kernels arising in nonlocal models and fractional calculus [16]. Assume ΩW = Ω V ,and let α : Ω V → (0 , 1) be a spatially varying order function. Define 
+
+Kα(x, y ) = cd,α (x)
+
+|x − y|d+2 α(x) ,
+
+where cd,α (x) denotes a normalization constant depending on the spatial dimension d and the local fractional order α(x). The associated operator is 
+
+G[α][ u]( x) = 
+
+Z
+
+> ΩU
+
+cd,α (x)
+
+|x − y|d+2 α(x) u(y) d y. 
+
+This example makes the role separation in multiple operator learning particularly transparent. Specifically, the functions α and u play fundamentally different roles, and therefore representing the operator as G[α, u ],thereby treating (α, u ) as a single concatenated input in a classical operator-learning formulation may obscure their structural distinction. The function α determines the kernel Kα and thereby defines the integration rule itself (namely how points interact, the weighting structure, and the relevant length scales). Changing α mod-ifies the action under consideration and thus characterizes the task. In contrast, the function u represents the data being processed; it is the input integrated against the kernel, analogous to a signal or state on which the operator acts. If u varies while α remains fixed, the rule and therefore the task remains unchanged, and only the input within that task is varied. MNO and related multi-operator learning architectures directly mimic this hier-archical structure by explicitly separating these inputs, which models their respective roles in a mathematically consistent fashion. 
+
+Solution operator of parametrized PDEs 
+
+Example 2.5 (Green-kernel representation of a parameterized PDE solution operator) . For broad classes of well-posed linear boundary-value problems, the solution operator admits the integral-kernel representation (1) where Kα is the Green’s kernel associated with the parameterized differential operator. For example, consider the boundary value problem: 
+
+− v′′ (x) = u(x), 0 < x < a, v(0) = 0 , v(a) = 0 ,
+
+where a > 0 and u : (0 , a ) → R is a given source term. For every u ∈ L2(0 , a ), classical elliptic regularity theory implies the existence of a unique weak solution: 
+
+v ∈ H10(0 , a ) ∩ H2(0 , a ).
+
+We denote the corresponding solution operator by: 
+
+G[a] : L 2 → H10(0 , a ) ∩ H2(0 , a )
+
+which is the inverse of − d2
+
+dx 2 on H10(0 , a ). The solution admits the Green representation 
+
+v(x) = G[a][ u]( x) = 
+
+Z a
+
+> 0
+
+Ka(x, y ) u(y) dy, 0 < x < a, 
+
+where the Dirichlet Green’s kernel is given by 
+
+Ka(x, y ) = 1
+
+a
+
+(
+
+x (a − y), 0 ≤ x ≤ y ≤ a, y (a − x), 0 ≤ y < x ≤ a. 
+
+Equivalently, for 0 ≤ x, y ≤ a, this can be written through ReLUs: 
+
+Ka(x, y ) = x + y
+
+2 − ReLU( x − y) + ReLU( y − x)2 − 1
+
+a xy, 
+
+7where ReLU( z) = max {0, z }. Extending the integral to the interval [0 , 1] using the Heaviside function H, we obtain: 
+
+G[a][ u]( x) = 
+
+Z 10
+
+H(a − y) Ka(x, y ) u(y) dy 
+
+=
+
+Z 10
+
+ℓ(1) (a, y ) τ (1) (x, y ) u(y) dy +
+
+Z 10
+
+ℓ(2) (a, y ) τ (2) (x, y ) u(y) dy, 
+
+where the functions are separated into: 
+
+ℓ(1) (a, y ) = H(a − y), ℓ(2) (a, y ) = − H(a − y)
+
+a ,
+
+and 
+
+τ (1) (x, y ) = x + y
+
+2 − ReLU( x − y) + ReLU( y − x)2 , τ (2) (x, y ) = xy. 
+
+This representation for G[a][ u] shows that the operator is in fact a finite sum of separable kernel compo-nents. Letting α : Ω V → R be the constant function a, a Monte Carlo quadrature with sampling nodes 
+
+Yi ∼ Unif(0 , 1) yields: 
+
+G[α][ u]( x) ≈
+
+> 2
+
+X
+
+> p=1
+> N
+
+X
+
+> i=1
+
+ℓ(p)(α, Y i) bi(u) τ (p)(x, Y i),
+
+where 
+
+ℓ(1) (α, Y i) = H(α − Yi)
+
+N , ℓ(2) (α, Y i) = − H(α − Yi)
+
+N α , bi(u) = u(Yi),τ (1) (x, Y i) = x + Yi
+
+2 − ReLU( x − Yi) + ReLU( Yi − x)2 , τ (2) (x, Y i) = xY i.
+
+The Monte Carlo approximation therefore yields the same structural form as the MNO ansatz, i.e., a finite sum of separable (low-rank) components where the nodes Yi can be can be absorbed into the network param-eters. The functions ℓ(p) encode the dependence on the operator parameter α, the coefficients bi encode the dependence on the input function u through point evaluations, and the functions τ (p) encode the dependence on the output variable x. In this sense, the Green’s solution provides an explicit, kernel-based realization of the separable operator structure. Similar decompositions arise for other linear PDE through their Green’s formulations. 
+
+Example 2.6 (Nonlinear PDE solution operator with a shared semigroup structure) . For nonlinear PDEs, the solution map u 7 → G[α][ u] is typically nonlinear and therefore cannot, in general, be represented by a single kernel acting linearly on u. We illustrate the idea of multi-operator approximations using a parameterized family of equations. Let α = ( σ, ν ) be the model parameters, where 
+
+σ ∈ { 0, 1} and ν > 0,
+
+and consider the PDE 
+
+∂tz + σ z ∂ xz = ν ∂ xx z, z(0 , x ) = u(x), x ∈ R.
+
+When σ = 0 , this reduces to the linear heat equation; when σ = 1 , it is the viscous Burgers equation. We denote the corresponding solution operator by 
+
+u → G[α][ u].
+
+The linear heat equation setting occurs when α = (0 , ν ), and the solution is given by the heat semigroup: 
+
+Sνt [u]( x) := 
+
+Z
+
+> R
+
+Γν (t, x − y) u(y) dy, 
+
+where 
+
+Γν (t, z ) = 1
+
+√4πνt exp 
+
+
+
+− z2
+
+4νt 
+
+
+
+.
+
+8Thus, the heat operator is given by: G[(0 , ν )][ u] = Sνt [u]. For the Burgers’ case ( σ = 1 ), if α = (1 , ν ), the Cole-Hopf transformation 
+
+ϕ(t, x ) = exp 
+
+
+
+− 12ν
+
+Z x
+
+> 0
+
+z(t, ξ ) dξ 
+
+
+
+reduces the equation to the heat equation 
+
+∂tϕ = ν ∂ xx ϕ, 
+
+and hence, 
+
+ϕ(t, x ) = 
+
+Z
+
+> R
+
+Γν (t, x − y) exp 
+
+
+
+− 12ν
+
+Z y
+
+> 0
+
+u(ξ) dξ 
+
+
+
+dy. 
+
+Transforming back yields 
+
+G[(1 , ν )][ u]( x) = −2ν ∂ x log ϕ(t, x ),
+
+or equivalently, 
+
+G[(1 , ν )][ u]( x) = 1
+
+t
+
+R
+
+> R
+
+(x − y) Γ ν (t, x − y) Eνu (y) dy 
+
+R 
+
+> R
+
+Γν (t, x − y) Eνu (y) dy ,
+
+where 
+
+Eνu (y) = exp 
+
+
+
+− 12ν
+
+Z y
+
+> 0
+
+u(ξ) dξ 
+
+
+
+.
+
+In both cases, the same linear heat semigroup Sνt [u]( x) appears as a common sub-operator. The main difference between the two PDEs’ solution operator lies only in nonlinear input/output transformations. Define 
+
+Pσ,ν [u] = 
+
+(
+
+u, σ = 0 ,Eνu , σ = 1 , Tσ,ν [ϕ] = 
+
+(
+
+ϕ, σ = 0 ,
+
+−2ν ∂ x log ϕ, σ = 1 .
+
+Then both solution operators admit the unified representation 
+
+G[α] = Tσ,ν ◦ Sνt ◦ P σ,ν , α = ( σ, ν ).
+
+If generating the solutions to the two PDEs are modeled by independent by neural networks, as in the single operator learning case, one constructs 
+
+NN (0 ,ν ) ≈ Sνt , NN (1 ,ν ) ≈ T 1,ν ◦ Sνt ◦ P 1,ν .
+
+In this case, the heat semigroup Sνt must effectively be learned twice. If C(Sνt ) denotes the approximation complexity (e.g., rank, width, or parameter count) required to represent Sνt , then the total complexity scales like: 
+
+2 C(Sνt ) + Cnonlinear .
+
+By contrast, in a simultaneous (multi-operator) setting, the family: 
+
+u → G[α][ u], α = ( σ, ν ),
+
+is learned jointly. The common operator Sνt is approximated once, while only the lower-complexity transfor-mations Pσ,ν and Tσ,ν depend on the equation type. The resulting complexity scales as 
+
+C(Sνt ) + Cnonlinear ,
+
+which is significantly smaller whenever the representation of the heat semigroup dominates the approximation cost. Thus, simultaneous operator learning leverages the shared linear propagator indexed by ν, whereas disjoint learning redundantly approximates the same semigroup structure for each equation type. 9Operator families indexed by symbolic or textual descriptions 
+
+Example 2.7 (PROSE architecture) . The family of networks defined by the PROSE architecture [45, 47] learns nonlinear operators G[α][ u]( x) using a multimodal Transformer framework. The objective is to approximate an operator where α denotes auxiliary (e.g., symbolic, text, or parametric) information and u denotes a function represented through sampled observations. In PROSE, the inputs α and u are first mapped into a shared latent space via separate MLP encoders, 
+
+˜α = Φ α(α), ˜u = Φ u(u), where Φα and Φu are learned nonlinear embeddings. The encoded tokens are then concatenated to form S = [˜ α, ˜u] ∈ R2×d. A self-attention layer integrates information across modalities: 
+
+Y = SelfAttention( S) = softmax 
+
+ (SW (s) 
+
+> Q
+
+)( SW (s) 
+
+> K
+
+)⊤
+
+√dk
+
+ (SW (s) 
+
+> V
+
+),
+
+where W (s) 
+
+> Q
+
+, W (s) 
+
+> K
+
+, W (s) 
+
+> V
+
+are learned projection matrices and the softmax is applied row-wise. This step pro-duces fused latent representations Y ∈ R2×dv . The PROSE framework resembles an operator since the output function can be evaluate at query location x as follows. The query embedding ˜x = Φ x(x), is used in a cross-attention mechanism with keys and values derived from the processed inputs Y :
+
+CrossAttention(˜ x, Y ) = softmax 
+
+ (˜ xW (c) 
+
+> Q
+
+)( Y W (c) 
+
+> K
+
+)⊤
+
+√dk
+
+ (Y W (c) 
+
+> V
+
+).
+
+The resulting output is mapped through decoder Ψ (e.g., a simple MLP) to produce the scalar (or vector-valued) operator evaluation, 
+
+G[α][ u]( x) = Ψ (CrossAttention(˜ x, Y )) .
+
+While the above description uses a single-head, in practice [45,47] a multi-head formulation is used. This gen-eralizes the single-head formulation by introducing head-indexed projection matrices {WQ,h , W K,h , W V,h }Hh=1 ,computing attention independently across heads, and aggregating the resulting representations via concatena-tion followed by a learned output projection. Mathematically, 
+
+MultiHead( S) = Concat  head 1(S), . . . , head H (S)WO,
+
+where for each head h,
+
+head h(S) = softmax 
+
+ (SW Q,h )( SW K,h )⊤
+
+√dk
+
+
+
+(SW V,h ),
+
+and WO denotes the output projection matrix. These architectures illustrate that generalization across operator instances α is naturally incorporated by treating α as an explicit input modality. 
+
+2.2 Scaling Laws for Multiple Operator Learning 
+
+In this section, we review the approximation-theoretic results underlying the MNO architecture, which provide the approximation term in Theorem 3.5 and motivate the ε-dependent instantiation of the network hypothesis class used throughout the proof of the latter. Specifically, we begin by recalling [64, Theorem 3.16], which establishes scaling laws for the expressivity of a general multiple operator architecture; the corresponding scaling laws for MNO follow as a special case. 
+
+Theorem 2.8 (Multiple Operator Scaling Laws) . Let dW , d U , d V > 0 be integers, 
+
+γW , γ U , γ V , β W , β U , β V , L W , L U , L V , L G, L G > 0 and rG, r G ≥ 1
+
+and assume that W (dW , γ W , L W , β W ), U (dU , γ U , L U , β U ) and V (dV , γ V , L V , β V ) satisfy Assumption S. .Let G be a map such that 
+
+G : {α : Ω W 7 → R | ∥ α∥L∞ ≤ βW } 7 → G where 
+
+10 G =
+
+n
+
+G[α] | G[α] : {u : Ω U 7 → R | ∥ u∥L∞ ≤ βU } 7 → V and 
+
+∥G[α][ u1] − G[α][ u2]∥L∞(Ω V ) ≤ LG ∥u1 − u2∥LrG (Ω U )
+
+o
+
+Furthermore, assume that G satisfies 
+
+∥G(α1) − G(α2)∥L∞({u:Ω U 7 →R | ∥ u∥L∞ ≤βU }× ΩV ) ≤ LG∥α1 − α2∥LrG (Ω W )
+
+for α1, α 2 ∈ { α : Ω W 7 → R | ∥ α∥L∞ ≤ βW }.There exists constants C depending on γV , L V , Cδ depending on LG , d U , γ U , r G , L U , C′ depending on 
+
+βU , L G , d U , γ U , r G , Cζ depending on LG, d W , γ W , r G, L W and C′′ depending on βW , L G, d W , γ W , r G such that the following holds. For any ε > 0,
+
+• let N = 2 ncW +2 C√dV (C′′ √ncW )ncW ε−(ncW +1) and consider the network class 
+
+F1 = FNN (dV , 1, L 1, p 1, K 1, κ 1, R 1) with parameters scaling as 
+
+L1 = O  d2 
+
+> V
+
+log dV + d2 
+
+> V
+
+(ncW + 1) log( ε−1) + d2 
+
+> V
+
+log(2 ncW +1 (C′′ √ncW )ncW ) + d2 
+
+> V
+
+log(2)  ,p1 = O(1) ,K1 = O  d2 
+
+> V
+
+log dV + d2 
+
+> V
+
+(ncW + 1) log( ε−1) + d2 
+
+> V
+
+log(2 ncW +1 (C′′ √ncW )ncW ) + d2 
+
+> V
+
+log(2) 
+
+κ1 = O(ddV /2+1  
+
+> V
+
+ε−(dV +1)( ncW +1) 2ncW +2 (C′′ √ncW )ncW
+
+(dV +1) ), R1 = 1 
+
+where the constants hidden in O depend on γV and LV ;
+
+• let {vℓ}N dV 
+
+> ℓ=1
+
+⊂ ΩV be a uniform grid with spacing 2γV /N along each dimension; 
+
+• let δ = Cδ ε(1+ dV )(1+ nc W )      
+
+> 2dV+nc W+2 (C√dV)dV(C′′ √ncW)nc W
+
+and let {cm}ncU 
+
+> m=1
+
+⊂ ΩU be points so that {B δ(cm)}ncU 
+
+> m=1
+
+is a cover of ΩU for some ncU ;
+
+• let H = 2 (dV +1)( ncW +2) C′√ncU (C√dV )dV (C′′ √ncW )ncW (dV +1) ε−(dV +1)(1+ ncW ) and consider the network class F2 = FNN (ncU , 1, L 2, p 2, K 2, κ 2, R 2) with parameters scaling as 
+
+L2 = O n2 
+
+> cU
+
+log ncU + n2 
+
+> cU
+
+(dV + 1)( ncW + 1) log( ε−1) + n2 
+
+> cU
+
+log(2 dV +1 (CpdV )dV )+ n2 
+
+> cU
+
+(dV + 1) log(2 ncW +1 (C′′ √ncW )ncW ) + n2 
+
+> cU
+
+log(2) , p2 = O(1) ,K2 = O n2 
+
+> cU
+
+log ncU + n2 
+
+> cU
+
+(dV + 1)( ncW + 1) log( ε−1) + n2 
+
+> cU
+
+log(2 dV +1 (CpdV )dV )+ n2 
+
+> cU
+
+(dV + 1) log(2 ncW +1 (C′′ √ncW )ncW ) + n2 
+
+> cU
+
+log(2) ,κ2 = O(nncU /2+1  
+
+> cU
+
+ε−(dV +1)( ncU +1)( ncW +1) [2 dV +2 (CpdV )dV ]ncU +1 h
+
+2dV +1 (CpdV )dV
+
+i(dV +1)( ncU +1) 
+
+),R2 = 1 
+
+where the constants hidden in O depend on βU , L G , d U , γ U , r G ;
+
+• let ζ = Cζ ε and let {ym}ncW 
+
+> m=1
+
+⊂ ΩW be points so that {B ζ (ym)}ncW 
+
+> m=1
+
+is a cover of ΩW for some ncW ;
+
+• let P = 2 C′′ √ncW ε−1 and consider the network class F3 = FNN (ncW , 1, L 3, p 3, K 3, κ 3, R 3) with parameters scaling as 
+
+L3 = O  n2 
+
+> cW
+
+log( ncW ) + n2 
+
+> cW
+
+log( ε−1) + n2 
+
+> cW
+
+log(2)  , p3 = O(1) ,K3 = O  n2 
+
+> cW
+
+log ncW + n2 
+
+> cW
+
+log( ε−1) + n2 
+
+> cW
+
+log(2)  ,κ3 = O(nncW /2+1  
+
+> cW
+
+2ncW +1 ε−ncW −1), R3 = 1 
+
+where the constants hidden in O depend on βW , L G, d W , γ W , r G.
+
+11 Then, there exists networks {τℓ}N dV 
+
+> ℓ=1
+
+⊂ F 1, networks {bk}Hnc U 
+
+> k=1
+
+⊂ F 2, networks {lp}Pp=1 ⊂ F 3, functions 
+
+{uk}Hnc U 
+
+> k=1
+
+⊂ { u : Ω U 7 → R | ∥ u∥L∞ ≤ βU } and functions {αp}Pp=1 ⊂ { α : Ω W 7 → R | ∥ α∥L∞ ≤ βW } such that 
+
+sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+G[α][ u]( x) − 
+
+> Pnc W
+
+X
+
+> p=1
+> Hnc U
+
+X 
+
+> k=1
+> NdV
+
+X
+
+> ℓ=1
+
+G[αp][ uk]( vℓ)lp(α)bk(u)τℓ(x) ≤ ε, (2) 
+
+where α = ( α(y1), α (y2), ..., α (yncW )) ⊤ is a discretization of α and u = ( u(c1), u (c2), ..., u (cncU )) ⊤ is a discretization of u.
+
+Next, for a function f : R → R and a constant a ≥ 0, we define the clipping operator that constrains the range of f to the interval [−a, a ]:
+
+Clip a(f ) = min {max( f, −a), a }.
+
+This truncation can be implemented exactly by a two–layer ReLU network. One explicit realization is 
+
+Clip a(f ) = −ReLU ( −ReLU( f + a) + 2 a) + a, 
+
+which expresses the clipping operation using only affine maps and ReLU activations. In particular, such a network is in the class FNN (1 , 1, 2, 1, 6, 2a, a ).The next result incorporates the clipping operation into the general multiple operator architecture and shows that the resulting clipped network class admits analogous expressivity guarantees and scaling laws. 
+
+Corollary 2.9 (Clipped network scaling laws) . Assume the same setting as in Theorem 2.8. Let NN[ α][ u]( x)
+
+be the network such that (2) holds for ε/ 2. Then, 
+
+(3) sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+G[α][ u]( x) − Clip βV (NN[ α][ u]( x)) ≤ ε. 
+
+In view of Corollary 2.9, clipping can be incorporated without loss of approximation power (up to ad-justment of the target accuracy). Accordingly, we henceforth take our hypothesis class to consist of clipped multiple operator networks. This boundedness property is a technical ingredient in the generalization analysis used in the proof of Theorem 3.5. We formalize the resulting model class in the following definition. 
+
+Definition 2.10 (Clipped multiple operator network class) . Let Fi for 1 ≤ i ≤ 3 be network classes defined in Definition 2.1. For a, I > 0, P, H, N ∈ N and fixed sampling points {ys}ncW 
+
+> s=1
+
+⊂ ΩW and {cs}ncU 
+
+> s=1
+
+, we define 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), the set of a-clipped multiple operator networks, as 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N )=
+
+Clip a
+
+
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θpkℓ lp(α)bk(u)τℓ(x)
+
+ | θpkℓ ∈ [−I, I ], τ ℓ ∈ F 1, b k ∈ F 2, l p ∈ F 3
+
+
+
+where α = ( α(y1), α (y2), ..., α (yncW )) ⊤ is a discretization of α and u = ( u(c1), u (c2), ..., u (cncU )) ⊤ is a discretization of u.Remark 2.11 (Scaling laws for clipped multiple operator network classes) . For 1 ≤ i ≤ 3, let Fi(ε) denote the network classes in Theorem 2.8 such that (2) holds for ε. Corollary 2.9 implies that there exists a network in 
+
+Cl βV (βV , F1(ε/ 2) , F2(ε/ 2) , F3(ε/ 2) , {ys}, {cs}, P ncW , H ncU , N dV )
+
+such that (3) holds for ε. Indeed, the network in Corollary 2.9 is clipped at βV and has coefficients θpkℓ =
+
+G[αp][ uk]( vℓ) which satisfy |G[αp][ uk]( vℓ)| ≤ βV by assumption on G.12 2.3 Covering Number of Neural Networks 
+
+In this section, we discuss covering numbers of the neural network classes defined in Definition 2.1. 
+
+Definition 2.12 (Covering Number) . Let (X, d ) be a metric space and let η > 0. A finite subset C ⊂ X is called a θ-cover of X if for every x ∈ X, there exists c ∈ C such that 
+
+d(x, c ) ≤ η. 
+
+The covering number of X at scale θ with respect to the metric d is defined as 
+
+N (η, X, d ) := min {|C| : C ⊂ X is a η-cover of X} .
+
+The next result is similar to [12, Lemma 7], [57, Lemma 3.2] or extensions in [56, Theorem 2.1]. 
+
+Proposition 2.13 (Covering number of feedforward ReLU network class) . Let FNN (d1, 1, L, p, K, κ, R ) be the network class defined in Definition 2.1 and suppose that κ ≥ 1. Let d(q1, q 2) denote the maximum parameter discrepancy for q1, q 2 ∈ F NN (d1, 1, L, p, K, κ, R ), that is 
+
+d(q1, q 2) = max  
+
+> 1≤ℓ≤L
+
+max {∥ W (1)  
+
+> ℓ
+
+− W (2)  
+
+> ℓ
+
+∥∞,∞, ∥b(1)  
+
+> ℓ
+
+− b(2)  
+
+> ℓ
+
+∥∞}.
+
+Then, the following identities hold: 1. For any q ∈ F NN (d1, 1, L, p, K, κ, R ), the L∞-norm of the output is bounded as follows: 
+
+(4) ∥q∥L∞ ≤ κL(p + 1) L−1(p∥x∥L∞ + 1); 
+
+2. For any q1, q 2 ∈ F NN (d1, 1, L, p, K, κ, R ), the L∞-norm of the difference between the outputs is bounded as follows: 
+
+(5) ∥q1 − q2∥L∞ ≤ Lκ L−1(p + 1) L−1(p∥x∥L∞ + 1) d(q1, q 2); 
+
+3. The covering number of FNN (d1, 1, L, p, K, κ, R ) is bounded as follows: 
+
+N (η, FNN (d1, 1, L, p, K, κ, R ), ∥ · ∥ L∞ ) ≤
+
+L(p2 + p)
+
+K
+
+  Lκ L(p + 1) L−1(p∥x∥L∞ + 1) 
+
+η
+
+
+
++ 1 
+
+K
+
+.
+
+# 3 Main Results 
+
+We start by introducing the standing assumptions on the underlying spaces utilized in the main results. 
+
+S. The space U (dU , γ U , L U , β U ) is a function set such that (a) any function u ∈ U is defined on ΩU := [ −γU , γ U ]dU ;(b) for all functions u ∈ U and x, y ∈ ΩU , we have 
+
+|u(x) − u(y)| ≤ LU |x − y|;
+
+(c) for all functions u ∈ U , we have ∥u∥L∞ ≤ βU .In the remainder of this section, we state our main results and discuss their interpretation. We conclude with a brief proof sketch highlighting the key ideas and the role of the intermediate technical lemmas. 13 3.1 Covering Numbers of Product Neural Network Classes 
+
+Our first result concerns the covering number of the clipped multiple operator network class from Defini-tion 2.10. Since this class serves as the hypothesis class in Theorem 3.5, the estimation terms in the gener-alization bound involve log N (η, Cl a, ∥ · ∥ L∞(W ×U ×ΩV )) and therefore require an explicit covering-number estimate. 
+
+Proposition 3.1 (Covering number of the clipped multiple operator network class) . Let 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N )
+
+be the clipped multiple operator class defined in Definition 2.10 where, for each NN in that class, we assume the following input domains: NN : W × U × ΩV 7 → R. Let 
+
+F (L, p, K, κ, h ) = 
+
+L(p2 + p)
+
+K
+
+  2κh
+
+
+
++ 1 
+
+K
+
+.
+
+Then, with h = 2 η/T where 
+
+T = P · H · N ·
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1∥x∥L∞ + 1) + IR 1R3L2κL2−12 (p2 + 1) L2−1(p2∥u∥L∞ + 1) + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3∥α∥L∞ + 1) + R1R2R3
+
+#
+
+,
+
+we obtain the following upper bound on the covering number: 
+
+N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+
+
+≤ [( ⌊2I/h ⌋ + 1) F (L3, p 3, K 3, κ 3, h )F (L2, p 2, K 2, κ 2, h )F (L1, p 1, K 1, κ 1, h )] P ·H·N .
+
+If, in addition, for dW , d U , d V > 0 integers and γW , γ U , γ V , β W , β U , β V , L W , L U , L V > 0, the spaces 
+
+W (dW , γ W , L W , β W ), U (dU , γ U , L U , β U ) and V (dV , γ V , L V , β V ) satisfy Assumption S. , then we can pick 
+
+T = P · H · N ·
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1γV + 1) + IR 1R3L2κL2−12 (p2 + 1) L2−1(p2βU + 1) + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3βW + 1) + R1R2R3
+
+#
+
+.
+
+In particular, the covering number is bounded uniformly in α ∈ W , u ∈ U and x ∈ ΩV .
+
+We note that Proposition 3.1 yields a covering-number bound that depends explicitly on all architectural parameters of the component network classes F1, F2, F3 constituting the hypothesis class, including their depths Li, widths pi, sparsity budgets Ki, parameter magnitudes κi, and output bounds Ri, as well as the multiplicities P, H, N and coefficient magnitude I of the separable expansion. 
+
+3.2 Generalization Bounds 
+
+We now formalize the data-generating and sampling procedure used throughout the paper. In the multiple operator setting the training data are naturally collected in a hierarchical manner: we first sample operator instances α, then sample input functions u conditional on each α, and finally sample evaluation points x at which noisy observations of G[α][ u] are recorded. The following definition makes this hierarchical training-set structure precise. We recall that X ∼ subG( σ2), i.e. X is a mean 0 sub-Gaussian random variable with variance proxy σ2 if 
+
+E(eλX ) ≤ e(λ2σ2)/2. In particular, if X ∼ subG( σ2), then aX ∼ subG( a2σ2).14 Definition 3.2 (Training set) . Let G : W 7 → { G[α] : U → V } be a map. Let μα be a probability measure on W , μu a probability measure on U , and μx a probability measure on ΩV . Given fixed sampling points 
+
+{ys}ncW 
+
+> s=1
+
+⊂ ΩW and {cs}ncU 
+
+> s=1
+
+⊂ ΩU , we define the training set: 
+
+SG, {ys},{cs} =
+
+n
+
+αℓ,
+
+n
+
+uℓi , {(xℓij , w ℓij )}nx
+
+> j=1
+
+onu
+
+> i=1
+
+onα
+
+> ℓ=1
+
+where 
+
+• αℓ iid 
+
+∼ μα and αℓ =  αℓ(y1), . . . , α ℓ(yncW ) ∈ RncW ;
+
+• uℓi iid 
+
+∼ μu and uℓi =  uℓi (c1), . . . , u ℓi (cncU ) ∈ RncU ;
+
+• xℓij iid 
+
+∼ μx drawn from ΩV ;
+
+• wℓij = G[αℓ][ uℓi ]( xℓij ) + ζℓij , where ζℓij are i.i.d. sub-Gaussian noise variables with mean 0 and variance proxy σ2.All random variables are assumed independent across all indices. This structure is illustrated schematically in Figure 1. 
+
+αℓ iid 
+
+∼ μα
+
+uℓi iid 
+
+∼ μu
+
+xℓij iid 
+
+∼ μx
+
+ζℓij iid 
+
+∼ subG (σ2)
+
+wℓi = G[αℓ][ uℓi ]
+
+αℓ = ( αℓ(y1), . . . , α ℓ(yncW )) 
+
+uℓi = ( uℓi (c1), . . . , u ℓi (cncU )) 
+
+wℓij = G[αℓ][ uℓi ]( xℓij ) + ζℓij 
+
+Parametric function 
+
+Input function 
+
+Evaluation points 
+
+Output function 
+
+Noisy output samples 
+
+Sampled parametric function 
+
+Sampled input function 
+
+Noise 
+
+Figure 1: Schematic structure of the training dataset SG, {ys},{cs} defined in Definition 3.2 for multiple operator learning. supG( σ2) denotes a sub-Gaussian distribution with variance proxy σ2. Blue arrows indicate discretization steps; black arrows represent the flow of data. 
+
+Next, we define the trained operator given a dataset SG, {ys},{cs}. In particular, the latter is a neural network chosen from the class Cl a(I, F1, F2, F3, {ys}, {cs}) and obtained by minimizing a L2 empirical loss over the training set. 
+
+Definition 3.3 (Trained operator) . Let Fi for 1 ≤ i ≤ 3 be network classes defined in Definition 2.1. Let 
+
+G : W 7 → { G[α] : U → V } be a map. Let μα be a probability measure on W , μu a probability measure on 
+
+U , and μx a probability measure on ΩV . Given fixed sampling points {ys}ncW 
+
+> s=1
+
+⊂ ΩW and {cs}ncU 
+
+> s=1
+
+⊂ ΩU ,let SG, {ys},{cs} be the training set defined in Definition 3.2. For a, I > 0, the trained a-clipped operator 
+
+Ga,I, F1,F2,F3,S is defined as 
+
+Ga,I, F1,F2,F3,S = argmin 
+
+> NN ∈Cl a(I, F1,F2,F3,{ys},{cs})
+
+1
+
+nαnunxnαX
+
+> ℓ=1
+> nu
+
+X
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+(NN[ αℓ][ uℓi ]( xℓij ) − wℓij )2
+
+where Cl a(I, F1, F2, F3, {ys}, {cs}) is defined in Definition 2.10. 
+
+15 Subsequently, we introduce the expected generalization error of the learned operator. The following quan-tity measures the expected performance of Ga,I, F1,F2,F3,S by averaging over the randomness in the training set S and over unseen test inputs (α, u, x ). It quantifies how well a model trained on one realization of the dataset generalizes to unseen data. 
+
+Definition 3.4 (Expected generalization error) . Let Fi for 1 ≤ i ≤ 3 be network classes defined in Definition 2.1. Let G : W 7 → { G[α] : U → V } be a map. Let μα be a probability measure on W , μu a probability measure on U , and μx a probability measure on ΩV . Let {ys}ncW 
+
+> s=1
+
+⊂ ΩW and {cs}ncU 
+
+> s=1
+
+⊂ ΩU be fixed sampling points. We define the expected generalization error as 
+
+ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+| {z }
+
+> test sampling
+
+ 1
+
+nxnxX
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+| {z }  
+
+> empirical approximation of the squared L2(μx)error
+
+,
+
+where ESG, {ys },{cs } denotes the expectation over the full training dataset SG, {ys},{cs} defined in Definition 3.2 (i.e. over all i.i.d. draws), Ga,I, F1,F2,F3,S is the a-clipped trained operator defined in Definition 3.3, α =(α(y1), α (y2), ..., α (yncW )) ⊤ is a discretization of α and u = ( u(c1), u (c2), ..., u (cncU )) ⊤ is a discretization of u.
+
+We now state our main scaling law bound for the expected generalization error. Fix a target approximation accuracy ε > 0, and instantiate the multiple operator network hypothesis class 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV )
+
+using the ε-dependent architectural scalings prescribed by the approximation theory (so that the class contains an ε-accurate approximant to G). Let η > 0 denote the covering scale used to control the complexity of this class via log N (η, Cl a, ∥ · ∥ L∞(W ×U ×ΩV )). The following theorem combines these ingredients to yield an explicit approximation–estimation tradeoff linking target accuracy, architecture size, and the sampling budgets 
+
+(nα, n u, n x).
+
+Theorem 3.5 (Scaling laws for the expected generalization error) . Let dW , d U , d V > 0 be integers, 
+
+γW , γ U , γ V , β W , β U , β V , L W , L U , L V , L G, L G > 0 and rG, r G ≥ 1
+
+and assume that W (dW , γ W , L W , β W ), U (dU , γ U , L U , β U ) and V (dV , γ V , L V , β V ) satisfy Assumption S. .Let G be a map such that 
+
+G : {α : Ω W 7 → R | ∥ α∥L∞ ≤ βW } 7 → G where 
+
+G =
+
+n
+
+G[α] | G[α] : {u : Ω U 7 → R | ∥ u∥L∞ ≤ βU } 7 → V and 
+
+∥G[α][ u1] − G[α][ u2]∥L∞(Ω V ) ≤ LG ∥u1 − u2∥LrG (Ω U )
+
+o
+
+Furthermore, assume that G satisfies 
+
+∥G(α1) − G(α2)∥L∞({u:Ω U 7 →R | ∥ u∥L∞ ≤βU }× ΩV ) ≤ LG∥α1 − α2∥LrG (Ω W )
+
+for α1, α 2 ∈ { α : Ω W 7 → R | ∥ α∥L∞ ≤ βW }. There exists constants C depending on γV , L V , Cδ depending on LG , d U , γ U , r G , L U , C′ depending on βU , L G , d U , γ U , r G , Cζ depending on LG, d W , γ W , r G, L W and C′′ 
+
+depending on βW , L G, d W , γ W , r G such that the following holds. For any ε > 0,
+
+• let N = 2 2ncW +3 C√dV (C′′ √ncW )ncW ε−(ncW +1) and consider the network class 
+
+F1 = FNN (dV , 1, L 1, p 1, K 1, κ 1, R 1) with parameters scaling as 
+
+L1 = O  d2 
+
+> V
+
+log dV + d2 
+
+> V
+
+(ncW + 1) log( ε−1) + d2 
+
+> V
+
+log(2 ncW +1 (C′′ √ncW )ncW ) , p1 = O(1) ,K1 = O  d2 
+
+> V
+
+log dV + d2 
+
+> V
+
+(ncW + 1) log( ε−1) + d2 
+
+> V
+
+log(2 ncW +1 (C′′ √ncW )ncW )
+
+κ1 = O(2 (dV +1)( ncW +1) ddV /2+1  
+
+> V
+
+ε−(dV +1)( ncW +1) 2ncW +2(C′′ √ncW )ncW
+
+(dV +1) ), R1 = 1 
+
+where the constants hidden in O depend on γV and LV ;
+
+16 • let δ = Cδ ε(1+ dV )(1+ nc W )       
+
+> 22dV+2 nc W+3+ dV nc W(C√dV)dV(C′′ √ncW)nc W
+
+and let {cm}ncU 
+
+> m=1
+
+⊂ ΩU be points so that {B δ(cm)}ncU
+
+> m=1
+
+is a cover of ΩU for some ncU ;
+
+• let H = 2 3+2 ncW +3 dV +2 dV ncW C′√ncU (C√dV )dV (C′′ √ncW )ncW (dV +1) ε−(dV +1)(1+ ncW ) and consider the network class F2 = FNN (ncU , 1, L 2, p 2, K 2, κ 2, R 2) with parameters scaling as 
+
+L2 = O n2 
+
+> cU
+
+log ncU + n2 
+
+> cU
+
+(dV + 1)( ncW + 1) log( ε−1) + n2 
+
+> cU
+
+log(2 dV +1 (CpdV )dV )+ n2 
+
+> cU
+
+(dV + 1) log(2 ncW +1 (C′′ √ncW )ncW ), p2 = O(1) ,K2 = O n2 
+
+> cU
+
+log ncU + n2 
+
+> cU
+
+(dV + 1)( ncW + 1) log( ε−1) + n2 
+
+> cU
+
+log(2 dV +1 (CpdV )dV )+ n2 
+
+> cU
+
+(dV + 1) log(2 ncW +1 (C′′ √ncW )ncW ),κ2 = O(nncU /2+1  
+
+> cU
+
+[ε/ 2] −(dV +1)( ncU +1)( ncW +1) [2 dV +2 (CpdV )dV ]ncU +1 h
+
+2dV +1 (CpdV )dV
+
+i(dV +1)( ncU +1) 
+
+),R2 = 1 
+
+where the constants hidden in O depend on βU , L G , d U , γ U , r G ;
+
+• let ζ = Cζ ε/ 2 and let {ym}ncW 
+
+> m=1
+
+⊂ ΩW be points so that {B ζ (ym)}ncW 
+
+> m=1
+
+is a cover of ΩW for some ncW ;
+
+• let P = 4 C′′ √ncW ε−1 and consider the network class F3 = FNN (ncW , 1, L 3, p 3, K 3, κ 3, R 3) with parameters scaling as 
+
+L3 = O  n2 
+
+> cW
+
+log( ncW ) + n2 
+
+> cW
+
+log( ε−1) , p3 = O(1) , K3 = O  n2 
+
+> cW
+
+log ncW + n2 
+
+> cW
+
+log( ε−1) ,κ3 = O(nncW /2+1  
+
+> cW
+
+2ncW +1 ε−ncW −12ncW +1 ), R3 = 1 
+
+where the constants hidden in O depend on βW , L G, d W , γ W , r G.Let a = βV , I ≥ βV , nα, n u, n x ∈ N, μα a probability measure on W , μu a probability measure on U , and 
+
+μx a probability measure on ΩV . Consider the clipped network class 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ).
+
+For η > 0, the expected generalization error is bounded as follows: 
+
+ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
+≤ 4ε2 + η(8 σ + 6) + 8ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) + 16 σ2
+
+nαnunx
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ log(2) 
+
+
+
++ 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η/ (4 βV ), Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+where α = ( α(y1), α (y2), ..., α (yncW )) ⊤ is a discretization of α and u = ( u(c1), u (c2), ..., u (cncU )) ⊤ is a discretization of u.
+
+In Theorem 3.5, the scaling laws depend on the best-in-class approximation error of the hypothesis class 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), denoted by ε, where the architectural parameters of the component network classes Fi are instantiated as ε-dependent choices. The next corollary controls the resulting metric entropy of this ε-dependent hypothesis class explicitly as a function of ε.
+
+Corollary 3.6 (Metric entropy bound under ε-dependent MNO scaling) . Assume the same setting as in Theo-rem 3.5. Then, 
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+17 ≲ ε−δ1ε−δ2ε−dW  1 + log( η−1)
+
+where δ1 = dU (1 + dV )
+
+
+
+1 + dW
+
+> 2
+
+
+
++ dW (dV +1) 2 + ( dV + 1) and δ2 = dU (1 + dV )
+
+
+
+1 + dW
+
+> 2
+
+
+
+.Remark 3.7 (Effective parameter scaling induced by the ε-dependent MNO construction) . The ε-dependence of the metric entropy term in Corollary 3.6 is driven by the growth in (i) the number of subnetworks in the separable expansion and (ii) the admissible parameter magnitudes. In particular, it depends on the product-structure multiplicities through 
+
+max {N dV , H ncU , P ncW } and on the parameter bounds through max  
+
+> i∈{ 1,2,3}
+
+κi.
+
+As shown in [64, Remark 3.17], this growth is equivalent to the scaling of the total number of non-zero param-eters N# required by the resulting MNO-type architecture: specifically, we have 
+
+N# ≲ ε−γ1 ε−γ2 ε−dW
+
+,
+
+for constants γ1, γ 2 > 0 depending only dW , d U , d V .Theorem 3.5 yields a family of bounds parameterized by the approximation accuracy ε and covering scale 
+
+η; using Corollary 3.6, in the next result, we select ε = ε(nα) and η = η(nα) to balance the approximation and estimation terms and thereby extract a single explicit learning rate as a function of the number of operator samples nα.
+
+Corollary 3.8 (Generalization rate in the number of sampled operators nα). Assume the same setting as in Theorem 3.5. If we pick 
+
+ε =
+
+ dW
+
+2δ2
+
+log log( nα)log log log( nα)
+
+− 1
+
+> dW
+
+and η = 4 βV n−1
+
+> α
+
+with δ2 = dU (1 + dV )
+
+
+
+1 + dW
+
+> 2
+
+
+
+, then the expected generalization error scales as follows: 
+
+ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
+= O
+
+ log log( nα)log log log( nα)
+
+− 2
+
+> dW
+
+!
+
+where the constants hidden in O are independent of nα, n u, n x.
+
+3.3 Proof Sketch 
+
+We briefly summarize the main ideas behind the proofs of Theorem 3.5 and Corollaries 3.6, 3.8. The argu-ments follow the standard approximation–estimation paradigm, but the multiple operator setting (hierarchical sampling and data-dependent predictors) requires a careful organization of the stochastic terms. 
+
+Notation and risk decomposition. We recall that the learned operator network bGS := Ga,I, F1,F2,F3,S de-pends on the (random) training sample S := SG, {ys},{cs}. For any candidate operator F (e.g. a network in our hypothesis class), define the population and empirical risks 
+
+R(F ) := Eα∼μα Eu∼μu Ex∼μx
+
+h F [α][ u]( x) − G[α][ u]( x)2i
+
+,
+
+bRS (F ) := 1
+
+nαnunxnαX
+
+> ℓ=1
+> nu
+
+X
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+
+
+F [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )
+
+2
+
+.
+
+18 With this notation, the expected generalization error is 
+
+T0 = ES R( bGS ).
+
+Adding and subtracting the expected empirical risk of the learned predictor yields the decomposition 
+
+T0 = 2 ES bRS ( bGS ) + 
+
+
+
+ES R( bGS ) − 2 ES bRS ( bGS )
+
+
+
+=: T1 + T2,
+
+which matches (80) (the factor 2 is a bookkeeping constant). 
+
+Step 1: Control of T1 (approximation + stochastic cross-term) The term T1 = 2 ES bRS ( bGS ) is an expected training-error quantity. Using the observation model w = G[α][ u]( x) + ζ from Definition 3.2, we expand the square and split T1 into (i) an approximation component and (ii) a noise-driven cross-term; see (81)–(89). The approximation component is controlled by the expressivity result for the clipped class: by Corollary 2.9 (together with Remark 2.11) there exists a network NN ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV )
+
+such that sup α,u,x | NN[ α][ u]( x) − G[α][ u]( x)| ≤ ε, yielding a contribution of order ε2 in (91). The remaining cross-term involves ( bGS −G)ζ and cannot be averaged out directly because bGS depends on S (and hence on ζ). We control this term by discretizing the relevant function class by an η-net and applying a moment generating function estimate together with a union bound, producing an estimation contribution involving log N (η) and the sample sizes (nα, n u, n x); see Lemma 4.1. This is the origin of the additive η term (net discretization) and the metric-entropy terms in the bound (92) for T1.
+
+Step 2: Control of T2 (generalization gap via symmetrization and discretization) The term T2 = ES R( bGS )−
+
+2ES bRS ( bGS ) is the generalization-gap contribution associated with the data-dependent predictor. To control it, we introduce an independent ghost sample S′ (symmetrization), which rewrites population quantities as expectations of independent empirical averages and reduces the problem to bounding a supremum of a sym-metrized (shifted) process over a shifted clipped class; see (48)–(53). We then discretize this shifted class by an η-net (constructed in Lemma 4.2), reducing the supremum to a maximum over finitely many functions plus an additive discretization error of order η; see (54)–(57). Finally, we bound the resulting maximum by a moment generating function estimate and a union bound over the finite cover, producing a term proportional to 
+
+log N (η) with explicit sample-size factors; see (69)–(79). 
+
+Step 3: Covering numbers and corollaries The proof of Theorem 3.5 is complete once the bounds for T1
+
+and T2 from Steps 1–2 are combined, yielding the stated scaling-law estimate in terms of the metric entropy 
+
+log N (η). To obtain explicit consequences, we then invoke Proposition 3.1 to bound log N (η) for the clipped hypothesis class, and subsequently choose the free parameters η and ε as functions of the sampling budgets to optimize/simplify the bound. This yields Corollary 3.6 (metric entropy as a function of ε) and Corollary 3.8 (an explicit generalization rate after balancing ε and η in terms of nα). 
+
+# 4 Proofs 
+
+In this section, we present detailed proofs of our results. 
+
+4.1 Proofs of the Background Results 
+
+4.1.1 Scaling laws for clipped networks 
+
+Proof of Corollary 2.9. We note that 
+
+E := sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+G[α][ u]( x) − Clip βV (NN[ α][ u]( x)) 
+
+≤ sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+|G[α][ u]( x) − NN[ α][ u]( x)|
+
+19 + sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+NN[ α][ u]( x) − Clip βV (NN[ α][ u]( x)) 
+
+≤ ε + sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+NN[ α][ u]( x) − Clip βV (NN[ α][ u]( x)) (6) 
+
+=: ε
+
+2 + T1
+
+where we used (2) for (6). For a fixed α ∈ W , u ∈ U and x ∈ ΩV , if | NN[ α][ u]( x)| ≤ βV , then T1 = 0 by definition and E ≤ ε/ 2.Else, we first suppose that NN[ α][ u]( x) > β V . This implies that Clip βV (NN[ α][ u]( x)) = βV and therefore, 
+
+T1 = NN[ α][ u]( x) − βV
+
+≤ NN[ α][ u]( x) − G[α][ u]( x)(7) 
+
+≤ | NN[ α][ u]( x) − G[α][ u]( x)|≤ ε
+
+2
+
+(8) where we used the fact that G[α][ u]( x) ≤ βV by Assumption S. for (7) and (2) for (8). Similarly, if 
+
+NN[ α][ u]( x) < −βV , then Clip βV (NN[ α][ u]( x)) = −βV and 
+
+T1 = −βV − NN[ α][ u]( x)
+
+≤ G[α][ u]( x) − NN[ α][ u]( x)(9) 
+
+≤ | NN[ α][ u]( x) − G[α][ u]( x)|≤ ε
+
+2
+
+(10) where we used the fact that G[α][ u]( x) ≥ − βV by Assumption S. for (9) and (2) for (10). Combining (8), (10) and (6), we conclude that E ≤ ε.
+
+4.1.2 Covering numbers for neural network classes 
+
+The following argument follows a standard discretization approach: we first establish uniform L∞ bounds on network outputs and on output differences in terms of the architectural parameters, and then quantize the admissible parameter set to construct an explicit η-net and count its cardinality. 
+
+Proof of Proposition 2.13. 1. We start by establishing a bound for the L∞-norm of the output of 
+
+q ∈ F NN (d1, 1, L, p, K, κ, R ),
+
+i.e. we provide a value of R as a function of all the other parameters. Specifically, we proceed by induction on the network depth to show that 
+
+∥q∥L∞ ≤ κk(p + 1) k−1(p∥x∥L∞ + 1) 
+
+when L = k.We recall the following bound for A ∈ Rm×n and x ∈ Rn:(11) ∥Ax ∥L∞ = max 
+
+> 1≤i≤m
+> n
+
+X
+
+> j=1
+
+[A]ij [x]j ≤ n∥x∥L∞ ∥A∥∞,∞.
+
+Base case: L = 1 The network we consider is q(x) = W1ReLU( x) + b1. Then, we have: 
+
+∥q∥L∞ ≤ ∥ W1ReLU( x)∥L∞ + ∥b1∥∞
+
+≤ p∥W1∥∞,∞∥ReLU( x)∥L∞ + ∥b1∥∞(12) 
+
+≤ pκ ∥x∥L∞ + κ(13) where we used (11) and the fact that the width of network (and hence the dimensions of the matrix W1)is bounded by p for (12) as well as the facts that max {∥ W1∥∞,∞, ∥b1∥∞} ≤ κ and ReLU( x) ≤ x for (13). 20 Induction step: L = k + 1 Suppose that ∥q∥L∞ ≤ κk(p + 1) k−1(p∥x∥L∞ + 1) for L = k. For 
+
+L = k + 1 , we write q(x) = WL+1 ReLU(˜ q(x)) + bL+1 where ˜q is a feedforward ReLU network of depth k. We estimate as follows: 
+
+∥q∥L∞ ≤ p∥WL+1 ∥∞∥ReLU(˜ q(x)) ∥L∞ + ∥bL+1 ∥∞(14) 
+
+≤ pκ ∥˜q(x)∥L∞ + κ(15) 
+
+≤ pκκ k(p + 1) k−1(p∥x∥L∞ + 1) + κ(16) 
+
+≤ pκ k+1 (p + 1) k−1(p∥x∥L∞ + 1) + κk+1 (p + 1) k−1(p∥x∥L∞ + 1) (17) 
+
+= κk+1 (p + 1) k(p∥x∥L∞ + 1) 
+
+where we used (11) and the fact that the width of the network is bounded by p for (14), the facts that 
+
+max {∥ W1∥∞,∞, ∥b1∥∞} ≤ κ
+
+and ReLU( x) ≤ x for (15), the induction hypothesis for (16) and the assumption that κ ≥ 1 for (17). 2. Next, we proceed by induction on the network depth to bound the L∞-norm of the difference between the output of two networks q1, q 2 ∈ F NN (d1, 1, L, p, K, κ, R ). Specifically, we prove that 
+
+∥q1 − q2∥L∞ ≤ kκ k−1(p + 1) k−1(p∥x∥L∞ + 1) d(q1, q 2)
+
+when L = k.
+
+Base case: L = 1 The networks we consider are q1(x) = W (1) 1 ReLU( x) + b(1) 1 and q2(x) = 
+
+W (2) 1 ReLU( x) + b(2) 1 . We have 
+
+∥q1 − q2∥L∞ ≤ ∥ (W (1) 1 − W (2) 1 )ReLU( x)∥L∞ + ∥b(1) 1 − b(2) 1 ∥∞
+
+≤ p∥W (1) 1 − W (2) 1 ∥∞,∞∥x∥L∞ + d(q1, q 2)(18) 
+
+≤ d(q1, q 2)( p∥x∥L∞ ) + 1) 
+
+where we used (11), the fact that the width of the two network is bounded by p and that ReLU( x) ≤ x
+
+for (18). 
+
+Induction step: L = k + 1 Suppose that ∥q1 − q2∥L∞ ≤ kκ k−1(p + 1) k−1(p∥x∥L∞ + 1) d(q1, q 2) for 
+
+L = k. For L = k + 1 , we write qi(x) = W (i)
+
+> L+1
+
+ReLU˜ qi(x) + b(i) 
+
+> L+1
+
+where ˜qi is a feedforward ReLU network of depth k. We estimate as follows: 
+
+∥q1 − q2∥L∞
+
+≤ ∥ W (1) 
+
+> L+1
+
+ReLU(˜ q1(x)) − W (2) 
+
+> L+1
+
+ReLU(˜ q1(x)) − W (2) 
+
+> L+1
+
+ReLU(˜ q2(x)) + W (2) 
+
+> L+1
+
+ReLU(˜ q1(x)) ∥L∞
+
++ ∥b(1)  
+
+> L+1
+
+− b(2) 
+
+> L+1
+
+∥∞
+
+≤ p∥W (1)  
+
+> L+1
+
+− WL+1 ∥∞,∞∥˜q1(x)∥L∞ + p∥W (2) 
+
+> L+1
+
+∥∞,∞∥ReLU(˜ q1(x)) − ReLU(˜ q2(x)) ∥L∞ + d(q1, q 2)
+
+(19) 
+
+≤ pd (q1, q 2)κk(p + 1) k−1(p∥x∥L∞ + 1) + pκ ∥˜q1(x) − ˜q2(x)∥L∞ + d(q1, q 2)
+
+(20) 
+
+≤ pd (q1, q 2)κk(p + 1) k−1(p∥x∥L∞ + 1) + pkκ k(p + 1) k−1(p∥x∥L∞ + 1) d(q1, q 2) + d(q1, q 2)
+
+(21) 
+
+≤ pd (q1, q 2)κk(p + 1) k−1(p∥x∥L∞ + 1) + pkκ k(p + 1) k−1(p∥x∥L∞ + 1) d(q1, q 2)+ ( k + 1) d(q1, q 2)κk(p + 1) k−1(p∥x∥L∞ + 1) 
+
+(22) 21 = ( k + 1) κk(p + 1) k(p∥x∥L∞ + 1) d(q1, q 2)
+
+(23) where we used (11) and the fact that the width of the two network is bounded by p for (19), (4) and the fact that ReLU is 1-Lipschitz for (20), the induction hypothesis for (21), the fact that κ ≥ 1 for (22) and the identity (k + 1)( p + 1) = pk + k + p + 1 for (23). 3. Finally, we derive an upper bound on the covering number of FNN (d1, 1, L, p, K, κ, R ). For any q ∈FNN (d1, 1, L, p, K, κ, R ), the weight matrices and biases satisfy max 1≤ℓ≤L {∥ Wℓ∥∞,∞, ∥bℓ∥∞} ≤ κ, 
+
+so each parameter lies in the interval [−κ, κ ].For a fixed h > 0, we discretize the latter interval into 2κ/h subintervals of length h, yielding ⌊2κ/h ⌋+1 
+
+grid points. Then, for any parameter value c ∈ [−κ, κ ], there exists a grid point c∗ such that |c − c∗| ≤ 
+
+h/ 2.Now, given any q ∈ F NN (d1, 1, L, p, K, κ, R ), let q∗ denote the network where each nonzero parameter of q is replaced by its nearest grid point. By construction, this implies that d(q, q ∗) ≤ h/ 2, and it follows from (5) that 
+
+∥q − q∗∥L∞ ≤ L κ L−1(p + 1) L−1 (p∥x∥L∞ + 1) h
+
+2 .
+
+Thus, setting h = 2ηLκ L−1(p+1) L−1(p∥x∥L∞ +1) , we conclude that the set of networks of the form 
+
+WL · ReLU ( WL−1 · · · ReLU( W1x + b1) + · · · + bL−1) + bL,
+
+i.e. a feedforward ReLU network with L layers and width p, whose nonzero parameters are constrained to grid points forms a η-cover of FNN (d1, 1, L, p, K, κ, R ) in the L∞-norm. It remains to estimate the number of such networks. Since each q ∈ F NN (d1, 1, L, p, K, κ, R ) has at most K nonzero parameters, it suffices to consider networks with parameters restricted to grid points and at most K nonzero parameters. The total number of parameters of a feedforward ReLU network with L layers and width p, is at most 
+
+L(p2 + p), where p2 corresponds to weights and p to biases per layer. Therefore, the number of possible sparsity patterns is bounded by L(p2 + p)
+
+K
+
+
+
+,
+
+and for each such pattern, there are ⌊2κ/h ⌋ + 1 choices per nonzero coordinate. Hence, the total number of distinct networks is at most 
+
+L(p2 + p)
+
+K
+
+  2κh
+
+
+
++ 1 
+
+K
+
+=
+
+L(p2 + p)
+
+K
+
+  Lκ L(p + 1) L−1(p∥x∥L∞ + 1) 
+
+η
+
+
+
++ 1 
+
+K
+
+.
+
+4.2 Proof of the Main Results 
+
+4.2.1 Covering numbers for product network classes 
+
+The proof follows the same discretization strategy as Proposition 2.13, now applied to the separable multiple operator architecture, which is a linear combination of products of three subnetworks. In particular, in addition to quantizing the parameters of the subnetworks lp, bk, and τℓ, we must also quantize the coefficient array 
+
+{θpkℓ } ⊂ [−I, I ] that weights the separable expansion. 
+
+Proof of Proposition 3.1. Let 
+
+NN 1[α][ u]( x) := Clip a
+
+
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θpkℓ lp(α)bk(u)τℓ(x)
+
+
+
+22 and 
+
+NN 2[α][ u]( x) := Clip a
+
+
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+˜θpkℓ ˜lp(α)˜bk(u)˜ τℓ(x)
+
+
+
+be two neural networks in 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ).
+
+We proceed as in Proposition 2.13 and start by estimating as follows: 
+
+∥ NN 1[α][ u]( x) − NN 2[α][ u]( x)∥L∞(W ×U ×ΩV )
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+∥θpkℓ lp(α)bk(u)τℓ(x) − ˜θpkℓ ˜lp(α)˜bk(u)˜ τℓ(x)∥L∞(W ×U ×ΩV )
+
+(24) 
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+
+
+|θpkℓ | · ∥ lp(α)bk(u)τℓ(x) − ˜lp(α)˜bk(u)˜ τℓ(x)∥L∞(W ×U ×ΩV )
+
++ |θpkℓ − ˜θpkℓ | · ∥ ˜lp(α)˜bk(u)˜ τℓ(x)∥L∞(W ×U ×ΩV )
+
+#
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+"
+
+|θpkℓ | · 
+
+
+
+∥lp(α)∥L∞(W ) · ∥ bk(u)τℓ(x) − ˜bk(u)˜ τℓ(x)∥L∞(U ×ΩV )
+
++ ∥lp(α) − ˜lp(α)∥L∞(W ) · ∥ ˜bk(u)˜ τℓ(x)∥L∞(U ×ΩV )
+
+
+
++ |θpkℓ − ˜θpkℓ | · ∥ ˜lp(α)˜bk(u)˜ τℓ(x)∥L∞(W ×U ×ΩV )
+
+#
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+"
+
+|θpkℓ | · 
+
+
+
+∥lp(α)∥L∞(W ) ·
+
+h
+
+∥bk(u)∥L∞(U ) · ∥ τℓ(x) − ˜τℓ(x)∥L∞(Ω V )
+
++ ∥bk(u) − ˜bk(u)∥L∞(U ) · ∥ ˜τℓ(x)∥L∞(Ω V )
+
+i
+
++ ∥lp(α) − ˜lp(α)∥L∞(W )∥˜bk(u)˜ τℓ(x)∥L∞(U ×ΩV )
+
+
+
++ |θpkℓ − ˜θpkℓ | · ∥ ˜lp(α)˜bk(u)˜ τℓ(x)∥L∞(W ×U ×ΩV )
+
+#
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+"
+
+I
+
+
+
+R3
+
+h
+
+R2∥τℓ(x) − ˜τℓ(x)∥L∞(Ω V ) + ∥bk(u) − ˜bk(u)∥L∞(U )R1
+
+i
+
++ ∥lp(α) − ˜lp(α)∥L∞(W )R2R1
+
+
+
++ |θpkℓ − ˜θpkℓ | · R3R2R1
+
+#
+
+(25) 
+
+≤
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+"
+
+I
+
+
+
+R3
+
+h
+
+R2L1κL1−11 (p1 + 1) L1−1(p1∥x∥L∞ + 1) d(τℓ, ˜τℓ)+ R1L2κL2−12 (p2 + 1) L2−1(p2∥u∥L∞ + 1) d(bk, ˜bk)
+
+i
+
++ R1R2L3κL3−13 (p3 + 1) L3−1(p3∥α∥L∞ + 1) d(lp, ˜lp)
+
+
+
++ |θpkℓ − ˜θpkℓ | · R3R2R1
+
+#
+
+(26) 
+
+=
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1∥x∥L∞ + 1) d(τℓ, ˜τℓ)+ IR 1R3L2κL2−12 (p2 + 1) L2−1(p2∥u∥L∞ + 1) d(bk, ˜bk)
+
+23 + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3∥α∥L∞ + 1) d(lp, ˜lp) + R1R2R3|θpkℓ − ˜θpkℓ |
+
+#
+
+(27) where we used the fact that the clipping operator Clip is 1-Lipschitz for (24), Definitions 2.1 and 2.10 for (25) as well as Proposition 2.13 for (26). By the definition of Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), we have θpkℓ , ˜θpkℓ ∈ [−I, I ] and each param-eter of lp, bk and τℓ is contained in [−κ3, κ 3], [−κ2, κ 2] and [−κ1, κ 1], respectively. For a fixed h > 0, we discretize the latter intervals into 2I/h , 2κ1/h , 2κ2/h and 2κ3/h subintervals of length h, yielding ⌊2I/h ⌋+1 ,
+
+⌊2κ1/h ⌋ + 1 , ⌊2κ2/h ⌋ + 1 and ⌊2κ3/h ⌋ + 1 grid points. Then, for any coefficient θpkℓ or parameter value c of 
+
+lp, bk and τℓ, there exists grid points θ∗ or c∗ such that |θpkℓ − θ∗| ≤ h/ 2 or |c − c∗| ≤ h/ 2.Now, for any NN ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), let NN ∗ denote its grid-constrained approxi-mation. Specifically, 
+
+NN ∗[α][ u]( x) = Clip a
+
+
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θ∗
+
+> pkℓ
+
+l∗
+
+> p
+
+(α)b∗
+
+> k
+
+(u)τ ∗ 
+
+> ℓ
+
+(x)
+
+ .
+
+where θ∗ 
+
+> pkℓ
+
+is the nearest grid point to θpkℓ and l∗
+
+> p
+
+, b∗
+
+> k
+
+, and τ ∗ 
+
+> ℓ
+
+are the grid-constrained versions of lp, bk, and 
+
+τℓ, obtained by replacing each nonzero parameter with its nearest grid point. By construction, this implies that 
+
+|θpkℓ − θ∗
+
+> pkℓ
+
+| ≤ h/ 2, d(lp, l ∗
+
+> p
+
+) ≤ h/ 2, d(bk, b ∗
+
+> k
+
+) ≤ h/ 2 and d(τℓ, τ ∗ 
+
+> ℓ
+
+) ≤ h/ 2. Inserting this into (27), this yields 
+
+∥ NN[ α][ u]( x) − NN ∗[α][ u]( x)∥L∞(W ×U ×ΩV )
+
+≤ P · H · N · h
+
+2
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1∥x∥L∞ + 1) + IR 1R3L2κL2−12 (p2 + 1) L2−1(p2∥u∥L∞ + 1) + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3∥α∥L∞ + 1) + R1R2R3
+
+#
+
+(28) 
+
+=: h
+
+2 T
+
+By picking h = 2ηT , we conclude that the set of the networks of the form 
+
+Clip a
+
+
+
+> P
+
+X
+
+> p=1
+> H
+
+X
+
+> k=1
+> N
+
+X
+
+> ℓ=1
+
+θpkℓ lp(α)bk(u)τℓ(x)
+
+
+
+whose nonzero coefficients and parameters are constrained to grid points form a η-cover of 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ).
+
+For each tuple (p, k, ℓ ), since lp, bk and τℓ have at most K3, K2 and K1 nonzero parameters, it suffices to consider networks restricted to grid points and at most K3, K2 and K1 nonzero parameters. As argued in Proposition 2.13, for each tuple (p, k, ℓ ), there therefore are • F (L3, p 3, K 3, κ 3, h ) possible grid-constrained networks l∗
+
+> p
+
+,• F (L2, p 2, K 2, κ 2, h ) possible grid-constrained networks b∗
+
+> k
+
+• and F (L1, p 1, K 1, κ 1, h ) possible grid-constrained networks τ ∗ 
+
+> ℓ
+
+.Furthermore, there are ⌊2I/h ⌋ + 1 choices for θ∗ 
+
+> pkℓ
+
+and thus, for each tuple (p, k, ℓ ), this yield a total of 
+
+(⌊2I/h ⌋ + 1) F (L3, p 3, K 3, κ 3, h )F (L2, p 2, K 2, κ 2, h )F (L1, p 1, K 1, h )
+
+24 grid-constrained networks. Since for each of the P · H · N tuples (p, k, ℓ ), the associated grid-constrained networks can be selected independently, we conclude that 
+
+N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+
+
+≤ [( ⌊2I/h ⌋ + 1) F (L3, p 3, K 3, κ 3, h )F (L2, p 2, K 2, κ 2, h )F (L1, p 1, K 1, κ 1, h )] P ·H·N .
+
+For the second claim of the Proposition, we continue from (28) and estimate it using Assumption S. :
+
+∥ NN[ α][ u]( x) − NN ∗[α][ u]( x)∥L∞(W ×U ×ΩV )
+
+≤ P · H · N · h
+
+2
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1∥x∥L∞ + 1) + IR 1R3L2κL2−12 (p2 + 1) L2−1(p2∥u∥L∞ + 1) + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3∥α∥L∞ + 1) + R1R2R3
+
+#
+
+≤ P · H · N · h
+
+2
+
+"
+
+IR 2R3L1κL1−11 (p1 + 1) L1−1(p1γV + 1) + IR 1R3L2κL2−12 (p2 + 1) L2−1(p2βU + 1) + IR 1R2L3κL3−13 (p3 + 1) L3−1(p3βW + 1) + R1R2R3
+
+#
+
+.
+
+The rest of the proof is analogous to the first part. 
+
+4.2.2 Generalization bounds 
+
+We start this section with several intermediate results used in the proof of Theorem 3.5. Specifically, the next result bounds a quantity appearing in the estimation of the expected training-error. 
+
+Lemma 4.1 (Noise-error cross term bound) . Assume the same setting as in Theorem 3.5. Then, 
+
+ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+> ℓ=1
+> nu
+
+X
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+≤ ησ + σ
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+
+
+×
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) 
+
+where Emp(NN) 2 = 1
+
+> nαnunx
+
+Pnα
+
+> ℓ=1
+
+Pnu
+
+> i=1
+
+Pnx 
+
+> j=1
+
+NN[ αℓ][ uℓi ][ xℓij ]2.Proof. Let 
+
+Cvr = {N N ∗ 
+
+> k
+
+}N (η, Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV ))
+
+> k=1
+
+be the η-covering constructed in the proof of Proposition 3.1. We have that 
+
+Ga,I, F1,F2,F3,S ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV )
+
+and there therefore exists G∗ 
+
+> a,I, F1,F2,F3,S
+
+∈ Cvr such that (29) ∥Ga,I, F1,F2,F3,S − G∗ 
+
+> a,I, F1,F2,F3,S
+
+∥L∞(W ×U ×ΩV ) ≤ η. 
+
+25 Step 1: Decomposition We first decompose our quantity of interest as follows: 
+
+T1 := ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+= ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) ζℓij 
+
+
+
++ ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij ) ζℓij 
+
+
+
+=: T2 + T3.
+
+(30) We first upper bound T2 as follows: 
+
+T 22 ≤ ESG, {ys },{cs }
+
+"
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+
+
+Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij )
+
+− G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij )
+
+
+
+ζℓij 
+
+!2#
+
+(31) 
+
+≤ ESG, {ys },{cs }
+
+"
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+
+
+Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij )
+
+− G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij )
+
+2!
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ζ2
+
+ℓij 
+
+!# 
+
+(32) 
+
+≤ η2ESG, {ys },{cs }
+
+"
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ζ2
+
+ℓij 
+
+#
+
+(33) 
+
+≤ η2σ2
+
+(34) where we used Jensen’s inequality for (31), Cauchy-Schwarz on the inner sum for (32), (29) for (33) and Definition 3.2 for (34). 
+
+Step 2: Moment generating function estimation We now turn to the estimation of T3. In particular, we want to express the latter through moments of sub-Gaussian random variables. We first recall the squared empirical evaluation of a network 
+
+Emp(NN) 2 = 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+NN[ αℓ][ uℓi ][ xℓij ]2.
+
+With an abuse of notation, for our map G, we also write 
+
+Emp( G)2 = 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+G[αℓ][ uℓi ][ xℓij ]2.
+
+Then, 
+
+Emp( G∗
+
+a,I, F1,F2,F3,S − G)= Emp( G∗
+
+a,I, F1,F2,F3,S − Ga,I, F1,F2,F3,S + Ga,I, F1,F2,F3,S − G)
+
+≤
+
+"
+
+2
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ][ xℓij ] − Ga,I, F1,F2,F3,S [αℓ][ uℓi ][ xℓij ]2
+
+26 + 2
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ][ xℓij ] − G[αℓ][ uℓi ][ xℓij ]) 2
+
+#1/2
+
+≤ 2η2 + 2Emp( Ga,I, F1,F2,F3,S − G)21/2
+
+(35) 
+
+≤ √2 [ η + Emp( Ga,I, F1,F2,F3,S − G)) (36) where we used (29) for (35). Next, we define 
+
+zk = 1
+
+√nαnunxEmp(NN ∗
+
+k −G)
+
+nαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN ∗
+
+k[αℓ][ uℓi ][ xℓij ] − G[αℓ][ uℓi ][ xℓij ]) ζℓij 
+
+for 1 ≤ k ≤ N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ and note that, 
+
+zk | { αℓ, {uℓi , {xℓij }}} ∼ subG σ2
+
+Pnα
+
+ℓ=1 
+
+Pnu
+
+i=1 
+
+Pnx
+
+j=1 (NN ∗
+
+k[αℓ][ uℓi ][ xℓij ] − G[αℓ][ uℓi ][ xℓij ]) 2
+
+Emp(NN ∗
+
+k −G)2nαnunx
+
+!
+
+(37) 
+
+∼ subG( σ2)
+
+where we used Definition 3.2 and [5, p.24] for (37). We estimate as follows: 
+
+T3 = ESG, {ys },{cs }
+
+" Emp( G∗
+
+a,I, F1,F2,F3,S − G)
+
+nαnunx
+
+×
+
+Pnα
+
+ℓ=1 
+
+Pnu
+
+i=1 
+
+Pnx
+
+j=1 
+
+
+
+G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )
+
+
+
+ζℓij 
+
+Emp( G∗
+
+a,I, F1,F2,F3,S − G)
+
+#
+
+≤ √2ESG, {ys },{cs }
+
+"
+
+η + Emp( Ga,I, F1,F2,F3,S − G)
+
+√nαnunx
+
+×
+
+Pnα
+
+ℓ=1 
+
+Pnu
+
+i=1 
+
+Pnx
+
+j=1 
+
+
+
+G∗
+
+a,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )
+
+
+
+ζℓij 
+
+√nαnunxEmp( G∗
+
+a,I, F1,F2,F3,S − G)
+
+#
+
+(38) 
+
+≤ √2ESG, {ys },{cs }
+
+ η + Emp( Ga,I, F1,F2,F3,S − G)
+
+√nαnunx
+
+max 
+
+k |zk|
+
+
+
+≤√2
+
+√nαnunx
+
+r
+
+ESG, {ys },{cs }
+
+h
+
+(η + Emp( Ga,I, F1,F2,F3,S − G)) 2is
+
+ESG, {ys },{cs }
+
+
+
+max 
+
+k |z2
+
+k|
+
+
+
+(39) 
+
+≤ 2
+
+√nαnunx
+
+q
+
+ESG, {ys },{cs } [η2 + Emp( Ga,I, F1,F2,F3,S − G)2]
+
+×
+
+s
+
+E{αℓ,{uℓi ,{xℓij }}} 
+
+
+
+E{ζℓij }
+
+
+
+max 
+
+k |z2
+
+k| | { αℓ, {uℓi , {xℓij }}} 
+
+ 
+
+(40) 
+
+≤ 2
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+
+
+×
+
+s
+
+E{αℓ,{uℓi ,{xℓij }}} 
+
+
+
+E{ζℓij }
+
+
+
+max 
+
+k |z2
+
+k| | { αℓ, {uℓi , {xℓij }}} 
+
+ 
+
+(41) 
+
+=: 2
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+ q 
+
+E{αℓ,{uℓi ,{xℓij }}} [T4](42) where we used (36) for (38), Cauchy-Schwarz for (39), we split the expectation 
+
+ESG, {ys },{cs } = En
+
+αℓ,
+
+n
+
+uℓi ,{(xℓij ,ζ ℓij )}j
+
+o
+
+> i
+
+o
+
+> ℓ
+
+= En
+
+αℓ,
+
+n
+
+uℓi ,{xℓij }j
+
+o
+
+> i
+
+o
+
+> ℓ
+
+,{ζℓij }ℓij 
+
+using the law of iterated expectations EX,Y [f (X, Y )] = EY [EX [f (X, Y ) | Y ]] for (40) and the inequality √a2 + b ≤ a + √b for (41). 27 Our aim is now show that T4 ≤ C for C > 0 independent of all other random variables. This will follow from standard bounds on moment generating functions of the sub-Gaussian variables zk | { αℓ, {uℓi , {xℓij }}} .For 2/σ 2 ≤ t ≤ 4/σ 2, we proceed as follows: 
+
+T4 = 1
+
+t log 
+
+
+
+exp 
+
+
+
+E{ζℓij }
+
+
+
+max  
+
+> k
+
+t|z2
+
+> k
+
+| | { αℓ, {uℓi , {xℓij }}} 
+
+ 
+
+≤ 1
+
+t log 
+
+
+
+E{ζℓij }
+
+
+
+max  
+
+> k
+
+etz 2 
+
+> k
+
+| { αℓ, {uℓi , {xℓij }}} 
+
+ 
+
+(43) 
+
+≤ 1
+
+t log 
+
+E{ζℓij }
+
+ 
+
+> N
+
+(η, Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV ))X
+
+> k=1
+
+etz 2 
+
+> k
+
+| { αℓ, {uℓi , {xℓij }}} 
+
+
+
+≤ 1
+
+t log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ 1
+
+t log 
+
+
+
+E{ζℓij }
+
+h
+
+etz 21 | { αℓ, {uℓi , {xℓij }}} 
+
+i 
+
+(44) 
+
+≤ 1
+
+t log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + 1
+
+t log(2) (45) where we used Jensen’s inequality for (43), the fact that zk is identically distributed for all k by (37) for (44) and the following equivalence from [5, p. 26] for (45): X ∼ subG( v) if and only if E
+
+h
+
+etX 2 i
+
+≤ 2 for all 
+
+2/v ≤ t ≤ 4/v . Picking t = 4 /σ 2, we obtain that 
+
+T4 ≤ σ2
+
+4 log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ σ2
+
+4 log(2) 
+
+which is non-random, since uniform in α ∈ W , u ∈ U and x ∈ ΩV by the second claim of Proposition 3.1. Therefore, substituting the latter expression in (42) yields: 
+
+T3 ≤ σ
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+
+
+×
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) .
+
+Continuing from (30) and using (34), we conclude that 
+
+T1 ≤ ησ + σ
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+
+
+×
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) .
+
+We next establish the covering number of a shifted network class used for bounding the generalization-gap. 
+
+Lemma 4.2 (Covering number of the shifted clipped multiple operator class) . Let 
+
+Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N )
+
+be the clipped multiple operator class defined in Definition 2.10 where, for each NN in that class, we assume the following input domains: NN : W × U × ΩV 7 → R. Let G : W 7 → { G[α] : U 7 → V } be a map such that 
+
+∥G∥L∞(W ×U ×ΩV ) ≤ a and define the shifted clipped multiple operator class 
+
+SCl a(I, F1, F2, F3, {ys}, {cs}, P, H, N )=
+
+n
+
+(NN[ α][ u]( x) − G[α][ u]( x)) 2 | NN ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N )
+
+o
+
+.
+
+Then, 
+
+{(N N ∗ 
+
+> k
+
+− G)2}N (η/ (4 a),Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV ))
+
+> k=1
+
+28 is a η-cover of SCl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ) where 
+
+{N N ∗ 
+
+> k
+
+}N (η/ (4 a),Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV ))
+
+> k=1
+
+is the η/ (4 a)-covering constructed in the proof of Proposition 3.1. In particular, we also have that 
+
+N  η, SCl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+
+
+≤ N  η/ (4 a), Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+
+
+and 
+
+∥(N N ∗ 
+
+> k
+
+− G)2∥L∞(W ×U ×ΩV ) ≤ 4a2
+
+for all 1 ≤ k ≤ N  η/ (4 a), Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+.Proof. Let g = (NN −G)2 and ˜g = ( gNN − G)2 be two networks in SCl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ).Then, we have: 
+
+∥g − ˜g∥L∞(W ×U ×ΩV ) =
+
+
+
+NN −gNN 
+
+  
+
+NN + gNN − 2G
+
+   
+
+> L∞(W×U×ΩV)
+
+(46) 
+
+≤ NN −gNN L∞(W ×U ×ΩV ) NN + gNN − 2G L∞(W ×U ×ΩV )
+
+≤ 4a NN −gNN L∞(W ×U ×ΩV )
+
+(47) where we used the identity (b − c)2 − (d − c)2 = ( b − d)( b + d − 2c) for (46) as well as the facts that 
+
+NN , gNN ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ) and ∥G∥L∞(W ×U ×ΩV ) ≤ a for (47). Let {N N ∗ 
+
+> k
+
+}N (η/ (4 a),Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV )) 
+
+> k=1
+
+be the η/ (4 a)-covering constructed in the proof of Proposition 3.1. Equation (47) implies that 
+
+{(N N ∗ 
+
+> k
+
+− G)2}N (η/ (4 a),Cl a(I, F1,F2,F3,{ys},{cs},P,H,N ),∥·∥ L∞(W ×U ×ΩV ))
+
+> k=1
+
+forms a η-covering of SCl a(I, F1, F2, F3, {ys}, {cs}, P, H, N ). In particular, by the construction in Proposi-tion 3.1, we know that ∥ NN ∗ 
+
+> k
+
+∥L∞(W ×U ×ΩV ) ≤ a for all k and therefore, 
+
+∥(N N ∗ 
+
+> k
+
+− G)2∥L∞(W ×U ×ΩV ) ≤ 4a2.
+
+Lemma 4.3 (Bound on generalization gap/estimation part) . Assume the same setting as in Theorem 3.5. Then, 
+
+ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
+− 2ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+> ℓ=1
+> nu
+
+X
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
+≤ 6η + 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+where SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ) is defined in Lemma 4.2. Proof. For ease of notation, we define 
+
+ˆg[α][ u][ x] = ( Ga,I, F1,F2,F3,S [α][ u]( x) − G[α][ u]( x)) 2 .
+
+29 Step 1: Symmetrization We estimate as follows: 
+
+T1 := ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
+− 2ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
+= ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α][ u]( xj )
+
+
+
+− 2ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[αℓ][ uℓi ]( xℓij )
+
+
+
+= 2 ESG, {ys },{cs }
+
+"
+
+Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α][ u]( xj )
+
+
+
+− 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[αℓ][ uℓi ]( xℓij ) − 12 Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α][ u]( xj )
+
+#
+
+≤ 2ESG, {ys },{cs }
+
+"
+
+Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α][ u]( xj )
+
+
+
+− 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[αℓ][ uℓi ]( xℓij ) − 18β2
+
+V
+
+Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg2[α][ u]( xj )
+
+#
+
+(48) where we used the fact that 
+
+Ga,I, F1,F2,F3,S [α][ u]( x) ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV )
+
+and Assumption S. on V imply that (49) ∥ˆg[α][ u]( x)∥L∞(W ×U ×ΩV ) ≤ 4β2
+
+V ,
+
+thus ˆg2/(4 β2
+
+V ) ≤ ˆg · ˆg/ (4 β2
+
+V ) ≤ ˆg, for (48). Let S′ be an independent copy of S. We introduce the latter to symmetrize (48). In particular, 
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+ = 1
+
+nαnunαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+
+
+= Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+ˆg[α][ u]( xj )
+
+(50) where we used Definition 3.2 for (50). Inserting (50) in (48), we obtain 
+
+T1 ≤ 2ESG, {ys },{cs }
+
+"
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+
+
+− 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg[αℓ][ uℓi ]( xℓij ) − 18β2
+
+V
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ˆg2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+#
+
+30 ≤ 2ESG, {ys },{cs }
+
+"
+
+sup 
+
+g∈SCl 
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ])( x′
+
+ℓij )
+
+
+
+− 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[αℓ][ uℓi ]( xℓij ) − 18β2
+
+V
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+!# 
+
+(51) 
+
+= 2 ESG, {ys },{cs }
+
+"
+
+sup 
+
+g∈SCl 
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g[αℓ][ uℓi ]( xℓij )
+
+
+
+− 116 β2
+
+V
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[αℓ][ uℓi ]( xℓij )
+
+!# 
+
+(52) 
+
+= 2 ESG, {ys },{cs }
+
+"
+
+sup 
+
+g∈SCl 
+
+ES′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g[αℓ][ uℓi ]( xℓij )
+
+
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g2[αℓ][ uℓi ]( xℓij )
+
+!# 
+
+= 2 ESG, {ys },{cs }
+
+"
+
+sup 
+
+g∈SCl 
+
+ES′
+
+> G, {ys },{cs }
+
+"
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g[αℓ][ uℓi ]( xℓij )
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g2[αℓ][ uℓi ]( xℓij )
+
+#!# 
+
+≤ 2ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+sup 
+
+g∈SCl 
+
+1
+
+nαnαX
+
+ℓ=1 
+
+1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g[αℓ][ uℓi ]( xℓij )
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+ 1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g2[αℓ][ uℓi ]( xℓij )
+
+!!# 
+
+(53) where we used the facts that Ga,I, F1,F2,F3,S [α][ u]( x) ∈ Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV )
+
+and SCl = SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ) is the shifted clipped multiple operator net-work class defined in Lemma 4.2 in (51), the fact that S′ be an independent copy of S for (52) and Jensen’s inequality for (53). 
+
+Step 2: Moment generating function estimation Let 
+
+Cvr = {g∗
+
+k}N (η, SCl a(I, F1,F2,F3,{ys},{cs},P nc W ,H nc U ,N dV ),∥·∥ L∞(W ×U ×ΩV ))
+
+k=1 
+
+be the η-cover of SCl constructed in Lemma 4.2. Then, for every g ∈ SCl , there exists g∗ ∈ Cvr such that 
+
+∥g − g∗∥L∞(W ×U ×ΩV ) ≤ η. Using this, we estimate as follows: 
+
+g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g[αℓ][ uℓi ]( xℓij ) = g[α′
+
+ℓ][ u′
+
+ℓi ][ x′
+
+ℓij ] − g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗[αℓ][ uℓi ]( xℓij )+ g∗[αℓ][ uℓi ]( xℓij ) − g[αℓ][ uℓi ]( xℓij )
+
+≤ 2∥g − g∗∥L∞(W ×U ×ΩV ) + g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗[αℓ][ uℓi ]( xℓij )
+
+31 ≤ 2η + g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗[αℓ][ uℓi ]( xℓij )(54) and 
+
+g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g2[αℓ][ uℓi ]( xℓij )= g2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − (g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g2[αℓ][ uℓi ]( xℓij ) − (g∗)2[αℓ][ uℓi ]( xℓij )+ ( g∗)2[αℓ][ uℓi ]( xℓij ) + ( g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+≥ (g∗)2[αℓ][ uℓi ]( xℓij ) + ( g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )
+
+− | g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )| · | g[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij )|− | g[αℓ][ uℓi ]( xℓij ) − g∗[αℓ][ uℓi ]( xℓij )| · | g[αℓ][ uℓi ]( xℓij ) + g∗[αℓ][ uℓi ]( xℓij )|(55) 
+
+≥ (g∗)2[αℓ][ uℓi ]( xℓij ) + ( g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − 2η  ∥g∥L∞(W ×U ×ΩV ) + ∥g∗∥L∞(W ×U ×ΩV )
+
+
+
+≥ (g∗)2[αℓ][ uℓi ]( xℓij ) + ( g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − 16 ηβ 2
+
+V(56) where we used the inequality (a − b)( a + b) + |a − b| · | a + b| = a2 − b2 + |a − b| · | a + b| ≥ 0 twice for (55) as well as (49) and Lemma 4.2 for (56). Inserting (54) and (56) into (53), we continue estimating as follows: 
+
+T1 ≤ 2ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+3η + sup 
+
+g∈SCl 
+
+1
+
+nαnαX
+
+ℓ=1 
+
+1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g∗[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗[αℓ][ uℓi ]( xℓij )
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+ 1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(g∗)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + ( g∗)2[αℓ][ uℓi ]( xℓij )
+
+!!# 
+
+= 6 η + 2 ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+max 
+
+k
+
+1
+
+nαnαX
+
+ℓ=1 
+
+1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )
+
+− 116 β2
+
+V
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+ 1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(g∗
+
+k)2[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) + ( g∗
+
+k)2[αℓ][ uℓi ]( xℓij )
+
+!!# 
+
+=: 6 η + T2.
+
+(57) For ease of notation, we write ES,S ′ for ESG, {ys },{cs },S ′ 
+
+> G, {ys },{cs }
+
+and define 
+
+rk(α′
+
+ℓ, {u′
+
+ℓi }nu
+
+i=1 , {x′
+
+ℓij }nu,n x
+
+i,j =1 , α ℓ, {uℓi }nu
+
+i=1 , {xℓij }nu,n x
+
+i,j =1 ) = 1
+
+nunxnuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )
+
+=: rkℓ 
+
+and note that, since S and S′ are identical copies, (58) ES,S ′ [rkℓ ] = 0 .
+
+For fixed k and ℓ, we also define 
+
+Z(kℓ )
+
+ij := g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij ),
+
+such that rkℓ = 1
+
+nunx
+
+Pnu
+
+i=1 
+
+Pnx
+
+j=1 Z(kℓ )
+
+ij . By (58), we have 
+
+Var( rkℓ ) = ES,S ′ [r2
+
+kℓ ]= ES,S ′
+
+ 1(nunx)2
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+nuX
+
+s=1 
+
+nxX
+
+q=1 
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+sq 
+
+
+
+= ES,S ′
+
+ 1(nunx)2
+
+X
+
+(i,j )=( s,q )
+
+
+
+Z(kℓ )
+
+ij 
+
+2
+
+ + ES,S ′
+
+ 1(nunx)2
+
+X
+
+(i,j )̸=( s,q )
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+sq 
+
+
+
+32 = ES,S ′
+
+ 1(nunx)2
+
+X
+
+(i,j )=( s,q )
+
+
+
+Z(kℓ )
+
+ij 
+
+2
+
+ + ES,S ′
+
+ 1(nunx)2
+
+X
+
+i=s, j ̸ =q
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+iq 
+
+
+
++ ES,S ′
+
+ 1(nunx)2
+
+X
+
+i̸=s
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+sq 
+
+ .(59) For j̸ = q, we estimate as follows: 
+
+ES,S ′
+
+h
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+iq 
+
+i
+
+= ES,S ′
+
+  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )   g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓiq ) − g∗
+
+k[αℓ][ uℓi ]( xℓiq ) 
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα,u ℓi ,u ′
+
+> ℓi
+> iid
+
+∼ μu
+
+"
+
+Exℓij ,x ′ 
+
+> ℓij
+
+,x ℓiq ,x ′
+
+> ℓiq
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )
+
+×  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓiq ) − g∗
+
+k[αℓ][ uℓi ]( xℓiq ) | αℓ, α ′
+
+ℓ, u ℓi , u ′
+
+ℓi 
+
+## 
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα,u ℓi ,u ′
+
+> ℓi
+> iid
+
+∼ μu
+
+"
+
+Exℓij ,x ′
+
+> ℓij
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij ) | αℓ, α ′
+
+ℓ, u ℓi , u ′
+
+ℓi 
+
+#
+
+× Exℓiq ,x ′
+
+> ℓiq
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓiq ) − g∗
+
+k[αℓ][ uℓi ]( xℓiq ) | αℓ, α ′
+
+ℓ, u ℓi , u ′
+
+ℓi 
+
+## 
+
+(60) 
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα,u ℓi ,u ′
+
+> ℓi
+> iid
+
+∼ μu
+
+"
+
+Exℓij ,x ′
+
+> ℓij
+> iid
+
+∼ μx
+
+  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij ) | αℓ, α ′
+
+ℓ, u ℓi , u ′
+
+ℓi 
+
+2#
+
+(61) 
+
+≤ Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα,u ℓi ,u ′
+
+> ℓi
+> iid
+
+∼ μu
+
+"
+
+Exℓij ,x ′
+
+> ℓij
+> iid
+
+∼ μx
+
+  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )2 | αℓ, α ′
+
+ℓ, u ℓi , u ′
+
+ℓi 
+
+#
+
+(62) 
+
+= ES,S ′
+
+
+
+Z(kℓ )
+
+ij 
+
+2
+
+(63) where we used the conditional independence of xℓij , x ′
+
+ℓij and xℓiq , x ′
+
+ℓiq for (60), the fact that xℓij , x ′
+
+ℓij and 
+
+xℓiq , x ′
+
+ℓiq are identically distributed for (61) and Jensen’s inequality for (62). Similarly, for i̸ = s, we have 
+
+ES,S ′
+
+h
+
+Z(kℓ )
+
+ij Z(kℓ )
+
+sq 
+
+i
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα
+
+"
+
+Euℓi ,u ′
+
+> ℓi
+
+,u ℓs ,u ′
+
+> ℓs
+> iid
+
+∼ μu,x ℓij ,x ′ 
+
+> ℓij
+
+,x ℓsq ,x ′
+
+> ℓsq
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )
+
+×  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓs ]( x′
+
+ℓsq ) − g∗
+
+k[αℓ][ uℓs ]( xℓsq ) | αℓ, α ′
+
+ℓ
+
+## 
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα
+
+"
+
+Euℓi ,u ′
+
+> ℓi
+
+,u ℓs ,u ′
+
+> ℓs
+> iid
+
+∼ μu,x ℓij ,x ′ 
+
+> ℓij
+
+,x ℓsq ,x ′
+
+> ℓsq
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij ) | αℓ, α ′
+
+ℓ
+
+#
+
+× Euℓi ,u ′
+
+> ℓi
+
+,u ℓs ,u ′
+
+> ℓs
+> iid
+
+∼ μu,x ℓij ,x ′ 
+
+> ℓij
+
+,x ℓsq ,x ′
+
+> ℓsq
+> iid
+
+∼ μx
+
+"  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓs ]( x′
+
+ℓsq ) − g∗
+
+k[αℓ][ uℓs ]( xℓsq ) | αℓ, α ′
+
+ℓ
+
+## 
+
+(64) 
+
+= Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα
+
+"
+
+Euℓi ,u ′
+
+> ℓi
+
+,u ℓs ,u ′
+
+> ℓs
+> iid
+
+∼ μu,x ℓij ,x ′ 
+
+> ℓij
+
+,x ℓsq ,x ′
+
+> ℓsq
+> iid
+
+∼ μx
+
+  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij ) | αℓ, α ′
+
+ℓ
+
+2#
+
+(65) 
+
+≤ Eαℓ,α ′
+
+> ℓ
+> iid
+
+∼ μα
+
+"
+
+Euℓi ,u ′
+
+> ℓi
+
+,u ℓs ,u ′
+
+> ℓs
+> iid
+
+∼ μu,x ℓij ,x ′ 
+
+> ℓij
+
+,x ℓsq ,x ′
+
+> ℓsq
+> iid
+
+∼ μx
+
+  g∗
+
+k[α′
+
+ℓ][ u′
+
+ℓi ]( x′
+
+ℓij ) − g∗
+
+k[αℓ][ uℓi ]( xℓij )2 | αℓ, α ′
+
+ℓ
+
+#
+
+(66) 33 = ES,S ′
+
+
+
+Z(kℓ )
+
+> ij
+
+2
+
+(67) where we used the conditional independence of uℓi , u ′
+
+> ℓi
+
+, x ℓij , x ′ 
+
+> ℓij
+
+and uℓs , u ′
+
+> ℓs
+
+, x ℓsq , x ′ 
+
+> ℓsq
+
+for (64), the fact that 
+
+uℓi , u ′
+
+> ℓi
+
+, x ℓij , x ′ 
+
+> ℓij
+
+and uℓs , u ′
+
+> ℓs
+
+, x ℓsq , x ′ 
+
+> ℓsq
+
+are identically distributed for (65) and Jensen’s inequality for (66). Inserting (63) and (67) into (59), we obtain: 
+
+Var( rkℓ ) ≤ ES,S ′
+
+ 1(nunx)2
+
+> nu
+
+X
+
+> i=1
+> nx
+
+X
+
+> j=1
+> nu
+
+X
+
+> s=1
+> nx
+
+X
+
+> q=1
+
+
+
+Z(kℓ )
+
+> ij
+
+2
+
+
+
+= ES,S ′
+
+ 1
+
+nunxnuX
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+
+
+Z(kℓ )
+
+> ij
+
+2
+
+
+
+≤ 2ES,S ′
+
+ 1
+
+nunxnuX
+
+> i=1
+> nx
+
+X
+
+> j=1
+
+ g∗
+
+> k
+
+[α′
+
+> ℓ
+
+][ u′
+
+> ℓi
+
+]( x′ 
+
+> ℓij
+
+)2 + g∗
+
+> k
+
+[αℓ][ uℓi ]( xℓij )2 .(68) Our aim is now to estimate T2 through the moment generating function of rkℓ . To this purpose, first re-write 
+
+T2 in (57): 
+
+T2 ≤ 2ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+max 
+
+> k
+
+1
+
+nαnαX
+
+> ℓ=1
+
+
+
+rkℓ − 132 β2
+
+> V
+
+Var( rkℓ )
+
+ !# 
+
+(69) where we used (68) for (69). Then, we proceed as follows for some t > 0:
+
+etT 2/2 ≤ exp tESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+max 
+
+> k
+
+1
+
+nαnαX
+
+> ℓ=1
+
+
+
+rkℓ − 132 β2
+
+> V
+
+Var( rkℓ )
+
+ !#! 
+
+≤ ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+exp t max 
+
+> k
+
+1
+
+nαnαX
+
+> ℓ=1
+
+
+
+rkℓ − 132 β2
+
+> V
+
+Var( rkℓ )
+
+ !! # 
+
+(70) 
+
+≤ X
+
+> k
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+"
+
+exp tnαnαX
+
+> ℓ=1
+
+
+
+rkℓ − 132 β2
+
+> V
+
+Var( rkℓ )
+
+! # 
+
+= X
+
+> knα
+
+Y
+
+> ℓ=1
+
+ESG, {ys },{cs },S ′
+
+> G, {ys },{cs }
+
+
+
+exp 
+
+ tnα
+
+rkℓ 
+
+ 
+
+× exp 
+
+
+
+− tnα
+
+132 β2
+
+> V
+
+Var( rkℓ )
+
+
+
+(71) 
+
+=: X
+
+> knα
+
+Y
+
+> ℓ=1
+
+T3 exp 
+
+
+
+− tnα
+
+132 β2
+
+> V
+
+Var( rkℓ )
+
+
+
+where we used Jensen’s inequality for (70), independence between S and S′ as well as Definition 3.2 for (71). The T3 term is the moment generating function we want to estimate for some λ > 0 (and fixed ℓ): 
+
+ES,S ′
+
+
+
+exp 
+
+ tnα
+
+rkℓ 
+
+ 
+
+= ES,S ′
+
+"
+
+1 + λr kℓ +
+
+> ∞
+
+X
+
+> s=2
+
+λsrskℓ 
+
+s!
+
+#
+
+≤ ES,S ′
+
+"
+
+1 + λr kℓ + λ2r2
+
+> kℓ
+> ∞
+
+X
+
+> s=2
+
+λs−2rs−2
+
+> kℓ
+
+2 · 3s−2
+
+#
+
+(72) 
+
+≤ ES,S ′
+
+"
+
+1 + λr kℓ + λ2r2
+
+> kℓ
+> ∞
+
+X
+
+> s=2
+
+λs−2(8 β2 
+
+> V
+
+)s−2
+
+2 · 3s−2
+
+#
+
+(73) 
+
+= ES,S ′
+
+"
+
+1 + λr kℓ + λ2r2
+
+> kℓ
+
+2
+
+> ∞
+
+X
+
+> s=2
+
+ 8λβ 2
+
+> V
+
+3
+
+s−2 #
+
+(74) 34 where used the fact that s! ≥ 2 · 3s−2 for s ≥ 2 for (72) (which is simply shown through induction) and the fact that 
+
+∥rk(α′
+
+> ℓ
+
+, u ′
+
+> ℓi
+
+, x ′ 
+
+> ℓij
+
+, α ℓ, u ℓi , x ℓij )∥L∞(( W ×U ×ΩV )×(W ×U ×ΩV )) ≤ 2∥g∗
+
+> k
+
+∥L∞(W ×U ×ΩV ) ≤ 8β2
+
+> V
+
+by Lemma 4.2 for (73). We pick λ < 3/(8 β2 
+
+> V
+
+) and continue from (74): 
+
+ES,S ′
+
+"
+
+exp λr kℓ 
+
+!# 
+
+≤ ES,S ′
+
+"
+
+1 + λr kℓ + λ2r2
+
+> kℓ
+
+211 − 8λβ 2
+
+> V
+> 3
+
+#
+
+= 1 + 3λ2
+
+6 − 16 λβ 2
+
+> V
+
+Var( rkℓ )(75) 
+
+≤ exp 
+
+ 3λ2
+
+6 − 16 λβ 2
+
+> V
+
+Var( rkℓ )
+
+
+
+(76) where we used (58) for (75) and the inequality 1 + x ≤ ex for x ≥ 0 for (76). In order to insert (76) into (71), we need to ensure that tnα
+
+≤ 38β2
+
+> V
+
+or, equivalently, (77) t ≤ 3nα
+
+8β2
+
+> V
+
+.
+
+For such t, using (76), we continue from (71) to obtain 
+
+etT 2/2 ≤ X
+
+> knα
+
+Y
+
+> ℓ=1
+
+exp 
+
+Var( rkℓ )
+
+
+
+3
+
+ tnα
+
+2
+
+6 − 16 tβ 2
+
+> V
+> nα
+
+− tnα32 β2
+
+> V
+
+ .(78) Now, we pick t such that 
+
+3
+
+ tnα
+
+2
+
+6 − 16 tβ 2
+
+> V
+> nα
+
+− tnα32 β2
+
+> V
+
+= 0 ,
+
+or, equivalently, 
+
+t = 3nα
+
+56 β2
+
+> V
+
+.
+
+Since 3/8 ≥ 3/56 , we note that this choice of t is compatible with the requirement (77). From (78), we deduce that etT 2/2 ≤ P 
+
+> k
+
+1 = N  η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ where 
+
+SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ) is defined in Lemma 4.2. In turn, this yields 
+
+T2 ≤ 2
+
+t log 
+
+
+
+N
+
+
+
+η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+= 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+.(79) Substituting (79) in (57) yields the claim of the lemma. 
+
+Proof of Theorem 3.5. We start by decomposing the expected generalization error into a bias and a variance term. Specifically, we write: 
+
+T0 := ESG, {ys },{cs } Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+> j=1
+
+(Ga,I, F1,F2,F3,S [α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
+35 = 2 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
++ T0 − 2ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
+=: T1 + T2.(80) 
+
+Step 1: Bound on T1 We start by bounding the T1 term which corresponds to the expected empirical risk, that is the average squared error of the learned operator evaluated on the training inputs, measured against the noise-free outputs. For ease of notation, we will write Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ) = Cl . We estimate as follows: 
+
+T1 = 2 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − wℓij + ζℓij )2
+
+
+
+(81) 
+
+= 2 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − wℓij )2
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − wℓij ) ζℓij 
+
+
+
++ 2 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ζ2
+
+ℓij 
+
+
+
+=: 2 ESG, {ys },{cs }
+
+ min 
+
+NN ∈Cl 
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − wℓij )2
+
+
+
+(82) 
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − wℓij ) ζℓij 
+
+ + 2 T3
+
+≤ 2 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij ) − ζℓij )2
+
+
+
+(83) 
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − wℓij ) ζℓij 
+
+ + 2 T3
+
+= 2 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
+− 4 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij ) − ζℓij ) ζℓij 
+
+ + 4 T3
+
+(84) 36 = 2 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
+− 4 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+(85) where we used the definition of wℓij for (81), Definition 3.3 for (82), Jensen’s inequality and the definition of wℓij for (83) as well as the definition of wℓij for (84). We continue by noting that NN[ αℓ][ uℓi ]( xℓij ) is independent of ζℓij by Definition 3.2 since, for a generic NN ∈ Cl , NN is not trained (this is in contrast with the trained operator Ga, F1,F2,F3,S ∈ Cl which certainly depends on wℓij and thus ζℓij ). Analogously, 
+
+G[αℓ][ uℓi ]( xℓij ) is also independent of ζℓij by Definition 3.2. Therefore, we have: 
+
+min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+= min 
+
+NN ∈Cl 
+
+1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+ESG, {ys },{cs } [(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij ))] ESG, {ys },{cs } [ζℓij ](86) 
+
+= 0 (87) where we used the above-noted independence in (86) and the fact that ESG, {ys },{cs } [ζℓij ] = 0 by Definition 3.2 for (87). Inserting (87) in (85), we obtain: 
+
+T1 ≤ 2 min 
+
+NN ∈Cl ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+= 2 min 
+
+NN ∈Cl 
+
+1
+
+nαnunαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+ESG, {ys },{cs }
+
+ 1
+
+nxnxX
+
+j=1 
+
+(NN[ αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) 2
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+= 2 min 
+
+NN ∈Cl 
+
+1
+
+nαnunαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+(NN[ α][ u]( xj ) − G[α][ u]( xj )) 2
+
+(88) 
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+= 2 min 
+
+NN ∈Cl Eα∼μα Eu∼μu E{xj }nx j=1 ∼μ⊗nx x
+
+ 1
+
+nxnxX
+
+j=1 
+
+(NN[ α][ u]( xj ) − G[α][ u]( xj )) 2
+
+
+
++ 4 ESG, {ys },{cs }
+
+ 1
+
+nαnunxnαX
+
+ℓ=1 
+
+nuX
+
+i=1 
+
+nxX
+
+j=1 
+
+(Ga,I, F1,F2,F3,S [αℓ][ uℓi ]( xℓij ) − G[αℓ][ uℓi ]( xℓij )) ζℓij 
+
+
+
+=: T4 + T5(89) 37 where we used the facts that αℓ iid 
+
+∼ μα, uℓi iid 
+
+∼ μu and xℓij iid 
+
+∼ μx by Definition 3.2 for (88). For T4, we estimate as follows: 
+
+T4 ≤ 2 sup 
+
+> α∈W
+
+sup 
+
+> u∈U
+
+sup 
+
+> x∈ΩV
+
+| NN[ α][ u]( x) − G[α][ u]( x)|2
+
+(90) 
+
+≤ 2ε2
+
+(91) where NN ∈ Cl in (90) is the network such that (3) holds – the latter exists by Corollary 2.9 and Remark 2.11. Combining (91) with Lemma 4.1 (and using the notation from the latter) for T5, we obtain that 
+
+T1 = ESG, {ys },{cs }
+
+Emp( Ga,I, F1,F2,F3,S − G)2
+
+≤ 2ε2 + 4 ησ + 4σ
+
+√nαnunx
+
+
+
+η +
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2]
+
+
+
+×
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) .
+
+As in the proof of [44, Theorem 2], the latter can be equivalently written as ρ2 ≤ c + 2 b ρ with 
+
+ρ =
+
+q
+
+ESG, {ys },{cs } [Emp( Ga,I, F1,F2,F3,S − G)2],c = 2 ε2 + 4 ησ 
+
++ 4ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) 
+
+and 
+
+b = 2σ
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) .
+
+Rearranging terms yields (ρ − b)2 ≤ c + b2, which implies ρ ≤ √c + b2 + b. Consequently, we obtain the bound ρ2 ≤ b2 + c + b2 + 2 b√c + b2 ≤ 2b2 + c + b2 + c + b2 = 2 c + 4 b2 (where the last inequality follows from 2pq ≤ p2 + q2) or, equivalently, 
+
+T1 ≤ 4ε2 + 8 ησ 
+
++ 8ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) + 16 σ2
+
+nαnunx
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ log(2) 
+
+
+
+.
+
+(92) 
+
+Step 2: Bound on T2 By Lemma 4.3, we obtain that 
+
+T2 ≤ 6η + 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+,
+
+so combining the latter with (80) and (92) yields: 
+
+T0 ≤ 4ε2 + 8 ησ 
+
++ 8ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) + 16 σ2
+
+nαnunx
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ log(2) 
+
+
+
++ 6 η + 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η, SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≤ 4ε2 + η(8 σ + 6) 
+
+38 + 8ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) + 16 σ2
+
+nαnunx
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ log(2) 
+
+
+
++ 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η/ (4 βV ), Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+(93) where SCl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ) is defined in Lemma 4.2 and we used the latter for (93). 
+
+Proof of Corollary 3.6. We start by estimating: 
+
+F (L, p, K, κ, h ) = 
+
+L(p2 + p)
+
+K
+
+  2κh
+
+
+
++ 1 
+
+K
+
+≤ (L(p2 + p)) K
+
+ 3κh
+
+K
+
+(94) 
+
+≲
+
+ Lp 2κT η
+
+K
+
+(95) where we used the inequality  nk
+
+ ≤ nk for (94) and the definition of h in Proposition 3.1 for (95). We continue as follows: 
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≤ P ncW HncU N dV log (3 I/h ) + K3 log  L3p23κ3T  + K2 log  L2p22κ2T  + K1 log  L1p21κ1T  
+
+(96) 
+
+≲ P ncW HncU N dV
+
+
+
+log 
+
+ Tη
+
+
+
++ K3 log 
+
+ L3κ3Tη
+
+
+
++ K2 log 
+
+ L2κ2Tη
+
+
+
++ K1 log 
+
+ L1κ1Tη
+
+ 
+
+(97) where we used Proposition 3.1 and (95) for (96) as well as the fact that pi = O(1) for 1 ≤ i ≤ 3 by Theorem 3.5 for (97). We now compute the asymptotic scaling of the all the above constants as a function of ε. In particular, we have • ncW ≲ ε−dW ;• L3 ≍ K3 ≲ (1 + dW )ε−2dW log( ε−1);• for κ3, we first consider the logarithm: 
+
+log( κ3) ≲
+
+ ncW
+
+2 + 1 
+
+
+
+log( ncW ) + (1 + ncW ) log( ε−1)
+
+≲
+
+
+
+1 + dW
+
+2
+
+
+
+ε−dW log( ε−1)
+
+which yields κ3 ≲ ε−ε−dW 
+
+> 
+> 1+ dW
+> 2
+> 
+
+;• for P ncW , we first consider the logarithm: 
+
+log( P ncW ) ≲ ncW
+
+2 log( ncW ) + ncW log( ε−1)
+
+≲
+
+
+
+1 + dW
+
+2
+
+
+
+ε−dW log( ε−1)
+
+which yields P ncW ≲ ε−ε−dW 
+
+> 
+> 1+ dW
+> 2
+> 
+
+;39 • ncU ≲ ε−ε−dW dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
+(as in [64, Remark 3.17]) • L2 ≍ K2 ≲ ε−2ε−dW dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
+− dW log( ε−1)(1 + dU )(1 + dV )
+
+
+
+1 + dW
+
+2
+
+
+
+(as in [64, Remark 3.17]); • for κ2, we first consider the logarithm: 
+
+log( κ2) ≲
+
+
+
+1 + ncU
+
+2
+
+
+
+log( ncU ) + ( dV + 1)( ncU + 1)( ncW + 1) log( ε−1)
+
+≲ ncU
+
+2 log( ncU ) + ncU ncW log( ε−1)
+
+≲ ε−ε−dW dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+ 
+
+ε−dW dU (1 + dV )
+
+
+
+1 + dW
+
+2
+
+
+
+log( ε−1) + ε−dW log( ε−1)
+
+
+
+= ε−ε−dW dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
+ε−dW log( ε−1)
+
+
+
+dU (1 + dV )
+
+
+
+1 + dW
+
+2
+
+
+
++ 1 
+
+
+
+which yields κ2 ≲ ε−ε−ε−dW d U (1+ dV ) 
+
+> 
+> 1+ dW
+> 2
+> 
+
+ε−dW
+
+h
+
+dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
++1 
+
+i
+
+;• HncU ≲ ε−ε−ε−dW d U (1+ dV )  
+
+> 
+> 1+ dW
+> 2
+> 
+> −dW
+
+h
+
+dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
++dW (dV +1) 2 +( dV +1) 
+
+i
+
+(as in [64, Remark 3.17]); • K1 ≍ L1 ≲ ε−dW log( ε−1)d2
+
+V
+
+
+
+1 + dW
+
+2
+
+
+
+• for κ1, we first consider the logarithm: 
+
+log( κ1) ≲ (1 + dV )(1 + ncW ) log( ε−1) + (1 + dV ) ncW
+
+2 log( ncW )
+
+≲ (1 + dV )ε−dW log( ε−1) + (1 + dV ) dW
+
+2 ε−dW log( ε−1)
+
+≲ (1 + dV )(1 + dW
+
+2 )ε−dW log( ε−1)
+
+which yields κ1 ≲ ε−ε−dW (1+ dV )(1+ dW 
+
+> 2
+
+);• N dV ≲ ε−ε−dW dV
+
+ dW 
+
+> 2
+
++1 
+
+
+
+(as in [64, Remark 3.17]). Using the above-derived formulas, we continue from (97) to derive that 
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≲ P ncW HncU N dV
+
+
+
+K2 log 
+
+ L2κ2Tη
+
+ 
+
+.
+
+Taking logarithms on the latter, and relying on the formulas again, we have 
+
+log 
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≲ log( HncU ) + log( K2) + log 
+
+
+
+log 
+
+ L2κ2Tη
+
+ 
+
+from which we deduce that 
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≲ HncU log 
+
+ L2κ2Tη
+
+
+
+(98) 
+
+≲ HncU log( L2κ2T ) + HncU log( η−1).(99) 40 We now consider T and use the asymptotic formulas to estimate as follows: 
+
+T ≲ P ncW HncU N ncU
+
+"
+
+L1κL1−11 + L2κL2−12 + L3κL3−13
+
+#
+
+(100) 
+
+≲ HncU L2κL2−12(101) 
+
+≲ HncU κL2
+
+2(102) where we use the fact that Ri = 1 and pi = O(1) for 1 ≤ i ≤ 3 by Theorem 3.5 for (100) and proceed in analagous fashion to how we obtained (98) for (101) and (102). Writing 
+
+HncU ≲ ε−ε−ε−dW d U (1+ dV )  
+
+> 
+> 1+ dW
+> 2
+> 
+> −dW
+
+h
+
+dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
++dW (dV +1) 2 +( dV +1) 
+
+i
+
+≲: ε−δ1ε−δ2ε−dW
+
+,L2 ≲ ε−2ε−dW dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
+− dW log( ε−1)(1 + dU )(1 + dV )
+
+
+
+1 + dW
+
+2
+
+
+
+≲: δ3ε−δ4ε−dW log( ε−1)
+
+and 
+
+κ2 ≲ ε−ε−ε−dW d U (1+ dV ) 
+
+> 
+> 1+ dW
+> 2
+> 
+
+ε−dW
+
+h
+
+dU (1+ dV )
+
+
+
+1+ dW
+
+> 2
+
+
+
++1 
+
+i
+
+≲: ε−δ5ε−δ6ε−dW
+
+,
+
+from (102), we obtain that 
+
+T ≲ ε−δ1ε−δ2ε−dW
+
+
+
+ε−δ5ε−δ6ε−dW
+
+δ3ε−δ4ε−dW log( ε−1)
+
+≲ ε−δ1ε−δ2ε−dW
+
+ε−δ5δ3ε−(δ6+δ4)ε−dW log( ε−1)
+
+≲ ε−δ1ε−δ2ε−dW −δ5δ3ε−(δ6+δ4)ε−dW log( ε−1)
+
+and therefore 
+
+log( L2κ2T ) ≲ log( κ2T )
+
+≲ log 
+
+
+
+ε−δ1ε−δ2ε−dW −δ5δ3ε−(δ6+δ4)ε−dW log( ε−1)−δ5ε−δ6ε−dW
+
+
+
+≲
+
+
+
+δ1ε−δ2ε−dW + δ5δ3ε−(δ6+δ4)ε−dW log( ε−1) + δ5ε−δ6ε−dW
+
+
+
+log( ε−1).(103) Equation (103) shows that log( L2κ2T ) grows much more slowly than HncU so, continuing from (99), we have 
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+≲ ε−δ1ε−δ2ε−dW  1 + log( η−1) .
+
+Proof of Corollary 3.8. In the proof C > 0 will denote a constant that can be arbitrarily large, is independent of the η, n α, n u, n x, and that may change from line to line. From Theorem 3.5, we want to express 
+
+4ε2 + η(8 σ + 6) + 8ση 
+
+√nαnunx
+
+q
+
+log  N  η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ + log(2) + 16 σ2
+
+nαnunx
+
+
+
+log 
+
+
+
+N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
++ log(2) 
+
+
+
+41 + 112 β2
+
+> V
+
+3nα
+
+log 
+
+
+
+N
+
+
+
+η/ (4 βV ), Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+ 
+
+=: T
+
+as a function of ε. For ease of notation, we write 
+
+N (η) := N
+
+
+
+η, Cl a(I, F1, F2, F3, {ys}, {cs}, P ncW , H ncU , N dV ), ∥ · ∥ L∞(W ×U ×ΩV )
+
+
+
+.
+
+We estimate as follows: 
+
+T ≤ 4ε2 + η(8 σ + 6) + 8ση 
+
+√nαnunx
+
+plog ( N (η/ (4 βV ))) + log(2) + 16 σ2
+
+nαnunx
+
+(log ( N (η/ (4 βV ))) + log(2)) + 112 β2
+
+> V
+
+3nα
+
+log( N (η/ (4 βV ))) 
+
+(104) 
+
+≲ 4ε2 + η(8 σ + 6) + 8ση 
+
+√nαnunx
+
+plog ( N (η/ (4 βV ))) + 16 σ2
+
+nαnunx
+
+log ( N (η/ (4 βV ))) + 112 β2
+
+> V
+
+3nα
+
+log( N (η/ (4 βV ))) 
+
+≲ 4ε2 + η(8 σ + 6) + 8ση 
+
+√nαnunx
+
+ε−(δ1/2) ε−δ2ε−dW  1 + log(4 βV η−1)
+
++ 16 σ2
+
+nαnunx
+
+ε−δ1ε−δ2ε−dW  1 + log(4 βV η−1) + 112 β2
+
+> V
+
+3nα
+
+ε−δ1ε−δ2ε−dW  1 + log(4 βV η−1)
+
+(105) where we used the fact that N (η) ≤ N (˜ η) if ˜η ≤ η for (104) and Corollary 3.6 for (105). By picking 
+
+η = 4 βV n−1 
+
+> α
+
+, we ensure that the η-dependent terms are of comparable scale to the n−1 
+
+> α
+
+-terms and, continuing from (105), we obtain: 
+
+T ≲ 4ε2 + Cnα
+
++ Cn3/2 
+
+> α
+
+(nunx)1/2 ε−(δ1/2) ε−δ2ε−dW
+
+log( nα)+ Cnαnunx
+
+ε−δ1ε−δ2ε−dW
+
+log( nα) + Cnα
+
+ε−δ1ε−δ2ε−dW
+
+log( nα)
+
+≲ 4ε2 + Cnα
+
+ε−δ1ε−δ2ε−dW
+
+log( nα)=: T1 + T2.(106) We now balance the last two terms T1 and T2. Our goal is to choose ε = ε(nα) so that the second term is of (at most) the same order as the first. Motivated by the structure of the exponent, we pick (107) ε := 
+
+ dW
+
+2δ2
+
+log log nα
+
+log log log nα
+
+− 1
+
+> dW
+
+.
+
+We now compute the corresponding asymptotic scales. By definition (107), 
+
+log( ε−1) = 1
+
+dW
+
+log 
+
+ dW
+
+2δ2
+
+log log nα
+
+log log log nα
+
+
+
+= 1
+
+dW
+
+
+
+log dW
+
+2δ2
+
++ log log log nα − log log log log nα
+
+
+
+≲ 1
+
+dW
+
+log log log nα.(108) We next analyze the intermediate exponential 
+
+ε−δ2ε−dW = exp 
+
+
+
+δ2ε−dW log 1
+
+ε
+
+
+
+42 ≲ exp 
+
+
+
+δ2
+
+dW
+
+2δ2
+
+log log nα
+
+log log log nα
+
+log log log nα
+
+dW
+
+
+
+(109) 
+
+= exp 
+
+ 12 log log nα
+
+
+
+= log( nα)1/2
+
+(110) where we used (108) for (109). We can now estimate the complete exponential factor as follows: 
+
+ε−δ1ε−δ2ε−dW
+
+= exp 
+
+
+
+δ1ε−δ2ε−dW log 1
+
+> ε
+
+
+
+≲ exp 
+
+ δ1
+
+dW
+
+log( nα)1/2 log log log nα
+
+
+
+(111) where we used (110) for (111) and thus 
+
+log ( T2) ≲ log( C) + log 
+
+ 1
+
+nα
+
+
+
++ δ1
+
+dW
+
+log( nα)1/2 log log log nα + log log nα.
+
+On the other hand, with the choice (107), 
+
+log( T1) = log(4) + −2
+
+dW
+
+
+
+log 
+
+ dW
+
+2δ2
+
+
+
++ log log log nα − log log log log nα
+
+
+
+.
+
+We note that lim nα→∞ log( T2) = −∞ due to the log( n−1 
+
+> α
+
+) term; we also have lim nα→∞ log( T1) = −∞ due to the term − log log log nα. This implies that T2 goes to 0 much faster than T1, so T1 dominates in (106) and, using (107), we conclude 
+
+T ≲ 4ε2 ≲
+
+ dW
+
+2δ2
+
+log log nα
+
+log log log nα
+
+− 2
+
+> dW
+
+.
+
+Remark 4.4 (Exact error balancing) . In principle, one could choose ε = ε(nα) by solving the implicit balanc-ing relation T1(ε) ≍ T2(ε). However, since T2(ε) contains the nested exponential factor ε−δ1ε−δ2ε−dW
+
+, this equation does not admit a tractable closed-form solution. We therefore select an explicit ε(nα) for which T2 is asymptotically negligible (and hence T1 dominant), yielding an explicit rate. 
+
+# 5 Conclusion 
+
+In this work, we provided theoretical insights into statistical generalization for multiple operator learning, where the goal is to learn an operator family {G[α] : U → V }α∈W from data collected hierarchically across sampled operator instances, input functions, and evaluation points. To motivate and contextualize this setting, we presented several representative examples in which the multi-operator viewpoint is intrinsic, including pa-rameterized integral operators, parameterized PDE solution operators, and task-conditioned operator families. For separable neural architectures, in particular the MNO model, we established an explicit generalization bound that makes the dependence on the sampling budgets (nα, n u, n x) and on the statistical complexity of the induced hypothesis class transparent. The analysis combines two main ingredients: (i) an ε-accurate approxi-mation guarantee for MNO (with an explicit ε-dependent architecture) from [64], and (ii) a covering-number estimate for the corresponding clipped separable network class, derived via a parameter-quantization argument. Balancing the approximation scale ε with the covering scale η then yields an explicit learning-rate statement in the operator-sampling budget nα, highlighting how increased operator variability improves transfer to pre-viously unseen operator instances. Several extensions of the present theory are natural. First, our analysis treats the trained network as an exact empirical-risk minimizer over the prescribed hypothesis class. In practice, training is approximate and influenced by optimization dynamics, regularization, and early stopping; incorporating an explicit optimiza-tion/suboptimality term, or deriving algorithm-dependent generalization guarantees, would sharpen the con-nection between the theory and real training pipelines. Second, the rates obtained here rely on global L∞
+
+43 covering-number control for clipped hypothesis classes, which is a large class. Improved bounds may be pos-sible by using localized or data-dependent complexity measures, and by studying alternative architectures or conditioning regimes that reduce the effective statistical complexity. In particular, it would be interesting to extend the analysis beyond separable MNO-type classes to attention-based operator architectures, in which the operator descriptor α and the input observations are encoded and combined in a shared latent represen-tation. Finally, under our current global complexity control, the bound is asymptotically bottlenecked by the 
+
+nα-dependent term, meaning that operator diversity cannot be compensated for by oversampling (u, x ) once 
+
+nα is fixed. This motivates investigating adaptive or active strategies for selecting operator instances α to accelerate transfer to previously unseen operators under a constrained operator-sampling budget. 
+
+# Acknowledgments 
+
+A. Weihs and H. Schaeffer were supported in part by NSF 2427558. 
+
+# References 
+
+[1] Ben Adcock, Michael Griebel, and Gregor Maier. The sample complexity of learning lipschitz operators with respect to gaussian measures, 2025. [2] Anima Anandkumar, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Nikola Kovachki, Zongyi Li, Burigede Liu, and Andrew Stuart. Neural operator: Graph kernel network for partial differential equa-tions. In ICLR 2020 Workshop on Integration of Deep Neural Models and Differential Equations , 2019. [3] Aras Bacho, Aleksei G. Sorokin, Xianjin Yang, Théo Bourdais, Edoardo Calvello, Matthieu Darcy, Alexander Hsu, Bamdad Hosseini, and Houman Owhadi. Operator learning at machine precision, 2025. [4] Kaushik Bhattacharya, Bamdad Hosseini, Nikola B. Kovachki, and Andrew M. Stuart. Model Reduction And Neural Networks For Parametric PDEs. The SMAI Journal of computational mathematics , 7:121– 157, 2021. [5] Stéphane Boucheron, Gábor Lugosi, and Pascal Massart. Concentration Inequalities: A Nonasymptotic Theory of Independence . Oxford University Press, 02 2013. [6] Nicolas Boullé, Seick Kim, Tianyi Shi, and Alex Townsend. Learning green’s functions associated with time-dependent partial differential equations. Journal of Machine Learning Research , 23(218):1–34, 2022. [7] Jean Bourgain, Haim Brezis, and Petru Mironescu. Another look at Sobolev spaces. In Optimal Control and Partial Differential Equations , 2001. [8] Yadi Cao, Yuxuan Liu, Liu Yang, Rose Yu, Hayden Schaeffer, and Stanley Osher. Vicon: Vision in-context operator networks for multi-physics fluid dynamics prediction. arXiv preprint arXiv:2411.16063 ,2024. [9] Javier Castro. The kolmogorov infinite dimensional equation in a hilbert space via deep learning methods. 
+
+Journal of Mathematical Analysis and Applications , 527(2):127413, 2023. [10] Javier Castro, Claudio Muñoz, and Nicolás Valenzuela. The calderón’s problem via deeponets. Vietnam Journal of Mathematics , 52(3):775–806, 2024. [11] Chuanqi Chen and Jinlong Wu. Neural operator for modeling dynamic systems. arXiv preprint arXiv:2306.XXXX , 2023. [12] Minshuo Chen, Haoming Jiang, Wenjing Liao, and Tuo Zhao. Nonparametric regression on low-dimensional manifolds using deep relu networks: function approximation and statistical recovery. In-formation and Inference: A Journal of the IMA , 11(4):1203–1253, 03 2022. 44 [13] T. Chen and H. Chen. Approximations of continuous functionals by neural networks with application to dynamic systems. IEEE Transactions on Neural Networks , 4(6):910–918, 1993. [14] Tianping Chen and Hong Chen. Universal approximation to nonlinear operators by neural networks with arbitrary activation functions and its application to dynamical systems. IEEE Transactions on Neural Networks , 6(4):911–917, 1995. [15] Maarten V. de Hoop, Daniel Zhengyu Huang, Elizabeth Qian, and Andrew M. Stuart. The cost-accuracy trade-off in operator learning with neural networks, 2022. [16] Eleonora Di Nezza, Giampiero Palatucci, and Enrico Valdinoci. Hitchhiker’s guide to the fractional sobolev spaces. Bulletin des Sciences Mathématiques , 2012. [17] Takashi Furuya, Michael Anthony Puthawala, Matti Lassas, and Maarten V. de Hoop. Globally injective and bijective neural operators. In Thirty-seventh Conference on Neural Information Processing Systems ,2023. [18] Craig R. Gin, Daniel E. Shea, Steven L. Brunton, and J. Nathan Kutz. Deepgreen: deep learning of green’s functions for nonlinear boundary value problems. Scientific Reports , 11(1):21614, 2021. [19] Somdatta Goswami, Aniruddha Bora, Yue Yu, and George Em Karniadakis. Physics-Informed Deep Neural Operator Networks , pages 219–254. Springer International Publishing, Cham, 2023. [20] Alex Graves, Abdel rahman Mohamed, and Geoffrey E. Hinton. Speech recognition with deep recurrent neural networks. 2013 IEEE International Conference on Acoustics, Speech and Signal Processing , pages 6645–6649, 2013. [21] Philipp Grohs, Samuel Lanthaler, and Margaret Trautner. Theory-to-practice gap for neural networks and neural operators, 2025. [22] Jiequn Han, Arnulf Jentzen, and Weinan E. Solving high-dimensional partial differential equations using deep learning. Proceedings of the National Academy of Sciences , 115(34):8505–8510, 2018. [23] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition, 2016. [24] Maximilian Herde, Bogdan Raonic, Tobias Rohner, Roger Käppeli, Roberto Molinaro, Emmanuel de Bezenac, and Siddhartha Mishra. Poseidon: Efficient foundation models for PDEs. In The Thirty-eighth Annual Conference on Neural Information Processing Systems , 2024. [25] Lukas Herrmann, Christoph Schwab, and Jakob Zech. Neural and spectral operator surrogates: unified construction and expression rate bounds. Advances in Computational Mathematics , 50(4):72, 2024. [26] Daniel Zhengyu Huang, Nicholas H. Nelsen, and Margaret Trautner. An operator learning perspective on parameter-to-observable maps. Foundations of Data Science , 7(1):163–225, 2025. [27] Zhongyi Jiang, Min Zhu, Dongzhuo Li, Qiuzi Li, Yanhua O. Yuan, and Lu Lu. Fourier-mionet: Fourier-enhanced multiple-input neural operators for multiphase modeling of geological carbon sequestration. 
+
+arXiv preprint arXiv:2303.04778 , 2023. [28] Pengzhan Jin, Shuai Meng, and Lu Lu. Mionet: Learning multiple-input operators via tensor product. 
+
+SIAM Journal on Scientific Computing , 44(6):A3490–A3514, 2022. [29] Derek Jollie, Jingmin Sun, Zecheng Zhang, and Hayden Schaeffer. Time-series forecasting and refine-ment within a multimodal pde foundation model. Journal of Machine Learning for Modeling and Com-puting , 6(2):77–89, 2025. [30] Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B. Brown, Benjamin Chess, Rewon Child, Scott Gray, Alec Radford, Jeffrey Wu, and Dario Amodei. Scaling laws for neural language models, 2020. 45 [31] Yuehaw Khoo, Jianfeng Lu, and Lexing Ying. Solving parametric pde problems with artificial neural networks. European Journal of Applied Mathematics , 32(3):421–435, 2021. [32] Nikola Kovachki, Samuel Lanthaler, and Siddhartha Mishra. On universal approximation and error bounds for fourier neural operators. J. Mach. Learn. Res. , 22(1), January 2021. [33] Nikola Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: learning maps between function spaces with applica-tions to pdes. J. Mach. Learn. Res. , 24(1), January 2023. [34] Nikola B. Kovachki, Samuel Lanthaler, and Hrushikesh Mhaskar. Data complexity estimates for operator learning, 2024. [35] Nikola B. Kovachki, Samuel Lanthaler, and Andrew M. Stuart. Chapter 9 - operator learning: Algorithms and analysis. In Siddhartha Mishra and Alex Townsend, editors, Numerical Analysis Meets Machine Learning , volume 25 of Handbook of Numerical Analysis , pages 419–467. Elsevier, 2024. [36] Samuel Lanthaler. Operator learning with pca-net: upper and lower complexity bounds. J. Mach. Learn. Res. , 24(1), January 2023. [37] Samuel Lanthaler, Siddhartha Mishra, and George E Karniadakis. Error estimates for deeponets: adeep learning framework in infinite dimensions. Transactions of Mathematics and Its Applications ,6(1):tnac001, 03 2022. [38] Samuel Lanthaler and Andrew M Stuart. The parametric complexity of operator learning. IMA Journal of Numerical Analysis , page draf028, 08 2025. [39] Jose Antonio Lara Benitez, Takashi Furuya, Florian Faucher, Anastasis Kratsios, Xavier Tricoche, and Maarten V. de Hoop. Out-of-distributional risk bounds for neural operators with applications to the helmholtz equation. J. Comput. Phys. , 513(C), September 2024. [40] Bian Li, Hanchen Wang, Shihang Feng, Xiu Yang, and Youzuo Lin. Solving seismic wave equations on variable velocity models with fourier neural operator. IEEE Transactions on Geoscience and Remote Sensing , 61:1–18, 2023. [41] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Multipole graph neural operator for parametric partial differential equa-tions. In Proceedings of the 34th International Conference on Neural Information Processing Systems ,NIPS ’20, Red Hook, NY, USA, 2020. Curran Associates Inc. [42] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. In 
+
+International Conference on Learning Representations (ICLR) , 2021. preprint arXiv:2010.08895. [43] Hao Liu, Haizhao Yang, Minshuo Chen, Tuo Zhao, and Wenjing Liao. Deep nonparametric estimation of operators between infinite dimensional spaces. J. Mach. Learn. Res. , 25(1), January 2024. [44] Hao Liu, Zecheng Zhang, Wenjing Liao, and Hayden Schaeffer. Neural scaling laws of deep relu and deep operator network: A theoretical study, 2024. [45] Yuxuan Liu, Jingmin Sun, Xinjie He, Griffin Pinney, Zecheng Zhang, and Hayden Schaeffer. PROSE-FD: A multimodal PDE foundation model for learning multiple operators for forecasting fluid dynamics. In 
+
+Neurips 2024 Workshop Foundation Models for Science: Progress, Opportunities, and Challenges , 2024. [46] Yuxuan Liu, Jingmin Sun, and Hayden Schaeffer. Bcat: A block causal transformer for pde foundation models for fluid dynamics. arXiv preprint arXiv:2501.18972 , 2025. [47] Yuxuan Liu, Zecheng Zhang, and Hayden Schaeffer. Prose: Predicting multiple operators and symbolic expressions using multimodal transformers. Neural Networks , 180:106707, 2024. 46 [48] Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3(3):218–229, 2021. [49] Lu Lu, Xuhui Meng, Shengze Cai, Zhiping Mao, Somdatta Goswami, Zhongqiang Zhang, and George Em Karniadakis. A comprehensive and fair comparison of two neural operators (with practical extensions) based on fair data. Computer Methods in Applied Mechanics and Engineering , 393:114778, 2022. [50] Carlo Marcati and Christoph Schwab. Exponential convergence of deep operator networks for elliptic partial differential equations. SIAM Journal on Numerical Analysis , 61(3):1513–1545, 2023. [51] Carlo Marcati and Christoph Schwab. Expression rates of neural operators for linear elliptic pdes in polytopes. CoRR , abs/2409.17552, 2024. [52] Ivan Markovsky. Low Rank Approximation: Algorithms, Implementation, Applications . Communications and Control Engineering. Springer London, 1st edition, 2012. [53] Michael McCabe, Bruno Régaldo-Saint Blancard, Liam Holden Parker, Ruben Ohana, Miles Cranmer, Alberto Bietti, Michael Eickenberg, Siavash Golkar, Géraud Krawezik, Francois Lanusse, et al. Multiple physics pretraining for physical surrogate models. arXiv preprint arXiv:2310.02994 , 2023. [54] Christian Moya, Guang Lin, Tianqiao Zhao, and Meng Yue. On approximating the dynamic response of synchronous generators via operator learning: A step towards building deep operator-based power grid simulators. arXiv preprint arXiv:2301.12538 , 2023. [55] Elisa Negrini, Yuxuan Liu, Liu Yang, Stanley J Osher, and Hayden Schaeffer. A multimodal pde founda-tion model for prediction and scientific text descriptions. arXiv preprint arXiv:2502.06026 , 2025. [56] Weigutian Ou and Helmut Bölcskei. Covering numbers for deep relu networks with applications to function approximation and nonparametric regression, 2024. [57] Weigutian Ou, Philipp Schenkel, and Helmut Bölcskei. Three quantization regimes for relu networks, 2024. [58] Jaideep Pathak, Shashank Subramanian, Peter Harrington, Sanjeev Raja, Ashesh Chattopadhyay, Morteza Mardani, Thorsten Kurth, David Hall, Zongyi Li, Kamyar Azizzadenesheli, and Anima Anandkumar. Fourcastnet: A global data-driven high-resolution weather model using adaptive fourier neural operators. 
+
+arXiv preprint arXiv:2202.11214 , 2022. [59] Christoph Schwab, Andreas Stein, and Jakob Zech. Deep operator network approximation rates for lipschitz operators. Analysis and Applications , 24(01):199–239, 2026. [60] Christoph Schwab and Jakob Zech. Deep learning in high dimension: Neural network expression rates for analytic functions in L2(Rd, γ d)L2(Rd, γ d)L2(Rd, γ d). SIAM/ASA Journal on Uncertainty Quantification , 11(1):199–234, 2023. [61] Jingmin Sun, Yuxuan Liu, Zecheng Zhang, and Hayden Schaeffer. Towards a foundation model for partial differential equations: Multioperator learning and extrapolation. Physical Review E , 111(3):035304, 2025. [62] Jingmin Sun, Zecheng Zhang, and Hayden Schaeffer. Lemon: Learning to learn multi-operator networks, 2025. [63] Adrien Weihs, Jalal Fadili, and Matthew Thorpe. Discrete-to-continuum rates of convergence for nonlocal p-Laplacian evolution problems. Information and Inference: A Journal of the IMA , 13(4):iaae031, 11 2024. [64] Adrien Weihs, Jingmin Sun, Zecheng Zhang, and Hayden Schaeffer. A deep learning framework for multi-operator learning: Architectures and approximation theory, 2025. 47 [65] Liu Yang, Siting Liu, Tingwei Meng, and Stanley J Osher. In-context operator learning with data prompts for differential equation problems. Proceedings of the National Academy of Sciences ,120(39):e2310142120, 2023. [66] Liu Yang, Tingwei Meng, Siting Liu, and Stanley J Osher. Prompting in-context operator learning with sensor data, equations, and natural language. arXiv preprint arXiv:2308.05061 , 2023. [67] Zhanhong Ye, Zining Liu, Bingyang Wu, Hongjie Jiang, Leheng Chen, Minyan Zhang, Xiang Huang, Qinghe Meng Zou, Hongsheng Liu, and Bin Dong. Pdeformer-2: A versatile foundation model for two-dimensional partial differential equations. arXiv preprint arXiv:2507.15409 , 2025. [68] Benjamin J Zhang, Siting Liu, Stanley J Osher, and Markos A Katsoulakis. Probabilistic operator learn-ing: generative modeling and uncertainty quantification for foundation models of differential equations. 
+
+arXiv preprint arXiv:2509.05186 , 2025. [69] Zecheng Zhang. Modno: Multi-operator learning with distributed neural operators. Computer Methods in Applied Mechanics and Engineering , 431:117229, 2024. [70] Zecheng Zhang, Wing Tat Leung, and Hayden Schaeffer. A discretization-invariant extension and analysis of some deep operator networks. Journal of Computational and Applied Mathematics , 456:116226, 2025. [71] Zecheng Zhang, Christian Moya, Lu Lu, Guang Lin, and Hayden Schaeffer. D2no: Efficient handling of heterogeneous input function spaces with distributed deep neural operators. Computer Methods in Applied Mechanics and Engineering , 428:117084, 2024. [72] Zecheng Zhang, Leung Wing Tat, and Hayden Schaeffer. Belnet: basis enhanced learning, a mesh-free neural operator. Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences ,479(2276):20230043, 2023. [73] Min Zhu, Shihang Feng, Youzuo Lin, and Lu Lu. Fourier-deeponet: Fourier-enhanced deep operator networks for full waveform inversion with improved accuracy, generalizability, and robustness. arXiv preprint arXiv:2305.17289 , 2023. 48

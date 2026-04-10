@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-001.webp",
+      "caption": "Figure 1: Multi-Physics Virtual Sensing Framework for VIRSO. (a) Training and validation for the VIRSO model originates from mesh-based numerical solvers. The boundary conditions at the geometry inlet and a discretization of the forcing profile (or signal for transient) are given as initial input to our framework along with the generated mesh which is converted to positional coordinates of each mesh cell throughout the domain of the desired multi-physics output. (b) The mesh cell coordinates become our graph nodes V and utilizing graph creation methods such as K-Nearest Neighbors (KNN), Radius, or a custom Variable KNN (V-KNN), we can define crucial edge connections E between node points. The input signal and values are mapped to a latent embedding space and then copied to each node and combined with node coordinates to define the initial node features X. (c) The VIRSO model projects the input into a hidden function dimension and repeatedly extracts global and local features through spectral-spatial blocks. Eventually the operator downlifts to the final output space. (d) A close up into the VIRSO block architecture. The GFT allows for the spectral convolution of the first m modes, and the spatial aggregation GNN provides local feature extraction. The collaboration projection f prevents over-smoothing while skip connections assist training and also allow local information flow. (e) Defined on the mesh-node grid, we have multiple predicted field outputs that describe physics within our domain such as pressure, velocity, and turbulent kinetic energy (TKE).",
+      "page": 6,
+      "index": 1,
+      "width": 932,
+      "height": 448
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-002.webp",
+      "caption": "Figure 4: Heat Exchanger: Problem Formulation and Results. (a) Geometry: wavy tape insert inside a dimpled cylindrical channel. Analysis performed on the 2D axial cross-section at x = 0.789. (b) Boundary inputs: axial heat profile and two scalar inlet conditions, geometrically disjoint from the output cross-section. (c) Percentile error distributions for the 10-layer VIRSO across all output fields. Distributions are centered below 1% with narrow spread. (d) 50th-percentile reconstruction. VIRSO accurately recovers the primary counter-rotating recirculation cells, secondary eddies, and pressure response to the insert gap. Elevated error is concentrated near the insert junction and channel wall, regions of maximum geometric complexity.",
+      "page": 11,
+      "index": 2,
+      "width": 932,
+      "height": 521
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-003.webp",
+      "caption": "Table 3: Model Comparison: Heat Exchanger",
+      "page": 11,
+      "index": 3,
+      "width": 627,
+      "height": 232
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-004.webp",
+      "caption": "Table 5: Accuracy–Efficiency Summary: Heat Exchanger (H200, device-level GPU measurements)",
+      "page": 15,
+      "index": 4,
+      "width": 877,
+      "height": 243
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-005.webp",
+      "caption": "Table 15: Lightweight Model Comparison: Heat Exchanger",
+      "page": 34,
+      "index": 5,
+      "width": 700,
+      "height": 231
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-006.webp",
+      "caption": "Figure 3: PWR Subchannel: Problem Formulation and Results. (a) Geometry: coolant flow between four reactor rods, analyzed at a fixed axial cross-section. No-slip boundary conditions are enforced on rod surfaces; inlet is at z = 0. (b) Multimodal boundary inputs: axial heat source profile q(z) at 100 positions and two scalar inlet conditions. These inputs are defined on the axial direction, while outputs are defined on the transverse cross-section — a geometrically disjoint cross-domain configuration. (c) Percentile error distributions (orange: temperature, blue: velocity, green: TKE, red: mean). All distributions centered below 1% with narrow spread. (d) 50th-percentile reconstruction. VIRSO accurately captures wall shear layers, central velocity structure, and symmetric thermal gradient. Weak spatial correlation of error with boundary proximity for velocity and TKE; stochastic fluctuations for temperature.",
+      "page": 10,
+      "index": 6,
+      "width": 932,
+      "height": 437
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-007.webp",
+      "caption": "Table 4: Inference Energy and Memory: Heat Exchanger",
+      "page": 14,
+      "index": 7,
+      "width": 1011,
+      "height": 208
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-008.webp",
+      "caption": "Figure 5: Graph Topology and Node Degree Distribution. (a) Mesh geometry of the heat exchanger, adapted to the VIRSO graph node configuration. Higher mesh density is visible near the insert junction and channel walls, corresponding to regions of steepest physical gradients. (b,c) Degree distribution for KNN with k = 30 and k = 45: modest variation with slightly elevated connectivity near high-density regions, but insufficient targeting. (d) KNN with k = 93: high-density regions receive elevated degree, improving performance, but the enforced minimum of 93 throughout the interior introduces significant inefficiency. (e) Radius with r = 0.001: naturally concentrates high degree near geometrically complex regions; outperforms KNN with k = 30, 45. (f) Radius with r = 0.0015: matches the maximum degree of KNN with k = 93 near walls and junctions but maintains a minimum of only 24 in the interior, achieving superior performance with fewer edges. (g) Variable-KNN (V-KNN): explicitly assigns connectivity proportional to local mesh density. Achieves the same maximum degree as (d) and (f) near geometric complexity, maintains minimum degree 45 in the interior, and uses only 270K edges — the most efficient configuration achieving the best overall accuracy.",
+      "page": 13,
+      "index": 8,
+      "width": 932,
+      "height": 355
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-009.webp",
+      "caption": "Figure 2: Lid-Driven Cavity: Problem Formulation and Results. (a) Boundary conditions: no-slip at all walls except the driven lid at y = 1, where a time-varying forcing signal V (t) prescribes the horizontal velocity. (b) Representative forcing signals V (t) evaluated at 90 discrete time steps, spanning a broad range of transient dynamics. (c) Percentile error distributions from VIRSO for pressure, velocity magnitude, TKE, and overall mean error (blue, orange, green, red). All distributions are centered below 1% with low spread, confirming consistent generalization across the test distribution. (d) 50th-percentile reconstruction: predicted fields, ground truth, and absolute error for pressure, velocity magnitude, and TKE. VIRSO accurately recovers the primary vortex, shear layer, and corner eddies. Elevated absolute error near boundaries and corners reflects the sensitivity of turbulent physics to regions underresolved by the uniform output grid.",
+      "page": 8,
+      "index": 9,
+      "width": 932,
+      "height": 558
+    },
+    {
+      "url": "assets/figures/arxiv/2604.01802v1/fig-010.webp",
+      "caption": "Table 9: Heat Exchanger: Percentile Error Statistics",
+      "page": 32,
+      "index": 10,
+      "width": 608,
+      "height": 198
+    }
+  ]
+}

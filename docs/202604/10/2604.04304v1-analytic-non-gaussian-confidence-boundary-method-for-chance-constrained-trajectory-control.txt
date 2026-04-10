@@ -1,0 +1,515 @@
+Title: Analytic Non-Gaussian Confidence Boundary Method for Chance-Constrained Trajectory Control
+
+URL Source: https://arxiv.org/pdf/2604.04304v1
+
+Published Time: Tue, 07 Apr 2026 01:16:57 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Analytic Non-Gaussian Confidence Boundary Method for Chance-Constrained Trajectory Control 
+
+Ethan R. Burnett 1 and Spencer Boone 2
+
+Abstract — Standard chance constrained control algorithms typically rely on the assumption that uncertainties in vehicle states obey Gaussian statistics. Highly nonlinear systems tend to disrupt Gaussianity, challenging standard chance-constrained control methods. This paper develops a non-Gaussian con-fidence boundary parameterization technique for such cases where the problem departs appreciably from the Gaussian assumption. The approach is to consider the true confidence boundary as a perturbation of the one predicted from covari-ance, deriving perturbed boundary geometry from computed higher-order statistical moments. Applying this technique to so-called “banana-shaped distributions” (found e.g. in orbital mechanics problems) enables a simple parameterization of the confidence boundary using the skew and kurtosis ten-sors. The method is then applied to an impulsive stochastic spacecraft maneuver targeting problem in two-body dynamics. An algorithmic implementation outperforms a standard linear covariance-based approach in computing control parameters satisfying certain probabilistic bounds on the non-Gaussian distribution. 
+
+I. I NTRODUCTION 
+
+Any practical control problem is characterized by some de-gree of uncertainty in the system states. Chance-constrained optimal control algorithms seek to achieve specific control goals while establishing probabilistic guarantees on the per-formance of an uncertain system. The system is often a vehicle, for which path constraints can be paramount. Most existing algorithms assume that system state uncertainties obey Gaussian statistics (e.g., [1]). Much of the work in chance-constrained trajectory control has focused on terres-trial robotic path-planning [2], [3]. For such applications, the dynamics are often sufficiently linear or the measurement update frequency is generally high enough that the Gaussian assumption holds. Control problems encountered in spaceflight differ from common terrestrial applications in several important ways. They are characterized by a potential for long periods without state measurements or corrective control maneuvers, and spacecraft are subject to the action of nonlinear dynamics in a chaotic environment [4]. Furthermore, the computational capabilities on a spacecraft are greatly reduced compared to terrestrial platforms, due to power limitations and design for a high-radiation environment. For safe long time-horizon maneuvers to be planned, spacecraft operators must accept the resulting non-Gaussian statistical distribution, and chance  
+
+> 1Ethan R. Burnett is affiliated with the Department of Aerospace Engi-neering and Engineering Mechanics, University of Texas at Austin, Austin, TX 78712, USA
+
+ethan.burnett@utexas.edu 
+
+> 2Spencer Boone is affiliated with ISAE SUPAERO, Toulouse, France
+
+spencer.boone@isae-supaero.fr 
+
+constraints must be enforced on the non-Gaussian distribu-tion itself. To this end, Ref. [5] applied a chance constrained approach with a Gaussian Mixture Model representation of the non-Gaussian distribution. The approach outperformed a linearized covariance-based approach, but it was numerically intensive. For rapid mission analysis or onboard implemen-tation, more computationally efficient methods are needed. Some adjacent studies from robotics are also worth men-tioning. Ref. [6] developed a non-Gaussian chance constraint approach in the case that state constraints can be defined as a polynomial in a random vector. Ref. [7] develops a chance-constrained trajectory optimization approach for learning-based motion planners and controllers. Sometimes the non-Gaussian problem can be partially side-stepped, if better working coordinates can be found which render the dynamics less nonlinear, reducing the rate of departure of a distribution from initial Gaussianity (e.g. orbital ele-ments for Keplerian dynamics [8], or exponential coordinates for planar robot problems [9]). However, such coordinates are not always available, especially in complex dynamical systems. Additionally, constraints in trajectory optimization problems are often most conveniently expressed in native physical coordinates. Overall, this area of research extends beyond spaceflight, where new findings are potentially useful for a broad class of control systems for which dynamic nonlinearity, computational constraints, and/or non-Gaussian uncertainty are driving concerns. In this paper, we develop a method for analytically param-eterizing the boundary of a non-Gaussian distribution at a specified confidence (or cumulative probability) level. Finite moments of the distribution are estimated via a deterministic technique and used to inform geometric corrections on baseline geometry driven by covariance and the Gaussian assumption. Modern uncertainty propagation techniques can estimate “higher order” statistical moments (so-named be-cause moments beyond mean and covariance are often ne-glected), with e.g. third- and fourth-order moments available at modest computational cost. To compute these moments, we make use of the conjugate unscented transform [10]. In possession of these moments, the perturbed confidence boundary can be computed and evaluated efficiently. This paper is structured as follows. We begin with a preliminary discussion on chance-constrained control, then address the standard Gaussian case. We then use some important facts from Gaussian and non-Gaussian statistics to derive the corrected form of a confidence boundary in the case that the first four moments (mean, covariance, skew, and kurtosis) are sufficient descriptors of non-Gaussianity. The 
+
+> arXiv:2604.04304v1 [math.OC] 5 Apr 2026
+
+paper concludes with use of the confidence boundary in a chance-constrained control algorithm applied to a stochastic spacecraft maneuver targeting problem. II. P RELIMINARY 
+
+A. Model 
+
+Consider a discrete nonlinear dynamical system with state vector x ∈ Rn, where xl specifically denotes the value of the state at time tl. The system evolves as 
+
+xl+1 = ϕ(xl + Bul) (1) where ϕ denotes the flow of the dynamics from time tl to 
+
+tl+1 , ul ∈ Rm is the control at time tl, with associated control matrix B ∈ Rn×m. This discrete dynamical system is a good approximation of the impulsive spacecraft control problems that motivate this work. We consider xl as a random vector with mean μ, probability density function 
+
+p(xl, t l), and covariance Pl. Because ϕ is nonlinear, even if the initial statistics at t0 are Gaussian, at subsequent times this will generally not be the case. For the class of control problems motivating this work, we seek to minimize an objective function J subject to path constraints g. Due to the stochasticity of system (1), g should be satisfied to some probabilistic confidence level. Chance constraints provide a natural way to encode such probabilistic path requirements. 
+
+B. Chance Constrained Control 
+
+Definition 1 (State chance constraint): Let Sl,j ⊂ Rn
+
+denote the feasible set associated with the jth state constraint at time tl, with j = 1 , . . . , N c. A state chance constraint is written as 
+
+Pr[ xl ∈ S l,j ] ≥ 1 − δl,j , (2) where 0 < δ l,j < 1 is the allowable probability of violation. 
+
+Problem 1 (Chance-constrained control problem): 
+
+In this work we solve the simplified problem. Given the dynamics in Eq. (1), determine a control sequence {ul}T −1
+
+> l=0
+
+that minimizes the objective J subject to the dynamics and the state chance constraints: min 
+
+> ul
+
+J(ul) (3a) s.t. xl+1 = ϕ(xl + Bul), (3b) 
+
+Pr[ xl + 1 ∈ S l+1 ,j ] ≥ 1 − δl+1 ,j . (3c) In the standard Gaussian setting, and for a half-space con-straint of the form Sl,j = {x : h⊤ 
+
+> l,j
+
+x ≤ gl,j }, the probabilistic constraint can be converted into a deterministic inequality involving only the mean and covariance [1], [2]. The present paper is concerned with cases in which the propagated statistics are appreciably non-Gaussian, so this approach is no longer an adequate description of the relevant confidence geometry. Rather than introducing a mixture-based reformulation as in Ref. [5], our approach is to approximate the non-Gaussian confidence boundary directly using higher-order moments. This viewpoint motivates the constructions developed in the next section. III. A PPROXIMATING NON -G AUSSIAN CONFIDENCE 
+
+BOUNDS 
+
+Standard covariance-based confidence boundaries rely on the Gaussian confidence geometry implied by first and sec-ond moments alone. In nonlinear stochastic dynamics, state uncertainty distributions can become appreciably perturbed while the covariance remains well defined, so an ellipse inferred only from mean and covariance may misrepresent the true confidence boundary. Motivated by this fact, this work derives analytic corrections of the confidence bounds in the case of weakly non-Gaussian statistics, leveraging measures of non-Gaussianity from the moments beyond mean and covariance. 
+
+A. Gaussian confidence contours 
+
+Let r ∈ R2 denote a two-state subset (a “slice”) of a higher-dimensional random vector. Let μ ∈ R2 and Σ ∈
+
+R2×2 denote the corresponding slice mean and covariance, with Σ ≻ 0.
+
+Definition 2 (Gaussian confidence contour): For a con-fidence scaling k(P ) > 0 corresponding to a specified confidence level 0 < P < 1, the Gaussian confidence region is 
+
+Ak ≜ r ∈ R2 : ( r − μ)⊤Σ−1(r − μ) ≤ k2 . (4) Its boundary ∂Ak is the Gaussian confidence contour. Let Σ = RΛR⊤ with Λ = diag( λ1, λ 2), λ1 ≥ λ2 > 0,and R a rotation, 
+
+R =
+
+cos θ − sin θ
+
+sin θ cos θ
+
+
+
+. (5) 
+
+θ = 12 atan2  2 Σ xy , Σxx − Σyy 
+
+. (6) where Eq. (6) is in terms of components of Σ. Define the principal semi-axes 
+
+a = kpλ1, b = kpλ2, (7) and the principal coordinates u, v measuring along the prin-cipal axis directions. 
+
+Remark 1 (Standard parameterization): In the case of Gaussian statistics, a convenient parameterization of the 
+
+confidence boundary ∂Ak at cumulative probability level P
+
+is 
+
+u(t) = a cos t, v(t) = b sin t, t ∈ [0 , 2π), (8) with mapping back to the original sliced coordinates via the contour 
+
+r(t) = μ + R
+
+u(t)
+
+v(t)
+
+
+
+. (9) Define normalized principal coordinates ˆu ≜ u/ √λ1 and 
+
+ˆv ≜ v/ √λ2, for which the Gaussian boundary satisfies 
+
+ˆu(t) = k cos t and ˆv(t) = k sin t.B. Moment tensors and Gaussian identities 
+
+Let X ∈ Rd be a random vector with finite central moments through order 4. Let μ = E[X], Σ = E[( X −
+
+μ)( X − μ)⊤], and define the central moment tensors 
+
+M (3)  
+
+> ijk
+
+≜ E[( Xi − μi)( Xj − μj )( Xk − μk)] , (10) 
+
+M (4)  
+
+> ijkl
+
+≜ E[( Xi − μi)( Xj − μj )( Xk − μk)( Xl − μl)] .
+
+(11) 
+
+Remark 2 (Symmetries of moment tensors): M (3) is invariant under any permutation of (i, j, k ) and M (4) is invariant under any permutation of (i, j, k, l ).
+
+Remark 3 (Gaussian moment identities): If X is mul-tivariate Gaussian, then 
+
+M (3)  
+
+> ijk
+
+= 0 , ∀i, j, k, (12) 
+
+M (4)  
+
+> ijkl
+
+= Σ ij Σkl + Σ ik Σjl + Σ il Σjk , ∀i, j, k, l. (13) Equivalently, the 4th-order cumulant tensor κ vanishes: 
+
+κijkl ≜ M (4)  
+
+> ijkl
+
+− (Σ ij Σkl + Σ ik Σjl + Σ il Σjk ) = 0 . (14) These identities are standard consequences of Isserlis’ theo-rem for centered multivariate Gaussian variables [11]. They provide two tests of Gaussianity generated by the third- and fourth-order statistical moments. Efficient estimates of these moments are available via e.g the algorithm in Ref. [10]. 
+
+C. Modeling weakly non-Gaussian contours 
+
+We now formalize a viewpoint for corrections due to non-Gaussianity: the Gaussian ellipse remains a useful baseline, but the true confidence boundary locally departs from it. This inspires a flexible corrective geometric approach whereby expected structure of the confidence boundary is imposed, and the necessary relations of the contour parameters to the statistical moments are derived. In this work, we assume that departures from Gaussianity occur primarily through (i) a bend of the short-axis coordinate as a function of long-axis deviation and (ii) long-axis asymmetry, both to be discussed shortly. These corrections are depicted in Fig. 1, along with the resulting improved constraint satisfaction of the non-Gaussian state distribution at a certain confidence level. 
+
+Fig. 1: Non-Gaussian chance constraints The form of the needed corrections is problem-driven and can be informed by study of the expected geometry of the propagated distribution. The purpose here is to demonstrate how such corrections can be computed systematically from non-Gaussian moments. 
+
+Assumption 1 (Weakly non-Gaussian regime): In the normalized principal coordinates (ˆ u, ˆv), the confidence boundary of interest is a smooth deformation of the Gaussian contour ˆu(t) = k cos t, ˆv(t) = k sin t, and the deformation can be approximated using only the first four central mo-ments of the underlying distribution. Under the flow of nonlinear dynamics for an initially Gaus-sian distribution, the central portion of the propagated dis-tribution is often still well-approximated by the Gaussian geometry induced by the mean and covariance. The largest visible departures appear farther from the mean along the extremities of the confidence boundary. We call a distribution satisfying this qualitative behavior “weakly non-Gaussian”. This motivates treating the non-Gaussian contour as a per-turbation of the Gaussian ellipse and retaining only first-order corrections in parameters inferred from non-Gaussian moments. 
+
+1) First correction: bend (banana centerline curvature): 
+
+Remark 4 (Banana distributions): It is often observed in applications with nonlinear dynamics, for example orbital mechanics problems [8], that the initially ellipsoidal shape of some projection/slice of a distribution bends into a “banana” shape under the flow of the nonlinear dynamics – namely, that after affine (linear) stretching effects, the next observable deformation is quadratic in nature. 
+
+Assumption 2 (Quadratic bending): Noting that the lowest-order capture of the bending observed in banana distributions is a departure in the short axis v that is quadratic in the long axis u coordinate, for a banana distribution and a given two-state slice q, the normalized short-axis coordinate admits the approximate coupling 
+
+ˆv ≈ βq + αq ˆu2, (15) where (αq , β q ) are slice-dependent coefficients to be de-termined from statistical moments, with index q for each possible two-state slice. Higher-order couplings are assumed negligible. Let the whitening map be 
+
+ˆu
+
+ˆv
+
+
+
+= Wq (r − μ), with 
+
+Wq = Λ −1/2 
+
+> q
+
+R⊤ 
+
+> q
+
+for the slice covariance factorization Σq =
+
+Rq Λq R⊤ 
+
+> q
+
+. This transformation is convenient for our deriva-tion. Define matrix components a = W ⊤ 
+
+> q
+
+e1, b = W ⊤ 
+
+> q
+
+e2
+
+for e1 = (1 , 0) ⊤, e2 = (0 , 1) ⊤, and δ = r − μ. If the covariance Σq is propagated from some epoch value Σq, 0,this can be done in either a linearized or nonlinear fashion. The whitening map could thus in principle be formed from either a linear or nonlinear covariance prediction. We use the linearly predicted covariance, denoted Σq, l. This is consistent with Assumption 1 and the perturbative viewpoint adopted here: the Gaussian ellipse induced by affine stretching serves as the zeroth-order organizing geometry, and the banana terms to be derived will provide the first-order non-Gaussian correction. 
+
+Proposition 1 (Quadratic bending coefficients): Under Assumption 2, the least-squares coefficients minimizing 
+
+E(ˆ v − β − αˆu2)2 satisfy β = −α and 
+
+α =
+
+P 
+
+> i,j,k
+
+biaj ak M (3) 
+
+> q,ijk
+
+P 
+
+> i,j,k,l
+
+aiaj akal M (4)  
+
+> q,ijkl
+
+− 1 . (16) In the Gaussian case, α = β = 0, by consequence of Remark 3. These coefficients provide the best fit of the assumed distribution for the specified ansatz. 
+
+Proof: The proof is established in three parts. First, we establish the suitability of the least-squares approach. Then, we apply the conditions of optimality, obtaining α, β in terms of whitened moments. Then, we relate these results back to the original moments. 1) We seek to minimize the expected square of the fit error, 
+
+(α, β ) = arg min  
+
+> α,β
+
+E
+
+h ˆv − β − α ˆu22i
+
+. (17) Under Assumptions 1 and 2, Eq. (17) selects the statistically most accurate quadratic coupling compat-ible with the adopted ansatz and the retained moment information. 2) Solving Eq. (17) by applying the first-order conditions of optimality w.r.t. α and β, we obtain: 
+
+E[ˆ v] = β + α E[ˆ u2], (18a) 
+
+E[ˆ v ˆu2] = β E[ˆ u2] + α E[ˆ u4]. (18b) These are two linear equations with two unknowns. With some further manipulations, the corrective coef-ficients are identified as below: 
+
+α = E[ˆ v ˆu2] − E[ˆ u2] E[ˆ v]
+
+E[ˆ u4] − E[ˆ u2]2 , (19a) 
+
+β = E[ˆ u4] E[ˆ v] − E[ˆ u2] E[ˆ v ˆu2]
+
+E[ˆ u4] − E[ˆ u2]2 . (19b) 3) Below we establish the necessary identities mapping transformed moments. 
+
+E[ˆ u] = E[a⊤δ] = a⊤ (E[r] − E[μq ]) = 0 (20a) 
+
+E[ˆ v] = E[b⊤δ] = b⊤ (E[r] − E[μq ]) = 0 (20b) Index notation is adopted for convenience, e.g. 
+
+ˆu2 =  a⊤δ2 =
+
+X
+
+> j
+
+aj δj
+
+ X
+
+> k
+
+akδk
+
+!
+
+= X
+
+> j
+
+X
+
+> k
+
+aj akδj δk
+
+(21a) 
+
+ˆvˆu2 = X
+
+> i
+
+biδi · ˆu2 = X
+
+> i
+
+X
+
+> j
+
+X
+
+> k
+
+biaj akδiδj δk
+
+(21b) From such expressions it is simple to compute the necessary expected values, e.g.: 
+
+E[ˆ vˆu2] = X
+
+> i
+
+X
+
+> j
+
+X
+
+> k
+
+biaj akE[δiδj δk]= X
+
+> i,j,k
+
+biaj akM (3) 
+
+> q,ijk
+
+(22) Establish one more identity by noting Σq = Rq Λq R⊤ 
+
+> q
+
+:
+
+E[ˆ u2] = a⊤Σq a
+
+= 1 0 Λ−1/2 
+
+> q
+
+R⊤ 
+
+> q
+
+Σq Rq
+
+
+
+Λ−1/2
+
+> q
+
+⊤ 10
+
+
+
+= 1 
+
+(23) The final result for Eqs. (19a)-(19b) is thus obtained as Eq. (16), as a function of skew and kurtosis. 
+
+2) Second correction: long-axis asymmetry: 
+
+Remark 5 (Quartile Asymmetries): Another commonly observed effect in non-Gaussian statistics is that the symmetry of the confidence bounds along adirection s and its opposite −s are broken, due to abreakdown in quartile symmetries. We note that this effect is naturally more pronounced along directions with larger variance. 
+
+Definition 3 (Cornish-Fisher Expansion): The Cornish-Fisher expansion is a well-known asymptotic correction from univariate statistical analysis. It provides an approximation of the quantiles of a non-Gaussian distribution based on its cumulants [12]. Below we provide just the first-order term of the expansion: 
+
+x(p) ≈ μ + σ
+
+
+
+z + γ1
+
+6 (z2 − 1) 
+
+
+
+(24) where x follows a slightly non-Gaussian univariate distri-bution, with mean μ and standard deviation σ. Furthermore 
+
+z = Φ −1(P ) where Φ is the cumulative distribution function of the standard normal distribution, i.e. Φ(3) ≈ 0.9987 .Lastly, γ1 can be expressed in terms of skew and standard deviation: 
+
+γ1 = μ3
+
+σ3 , μn = E[( x − μ)n] (25) 
+
+Assumption 3 (Cornish-Fisher shift): Because quartile asymmetries are most pronounced along high-variance direc-tions, we seek a correction to the long axis of the distribution along ˆu, and not along the short axis ˆv. This is similar to the logic by which we prioritized bending of the form ˆv ∝ ˆu2 but ignored the (assumed sub-dominant) analogous bending term 
+
+ˆu ∝ ˆv2. We assume an additive t-periodic correction to the parameterization ˆu(t) = k cos t which obeys the following properties for c(k) = γ1 
+
+> 6
+
+(k2 − 1) :
+
+δˆu(0) = δˆu(π) = c(k) (26a) 
+
+δˆu( π
+
+2 ) = δˆu( 3π
+
+2 ) = 0 (26b) 
+
+δˆu′(0) = δˆu′(π) = 0 (26c) 
+
+δˆu′( π
+
+2 ) = δˆu′( 3π
+
+2 ) = 0 (26d) where ( ) ′ = ddt ( ) . The first two conditions state that along the direction ˆu, we expect to recover the univariate correction: The kσ boundaries shift to −k + c(k) for ˆu < 0
+
+and k+c(k) for ˆu > 0. The second two enforce no net change when ˆu = 0 . The last four conditions are for regularity – to avoid unphysical directional biases. Noting that the univariate Cornish-Fisher expansion provides no information about how the contour changes except purely along the long axis of the distribution, we furthermore require evenness of δˆu(t)
+
+about t = 0 and t = π, as any other choice induces off-axis asymmetries that cannot be justified. The class of all functions satisfying these conditions can be expressed via the cosine series: 
+
+δˆuq (t) = η0,q + X
+
+> n≥1
+
+ηn,q cos ( nt ) (27) We noted previously that the first four moments of a non-Gaussian distribution are not enough to uniquely determine the new chance contour. In general a non-Gaussian distribu-tion is characterized by infinitely many moments of descend-ing importance. Thus we propose the simplest justifiable correction based on known information and constraints of Eq. (26), arriving at our second ansatz: 
+
+δˆu = η0 + η2 cos 2 t (28) 
+
+Proposition 2 (Long axis shift coefficients): Under As-sumption 3, the desired coefficients of Eq. (28) are 
+
+η0 = 12 c(k) (29a) 
+
+η2 = η0, (29b) where c(k) is given in terms of skew as 
+
+c(k) = k2 − 16
+
+X
+
+> i,j,k
+
+ai aj ak M (3)  
+
+> q,ijk
+
+(30) 
+
+Proof: The proof is established in the same manner as Proposition 1: setup and solve of constraint equations to be satisfied by the ansatz. Namely, the coefficients of Eq. (28) must satisfy Eqs. (26), then moment identities like Eqs. (21a) establish the result in terms of computed (non-whitened) higher-order moments. 
+
+3) Final Result: At this point, the corrective quantities have been expressed directly in terms of the propagated third-and fourth-order moments. The remaining step is to embed these quantities into a practical contour parameterization that reduces to the Gaussian ellipse when the non-Gaussian indicators vanish, while preserving the intended bending and long-axis asymmetry to first order. This yields a closed-form surrogate for the confidence boundary that is simple to evaluate and therefore suitable for algorithmic use inside trajectory optimization routines. 
+
+Definition 4 (Banana contour parameterization): 
+
+Incorporating the quadratic bending term and the uniaxial quartile shift, a moment-corrected contour in principal coordinates can be written. Revisiting Eqs. (8), (15), and (28), we note the zeroth-order solution can be written as 
+
+ˆu = k cos t, ˆv = k sin t. We add the first-order corrections, noting that in the event that α = 0 and c(k) = 0 , the resulting ˆu and ˆv are unmodified from the Gaussian case. After rescaling (undoing the normalization), we make use of a double-angle identity to the correction in u, highlighting the cosine-squared commonality of the corrective terms in 
+
+u and v:
+
+u(t) = a cos t + c(k)pλ1 cos 2 t, a = kpλ1, (31) 
+
+v(t) = b sin t + αpλ2
+
+ k2 cos 2 t − 1 , b = kpλ2,
+
+(32) This is mapped back to r via Eq. (9) (unchanged from the Gaussian case). This is a first-order correction, linear in perturbative parameters, which thus can be applied inde-pendently slice-by-slice (e.g. different q) to accommodate multiple bendings if needed, with each slice referencing different parts of the skew and kurtosis tensors. IV. N UMERICAL EXAMPLE 
+
+We demonstrate the proposed banana contour model on the impulsive maneuver targeting scenario from Ref. [5], with a spacecraft orbiting an asteroid modeled as a point mass. 
+
+A. Dynamics model: two-body problem 
+
+The dynamics of a spacecraft orbiting a single body can be approximated by assuming the central body is a point mass. The equations of motion for the two-body problem are 
+
+¨x = − μx r3 ¨y = − μy r3 ¨z = − μz r3 (33) where the state vector x = x y z ˙x ˙y ˙zT contains 3 position (x, y, z ) and 3 velocity ( ˙ x, ˙y, ˙z) components. The distance r is the distance from the spacecraft to the central body (i.e., r = px2 + y2 + z2), and μ is the gravitational parameter for the central body. 
+
+B. Scenario 
+
+Consider the scenario from Ref. [5] with a space-craft orbiting a small asteroid (μ = 5.2 m3/s2)in a circular terminator orbit. The initial state val-ues for the spacecraft’s nominal trajectory are x =−1000 0 0 0 0 −7.211 × 10 −2T (m, m/s). We consider the case where a control u0 is computed at time 
+
+t0 to place the spacecraft on a reconnaissance orbit that approaches the surface of the asteroid (see Fig. 2). We want to plan the maneuver to ensure that the spacecraft will not arrive too close to the asteroid at a target time t1, given some initial state uncertainty. This may be operationally desirable for this type of mission, since state and navigation uncertainties are relatively large, and any unforeseen close approach may result in mission failure. The following initial state uncertainty values are applied at time t0 to the spacecraft system, where ϵ ≪ 1 (a case with initial position-dominant dispersions, as escape velocity for this problem is only ∼0.1 m/s): 
+
+σ0 = 1.0 1.0 1.0 ϵ ϵ ϵT (m, m/s) (34) We assume that P0 = diag ([ σ20 ]) and that these initial state uncertainties are Gaussian. In order to introduce significant X (m )     
+
+> −1000
+> −500 0500 1000 Y (m )
+> −500 0500 Z (m )
+> −500 0500 1000 Reconnaissance orbit Depart ure t erm inat or orbit Target const raint box Maneuver locat ion
+
+Fig. 2: Asteroid maneuver targeting scenario nonlinearities into the trajectory, the final time t1 is set after 1.5 revolutions of the reconnaissance orbit from the maneu-ver location. This corresponds to roughly 23.6 hours. At the target time, the uncertainty distribution becomes decidedly non-Gaussian when expressed in Cartesian coordinates. 
+
+C. Optimization with chance constraints 
+
+We now demonstrate how the banana contour param-eterization can be used to apply chance constraints to a non-Gaussian distribution. For this scenario, the target state constraint is defined as a box. This can be formulated using six chance constraints defining the boundaries of the target box in position space. The risk threshold for each chance constraint is set to ∆1 = 0 .01 ; in other words, we want each chance constraint to be satisfied by 99% of the state distribution at the target time. The six chance constraints can be expressed in the asteroid-centric inertial Cartesian frame: Pr [x1 ≥ 495 m] ≥ 1 − ∆1 (35) Pr [x1 ≤ 505 m] ≥ 1 − ∆1 (36) Pr [y1 ≥ − 80 m] ≥ 1 − ∆1 (37) Pr [y1 ≤ 80 m] ≥ 1 − ∆1 (38) Pr [z1 ≥ − 25 m] ≥ 1 − ∆1 (39) Pr [z1 ≤ 25 m] ≥ 1 − ∆1 (40) This corresponds to a box roughly 250 m altitude above the asteroid surface (see Fig. 2). We seek to minimize the control norm at time t0, so the ob-jective function is defined as J = ∥u0∥. An initial guess for the control vector is u0,guess = 0.0 0.058 0.072111  m/s. In order to enforce the chance constraints, points are chosen from the constraint boundary. The optimization algorithm is set up to enforce that all selected points on the boundary 0.492 0.494 0.496 0.498 0.500 0.502 
+
+## x [km] 
+
+> −0.10
+> −0.05
+> 0.00
+> 0.05
+> 0.10
+> y [km]
+> Linear contour Chance constraint boundary
+
+Fig. 3: Monte Carlo results for linear covariance ellipse chance constraints 0.492 0.494 0.496 0.498 0.500 0.502 
+
+## x [km] 
+
+> −0.10
+> −0.05
+> 0.00
+> 0.05
+> 0.10
+> y [km]
+> Banana contour Chance constraint boundary
+
+Fig. 4: Monte Carlo results for banana contour chance constraints satisfy all constraints. The optimization is performed us-ing the SLSQP algorithm available with SciPy’s minimize 
+
+function. In this approach, the optimal control parameters are computed by a sequential optimization process, with the confidence boundary recomputed for each iterate. First, the optimization was performed using the linear covariance propagation, which computes and enforces satis-faction of an ellipse-shaped confidence boundary. Next, the optimization was performed using the contour defined by Eqs. 31 and 32. In both cases, the optimization is able to converge on an impulsive maneuver that satisfies the desired boundary. The resulting covariance ellipses at time t1 are shown in Fig. 3 for the linear covariance propagation, and in Fig. 4 for the banana contour parameterization. To evaluate the performance of the computed optimal control with the true statistical distribution, 5000 state pertur-bations were sampled from the initial state distribution, and the optimal controls from the linear covariance propagation and the banana contour parameterization were applied. These state vectors were propagated to time t1, and the final positions are shown on Figs. 3 and 4. We emphasize that the Monte Carlo samples are not used at all in the computation of the contour in Fig. 4. Comparing the two figures, the banana contour method clearly conforms much better to the true physical shape of the state distribution at time t1. As a result, the control computed using this chance constraint method results in improved performance in the Monte Carlo trial. Specifically, 92.2% of the samples from the linear covariance simulation were found to satisfy all of the chance constraints, whereas 98.3% of the samples from the non-Gaussian method were found to satisfy all constraints. Note that each individual chance constraint is enforced separately, and each individual chance constraint is satisfied to the desired 99.0% probability. Overall, the new contour method is found to be more numerically efficient than the method developed in Ref. [5] which uses a Gaussian mixture model to model the non-Gaussian distribution and an iterative risk allocation algo-rithm to optimally assign risk to the different mixands. By modeling the non-Gaussian distribution using a single contour boundary, this method obviates the need for an expensive iterative method. V. C ONCLUSIONS 
+
+This paper presents a methodology for approximating non-Gaussian chance constraints via use of an analytic parameter-ization of the boundary of the distribution at a specified con-fidence level. The first four moments of the distribution are estimated via a deterministic technique and used to inform geometric corrections on the baseline Gaussian geometry. We apply this to so-called “banana-shaped” distributions commonly observed in orbital mechanics problems. The approach is then applied to enforce chance constraints on a non-Gaussian distribution in a constrained optimal spacecraft maneuver targeting scenario. The algorithm accurately satis-fies the desired chance constraint boundary, outperforming a traditional linear covariance-based strategy. Future work will focus on improving the efficiency of the algorithm which enforces the geometric conditions of the chance constraint. The current algorithm applies a given path constraint (e.g. a half-plane constraint) jointly at many sampled points on the analytic contour. A better approach is to identify the worst-violating point and compute the correction based on that single constraint alone. This is more difficult due to the potential for the worst-violating point to jump back and forth between distinct “lobes” of the non-convex contour of the non-Gaussian shape. In addition, the manner in which cumulative probability is treated in this methodology could perhaps be refined. We will also develop extensions of the geometric technique applied here, and investigate other methods of estimating necessary nonlinear statistical moments. Lastly, future work will develop more sophisticated examples with non-Gaussian chance constraints at multiple distinct times, and more complex dynamics. Ongoing numerical experiments in more non-Gaussian sce-narios with more dynamic complexity, including a high-fidelity cislunar study, suggest that the present approach is effective beyond the simple asteroid-targeting example considered here. REFERENCES [1] K. Oguri, M. Ono, and J. W. McMahon, “Convex optimization over sequential linear feedback policies with continuous-time chance constraints,” in 2019 IEEE 58th Conference on Decision and Control (CDC) , 2019, pp. 6325–6331. [2] L. Blackmore, M. Ono, and B. C. Williams, “Chance-constrained optimal path planning with obstacles,” IEEE Transactions on Robotics ,vol. 27, no. 6, pp. 1080–1094, 2011. [3] M. Ono and B. C. Williams, “Iterative risk allocation: A new approach to robust model predictive control with a joint chance constraint,” in

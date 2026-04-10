@@ -1,0 +1,1136 @@
+Title: General Explicit Network (GEN): A novel deep learning architecture for solving partial differential equations
+
+URL Source: https://arxiv.org/pdf/2604.03321v1
+
+Published Time: Tue, 07 Apr 2026 00:05:07 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+## General Explicit Network (GEN): A novel deep learning architecture for solving partial di ff erential equations 
+
+Genwei Ma a,b , Ting Luo c, Ping Yang d, Xing Zhao e, ∗
+
+> aNational Center for Applied Mathematics Beijing, Capital Normal University, No. 105 West Third Ring Road North, Beijing, 100048, China
+> bThe Academy for Multidisciplinary Studies, Capital Normal University, No. 105 West Third Ring Road North, Beijing, 100048, China
+> cAcademy of Information Network Security, People’s Public Security University of China, No.1 Muxidi Nanli, Beijing, 100038, China
+> dInstitute of Nuclear and New Energy Technology, Tsinghua University, Haidian District, Beijing, 100084, China
+> eSchool of Mathematical Sciences, Capital Normal University, No. 105 West Third Ring Road North, Beijing, 100048, China
+
+Abstract 
+
+Machine learning, especially physics-informed neural networks (PINNs) and their neural network variants, has been widely used to solve problems involving partial di ff erential equations (PDEs). The successful deployment of such methods beyond academic research remains limited. For example, PINN methods primarily consider discrete point-to-point fitting and fail to account for the potential properties of real solutions. The adoption of continuous activation functions in these approaches leads to local characteristics that align with the equation solutions while resulting in poor extensibility and robustness. A general explicit network (GEN) that implements point-to-function PDE solving is proposed in this paper. The "function" component can be constructed based on our prior knowledge of the original PDEs through corresponding basis functions for fitting. The experimental results demonstrate that this approach enables solutions with high robustness and strong extensibility to be obtained. 
+
+Keywords: partial di ff erential equations, physics-informed neural networks 
+
+1. Introduction 
+
+In the fields of science and engineering, partial di ff erential equations (PDEs) are widely employed in their sim-plest mathematical forms to describe the behaviours of complex systems spanning fluid dynamics, electromagnetism, and quantum mechanics [42]. These equations establish a foundational framework for understanding and simulating natural phenomena. However, the traditional numerical methods for solving PDEs, which rely on progressive compu-tations that extrapolate from the initial conditions in a step-by-step manner, often demand substantial computational resources and time. Moreover, although these traditional methods achieve high accuracy and are supported by rigorous error and stability analyses, their computational costs scale exponentially with the dimensionality of the underlying PDEs, resulting in the curse of dimensionality. In recent years, machine learning models, especially deep neural networks (DNNs), have emerged as transfor-mative tools, demonstrating remarkable advancements in both computational speed and e ffi ciency for solving PDEs, thereby unlocking new perspectives and possibilities for scientists and engineers [18, 38, 12, 39, 6]. In fact, the theoret-ical foundation for solving PDEs using DNNs stems from the universal approximation theorem [13], which asserts that DNNs can theoretically approximate any continuous function. The contemporary machine learning approaches for solving PDEs predominantly fall into two methodological categories: neural operator learning frameworks [20, 2, 34] and physics-informed neural network (PINN) variants enhanced with physical constraints. The former paradigm fo-cuses on learning di ff erential operators through architectures such as deep operator network (DeepONet) [28, 22, 23], the low-rank neural operator (LNO), the multipole graph neural operator (MGNO) [25], the Fourier neural operator (FNO) [26], and the Laplace neural operator [8], enabling e ffi cient solutions to be obtained for parametric PDEs with     
+
+> ∗Corresponding author
+> Email addresses: magenwei@126.com (Genwei Ma), zhaoxing_1999@126.com (Xing Zhao)
+> arXiv:2604.03321v1 [cs.LG] 2 Apr 2026
+
+shared mathematical structures but varying coe ffi cients. While these operator-based learning methods demonstrate remarkable generalization capabilities once trained, their development processes pose three primary challenges: 1) their heavy reliance on extensive numerical simulation datasets for training, 2) the inherent neglect of the governing physical principles that are encoded in PDEs, and 3) the substantial computational overhead derived from both data acquisition and network optimization steps. These limitations have become particularly apparent since the emergence of physics-informed learning paradigms, leading to diminished interest in purely data-driven operator-based learning approaches. The latter paradigm originates from the ground-breaking PINN framework introduced by Raissi et al. (2019) [33], which established a novel computational paradigm by embedding PDE formulations directly into neural net-work architectures. This methodology synergistically integrates supervised learning with physical constraints through autodi ff erentiation mechanisms of deep learning, enabling not only e ffi cient numerical solutions but also physically consistent solutions to be obtained for PDEs. The framework has catalysed transformative advancements in com-putational mathematics and engineering physics [7, 45, 36], garnering significant interdisciplinary recognition, as evidenced by its 20017 citations (Google Scholar, 16 February 2026). However, despite the demonstrated precision and computational e ffi ciency of the contemporary deep learning techniques in terms of solving PDEs, emerging scepticism within the scientific community has raised methodologi-cal concerns about machine learning approaches. A seminal meta-analysis conducted by McGreivy and Hakim [29] involved systematically evaluating 82 studies on machine learning-based PDE solvers in fluid dynamics scenarios, revealing critical flaws in the current benchmarking practices. Furthermore, PINN methods generally fail to converge to reasonable approximations [11], even for simple toy problems [41, 21, 3]; thus, they do not appear to be superior to alternative approaches such as discrete grid-based methods [10, 17].Furthermore, Brandstetter [5] fundamentally questioned whether machine learning o ff ers substantive advantages beyond selective speed improvements, empha-sizing the need for comprehensive evaluation frameworks that assess accuracy, generalizability, and computational costs across diverse physical regimes. Indeed, the application of machine learning to PDE solvers remains a solution looking for a problem [1]. The current research addressing the limitations of PINNs focuses primarily on optimizing ill-posedness in domain-specific applications. Chen et al. [9] proposed PF-PINNs, which employ normalization techniques to mitigate spa-tiotemporal scale discrepancies, coupled with a neural tangent kernel (NTK)-based [15, 44, 14] adaptive weighting strategy to balance multitask loss terms for solving coupled Allen-Cahn and Cahn-Hilliard phase field equations. The Sinc Kolmogorov-Arnold network (SincKAN) [46, 27] architecture replaces conventional activation functions with Sinc functions, improving upon the high-frequency feature detection capabilities of the former; this approach has been successfully applied to phonon Boltzmann equations. In the context of Fourier neural networks, researchers have observed a spectral bias where networks exhibit faster convergence towards low-frequency solution components than they do toward high-frequency components, with no guaranteed convergence to the high-frequency modes even after extensive iterations. The FNO [24, 32] and Fouier PINNs [35, 40, 16, 4, 37] have demonstrated e ff ectiveness in fluid dynamics applications, including two-phase (subsurface oil /water) flow PDEs [47] and seismic wave equations involving variable velocity models [37, 43]. Physics-informed neural operators (PINOs) integrate FNOs with physi-cal constraints to achieve high-precision solution operator approximations under zero-shot superresolution conditions, achieving 10-fold acceleration over conventional PINNs. Although various neural architectures have provided promising experimental results in di ff erent domains, their holistic structures and intrinsic properties cannot be fundamentally optimized through network training. To address this limitation at its root, comprehensive modifications to the network architecture and design paradigm are needed. In reality, DNN-based approaches, including PINNs, essentially employ neural networks to learn a potential closed-form solution that remains valid only within specific domain intervals. Two critical aspects warrant clarification. 
+
+• Closed-form solution: For a DNN with inputs of x = (x1, x2, · · · , xn)T , t and an output u, the corresponding mathematical representation can be expressed as follows: 
+
+u = ϕ(WLδ(WL−1 · · · δ(w1(x, t) + b1) + bL−1) + bL)where ϕ and δ denote activation functions. For PDE-related problems, di ff erentiable functions such as tanh (·)are typically employed. Thus, the network essentially constructs a di ff erentiable equation that approximates the PDE solution. 2- - /2 0 /2       
+
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Polynomial Extrapolation
+> True Function
+> Samples
+> 3rd-degree Fit
+> 5th-degree Fit
+> 7th-degree Fit
+> --/2 0/2
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Taylor Series Approximation
+> sin(x)
+> 1 terms
+> 2 terms
+> 3 terms
+> 4 terms
+> 101
+> 1
+> 0
+> 1
+
+## a b
+
+Figure 1: This comparative study demonstrates two approaches for approximating y = sin (x). (a): Explicit polynomial fitting reveals a critical trade-o ff : low-degree polynomials (e.g., 3rd-degree, red) fail to capture the curvature of the function within the sampled region ( x ∈ [−1, 1]), whereas higher-degree fitting (5th-7th degrees, orange /green) provides improved in-sample accuracy at the cost of severe overfitting and unstable extrapolation (wild oscillations beyond |x| > 1). (b): Taylor series expansion exhibits progressive refinement: lower-order approximations (1-2 terms, red /brown) approximate the core trend, whereas higher-order expansions (3-4 terms, green /blue) systematically enhance both the local accuracy and global extrapolation stability of the system by aligning derivative constraints with the intrinsic physics of sin (x). These divergent extrapolation behaviours underscore the superiority of series expansions over purely empirical polynomial regression schemes. 
+
+• Domain validity: We must examine how such single-function representations capture complex functional be-haviours within specified intervals. Our analysis suggests that conventional DNNs require substantial param-eters to accommodate pointwise inputs during training, resulting in weak neighbourhood correlations between adjacent points. Consequently, while achieving pointwise approximation accuracy within their training do-mains, these models often exhibit catastrophic fitting failures in extrapolation regions beyond the coverage area of the training data. We characterize this fitting paradigm as a point-to-point approximation scheme. We emphasize that performing pointwise fitting during training, without enforcing explicit constraints to maintain functional continuity or topological consistency between adjacent regions, results in weak interneighbourhood corre-lations in DNNs. This ultimately leads to solutions with poor extensibility, low robustness, and compromised stability in the learned functional representations. To transcend the aforementioned weak interdomain correlations, we re-examine PDE solution representations through dual mathematical paradigms, i.e., closed-form analytical expressions and series-expansion representations, with each paradigm possessing distinct advantages and limitations. Closed-form solutions ( u = H(x, t)) o ff er intuitive mathematical elegance that explicitly reveals physical properties (e.g., stability and extensibility), facilitating theoret-ical analyses and rapid computational implementations. However, their applicability remains constrained to specific equation types with simple boundary conditions, often failing to provide explicit solutions for complex systems. Conversely, series-expansion methods ( u = P ai j fi(x)g j(t)), e.g., Fourier series and power series, demonstrate uni-versal adaptability through basis function decomposition, e ff ectively approximating nonlinear and variable-coe ffi cient problems for which analytical solutions have proven elusive. While truncation errors and diminished physical in-terpretability persist as limitations, each basis function inherently encodes global structural information through its spectral characteristics. In contrast with the conventional DNN approaches that seek monolithic function approximations, we observe fundamental incompatibility with analytical solution properties such as stability preservation, which explicitly reveal physical properties. This motivates our investigation into neural architectures that mimic series-expansion mecha-nisms. Therefore, we propose a more general and explicit point-to-function network architecture, which we call a generalized explicit network (GEN). Formally analogous to series-expansion representations, the GEN synthesizes the final solution through a prescribed combination of basis functions. That is, 
+
+u = K(( f1(x), · · · , fm(x), (g1(t), · · · , gn(t))) where the following hold. 
+
+• The operator K represents a composition operator for basis functions, which is analogous to the linear superpo-sition mechanism in series expansions. To leverage the adaptive intelligence of neural networks, we implement 3this operator through a parameterized network that enables the nonlinear synthesis of basis functions into the final solution. 
+
+Kθ : {{ fi(x)}mi=1{G j(t)}nj=1
+
+| {z }
+
+> Basis Function Space
+
+} Neural Synthesis 
+
+−−−−−−−−−−−→ U
+
+where θ represents the trainable network parameters, and Kθ achieves the following. 1) Nonlinear basic cou-pling: Through activation functions, δ(·), Kθ establishes cross-basis interactions, enabling nonlinear combina-tions beyond the linear superposition P ci j fi(x)g j(t). 2) Dynamically adjusted basis coe ffi cients via hidden-layer states: 
+
+u(x, t) = ϕ(WLδ(WL−1 · · · δ(w1( fi(x), g j(t)) + b1) + bL−1) + bL), enabling spatiotemporal context-aware synthesis. 
+
+• f1(x), · · · , fm(x): Spatially parameterized basis functions are formed under predefined spectral constraints. Ex-ample: Trigonometric bases for spatial dimensions: 
+
+fi = ai sin( ωi x + ϕi) + bi
+
+• g1(t), · · · , gn(t): Temporally modulated basis functions are formed with adaptive localization. Example: Gaus-sian bases for temporal dynamics: 
+
+g j(t) = α jexp (− (t − μ j)2
+
+2σ2
+
+> j
+
+)
+
+ai, ω i, ϕ i, bi, α j, μ j, σ j ∈ R are the learnable parameters of the network. Compared with the conventional DNN methods, our network presents a more universal PDE-solving framework through explicitly designed basis functions. Its key advantages include the following. 1 Enhanced generality via finite series approximation implemented over single-network closed-form solution fitting. 2 Customizable basis functions guided by intrinsic PDE properties, enabling e ff ective analyses of the learned solution representations. 3 A per-point functional series fitting scheme that enriches the topological structural information of solutions, thereby granting the GEN superior robustness and extensibility. 
+
+2. Methods 
+
+2.1. Basis function selection 
+
+The methodological selection of trigonometric and Gaussian functions as the dual basis functions employed in this study is guided by the following considerations. First, Gaussian functions, whose original purpose was to use characteristic functions, can be expressed as a combination of characteristic functions. This method better explains the weak extension and local consistency of the traditional point-by-point DNN fitting approach. However, the dis-continuity of the underlying characteristic functions leads to inappropriate derivative requirements due to the use of DNN method. Selecting a basis function that is similar to the target characteristic function is necessary for explaining and understanding our method, so the di ff erentiability of Gaussian functions is used for the experiments. Other func-tions, such as quadratic functions, can also be selected. Second, trigonometric functions are selected because they possess a property similar to that of the Fourier series form, which provides the following advantages. 1) Domain universality: These functions are defined over R with infinite di ff erentiability. 2) Orthogonality of basis functions: Trigonometric functions are orthogonal over a given period. 3) Completeness: Trigonometric function series can represent any piecewise-smooth periodic function (Dirichlet conditions). 4) PDE solution representation capacity: Solutions frequently involving trigonometric series expansions, aligning with the fundamental PDE theory. Our methodological paradigm systematically embeds domain-specific physical priors by exploiting the intrinsic physical properties of di ff erential equations by conducting structured basis function engineering within spatiotem-poral frameworks. This form enables a physics-informed constraint integration process guided by the conservation 4principles and dynamic evolution characteristics that are inherent to each PDE class. Heat equation implementation: 
+
+Given a priori knowledge regarding exponential temporal decay characteristics, we restrict the basis construction pro-cedure to spatial dimensions. This operational constraint motivates trigonometric or Gaussian basis functions designed to capture the di ff usion process in space while inherently preserving the temporally asymptotic decay structure. Wave equation formulation: The hyperbolic nature of the wave equation manifests through its characteristic propagation structure, which is governed by the d’Alembert solution framework. This intrinsic property motivates our construction of directional composite basis functions ψ±(ξ) = ϕ1(x − ct ) + ϕ2(x + ct ), where ξ = x ± ct denotes the characteristic coordinates. Such characteristic-aligned function compositions inherently preserve the fundamental duality of trav-elling wave solutions while maintaining strict adherence to the finite propagation speed constraint of the equation 
+
+|dx /dt | = c. Burgers’ equation exploration: In the absence of strong physical priors, we adopt a comprehensive testing framework employing hybrid bases across both the spatial and temporal domains. 
+
+2.2. Model training 
+
+The general PDE form can be expressed as 
+
+ut + F (x, u(x, t)) = f (x, t), x ∈ Ω, t ∈ [0 , T ]
+
+B(u) = b(x, t), x ∈ ∂Ω
+
+I(u) = i(x, t), t = 0(1) where u(x, t) is the latent solution to be decided, ut is the temporal derivative, F (·) is the linear or nonlinear spatial di ff erential operator containing the possible orders of spatial derivatives, f (x, t) is the source term, B(·) is the boundary operator for calculating the boundary values, b(x, t) is the boundary condition, I(·) is the initial operator for calculating the initial values, i(x, t) is the initial condition, Ω is the computational domain and ∂Ω is the boundary. Considering the PDEs in the form of equation (1) and inputting the spatial coordinate x and the temporal coordinate 
+
+t, we can obtain the corresponding values of a series of basis functions fi(x) and g j(t), which are input into the synthetic network to obtain the network prediction solution ˆ u. By properly designing the loss function and a certain optimization algorithm, we can finally obtain a solution to which the network converges. Three points need to be explained here. 1. Basis function initialization protocols: 
+
+Trigonometric function: 
+
+ai ∼ U (0 , 1) (2) 
+
+ωi ∼ iπ · U (0 , 1) (3) Gaussian function 
+
+ai ∼ U (0 , 1) (4) 
+
+σi ∼ U (0 , 1) (5) 
+
+μi ∼ min +(max − min) · U (0 , 1) (6) where U(0 , 1) is a uniform distribution and min and max are the minimum and maximum values of the current coordinates, respectively. 2. Network synthesis architecture specifications: 
+
+• Input dimensionality: M + N (basis concatenation) 
+
+• Hidden layer: 20 neurons with tanh activation 
+
+• Output: Linear transformation 3. Physics-informed loss function : Aligned with conventional PINN frameworks: 
+
+L = E(x,t)
+
+h(N[ˆ u]) 2i| {z }
+
+> MSE PDE
+
++λ E∂Ω
+
+h(ˆ u − uBC )2i| {z }
+
+> MSE BC
+
++γ Et=0
+
+h(ˆ u − u0)2i| {z }
+
+> MSE IC
+
+(7) The GEN model is built using the PyTorch framework [30, 31, 19] and trained on one Nvidia RTX 4090 GPU for a total of 100000 iterations. The adaptive moment estimation (Adam) optimizer is used with the default parameters (β1 = 0.9 and β2 = 0.999). The learning rate is set to 1 e − 3. 53. Results 
+
+We demonstrate our PDE-solving framework through three canonical model systems: the heat equation governing thermal di ff usion, the wave equation describing vibrational propagation, and Burgers’ equation for modelling non-linear convection-di ff usion phenomena. For di ff erent specific equations with various initial conditions and boundary conditions, we emphasize that prior information significantly influences the process of selecting appropriate basis functions, which directly impacts the accuracy and quality of the fitting results. 
+
+3.1. Heat equation 
+
+Simply, we commence our investigation with the heat equation, which is selected due to its well-characterized solution properties. The governing PDE is formulated as follows: 
+
+ut − uxx = 0
+
+u(x, 0) = sin ( π
+
+2 x)
+
+u(0 , t) = u(2 , t) = 0(8) The analytical solution admits the closed-form expression shown below: 
+
+u(x, t) = e−(π/ 2) 2t sin 
+
+ π
+
+2 x
+
+
+
+(9) Two novel basis function schemes are developed for this study: 
+
+• SineGEN : Trigonometric basis functions for spatial positions with N = 25: 
+
+{aie−ω2  
+
+> it
+
+sin (ωi x) + b}Ni=1
+
+• GaussGEN : Gaussian basis functions for spatial positions with m = n = 5: 
+
+{e−μt j t}nj=1 ⊗ { aie( x−μxi  
+
+> σi)2
+
+}mi=1
+
+A comparative analysis between the PINN and the conventional numerical solvers is presented in Fig. 2, which demonstrates the e ffi cacy of our methodology. From the solution results, visually, both the PINN and the GENs with two di ff erent basis functions achieve sat-isfactory outcomes. A further analysis performed through appropriate extrapolations from the ixed positions reveals that although our equation possesses an explicit closed-form solution, the PINN exhibits significant deviations outside the original domain. This indicates that the pursuit of a "black-box" explicit closed-form solution by the PINN fails to attain the expected true solution and instead produces only a local fitting result. In contrast, when our method formally aligns with the solution structure, it can ultimately yield expressions with better extrapolation capabilities and higher accuracy or approximate the true solution. Even with poorly chosen basis functions, our method achieves an accuracy comparable to that of the PINN, although its extrapolation performance depends on the properties of the chosen basis functions. Figs. 2(f-g) illustrate specific characteristics of the basis functions, which not only aid in further analyses but also increase the resulting solution accuracy. For example, analysing frequencies and amplitudes through techniques that are analogous to Fourier transformations could further refine these insights. 
+
+3.2. Wave equation 
+
+Next, we further demonstrate the application of the GEN to a wave equation. Let us consider the following wave equation: 
+
+utt − uxx = 0
+
+u(x, 0) =
+
+ 
+
+> x
+> 2
+
+, x < 11 − x 
+
+> 2
+
+, x ≥ 1
+
+u(0 , t) = u(2 , t) = 0(10) 60.00 0.50 1.00 1.50 2.00 2.50 
+
+t
+
+0.00 
+
+0.20 
+
+0.40 
+
+0.60 
+
+0.80 
+
+1.00 
+
+1.20 
+
+1.40 
+
+1.60 
+
+1.80 
+
+2.00 
+
+> x
+
+PINN 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 0.00 0.50 1.00 1.50 2.00 2.50 
+
+t
+
+0.00 
+
+0.20 
+
+0.40 
+
+0.60 
+
+0.80 
+
+1.00 
+
+1.20 
+
+1.40 
+
+1.60 
+
+1.80 
+
+2.00 
+
+> x
+
+SineGEN 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 0.00 0.50 1.00 1.50 2.00 2.50 
+
+t
+
+0.00 
+
+0.20 
+
+0.40 
+
+0.60 
+
+0.80 
+
+1.00 
+
+1.20 
+
+1.40 
+
+1.60 
+
+1.80 
+
+2.00 
+
+> x
+
+GaussGEN 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 1.6 1.8 2.0 2.2 2.4 
+
+t
+
+10 3
+
+10 2
+
+> u(x, t)(log scale)
+
+Fitting Region Extrapolation Region 
+
+u(x = 0.5, t)        
+
+> 2.30 2.32 2.34 2.36 2.38 2.40 2.42 2.44 2.46
+
+2 × 10 3
+
+3 × 10 3
+
+4 × 10 3
+
+1.6 1.8 2.0 2.2 2.4 
+
+t
+
+Fitting Region Extrapolation Region 
+
+u(x = 1.0, t)        
+
+> 2.30 2.32 2.34 2.36 2.38 2.40 2.42 2.44 2.46
+
+2 × 10 3
+
+3 × 10 3
+
+4 × 10 3
+
+Methods 
+
+Analytical 
+
+Numerical 
+
+PINN 
+
+Sine 
+
+Gauss 10 0 10 
+
+0.75 
+
+1.00 A=0.60 
+
+=-0.03 
+
+10 0 10 
+
+0.75 
+
+1.00 A=0.32 
+
+=0.39 
+
+10 0 10 
+
+0
+
+2 A=1.07 
+
+=1.63 
+
+10 0 10 
+
+0
+
+1
+
+A=0.84 
+
+=1.38 
+
+10 0 10 
+
+0
+
+1
+
+A=0.82 
+
+=1.76 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.36 
+
+=1.65 
+
+10 0 10 
+
+0
+
+1
+
+A=0.79 
+
+=6.91 
+
+10 0 10 
+
+0
+
+2 A=1.06 
+
+=20.52 
+
+10 0 10 
+
+0
+
+1
+
+A=0.83 
+
+=15.64 
+
+10 0 10 
+
+0.8 
+
+1.0 A=0.15 
+
+=27.55 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.35 
+
+=22.31 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.43 
+
+=26.58 
+
+10 0 10 
+
+0.85 
+
+0.90 A=0.04 
+
+=21.36 
+
+10 0 10 
+
+0
+
+1
+
+A=0.97 
+
+=24.05 
+
+10 0 10 
+
+0
+
+1
+
+A=0.92 
+
+=8.42 
+
+10 0 10 
+
+0
+
+1
+
+A=0.96 
+
+=3.06 
+
+10 0 10 
+
+0
+
+2 A=1.20 
+
+=30.20 
+
+10 0 10 
+
+0.85 
+
+0.90 A=0.05 
+
+=48.52 
+
+10 0 10 
+
+0
+
+1
+
+A=1.04 
+
+=44.15 
+
+10 0 10 
+
+0.5 
+
+1.0 
+
+1.5 A=0.71 
+
+=6.26 
+
+10 0 10 
+
+0
+
+1
+
+A=0.98 
+
+=3.89 
+
+10 0 10 
+
+0.5 
+
+1.0 
+
+1.5 A=0.62 
+
+=60.34 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.46 
+
+=58.12 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.35 
+
+=39.81 
+
+10 0 10 
+
+0.5 
+
+1.0 A=0.46 
+
+=18.68 0.5 
+
+1.0 
+
+1.5 
+
+0.25 
+
+0.50 
+
+0.75 
+
+0.20 
+
+0.15 
+
+0.10 
+
+0.5 
+
+1.0 
+
+0.0 
+
+0.5 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.25 
+
+0.50 
+
+0.75 
+
+0.25 
+
+0.50 
+
+0.0 
+
+0.5 
+
+0.25 
+
+0.50 
+
+0.0 
+
+0.5 
+
+0.5 
+
+1.0 
+
+0.25 
+
+0.50 
+
+0.75 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0
+
+1
+
+2
+
+0.0 
+
+0.5 
+
+1.0 
+
+0.0 
+
+0.5 
+
+1.0 
+
+0.0 
+
+0.5 
+
+1.0 
+
+0.0 
+
+0.2 
+
+0.4 
+
+1
+
+2
+
+0.000 
+
+0.025 
+
+0.050 
+
+1.0 
+
+1.5 
+
+0.25 
+
+0.50 
+
+0.0 
+
+0.1 0 1 2 3 4 5 6 7
+
+0
+
+1
+
+2
+
+> Numerical
+
+0.5 
+
+0.0 
+
+0.5 
+
+0 1 2 3 4 5 6 7
+
+0
+
+1
+
+2
+
+> PINN
+
+0.5 
+
+0.0 
+
+0.5 
+
+0 1 2 3 4 5 6 7
+
+0
+
+1
+
+2
+
+> Sine
+
+0.5 
+
+0.0 
+
+0.5 
+
+0 1 2 3 4 5 6 7
+
+0
+
+1
+
+2
+
+> Gauss
+
+0.5 
+
+0.0 
+
+0.5 0 1 2 3 4 5 6 7
+
+t
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+u(x = 0.5, t)
+
+0 1 2 3 4 5 6 7
+
+t
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+Fitting Region 
+
+Extrapolation Region 
+
+u(x = 1, t)
+
+Methods 
+
+Analytical 
+
+Numerical 
+
+PINN 
+
+Sine 
+
+Gauss 1a b cd ef g
+
+Figure 2: Comparison among solutions for the heat equation: (a) The PINN. (b-c) The SineGEN and GaussGEN developed under the proposed GEN framework. (d-e) The temporal profiles produced at x = 0.5 (left) and x = 1.0 (right), demonstrating increasing extrapolation errors beyond the training domain ( t > 2.0), which is particularly evident in the PINN predictions. (f-g) The 25 basis functions learned by the two GEN methods. 
+
+710 0 10                                                                        
+
+> 0
+> 1
+> A=0.96
+> =3.06
+> 10 010
+> 0
+> 2A=1.20
+> =30.20
+> 10 010
+> 0.85
+> 0.90 A=0.05
+> =48.52
+> 10 010
+> 0
+> 1
+> A=1.04
+> =44.15
+> 10 010
+> 0.5
+> 1.0
+> 1.5 A=0.71
+> =6.26
+> 10 010
+> 0
+> 1
+> A=0.98
+> =3.89
+> 10 010
+> 0.5
+> 1.0
+> 1.5 A=0.62
+> =60.34
+> 10 010
+> 0.5
+> 1.0 A=0.46
+> =58.12
+> 10 010
+> 0.5
+> 1.0 A=0.35
+> =39.81
+> 10 010
+> 0.5
+> 1.0 A=0.46
+> =18.68 0
+> 1
+> 2
+> 0.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 0.0
+> 0.5
+> 1.0
+> 0.0
+> 0.2
+> 0.4
+> 1
+> 2
+> 0.000
+> 0.025
+> 0.050
+> 1.0
+> 1.5
+> 0.25
+> 0.50
+> 0.0
+> 0.1 01234567
+> 0
+> 1
+> 2
+> Numerical
+> 0.5
+> 0.0
+> 0.5
+> 01234567
+> 0
+> 1
+> 2
+> PINN
+> 0.5
+> 0.0
+> 0.5
+> 01234567
+> 0
+> 1
+> 2
+> Sine
+> 0.5
+> 0.0
+> 0.5
+> 01234567
+> 0
+> 1
+> 2
+> Gauss
+> 0.5
+> 0.0
+> 0.5 01234567
+> t
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> u(x= 0.5, t)
+> 01234567
+> t
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> Fitting Region
+> Extrapolation Region
+> u(x= 1, t)
+> Methods
+> Analytical
+> Numerical
+> PINN
+> Sine
+> Gauss
+
+1a bc
+
+Figure 3: Wave equation: (a) Heatmap comparison among the numerical solution, the PINN and the two GEN results, with the colour intensities representing the solution values. (b) and (c) Temporal snapshots of the solutions produced at spatial locations x = 0.5 and x = 3.0, respectively. The green shaded area represents the fitting region (training domain), and the red shaded area represents the extrapolation region. 
+
+For this equation, two characteristic lines exist: x − t = c1 and x + t = c2. On the basis of this property, we design basis functions with the forms of ζ(x + t) and η(x − t). Similarly, we also test trigonometric functions {ai sin( ω(x −
+
+t)) + bi sin( ω(x + t)) + d}25 
+
+i=1 and Gaussian basis functions {ai exp(( x−μxi −t−μti 
+
+σxi σti )2) + bi exp(( x+μxi −t−μti 
+
+σxi σti )2) + d}25 
+
+i=1 for solving the equation. The results are illustrated in Fig. 3. As above, the experimental results show that within the training domain, both the PINN and the GEN methods with trigonometric basis functions produce satisfactory numerical solutions. However, outside the fitting region, owing to the nature of the periodic extension, the PINN and Gaussian basis functions exhibit ill-posed behaviour, whereas the inherent periodicity of the trigonometric functions e ff ectively preserves the periodic extension. Additionally, at the fixed spatial point x = 1, the Gaussian basis functions retain the smooth transition at the peak rather than a sharp turning point. On the one hand, this highlights that the appropriate selection of basis functions can enhance the accuracy of the solutions output by a network. On the other hand, it underscores the critical role of human prior knowledge in PDE-solving tasks. These insights are vital for conducting robust performance analyses when applying DNN methods to solve PDEs in real-world scenarios. 
+
+3.3. Burgers’ equation 
+
+In previous discussions, we observed that the method of approximating PDEs using trigonometric functions ap-pears to outperform PINNs. This advantage likely stems from the fact that any periodic function satisfying the Dirich-let conditions can be represented as a superposition of sine (or cosine) functions with varying frequencies. To explore this concept further, we conduct a study using trigonometric basis functions for solving Burgers’ equation, which are defined as follows: 
+
+ut + uu x − 0.01 
+
+π uxx = 0
+
+u(x, 0) = − sin( πx)
+
+u(1 , t) = u(−1, t) = 0(11) Here, we conduct experiments using the same sine basis functions as those applied for the wave equation but with varying numbers of basis functions. Fig. 4 presents the solution results obtained with 25 basis functions (GEN 25) and 100 basis functions (GEN 100). A summary of our results obtained for this example is presented in Fig. 4. A particularly intriguing finding is that our sine-based basis functions achieve high accuracy in terms of solving the equation regardless of the number of basis functions used. However, as observed in the localized magnified plots near the maxima and minima of the temporal snapshots, a certain degree of error persists when fewer basis functions are employed (e.g., GEN 25), whereas higher precision is attained with an increased number of basis functions (e.g., GEN 100). This phenomenon suggests that 80.00 0.25 0.50 0.75 
+
+−101 Exact 
+
+0.00 0.25 0.50 0.75 
+
+−101 GEN 25 
+
+0.0 0.5
+
+−101 GEN 100 
+
+01
+
+−1 0 1
+
+x
+
+−101
+
+> u(x, t )
+
+t = 0 .25 
+
+−1 0 1
+
+x
+
+−101
+
+> u(x, t )
+
+t = 0 .5  
+
+> Exact GEN 25 GEN 100
+
+−1 0 1
+
+x
+
+−101
+
+> u(x, t )
+
+t = 0 .75 a b cd e f    
+
+> Figure 4: Burgers’ equation: (a)-(c) Heatmap comparisons between exact solutions and GENs with various numbers of basis functions. (d)-(f) Spatial snapshots of the solutions produced at temporal positions t=0.25 ,0.5 and 0 .75, respectively. Magnified views near the maxima and minima are shown in the upper-right and lower-left corners, respectively. Marked fitting accuracy discrepancies are observed when a smaller number of basis functions is employed.
+
+our method achieves large-scale fitting (a globally optimal solution) with fewer basis functions, while incorporating more basis functions enhances the resolution of the localized details, leading to superior fine-grained feature capturing accuracy. 
+
+4. Discussion 
+
+The traditional DNNs for solving PDEs face critical limitations. 1) Robustness deficits: Data-driven methods are noise-sensitive approaches, with their extrapolation errors growing exponentially. 2) Limited extensibility: Black-box models struggle to incorporate prior knowledge (e.g., symmetries and conservation laws) and fail to achieve continuity. A novel paradigm for solving PDEs through the explicit construction of solutions via equation-specific customized basis functions is introduced in this paper, ensuring enhanced fidelity to the intrinsic properties and governing laws of the true solutions. This explicit synthesis framework o ff ers three key advantages. 
+
+• Series representations enable regional extensions: A finite-term series expansion method based on basis functions uses the definition domain and global analytic relationships of these functions to achieve local conti-nuity, which ensures stability. Moreover, basis functions inherently support domain extensions, whereas appro-priately selected basis functions can enable DNN-based methods to solve PDE problems and align more closely with the global solution rather than being confined solely to the training interval. 
+
+• PED-driven basis function design: The conventional DNN-based methods for solving most equations exhibit inherent limitations, primarily manifesting in scenarios where critical physical properties, such as symmetry, periodicity, or specific intrinsic features, are not explicitly embedded into the network architectures. For ex-ample, in wave equations, while periodicity is a defining characteristic, the traditional point-to-point mapping paradigms often fail to reliably generalize to nontraining regions. Addressing this defect, the incorporation of periodic basis functions into the proposed network architecture proves e ff ective for mitigating such shortcom-ings. 9• Explicit solution structure analysis: Analytical representations of basis functions permit systematic charac-terization and targeted modulation processes to be implemented, with trigonometric spectral analysis enabling dimensionality reduction to be achieved through the execution of pruning operations within optimization frame-works. While the proposed method demonstrates significant advancements in terms of solving PDEs, three critical limi-tations hinder its broader applicability and performance optimization potential. 
+
+• Basis function selection: The selection of appropriate basis functions that are tailored to specific di ff erential equations fundamentally determines the solution accuracy our method. While our selection of trigonometric and Gaussian functions is guided by empirical heuristics (as discussed in the methodology section), the results section critically demonstrates that customized basis functions conforming to particular physical principles and system properties are essential for achieving optimal performance. 
+
+• Slow convergence during training: Experimental observations reveal a protracted training convergence pro-cess, with our implementation requiring 100,000 iterations, which is significantly greater than that of conven-tional PINNs. This computational intensiveness presents a major challenge for achieving e ffi cient and explicit representations, necessitating the development of accelerated optimization algorithms. 
+
+• Trade-o ff s regarding the number of basis functions: The solution precision our approach is sensitive to the number of selected basis functions. Insu ffi cient cardinality degrades the accuracy of the network, whereas the use of excessive functions induces parameter redundancy. The inability of the current framework to au-tonomously adapt its basis function quantity through an intelligent cardinality-parameter co-optimization scheme constitutes a notable limitation with respect to its use in high-precision applications. Of course, the primary limitation of this paper is that I am not engaged in research related to PDEs. The selection of basis functions mentioned in this work may not necessarily be reasonable or optimal, and it requires subsequent PDE researchers to continually explore and identify suitable basis functions, or to integrate them into neural networks to enhance applications across more fields. The idea behind this paper originated three years ago, and I have decided not to invest further time in refining it. I hope that someone with the right interest will uncover and further develop the techniques presented here, continuously improving the e ff ectiveness of the method. In conclusion, a novel paradigm for constructing explicit PDE solutions is proposed in this study. The developed methodology demonstrates enhanced model extensibility and robustness while establishing an analytical framework for DNN-based PDE solvers. This advancement is achieved through the systematic integration of prior knowledge via basis functions as architectural constraints during the solution formulation process. A comprehensive experimental validation confirms the ability of the proposed approach to resolve PDEs with high precision. 
+
+5. Acknowledgments 
+
+This research is supported by National Natural Science Foundation of China, Grant /Award Numbers (12426308) and the National Key Research and Development Program of China, Grant /Award Number (2023YFA1011402), Bei-jing Postdoctoral Research Foundation and the Key Research Project of the Academy for Multidisciplinary Studies, Capital Normal University. The authors are also grateful to National Center for Applied Mathematics Beijing for funding this research work. 
+
+References 
+
+[1] , 2025. Machine learning solutions looking for pde problems. Nature Machine Intelligence 7, 1. [2] Anandkumar, A., Azizzadenesheli, K., Bhattacharya, K., Kovachki, N., Li, Z., Liu, B., Stuart, A., 2020. Neural operator: Graph kernel network for partial di ff erential equations, in: ICLR 2020 workshop on integration of deep neural models and di ff erential equations. 10 [3] Basir, S., Senocak, I., 2022. Critical investigation of failure modes in physics-informed neural networks, in: AiAA SCITECH 2022 Forum, p. 2353. [4] Bounnah, Y., Mihoubi, M.K., Larbi, S., 2025. Physics informed neural network with fourier feature for natural convection problems. Engineering Applications of Artificial Intelligence 146, 110327. [5] Brandstetter, J., 2025. Envisioning better benchmarks for machine learning pde solvers. Nature Machine Intel-ligence 7, 2–3. [6] Brunton, S.L., Kutz, J.N., 2024. Promising directions of machine learning for partial di ff erential equations. Nature Computational Science 4, 483–494. [7] Cai, S., Mao, Z., Wang, Z., Yin, M., Karniadakis, G.E., 2021. Physics-informed neural networks (pinns) for fluid mechanics: A review. Acta Mechanica Sinica 37, 1727–1738. [8] Cao, Q., Goswami, S., Karniadakis, G.E., 2024. Laplace neural operator for solving di ff erential equations. Nature Machine Intelligence 6, 631–640. [9] Chen, N., Lucarini, S., Ma, R., Chen, A., Cui, C., 2025. Pf-pinns: Physics-informed neural networks for solving coupled allen-cahn and cahn-hilliard phase field equations. Journal of Computational Physics , 113843. [10] Chuang, P.Y., Barba, L.A., 2022. Experience report of physics-informed neural networks in fluid simulations: pitfalls and frustration. arXiv preprint arXiv:2205.14249 . [11] Chuang, P.Y., Barba, L.A., 2023. Predictive limitations of physics-informed neural networks in vortex shedding. arXiv preprint arXiv:2306.00230 . [12] Cuomo, S., Di Cola, V.S., Giampaolo, F., Rozza, G., Raissi, M., Piccialli, F., 2022. Scientific machine learning through physics–informed neural networks: Where we are and what’s next. Journal of Scientific Computing 92, 88. [13] Hornik, K., Stinchcombe, M., White, H., 1989. Multilayer feedforward networks are universal approximators. Neural networks 2, 359–366. [14] Huang, B., Li, X., Song, Z., Yang, X., 2021. Fl-ntk: A neural tangent kernel-based framework for federated learning analysis, in: International Conference on Machine Learning, PMLR. pp. 4423–4434. [15] Jacot, A., Gabriel, F., Hongler, C., 2018. Neural tangent kernel: Convergence and generalization in neural networks. Advances in neural information processing systems 31. [16] Jin, G., Wong, J.C., Gupta, A., Li, S., Ong, Y.S., 2024. Fourier warm start for physics-informed neural networks. Engineering Applications of Artificial Intelligence 132, 107887. [17] Karnakov, P., Litvinov, S., Koumoutsakos, P., 2024. Solving inverse problems in physics by optimizing a discrete loss: Fast and accurate learning without neural networks. PNAS nexus 3, pgae005. [18] Karniadakis, G.E., Kevrekidis, I.G., Lu, L., Perdikaris, P., Wang, S., Yang, L., 2021. Physics-informed machine learning. Nature Reviews Physics 3, 422–440. [19] Ketkar, N., Moolayil, J., Ketkar, N., Moolayil, J., 2021. Automatic di ff erentiation in deep learning. Deep Learning with python: learn best practices of deep learning models with PyTorch , 133–145. [20] Kovachki, N., Li, Z., Liu, B., Azizzadenesheli, K., Bhattacharya, K., Stuart, A., Anandkumar, A., 2023. Neural operator: Learning maps between function spaces with applications to pdes. Journal of Machine Learning Research 24, 1–97. [21] Krishnapriyan, A., Gholami, A., Zhe, S., Kirby, R., Mahoney, M.W., 2021. Characterizing possible failure modes in physics-informed neural networks. Advances in neural information processing systems 34, 26548–26560. 11 [22] Li, W., Bazant, M.Z., Zhu, J., 2023. Phase-field deeponet: Physics-informed deep operator neural network for fast simulations of pattern formation governed by gradient flows of free-energy functionals. Computer Methods in Applied Mechanics and Engineering 416, 116299. [23] Li, W., Fang, R., Jiao, J., Vassilakis, G.N., Zhu, J., 2024. Tutorials: Physics-informed machine learning methods of computing 1d phase-field models. APL Machine Learning 2. [24] Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A., Anandkumar, A., 2020a. Fourier neural operator for parametric partial di ff erential equations. arXiv preprint arXiv:2010.08895 . [25] Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Stuart, A., Bhattacharya, K., Anandkumar, A., 2020b. Mul-tipole graph neural operator for parametric partial di ff erential equations. Advances in Neural Information Pro-cessing Systems 33, 6755–6766. [26] Li, Z., Kovachki, N.B., Azizzadenesheli, K., Bhattacharya, K., Stuart, A., Anandkumar, A., et al., . Fourier neural operator for parametric partial di ff erential equations, in: International Conference on Learning Representations. [27] Liu, Z., Wang, Y., Vaidya, S., Ruehle, F., Halverson, J., Soljaˇ ci´ c, M., Hou, T.Y., Tegmark, M., 2024. Kan: Kolmogorov-arnold networks. arXiv preprint arXiv:2404.19756 . [28] Lu, L., Jin, P., Pang, G., Zhang, Z., Karniadakis, G.E., 2021. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature machine intelligence 3, 218–229. [29] McGreivy, N., Hakim, A., 2024. Weak baselines and reporting biases lead to overoptimism in machine learning for fluid-related partial di ff erential equations. Nature Machine Intelligence 6, 1256–1269. [30] Paszke, A., 2019. Pytorch: An imperative style, high-performance deep learning library. arXiv preprint arXiv:1912.01703 . [31] Paszke, A., Gross, S., Chintala, S., Chanan, G., Yang, E., DeVito, Z., Lin, Z., Desmaison, A., Antiga, L., Lerer, A., 2017. Automatic di ff erentiation in pytorch . [32] Qi, K., Sun, J., 2024. Gabor-filtered fourier neural operator for solving partial di ff erential equations. Computers & Fluids 274, 106239. [33] Raissi, M., Perdikaris, P., Karniadakis, G.E., 2019. Physics-informed neural networks: A deep learning frame-work for solving forward and inverse problems involving nonlinear partial di ff erential equations. Journal of Computational physics 378, 686–707. [34] Rosofsky, S.G., Al Majed, H., Huerta, E., 2023. Applications of physics informed neural operators. Machine Learning: Science and Technology 4, 025022. [35] Sallam, O., Fürth, M., 2023. On the use of fourier features-physics informed neural networks ( ff -pinn) for forward and inverse fluid mechanics problems. Proceedings of the Institution of Mechanical Engineers, Part M: Journal of Engineering for the Maritime Environment 237, 846–866. [36] Sharma, P., Chung, W.T., Akoush, B., Ihme, M., 2023. A review of physics-informed machine learning in fluid mechanics. Energies 16, 2343. [37] Song, C., Wang, Y., 2023. Simulating seismic multifrequency wavefields with the fourier feature physics-informed neural network. Geophysical Journal International 232, 1503–1514. [38] Thuerey, N., Holl, P., Mueller, M., Schnell, P., Trost, F., Um, K., 2021. Physics-based deep learning. arXiv preprint arXiv:2109.05237 . [39] Vinuesa, R., Brunton, S.L., 2022. Enhancing computational fluid dynamics with machine learning. Nature Computational Science 2, 358–366. 12 [40] Wang, S., Wang, H., Perdikaris, P., 2021. On the eigenvector bias of fourier feature networks: From regression to solving multi-scale pdes with physics-informed neural networks. Computer Methods in Applied Mechanics and Engineering 384, 113938. [41] Wang, S., Yu, X., Perdikaris, P., 2022. When and why pinns fail to train: A neural tangent kernel perspective. Journal of Computational Physics 449, 110768. [42] Wang, Y., Zhong, L., 2024. Nas-pinn: Neural architecture search-guided physics-informed neural network for solving pdes. Journal of Computational Physics 496, 112603. [43] Wei, W., Fu, L.Y., 2022. Small-data-driven fast seismic simulations for complex media using physics-informed fourier neural operators. Geophysics 87, T435–T446. [44] Wight, C.L., Zhao, J., 2020. Solving allen-cahn and cahn-hilliard equations using the adaptive physics informed neural networks. arXiv preprint arXiv:2007.04542 . [45] Wu, C., Zhu, M., Tan, Q., Kartha, Y., Lu, L., 2023. A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks. Computer Methods in Applied Mechanics and Engineering 403, 115671. [46] Yu, T., Qiu, J., Yang, J., Oseledets, I., 2024. Sinc kolmogorov-arnold network and its applications on physics-informed neural networks. arXiv preprint arXiv:2410.04096 . [47] Zhang, K., Zuo, Y., Zhao, H., Ma, X., Gu, J., Wang, J., Yang, Y., Yao, C., Yao, J., 2022. Fourier neural operator for solving subsurface oil /water two-phase flow partial di ff erential equation. Spe Journal 27, 1815–1830. 13

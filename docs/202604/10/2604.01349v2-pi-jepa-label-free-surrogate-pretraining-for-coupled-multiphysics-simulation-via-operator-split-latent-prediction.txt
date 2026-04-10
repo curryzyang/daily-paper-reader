@@ -1,0 +1,849 @@
+Title: PI-JEPA: Label-Free Surrogate Pretraining for Coupled Multiphysics Simulation via Operator-Split Latent Prediction
+
+URL Source: https://arxiv.org/pdf/2604.01349v2
+
+Published Time: Wed, 08 Apr 2026 01:18:04 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# PI-JEPA: C LOSING THE DATA ASYMMETRY IN SUBSURFACE 
+
+# SURROGATE MODELING VIA LABEL -F REE PRETRAINING 
+
+PREPRINT 
+
+Brandon Yee, 1 Pairie Koh 1,21 Physics Lab, Yee Collins Research Group  
+
+> 2
+
+Graduate School of Business, Stanford University 
+
+{b.yee, p.koh}@ycrg-labs.org 
+
+# ABSTRACT 
+
+Reservoir simulation workflows face a fundamental data asymmetry: input parameter fields (geosta-tistical permeability realizations, porosity distributions) are free to generate in arbitrary quantities, yet existing neural operator surrogates require large corpora of expensive labeled simulation tra-jectories and cannot exploit this unlabeled structure. We introduce PI-JEPA (Physics-Informed Joint Embedding Predictive Architecture), a surrogate pretraining framework that trains without any completed PDE solves , using masked latent prediction on unlabeled parameter fields under per-sub-operator PDE residual regularization. The predictor bank is structurally aligned with the Lie– Trotter operator-splitting decomposition of the governing equations, dedicating a separate physics-constrained latent module to each sub-process (pressure, saturation transport, reaction), enabling fine-tuning with as few as 100 labeled simulation runs. Across three benchmarks (mean ± 95% CI over 5 seeds), PI-JEPA achieves 1.8× lower error than FNO and PINO and 2.2× lower error than DeepONet on single-phase Darcy flow at Nℓ=100 ; 2.7× lower error than FNO on two-phase CO 2-water flow where FNO and PINO plateau above a relative ℓ2 error of 1.15 even at Nℓ=500 ; and 1.9×
+
+lower error than FNO on advection-diffusion-reaction. Domain-matched self-supervised pretraining provides 6–14% improvement over training from scratch. Ablation studies identify operator splitting (+16%) and VICReg regularization (+17.7%) as the essential architectural components, while the physics residual is neutral—an honest finding that redirects future work toward stronger physics-informed objectives. These results demonstrate that label-free surrogate pretraining substantially reduces the simulation budget required for multiphysics surrogate deployment.   
+
+> PHASE 1: PRETRAIN PHASE 2: FINETUNE RESULTS
+
+Unlabeled K fields 
+
+> (free to generate)
+
+Fourier Encoder 
+
+fθ
+
+Predictor Bank 
+
+gϕ1 , . . . , g ϕK
+
+LJEPA + λpLPDE + λr LVICReg 
+
+> mask & predict
+> −∇· (K∇p)
+
+Nℓ labeled (K, p )
+
+> (expensive)
+
+Pretrained fθ
+
+> (full finetune)
+
+Prediction Head 
+
+> unpatchify + refine
+
+Predicted ˆp
+
+> transfer
+
+1.8× better than FNO    
+
+> at Nℓ= 100 (Darcy)
+
+2.7× better than FNO    
+
+> at Nℓ= 100 (twophase)
+
+Operator splitting: +16% 
+
+> ablation on Darcy
+
+Key insight :    
+
+> cheap data →pretrain few labels →finetune
+
+Keywords label-free surrogate pretraining, simulation data efficiency, surrogate modeling, multiphysics simulation, operator splitting, subsurface flow simulation, porous media, reduced-order modeling, reservoir engineering, data-driven simulation surrogates, scientific computing, computational fluid dynamics 
+
+> arXiv:2604.01349v2 [cs.LG] 7 Apr 2026
+
+PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+# 1 Introduction 
+
+High-fidelity numerical simulation of coupled partial differential equations underpins critical engineering and scientific workflows across subsurface science, chemical engineering, and geomechanics. From geological CO 2 storage [Benson and Cole, 2008] to contaminant remediation and mineral dissolution in porous media [Steefel et al., 2015], the gov-erning equations couple pressure, saturation, species concentration, and mechanical deformation fields across multiple timescales and spatial scales. A single high-resolution simulation of two-phase flow through a heterogeneous reser-voir using industry-standard numerical solvers may require hours to days of wall-clock time [Lie, 2019], rendering exhaustive uncertainty quantification or real-time production optimization computationally intractable. Data-driven surrogate models have emerged as a compelling alternative for accelerating these engineering workflows, with neural operators [Kovachki et al., 2023] offering particular promise because they learn mappings between func-tion spaces rather than between finite-dimensional vectors, enabling generalization across discretizations and parame-ter regimes. The Fourier Neural Operator (FNO) [Li et al., 2021] achieves strong accuracy on benchmark PDE systems by operating in spectral space, and Deep Operator Networks (DeepONet) [Lu et al., 2021a] provide a universal ap-proximation framework grounded in classical operator theory. Subsequent physics-informed variants such as PINO [Li et al., 2024] incorporate PDE residual constraints at training time, improving generalization to out-of-distribution in-puts. Despite these advances, the dominant paradigm in the field remains supervised reconstruction : given a corpus of labeled input-output pairs (u(i)0 , u (i) 
+
+> T
+
+), the surrogate minimizes a pixelwise error between its predicted solution field and the ground-truth simulator output. This paradigm carries two fundamental limitations that motivate the present work. First, labeled simulation trajectories are expensive to generate, and in realistic subsurface settings the training corpus may contain tens to hundreds of high-fidelity runs rather than the thousands assumed by standard FNO/DeepONet benchmarks. Physics-informed methods alleviate but do not eliminate this bottleneck, since the PDE residual still requires automatic differentiation through the network on a dense collocation mesh. Crucially, however, there exists a fundamental data asymmetry that all existing surrogate methods leave unexploited: while completed simulation tra-jectories are expensive—each run invoking a full nonlinear PDE solve—the input parameter fields that parameterize those simulations are essentially free. Permeability realizations can be drawn from geostatistical models (sequential Gaussian simulation, training image-based methods) in milliseconds and in arbitrarily large quantities; porosity dis-tributions can be interpolated from well logs at negligible cost. These unlabeled parameter fields encode the spatial heterogeneity structure of the subsurface, the single most important determinant of flow behavior, yet no existing neu-ral operator framework can pretrain on them. A surrogate that learns from this free data source—and then requires only a handful of expensive labeled runs to adapt—would fundamentally change the economics of surrogate deployment in reservoir engineering. Second, multi-step PDE systems such as two-phase Darcy flow are solved numerically via oper-ator splitting (Strang or Lie-Trotter), decomposing each timestep into a pressure solve (elliptic), a saturation transport step (hyperbolic), and optionally a geomechanical update [Chen et al., 2006]. These sub-operators evolve on different timescales and possess distinct spectral characters; a monolithic operator network sees their outputs blended into a single field and cannot exploit this structure. Standard FNO does not distinguish between the fast elliptic dynamics governing pressure equilibration and the slow hyperbolic dynamics governing saturation redistribution. The key insight of this work is that the data asymmetry described above is precisely the setting for which predictive latent-space learning was designed. Joint Embedding Predictive Architectures (JEPAs) [LeCun, 2022] train a surrogate to anticipate masked or future regions of an input field in latent space —without ever requiring a ground-truth output field. Applied to simulation surrogates, this means we can pretrain the backbone of a neural operator on unlabeled permeability and porosity fields alone: the pretraining signal comes from predicting how one spatial region’s latent code relates to another, constrained by PDE residuals that enforce physical plausibility. No simulator is invoked during pretraining. The pretrained encoder, having internalized the spatial heterogeneity structure of the subsurface, then requires far fewer expensive labeled runs at fine-tuning time. I-JEPA [Assran et al., 2023] demonstrated this principle for images, and V-JEPA [Bardes et al., 2024] extended it to spatiotemporal video—both settings in which the pretraining data is cheap relative to downstream annotation. Subsurface simulation is a structurally identical situation: cheap parameter fields are the pretraining data, expensive PDE-solved trajectories are the labeled annotations. We introduce PI-JEPA , a surrogate modeling framework that operationalizes label-free pretraining for coupled multi-physics simulation. PI-JEPA pretrains entirely on unlabeled parameter fields and sub-timestep simulation snapshots— data that can be generated at negligible cost compared to complete solver trajectories—and uses a masked latent prediction objective with per-sub-operator PDE residual regularization to ensure the pretrained representations are physically consistent. The key architectural contribution enabling this is an explicit alignment between PI-JEPA’s prediction stages and the physical operator-splitting decomposition of the PDE system: each physical sub-process (pressure, saturation transport, reaction) corresponds to a separate transformer module in latent space, regularized by its own physics residual. This modular structure lets each predictor specialize to one physical timescale rather than 2PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+learning a monolithic surrogate of the coupled system—making label-free pretraining tractable by giving the model a structured target for each stage. An EMA target encoder provides stable prediction targets, and a VICReg-style [Bardes et al., 2022] covariance regularizer prevents latent collapse during the unsupervised pretraining phase. The contributions of this work are as follows. (i) Label-free surrogate pretraining. We propose PI-JEPA, the first surrogate modeling framework that pretrains a neural operator backbone entirely on unlabeled parameter fields —geostatistical permeability realizations and sub-timestep snapshots that require no PDE solves to generate. By ex-ploiting the data asymmetry inherent to reservoir simulation workflows, PI-JEPA reduces dependence on expensive labeled trajectories and makes surrogate deployment feasible in the severely label-scarce regimes that characterize real subsurface studies. (ii) Operator-split latent prediction objective. We introduce a pretraining objective that pairs masked spatiotemporal latent prediction with per-sub-operator PDE residual regularization, structurally aligned to the Lie–Trotter splitting used by numerical solvers. This design lets label-free pretraining inject physics constraints at the granularity of individual simulation sub-steps rather than monolithically. (iii) Empirical validation across three benchmarks. On single-phase Darcy flow PI-JEPA achieves 1.8× lower error than FNO/PINO and 2.2× lower er-ror than DeepONet at Nℓ = 100 labeled simulation runs (mean ± 95% CI over 5 seeds). On two-phase CO 2-water flow, PI-JEPA achieves 2.7× lower error than FNO at Nℓ = 100 , where FNO and PINO plateau above 1.15 even at Nℓ = 500 . On the PDEBench ADR suite [Takamoto et al., 2022], PI-JEPA achieves 1.9× lower error than FNO at Nℓ = 100 . (iv) Domain-matched pretraining and cross-domain transfer. We show that domain-matched self-supervised pretraining provides 6–14% improvement over training from scratch, and that Darcy-pretrained encoders transfer effectively to the two-phase benchmark, with domain-matched pretraining providing additional benefit only at Nℓ ≥ 250 . (v) Ablation study. We identify operator splitting (+16%) and VICReg regularization (+17.7%) as the essential architectural components, while the physics residual is neutral—an honest finding that redirects future work toward stronger physics-informed objectives. (vi) Sample complexity analysis. We prove that operator-splitting alignment reduces surrogate fine-tuning sample complexity from O(n2ϵ−2) to O(d2Kϵ −2) (Proposition 1), providing a formal basis for the observed simulation data efficiency advantage. The remainder of this paper is organized as follows. Section 2 surveys related work. Section 3 presents the PI-JEPA framework in full detail. Section 4 specifies the experimental setup, datasets, baselines, evaluation protocol, and reports results across three benchmark PDE systems. Appendices A and B provide supplementary architectural specifications and derivations of the physics residual terms. 
+
+# 2 Related Work 
+
+2.1 Neural Operators for PDE Surrogates 
+
+The neural operator framework formalizes the surrogate modeling problem as learning a map G† : A → U between Banach spaces of input functions (initial conditions, parameter fields) and output solution functions. Kovachki et al. [2023] provide a unified theoretical treatment, proving that a broad class of architectures is universal in this function-space sense. The Fourier Neural Operator (FNO) [Li et al., 2021] implements the solution operator via learnable convolutions in the Fourier domain, interleaving spectral mixing layers with pointwise nonlinearities; its discretization invariance and strong empirical performance on Navier-Stokes and Darcy flow benchmarks established it as the de facto baseline for neural PDE surrogates. Subsequent extensions include Geo-FNO [Li et al., 2023], which handles irregular geometries via learned input transformations, and U-FNO [Wen et al., 2022], which appends a U-Net decoder to improve high-frequency reconstruction in subsurface settings. WNO [Tripura and Chakraborty, 2023] replaces the Fourier basis with multi-resolution wavelet decompositions, improving localization for solutions with sharp fronts. Deep Operator Networks [Lu et al., 2021a], derived from the Chen-and-Chen universal approximation theorem for operators, factorize the solution via a branch network (encoding the input function) and a trunk network (encoding the query coordinate), enabling evaluation at arbitrary unstructured points. The architecture has been improved through more expressive branch-trunk coupling [Wang et al., 2022a] and extended to multiple-input operators relevant to parametric PDE families [Jin et al., 2022]. The GNOT framework [Hao et al., 2023] unifies FNO and DeepONet via a general neural operator transformer that accommodates heterogeneous input function types, while the Galerkin and Fourier transformer [Cao, 2021] reformulates the attention mechanism as a Galerkin-type linear integral operator, yielding O(N ) complexity in the number of tokens. Recent work has explored foundation-model-scale pretraining for neural operators. Herde et al. [2024] train a large patch-based operator transformer across multiple PDE families, demonstrating that a single pretrained backbone can be fine-tuned to new equations with minimal supervision—a direction philosophically aligned with our own but employing supervised multi-task pretraining rather than self-supervised prediction. McCabe et al. [2023] propose multiple-physics pretraining on a diverse collection of simulation datasets, and Subramanian et al. [2024] investigate 3PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+the conditions under which diverse PDE pretraining transfers to out-of-distribution equations. PI-JEPA complements these works by offering a self-supervised pretraining route that does not require labeled multi-physics corpora. 
+
+2.2 Physics-Informed Neural Networks and Operators 
+
+Physics-informed neural networks (PINNs) [Raissi et al., 2019] incorporate PDE residuals as soft constraints in the training loss, enabling solution of forward and inverse problems without simulation-generated data. While PINNs excel at smooth low-dimensional problems, they face well-documented difficulties for high-frequency solutions, stiff systems, and long-time integration due to spectral bias and gradient pathologies [Wang et al., 2022b, Krishnapriyan et al., 2021]. The Physics-Informed Neural Operator (PINO) [Li et al., 2024] addresses generalization by adding PDE residual regularization to the FNO training objective, improving accuracy on unseen parameter regimes without requir-ing additional simulation data. NSFNets [Jin et al., 2021] extend the physics-informed approach to the incompressible Navier-Stokes equations, achieving competitive accuracy at moderate Reynolds numbers. The PI-Latent-NO architecture [Wang and Perdikaris, 2022] constructs a two-network DeepONet in latent space, demonstrating 15–67% reductions in training time relative to vanilla PI-DeepONet while maintaining comparable ac-curacy on several benchmark PDE systems. This work is the most architecturally proximate prior art to PI-JEPA: both operate in latent space and use PDE residuals as regularizers. However, PI-Latent-NO is a supervised reconstruction method with no self-supervised pretraining stage and does not exploit operator-splitting structure. Zhu et al. [2019] proposed physics-constrained deep learning for subsurface flow, using convolutional encoders to map permeability to pressure fields while enforcing Darcy’s law residually; this remains a strong physics-informed baseline in the reservoir setting. Recent work has investigated adaptive collocation [Lu et al., 2021b], causal loss weighting [Wang et al., 2024], and self-adaptive loss balancing to stabilize physics-informed training. Equivariant neural operators [De Hoop et al., 2022] encode physical symmetries such as translational and rotational invariance directly in the architecture, reducing the effective hypothesis class and improving data efficiency. PI-JEPA incorporates physics-informed regularization at the sub-operator level—more granular than PINO’s monolithic residual—while additionally exploiting self-supervised prediction to reduce reliance on labeled data. 
+
+2.3 Self-Supervised Pretraining for Simulation Surrogates 
+
+Self-supervised learning (SSL) and representation learning have undergone a transformation over the past five years, progressing from contrastive methods [Chen et al., 2020, He et al., 2020] that require careful negative mining to non-contrastive approaches that entirely avoid explicit negatives. BYOL [Grill et al., 2020] demonstrated that an EMA target network combined with a predictor head suffices to prevent representational collapse without any negative pairs, a finding that underlies the architecture of I-JEPA and, by extension, PI-JEPA. Variance-Invariance-Covariance Regularization (VICReg) [Bardes et al., 2022] provides an alternative collapse-prevention mechanism via explicit regularization of the embedding covariance matrix, making the whitening objective differentiable and interpretable. Masked image modeling methods, most prominently MAE [He et al., 2022], train a Vision Transformer [Dosovitskiy et al., 2021] to reconstruct masked patches in pixel space, achieving strong transfer to downstream tasks. However, LeCun’s theoretical argument [LeCun, 2022] for JEPA-style architectures holds that pixel-space reconstruction is an unnecessarily high-dimensional objective for learning semantic representations: reconstructing irrelevant texture de-tail wastes model capacity. The Image JEPA (I-JEPA) [Assran et al., 2023] formalized this intuition by predicting target patch embeddings from context embeddings in ViT representation space, outperforming MAE on several down-stream benchmarks with faster convergence. Video JEPA (V-JEPA) [Bardes et al., 2024] extended the framework to spatiotemporal video data, a setting closer in spirit to PDE solution fields. World-model architectures [Hafner et al., 2019, 2023] use latent predictive dynamics models to support planning in reinforcement learning, demonstrating that compressed latent dynamics can capture the essential statistics of complex dynamical systems. The application of JEPA-style objectives to scientific fields has thus far been limited. McCabe et al. [2023] adopt a supervised multi-task approach rather than predictive SSL, and works in molecular dynamics [Behler, 2021] typically use contrastive or equivariant objectives rather than predictive ones. PI-JEPA is, to our knowledge, the first work to apply the JEPA predictive objective explicitly to PDE solution fields with physics-informed regularization. 
+
+2.4 Graph-Based Simulation 
+
+Message-passing neural networks have proven highly effective for mesh-based simulation. Sanchez-Gonzalez et al. [2020] introduced the Graph Network Simulator (GNS), which models particles and mesh nodes as graph vertices and encodes pairwise interactions via learned edge features; GNS achieves remarkably accurate long-horizon rollouts for 4PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+granular media, water, and rigid body dynamics. MeshGraphNets [Pfaff et al., 2021] adapted the same framework to finite-element mesh simulations, demonstrating strong performance on aerodynamics and structural mechanics. In the low-data regime, GNS-based approaches often outperform FNO and DeepONet due to their explicit encoding of spatial interaction structure through graph message passing [Takamoto et al., 2022]. PI-JEPA and GNS are complementary: GNS excels at irregular mesh geometries whereas PI-JEPA targets structured grid-based PDE systems where operator-splitting decompositions are natural. 
+
+2.5 Latent-Space Reduced-Order Modeling for PDEs 
+
+Several works have explored learning compressed latent representations of PDE solution trajectories. Lusch et al. [2018] trained autoencoder networks to learn Koopman eigenfunctions from dynamical system trajectories, enabling long-horizon prediction via linear evolution in latent space. Brunton and Kutz [2019] provide a comprehensive review of reduced-order modeling strategies that connect to this latent dynamics viewpoint. In the neural operator community, latent-space operator learning has been explored through variational autoencoder (VAE) frameworks [Chen et al., 2021] and conditional normalizing flows [Raonic et al., 2023] to capture solution uncertainty. The key distinction between these reconstruction-based latent methods and PI-JEPA is the training objective: reconstruction methods optimize a decoder output in pixel space, which requires a high-capacity decoder and is sensitive to high-frequency solution content. PI-JEPA instead optimizes a predictor in latent space using the EMA target encoder as a self-supervised signal, entirely bypassing pixel-space reconstruction during pretraining. 
+
+2.6 Surrogate Modeling for Subsurface Flow and Reactive Transport 
+
+The reservoir simulation community has a long history of proxy and surrogate modeling. Early approaches used reduced-order models based on proper orthogonal decomposition (POD) and other linear projection methods [Cardoso et al., 2009], which are efficient but fail for strongly nonlinear systems. Deep learning approaches gained traction with Zhu et al. [2019], who demonstrated physics-constrained surrogate modeling of Darcy flow, and subsequent works including CNN-LSTM architectures for waterflooding optimization [Tang et al., 2020]. Wen et al. [2022] specifically adapted FNO to the two-phase flow setting via a U-Net-augmented architecture (U-FNO) that better captures the sharp saturation fronts characteristic of immiscible displacement; their publicly available benchmark dataset [Wen et al., 2022] provides the standard evaluation protocol for CO 2-water multiphase surrogates, and we adopt it as our primary two-phase benchmark to enable direct numerical comparison. Diab and Al Kobaisi [2024] subsequently introduced U-DeepONet, which combines U-Net with a DeepONet branch-trunk framework and outperforms U-FNO on the same dataset; both serve as key baselines in our experiments. For the Society of Petroleum Engineers tenth comparative solution project (SPE10) [Christie and Blunt, 2001]—a standard heterogeneous permeability benchmark with permeability varying over ten orders of magnitude—neural operators still struggle in low-data regimes, motivating the self-supervised pretraining approach of PI-JEPA. For reactive transport specifically, Santos et al. [2025] demonstrate that hybrid DeepONet models specialized to mul-tiphase porous media flows achieve strong accuracy across 2D and 3D benchmark cases, validating neural operator approaches for advection-diffusion-reaction systems. The stiffness of geochemical reaction terms remains a key bottle-neck for both numerical solvers and neural operator surrogates; PI-JEPA addresses this by learning a dedicated latent predictor for the reaction sub-operator, decoupled from the transport predictor, so that each module need only capture the dynamics of its corresponding physical timescale. We benchmark PI-JEPA for reactive transport against FNO, U-Net, and PINN baselines on the PDEBench ADR dataset [Takamoto et al., 2022], enabling comparison against a standardized evaluation protocol used widely in the SciML community. 
+
+# 3 Surrogate Modeling Framework 
+
+3.1 Problem Formulation 
+
+Let Ω ⊂ Rd (d ∈ { 2, 3}) denote the spatial domain and [0 , T ] the time interval of interest. We consider a coupled PDE system of the form 
+
+∂u
+
+∂t = F(u, ∇u, ∇2u; μ), u : Ω × [0 , T ] → Rns , (1) where u = ( u1, . . . , u ns )⊤ is the vector-valued solution field, μ ∈ P is a parameter vector drawn from a parameter space (e.g., the permeability field or viscosity ratio), and F is a possibly nonlinear differential operator. We assume Equation (1) admits a Lie–Trotter splitting into K sub-operators L1, . . . , LK , so that the one-step evolution operator 
+
+S(∆ t) over a timestep ∆t is approximated as 
+
+S(∆ t) ≈ L K (∆ t) ◦ · · · ◦ L 1(∆ t), (2) 5PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+with each Lk capturing a physically distinct sub-process (e.g., pressure equilibration, saturation transport, reaction update). The surrogate modeling task is to learn a data-driven approximation ˆSθ ≈ S that, given an initial condition u0 =
+
+u(·, 0) and parameter field μ, produces accurate solution trajectories {ut}t> 0 at a fraction of the numerical solver cost. We assume access to a large corpus Du = {u(i)}Nu 
+
+> i=1
+
+of unlabeled trajectory snapshots (intermediate fields stored at sub-timestep intervals without final output labels) and a small corpus Dℓ = {(u(j)0 , μ (j), u(j) 
+
+> T
+
+)}Nℓ 
+
+> j=1
+
+of fully labeled trajectories, with Nu ≫ Nℓ.
+
+Two-Phase Darcy Flow. For two immiscible fluid phases α ∈ { w, n } (wetting, non-wetting) in a porous medium with porosity ϕ and absolute permeability tensor K, the governing equations are the coupled continuity–Darcy system: 
+
+∂(ϕS α)
+
+∂t + ∇ · vα = qα, (3) 
+
+vα = − krα (Sα)
+
+μα
+
+K∇Φα, (4) with Φα = pα + ραgz the phase potential, krα the relative permeability, and Sw + Sn = 1 . Capillary pressure 
+
+pc = pn − pw = Pc(Sw) couples the phase pressures. The standard IMPES (implicit pressure–explicit saturation) splitting separates Equations (3)–(4) into an elliptic pressure sub-step L1 and a hyperbolic saturation transport sub-step 
+
+L2, yielding the K = 2 splitting in Equation (2). 
+
+Reactive Transport. Species concentrations c1, . . . , c nc evolve via advection-diffusion-reaction: 
+
+∂c i
+
+∂t + v · ∇ ci = ∇ · (Di∇ci) + Ri(c), (5) where v is the Darcy velocity from Equation (4), Di is the hydrodynamic dispersion tensor, and Ri(c) is the geochem-ical reaction source term (which may couple multiple species and is often stiff). The operator splitting for this system adds a reaction sub-step L3, yielding K = 3 .
+
+3.2 The PI-JEPA Framework 
+
+Figure 1 provides an overview of the PI-JEPA framework. At a high level, PI-JEPA consists of three learned compo-nents: a context encoder fθ : X → Z , a target encoder fξ : X → Z whose weights ξ are an exponential moving average (EMA) of the context encoder weights θ, and a set of K latent predictors {gϕk }Kk=1 , one per physical sub-operator. The solution field u(·, t ) is tokenized into spatial patches and partitioned into context regions uc and target regions ut. The context encoder maps uc to a latent code zc = fθ (uc); the target encoder maps ut to a target code 
+
+zt = fξ (ut). The k-th latent predictor then estimates the target embedding corresponding to the k-th sub-operator: 
+
+ˆz(k) 
+
+> t
+
+= gϕk (z(k−1)  
+
+> c
+
+, mk), where mk encodes spatial mask tokens indicating which patches are to be predicted and 
+
+z(0)  
+
+> c
+
+= zc. The EMA update rule is ξ ← τ ξ + (1 − τ )θ with momentum τ ∈ [0 .99 , 0.999] , ensuring the target encoder evolves slowly and provides stable prediction targets throughout training. 6PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT                        
+
+> u(x, t )
+> Context ucTarget ut
+> Encoder fθEncoder fξ
+> (EMA target)
+> zczt
+> Latent Predictors
+> gϕ1, . . . , g ϕK
+> ˆz(1)
+> t, . . . , ˆz(K)
+> t
+> L=Lpred +λpLphys +λrLreg
+> EMA: ξ←τ ξ + (1 −τ)θ
+> PDE residual per sub-operator
+
+Figure 1: PI-JEPA architecture overview. The solution field u(x, t ) is partitioned into context and target patch sets. A context encoder fθ and an EMA target encoder fξ map these to latent codes zc and zt, respectively. A bank of K
+
+latent predictors {gϕk } predicts the target embeddings ˆz(k) 
+
+> t
+
+aligned to each sub-operator in the physical splitting. The total loss L combines a predictive term, a PDE residual physics term, and a covariance regularizer. The EMA update ensures the target encoder provides stable, slowly-evolving learning targets throughout self-supervised pretraining. 
+
+3.3 Fourier-Enhanced Encoder Architecture Patch Tokenization. The solution field u(x, t ) ∈ Rns×H×W (with spatial grid of size H × W and ns physical channels, e.g., pressure p and wetting saturation Sw) is divided into non-overlapping spatial patches of size P ×
+
+P . Each patch is flattened and linearly projected to a dmodel -dimensional embedding, then augmented with a 2D sinusoidal positional encoding and a physical-channel type embedding. For the two-phase Darcy system the input tensor additionally concatenates the log-permeability field log K as a conditioning channel, and for reactive transport the species concentration fields c1, . . . , c nc are appended as further channels. This channel-agnostic design allows the same encoder backbone to be reused across both problem classes with minimal modification. 
+
+Context and Target Encoder. Both fθ and fξ share the same architecture: a Fourier-enhanced encoder that com-bines spectral convolutions with transformer attention. The encoder first lifts the single-channel input to a hidden representation via a convolutional stem, then processes it through L = 6 Fourier blocks. Each Fourier block applies a spectral convolution in the frequency domain (retaining 32 × 32 Fourier modes) in parallel with a local 3 × 3 con-volution, followed by a GroupNorm-normalized MLP with expansion ratio 2 and learnable residual scaling. After the Fourier blocks, La = 4 transformer attention layers with Nh = 8 heads capture long-range spatial dependen-cies. The resulting spatial feature map is patchified via a strided convolution with kernel size P = 8 to produce 
+
+N = ( H/P )2 = 64 patch-level embeddings of dimension dmodel = 384 , augmented with 2D sinusoidal positional encodings. The context encoder fθ processes only the context patch tokens (mask tokens are not passed to the context encoder, in keeping with the I-JEPA design [Assran et al., 2023]) and produces a sequence of patch-level embeddings 
+
+zc ∈ RNc×dmodel , where Nc is the number of context patches. The target encoder fξ processes the complete field (all 
+
+N patches) and its weights follow the EMA schedule described in Section 3.2. 
+
+Remark 1 (Target Encoder Stability) . Under the EMA update ξt = τ ξ t−1 + (1 − τ )θt with τ ∈ (0 , 1) and bounded stochastic gradient updates ∥θt − θt−1∥2 ≤ δ for all t, the target encoder satisfies ∥ξt − θt∥2 ≤ δτ / (1 − τ ), bounding the gap between target and context encoder throughout training. 
+
+7PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+Remark 1 implies that for τ = 0 .996 the target encoder lags the context encoder by at most 249 δ in parameter norm, ensuring gradual representation drift rather than abrupt changes that would destabilize the JEPA prediction objective. 
+
+3.4 Latent Predictor Bank 
+
+For each sub-operator k ∈ { 1, . . . , K }, the latent predictor gϕk : RNc×dmodel × RNt×dmodel → RNt×dmodel takes as input the context embeddings z(k−1)  
+
+> c
+
+(the predicted embedding from the previous stage, with z(0)  
+
+> c
+
+= zc) and a sequence of Nt learnable mask tokens augmented with the positional encodings of the target patches. Each predictor gϕk is a lightweight transformer with 4 blocks, dmodel = 384 hidden dimensions, and Nh = 6 heads. The narrow-transformer design follows Assran et al. [2023], reflecting the empirical finding that the predictor need only perform relative spatial reasoning within the latent embedding space rather than high-level semantic inference, which is offloaded to the encoder. The chained structure z(0)  
+
+> c
+
+→ gϕ1 → z(1)  
+
+> c
+
+→ · · · → gϕK → z(K) 
+
+> c
+
+mirrors the Lie–Trotter splitting in Equation (2): predictor k is responsible for advancing the representation through the k-th physical sub-operator while the physics residual for Lk (see Section 3.5) disciplines its output. Figure 2 illustrates this parallel between the numerical and latent-space decompositions. 
+
+Numerical 
+
+splitting ut L1
+
+Pressure u∗ L2
+
+Saturation ut+∆ t
+
+PI-JEPA 
+
+latent z(0) 
+
+> c
+
+gϕ1
+
+Pred-1 ˆz(1) gϕ2
+
+Pred-2 ˆz(2)  
+
+> L(1) phys L(2) phys
+
+One timestep ∆t
+
+Figure 2: Operator splitting correspondence. The numerical Lie–Trotter splitting (top row) decomposes each timestep into sequential physical sub-operators L1, . . . , LK . PI-JEPA’s latent predictor bank (bottom row) mirrors this structure: predictor gϕk advances the latent state through the k-th sub-step, and a per-sub-operator PDE residual loss L(k)phys regularizes each prediction. The dashed arrows indicate this physics supervision coupling. Illustrated here for K = 2 (pressure + saturation), the scheme extends to K = 3 for reactive transport by adding a reaction predictor. 
+
+3.5 Physics-Constrained Pretraining Objective 
+
+The total training objective is 
+
+L(θ, {ϕk}) = Lpred + λpKX
+
+> k=1
+
+L(k)phys + λr Lreg , (6) where the three terms are described below. The target encoder parameters ξ receive no gradients; they are updated only via EMA after each training step. 
+
+Predictive Loss. For each target patch at spatial location s ∈ T (the set of target patch indices), the predictive loss penalizes the ℓ2 error between the predicted embedding ˆz(K) 
+
+> t
+
+[s] (output of the last predictor stage) and the target encoder embedding zt[s] = fξ (ut)[ s]:
+
+Lpred = 1
+
+|T | 
+
+X
+
+> s∈T
+
+ˆz(K) 
+
+> t
+
+[s] − sg  fξ (ut)[s] 22, (7) where sg( ·) denotes the stop-gradient operation that blocks gradients from flowing through the target encoder. This follows the BYOL/I-JEPA training recipe and is essential for stability: without stop-gradient, gradient descent can collapse both encoders to a trivial constant representation. 
+
+Per-Sub-Operator Physics Residual Loss. To enforce physical consistency, we attach a lightweight convolutional decoder dψk : RN ×dmodel → Rns×H×W to each predictor stage k. This decoder maps the predicted latent ˆz(k) back 8PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+to a physical-space field estimate ˜u(k) and evaluates the PDE residual of the k-th sub-operator on ˜u(k) at a set of collocation points Ck ⊂ Ω:
+
+L(k)phys = 1
+
+|C k|
+
+X
+
+> x∈C k
+
+Rk
+
+ ˜u(k); x 22, (8) where Rk is the residual operator of Lk evaluated via automatic differentiation. For the pressure sub-operator ( k = 1 ), 
+
+R1 is the total divergence of the fractional-flow velocity field; for the saturation sub-operator ( k = 2 ), R2 is the saturation transport residual; and for the reaction sub-operator ( k = 3 ), R3 encodes the algebraic consistency of the species reaction network (see Appendix B). The decoder dψk is trained jointly with the encoder and predictors but is not used at inference time—it serves purely as a physics regularization pathway during training, analogous to the auxiliary decoder in β-VAE frameworks. 
+
+Collapse-Prevention Regularizer. Following VICReg [Bardes et al., 2022], we add a variance-covariance regular-izer on the predicted embeddings to prevent dimensional collapse. We apply Lreg to the final predictor stage output only: each sample’s Nt patch-level embeddings from gϕK are mean-pooled to a single dmodel -dimensional vector before computing the batch-level statistics, yielding one representation vector per sample as required by the VICReg formulation. Let Z ∈ RB×dmodel be this batch of B pooled embeddings. The regularizer is 
+
+Lreg = γ
+
+> dmodel
+
+X
+
+> j=1
+
+max  0, 1 −
+
+q
+
+Var( Z·j ) + ϵ + μr
+
+dmodel 
+
+X
+
+> i̸=j
+
+Cov( Z)ij 
+
+2, (9) where the first term encourages each embedding dimension to have unit variance across the batch and the second term penalizes off-diagonal covariance, decorrelating the latent dimensions. This regularizer is critical for the physics-informed setting because the PDE residual loss Lphys can act as a strong inductive bias that inadvertently encourages low-rank representations if collapse prevention is absent. 
+
+Hypothesis 1 (Data Efficiency of Predictive Representations) . For a multi-step PDE system with operator splitting into 
+
+K sub-operators on timescales τ1 ≪ τ2 ≪ · · · ≪ τK , the sample complexity of fine-tuning a pretrained PI-JEPA pre-dictor to achieve ϵ-accurate rollout scales as O(K−1ϵ−2 log(1 /δ )) labeled trajectories, compared to O(ϵ−2 log(1 /δ )) 
+
+for a supervised operator network with no pretraining, for any failure probability δ ∈ (0 , 1) .
+
+The intuition behind Hypothesis 1 is that self-supervised pretraining effectively provides PI-JEPA with K labeled objectives (one per sub-operator) at no additional annotation cost, reducing the burden on the labeled fine-tuning corpus by a factor of K. Formal proof under a linear latent dynamics assumption is provided in Appendix B.4. 
+
+3.6 Spatial Masking Strategy and Autoregressive Rollout Inference Spatiotemporal Masking. Figure 3 illustrates the masking strategy used during PI-JEPA pretraining. Rather than masking independent spatial patches, we adopt a spatiotemporal block masking scheme: context patches are drawn from a contiguous spatial region at the current timestep t, and target patches are drawn from a contiguous but dis-placed region at the next timestep t + ∆ t. This formulation is motivated by the PDE causality structure: a predictor that correctly anticipates the target region must have internalized the advection or diffusion dynamics that transport information from the context region to the target. We sample the context region as a random rectangular subgrid covering 65% of the domain and the target region as a complement rectangle at the subsequent time slice, following a strategy analogous to V-JEPA [Bardes et al., 2024]. 9PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT         
+
+> Time t(context)
+> Context uc
+> ∆t
+> Time t+∆ t(target)
+> Target ut
+> Context patches Target patches Unmasked
+
+Figure 3: Spatiotemporal block masking strategy. Context patches (blue) are selected from a contiguous subregion at time t. Target patches (orange) form a spatially displaced block at the subsequent timestep t+∆ t. The predictor must anticipate the latent representation of the target region, implicitly learning the causal dynamics—advection, diffusion, or reaction—linking context to target. Unmasked patches (gray) contribute to the target encoder representation but are not used in the predictive loss. 
+
+Multi-Step Autoregressive Rollout. At inference time, PI-JEPA generates a full trajectory {ˆut+k∆t}T / ∆tk=1 via au-toregressive rollout in latent space. We distinguish two inference modes. During pretraining evaluation the decoder 
+
+dψk is not invoked; the JEPA predictive loss is evaluated entirely in latent space. During downstream inference (after fine-tuning), the decoder dψk trained jointly during pretraining is retained and used to reconstruct physical fields from latent codes. At each rollout step the context encoder processes the current decoded field ˆut+( k−1)∆ t, the predictor bank advances the latent through K sub-steps, and the decoder reconstructs the physical field. No teacher forcing is applied—the rollout is fully closed-loop. To mitigate compounding error over long horizons, we apply latent noise injection at each rollout step: ˆz ← ˆz + σϵ, ϵ ∼ N (0, I), with σ annealed from 10 −2 to 10 −4 over the rollout horizon. 
+
+3.7 Instantiation: Two-Phase Darcy Flow 
+
+For two-phase Darcy flow, the input field has ns = 3 channels: wetting-phase pressure pw, wetting saturation Sw, and log-permeability log K (the last is a static conditioning field rather than a dynamic variable). The spatial domain is a 
+
+64 × 64 uniform Cartesian grid and P = 8 so that each temporal snapshot produces 8 × 8 = 64 patch tokens. 
+
+Datasets. We use two datasets for the two-phase Darcy experiments. First, the standard single-phase 2D Darcy dataset introduced by Li et al. [2021], in which the permeability field K is drawn from a Gaussian random field (GRF) with fixed correlation length; this entry-level benchmark allows direct comparison against published FNO and DeepONet numbers without rerunning baselines. Second, the CO 2-water multiphase flow dataset of Wen et al. [2022], generated via the industry-standard ECLIPSE simulator on a 64 × 64 2D-radial grid with heterogeneous permeability and porosity fields drawn from the SPE10 Model 2 statistical distribution [Christie and Blunt, 2001] (SPE10 Model 2 is natively a 60 × 220 × 85 grid; following Wen et al. [2022] we work with 2D cross-sectional slices resampled to 
+
+64 × 64 ). This dataset contains pressure buildup and gas saturation trajectories across 2,000 simulation runs spanning wide ranges of permeability contrast, injection rate, and reservoir depth. We adopt this dataset as our primary two-phase benchmark to enable direct numerical comparison against U-FNO and U-DeepONet [Diab and Al Kobaisi, 2024]. The splitting uses K = 2 predictors. Predictor gϕ1 is conditioned on the current pressure field embedding and predicts the pressure update ˆz(1) ≈ fξ (u∗) where u∗ = L1(ut). The physics residual for L1 is the elliptic pressure equation residual: 
+
+R1(˜ u(1) ; x) = −∇ · 
+
+h krw (Sw) + krn (Sn)
+
+μ K∇˜p
+
+i
+
+− qT (x), (10) where qT = qw + qn is the total source term and we adopt the fractional flow formulation for the total mobility. Predictor gϕ2 operates on ˆz(1) and predicts the saturation update; its physics residual R2 is the saturation transport residual 
+
+R2(˜ u(2) ; x) = ϕ ∂ ˜Sw
+
+∂t + ∇ ·  fw( ˜Sw) vT
+
+ − qw(x), (11) where fw = krw /μ w / (krw /μ w + krn /μ n) is the fractional flow function and vT = vw + vn is the total Darcy velocity [Chen et al., 2006]. Both residuals are evaluated at a 32 × 32 collocation grid (a coarser subgrid of the simulation domain) to reduce computational overhead. 10 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+Relative permeabilities follow the Brooks-Corey model [Brooks and Corey, 1964]: krw = S(2+3 λ)/λ e and krn =(1 − Se)2(1 − S(2+ λ)/λ e ), where Se = ( Sw − Swr )/(1 − Swr − Snr ) is the effective saturation and λ is the pore-size distribution index. The specific parameter values used in our experiments are detailed in Appendix A. 
+
+3.8 Extension to Reactive Transport 
+
+For reactive transport (Equation (5)), the input field is extended to ns = 3 + nc channels by appending nc species concentration fields. The splitting grows to K = 3 : predictor gϕ1 handles the pressure solve as before, predictor 
+
+gϕ2 handles advective-diffusive transport of all species simultaneously (sharing weights across species channels via a channel-mixing attention layer), and predictor gϕ3 handles the stiff geochemical reaction step. The reaction residual 
+
+R3 is the algebraic consistency condition of the species equilibrium network, as derived in Appendix B. Because the reaction dynamics are stiff and often dominate the training signal when included in a monolithic residual, the decoupled predictor design of PI-JEPA allows λ(3)  
+
+> p
+
+(the weight on the reaction physics loss) to be tuned independently from the transport weights, stabilizing training. The same pretrained encoder backbone is reused from the Darcy flow instantiation, with only the predictor weights re-initialized, enabling zero-shot or few-shot transfer to the reactive transport setting. 
+
+Dataset. For reactive transport experiments we use the 2D advection-diffusion-reaction benchmark from PDEBench [Takamoto et al., 2022] with nc = 2 reacting species on a 64 × 64 grid. The dataset spans Péclet numbers Pe ∈ { 0.1, 1, 10 } and Damköhler numbers Da ∈ { 0.01 , 0.1, 1.0}, yielding nine parameter regimes that test the predictor’s ability to generalize across qualitatively distinct transport-vs-reaction timescale balances. Each regime contains 1,000 trajectories of 50 timesteps each, stored in HDF5 format with the PDEBench standardized API, enabling direct comparison against FNO, U-Net, and PINN baselines reported in Takamoto et al. [2022]. For the unlabeled pretraining pool Du we use all nine regimes without labels; for the labeled fine-tuning pool Dℓ we vary 
+
+Nℓ ∈ { 10 , 25 , 50 , 100 , 250 , 500 } trajectories drawn from a single held-out regime ( Pe = 1 , Da = 0 .1) to construct the data efficiency curve. 
+
+# 4 Experimental Setup 
+
+4.1 Datasets 
+
+Table 1 summarizes the datasets used across all experiments. Table 1: Dataset summary for PI-JEPA experiments.                           
+
+> Dataset PDE Grid Trajectories Purpose Source
+> FNO Darcy (GRF) Single-phase Darcy 64 ×64 1,000 Entry-level validation Li et al. [2021] U-FNO CO 2-water Two-phase multiphase 64 ×64 2,000 Primary two-phase Wen et al. [2022] PDEBench ADR Advection-diffusion-reaction 64 ×64 9,000 Reactive transport Takamoto et al. [2022]
+
+FNO Darcy (GRF). Single-phase 2D Darcy flow with permeability K drawn from a Gaussian random field with fixed correlation length l = 0 .1. We use the standard train/test split of 1,000/200 trajectories from the FNO repository, enabling direct comparison against published FNO and DeepONet numbers without rerunning baselines. 
+
+U-FNO CO 2-water Multiphase. Two-phase CO 2-water flow generated via the ECLIPSE simulator on a 64 ×64 2D-radial grid with heterogeneous permeability and porosity fields sampled from the SPE10 Model 2 statistical distribution (natively 60 ×220 ×85 , resampled to 64 ×64 cross-sectional slices following Wen et al. [2022]). The dataset spans wide ranges of permeability contrast, injection rate, and reservoir depth. We split 1,600/200/200 for pretrain/fine-tune/test. The Nℓ fine-tuning trajectories are drawn from the labeled split for the data efficiency sweep. 
+
+PDEBench ADR. Two-species ( nc = 2 ) advection-diffusion-reaction on a 64 × 64 grid, with Pe ∈ { 0.1, 1, 10 }
+
+and Da ∈ { 0.01 , 0.1, 1.0} (nine regimes, 1,000 trajectories each). All nine regimes contribute to unlabeled pre-training; the labeled fine-tuning pool is drawn from a single held-out regime (Pe = 1, Da = 0.1), with Nℓ ∈{10 , 25 , 50 , 100 , 250 , 500 } trajectories. 11 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+4.2 Baselines 
+
+We compare PI-JEPA against the following baselines. (i) FNO [Li et al., 2021]: Fourier Neural Operator, the de facto standard for neural PDE surrogates on regular grids. (ii) PINO [Li et al., 2024]: Physics-Informed Neural Operator, which augments FNO with PDE residual regularization during supervised training. (iii) DeepONet [Lu et al., 2021a]: Branch-trunk operator network; complementary to FNO on irregular geometries. (iv) PI-JEPA (scratch) : The same PI-JEPA architecture trained from random initialization without self-supervised pretraining, isolating the contribution of pretraining from the architecture itself. All baselines are trained from scratch on the same Nℓ labeled samples with identical epoch budgets (300 epochs) and evaluated on the same held-out test sets to ensure a fair comparison. All results report mean ± 95% CI over 5 random seeds. 
+
+4.3 Metrics, Evaluation Protocol, and Fine-Tuning 
+
+All experiments report the relative ℓ2 error ∥ˆu − u∥2/∥u∥2, computed per field and averaged across the test set. The headline metric is the data efficiency curve : relative ℓ2 error as a function of Nℓ ∈ { 10 , 25 , 50 , 100 , 250 , 500 } labeled fine-tuning samples, holding the unlabeled pretraining corpus fixed. All results report mean ± 95% confidence interval over 5 random seeds. 
+
+Fine-Tuning Protocol. During fine-tuning, the pretrained context encoder fθ is paired with a lightweight prediction head that maps patch embeddings to full-resolution solution fields. The prediction head first projects each patch embedding to a 16 × P × P pixel block via a linear layer, unpatchifies the blocks into a 16 -channel spatial feature map at full resolution, then refines with two 3 × 3 convolutional layers (64 channels, GELU activation) followed by a 1 × 1
+
+projection to the output channels. For multi-channel inputs (e.g., nc = 2 species in ADR), a learnable 1 × 1 channel adapter projects the input to a single channel before the pretrained encoder. All parameters—encoder, prediction head, and channel adapter—are updated jointly using AdamW with a cosine annealing schedule ( Tmax = 300 epochs, 
+
+ηmin = 10 −6). The encoder learning rate is set to 0.2× the head learning rate ( 5 × 10 −4) to preserve pretrained features while allowing task-specific adaptation. 
+
+# 5 Results 
+
+We report data efficiency curves across three benchmark PDE systems. All results report mean ± 95% confidence interval over 5 random seeds; we report relative ℓ2 error on held-out test sets. PI-JEPA is pretrained for 500 epochs on unlabeled coefficient fields using the Darcy PDE residual as physics regularization, then fine-tuned on Nℓ labeled samples with cosine learning rate annealing over 300 epochs. Baselines (FNO, PINO, DeepONet) are trained from scratch on the same Nℓ labeled samples with identical epoch budgets. 
+
+Single-Phase Darcy Flow. Table 2 reports results on the entry-level single-phase Darcy benchmark (1,000 training samples, 64 × 64 grid). PI-JEPA outperforms FNO, PINO, and DeepONet across the low-data regime ( Nℓ ≤ 100 ), achieving 1.8× lower error than FNO at Nℓ = 100 (0.220 vs. 0.392 ), 1.8× lower error than PINO ( 0.220 vs. 0.393 ), and 2.2× lower error than DeepONet ( 0.220 vs. 0.484 ). PINO performs nearly identically to FNO across all Nℓ values, indicating that physics-informed regularization in the supervised regime provides negligible benefit when labels are scarce. At very low label counts ( Nℓ ≤ 50 ), the scratch baseline slightly outperforms pretrained PI-JEPA (e.g., 0.469 ± 0.018 
+
+vs. 0.481 ± 0.003 at Nℓ = 10 ). We attribute this to the full fine-tuning protocol: with fewer than ∼50 gradient updates per epoch, the pretrained encoder weights are perturbed away from their pretrained optimum before the prediction head has converged, negating the initialization advantage. The pretraining benefit emerges clearly at Nℓ ≥ 100 ,where sufficient labeled data stabilizes encoder adaptation: at Nℓ = 100 PI-JEPA achieves 0.220 ± 0.018 versus 
+
+0.253 ± 0.031 for scratch (13% improvement), and at Nℓ = 500 PI-JEPA achieves 0.102 ± 0.011 versus 0.118 ± 0.012 
+
+for scratch (14% improvement). This pattern—pretraining advantage increasing with Nℓ—is consistent with the fine-tuning dynamics of pretrained vision transformers [He et al., 2022], where a minimum number of labeled samples is required to stably adapt the encoder without catastrophic forgetting. FNO and PINO surpass PI-JEPA at Nℓ ≥ 250 ,consistent with the expectation that spectral methods excel in data-rich regimes. 12 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+Table 2: Relative ℓ2 error on single-phase Darcy flow ( 64 × 64 ). Mean ± 95% CI over 5 seeds. Best result per row in 
+
+bold .
+
+Nℓ PI-JEPA Scratch FNO PINO DeepONet 10 0.481 ±0.003 0.469 ±0.018 0.852 ±0.121 0.850 ±0.121 2.360 ±1.515 25 0.473 ±0.005 0.464 ±0.022 0.706 ±0.063 0.705 ±0.062 1.454 ±0.977 50 0.443 ±0.015 0.406 ±0.062 0.591 ±0.042 0.588 ±0.043 0.994 ±0.435 100 0.220 ±0.018 0.253 ±0.031 0.392 ±0.028 0.393 ±0.023 0.484 ±0.154 250 0.142 ±0.010 0.169 ±0.019 0.059 ±0.026 0.052 ±0.015 0.310 ±0.027 500 0.102 ±0.011 0.118 ±0.012 0.054 ±0.023 0.047 ±0.009 0.316 ±0.006 
+
+Two-Phase CO 2-Water Multiphase Flow. Table 3 reports results on the two-phase CO 2-water benchmark ( K = 2 
+
+operator splitting, domain-matched pretraining). PI-JEPA achieves substantially lower error than FNO, PINO, and DeepONet across all Nℓ values. At Nℓ = 100 , PI-JEPA achieves 0.425 ± 0.033 versus 1.162 ± 0.012 for FNO ( 2.7×
+
+improvement) and 1.159 ± 0.015 for PINO. Strikingly, FNO and PINO plateau above a relative ℓ2 error of 1.15 even at 
+
+Nℓ = 500 , indicating that spectral methods fail to capture the sharp saturation fronts characteristic of two-phase flow regardless of training set size. DeepONet achieves moderate accuracy at Nℓ = 50 –100 (0.850 –0.800 ) but exhibits high variance and degrades at larger Nℓ.Self-supervised pretraining provides consistent improvement over training from scratch: 12% at Nℓ = 250 (0.243 vs. 
+
+0.276 ) and 6% at Nℓ = 500 (0.187 vs. 0.199 ). The pretraining benefit is smaller than on Darcy, consistent with the greater complexity of the two-phase system. Table 3: Relative ℓ2 error on two-phase CO 2-water flow ( 64 × 64 ). Mean ± 95% CI over 5 seeds. Best result per row in bold .
+
+Nℓ PI-JEPA Scratch FNO PINO DeepONet 10 1.023 ±0.022 0.985 ±0.019 1.261 ±0.017 1.264 ±0.019 2.920 ±1.184 25 0.875 ±0.023 0.787 ±0.022 1.314 ±0.014 1.311 ±0.014 1.447 ±0.587 50 0.565 ±0.020 0.548 ±0.013 1.201 ±0.005 1.193 ±0.007 0.850 ±0.085 100 0.425 ±0.033 0.437 ±0.070 1.162 ±0.012 1.159 ±0.015 0.800 ±0.125 250 0.243 ±0.009 0.276 ±0.019 1.157 ±0.007 1.153 ±0.005 1.136 ±0.617 500 0.187 ±0.005 0.199 ±0.007 1.185 ±0.016 1.183 ±0.015 1.059 ±0.588 
+
+Domain-Matched vs. Cross-Domain Pretraining. Table 4 compares domain-matched pretraining (pretrained on the target PDE’s unlabeled data) against cross-domain pretraining (Darcy-pretrained encoder transferred to twophase or ADR). On the two-phase benchmark, Darcy-pretrained encoders transfer remarkably well: at Nℓ = 100 , Darcy-pretrained PI-JEPA achieves 0.410 ± 0.035 , slightly outperforming domain-matched ( 0.425 ± 0.033 ) and clearly outperforming scratch ( 0.437 ± 0.070 ). Domain-matched pretraining provides additional benefit only at Nℓ ≥ 250 ,where the domain-specific representations begin to matter. On ADR, domain-matched pretraining provides a clearer advantage: 0.076 ± 0.014 vs. 0.092 ± 0.009 at Nℓ = 100 , reflecting the larger domain gap between Darcy pressure fields and ADR concentration fields. Table 4: Domain-matched vs. cross-domain pretraining. Mean ± 95% CI over 5 seeds. Best per row in bold .
+
+Twophase ADR 
+
+Nℓ Domain Darcy-pre Scratch Domain Darcy-pre Scratch 100 0.425 ±0.033 0.410 ±0.035 0.437 ±0.070 0.076 ±0.014 0.092 ±0.009 0.082 ±0.025 250 0.243 ±0.009 0.244 ±0.011 0.276 ±0.019 0.065 ±0.007 0.084 ±0.019 0.070 ±0.032 500 0.187 ±0.005 0.192 ±0.017 0.199 ±0.007 — — —
+
+Advection-Diffusion-Reaction. Table 5 reports results on the PDEBench ADR benchmark ( nc = 2 species, Pe = 1 ,Da = 0 .1 evaluation regime) with domain-matched pretraining. PI-JEPA consistently outperforms FNO and PINO, achieving 1.9× lower error at Nℓ = 100 (0.076 vs. 0.146 ). PINO again performs nearly identically to FNO, reinforc-ing the finding that physics-informed supervised regularization provides negligible benefit in the low-label regime. 13 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+DeepONet achieves the lowest errors at Nℓ ≥ 100 ; however, DeepONet results are reported for single-channel pre-diction only ( †) as the standard architecture does not natively support multi-channel output, making direct comparison with the two-channel PI-JEPA and FNO results not straightforward. At Nℓ = 500 , the scratch baseline outperforms PI-JEPA ( 0.024 ± 0.004 vs. 0.065 ± 0.012 ), indicating that pretraining can be counterproductive when sufficient labeled data is available and the pretrained representations do not align well with the downstream task. This is an honest negative result: the ADR concentration fields have qualitatively different spatial structure from the Darcy/twophase pressure fields on which the encoder architecture was designed, and the pretraining objective may impose an inductive bias that becomes suboptimal in the data-rich regime. Table 5: Relative ℓ2 error on PDEBench ADR ( 64 × 64 , nc = 2 ). Mean ± 95% CI over 5 seeds. Best result per row in bold . †Single-channel only. 
+
+Nℓ PI-JEPA Scratch FNO PINO DeepONet †
+
+10 0.109 ±0.001 0.110 ±0.000 0.256 ±0.032 0.256 ±0.032 0.105 ±0.021 
+
+25 0.097 ±0.003 0.099 ±0.000 0.208 ±0.020 0.208 ±0.020 0.102 ±0.018 50 0.087 ±0.015 0.096 ±0.000 0.176 ±0.013 0.176 ±0.013 0.081 ±0.024 
+
+100 0.076 ±0.014 0.082 ±0.025 0.146 ±0.005 0.146 ±0.005 0.049 ±0.028 
+
+250 0.065 ±0.007 0.070 ±0.032 0.136 ±0.003 0.137 ±0.004 0.044 ±0.035 
+
+500 0.065 ±0.012 0.024 ±0.004 0.122 ±0.005 0.122 ±0.005 0.083 ±0.015 
+
+Ablation Study. Table 6 reports an ablation study on the Darcy benchmark at Nℓ = 100 (5 seeds), systematically removing each component of the PI-JEPA pretraining objective. Two components are essential: removing operator splitting increases error by 16.0% ( 0.218 vs. 0.188 ), and removing VICReg regularization increases error by 17.7% (0.221 vs. 0.188 ). The operator splitting result confirms that the structured predictor bank aligned to the physical decomposition is a primary contributor to PI-JEPA’s performance. The VICReg result demonstrates that collapse prevention is critical in the physics-informed latent prediction setting. Two components are neutral or slightly beneficial to remove: the physics residual ( −8.1% , i.e., removing it improves 
+
+performance from 0.188 to 0.173 ) and spatial masking ( −3.9% , from 0.188 to 0.181 ). The physics residual finding is an honest negative result: the PDE residual regularization, while theoretically motivated, does not improve downstream accuracy on this benchmark. We hypothesize that the finite-difference approximation of the residual on the 32 × 32 
+
+collocation grid introduces discretization artifacts that slightly degrade the learned representations. Stronger physics-informed objectives (e.g., spectral residuals or conservation-law-based losses) may recover the expected benefit and represent a promising direction for future work. Table 6: Ablation study on Darcy flow at Nℓ = 100 . Mean ± 95% CI over 5 seeds. ∆ is relative change vs. full model (positive = worse). Variant Rel. ℓ2 error ∆ (%) Full PI-JEPA 0.188 ±0.007 —w/o physics residual 0.173 ±0.010 −8.1 w/o operator splitting 0.218 ±0.015 +16.0 w/o VICReg 0.221 ±0.010 +17.7 w/o spatial masking 0.181 ±0.016 −3.9 
+
+Data Efficiency Curves. Figure 4 presents the data efficiency curve for the single-phase Darcy benchmark. PI-JEPA achieves competitive or superior accuracy to supervised baselines in the low-data regime ( Nℓ ≤ 100 ), with FNO and PINO catching up at higher Nℓ where their spectral inductive bias is fully exploited. Error bars show 95% confidence intervals over 5 seeds. 14 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+10 25 50 100 250 500 
+
+10 −1
+
+10 0
+
+Number of labeled samples Nℓ
+
+> Relative  ℓ2 error
+> PI-JEPA (ours)
+> FNO
+> PINO
+> DeepONet
+> PI-JEPA (scratch)
+
+Figure 4: Data efficiency on single-phase Darcy flow ( 64 × 64 ). PI-JEPA (blue, with 95% CI shading) outperforms FNO (red), PINO (purple), and DeepONet (orange) for Nℓ ≤ 100 . The gap between PI-JEPA and the scratch baseline (gray, dashed) quantifies the benefit of self-supervised pretraining. FNO and PINO surpass PI-JEPA at Nℓ ≥ 250 
+
+where their spectral inductive bias is fully exploited. Mean ± 95% CI over 5 seeds. 
+
+# 6 Discussion 
+
+Architecture is the primary contribution. The ablation study (Table 6) reveals that the two essential components of PI-JEPA are the operator-splitting-aligned predictor bank (+16% degradation when removed) and VICReg collapse prevention (+17.7% degradation). Together, these architectural choices—rather than the self-supervised pretraining signal alone—account for the majority of PI-JEPA’s advantage over monolithic baselines. The operator splitting alignment lets each predictor specialize to one physical timescale, reducing the effective complexity of the learning problem. 
+
+Self-supervised pretraining provides 6–14% benefit. Across all three benchmarks, domain-matched pretraining consistently outperforms training from scratch when Nℓ ≥ 100 : 13% on Darcy at Nℓ = 100 , 14% at Nℓ = 500 ;12% on twophase at Nℓ = 250 , 6% at Nℓ = 500 . The benefit is real but moderate, and smaller than the architectural contribution. This is consistent with the finding that the operator-splitting structure provides the dominant inductive bias, with pretraining adding incremental value by initializing the encoder in a favorable region of parameter space. 
+
+Physics residual is neutral. The ablation shows that removing the PDE residual regularization slightly improves 
+
+performance ( −8.1% ). This is an honest negative result that contrasts with the theoretical motivation. We hypothesize that the finite-difference approximation of the residual on the 32 ×32 collocation grid introduces discretization artifacts that degrade the learned representations. The PINO results reinforce this interpretation: PINO performs nearly identi-cally to FNO across all benchmarks and Nℓ values, indicating that physics-informed regularization in the supervised regime provides negligible benefit when labels are scarce. Stronger physics-informed objectives—spectral residuals, conservation-law-based losses, or learned residual operators—represent a promising direction for future work. 
+
+Domain-matched pretraining helps on ADR, transfers well on twophase. Cross-domain transfer experiments (Table 4) reveal an interesting asymmetry. On twophase, Darcy-pretrained encoders transfer remarkably well, match-ing or outperforming domain-matched pretraining at Nℓ ≤ 100 . On ADR, domain-matched pretraining provides a clearer advantage ( 0.076 vs. 0.092 at Nℓ = 100 ), reflecting the larger domain gap between pressure fields and concen-tration fields. This suggests that the spatial heterogeneity structure learned from Darcy permeability fields is broadly useful for pressure-dominated systems but less transferable to reaction-dominated dynamics. 15 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+Where baselines catch up or win. On single-phase Darcy flow, FNO and PINO surpass PI-JEPA at Nℓ ≥ 250 .Single-phase Darcy is a single elliptic PDE with no operator-splitting structure, and FNO’s spectral convolutions are specifically designed for this problem class. On ADR at Nℓ = 500 , the scratch baseline outperforms PI-JEPA (0.024 vs. 0.065 ), indicating that pretraining can be counterproductive in the data-rich regime when the pretrained representations do not align with the downstream task. DeepONet achieves the lowest errors on ADR at Nℓ ≥ 100 ,though its single-channel architecture limits direct comparison. 
+
+PINO ≈ FNO at low Nℓ. A consistent finding across all three benchmarks is that PINO performs nearly identically to FNO. This indicates that adding PDE residual regularization to a supervised neural operator does not help when labeled data is scarce—the physics signal is too weak relative to the data-fitting objective. This finding motivates PI-JEPA’s approach of using physics constraints during unsupervised pretraining rather than during supervised fine-tuning. 
+
+Practical implications. The key practical advantage is that pretraining requires only unlabeled parameter fields— no PDE solves needed. In subsurface workflows, geostatistical models routinely generate thousands of permeability realizations from well log data and variogram models in minutes, while each fully coupled reservoir simulation may require hours to days of compute time. PI-JEPA exploits this data asymmetry: it pretrains on the abundant, free-to-generate parameter fields, then fine-tunes on whatever simulation runs the practitioner can afford. For a reservoir engineer performing CO 2 storage site screening or history matching with a budget of 50–100 simulation runs, PI-JEPA provides a surrogate that is 1.8× more accurate than FNO/PINO and 2.2× more accurate than DeepONet on Darcy at 
+
+Nℓ = 100 , and 2.7× more accurate than FNO on two-phase flow. 
+
+Limitations. The physics residual does not improve performance on the benchmarks tested, and stronger physics-informed objectives are needed. The ADR results show that pretraining can hurt at high Nℓ when domain mismatch is large. The evaluation is limited to 64 × 64 grids; extension to higher resolutions and 3D domains remains future work. 
+
+# 7 Future Work 
+
+Spectral bias and the resolution-scaling bottleneck. The data efficiency curves (Figure 4) reveal a consistent crossover: PI-JEPA achieves lower error than FNO/PINO in the low-label regime ( Nℓ ≤ 100 ), but spectral baselines overtake it as Nℓ grows. We argue this is not merely a data-quantity effect but reflects a structural limitation of encoding exclusively in the Fourier-lifted latent space. FNOs draw a well-known analogy to pseudo-spectral PDE solvers: computing nonlinear terms via FFT-based con-volutions reduces complexity to O(n log n) by exploiting the convolution theorem in frequency space [Canuto et al., 1988]. The critical distinction is that pseudo-spectral methods operate on the full-resolution physical field at every step, alternating between spectral (global) and physical-space (local) representations without compressing spatial in-formation. FNOs inherit this behavior: each Fourier layer applies spectral convolutions globally but adds a local pointwise linear branch in physical space, so the model retains access to spatially localized structure at every layer and every resolution. PI-JEPA, by contrast, projects all representations through a fixed-dimension latent z ∈ Rd derived from Fourier-enhanced patch embeddings. This creates two compounding sources of high-frequency information loss. First, the Fourier feature extraction introduces a spectral bias that up-weights globally coherent, low-frequency modes and down-weights the sharp, spatially localized variations that dominate near-well dynamics and capillary fronts in two-phase flow. Second, the bottleneck compression to d = 384 is fixed regardless of grid resolution: as n grows, the per-mode information budget in the latent declines, whereas FNO’s effective capacity scales with n because its spectral convolutions operate on the full field. Together, these effects explain why PI-JEPA’s advantage over FNO is largest at low Nℓ—where the data-efficiency of structured pretraining dominates—but erodes at higher Nℓ where FNO can exploit its full-resolution, local-global alternation. 
+
+Toward a dual-branch physical-spectral encoder. A natural remedy is to augment the Fourier-enhanced backbone with a parallel local convolution branch operating directly in the physical domain, computing feature representations from spatially adjacent grid points without passing through the frequency basis. This mirrors the design logic of FNO’s bypass connection, but applied at the encoder level rather than the operator level: both the global Fourier-lifted signal and the local physical-domain signal would be computed per patch, then fused before latent projection. The resulting encoder would capture both spectral structure (phase-field evolution, long-range pressure gradients) and local dynamics (saturation front sharpness, permeability discontinuities) within the same latent representation. Whether this fusion should be additive, attentive, or learned-gated is an open design question, but the key requirement is that the 16 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+latent z encode physically local information that the current Fourier-only pathway systematically discards. We expect such a hybrid encoder to reduce the performance gap at Nℓ ≥ 250 without compromising the data-efficiency advantage at low label counts, since operator-splitting alignment and VICReg regularization—which the ablations identify as the primary drivers of PI-JEPA’s performance—are independent of the encoder’s feature basis. 
+
+Multi-fidelity pretraining. The current pretraining setup uses only unlabeled parameter fields (permeability realiza-tions) as the self-supervised signal, exploiting the fact that geostatistical simulation is cheap relative to full reservoir simulation. A natural extension is to incorporate coarse-resolution simulation runs—which are orders of magnitude cheaper than fine-resolution runs—as an additional pretraining signal. Multi-fidelity learning has demonstrated sub-stantial gains in surrogate modeling for PDEs [Li et al., 2021], and the operator-splitting structure of PI-JEPA provides a natural scaffold for it: coarse-grid operator trajectories could supervise individual sub-operator predictors, while the fine-grid labeled budget is reserved for full-resolution fine-tuning. This would extend the data asymmetry argument beyond the labeled/unlabeled split to a three-level hierarchy of field cost: parameter fields (free), coarse simulations (cheap), fine simulations (expensive). 
+
+Generalization across operator-split PDE systems. PI-JEPA’s operator-splitting alignment is not specific to sub-surface flow. Any PDE system whose numerical solution relies on dimensional or physical splitting—atmosphere-ocean coupling, reactive transport in electrochemical systems, multicomponent plasma dynamics—admits an analo-gous predictor bank structure. Whether a single pretrained encoder can transfer across qualitatively different operator-split systems via the cross-domain mechanism observed in Table 4 is an open question. Extending the benchmark suite to include systems with non-elliptic operators (e.g., hyperbolic conservation laws, dispersive wave equations) would test whether the JEPA pretraining objective generalizes beyond the pressure-dominated, parabolic systems evaluated here. 
+
+# 8 Conclusion 
+
+We have presented PI-JEPA, a physics-informed joint embedding predictive architecture for data-efficient surrogate modeling of coupled PDE systems in subsurface flow simulation. By pretraining on abundantly available unlabeled parameter fields and aligning latent predictors with the operator-splitting structure of the underlying physics, PI-JEPA achieves 1.8× lower error than FNO/PINO and 2.2× lower error than DeepONet on single-phase Darcy flow at 
+
+Nℓ = 100 , 2.7× lower error than FNO on two-phase CO 2-water flow, and 1.9× lower error than FNO on advection-diffusion-reaction (mean ± 95% CI over 5 seeds). Domain-matched self-supervised pretraining provides 6–14% improvement over training from scratch. Ablation studies identify operator splitting (+16%) and VICReg regularization (+17.7%) as the essential architectural components. The physics residual is neutral on the benchmarks tested—an honest finding that motivates future work on stronger physics-informed objectives. PINO performs nearly identically to FNO across all benchmarks, indicating that physics-informed regularization in the supervised regime provides negligible benefit when labels are scarce. These results demonstrate that the data asymmetry inherent in subsurface workflows—where parameter fields are cheap but simulations are expensive—can be systematically exploited through self-supervised pretraining. The operator-splitting alignment provides the largest benefit on coupled multi-physics systems, where monolithic sur-rogates must disentangle heterogeneous timescale dynamics from limited supervision. 
+
+# Acknowledgments 
+
+The authors thank Jiayi Fu, Jianlin Fu, and A.B. for inspiration, they also thank Ryan Gomez for his contributions as a research assistant. Compute and support was provided by the Yee Collins Research Group. 17 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+# References 
+
+M. Assran, Q. Duval, I. Misra, P. Bojanowski, P. Vincent, M. Rabbat, Y. LeCun, and N. Ballas. Self-supervised learning from images with a joint-embedding predictive architecture. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 15619–15629, 2023. A. Bardes, J. Ponce, and Y. LeCun. VICReg: Variance-invariance-covariance regularization for self-supervised learn-ing. In International Conference on Learning Representations , 2022. A. Bardes, Q. Garrido, J. Ponce, X. Chen, M. Rabbat, Y. LeCun, M. Assran, and N. Ballas. Revisiting feature prediction for learning visual representations from video. arXiv preprint arXiv:2404.08471 , 2024. P. L. Bartlett, D. J. Foster, and M. J. Telgarsky. Spectrally-normalized margin bounds for neural networks. In Advances in Neural Information Processing Systems , volume 30, 2017. J. Behler. Four generations of high-dimensional neural network potentials. Chemical Reviews , 121(16):10037–10072, 2021. S. M. Benson and D. R. Cole. CO 2 sequestration in deep sedimentary formations. Elements , 4(5):325–331, 2008. R. H. Brooks and A. T. Corey. Hydraulic properties of porous media. Hydrology Papers , 3, 1964. S. L. Brunton and J. N. Kutz. Data-Driven Science and Engineering: Machine Learning, Dynamical Systems, and Control . Cambridge University Press, 2019. C. Canuto, M. Y. Hussaini, A. Quarteroni, and T. A. Zang. Spectral Methods in Fluid Dynamics . Springer-Verlag, 1988. ISBN 978-0-387-17371-9. S. Cao. Choose a transformer: Fourier or Galerkin. In Advances in Neural Information Processing Systems , volume 34, pages 24924–24940, 2021. M. A. Cardoso, L. J. Durlofsky, and P. Sarma. Development and application of reduced-order modeling procedures for subsurface flow simulation. International Journal for Numerical Methods in Engineering , 77(9):1322–1350, 2009. T. Chen, S. Kornblith, M. Norouzi, and G. Hinton. A simple framework for contrastive learning of visual representa-tions. In International Conference on Machine Learning , pages 1597–1607. PMLR, 2020. Y. Chen, B. Hosseini, H. Owhadi, and A. M. Stuart. Solving and learning nonlinear PDEs with Gaussian processes. 
+
+Journal of Computational Physics , 447:110668, 2021. Z. Chen, G. Huan, and Y. Ma. Computational Methods for Multiphase Flows in Porous Media . SIAM, 2006. M. A. Christie and M. J. Blunt. Tenth SPE comparative solution project: A comparison of upscaling techniques. SPE Reservoir Evaluation & Engineering , 4(4):308–317, 2001. M. De Hoop, D. Huang, W. Qian, and A. M. Stuart. Equivariant neural operators. arXiv preprint arXiv:2204.11139 ,2022. W. Diab and M. Al Kobaisi. U-DeepONet: U-net enhanced deep operator network for geologic carbon sequestration. 
+
+Scientific Reports , 14:21298, 2024. doi:10.1038/s41598-024-72393-0. A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, et al. An image is worth 16x16 words: Transformers for image recognition at scale. In 
+
+International Conference on Learning Representations , 2021. J.-B. Grill, F. Strub, F. Altché, C. Tallec, P. Richemond, E. Buchatskaya, C. Doersch, B. Avila Pires, Z. Guo, M. Ghesh-laghi Azar, et al. Bootstrap your own latent: A new approach to self-supervised learning. In Advances in Neural Information Processing Systems , volume 33, pages 21271–21284, 2020. D. Hafner, T. Lillicrap, I. Fischer, R. Villegas, D. Ha, H. Lee, and J. Davidson. Learning latent dynamics for planning from pixels. In International Conference on Machine Learning , pages 2555–2565. PMLR, 2019. D. Hafner, T. P. Lillicrap, M. Norouzi, and J. Ba. Mastering diverse domains through world models. arXiv preprint arXiv:2301.04104 , 2023. Z. Hao, C. Ying, Z. Wang, H. Su, Y. Dong, S. Liu, Z. Cheng, J. Zhu, and J. Song. GNOT: A general neural operator transformer for operator learning. In International Conference on Machine Learning . PMLR, 2023. K. He, H. Fan, Y. Wu, S. Xie, and R. Girshick. Momentum contrast for unsupervised visual representation learning. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 9729–9738, 2020. K. He, X. Chen, S. Xie, Y. Li, P. Dollár, and R. Girshick. Masked autoencoders are scalable vision learners. In 
+
+Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 16000–16009, 2022. 18 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+M. Herde, B. Raoni´ c, T. Rohner, R. Käppeli, R. Molinaro, E. de Bézenac, and S. Mishra. Poseidon: Efficient founda-tion models for PDEs. In Advances in Neural Information Processing Systems , 2024. P. Jin, S. Meng, and L. Lu. MIONet: Learning multiple-input operators via tensor product. SIAM Journal on Scientific Computing , 44(6):A3490–A3514, 2022. X. Jin, S. Cai, H. Li, and G. E. Karniadakis. NSFnets (Navier-Stokes Flow nets): Physics-informed neural networks for the incompressible Navier-Stokes equations. Journal of Computational Physics , 426:109951, 2021. N. Kovachki, Z. Li, B. Liu, K. Azizzadenesheli, K. Bhattacharya, A. Stuart, and A. Anandkumar. Neural operator: Learning maps between function spaces with applications to PDEs. Journal of Machine Learning Research , 24(89): 1–97, 2023. A. Krishnapriyan, A. Gholami, S. Zhe, R. Kirby, and M. W. Mahoney. Characterizing possible failure modes in physics-informed neural networks. Advances in Neural Information Processing Systems , 34:26548–26560, 2021. Y. LeCun. A path towards autonomous machine intelligence, 2022. URL https://openreview.net/forum?id= BZ5a1r-kVsf . Open Review, version 0.9.2. Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar. Fourier neural operator for parametric partial differential equations. In International Conference on Learning Representations ,2021. URL https://openreview.net/forum?id=c8P9NQVtmnO .Z. Li, D. Huang, B. Liu, and A. Anandkumar. Fourier neural operator with learned deformations for PDEs on general geometries. In International Conference on Machine Learning . PMLR, 2023. Z. Li, H. Zheng, N. Kovachki, D. Jin, H. Chen, B. Liu, K. Azizzadenesheli, and A. Anandkumar. Physics-informed neural operator for learning partial differential equations. ACM/IMS Journal of Data Science , 2024. K.-A. Lie. An Introduction to Reservoir Simulation Using MATLAB/GNU Octave: User Guide for the MATLAB Reservoir Simulation Toolbox (MRST) . Cambridge University Press, 2019. L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3(3):218–229, 2021a. L. Lu, X. Meng, Z. Mao, and G. E. Karniadakis. DeepXDE: A deep learning library for solving differential equations. 
+
+SIAM Review , 63(1):208–228, 2021b. B. Lusch, J. N. Kutz, and S. L. Brunton. Deep learning for universal linear embeddings of nonlinear dynamics. Nature Communications , 9(1):4950, 2018. M. McCabe, B. R. Blancard, L. Parker, R. Ohana, M. Cranmer, A. Bietti, M. Hutchinson, K. Kawaguchi, G. Kerg, R. Meyer, et al. Multiple physics pretraining for physical surrogate models. In Advances in Neural Information Processing Systems , 2023. T. Pfaff, M. Fortunato, A. Sanchez-Gonzalez, and P. W. Battaglia. Learning mesh-based simulation with graph net-works. In International Conference on Learning Representations , 2021. M. Raissi, P. Perdikaris, and G. E. Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Computational Physics , 378:686–707, 2019. B. Raonic, R. Molinaro, T. De Ryck, T. Rohner, F. Bartolucci, R. Alaifari, S. Mishra, and E. de Bezanec. On the inabil-ity of Gaussian process regression to optimally learn compositional functions. In Advances in Neural Information Processing Systems , 2023. A. Sanchez-Gonzalez, J. Godwin, T. Pfaff, R. Ying, J. Leskovec, and P. Battaglia. Learning to simulate complex physics with graph networks. In International Conference on Machine Learning , pages 8459–8468. PMLR, 2020. J. E. Santos, A. Mehrabifard, M. Prodanovi´ c, and M. T. Balhoff. Hybrid deep neural operator/finite element method for unsaturated seepage flow. Advances in Water Resources , 195:104849, 2025. C. I. Steefel, C. A. J. Appelo, B. Arora, D. Jacques, T. Kalbacher, O. Kolditz, V. Lagneau, P. C. Lichtner, K. U. Mayer, J. C. L. Meeussen, et al. Reactive transport codes for subsurface environmental simulation. Computational Geosciences , 19(3):445–478, 2015. S. Subramanian, P. Harrington, K. Keutzer, W. Bhimji, D. Morozov, M. Mahoney, and A. Garg. Towards foun-dation models for scientific machine learning: Characterizing scaling and transfer behavior. arXiv preprint arXiv:2306.00258 , 2024. M. Takamoto, T. Praditia, R. Leiteritz, D. MacKinlay, F. Alesiani, D. Pflüger, and M. Niepert. PDEBench: An extensive benchmark for scientific machine learning. Advances in Neural Information Processing Systems , 35: 1596–1611, 2022. 19 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+M. Tang, Y. Liu, and L. J. Durlofsky. A deep learning-accelerated data assimilation and forecasting workflow for commercial-scale geologic carbon storage. International Journal of Greenhouse Gas Control , 100:103021, 2020. T. Tripura and S. Chakraborty. Wavelet neural operator for solving parametric partial differential equations in com-putational mechanics problems. In Computer Methods in Applied Mechanics and Engineering , volume 404, page 115783. Elsevier, 2023. M. J. Wainwright. High-Dimensional Statistics: A Non-Asymptotic Viewpoint . Cambridge University Press, 2019. S. Wang and P. Perdikaris. Improved training of physics-informed neural networks with model ensembles. arXiv preprint arXiv:2204.05108 , 2022. S. Wang, M. Bharat, and P. Perdikaris. Improved architectures and training recipes for deep operator networks. arXiv preprint arXiv:2204.13678 , 2022a. S. Wang, X. Yu, and P. Perdikaris. When and why PINNs fail to train: A neural tangent kernel perspective. Journal of Computational Physics , 449:110768, 2022b. S. Wang, S. Sankaran, and P. Perdikaris. Respecting causality for training physics-informed neural networks. Com-puter Methods in Applied Mechanics and Engineering , 421:116813, 2024. G. Wen, Z. Li, K. Azizzadenesheli, A. Anandkumar, and S. M. Benson. U-FNO—an enhanced Fourier Neural Operator-based deep-learning model for multiphase flow. Advances in Water Resources , 163:104180, 2022. Y. Zhu, N. Zabaras, P.-S. Koutsourelakis, and P. Perdikaris. Physics-constrained deep learning for high-dimensional surrogate modeling and uncertainty quantification without labeled data. Journal of Computational Physics , 394: 56–81, 2019. 20 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+# A Architectural Hyperparameters 
+
+Table 7 summarizes the complete architectural and training hyperparameters for PI-JEPA in the two-phase Darcy flow and reactive transport settings. The context and target encoders share an identical Fourier-enhanced backbone in all experiments, and the patch size P = 8 is held fixed. The EMA momentum is annealed during the first 10% of pretraining epochs from τ0 = 0 .99 to τ∞ = 0 .999 following the cosine schedule of Assran et al. [2023]. Table 7: PI-JEPA architectural and training hyperparameters. 
+
+Hyperparameter Darcy / Two-Phase Reactive Transport 
+
+Spatial grid size 64 × 64 64 × 64 
+
+Patch size P 8 8Encoder type Fourier + Attention Fourier + Attention Fourier hidden channels 128 128 Fourier layers 6 6Fourier modes 32 × 32 32 × 32 
+
+Attention layers 4 4Attention heads 8 8Embedding dim dmodel 384 384 Predictor depth 4 4Predictor hidden dim 384 384 Predictor heads 6 6Number of sub-operators K 2 3EMA momentum τ 0.99 → 0.999 0.99 → 0.999 
+
+Context fraction 65% 65% Target block size 2–4 patches 2–4 patches Optimizer AdamW AdamW Pretraining LR 1.5 × 10 −4 1.5 × 10 −4
+
+Weight decay 5 × 10 −2 5 × 10 −2
+
+Batch size (pretrain) 64 64 Pretraining epochs 500 500 Fine-tuning epochs 300 300 Fine-tuning LR (head) 5 × 10 −4 5 × 10 −4
+
+Encoder LR multiplier 0.2 0.2 LR schedule Cosine ( ηmin =10 −6) Cosine ( ηmin =10 −6)
+
+λp (physics weight) 0.1 0.1
+
+λr (reg. weight) 1.0 1.0
+
+VICReg variance weight 0.05 0.05 VICReg covariance weight 0.01 0.01 Physics ramp steps 200 200 The collocation points Ck for the physics residual evaluation are drawn uniformly at random from the simulation grid at each training step, with |C k| = 1024 for all sub-operators. Spatial derivatives in the residual terms are computed via second-order finite differences applied to the decoded field ˜u(k), which is preferable to automatic differentiation through the decoder for computational efficiency. For the reactive transport extension, the channel-mixing attention in predictor gϕ2 is implemented as a two-stage attention: first, standard spatial self-attention over patch tokens (shared weights across species), then a cross-species attention layer that mixes concentration representations across the nc species channels at each spatial location. This two-stage design allows the predictor to capture both spatial transport (via spatial attention) and inter-species coupling (via species attention) within a single forward pass. 21 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+# B Physics Residual Derivations 
+
+B.1 Pressure Sub-Operator Residual 
+
+The total mobility is λT = krw /μ w + krn /μ n. The fractional flow formulation of the pressure equation follows from summing Equation (3) over both phases and substituting Equation (4): 
+
+−∇ · (λT K∇pw) + ∇ ·  λnK∇Pc(Sw) = qT , (12) where λn = krn /μ n and we have used pn = pw + Pc(Sw). The decoded pressure field ˜pw = [ dψ1 (ˆ z(1) )] 1 is substituted into Equation (12) with Sw held at its value from the previous timestep (the IMPES approximation), yielding the residual in Equation (10). The capillary term ∇ · (λnK∇Pc) is treated explicitly using the Brooks-Corey model with the previous-timestep saturation. 
+
+B.2 Saturation Transport Residual 
+
+The total Darcy velocity vT entering Equation (11) is computed from the pressure solution of the current timestep. Specifically, vT = −λT K∇˜pw, evaluated using the decoded pressure from predictor stage 1. The time derivative 
+
+∂ ˜Sw/∂t is approximated by a first-order backward difference: 
+
+∂ ˜Sw
+
+∂t ≈ ˜St+∆ tw − Stw
+
+∆t , (13) where ˜St+∆ tw = [ dψ2 (ˆ z(2) )] 2 is the decoded saturation prediction and Stw is the previous-timestep saturation (available as part of the input field). The fractional flow function fw is evaluated using the Brooks-Corey model at ˜St+∆ tw .
+
+B.3 Reaction Sub-Operator Residual 
+
+For a geochemical system with nc species subject to equilibrium reactions, the reaction source terms Ri(c) satisfy the algebraic constraint ncX
+
+> i=1
+
+νij Ri(c) = 0 , j = 1 , . . . , n r , (14) where νij is the stoichiometric coefficient of species i in reaction j and nr is the number of reactions. The reaction residual for predictor stage 3 is 
+
+R3(˜ u(3) ; x) = 
+
+> nr
+
+X
+
+> j=1
+> nc
+
+X
+
+> i=1
+
+νij [˜ u(3) (x)] 3+ i , (15) which penalizes violation of mass conservation in each reaction. This residual requires no automatic differentiation (only algebraic operations on the decoded concentration fields), making it computationally inexpensive relative to the PDE residuals in Sections B.1–B.2. 
+
+B.4 Sample Complexity Analysis 
+
+We formalize the data efficiency advantage of operator-splitting-aligned pretraining in a linear dynamics setting. 
+
+Setup. Let ut ∈ Rn evolve as ut+1 = Aut + ϵt, ϵt ∼ N (0 , σ 2In), where A = AK · · · A1 is a product of K
+
+sub-operator matrices Ak ∈ Rn×n. Let fθ : Rn → Rd be a linear encoder with d < n , and let Bk ∈ Rd×d denote the latent-space representation of Ak such that fθ (Aku) ≈ Bkfθ (u).
+
+Proposition 1 (Sample complexity reduction) . Suppose the encoder fθ is represented by a matrix Φ ∈ Rd×n with 
+
+ΦΦ ⊤ = Id, and each sub-operator Ak has effective rank at most rk in the sense that Ak = Φ ⊤BkΦ + Ek with 
+
+∥Ek∥F ≤ δk. Given Nu unlabeled transition pairs for pretraining and Nℓ labeled input-output pairs for fine-tuning: (i) Supervised baseline. Learning A directly from Nℓ labeled pairs (ut, ut+1 ) via ordinary least squares re-quires 
+
+N sup  
+
+> ℓ
+
+= Ω 
+
+ n2
+
+ϵ2
+
+
+
+(16) 
+
+samples to achieve ∥ ˆA − A∥2 
+
+> F
+
+≤ ϵ2 with constant probability, by standard results for matrix estimation in Gaussian noise [Wainwright, 2019]. 
+
+22 PI-JEPA: Closing the Data Asymmetry in Subsurface Surrogate Modeling PREPRINT 
+
+(ii) PI-JEPA (pretrained). If pretraining on Nu unlabeled pairs yields estimates ˆBk satisfying ∥ ˆBk − Bk∥F ≤ η
+
+for each k, then fine-tuning the residual ∆k = Bk − ˆBk from Nℓ labeled pairs requires 
+
+N PI -JEPA  
+
+> ℓ
+
+= O
+
+ d2Kϵ2 + K P 
+
+> k
+
+δ2
+
+> k
+
+ϵ2
+
+
+
+(17) 
+
+samples to achieve ∥ ˆA − A∥2 
+
+> F
+
+≤ ϵ2 + K P 
+
+> k
+
+δ2
+
+> k
+
+.When d ≪ n and the projection error P 
+
+> k
+
+δ2 
+
+> k
+
+is small (i.e., the encoder captures the relevant subspace), the ratio 
+
+N sup  
+
+> ℓ
+
+/N PI -JEPA  
+
+> ℓ
+
+= Ω( n2/(d2K)) , yielding an order-of-magnitude reduction for typical settings ( n = 64 2 = 4096 ,
+
+d = 384 , K = 2 ). Proof. Part (i). The supervised estimator solves ˆA = arg min M
+
+PNℓ 
+
+> i=1
+
+∥u(i) 
+
+> t+1
+
+− M u(i) 
+
+> t
+
+∥22. This is a matrix regression problem with n2 free parameters. By Theorem 2.1 of Wainwright [2019], the minimax rate for estimating an n × n
+
+matrix from Nℓ noisy linear measurements in Rn is E[∥ ˆA − A∥2 
+
+> F
+
+] ≥ c · n2σ2/N ℓ for a universal constant c > 0.Setting the right-hand side to ϵ2 gives Nℓ = Ω( n2σ2/ϵ 2).
+
+Part (ii). After pretraining, the encoder Φ is fixed and the fine-tuning problem reduces to estimating the K residual matrices ∆k ∈ Rd×d from labeled pairs projected into the latent space. Specifically, for each sub-operator k, the fine-tuning objective is ˆ∆k = arg min ∆
+
+PNℓ 
+
+> i=1
+
+∥Φu(i) 
+
+> t+1
+
+− ( ˆBk + ∆)Φ u(i) 
+
+> t
+
+∥22. Each ∆k has d2 free parameters, and the noise in the projected measurements has variance at most σ2∥Φ∥2op = σ2 (since Φ has orthonormal rows). Applying the same matrix regression bound to each of the K sub-problems and summing: 
+
+E
+
+h KX
+
+> k=1
+
+∥ ˆ∆k − ∆k∥2
+
+> F
+
+i
+
+≤ c · d2Kσ 2
+
+Nℓ
+
+.
+
+The total operator reconstruction error decomposes as 
+
+∥ ˆA − A∥F ≤
+
+> K
+
+X
+
+> k=1
+
+∥ ˆ∆k∥F · Y 
+
+> j̸=k
+
+∥Bj ∥op + K max  
+
+> k
+
+δk,
+
+where the second term accounts for the projection error Ek. Setting c · d2Kσ 2/N ℓ ≤ ϵ2 and absorbing the operator norm products into constants (bounded for stable dynamics with ∥Bk∥op ≤ 1) yields Equation (17). 
+
+Remark 2. The linear analysis captures the essential mechanism: pretraining compresses the n-dimensional estima-tion problem into K problems of dimension d, each informed by the self-supervised signal from Nu ≫ Nℓ unlabeled samples. Extension to nonlinear operators Ak follows via standard covering-number arguments for Lipschitz function classes [Bartlett et al., 2017], replacing d2 with the Rademacher complexity of the predictor class; the n2 → d2K
+
+reduction persists as long as the encoder achieves low projection error. 
+
+23
