@@ -1,0 +1,1783 @@
+Title: High-Precision Phase-Shift Transferable Neural Networks for High-Frequency Function Approximation and PDE Solution
+
+URL Source: https://arxiv.org/pdf/2604.03186v1
+
+Published Time: Mon, 06 Apr 2026 01:01:41 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# High-Precision Phase-Shift Transferable Neural Networks for High-Frequency Function Approximation and PDE Solution 
+
+Xuyang Gao ∗
+
+, Liang Chen †
+
+, Minqiang Xu ‡
+
+, Jing Niu §
+
+Abstract: Neural network-based methods have emerged as a promising paradigm for scientific computing, yet they face critical bottlenecks in high-frequency function ap-proximation and partial differential equation (PDE) solving. A fundamental limitation is the inherent spectral bias of neural networks, which prioritizes low-frequency components and hinders the accurate capture of sharp, oscillatory details. To address these challenges, we propose the Phase-Shift Transferable Neural Net-work (PhaseTNN) framework. By integrating phase-shift frequency decomposition with TransNet’s efficient least-squares training, PhaseTNN eliminates the need for manual shape parameter tuning and decomposes intractable high-frequency problems into solv-able low-frequency subproblems. We present two complementary architectures: Parallel PhaseTNN (PPTNN), designed for parallel frequency learning, and Coupled PhaseTNN (CPTNN), tailored for simultaneous multi-frequency representation. Extensive numerical experiments demonstrate that PhaseTNN achieves near-machine-precision accuracy for high-frequency approximation. For high-frequency PDEs (variable-coefficient elliptic equation, linear/nonlinear Helmholtz, Wave equations, diffusion inter-face problem), CPTNN consistently outperforms baselines by up to three orders of magni-tude in accuracy while delivering orders-of-magnitude faster computation. These results confirm PhaseTNN’s superior robustness, accuracy, and efficiency for high-frequency sci-entific computing tasks. 
+
+Keywords: Phase-shift neural network, High-precision approximation, High-frequency function, Partial differential equation, 
+
+AMS subject classifications 41A30, 65T50, 65M15 
+
+# 1 Introduction 
+
+In recent years, neural networks have achieved remarkable progress across diverse fields, including computer vision, speech recognition, natural language processing, and scientific          
+
+> ∗School of Mathematics and Science, Harbin Normal University, Harbin, 150025, China.
+> †Department of Mathematics, Jiujiang University, Jiujiang, 332000, P. R. China.
+> ‡Corresponding Author. School of Mathematical Sciences, Zhejiang University of Technology, Hangzhou, 310023, China(mqxu@zjut.edu.cn).
+> §School of Mathematics and Science, Harbin Normal University, Harbin, 150025, China.
+
+1
+
+> arXiv:2604.03186v1 [math.NA] 3 Apr 2026
+
+computing [4, 5, 10–12, 16–18, 27, 31, 36, 37, 39, 41, 51, 52]. Against this backdrop, neu-ral network-based methods for solving partial differential equations (PDEs) have emerged as a transformative paradigm, garnering widespread attention in the scientific comput-ing community. Representative approaches include Physics-Informed Neural Networks (PINNs) [36], the Deep Galerkin Method (DGM) [39], the Deep Ritz Method (DRM) [51], and Weak Adversarial Networks (WAN) [52]. However, these methods face challenges that impede their practical utility in scien-tific computing. On one hand, neural network training is prone to stagnation in local minima [2, 26], leading to premature convergence of the loss function. This not only degrades the final accuracy of the model but also introduces failure modes inherent to deep neural networks (DNNs) [26]. On the other hand, the innate spectral bias of neu-ral networks undermines their ability to capture sharp variations in PDE solutions, a phenomenon well-documented in the literature [23, 30, 35, 48, 49]. This spectral bias creates a critical bottleneck for learning high-frequency components in PDEs, rendering high-frequency function approximation and PDE solving among the most demanding scenarios for neural network-based methods. Consequently, achieving high-precision so-lutions remains a fundamental prerequisite and core challenge for deploying such methods in high-performance scientific computing. To address the aforementioned challenges, existing research has primarily advanced along two distinct paradigms. The first paradigm centers on enhancing gradient-descent-based optimization frameworks, with specific strategies including advances in optimiza-tion algorithms [3, 9, 24, 33, 40, 42], architectural innovations [1, 22, 28, 32, 38], loss func-tion term weighting schemes [44, 45], and improvements to training protocols [20, 25]. Despite these developments, achieving high-precision predictions remains a persistent, severe challenge. A recently proposed multi-stage neural network (MSNN) approach [43] employs a hierarchical training strategy that iteratively refines residuals, enabling predic-tions to approach machine precision. While this method has achieved notable progress in approximation accuracy, it still faces fundamental limitations in training efficiency and generalization performance. Consequently, gradient-based methods currently encounter inherent difficulties in balancing solution accuracy and computational cost. The second paradigm seeks to fundamentally restructure the training pipeline to overcome the optimization challenges and high computational overhead inherent to deep neural networks (DNNs) [19]. Representative methods in this category include the Ex-treme Learning Machine (ELM) [21] and the Random Feature Method (RFM) [7]. Their core design is to construct a shallow neural network: hidden-layer parameters are ran-domly initialized and fixed, leaving only the output layer trainable. This formulation transforms the learning problem into an efficiently solvable linear least-squares problem. Inspired by physics-informed neural networks (PINNs) and ELM, Dwivedi et al. [15] pro-posed the Physics-Informed Extreme Learning Machine (PIELM), which combines the unsupervised learning characteristics of PINNs with the high computational efficiency of ELM. The local extreme learning machine (locELM) [14] further integrates ELM with domain decomposition techniques, significantly enhancing its capability to solve complex problems. Overall, compared with traditional gradient-based neural networks, these ap-proaches substantially reduce computational costs and often achieve high accuracy for PDE solving [7, 8, 13, 14, 34, 50]. Nevertheless, ELM and RFM lack rigorous, theoret-ically justified guidelines for selecting hidden-layer parameters; parameter tuning relies 2heavily on empirical experience or manual adjustment, limiting their reliability and scal-ability in large-scale, high-frequency problems. The recently proposed Transferable Neural Network (TransNet) [54] effectively addresses this scalability limitation. TransNet constructs a single-hidden-layer network where the weights and biases of hidden neurons are reparameterized via location and shape parameters. By tuning shape parameters via auxiliary functions, it generates uni-formly distributed, transferable neurons. Numerical results confirm that shape parameter selection works effectively for low-frequency problems, enabling TransNet to achieve high computational accuracy and efficiency. While TransNet performs well for low-frequency problems, its extension to high-frequency regimes remains a critical challenge. A key limitation lies in its heavy reliance on the shape parameter , which governs the steepness of hidden neurons and dictates the expressivity of the approximation space. Existing tuning strategies work effectively for low-frequency scenarios but fail in high-frequency settings, suffering from three core drawbacks: 
+
+• Gaussian Random Field (GRF)-based tuning methods [54] introduce an additional correlation-length hyperparameter, whose optimal value is tightly coupled to the behavior of the underlying PDE solution. Improper selection of this length scale compromises the GRF’s ability to capture the true solution structure, leading to misaligned shape parameters. 
+
+• The optimal shape parameter depends strongly on network scale, even for the same problem, rendering the tuning process computationally expensive. Although an empirical extrapolation strategy [29] mitigates this cost, its accuracy is constrained by the generality of the empirical constant. 
+
+• A fixed shape parameter cannot simultaneously capture low-frequency backgrounds and high-frequency details required for high-precision solutions. These observations reveal a fundamental limitation of TransNet: its insufficient ap-proximation capability for high-frequency problems, rooted in a parameterization strategy that fails to align with the multi-scale frequency characteristics of PDE solutions . To overcome this challenge, we require a framework that can effectively capture the features of rapidly oscillatory solutions while preserving computational effi-ciency. Among existing efforts to address high-frequency challenges, the phase-shift deep neu-ral network [6] provides particularly critical inspiration: it decomposes challenging high-frequency problems into multiple tractable low-frequency subproblems via frequency-domain filtering and phase shifting, thereby significantly improving the DNN’s ability to fit high-frequency components. However, PhaseDNN offers a profound conceptual foun-dation but relies on gradient descent training, which introduces significant optimization challenges and high computational costs. In contrast, TransNet leverages efficient least-squares solvers to deliver rapid training. We therefore aim to combine the strengths of both approaches: a method tailored for high-frequency solutions while preserving com-putational efficiency. To this end, we propose the Phase Shift Transferable Neural Network (PhaseTNN) 
+
+framework, encompassing two architectures: the Parallel PhaseTNN (PPTNN) and the 3Coupled PhaseTNN (CPTNN). PPTNN decomposes the target problem into distinct frequency bands via frequency-domain filtering, then transforms each component into a tractable low-frequency subproblem via phase shifting, enabling these components to be learned in parallel. Instead of explicitly decomposing training data, CPTNN constructs phase-modulated neural basis functions to simultaneously represent multiple frequency components within a single model, enabling efficient learning for high-dimensional and large-scale problems. The main contributions of our work are summarized as follows: 
+
+• An improved filtering method : Compared with the filtering method used in PhaseDNN [6], our method achieves significantly improved filtering accuracy, ap-proaching double-precision machine precision limits. 
+
+• Enhanced robustness and usability : Compared with TransNet methods in [29, 54], our method avoids shape parameter tuning and possesses stronger adaptability. For high-frequency problems, conventional TransNets are highly sensitive to the shape parameter, rendering the strategies in [29, 54] ineffective; whereas our method achieves robust and superior performance across various high-frequency functions. 
+
+• High accuracy and exceptional computational efficiency : Numerical exper-iments confirm that our proposed method significantly outperforms many existing techniques in computational speed, while achieving high-precision approximation of high-frequency functions and accurate solution of PDEs with high-frequency components. The remainder of the paper is organized as follows. In section 2, we establish the transferable neural feature space. section 3 presents the PhaseTNN framework, detailing two distinct architectures, the PPTNN and the CPTNN, and their application to function approximation. Subsequently, section 4 introduces the application of these architectures to solving differential equations. Comprehensive numerical experiments demonstrating the effectiveness of our method are presented in section 5. Finally, section 6 concludes the paper with a summary of key findings. 
+
+# 2 Construction of a Transferable Neural Feature Space for low-frequency functions 
+
+Inspired by [54], we consider a single-hidden-layer fully-connected neural network, de-noted by 
+
+TNN (x, α) := 
+
+> M
+
+X
+
+> m=1
+
+αmσ(w⊤
+
+> m
+
+x + bm) + α0, (1) where x ∈ Ω ⊂ Rd, M is the number of hidden neurons, wm = ( wm, 1, . . . , w m,d )⊤
+
+and bm are are the weight vector and bias of the m-th hidden neuron, the vector 
+
+α = ( α0, α 1, . . . , α M )⊤ collects the output-layer weights and bias, and σ(·) denotes the activation function. 4In [54], the authors establish a transferable neural feature space PNN defined as 
+
+PNN = span 1, σ (w⊤ 
+
+> 1
+
+x + b1), . . . , σ (w⊤ 
+
+> M
+
+x + bM ) , (2) To obtain uniformly distributed basis functions over PNN , the key strategy adopted in [54] is to reparameterize the hidden-layer parameters ( wm, b m) in terms of location parameters ( am, r m) and a shape parameter γm, such that 
+
+σ(w⊤
+
+> m
+
+x + bm) = σ(γm(a⊤
+
+> m
+
+x + rm)) ,
+
+with ∥am∥2 = 1 and γm ≥ 0. Their equivalence between the two parameterizations is given by 
+
+(
+
+wm = γmam
+
+bm = γmrm
+
+⇐⇒ 
+
+
+
+am = wm
+
+> ∥wm∥2
+
+rm = bm
+
+> ∥wm∥2
+
+γm = ∥wm∥2
+
+.
+
+The complete sampling procedure for the location parameters is expressed as follows: 
+
+am = Xm
+
+∥Xm∥2
+
+and rm = Um, m = 1 , . . . , M. (3) where Xm are independent and identically distributed (i.i.d.) standard Gaussian random vectors, Um follows i.i.d. uniform random variables on [0 , 1] and the optimal shape parameters γm is obtained via pre-training. While the approximation space PNN achieves satisfactory performance for low-frequency functions, the pre-trained optimal parameters fail to generalize to high-frequency func-tions. Moreover, exhaustive enumeration for optimal shape parameter selection during training incurs prohibitive computational costs. To address these limitations, inspired by [6], we propose to extract high-frequency components from target functions via fil-tering, and transform these components into tractable low-frequency components via a translation (phase-shift) transformation. In this framework, we only require PNN to learn the resulting low-frequency components, eliminating the need for costly shape param-eter tuning. Consequently, the shape parameters γm can be chosen randomly, and we construct the low-frequency transferable feature space PL 
+
+> NN
+
+as 
+
+PL 
+
+> NN
+
+= span 1, σ  γ1(a⊤ 
+
+> 1
+
+x + r1) , . . . , σ  γM (a⊤ 
+
+> M
+
+x + rM ) , (4) where am and rm are obtained via (3), and γm is fixed to a small constant—specifically, 
+
+γm = 2 throughout this work. 
+
+Remark 2.1. The filtering operation effectively converts high-frequency problems into equivalent low-frequency problems for solution. Therefore, in our method, γm is simply fixed to a shape parameter that is nearly optimal for most low-frequency problems, thereby avoiding the laborious shape parameter tuning process required in [54]. 
+
+53 Phase-Shift Transferable Neural Networks for High-Frequency Approximation 
+
+3.1 An improved filtering method 
+
+In this subsection, we address two core challenges: ( i) how to apply frequency-domain filtering to a function f that is only defined and observable on [ −1, 1], ( ii ) how to integrate this filtering operation into numerical approximations over the entire interval. We first define the Fourier transform and its inverse for a function f (x) by 
+
+F[f ]( k) = 
+
+Z +∞−∞ 
+
+f (x)e−2πikx dx, F−1[ ˆf ]( x) = 
+
+Z +∞−∞ 
+
+ˆf (k)e2πikx dk. (5) For a given frequency increment ∆ k, we assume that for some integer K > 0, the support of supp ˆf (k) is contained in [ −K∆k, K ∆k], i.e., supp ˆf (k) ⊂ [−K∆k, K ∆k].
+
+For any positive integer N , we denote IN = {− N, . . . , N } and I+ 
+
+> N
+
+= {1, 2, . . . , N }. We first construct a mesh for the interval [ −K∆k, K ∆k] by 
+
+κj = j∆k, j ∈ I K (6) Let ϕ(k) denote the characteristic function of the interval − 12 , 12
+
+, i.e., ϕ(k) = χ[− 12 , 12 ](k), with inverse Fourier transform ϕ∨(x) = sin πx πx (the sinc function). We then define the scaled basis functions 
+
+ϕj (k) = ϕ
+
+ k − κj
+
+∆k
+
+
+
+, j ∈ I K ,
+
+which satisfy the partition-of-unity identity 1 = 
+
+> K
+
+X
+
+> j=−K
+
+ϕj (k), k ∈ [−K∆k, K ∆k]. (7) Define the frequency-shifted basis function via inverse Fourier transform: 
+
+ϕ∨ 
+
+> j
+
+(x) := F−1[ϕj ]( x) = ∆ ke 2πiκj xϕ∨(∆ kx ), x ∈ R. (8) Accordingly, the target function f (x) decomposes in the frequency domain as ˆf (k) = 
+
+> K
+
+X
+
+> j=−K
+
+ϕj (k) ˆf (k) := 
+
+> K
+
+X
+
+> j=−K
+
+ˆfj (k). (9) The corresponding spatial-domain decomposition of f reads 
+
+f (x) = 
+
+> K
+
+X
+
+> j=−K
+
+fj (x), where fj (x) = F−1[ ˆfj ]( x), j ∈ I K . (10) 6For any xi ∈ [−1, 1], the pointwise value fj (xi) is computed as 
+
+fj (xi) = F−1[ ˆfj ]( xi) = F−1[ϕj (k) ˆf (k)]( xi) = F−1[ϕj (k)] ∗ F −1[ ˆf (k)]( xi)= ( ϕ∨ 
+
+> j
+
+∗ f )( xi) = 
+
+Z +∞−∞ 
+
+ϕ∨ 
+
+> j
+
+(xi − s)f (s)ds, j ∈ I K . (11) If f is only known on [ −1, 1], how do we evaluate the integral in (11)? Our goal is to construct an auxiliary function F that coincides exactly with f over the interval [ −1, 1], exhibits at least ( Q − 1)-order continuous differentiability at the endpoints x = −1, 1, and decays rapidly to zero outside this interval. To this end, we employ a higher-order exponential decay factor. Specifically, the function F is constructed via two distinct strategies. Case 1: Explicit expression of f on [ −1, 1] is available, 
+
+F (x) = 
+
+
+
+f (x)e −10( x+1) Q
+
+, x ∈ (−∞ , −1) ,f (x), x ∈ [−1, 1] ,f (x)e −10( x−1) Q
+
+, x ∈ (1 , +∞).
+
+(12) Case 2: Only finitely many sampling points of f on [ −1, 1] are known. We construct polynomial extensions on both sides of f on [ −1, 1] to define F :
+
+F (x) = 
+
+
+
+> Q−1
+
+P  
+
+> q=0
+> f(q)(−1)
+> q!
+
+(x + 1) q
+
+!
+
+e−10( x+1) Q
+
+, x ∈ (−∞ , −1) ,f (x), x ∈ [−1, 1] ,
+
+> Q−1
+
+P  
+
+> q=0
+> f(q)(1)
+> q!
+
+(x − 1) q
+
+!
+
+e−10( x−1) Q
+
+, x ∈ (1 , +∞).
+
+(13) where the values of f (q)(−1) and f (q)(1) for q = 0 , 1, . . . , Q − 1 are approximated from samples of f on [ −1, 1]. Once the data are prepared, we can approximate fj (x) via the trapezoidal rule over the domain [ −C, C ]: 
+
+fj (x) ≈
+
+Z C
+
+> −C
+
+ϕ∨ 
+
+> j
+
+(x − s)F (s)ds ≈
+
+> Ns
+
+X
+
+> s=1
+
+ϕ∨ 
+
+> j
+
+(x − xs)F (xs)∆˜ xs := ˜fj (x), (14) where {xs}Ns 
+
+> s=1
+
+denote numerical integration nodes with grid spacing ∆ x = 2CNs−1 , and C
+
+is chosen such that the function F (xs) is sufficiently small outside ( −C, C ), and ∆˜ xs are given by: ∆˜ xs =
+
+( ∆x 
+
+> 2
+
+, if s = 1 or s = Ns,
+
+∆x, if 1 < s < N s. (15) Consequently, the overall approximation ˜f of f reconstructed as ˜f =
+
+> K
+
+X
+
+> j=−K
+
+˜fj (x), x ∈ [−1, 1] . (16) 7It is important to note that our method differs from [6]: while [6] only considers scenarios where f (x) has an explicit expression, our work addresses scenarios where f is known over [ −1, 1] (or only finite sampled data is available). Furthermore, when using the filtering method in [6] to approximate f (x), our method significantly outperforms [6] in terms of approximation accuracy and can even achieve machine precision. Detailed comparisons are provided in Example 5.1 of Section 5. 
+
+Remark 3.1. Compared with the method in [6], our approach offers a distinct advantage through the introduction of a decay factor. This factor guarantees rapid decay of the integrand, enabling high-accuracy approximation without requiring an excessively large integration domain or an inordinate number of sampling points. Throughout this work, the parameter C is set to 5. 
+
+Remark 3.2. Suppose only finitely many values of f are available on the interval [−1, 1] .We employ the PPR method [47, 53] to recover the derivatives of f at the endpoints 
+
+x = −1 and x = 1 . For each z ∈ {− 1, 1}, we first construct a local stencil Lz around z
+
+that contains at least Q points, and then determine the polynomial pz ∈ PQ−1(Lz ) that solves the following least-squares minimization problem: 
+
+pz = arg min  
+
+> p∈PQ−1(Lz)
+
+X
+
+> ˜z∈L z
+
+|p(˜ z) − vh(˜ z)|2 .
+
+The q-th derivative of f at z is then approximated by evaluating the q-th derivative of the polynomial pz at z:
+
+f (q)(z) = ∂q pz
+
+∂x q x=z
+
+, q = 0 , 1, . . . , Q − 1.
+
+3.2 A Parallel Phase-Shift Transferable Neural Network (PPTNN) for the 1D Case 
+
+In this subsection, we develop a framework for high-accuracy approximation of high-frequency functions, leveraging the transferable neural feature space established in Sec-tion 2 to approximate each component ˜fj (x) in Eq. (16). Our primary contribution is the proposal of a Parallel Phase-Shift Transferable Neural Network (PPTNN) ,which leverages phase-shift frequency decomposition to enable efficient learning of each frequency component. Following the strategy in [6], we implement the learning process for each individual frequency component ˜fj (x), whose frequency spectrum is confined to the interval [ κj − 
+
+> ∆k
+> 2
+
+, κ j + ∆k 
+
+> 2
+
+]. It is a well-established result in harmonic analysis that low-frequency components of a loss function converge significantly faster than their high-frequency counterparts. Exploiting this property, a simple phase shift translates the spectrum of ˜fj (x) into the baseband interval [ − ∆k 
+
+> 2
+
+, ∆k 
+
+> 2
+
+], thereby enabling efficient training of a Transferable Neural Network Tj (x) with only a few training epochs. Specifically, given that the frequency support of ˆfj (k) is [ κj − ∆k 
+
+> 2
+
+, κ j + ∆k 
+
+> 2
+
+], the shifted spectrum ˆfj (k + κj ) is supported in [ − ∆k 
+
+> 2
+
+, ∆k 
+
+> 2
+
+]. Its inverse Fourier transform is defined as 
+
+f shift  
+
+> j
+
+(x) = F−1 h ˆfj (k + κj )
+
+i
+
+(x), j ∈ I K . (17) 8Subsequently, we focus on approximating f shift  
+
+> j
+
+(x) in PL 
+
+> NN
+
+using a transferable neural network Tj (x, αj ), defined as 
+
+Tj (x, αj ) = 
+
+> N
+
+X
+
+> m=0
+
+αj,m ψj,m (x), j ∈ I K .
+
+To construct the training dataset, we utilize the fundamental frequency-shift identity: 
+
+f shift  
+
+> j
+
+(x) = e−2πiκ j xfj (x), j ∈ I K . (18) Recalling the approximation ˜fj (x) in (14), the training data {xξ , f shift  
+
+> j
+
+(xξ )}Nξ 
+
+> ξ=1
+
+are ob-tained via numerical quadrature: 
+
+f shift  
+
+> j
+
+(xξ ) ≈ e−2πiκ j xξ
+
+> Ns
+
+X
+
+> s=1
+
+ϕ∨ 
+
+> j
+
+(xξ − xs)F (xs)∆˜ xs := ˜f shift  
+
+> j
+
+(xξ ), ξ ∈ I + 
+
+> Nξ
+
+, (19) where ∆˜ xs =
+
+( ∆x 
+
+> 2
+
+, if s = 1 or s = Ns,
+
+∆x, if 1 < s < N s. (20) The network Tj (x, αj ) is trained by minimizing the mean-squared error (MSE) loss func-tion: 
+
+Lj (αj ) = 
+
+> Nξ
+
+X
+
+> ξ=1
+
+ f shift  
+
+> j
+
+(xξ ) − Tj (xξ , αj )2 , j ∈ I K . (21) Combining (18) and the definition of (21), we obtain the approximation for ˜fj (x): ˜fj (x) = e2πiκ j xTj (x, αj ). (22) Finally, the overall approximation f (x) is reconstructed by summing the component-wise approximations: 
+
+f (x) ≈
+
+> K
+
+X
+
+> j=−K
+
+˜fj (x) := ˜f (x), for x ∈ (−1, 1) . (23) 
+
+Remark 3.3. In practice, the proposed PPTNN framework does not require training of all 2K+1 frequency components fj (x). Instead, we prioritize learning dominant frequency components that carry the majority of signal energy, while extremely weak components can be safely approximated as zero. This adaptive learning strategy directs the network to focus on problem-relevant frequency content, thereby significantly reducing the number of networks requiring training and lowering the overall computational cost. 
+
+The main steps of the PPTNN method are summarized in Algorithm 1. 9Algorithm 1: PPTNN training scheme for 1D function approximation. 
+
+Input : Training data {(xξ , f (xξ )) }Nξ
+
+> ξ=1
+
+, frequency nodes κj = j∆k, j ∈ I K ,bandwidth ∆ k, threshold ε
+
+Output: The approximate solution ˜f (x) 
+
+> 1
+
+Initialize ˜f (x) ← 0 
+
+> 2
+
+for each j ∈ I K do  
+
+> 3
+
+Compute the frequency-shifted data ˜f shift  
+
+> j
+
+(xξ ) using numerical quadrature according to Eq. (19)  
+
+> 4
+
+Decompose ˜f shift  
+
+> j
+
+(xξ ) into real and imaginary parts: ˜f real  
+
+> j
+
+(xξ ), ˜f imag  
+
+> j
+
+(xξ ) 
+
+> 5
+
+Compute root mean square (RMS) for each component: RMS( ˜f real  
+
+> j
+
+), RMS( ˜f imag  
+
+> j
+
+) 
+
+> 6
+
+for ϑ ∈ { real , imag } do  
+
+> 7
+
+if RMS ( ˜f ϑj ) < ε then  
+
+> 8
+
+˜f ϑj (x) ← 0 
+
+> 9
+
+end  
+
+> 10
+
+else  
+
+> 11
+
+Train TransNet T ϑj (x, αj ) to approximate ˜f ϑj (x) 
+
+> 12
+
+˜f ϑj (x) ← T ϑj (x, αj ) 
+
+> 13
+
+end  
+
+> 14
+
+end  
+
+> 15
+
+˜f (x) ← ˜f (x) + [ ˜f real  
+
+> j
+
+(x) + i ˜f imag  
+
+> j
+
+(x)] e2πiκ j x 
+
+> 16
+
+end  
+
+> 17
+
+return ˜f (x)
+
+3.3 A Parallel Phase-Shift Transferable Neural Network for the 2D Case 
+
+In this subsection, we extend the PPTNN framework to the two-dimensional (2D) setting, generalizing the 1D high-frequency function approximation method to the domain Ω = [−1, 1] 2.The PPTNN framework extends naturally to two spatial dimensions. For the spatial variable x = ( x1, x 2) ∈ R2 and frequency variable k = ( k1, k 2) ∈ R2, the 2D Fourier transform and its inverse are defined as 
+
+F[f ]( k) = 
+
+Z ∞−∞ 
+
+Z ∞−∞ 
+
+f (x1, x 2)e−2πi (k1x1+k2x2) dx 1dx 2, (24) 
+
+F−1[ ˆf ]( x) = 
+
+Z ∞−∞ 
+
+Z ∞−∞ 
+
+ˆf (k1, k 2)e2πi (k1x1+k2x2) dk 1dk 2. (25) We introduce a 2D frequency grid ( κj1 , κ j2 ), where 
+
+κj1 = j1∆k1, κj2 = j2∆k2, j1 ∈ I K1 , j 2 ∈ I K2 . (26) 10 A partition of unity (POU) {ϕj1,j 2 (k1, k 2)} for the rectangular frequency domain [ −K1∆k1, K 1∆k1]×
+
+[−K2∆k2, K 2∆k2] is constructed as the tensor product of the 1D basis functions: 
+
+ϕj1,j 2 (k) = ϕ
+
+ k1 − κj1
+
+∆k1
+
+
+
+ϕ
+
+ k2 − κj2
+
+∆k2
+
+
+
+, and X
+
+> j1,j 2
+
+ϕj1,j 2 (k) = 1 . (27) The inverse Fourier transform of ϕj1,j 2 (k1, k 2) yields the 2D filtering kernel: 
+
+ϕ∨ 
+
+> j1,j 2
+
+(x) = ∆ k1∆k2ϕ∨
+
+∆k1x1
+
+
+
+ϕ∨
+
+∆k2x2
+
+
+
+e2πi (κj1 x1+κj2 x2). (28) Using this kernel, we decompose f into frequency components via convolution: 
+
+fj1,j 2 (x) = ( ϕ∨ 
+
+> j1,j 2
+
+∗ f )( x), f (x) = 
+
+> K1
+
+X
+
+> j1=−K1
+> K2
+
+X
+
+> j2=−K2
+
+fj1,j 2 (x). (29) Each component fj1,j 2 has its spectrum confined to the rectangle [ κj1 − ∆k1 
+
+> 2
+
+, κ j1 + ∆k1 
+
+> 2
+
+] ×
+
+[κj2 − ∆k2 
+
+> 2
+
+, κ j2 + ∆k2 
+
+> 2
+
+]. A phase-shift operation translates this spectrum to the baseband interval [ − ∆k1 
+
+> 2
+
+, ∆k1 
+
+> 2
+
+] × [− ∆k2 
+
+> 2
+
+, ∆k2 
+
+> 2
+
+]: 
+
+f shift  
+
+> j1,j 2
+
+(x) = e−2πi (κj1 x1+κj2 x2)fj1,j 2 (x). (30) To compute the training data for approximating f shift  
+
+> j1,j 2
+
+(xξ ), we introduce an auxiliary function F (x) that ensures rapid spectral decay outside Ω: 
+
+F (x) = f (x) · exp 
+
+
+
+−10 
+
+h
+
+(max(0 , |x1| − 1)) 6 + (max(0 , |x2| − 1)) 6i 
+
+. (31) The training dataset {xξ , f shift  
+
+> j1,j 2
+
+(xξ )}Nξ 
+
+> ξ=1
+
+for the 2D scenario is obtained via numerical quadrature: 
+
+f shift  
+
+> j1,j 2
+
+(xξ ) ≈ e−2πi κ⊤ 
+
+> j1,j 2xξ
+> Ns1
+
+X
+
+> s1=1
+> Ns2
+
+X
+
+> s2=1
+
+ϕ∨ 
+
+> j1,j 2
+
+(xξ − xs1,s 2 )F (xs1,s 2 )∆˜ x1,s 1 ∆˜ x2,s 2
+
+:= ˜f shift  
+
+> j1,j 2
+
+(xξ ), ξ ∈ I + 
+
+> Nξ
+
+.
+
+(32) Here, the grid spacings are defined as ∆ x1 = 2CNs1 −1 and ∆ x2 = 2CNs2 −1 , respectively. The terms ∆˜ x1,s 1 and ∆˜ x2,s 2 denote the integration steps incorporating the trapezoidal rule weights, following the same formulation specified in Eq. (20). Analogous to the 1D case, we employ the Transferable Neural Network framework 
+
+Tj1,j 2 (x, αj ) to approximate each component f shift  
+
+> j1,j 2
+
+by minimizing the following least-squares loss function: 
+
+Lj1,j 2 (αj1,j 2 ) = 
+
+> Nξ
+
+X
+
+> ξ=1
+
+ f shift  
+
+> j1,j 2
+
+(xξ ) − Tj1,j 2 (xξ , αj1,j 2 )2 , j 1 ∈ I K1 , j 2 ∈ I K2 . (33) 11 From the phase-shift identity (31) and the network approximation Tj1,j 2 , we reconstruct the component approximation: ˜fj1,j 2 (x) = Tj1,j 2 (x)e2πi (κj1 x1+κj2 x2).
+
+Finally, the overall approximation ˜f (x) of f (x) on Ω is obtained by summing the com-ponent approximations: ˜f (x) = 
+
+> K1
+
+X
+
+> j1=−K1
+> K2
+
+X
+
+> j2=−K2
+
+˜fj1,j 2 (x), x ∈ Ω. (34) 
+
+3.4 A Coupled Phase-Shift Transferable Neural Network (CPTNN) 
+
+While the PPTNN framework decomposes data into frequency components for paral-lelizable TransNet training, it relies on explicit convolution (cf. Eq. (19)) to construct task-specific training data—a bottleneck that fundamentally limits its scalability to high-dimensional problems and large-scale datasets. To address this limitation, we introduce a Coupled Phase-Shift Transferable Neural Network, which integrates frequency modu-lation directly into the neural network architecture. Rather than explicitly decomposing the training data, the CPTNN constructs a set of phase-modulated neural basis func-tions, enabling the simultaneous representation of multiple frequency components within a single model. Specifically, for a one-dimensional function f , we decompose f as 
+
+f (x) = 
+
+> K
+
+X
+
+> j=−K
+
+fj (x),
+
+where the spectrum of fj (x) is confined to the interval κj − ∆k 
+
+> 2
+
+, κ j + ∆k
+
+> 2
+
+. To convert 
+
+fj (x) into a tractable low-frequency problem, we introduce the phase-shifted variable 
+
+gj (x) = e−2πiκ j xfj (x), (35) whose spectrum is now centered at zero, corresponding to a low-frequency problem. Inverting this transformation yields 
+
+fj (x) = e2πiκ j xgj (x). (36) We then employ TransNet to approximate these low-frequency components gj . Substi-tuting these approximations back into the expression for f , we obtain the final approxi-mation 
+
+fT (x) = 
+
+> K
+
+X
+
+> j=−K
+
+e2πiκ j xTj (x). (37) Equation (37) admits a natural generalization to higher-dimensional functions. For sim-plicity, given a d-dimensional function f , its approximation fT takes the following math-ematical form: 
+
+fT (x) = 
+
+> Nκ
+
+X
+
+> ζ=1
+
+e2πi κ⊤ 
+
+> ζx
+
+Tζ (x, αζ ), (38) 12 where x ∈ Ω ⊂ Rd denotes the input variable and f : Rd → R is the target function to be approximated. The vectors κζ represent prescribed frequency modes generated on a uniformly spaced grid, i.e., κζ ∈ {− K∆k, (−K + 1)∆ k, ..., K ∆k}d. Here, Tζ (x, αζ ) ∈PL 
+
+> NN
+
+are compact complex-valued TransNet modules parameterized by coefficient vectors 
+
+αζ .For real-valued target functions, a real-valued Fourier series is mathematically equiv-alent to a complex-valued one. We may therefore restrict our attention to sine and cosine expansions, expressed as: 
+
+fT (x) = 
+
+> Nκ
+
+X
+
+> ζ=1
+
+ T cos  
+
+> ζ
+
+cos(2 πκ⊤ 
+
+> ζ
+
+x) + T sin  
+
+> ζ
+
+sin(2 πκ⊤ 
+
+> ζ
+
+x) , (39) where T cos  
+
+> ζ
+
+, T sin  
+
+> ζ
+
+∈ P L 
+
+> NN
+
+are real-valued TransNets. This formulation is equivalent to employing the following set of global basis functions: Ψcos 
+
+> ζ,m
+
+(x) = cos(2 πκ⊤ 
+
+> ζ
+
+x)σ(wcos ⊤ 
+
+> ζ,m
+
+x + bcos 
+
+> ζ,m
+
+), (40) Ψsin 
+
+> ζ,m
+
+(x) = sin(2 πκ⊤ 
+
+> ζ
+
+x)σ(wsin ⊤ 
+
+> ζ,m
+
+x + bsin 
+
+> ζ,m
+
+), (41) for ζ = 1 , . . . , N κ and m = 1 , . . . , M sub . Consequently, the CPTNN approximation admits a linear expansion over these fixed global basis functions: 
+
+fT (x) = 
+
+> Nκ
+
+X
+
+> ζ=1
+> Msub
+
+X
+
+> m=1
+
+ αcos 
+
+> ζ,m
+
+Ψcos 
+
+> ζ,m
+
+(x) + αsin 
+
+> ζ,m
+
+Ψsin 
+
+> ζ,m
+
+(x) . (42) The weights and biases of Ψ cos 
+
+> ζ,m
+
+(x) and Ψ sin 
+
+> ζ,m
+
+(x) are generated using the same sam-pling scheme as TransNet. Let wη and bη denote any weight wcos / sin  
+
+> ζ,m
+
+and bias bcos / sin  
+
+> ζ,m
+
+,respectively. These parameters are decomposed as follows: 
+
+(
+
+wη = γη aη ,bη = γη rη , (43) with the specific sampling procedure given by: 
+
+aη = Xη
+
+∥Xη ∥2
+
+, and rη = Uη , η = 1 , . . . , 2NκMsub . (44) Here, Xη are i.i.d. standard Gaussian distribution, and Uη are i.i.d. uniform random variables on [0 , 1]. Similar to PPTNN, the shape parameter γη is fixed at 2, eliminating the need for manual tuning. Since all basis functions are fixed, model training for approximating f reduces to a linear least-squares problem. The optimal coefficient vector α∗ is obtained by minimizing the mean-squared error loss function: 
+
+L(α) = 
+
+> Ns
+
+X
+
+> ξ=1
+
+|f (xξ ) − fT (xξ )|2 , (45) where {xξ }Ns 
+
+> ξ=1
+
+are Ns sampling nodes in Ω. 13 4 Solving Differential Equations with CPTNN 
+
+In this section, we apply the CPTNN framework to solve the following boundary value problem (BVP): 
+
+L(u(x)) = f (x), x ∈ Ω,
+
+B(u(x)) = C(x), x ∈ ∂Ω, (46) where Ω ⊂ Rd is a bounded domain, L is a differential operator, B is a linear bound-ary operator, f (x) is the source function, and C(x) denotes the prescribed boundary condition. As established in Eq. (42) in Section 3.4, the approximate solution uT to the exact solution u admits the simple representation 
+
+uT (x) = 
+
+> MT
+
+X
+
+> η=1
+
+αη Ψη (x). (47) where {Ψη }MT 
+
+> η=1
+
+are the phase-modulated neural basis functions defined in Eqs. (40)-(42), and α = ( α1, α 2, . . . , α MT )⊤ is the vector of unknown coefficients to be determined. The network parameters α are optimized by minimizing a composite loss function that enforces satisfaction of the PDE and boundary conditions at collocation points: 
+
+L(α) = 
+
+> Npde
+
+X
+
+> μ=1
+
+|f (xμ) − L (uT (xμ)) |2 +
+
+> Nbc
+
+X
+
+> ν=1
+
+|C (yν ) − B (uT (yν )) |2 . (48) where {xμ}Npde  
+
+> μ=1
+
+⊂ Ω and {yν }Nbc  
+
+> ν=1
+
+⊂ ∂Ω denote the sets of interior and boundary collo-cation points, respectively. 
+
+Linear Differential Operator When L is a linear differential operator, the linearity of L and B implies 
+
+L(uT (x)) = 
+
+> MT
+
+X
+
+> η=1
+
+αη L[Ψ η (x)] . (49) We define the feature matrices Apde ∈ RNpde ×MT and Abc ∈ RNbc ×MT with entries (Apde )μ,η = L[Ψ η (xμ)] , (Abc )ν,η = B[Ψ η (yν )] . (50) Let f ∈ RNpde ×1 and c ∈ RNbc ×1 denote the target vectors with entries ( f )μ = f (xμ) and (c)ν = C(yν ), respectively. The optimal coefficient vector α is then obtained by solving the linear least-squares problem: 
+
+αOPT = arg min 
+
+> α
+
+Apde 
+
+Abc 
+
+
+
+α −
+
+fc
+
+ 22
+
+. (51) 14 Nonlinear Differential Operator For nonlinear L, we employ a Picard iterative method to linearize the problem. We decompose L into a linear component A and a nonlinear component N , i.e., L(u) = A(u) + N (u). At the iter-th iteration, the nonlinear term N (u) is evaluated using the previous iterate u(iter) (x), reducing the problem to a sequence of linear least-squares subproblems. The updated coefficients α(iter+1) are computed by minimizing 
+
+α(iter+1) = arg min 
+
+> α
+
+Apde 
+
+Abc 
+
+
+
+α −
+
+f − N(α(iter) )
+
+c
+
+ 22
+
+, (52) where Apde and Abc are the feature matrices associated with A and B, and N(α(iter) ) ∈
+
+RNpde ×1 is the discrete nonlinear vector with entries ( N(α(iter) )) μ = N (u(iter) (xμ)) .
+
+Iterations proceed until the relative change in the solution falls below a tolerance tol: 
+
+∥u(iter+1) − u(iter) ∥2
+
+∥u(iter) ∥2
+
+< tol . (53) 
+
+Remark 4.1. The CPTNN framework also exhibits strong approximation performance for other classes of partial differential equations (PDEs) with high-frequency solutions, including the large-wavenumber Helmholtz equation and the time-dependent wave equa-tion. We validate the successful application of our method to such PDEs in the numerical examples section. 
+
+Remark 4.2. Notably, the proposed method admits a natural generalization to the ap-proximation of discontinuous functions and the solution of interface problems. Follow-ing the domain-decomposition-based TransNet framework established in the literature, we construct separate neural networks on individual subdomains to address these challenging problems. To rigorously validate this generalization, we test the method on the piecewise function f3 in our numerical experiments, and the results confirm that our approach maintains high-precision approximation even for discontinuous target functions. 
+
+Remark 4.3. Applying PPTNN to solve the boundary value problem (4.1) suffers from essential and insurmountable difficulties. The key bottleneck is that, in decomposing the original equation into frequency-wise subproblems, the boundary conditions of the subproblems lack a unified, rigorous construction and are extremely difficult to properly determine. 
+
+# 5 Numerical Results 
+
+In this section, we present numerical results to demonstrate the superior performance of the proposed methods. Our examples encompass both function approximation and partial differential equation (PDE) solving. We employ the relative L2 error to quantify performance, defined as 
+
+∥uθ − u∥2
+
+∥u∥2
+
+,
+
+where u denotes the exact solution and uθ the corresponding approximate solution. 15 All neural networks in our experiments utilize the tanh activation function. All least-squares problems are solved using the numpy.linalg.lstsq routine. Computational timing data is collected on a local workstation (2.90 GHz Intel Core Ultra 9 285H CPU, 32GB memory). For the Transferable Neural Network, the shape parameter tuning strategy proposed in [54] is no longer applicable. We instead identify the optimal shape parameter via a systematic grid search, selecting the approximation with the minimal error as the baseline for comparison with our proposed method. For the random feature method (RFM) [7], hidden-layer network coefficients are ini-tialized with uniform random values sampled from the interva [ −Rmax , R max ], where 
+
+Rmax is tuned for each specific high-frequency problem. Analogous to the TransNet setup, we determine the optimal hyperparameters via grid search and use the resulting minimal-error approximation as the reference baseline for evaluating our method. In the following numerical experiments, the number of hidden neurons for both RFM and TransNet is set to an exceptionally large value of 100,000, unless otherwise speci-fied. This over-parameterization is adopted to strictly eliminate potential performance limitations arising from insufficient network capacity, ensuring a fair comparison across all methods. 
+
+5.1 Filtering Accuracy 
+
+In this subsection, we compare the accuracy of the filtering method from Ref. [6] with the two novel filtering strategies proposed in this work. The experimental setup is detailed as follows: 
+
+• Method 1. The filtering method from [6], applied directly to the raw data. 
+
+• Method 2. Based on the raw data, an auxiliary function is first constructed using Eq. (12), followed by filtering via Eq. (14). 
+
+• Method 3. Based on the raw data, an auxiliary function is first constructed using Eq. (13), followed by filtering via Eq. (14). Table 1: Comparison of the performance of three filtering methods. Function Method 1 Method 2 Method 3 
+
+x3 6.31E-03 8.19E-15 8.17E-15 100 x 3.52E+04 2.16E-14 2.11E-14 sin(2 πx ) 3.42E-06 1.79E-15 2.69E-15 sin(2 x + 1) + 0 .2e1.3x 1.17E-02 2.45E-15 2.45E-15 (1 − 0.5x2) cos(30( x + 0 .5x3)) 6.40E-02 3.05E-15 5.96E-08 
+
+x sin(100 x) 9.73E-04 1.09E-14 1.04E-06 We report the filtering errors in Table 1, where the filtering error norm: 
+
+filtering error =
+
+f (xξ ) − PKj=−K ˜fj (xξ ) 2
+
+∥f (xξ )∥2
+
+, (54) 16 with K = 40 (corresponding to C = 5 in Eq. (14) for computing ˜fj ). All methods are evaluated using 5001 sampling points. The bandwidth ∆ k is fixed at 2, and the error in Eq. (54) is evaluated over 1001 equidistant points {xξ }1001 1 ⊂ [−1, 1]. Numerical results in Table 1 demonstrate that the two proposed filtering strategies (Methods 2 and 3) significantly enhance the filtering performance compared to Method 1 from [6], with both achieving accuracy close to machine precision. This study provides a necessary foundation for the subsequent application of the PPTNN method to high-precision function approximation and PDE solving. 
+
+5.2 Accuracy of approximation of functions with PhaseTNN 
+
+In this subsection, we perform numerical validation to evaluate the approximation perfor-mance of the proposed PhaseTNN framework (encompassing both PPTNN and CPTNN) for high-frequency functions. We begin by considering the following three one-dimensional test functions, which are adopted from [43], [46], and [6], respectively: 
+
+f1(x) = (1 − 0.5x2) cos  a(x + 0 .5x3),f2(x) = x sin(100 x),f3(x) = 
+
+(
+
+sin( x) + sin(3 x), x ∈ [−1, 0) ,
+
+sin(23 x) + sin(137 x) + sin(203 x), x ∈ [0 , 1] .
+
+Subsequently, we extend our evaluation to two-dimensional high-frequency functions, using the following test cases: 
+
+f4(x1, x 2) =  1 − 0.5x21
+
+ cos 20( x1 + 0 .5x31) · (1 − 0.5x22) cos 20( x2 + 0 .5x32),f5(x1, x 2) = x1 cos  2π · 5( x1 + x2) + ( x1x2)3 + esin(7 x1x2).
+
+For the one–dimensional problems, we adopt 1001 equidistant points in [ −1, 1] as training data, and evaluate approximation accuracy via the relative L2 error computed on 8000 test points. For the 2D function approximation, we set the domain to [ −1, 1] 2,with training and test data consist of 201 2 and 300 2 equidistant points, respectively. 
+
+5.2.1 Effects of the shape parameter and network capacity 
+
+The frequency content of f1 increases monotonically with a. To assess performance across frequency regimes, we select a = 1 , 30 , 100 (low, moderate, high) and conduct approxi-mation experiments with TransNet, PPTNN, and CPTNN. Network configurations are as follows: TransNet and CPTNN employ 1000 hidden neurons, while PPTNN uses 100 neurons per sub-network. We evaluate the sensitivity of approximation accuracy to γ. Fig. 1 plots relative 
+
+L2 test error error vs. γ, with star markers denoting optimal. For TransNet, the opti-mal γ fluctuates sharply with frequency, requiring costly parameter tuning. In contrast, PPTNN and CPTNN maintain stable optimal γ, streamlining implementation and im-proving robustness. 17 0 10 20 30 40 50                                
+
+> Shape parameter
+> 10 13
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> 10 1
+> Relative  L2 error
+> TransNet
+> a=1
+> a=30
+> a=100
+> 010 20 30 40 50
+> Shape parameter
+> 10 13
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> 10 1
+> Relative  L2 error
+> PPTNN
+> a=1
+> a=30
+> a=100
+> 010 20 30 40 50
+> Shape parameter
+> 10 13
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> 10 1
+> Relative  L2 error
+> CPTNN
+> a=1
+> a=30
+> a=100
+
+Figure 1: Relative L2 error vs. γ for f1 (a = 1 , 30 , 100) with TransNet, PPTNN and CPTNN. We further analyze convergence behavior for the highly oscillatory function f1(x)(a = 30) with γ = 2 fixed. PPTNN uses Ns = 5001, ∆ k = 2, κj ∈ {− 50 , −48 , . . . , 50 },
+
+ε = 10 −14 , varying sub-network neurons (10-100). CPTNN varies total hidden neurons (100-1000), corresponding to 25-250 frequency groups. As shown in Fig. 2, both methods exhibit monotonic error decay with increasing capacity, demonstrating strong expressivity after low-frequency decomposition. Notably, PPTNN’s error saturates at O(10 −12 ) due to summation-induced round-off errors in its parallel architecture. Conversely, CPTNN resolves all frequency components in a coupled manner, avoiding such error accumulation and achieving higher precision ( O(10 −15 )). 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00                     
+
+> x
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> f(x)
+> Exact solution
+> 20 40 60 80 100
+> The number of hidden neurons per sub-network
+> 10 13
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> Relative  L2 error
+> PPTNN (fixed shape parameter)
+> 200 400 600 800 1000
+> The total number of hidden neurons
+> 10 13
+> 10 11
+> 10 9
+> 10 7
+> 10 5
+> 10 3
+> Relative  L2 error
+> CPTNN (fixed shape parameter)
+
+Figure 2: Convergence behavior for f1 (a = 30). (Left) f1; (Middle) PPTNN relative L2
+
+error vs. hidden neurons per sub-network; (Right) CPTNN relative L2 error vs. total hidden neurons. 
+
+5.2.2 1D function approximation 
+
+We compare our proposed methods against four existing algorithms–FNN [19], RFM [7], MSNN [43] and TransNet [54]–for the one–dimensional problems f1, f2 and f3.Training details for f1 and f2 are summarized in Table 2. For the piecewise func-tion f3, we use domain decomposition, training two sub-networks on [ −1, 0) and [0 , 1] separately. This strategy is applied to all models for fairness, with Table 2 listing per-18 sub-network configurations. Minor adjustments are made for f3: FNN architecture per sub-network is [1 , 16100 , 1], and CPTNN uses 250 frequencies sampled from [0 , 40]. Table 2: Network architectures and training strategies for the 1D function approximation. Method Architecture Training strategy Other configurations FNN [19] [1 , 10100 , 1] Adam: 10k (steps) Learning rate: 0.001 (decay 0.7 per 2k steps) RFM [7] [1 , 100000 , 1] Least squares Rmax ∈ { 2, 4, . . . , 200 }
+
+MSNN [43] Stage 1-2: [1 , 20 × 3, 1] Stage 3-4: [1 , 30 × 3, 1] Adam + L-BFGS Stage 1: 3k + 10k (steps) Stage 2: 5k + 20k (steps) Stage 3: 5k + 30k (steps) Stage 4: 5k + 40k (steps) Stage 1-2: Ntrain = 1501 Stage 3-4: Ntrain = 4801 TransNet [54] [1 , 100000 , 1] Least squares γ ∈ { 2, 4, . . . , 100 }
+
+PPTNN [1 , 100 , 1] (per sub-net) Least squares 
+
+Ns = 5001 
+
+C = 5 ∆k = 2 
+
+κj ∈ [−50 , 50] 
+
+ε = 10 −14 
+
+CPTNN [1 , 1000 , 1] Least squares 250 frequencies in [0 , 20] Table 3 comprehensively evaluates the proposed frameworks against representative baselines, assessing both approximation accuracy and computational efficiency. As shown in the upper panel of Table 3, traditional architectures such as FNN and RFM fail to con-verge for highly oscillatory functions f1 and f2, with errors stagnating at O(10 0). While the multi-stage neural network (MSNN) partially mitigates this issue, it still suffers from a bottleneck in high-frequency approximation, saturating at O(10 −6)– O(10 −7). Under the optimal shape parameter, TransNet achieves strong performance across all bench-marks, attaining relative L2 errors in the range O(10 −13 )– O(10 −11 ). PPTNN matches TransNet’s accuracy, whereas CPTNN consistently outperforms all compared methods, reducing errors to near-machine precision ( O(10 −14 )– O(10 −15 )) for both high- and low-frequency functions. When evaluating computational efficiency (lower panel of Table 3), the practical cost of achieving high accuracy is critical. Existing high-accuracy methods incur prohibitive overheads: MSNN requires over 1200 seconds due to its sequential multi-stage training. For TransNet, optimal accuracy relies on an exhaustive grid search over the shape param-eter γ (2 to 50 in steps of 2, totaling 25 independent runs). Although this tuning could be parallelized, it wastes 96% of computational effort. To accurately reflect the practical computational budget, the time reported for TransNet encompasses the total duration of shape parameter tuning (exceeding 56 seconds), whereas for PPTNN, it denotes the theoretical parallel execution time. This clearly demonstrates the resource inefficiency of parameter-dependent models. In stark contrast, our proposed PPTNN and CPTNN resolve this accuracy–efficiency dilemma by eliminating exhaustive parameter searches. By decomposing the target func-tion in the frequency domain, PPTNN enables fully independent training of its sub-19 networks. With sufficient parallel computing resources, its execution time is governed by the maximum runtime across sub-networks: 
+
+tparallel = max( tfilter ) + max( ttrain ),
+
+yielding an unprecedented runtime of less than 0.6 seconds. Furthermore, CPTNN achieves the highest precision in approximately 1 second. By removing the need for hyperparameter tuning, our frameworks deliver speedups of several orders of magnitude over tuning-dependent baselines while retaining extreme precision. Table 3: Comparison of approximation accuracy and computational efficiency for 1D functions Relative L2 error Function FNN [19] RFM [7] MSNN [43] TransNet [54] PPTNN CPTNN 
+
+f1 9.99E-01 7.39E-11 8.29E-07 3.57E-11 5.13E-12 2.98E-15 
+
+f2 1.00E+00 4.05E-10 3.74E-06 1.42E-10 8.12E-12 2.55E-14 
+
+f3 7.01E-01 1.96E-09 1.28E-06 3.00E-09 7.41E-13 1.54E-13 Time (seconds) Function FNN RFM MSNN TransNet PPTNN (parallel time) CPTNN 
+
+f1 205.30 10.27 1288.37 11.01 0.36 0.99 
+
+f2 190.76 12.93 1392.49 13.04 0.54 0.88 
+
+f3 326.15 7.48 1963.08 7.55 0.21 0.78 
+
+5.2.3 2D function approximation 
+
+To evaluate the 2D function approximation for f4, we fix the shape parameter at γ = 2. For PPTNN, we set Ns = 1001 2, C = 5, ∆ k = 2, ε = 10 −12 , and the frequency centers 
+
+κj ∈ {− 40 , −38 , . . . , 40 }2, while varying the number of neurons per sub-network ( Msub )from 50 to 2000. For CPTNN, we set the frequency range to [ −10 , 10] 2, and vary the total number of hidden neurons ( MT ) from 1600 (4 × 20 2) to 10000 (4 × 50 2). Table 4 summarizes the convergence behavior of PPTNN and CPTNN for the 2D oscillatory function f4. As network capacity increases, both methods exhibit a decay in relative L2 error, with values falling to O(10 −10 ). This confirms that the superior approximation capabilities observed in 1D experiments are preserved in 2D problems. To further assess our approach, we compare the proposed PPTNN and CPTNN against FNN, RFM, and TransNet for the 2D high-frequency functions f4 and f5. De-tailed network configurations are summarized in Table 5. Consistent with the 1D exper-iments, the baseline models are allocated substantial parameter capacities to ensure a fair comparison. Table 6 reports the relative L2 test errors, confirming that our meth-ods successfully extend their high-precision approximation capabilities to 2D domains. Notably, PPTNN and CPTNN consistently outperform all other compared methods. 20 Table 4: Convergence behavior of PPTNN and CPTNN for the 2D function f4.PPTNN CPTNN 
+
+Msub Relative L2 error MT Relative L2 error 50 7.30E-02 4 × 20 2 3.01E-01 100 2.56E-03 4 × 25 2 1.14E-04 200 3.88E-05 4 × 30 2 9.80E-08 500 3.01E-08 4 × 35 2 8.02E-09 1000 2.11E-09 4 × 40 2 2.64E-09 1500 1.21E-09 4 × 45 2 1.25E-09 2000 9.87E-10 4 × 50 2 9.07E-10 Table 5: Network architectures and training strategies for the 2D function approximation. Method Architecture Training strategy Other configurations FNN [2 , 100 × 5, 1] Adam (10000 steps) Learning rate: 0.001 (decay 0.7 per 2k steps) RFM [2 , 100000 , 1] Least squares Rmax ∈ { 2, 11 , . . . , 101 }
+
+TransNet [2 , 100000 , 1] Least squares γ ∈ { 2, 4, . . . , 30 }
+
+PPTNN [2 , 2000 , 1] (per sub-net) Least squares 
+
+Ns = 1001 2
+
+C = 5 ∆k = 2 
+
+κj ∈ {− 40 , −38 , . . . , 40 }2
+
+ε = 10 −12 
+
+CPTNN [2 , 10000 , 1] Least squares 2500 frequencies in [−10 , 10] 2
+
+Table 6: Performance comparison of approximation accuracy for the 2D functions. function FNN RFM TransNet PPTNN CPTNN 
+
+f4 1.00E+00 3.45E-07 7.66E-08 9.87E-10 9.07E-10 
+
+f5 9.20E-03 3.26E-08 1.01E-08 3.69E-09 3.92E-12 
+
+5.3 PhaseTNN for solving PDEs with high frequency solutions 
+
+In this subsection, we evaluate the performance of our CPTNN for solving PDEs with high-frequency solutions under the following consistent settings: 
+
+• 1D problems : Trained on 2001 equidistant points, tested on 8000 points for relative L2 error. 
+
+• 2D problems : Trained on a 100 × 100 grid, tested on a finer 200 × 200 grid. 
+
+• Baseline PINN : Single-hidden-layer network for fair comparison. Optimized via Adam for 10,000 steps, initial learning rate of 0 .001 that is decayed by a factor of 0.7 every 2000 steps. 21 5.3.1 Variable-coefficient elliptic equation 
+
+We first consider the following one-dimensional equation: 
+
+− (1 + x2)u′(x)′ = f (x), x ∈ [−1, 1] 
+
+u(−1) = u(1) = 0 . (55) We choose the source term f (x) such that Eq. (55) has the following solution: 
+
+u(x) = sin(2 πx ) + 0 .1 sin( aπx 2), (56) with a > 0 a parameter controlling the high-frequency content of the problem. In this numerical study, we fix the number of hidden neurons to 4000 for both PINN and CPTNN. For CPTNN, these neurons are constructed using 2000 distinct frequency modes, uniformly sampled from the interval [0 , 300] across all three test configurations (a = 100 , 150 , 250). For the baseline methods, we perform targeted parameter tuning as follows: 
+
+• For RFM, the scaling parameter Rmax is tuned over the set {1, 11 , . . . , 301 }.
+
+• For TransNet, the shape parameter is exhaustively tuned over the set {2, 4, . . . , 350 }.To evaluate the influence of the shape parameter γ for TransNet and CPTNN, we vary γ over the set {2, 4, . . . , 200 } for both methods. Figure 3 depicts the relative L2 er-ror versus γ for TransNet and CPTNN under these frequency settings. Numerical results from Figure 3, demonstrate that the optimal shape parameter of CPTNN is nearly inde-pendent of the problem frequency, consistently achieving high precision O(10 −9) within a narrow range of γ. This robust behavior rigorously justifies fixing the shape parameter to a small constant(e.g., γ = 2): by intrinsically avoiding numerically ill-conditioned regions, CPTNN guarantees both high efficiency and high accuracy, regardless of the target function’s frequency. In contrast, the optimal shape parameter of TransNet ex-hibits a strong dependence on the problem frequency, and its peak achievable accuracy deteriorates with increasing frequency. 0 25 50 75 100 125 150 175 200                 
+
+> Shape parameter
+> 10 8
+> 10 6
+> 10 4
+> 10 2
+> 10 0
+> 10 2
+> Relative  L2 error
+> TransNet
+> a=100
+> a=150
+> a=250
+> 025 50 75 100 125 150 175 200
+> Shape parameter
+> 10 8
+> 10 6
+> 10 4
+> 10 2
+> 10 0
+> 10 2
+> Relative  L2 error
+> CPTNN
+> a=100
+> a=150
+> a=250
+
+Figure 3: Relative L2 error vs. shape parameter γ for variable coefficient equation (55) Table 7 compares the relative L2 errors and computational times of numerical solu-tions obtained by various methods for solving Eq. (55) with a high-frequency solution 22 (a = 250). Numerical results demonstrate that PINN fails to effectively solve this high-frequency problem. The relative errors of RFM and TransNet are O(10 −5) and O(10 −6), respectively, whereas the proposed CPTNN method attains a relative L2 error of O(10 −9)representing an improvement of 3-4 orders of magnitude in accuracy. Meanwhile, CPTNN exhibits the optimal computational efficiency among all tested methods, with a computational time of only 4 .87 seconds. 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00                            
+
+> x
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> u(x)
+> Exact solution vs CPTNN solution
+> Exact solution
+> CPTNN solution
+> 1.00 0.99 0.98 0.97 0.96 0.95
+> x
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> u(x)
+> x[1.000, 0.950]
+> Exact solution
+> CPTNN solution
+> 0.50 0.55 0.60 0.65 0.70 0.75
+> x
+> 1.0
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> u(x)
+> x[0.500, 0.750]
+> Exact solution
+> CPTNN solution
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 10 9
+> 2 × 10 9
+> 3 × 10 9
+> 4 × 10 9
+> 6 × 10 9
+> Absolute error
+> Pointwise error
+> Pointwise absolute error
+
+Figure 4: Numerical solution and absolute error obtained by CPTNN for equation (55). Table 7: Performance comparison of various methods for solving the equation (55) ( a =250). Method PINN RFM TransNet CPTNN Error 4.55E+00 4.96E-05 3.96E-06 6.13E-09 Time 878.60 22.89 22.29 4.87 
+
+5.3.2 Helmholtz equation 
+
+Next, we consider the Helmholtz equation with constant wave numbers suggested in [6]: 
+
+u′′ (x) + λ2u(x) = μ2J′′ 
+
+0 (μx ) + λ2J0(μx ), x ∈ [−1, 1] ,u(−1) = J0(−μ) + 0 .2 cos( −λ), u (1) = J0(μ) + 0 .2 cos( λ). (57) 23 where J0(x) denotes the zeroth-order Bessel function. The exact solution u(x) to this problem is given by: 
+
+u(x) = J0(μx ) + 0 .2cos (λx ), (58) In this numerical experiment, we set λ = 500 and μ = 200. The number of hidden neurons is set to 1000 for both PINN and CPTNN. For CPTNN, 500 distinct frequencies are uniformly sampled from the interval [0 , 200]. For the baseline methods, we perform the following parameter settings: 
+
+• For RFM, the scaling parameter Rmax is optimized over the set {1, 11 , . . . , 351 }.
+
+• For TransNet, the shape parameter is exhaustively searched over the set {2, 4, . . . , 350 }.Figure 5 depicts the numerical solution and absolute error obtained by CPTNN for the large-wavenumber Helmholtz equation (57), which clearly demonstrates the superior performance of the proposed method on this challenging high-frequency problem. Table 8 summarizes the relative L2 errors and computational times of various meth-ods for problem (57). As evident from the table, the standard PINN fails completely due to spectral bias. Although RFM and TransNet are capable of capturing the oscillatory behavior of the solution, their accuracy saturates at the O(10 −6) − O (10 −7) level. In contrast, the proposed CPTNN overcomes this accuracy bottleneck, reducing the rela-tive L2 error to O(10 −10 ). Concurrently, our method exhibits superior computational efficiency, requiring significantly less time than all competing approaches considered. 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00                           
+
+> x
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> u(x)
+> Exact solution vs CPTNN solution
+> Exact solution
+> CPTNN solution
+> 1.00 0.98 0.96 0.94 0.92 0.90
+> x
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> u(x)
+> x[1.000, 0.900]
+> Exact solution
+> CPTNN solution
+> 0.004 0.002 0.000 0.002 0.004
+> x
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1
+> 1.2
+> u(x)
+> x[0.005, 0.005]
+> Exact solution
+> CPTNN solution
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 10 13
+> 10 12
+> 10 11
+> 10 10
+> Absolute error
+> Pointwise error
+> Pointwise absolute error
+
+Figure 5: Numerical solution and absolute error obtained by CPTNN for Helmholtz equation (57) 24 Table 8: Performance comparison of various methods for solving the Helmholtz equation. Method PINN RFM TransNet CPTNN Error 9.99E-01 3.73E-06 2.15E-07 6.72E-10 Time 212.93 20.01 23.04 1.11 
+
+5.3.3 Nonlinear Helmholtz equation 
+
+We next evaluate the CPTNN method on a nonlinear Helmholtz boundary value problem [14]: 
+
+u′′ − 50 u + 10 sin( u) = f (x)
+
+u(−1) = h1, u(1) = h2, (59) with exact solution 
+
+u(x) = sin 
+
+
+
+150 πx + 3π
+
+20 
+
+
+
+cos 
+
+
+
+200 πx − 2π
+
+5
+
+
+
++ 32 + x
+
+10 , (60) where the source term f (x) and the boundary values h1 and h2 are chosen to satisfy Eq. (59). 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00                          
+
+> x
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> 2.5
+> u(x)
+> Exact solution vs CPTNN solution
+> Exact solution
+> CPTNN solution
+> 1.00 0.98 0.96 0.94 0.92 0.90
+> x
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> 2.25
+> u(x)
+> x[1.000, 0.900]
+> Exact solution
+> CPTNN solution
+> 0.004 0.002 0.000 0.002 0.004
+> x
+> 1.4
+> 1.6
+> 1.8
+> 2.0
+> 2.2
+> 2.4
+> u(x)
+> x[0.005, 0.005]
+> Exact solution
+> CPTNN solution
+> 1.00 0.75 0.50 0.25 0.00 0.25 0.50 0.75 1.00
+> x
+> 10 11
+> 10 10
+> 10 9
+> Absolute error
+> Pointwise error
+> Pointwise absolute error
+
+Figure 6: Numerical solution and absolute error obtained by CPTNN for nonlinear Helmholtz equation (59) For CPTNN, we set 2000 hidden neurons and sample 500 distinct frequencies uni-formly from interval [0 , 250]. For the baseline methods, we perform the following param-eter tuning: 25 • For RFM, the scaling parameter Rmax is optimized over the set {1, 11 , . . . , 201 }.
+
+• For TransNet, the shape parameter is exhaustively searched over the set {2, 4, . . . , 350 }.Figure 6 plots the numerical solution and absolute error obtained by CPTNN for the nonlinear large-wavenumber Helmholtz equation (59), demonstrating its excellent per-formance in capturing highly oscillatory nonlinear behavior. Table 9 summarizes the performance of various methods for solving the problem (59). The coupling of nonlinear terms and high-frequency oscillations significantly increases the problem difficulty: PINN fails to converge. While RFM and TransNet mitigate this challenge but incur high computational cost ( > 250s) due to over-parameterization and exhaustive tuning, with accuracy saturating at O(10 −7). In stark contrast, CPTNN achieves a relative L2 error of O(10 −10 ) (3 orders of magnitude higher accuracy than the best-performing baseline) with only a fraction of the computational cost, showcasing its exceptional accuracy and efficiency. Table 9: Performance comparison of various methods for solving the problem (59) Method PINN RFM TransNet CPTNN Error 2.04E+01 5.19E-07 1.58E-07 3.84E-10 Time 380.99 250.70 258.98 35.87 
+
+5.3.4 Wave equation 
+
+Here, we consider the following wave equation [54]: 
+
+utt (x, t ) − cu xx (x, t ) = 0 , (x, t ) ∈ [0 , 1] × [0 , 1] ,u(x, 0) = sin(24 πx ), x ∈ [0 , 1] ,ut(x, 0) = 0 , x ∈ [0 , 1] ,u(0 , t ) = u(1 , t ) = 0 , t ∈ [0 , 1] ,
+
+(61) where c = 625 36 π2 . The exact solution is given by 
+
+u(x, t ) = 0 .5 (sin(24 πx + 100 t) + sin(24 πx − 100 t)) . (62) For PINN and CPTNN, we fix the number of hidden neurons at 4000. For CPTNN, we select 20 2 distinct frequencies uniformly sampled from [ −20 , 20] 2. For the baseline methods, we perform the following parameter tuning: 
+
+• For RFM, the scaling parameter Rmax is optimized over the set {1, 11 , . . . , 101 }.
+
+• For TransNet, the shape parameter is exhaustively searched over the set {2, 4, . . . , 30 }.Figure 7 depicts the numerical solution and absolute error obtained by CPTNN for the wave equation (61), demonstrating its excellent performance in capturing highly oscillatory solutions for time-dependent wave problems. 26 Table 10 summarizes the relative L2 errors and computational costs for solving this time-dependent wave equation. The standard PINN fails to produce a valid solution. While RFM and TransNet successfully solve the equation, they incur significant compu-tational overhead (approximately 500 seconds) due to the excessive number of hidden neurons. In contrast, the proposed CPTNN achieves a relative L2 errors of O(10 −6), outperforming the best baseline method by nearly two orders of magnitude. Further-more, CPTNN obtains this high-fidelity solution in only 15.81 seconds, demonstrating its superior computational efficiency. 0.0 0.2 0.4 0.6 0.8 1.0            
+
+> t
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> x
+> Exact solution
+> 0.96
+> 0.72
+> 0.48
+> 0.24
+> 0.00
+> 0.24
+> 0.48
+> 0.72
+> 0.96
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> t
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> x
+> CPTNN solution
+> 0.96
+> 0.72
+> 0.48
+> 0.24
+> 0.00
+> 0.24
+> 0.48
+> 0.72
+> 0.96
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> t
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> x
+> CPTNN error
+> 0.0
+> 0.6
+> 1.2
+> 1.8
+> 2.4
+> 3.0
+> 3.6
+> 4.2
+> 4.8
+> 1e 5
+
+Figure 7: Numerical solution and absolute error obtained by CPTNN for Wave equation (61). Table 10: Performance comparison of various methods for solving the Wave equation. Method PINN RFM TransNet CPTNN Error 1.00E+00 5.40E-03 2.23E-04 5.95E-06 Time 13213.59 580.63 496.22 15.81 
+
+5.3.5 2D Diffusion interface problem 
+
+In the final numerical example, we consider the following diffusion interface problem [29] posed on the domain Ω = [0 , 2] 2:
+
+−∇ · (β∇u) = f, (x, y ) ∈ Ω1 ∪ Ω2,
+
+[u] = h1, (x, y ) ∈ Γ,
+
+[β∇u · n] = h2, (x, y ) ∈ Γ,u = g, (x, y ) ∈ ∂Ω,
+
+(63) where Γ = {(x, y ) | (x − 1) 2 + ( y − 1) 2 = 0 .5} denotes the circular interface separating the subdomains Ω 1 and Ω 2, and the diffusion coefficient is given by β(x, y ) = 1 ·χΩ1 +10 ·χΩ2 .The exact solution is given by 
+
+u(x, y ) = 
+
+(
+
+(x − 1) 2 + ( y − 1) 2, (x, y ) ∈ Ω1,
+
+cos(16 πx ) cos(16 πy ), (x, y ) ∈ Ω2. (64) 27 The solution to problem (63) exhibits distinct frequency characteristics across the two subdomains: Ω1 admits a smooth, low-frequency solution, while Ω 2 features a highly oscillatory high-frequency component. To address the multiscale discrepancies inherent to the interface problem, we employ the domain decomposition strategy from [29] and incorporate a dual-subnetwork frame-work. For consistency and fair comparison, this strategy is applied to all baseline models. The number of hidden neurons per subnetwork is set to 5000 for PINN and CPTNN, and 50000 for RFM and TransNet. For the baseline methods, we tune parameters as follows: 
+
+• For RFM, Rmax ,1 ∈ { 1, 11 , . . . , 51 }, Rmax ,2 ∈ { 1, 11 , . . . , 101 }.
+
+• For TransNet, γ1 ∈ { 2, 4, . . . , 10 }, γ 2 ∈ { 2, 4, . . . , 30 }.In stark contrast, both subnetworks in the CPTNN framework share identical hyper-parameters throughout training, removing the burden of manual tuning entirely. For frequency sampling, 50 2 distinct modes are uniformly sampled over [ −10 , 10] 2. Interior training/testing points follow the setup from prior examples, with 100 collocation points on each edge of ∂Ω and 300 on Γ to enforce interface jump conditions. Figure 8 shows the numerical solution and absolute error of CPTNN for the problem (63), confirming the method’s successful extension to interface problems with a maximum absolute error of O(10 −6). Table 11 compares the relative L2 errors and computational times of numerical so-lutions obtained by various methods for solving Eq. (63). Despite utilizing identical hyperparameters across both sub-networks and avoiding manual tuning, the proposed CPTNN achieves a relative L2 error of O(10 −7), outperforming the best baseline method by three orders of magnitude with minimal computational cost. 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00                  
+
+> x
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> y
+> Exact solution
+> 0.96
+> 0.72
+> 0.48
+> 0.24
+> 0.00
+> 0.24
+> 0.48
+> 0.72
+> 0.96
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> x
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> y
+> CPTNN solution
+> 0.96
+> 0.72
+> 0.48
+> 0.24
+> 0.00
+> 0.24
+> 0.48
+> 0.72
+> 0.96
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> x
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+> y
+> CPTNN error
+> 0.00
+> 0.15
+> 0.30
+> 0.45
+> 0.60
+> 0.75
+> 0.90
+> 1.05
+> 1.20
+> 1.35
+> 1e 6
+
+Figure 8: Numerical solution and absolute error obtained by CPTNN for problem (63). Table 11: Performance comparison of various methods for problem (63). Method PINN RFM TransNet CPTNN Error 1.71E+02 1.42E-03 9.11E-04 2.32E-07 Time 13819.51 507.86 456.15 113.54 28 6 Concluding remarks 
+
+In this work, we propose the PhaseTNN framework to address critical bottlenecks in neural network-based high-frequency function approximation and PDE solving: spec-tral bias and the accuracy-efficiency trade-off induced by empirical parameter tuning. PhaseTNN integrates improved frequency filtering, phase-shift frequency decomposition, and TransNet’s efficient least-squares training to decompose intractable high-frequency problems into tractable low-frequency subproblems, eliminating the need for manual shape parameter tuning. We present two PhaseTNN architectures: 
+
+• PPTNN : Decomposes high-frequency functions into narrow-band components for parallel TransNet training, achieving high-precision 1D/2D function approxima-tion; 
+
+• CPTNN : Integrates phase-modulated basis functions into a single model, en-abling simultaneous multi-frequency representation and efficient solution of lin-ear/nonlinear high-frequency PDEs, with scalability to high-dimensional problems. Extensive numerical experiments validate that PhaseTNN achieves near-machine-precision accuracy for 1D/2D high-frequency function approximation, and outperforms state-of-the-art methods (PINN, RFM, TransNet, MSNN) in both accuracy and computational efficiency for canonical high-frequency PDEs (variable-coefficient elliptic equation, lin-ear/nonlinear Helmholtz, wave equations, 2D diffusion interface problem). Our future research directions include: 
+
+• Uncertainty quantification : Integrate PhaseTNN with stochastic methods to solve stochastic PDEs with high-frequency random solutions; 
+
+• Non-smooth functions : Extend the filtering method to handle non-smooth high-frequency functions (e.g., discontinuous solutions) and singular PDEs; 
+
+• Inverse problems : Apply PhaseTNN to high-frequency PDE inverse problems (e.g., parameter identification) for scientific computing and engineering applica-tions. 
+
+# Acknowledgments 
+
+The work is supported by National Natural Science Foundation of China (No. 92370113, 12326346, 12461019), Natural Science Foundation of Zhejiang Province (No. ZCLY24A0101), the “Pioneer” and “Leading Goose” R&D Program of Zhejiang Province (No. 2024C1093), and the Science and Technology Research Project of Jiangxi Provincial Department of Education (No. GJJ2504901). 
+
+# References 
+
+[1] Ainsworth, M., Dong, J. Galerkin neural network approximation of singularly-perturbed elliptic systems. Computer Methods in Applied Mechanics and Engi-neering , 2022, 402: 115169. 29 [2] Baldi, P., Hornik, K. Neural networks and principal component analysis: learning from examples without local minima. Neural Networks , 1989, 2(1): 53–58. [3] Bottou, L., Curtis, F.E., Nocedal, J. Optimization methods for large-scale machine learning. SIAM Review , 2018, 60(2): 223–311. [4] Brown, T., et al. Language models are few-shot learners. Advances in Neural In-formation Processing Systems , 2020, 33: 1877–1901. [5] Brown, P.F., et al. A statistical approach to machine translation. Computational Linguistics , 1990, 16(2): 79–85. [6] Cai, W., Li, X., Liu, L. A phase shift deep neural network for high frequency approximation and wave problems. SIAM Journal on Scientific Computing , 2020, 42(5): A3285–A3312. [7] Chen, J., Chi, X., E, W., Yang, Z. Bridging traditional and machine learning-based algorithms for solving PDEs: the random feature method. Journal of Machine Learning , 2022, 1(3): 268–298. [8] Chen, J.-R., E, W., Luo, Y.-X. The random feature method for time-dependent problems. East Asian Journal on Applied Mathematics , 2023, 13(3): 435–463. [9] Chiu, P.-H., et al. CAN-PINN: a fast physics-informed neural network based on coupled automatic–numerical differentiation method. Computer Methods in Applied Mechanics and Engineering , 2022, 395: 114909. [10] Chowdhary, K.R. Natural language processing. In: Fundamentals of Artificial In-telligence , Springer, 2020: 603–649. [11] Collobert, R., Weston, J. A unified architecture for natural language processing: deep neural networks with multitask learning. In: ICML , 2008: 160–167. [12] Devlin, J., Chang, M.-W., Lee, K., Toutanova, K. BERT: pre-training of deep bidirectional transformers for language understanding. In: NAACL-HLT , 2019: 4171–4186. [13] Dong, S., Yang, J. On computing the hyperparameter of extreme learning ma-chines: algorithm and application to computational PDEs, and comparison with classical and high-order finite elements. Journal of Computational Physics , 2022, 463: 111290. [14] Dong, S., Li, Z. Local extreme learning machines and domain decomposition for solving linear and nonlinear partial differential equations. Computer Methods in Applied Mechanics and Engineering , 2021, 387: 114129. [15] Dwivedi, V., Srinivasan, B. Physics informed extreme learning machine (PIELM)–a rapid method for the numerical solution of partial differential equations. Neurocom-puting , 2020, 391: 96–118. [16] Han, J., Jentzen, A. Deep learning-based numerical methods for high-dimensional parabolic partial differential equations and backward stochastic differential equa-tions. Communications in Mathematics and Statistics , 2017, 5(4): 349–380. 30 [17] Han, J., Jentzen, A., E, W. Solving high-dimensional partial differential equations using deep learning. PNAS , 2018, 115(34): 8505–8510. [18] He, K., Zhang, X., Ren, S., Sun, J. Deep residual learning for image recognition. In: CVPR , 2016: 770–778. [19] Hornik, K., Stinchcombe, M., White, H. Multilayer feedforward networks are uni-versal approximators. Neural Networks , 1989, 2(5): 359–366. [20] Howard, A.A., et al. Stacked networks improve physics-informed training: ap-plications to neural networks and deep operator networks. arXiv preprint arXiv:2311.06483, 2023. [21] Huang, G.-B., Zhu, Q.-Y., Siew, C.-K. Extreme learning machine: theory and applications. Neurocomputing , 2006, 70(1–3): 489–501. [22] Jagtap, A.D., Karniadakis, G.E. Extended physics-informed neural networks (XPINNs): a generalized space-time domain decomposition based deep learning framework for nonlinear partial differential equations. Communications in Compu-tational Physics , 2020, 28(5). [23] John Xu, Z.-Q., Zhang, Y., Luo, T., Xiao, Y., Ma, Z. Frequency principle: Fourier analysis sheds light on deep neural networks. Communications in Computational Physics , 2020, 28(5): 1746–1767. [24] Kiyani, E., et al. Optimizing the optimizer for physics-informed neural networks and Kolmogorov-Arnold networks. Computer Methods in Applied Mechanics and Engineering , 2025, 446: 118308. [25] Kopaniˇ c´ akov´ a, A., Kothari, H., Karniadakis, G.E., Krause, R. Enhancing training of physics-informed neural networks using domain decomposition–based precondi-tioning strategies. SIAM Journal on Scientific Computing , 2024, 46(5): S46–S67. [26] Krishnapriyan, A., et al. Characterizing possible failure modes in physics-informed neural networks. Advances in Neural Information Processing Systems , 2021, 34: 26548–26560. [27] LeCun, Y., Bengio, Y., Hinton, G. Deep learning. Nature , 2015, 521(7553): 436– 444. [28] Liu, Z., et al. KAN: Kolmogorov-Arnold networks. arXiv preprint arXiv:2404.19756, 2024. [29] Lu, T., Ju, L., Zhu, L. A multiple transferable neural network method with domain decomposition for elliptic interface problems. Journal of Computational Physics ,2025, 530: 113902. [30] Luo, T., Ma, Z., Wang, Z., Xu, Z.J., Zhang, Y. An upper limit of decaying rate with respect to frequency in linear frequency principle model. In: MSML , PMLR, 2022: 205–214. [31] Mildenhall, B., et al. NeRF: representing scenes as neural radiance fields for view synthesis. Communications of the ACM , 2021, 65(1): 99–106. 31 [32] Moseley, B., Markham, A., Nissen-Meyer, T. Finite basis physics-informed neu-ral networks (FBPINNs): a scalable domain decomposition approach for solving differential equations. Advances in Computational Mathematics , 2023, 49(4): 62. [33] M¨ uller, J., Zeinhofer, M. Achieving high accuracy with PINNs via energy natural gradient descent. In: ICML , PMLR, 2023: 25471–25485. [34] Ni, N., Dong, S. Numerical computation of partial differential equations by hidden-layer concatenated extreme learning machine. Journal of Scientific Computing ,2023, 95(2): 35. [35] Rahaman, N., et al. On the spectral bias of neural networks. In: ICML , PMLR, 2019: 5301–5310. [36] Raissi, M., Perdikaris, P., Karniadakis, G.E. Physics-informed neural networks: a deep learning framework for solving forward and inverse problems involving non-linear partial differential equations. Journal of Computational Physics , 2019, 378: 686–707. [37] Ronneberger, O., Fischer, P., Brox, T. U-Net: convolutional networks for biomed-ical image segmentation. In: MICCAI , 2015: 234–241. [38] Shukla, K., et al. A comprehensive and FAIR comparison between MLP and KAN representations for differential equations and operator networks. Computer Methods in Applied Mechanics and Engineering , 2024, 431: 117290. [39] Sirignano, J., Spiliopoulos, K. DGM: a deep learning algorithm for solving partial differential equations. Journal of Computational Physics , 2018, 375: 1339–1364. [40] Urb´ an, J.F., Stefanou, P., Pons, J.A. Unveiling the optimization process of physics informed neural networks: how accurate and competitive can PINNs be? Journal of Computational Physics , 2025, 523: 113656. [41] Vaswani, A., et al. Attention is all you need. Advances in Neural Information Processing Systems , 2017, 30. [42] Wang, S., Bhartari, A.K., Li, B., Perdikaris, P. Gradient alignment in physics-informed neural networks: a second-order optimization perspective. arXiv preprint arXiv:2502.00604, 2025. [43] Wang, Y., Lai, C.-Y. Multi-stage neural networks: function approximator of ma-chine precision. Journal of Computational Physics , 2024, 504: 112865. [44] Wang, S., Teng, Y., Perdikaris, P. Understanding and mitigating gradient flow pathologies in physics-informed neural networks. SIAM Journal on Scientific Com-puting , 2021, 43(5): A3055–A3081. [45] Wang, S., Yu, X., Perdikaris, P. When and why PINNs fail to train: a neural tangent kernel perspective. Journal of Computational Physics , 2022, 449: 110768. [46] Xu, Y. Multi-grade deep learning. Communications on Applied Mathematics and Computation , 2025: 1–52. 32 [47] Xu, M., Zhang, L., Wu, B., Liu, K. A novel class of hessian recovery-based numer-ical methods for solving biharmonic equations and their applications in phase field modeling. Finite Elements in Analysis and Design , 2025, 251: 104405. [48] Xu, Z.-Q.J., Zhang, Y., Luo, T. Overview frequency principle/spectral bias in deep learning. Communications on Applied Mathematics and Computation , 2025, 7(3): 827–864. [49] Xu, Z.-Q.J., Zhang, L., Cai, W. On understanding and overcoming spectral biases of deep neural network learning methods for solving PDEs. Journal of Computa-tional Physics , 2025, 530: 113905. [50] Yang, Y., Hou, M., Luo, J. A novel improved extreme learning machine algorithm in solving ordinary differential equations by Legendre neural network methods. 
+
+Advances in Difference Equations , 2018, 2018(1): 469. [51] Yu, B. The deep Ritz method: a deep learning-based numerical algorithm for solving variational problems. Communications in Mathematics and Statistics , 2018, 6(1): 1–12. [52] Zang, Y., Bao, G., Ye, X., Zhou, H. Weak adversarial networks for high-dimensional partial differential equations. Journal of Computational Physics , 2020, 411: 109409. [53] Zhang, Z., Naga, A. A new finite element gradient recovery method: superconver-gence property. SIAM Journal on Scientific Computing , 2005, 26(4): 1192–1213. [54] Zhang, Z., Bao, F., Ju, L., Zhang, G. Transferable neural networks for partial differential equations. Journal of Scientific Computing , 2024, 99(1): 2. 33

@@ -1,0 +1,2915 @@
+Title: Lotka-Sharpe Neural Operators for Control of Population PDEs
+
+URL Source: https://arxiv.org/pdf/2604.03892v1
+
+Published Time: Tue, 07 Apr 2026 00:48:46 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+> 1
+
+# Lotka-Sharpe Neural Operators for Control of Population PDEs 
+
+Miroslav Krsti´ c, Iasson Karafyllis, Luke Bhan, Carina Veil 
+
+Abstract — Age-structured predator-prey integro-partial differential equations provide models of interacting pop-ulations in ecology, epidemiology, and biotechnology. A key challenge in feedback design for these systems is the scalar ζ, defined implicitly by the Lotka-Sharpe nonlinear integral condition, as a mapping from fertility and mortality rates to ζ. To solve this challenge with operator learning, we first prove that the Lotka-Sharpe operator is Lipschitz continuous, guaranteeing the existence of arbitrarily accu-rate neural operator approximations over a compact set of fertility and mortality functions. We then show that the resulting approximate feedback law preserves semi-global practical asymptotic stability under propagation of the op-erator approximation error through various other nonlinear operators, all the way through to the control input. In the numerical results, not only do we learn “once-and-for-all” the canonical Lotka-Sharpe (LS) operator, and thus make it available for future uses in control of other age-structured population interconnections, but we demonstrate the on-line usage of the neural LS operator under estimation of the fertility and mortality functions. 
+
+I. I NTRODUCTION 
+
+Understanding the dynamics of interacting populations is fundamental to predicting the behavior of ecosystems, epi-demics, and bioreactors. Age-structured population models, formulated as partial differential equations (PDEs), have emerged as the cornerstone framework for describing such dynamics [26]. While single-species dynamics have received considerable attention from a control-theoretic perspective [1], [8]–[13], [17], [18], [27], the multi-species setting — where predator and prey populations are coupled through nonlinear feedback — has only recently been tackled with a rigorous feedback design [29]–[31]. These results establish global stabilization laws capable of driving both populations to prescribed set-points. However, they share a common vul-nerability: each controller gain depends critically on a scalar 
+
+ζ, defined implicitly through the Lotka–Sharpe (LS) condition [28]. In general, this scalar cannot be computed in closed form and must therefore be approximated numerically. Biologically, ζ is critical as it encodes the long-term fate of the population: whether it grows, declines, or reaches equilibrium. Furthermore, from a mathematical perspective, it is equally rich, representing an infinite dimensional mapping        
+
+> Miroslav Krsti´ c and Luke Bhan are with the University of Califor-nia, San Diego, USA, {mkrstic, lbhan }@ucsd.edu. Iasson Karafyl-lis is with the National Technical University of Athens, Greece, ia-sonkar@central.ntua.gr. Carina Veil is with KTH Royal Institute Tech-nology, Stockholm, Sweden, veil@kth.se.
+
+from the birth rate k(a) and mortality rate μ(a) into a real-valued scalar ζ satisfying: 
+
+Z A
+
+> 0
+
+k(a)e− R a 
+
+> 0(μ(s)+ ζ)ds
+
+da = 1 , (1) Generally, this infinite dimensional map has no analytical solution and hence every change in k or μ demands a fresh computation. In age dependent control designs, the Lotka-Sharpe parameters ζ1 and ζ2 of both the predator and prey species appear in the controller gains. Consequently, any practical implementation will introduce approximation errors with no a priori stability certificate. This paper is the first step toward understanding approximations of this operator and certifying stability of feedback laws when faced with such approximations. To begin studying approximations of the Lotka-Sharpe operator, we first establish the mapping (k, μ ) 7 → ζ is Lip-schitz continuous. This is the key technical challenge as ζ
+
+is only given implicitly and hence its continuity requires a monotonicity argument tailored to the biological constraints of the domain. Establishing this continuity paves the way for both neural operator [5], [22], [24] and numerical approximations. In this work, we focus on the operator learning paradigm as it has proven transformative for replacing expensive implicit computations in feedback laws, with deployments spanning PDE backstepping [3], [16], [32], adaptive control [4], [19], [20], delayed systems [32], and applications in biological Chemostats [2] as well as traffic flows [25], [33]. Building on the Lipschitz continuity of the Lotka–Sharpe operator, we establish a universal approximation theorem over compact classes of birth and mortality profiles. Moreover, we do not stop at just the approximation. For the predator–prey model, we study the robustness of the feedback law when the exact Lotka–Sharpe parameters are replaced by approximations. In particular, we prove semi-global practical asymptotic stability of the resulting closed-loop system. We emphasize that this stability result is not limited to neural operators, but is a robustness result that captures any uniform approximation. In this sense, the paper resolves a foundational vulnerability shared by every existing age-structured predator-prey controller: for the first time, one can implement the feedback law without exact knowledge of ζ and still have a rigorous guarantee that the populations will behave. The paper makes the following specific contributions, through new ideas, techniques, and results: 1) Formulation of the Lotka–Sharpe mapping as an oper-ator in feedback control. The dependence of stabilizing 
+
+> arXiv:2604.03892v1 [eess.SY] 4 Apr 2026 2
+
+predator–prey controllers on the implicitly defined scalar 
+
+ζ is recast as an operator mapping from functional data (birth and mortality profiles) to a control-relevant parameter, thereby exposing a heretofore hidden concept in age-structured feedback design. 2) Establishment of Lipschitz continuity for an implicitly defined nonlinear operator on a biologically constrained domain. A nonstandard analysis is developed to prove Lipschitz continuity of the Lotka–Sharpe operator de-spite its implicit definition, leveraging monotonicity properties induced by ordered bounds on fertility and mortality functions. 3) Derivation of a universal approximation framework for the Lotka–Sharpe operator. By combining the Lips-chitz property with compactness of admissible function classes, it is shown that the Lotka–Sharpe operator ad-mits uniformly accurate neural operator approximations, placing it within the operator-learning paradigm despite its implicit structure. 4) Explicit characterization of how approximation errors propagate through the control architecture. It is clearly exhibited how approximation errors in ζ do not remain localized but enter all downstream operator evaluations (Gκ, Gγ , Gπ ), yielding a structured perturbation of the control law that is reduced to two scalar error channels. 5) Development of a robustness analysis for controllers with implicitly parameterized gains under approxima-tion. A new analytical framework is constructed to handle perturbations that simultaneously affect multiple gain terms through a shared implicit parameter. The technical approach is devised to yield guarantees in the presence of a positivity constraint on the control input and under Lyapunov derivatives that, while neg-ative definite, are non-proper, because, in the context of population dynamics, extinction is a barrier near the equilibrium. The paper is organized as follows. Section II presents the age-structured predator–prey model and the Lotka–Sharpe condition. Section III introduces the four operators and high-lights the implicit nature of the Lotka–Sharpe operator. Section IV develops the nominal and approximate control laws and identifies the structure of the induced perturbation. Section V establishes neural approximability of the Lotka–Sharpe operator. Section VI provides the stability analysis under approximation errors, including the main robustness result. Section VII contains the proofs of the main theorems. Section VIII presents numerical results and Section IX presents a illustration of a adaptive design when the fertility and mortality functions are unknown. A preliminary version of this paper has been submitted to the Conference on Decision and Control 2026 [14]. This jour-nal version, additionally, contains all the proofs (Section VII and Appendices A, B, C) as well as an additional illustrative adaptive design in Section IX. 
+
+Notation: Denote the sets R>0 and R≥0 as the positive real numbers excluding and including zero respectively. Let 
+
+Ck(S1; S2) represent the class of k ≥ 1 continuously dif-ferentiable functions mapping S1 to S2 and C0(S1; S2) be the class of continuous functions mapping S1 to S2. Let 
+
+A > 0 be a real-valued positive scalar. For a function 
+
+f : [0 , A ] → R≥0, we define ∥f (·)∥∞ to be the supremum norm sup x∈[0 ,A ] |f (x)|. For a distributed function f (a, t ) with 
+
+(a, t ) ∈ [0 , A ] × R≥0, we use ˙f = ∂f ∂t for the time derivative and analogously f ′ = ∂f ∂x for the space derivative. 
+
+II. A GE -STRUCTURED POPULATION MODEL 
+
+The dynamics of one age-structured species in a chemostat with population density x(a, t ), where the organisms compete for a common food source, is governed by 
+
+x′(a, t ) + ˙ x(a, t ) = − x(a, t )
+
+h
+
+μ(a)+
+
+Z A
+
+> 0
+
+p(α)x(α, t )dα + u(t)
+
+i
+
+(2) with mortality function μ(a), competition kernel p(a), dilution 
+
+u(t), and derivatives with respect to time and x′ with respect to age [26]. Essentially, the population density is reduced by mortality, competition, and dilution. The Lotka-Sharpe condition (1) is an integral equation that defines the intrinsic growth rate ζ. It ensures that the mortality-discounted age-specific fertility contributions equal one, which characterizes a stable population growth rate and age distri-bution. It was proven in [28] that (1) has a unique positive real-valued solution ζ(k, μ ) for any nonnegative measurable birth rate function k that is not identically zero and for any nonnegative measurable mortality rate function μ, such that R A 
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da > 1.Extending (2) to a predator-prey setup results in the fol-lowing age-structured model considered in [30], with initial conditions (IC) and boundary conditions (BC), 
+
+∂x 1
+
+∂t (a, t ) + ∂x 1
+
+∂a (a, t ) = −x1(a, t )
+
+"
+
+μ1(a) + u(t)+
+
+Z A
+
+> 0
+
+g1(α)x2(α, t )dα 
+
+#
+
+(3a) 
+
+∂x 2
+
+∂t (a, t ) + ∂x 2
+
+∂a (a, t ) = −x2(a, t )
+
+"
+
+μ2(a) + u(t)+ 1
+
+R A 
+
+> 0
+
+g2(α)x1(α, t )dα 
+
+#
+
+(3b) IC : xi(a, 0) = xi, 0(a), (3c) BC : xi(0 , t ) =
+
+Z A
+
+> 0
+
+ki(a)xi(a, t )da, (3d) where, for i, j ∈ { 1, 2}, i̸ = j, xi(a, t ) > 0 is the population density, i. e. the amount of organisms of a certain age a ∈
+
+[0 , A ] of the two interacting populations x1(a, t ) and x2(a, t )
+
+with (a, t ) ∈ [0 , A ] × R>0, their derivatives ˙xi with respect to time and x′ 
+
+> i
+
+with respect to age, and the constant maximum age A > 0. The interaction kernels gi(a) : [0 , A ] → R≥0,the mortality rates μi(a) : [0 , A ] → R≥0, and the birth rates ki(a) : [0 , A ] → R≥0 are continuous functions with 
+
+R A 
+
+> 0
+
+μi(a)da > 0, R A 
+
+> 0
+
+gi(a)da > 0, R A 
+
+> 0
+
+ki(a)da > 0. The 3
+
+continuous dilution rate u(t) : R≥0 → R≥0, is an input affecting both species. 
+
+Proposition 1 (Equilibrium [30]): The equilibrium state 
+
+(x∗
+
+> 1
+
+(a), x ∗
+
+> 2
+
+(a)) of the population system (3), along with the equilibrium dilution input u∗, is given by 
+
+x∗ 
+
+> i
+
+(a) = x∗ 
+
+> i
+
+(0) ni(a) , ni(a) := e−R a 
+
+> 0(ζi+μi(s)) ds
+
+, (4a) 
+
+u∗ = ζ1 − λ2 = ζ2 − 1
+
+λ1
+
+∈ (0 , min {ζ1, ζ 2}) , (4b) with unique parameters ζi(ki, μ i) resulting from the Lotka-Sharpe condition [28], 
+
+λ1 := 
+
+Z A
+
+> 0
+
+g2(a)x∗
+
+> 1
+
+(a)da = x∗
+
+> 1
+
+(0) γ2 , (5a) 
+
+γ2 := 
+
+Z A
+
+> 0
+
+g2(a)n1(a)da > 0 (5b) 
+
+λ2 := 
+
+Z A
+
+> 0
+
+g1(a)x∗
+
+> 2
+
+(a)da = x∗
+
+> 2
+
+(0) γ1 (5c) 
+
+γ1 := 
+
+Z A
+
+> 0
+
+g1(a)n2(a)da > 0 (5d) and the positive concentrations of the newborns 
+
+x∗
+
+> 1
+
+(0) = 1(ζ2 − u∗) γ2
+
+> 0, (6a) 
+
+x∗
+
+> 2
+
+(0) = ζ1 − u∗
+
+γ1
+
+= 1
+
+γ1
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+> 0 . (6b) Moreover, for u∗ to be positive, the prey birth concentration must be commanded to be large enough: 
+
+x∗
+
+> 1
+
+(0) > 1
+
+ζ2γ2
+
+. (7) Proposition 1 indicates that the equilibrium is explicitly characterized by the Lotka–Sharpe quantities ζi, the dilution setpoint u∗, and the newborn concentrations x∗ 
+
+> i
+
+(0) . To achieve a target equilibrium, we will invoke the feedback law designed in [30]. However, before doing so, we first define four key operators necessary for implementing the feedback law. 
+
+III. F OUR OPERATORS 
+
+In the implementation of a stabilizing controller for an age-structured predator-prey system, four operators are involved, the principal among which is the Lotka-Sharpe operator GLS 
+
+(See Figure 2). 
+
+A. Lotka-Sharpe operator (output sits within an integral — it has to be solved for). 
+
+Define the Lotka-Sharpe operator as GLS : (k, μ ) 7 → ζ,mapping two functions into a scalar, and defined implicitly by Z A
+
+> 0
+
+k(a) e− R a   
+
+> 0(ζ+μ(s)) ds
+
+da = 1 (8) with ζi = GLS (ki, μ i), i = 1 , 2.For A = ∞, the Lotka-Sharpe condition admits a useful reformulation that makes the mathematical meaning of GLS 
+
+transparent. Define the survival function 
+
+Π( a) = exp 
+
+
+
+−
+
+Z a
+
+> 0
+
+μ(s) ds 
+
+
+
+, (9)    
+
+> k(a)μ(a)
+> extend by 0
+> for a > A
+
+Survival Π( a)    
+
+> e−Ra
+> 0μ(s)ds
+> Π( a)
+
+Net maternity k·Π    
+
+> k(a)·Π( a)
+> k(a)·Π( a)
+
+Laplace transform       
+
+> L{ kΠ}(ζ) = R∞
+> 0k(a)Π( a)e−ζa da
+> F(ζ) = L{ kΠ}(ζ)
+
+Function inversion ⋆      
+
+> find ζ:F(ζ) = 1
+> ζ
+> step 1 — trivial: (zero-extend k)
+> step 2 — direct: (explicit integral)
+> step 3 — direct: (pointwise product)
+> step 4 — direct: (linear integral)
+> step 5 — nontrivial ⋆
+> (implicit, no closed form)
+
+GLS : ( k, μ ) 7 → ζ
+
+> Fig. 1. Computational breakdown of the Lotka-Sharpe operator
+
+so that k(a)Π( a) is the net maternity function , i.e. fertility at age a weighted by survival up to age a. Then the defining equation becomes 
+
+Z ∞
+
+> 0
+
+k(a)Π( a)e−ζa da = 1 , (10) or equivalently 
+
+L{ kΠ}(ζ) = 1 . (11) where L is the Laplace transform. Hence, the Lotka-Sharpe operator may be viewed as 
+
+GLS (k, μ ) = ( L{ kΠ})−1(1) , (12) namely: first form the net maternity profile kΠ, then take its Laplace transform, and finally locate its 1-level crossing. Biologically, ζ is the harvesting rate for which discounted lifetime maternity is exactly one, so that each individual replaces itself and the population remains constant. This decomposition also clarifies what is mathematically easy and what is genuinely difficult in learning GLS (See Fig-ure 1). The passage (k, μ ) 7 → kΠ is explicit, and the Laplace transform is likewise explicit and linear, even though it acts on an infinite-dimensional input. The central nonlinearity lies in the last step: solving for the unique ζ such that L{ kΠ}(ζ) = 1 .In other words, learning GLS amounts primarily to learning the inverse of the scalar function ζ 7 → L{ kΠ}(ζ) at level 1. This is a root-finding problem whose solution depends globally on the whole net maternity profile, which explains why GLS is nontrivial despite the apparent simplicity of its definition. 
+
+B. Three easier operators (outputs = direct evaluations of integrals). 
+
+We will see the control law also requires three additional operators - although their mappings are explicit and hence do 4
+
+not require the same computational treatment as the Lotka-Sharpe operator.  
+
+> •
+
+Gκ : (k, μ, ζ ) 7 → κ, mapping two functions and one scalar into a scalar, and defined explicitly as 
+
+κ =
+
+Z A
+
+> 0
+
+a k (a) e− R a   
+
+> 0(ζ+μ(s)) ds
+
+da (13) with κi = Gκ(ki, μ i, ζ i), i = 1 , 2. 
+
+> •
+
+Gγ : (g, ζ, μ ) 7 → γ, mapping two functions and one scalar into a scalar, and defined explicitly as 
+
+γ =
+
+Z A
+
+> 0
+
+g(a) e− R a   
+
+> 0(ζ+μ(s)) ds
+
+da (14) with γ1 = Gγ (g1, ζ 2, μ 2) and γ2 = Gγ (g2, ζ 1, μ 1). 
+
+> •
+
+Gπ : (k, μ, ζ ) 7 → π0, mapping two functions and one scalar into a function, and defined explicitly as 
+
+π0(a) = 
+
+Z Aa
+
+k(s) eR as (ζ+μ(l)) dl ds (15) with π0,i (a) = Gπ (ki, μ i, ζ i)( a), i = 1 , 2.
+
+IV. C ONTROL LAWS : N OMINAL AND 
+
+NEURO -APPROXIMATED 
+
+We are now ready to introduce the feedback law for stabiliz-ing (3). We begin by discussing the exact feedback design and then discuss the design under approximations ˆζ1, ˆζ2 explicitly characterizing the propagation of the error. 
+
+A. Nominal controller ensures stabilization 
+
+Nominal controller.: The control law 
+
+u = u∗ + β
+
+"
+
+1
+
+λ2
+
+1 −
+
+R A 
+
+> 0
+
+ak 1(a)x∗
+
+> 1
+
+(a)da 
+
+R A 
+
+> 0
+
+π0,1(a)x1(a, t )da 
+
+!
+
+− (1 + ε)λ1 1 −
+
+R A 
+
+> 0
+
+π0,2(a)x2(a, t )da 
+
+R A 
+
+> 0
+
+ak 2(a)x∗
+
+> 2
+
+(a)da 
+
+! # 
+
+(16) was designed in [30] to stabilize system (3). Using (5) to eliminate the constants λi, (4a) to eliminate the profiles x∗ 
+
+> i
+
+(a),and the relation u∗ = ζ2 − 1  
+
+> x∗
+> 1(0) γ2
+
+, the control can be rewritten as 
+
+u = ζ2 − 1
+
+x∗
+
+> 1
+
+(0) γ2
+
++ β
+
+ 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+1 − x∗
+
+> 1
+
+(0) κ1
+
+⟨π0,1, x 1⟩
+
+
+
+− (1 + ε)x∗
+
+> 2
+
+(0) γ1
+
+
+
+1 − ⟨π0,2, x 2⟩
+
+x∗
+
+> 2
+
+(0) κ2
+
+  
+
+, (17) which, then, eliminating x∗
+
+> 2
+
+(0) using (6b) and keeping only the prey birth setpoint x∗
+
+> 1
+
+(0) , becomes u = unom (η) with 
+
+unom (η) := ζ2 − 1
+
+x∗
+
+> 1
+
+(0) γ2
+
++ β
+
+
+
+(1 + ε)( ζ2 − ζ1)
+
+− εx∗
+
+> 1
+
+(0) γ2
+
+− κ1
+
+γ2⟨π0,1, x 1⟩
+
++ (1 + ε) γ1
+
+κ2
+
+⟨π0,2, x 2⟩
+
+
+
+. (18) The inputs into this feedback law are the states (x1, x 2), the setpoint scalar x∗
+
+> 1
+
+(0) , as well as the scalars ζi, κ i, γ i and functions π0,i , which all depend only on (ki, μ i, g i).
+
+Closed-loop stability under nominal/exact ζ1, ζ 2.: It was shown in [30, Proposition 2] that, on the set {a ∈
+
+[0 , A ]|κixi(a) = ni(a)⟨π0,i , x i⟩} , the PDE system (3) is governed by the ODE 
+
+˙η1 = ζ2 − 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+eη2 − u (19a) 
+
+˙η2 = ζ1 − 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+e−η1 − u (19b) We focus in this paper on stabilization of this ODE system, in the presence of approximation errors ζi − ˆζi.For exact parameters, ˆζi = ζi, the controller unom (η) gives 
+
+˙η1 = − βx∗
+
+> 1
+
+(0) γ2
+
+(1 − e−η1 )
+
+− (1 + β(1 + ε)) 
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − 1) 
+
+(20a) 
+
+˙η2 = 1 − βx∗
+
+> 1
+
+(0) γ2
+
+(1 − e−η1 )
+
+− β(1 + ε)
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − 1) (20b) The stability analysis under the nominal controller is con-ducted with the functions 
+
+ϕ1(η1) = 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+(1 − e−η1 ), (21a) 
+
+ϕ2(η2) = 
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − 1) , (21b) where the Lyapunov function is given as 
+
+V1(η) = 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+(e−η1 + η1 − 1) + (1 + ε)
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − η2 − 1) 
+
+(22) with ∂V 1 
+
+> ∂η 1
+
+= ϕ1(η1), ∂V 1 
+
+> ∂η 2
+
+= (1 + ε)ϕ2(η2), and for the closed-loop system 
+
+˙η1 = −βϕ 1(η1) −  1 + β(1 + ε)ϕ2(η2), (23a) 
+
+˙η2 = −β(1 + ε)ϕ2(η2) + (1 − β)ϕ1(η1). (23b) The Lyapunov derivative is 
+
+˙V1(η) = − ϕ1 ϕ2
+
+ Q
+
+ϕ1
+
+ϕ2
+
+
+
+, (24) where 
+
+Q =
+
+
+
+β ε − 2β(1 + ε)2
+
+ε − 2β(1 + ε)2 β(1 + ε)2
+
+ . (25) The determinant det Q = ε
+
+ 4β(1+ ε)−ε
+
+ 
+
+> 4
+
+is positive if and only if 
+
+β > ε
+
+4(1 + ε) , (26) which makes ˙V1(η) negative definite and η1 = η2 = 0 aglobally asymptotically stable equilibrium, at least if u is not restricted to only positive values. 5
+
+1 implicit 
+
+2 explicit 
+
+3 control 
+
+GLS 
+
+(k, μ ) 7 → ζ implicit 
+
+Gκ
+
+(k, μ, ζ ) 7 → κ
+
+Gγ
+
+(g, ζ, μ ) 7 → γ
+
+Gπ
+
+(k, μ, ζ ) 7 → π0(·)
+
+Control law u(t)
+
+Eq. (18) 
+
+ζ ζ
+
+ζ
+
+ζ inside kernel 
+
+implicit — requires iterative root-finding explicit given ζ 
+
+> Fig. 2. Graph of the operator dependencies for the control construction in (28) .
+
+B. Approximate controller introduces a perturbation 
+
+When the Lotka-Sharpe parameters ζi are known only approximately as ˆζi, ζi is replaced in the controller by ˆζi.The resulting approximation error does not remain localized, but enters every operator that depends on ζi.The approximation of controller (18) is given by u =ˆu(η, e 1, e 2) where 
+
+ˆu(η, e 1, e 2) := ˆζ2 − 1
+
+x∗
+
+> 1
+
+(0)ˆ γ2
+
++ β
+
+
+
+(1 + ε)( ˆζ2 − ˆζ1)
+
+− εx∗
+
+> 1
+
+(0)ˆ γ2
+
+− ˆκ1
+
+ˆγ2⟨ˆπ0,1, x 1⟩
+
++ (1 + ε) ˆγ1
+
+ˆκ2
+
+⟨ˆπ0,2, x 2⟩
+
+
+
+(27) 
+
+= ˆζ2 − 1
+
+x∗
+
+> 1
+
+(0)ˆ γ2
+
++ β
+
+
+
+(1 + ε)( ˆζ2 − ˆζ1)
+
+− εx∗
+
+> 1
+
+(0)ˆ γ2
+
+− ˆκ1
+
+ˆγ2 ⟨ˆπ0,1, n 1⟩ x∗
+
+> 1
+
+(0) e−η1
+
++ (1 + ε) ˆγ1 ⟨ˆπ0,2, n 2⟩ x∗
+
+> 2
+
+(0) ˆκ2
+
+eη2
+
+
+
+, (28) where 
+
+ηi = ln 
+
+ ⟨π0,i , x i⟩
+
+x∗ 
+
+> i
+
+(0) κi
+
+
+
+, (29) and 
+
+ζi = GLS (ki, μ i) (30) 
+
+ˆζi = bGLS (ki, μ i) = ζi − ei (31) 
+
+ei = ζi − ˆζi (32) 
+
+ˆκi = Gκ(ki, μ i, ζ i − ei) (33) 
+
+ˆγ1 = Gγ (g1, ζ 2 − e2, μ 2) (34) 
+
+ˆγ2 = Gγ (g2, ζ 1 − e1, μ 1) (35) 
+
+ˆπ0,i = Gπ (ki, μ i, ζ i − ei) , (36) where bGLS stands for an approximation of the operator GLS ,which can be of a neural, numerical, or another kind, produc-ing errors ei.In (33)-(36) one faces a nearly terrifying feature of the approximate controller: the approximation errors ei of the Lotka-Sharpe operator propagate throughout the gain architec-ture of the control law. The robustness analysis will have to quantify all of them, through the respective nonlinear infinite-dimensional operators Gκ, Gγ , Gπ .Further, note explicitly that unom (η) = ˆ u(η, 0, 0) . Dealing with the perturbation 
+
+∆u(η, e 1, e 2) = ˆ u(η, e 1, e 2) − ˆu(η, 0, 0) (37) is the main technical challenge to be overcome in the stability analysis portion of this paper. Additionally, though negative definite, ˙V1(η) is not proper. The lack of properness is the model’s fundamental challenge for achieving semiglobal sta-bility in the face of the controller perturbation ∆u(η, e 1, e 2).Theorem 2 is where these challenges are overcome. 
+
+V. N EURAL APPROXIMABILITY OF LOTKA -S HARPE 
+
+OPERATOR 
+
+Relative to many previous results on neural operator-based control, what differentiates the result of the present paper is the operator: the Lotka-Sharpe nonlinear mapping. The next theorem is the backbone of the paper — establishing Lipschitzness of GLS . The result is unconventional: from the domain on which the result holds, whose idiosyncrasy comes from biology-required monotonicity of birth and mortality, to the technique with which the Lipschitz constant is derived. 
+
+Theorem 1: (Lipschitz continuity of the Lotka–Sharpe map-ping) Let A > 0 and let kmin , k max , μ min , μ max ∈
+
+C0([0 , A ]; R≥0) be Lipschitz functions such that 
+
+kmin (a) ≤ kmax (a),μmin (a) ≤ μmax (a), ∀a ∈ [0 , A ], (38) 6
+
+k1(a) k2(a)μ1(a)g2(a) μ2(a) g1(a)                   
+
+> bGLS
+> (k1, μ 1)7→ˆζ1
+> bGLS
+> (k2, μ 2)7→ˆζ2
+> Gγ
+> 
+> g2,ˆζ1, μ 1
+> 
+> 7→γ2
+> Gκ
+> k1, μ 1,ˆζ1
+> 
+> 7→κ1
+> Gπ
+> k1, μ 1,ˆζ1
+> 
+> 7→π0,1
+> Gπ
+> k2, μ 2,ˆζ2
+> 
+> 7→π0,2
+> Gκ
+> k2, μ 2,ˆζ2
+> 
+> 7→κ2
+> Gγ
+> 
+> g1,ˆζ2, μ 2
+> 
+> 7→γ1
+> Control law Eq. (28)
+
+ˆζ1 ˆζ2
+
+γ2 κ1 π0,1 π0,2 κ2 γ1
+
+x1(a, t ) x2(a, t )
+
+u(t)
+
+input function ζ output given / measured 
+
+x∗
+
+> 1
+
+(0) 
+
+Fig. 3. Explicit operator mappings in the predator-prey control law. 
+
+and Z A
+
+> 0
+
+kmin (a)e− R a   
+
+> 0μmax (s)ds
+
+da > 1. (39) Let ζmin ≤ ζmax be the unique solutions of the following equa-tions for ( kmin ,μmax ) and ( kmax , μmin ) respectively. Then, 
+
+Z A
+
+> 0
+
+kmin (a)e−ζmin a−R a   
+
+> 0μmax (s)ds
+
+da = 1 , (40) 
+
+Z A
+
+> 0
+
+kmax (a)e−ζmax a−R a   
+
+> 0μmin (s)ds
+
+da = 1 . (41) Let G > 0 be a sufficiently large constant so that 
+
+∥f ∥∞ + sup 
+
+> a,s ∈[0 ,A ]
+> a̸=s
+
+|f (a) − f (s)||a − s| ≤ G (42) for f = kmin , k max , μ min , μ max . Define 
+
+HG := f ∈ C0[0 , A ]; R≥0) : ∥f ∥∞ + [ f ]C0,1([0 ,A ]) ≤ G ,
+
+(43) where 
+
+[f ]C0,1([0 ,A ]) := sup 
+
+> a,s ∈[0 ,A ]
+> a̸=s
+
+|f (a) − f (s)||a − s| , (44) and 
+
+S := 
+
+
+
+(k, μ ) ∈ H2 
+
+> G
+
+: kmin (a) ≤ k(a) ≤ kmax (a),μmin (a) ≤ μ(a) ≤ μmax (a),
+
+for all a ∈ [0 , A ]
+
+ . (45) Furthermore, for each (k, μ ) ∈ S, define P (k, μ ) = ζ, where 
+
+ζ > 0 is the unique solution of 
+
+Z A
+
+> 0
+
+k(a)e−ζa −R a   
+
+> 0μ(s)ds
+
+da = 1 . (46) Then the mapping P : S → [ζmin , ζ max ] is Lipschitz continuous with respect to the sup norm, namely, for all 
+
+(k, μ ), (˜k, ˜μ) ∈ S,
+
+|P (˜k, ˜μ) − P (k, μ )| ≤ L ∥˜k − k∥∞ + L ∥kmax ∥∞ A ∥˜μ − μ∥∞,
+
+(47) where 
+
+L = A  2A∥kmax ∥∞
+
+2A∥kmax ∥∞−1
+
+R A 
+
+> 0
+
+a k min (a)I(a) da 
+
+
+
+ln 
+
+R A 
+
+> 0
+
+kmin (a)I(a) da 
+
+ , (48) with 
+
+I(a) := e− R a  
+
+> 0μmax (s)ds
+
+. (49) As depicted in Figure 1, the Lotka–Sharpe operator reduces to a scalar root-finding problem for the Laplace transform of the net maternity function k(a)Π( a). The only nonlinear step is the function inversion F (ζ) = 1 ; all other steps are explicit. The analysis below quantifies the sensitivity of this function inversion to perturbations in the input functions (k, μ ).The Lipschitz constant (48) reflects the sensitivity of the intrinsic growth rate to perturbations in fertility and mortality profiles, increasing when reproduction is either high (large 
+
+kmax ) or when mortality-discounted fertility is weak (small 7
+
+kmin , large μmax ), i.e., when the population operates near a fragile balance between growth and decline. From the constant (48) being independent of the Lipschitz constants of kmin , k max , μ min , μ max the reader should not infer that S can be a set that contains non-Lipschitz continuous functions. In order to obtain the neural approximability S
+
+needs to be a compact set, which is ensured by the definitions of HG and S and by the Arzela-Ascoli theorem. 1
+
+The next result, an immediate corollary of the universal approximation theory for nonlinear operators on compact domains (See [5], [21, Theorem 1]), provides the neural approximation mechanism that is used to replace the exact Lotka–Sharpe parameters in the feedback law. 
+
+Corollary 1: (Neural-operator approximability of the Lotka–Sharpe mapping) Let A > 0, and let 
+
+kmin , k max , μ min , μ max ∈ C0([0 , A ]; R≥0) satisfy (38) and (39). Let G > 0, define HG and S ⊂ H2 
+
+> G
+
+as in Theorem 1. Define the Lotka–Sharpe operator as P in Theorem 1, namely, as 
+
+GLS : S → [ζmin , ζ max ], GLS (k, μ ) := ζ, (50) where ζ is the unique solution of (46) and ζmin ≤ ζmax be the constants defined by (40). Then, for every δ > 0, there exists a neural operator bGLS : S → R such that 
+
+|G LS (k, μ ) − bGLS (k, μ )| ≤ δ, ∀ (k, μ ) ∈ S. (51) 
+
+Proof: By Theorem 1, GLS is Lipschitz on S, hence continuous on the compact set S. The universal approximation property of neural operators [24] implies that GLS can be uniformly approximated on S by a neural operator bGLS with arbitrary accuracy δ > 0.
+
+VI. S TABILIZATION WITH NEURAL OPERATOR 
+
+A. Stability theorem under errors in Lotka-Sharpe parameters ζ1, ζ 2
+
+We first state a generic approximation-robustness result, in Theorem 2, which is independent of whether the approxima-tion originates from a neural operator or some other error in computing the Lotka-Sharpe parameters ζ1, ζ 2. Then, in Corollary 2, we give a stabilization result under a neural operator. Note that the approximate controller (28) depends on the approximation ˆζi = ζi − ei not only directly, but also through the derived quantities ˆκi, ˆγi, ˆπ0,i defined in (33), (34), (35), (36), which are exact evaluations of Gκ, Gγ , Gπ at the approx-imate Lotka-Sharpe values. Consequently, all approximation errors in the controller reduce to the scalar errors e1, e 2 and Theorem 2 is stated entirely in terms of these. Even though the (approximate) feedback law (28) is given in terms of the state of the PDE, see the version (27), we provide a stability guarantee for the reduced/ODE model (19). We have two reasons for this. First, the full PDE model is equivalent to the ODE model with exponentially decaying multiplicative perturbations, as shown in [30, (15)], and noting   
+
+> 1A slight generalization can be obtained if the set HGis not a bounded subset of Lipschitz functions but a bounded subset of Holder continuous func-tions (where equicontinuity holds as well), but we forego that generalization.
+
+the exponential decay of ψi in [30, (53), (54)]. We can extend our Theorem 2 here just as we extended the ODE Theorem 1 to the PDE Theorem 2 in 2 in [30]. Second, such an extension would not illuminate — it would, in fact, detract from the clarity of how the errors of approximating the Lotka-Sharpe and the other three operators are handled in our robustness analysis. 
+
+Theorem 2: (Admissibly semi-global practical asymptotic stability under positive control ) Consider system (19) con-trolled by the approximate feedback law (28). Let ε > 0,
+
+β > ε
+
+4(1 + ε) , (52) 
+
+γ1, γ 2, ζ 1, ζ 2 > 0, x∗
+
+> 1
+
+(0) > 1 
+
+> ζ2γ2
+
+, x∗
+
+> 2
+
+(0) > 0, and define 
+
+a := 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+, b := ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+= γ1x∗
+
+> 2
+
+(0) > 0
+
+(53) 
+
+ϕ1(η1) := a(1 − e−η1 ), ϕ2(η2) := b(eη2 − 1) , (54) 
+
+r(η) := pϕ1(η1)2 + ϕ2(η2)2, (55) 
+
+D∗ := {η ∈ R2 : r(η) < min {a, b }} , (56) and 
+
+V1(η) := a e−η1 + η1 − 1 + (1 + ε)b eη2 − η2 − 1. (57) Define 
+
+Ωc := {η ∈ R2 : V1(η) ≤ c}, (58) and for δ > 0
+
+c∗ 
+
+> δ
+
+:= sup 
+
+n
+
+c > 0 : Ω c ⊂ D ∗ and 
+
+inf   
+
+> η∈Ωc,|e1|+|e2|≤ δ
+
+u(η; e1, e 2) ≥ 0
+
+o
+
+. (59) Then, for every δ > 0 and every c ∈ (0 , c ∗ 
+
+> δ
+
+), there exist functions βc ∈ KL and μc ∈ K such that if 
+
+|e1| + |e2| ≤ δ, η(0) ∈ Ωc, (60) the solution satisfies 
+
+η(t) ∈ Ωc ⊂ D ∗, u(t) ≥ 0, ∀t ≥ 0, (61) and 
+
+r(η(t)) ≤ βc
+
+ r(η(0)) , t  + μc(δ), ∀t ≥ 0. (62) 
+
+B. Main result—stabilization under Lotka-Sharpe NO 
+
+Corollary 2: (Admissibly semi-global practical asymptotic stability under neural approximation) Let the assumptions of Theorem 2 hold. Consider system (19) controlled by the approximate feedback law (28), and assume that the neural operator bGLS satisfies 
+
+GLS (k1, μ 1) − bGLS (k1, μ 1) < δ
+
+2 , (63) 
+
+GLS (k2, μ 2) − bGLS (k2, μ 2) < δ
+
+2 , (64) or, equivalently, 
+
+e1 := ζ1 − ˆζ1, e2 := ζ2 − ˆζ2, (65) 8
+
+satisfy |e1| < δ/ 2, |e2| < δ/ 2, and, combined, |e1| + |e2| < δ .Then, for every c ∈ (0 , c ∗ 
+
+> δ
+
+), every solution of the closed-loop system consisting of (19), (28) with initial condition η(0) ∈ Ωc
+
+exists for all t ≥ 0, satisfies 
+
+η(t) ∈ Ωc ⊂ D∗, u(t) ≥ 0, ∀t ≥ 0, (66) and obeys 
+
+r(η(t)) ≤ βc
+
+ r(η(0)) , t  + μc(δ), ∀t ≥ 0. (67) In particular, controller (17) renders system (26) admissibly semi-globally practically asymptotically stable on every Ωc
+
+with 0 < c < c ∗ 
+
+> δ
+
+.
+
+Proof: The two neural-operator error bounds imply |e1|+
+
+|e2| < δ . The claim follows directly from Theorem 2, since (28) is the approximate controller corresponding to the errors 
+
+e1, e 2 applied to the η-system (19). 
+
+VII. P ROOFS OF THE THEOREMS 
+
+A. Proof of Lipschitzness of Lotka-Sharpe operator 
+
+Proof: [Proof of Theorem 1] The proof proceeds in six steps. 
+
+Step 1: Well-posedness and bounds: We consider the set of functions 
+
+B =
+
+(
+
+(k, μ ) ∈ C0  [0 , A ]; R2
+
+> ≥0
+
+ :
+
+Z A
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da > 1
+
+)
+
+.
+
+(68) For every (k, μ ) ∈ B, there exists a unique ζ > 0 such that R A 
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da = 1 . Notice that k(a) ≥ 0, μ(a) ≥
+
+0 for all a ∈ [0 , A ], and R A 
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da > 1 imply that 
+
+A∥k∥∞ > 1 ∀ (k, μ ) ∈ B.Our goal is to find an estimate of ζ > 0 for arbitrary (k, μ ) ∈
+
+B. Since (k, μ ) ∈ B, let ζ denote the unique solution of the Lotka–Sharpe equation, so that R A 
+
+> 0
+
+k(a)e−ζa −R a   
+
+> 0μ(s)ds
+
+da =1. Then we get 
+
+1 ≥ e−ζA 
+
+Z A
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da. (69) Consequently, we obtain the estimate 
+
+ζ ≥ 1
+
+A ln 
+
+Z A
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da 
+
+!
+
+> 0. (70) Now, define ε = 12∥k∥∞ , and notice that, since A∥k∥∞ > 1,we get that ε ∈
+
+
+
+0, A
+
+> 2
+
+
+
+. Since R A 
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da = 1 ,we get 
+
+Z ε
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da +
+
+Z Aε
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da = 1 
+
+⇒
+
+Z ε
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da + e−ζε 
+
+Z Aε
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da ≥ 1
+
+⇒
+
+Z ε
+
+> 0
+
+k(a)da + e−ζε 
+
+Z Aε
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da ≥ 1
+
+⇒ ε∥k∥∞ + e−ζε 
+
+Z Aε
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da ≥ 1. (71) Since ε = 12∥k∥∞ , we obtain the following estimate: 
+
+ζ ≤ 2∥k∥∞ ln 2
+
+Z A
+
+> 1/(2 ∥k∥∞)
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da 
+
+!
+
+≤ 2∥k∥∞ ln 2
+
+Z A
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da 
+
+!
+
+≤ 2∥k∥∞ ln (2 A∥k∥∞) . (72) 
+
+Step 2: Monotonicity: Let kmin , μ max , k max , μ min be given Lipschitz functions with (kmin , μ max ) ∈ B, (kmax , μ min ) ∈ B
+
+and 
+
+kmin (a) ≤ kmax (a), for all a ∈ [0 , A ] (73) 
+
+μmin (a) ≤ μmax (a), for all a ∈ [0 , A ] (74) Let the unique ζmin , ζ max > 0 for which 
+
+Z A
+
+> 0
+
+kmin (a)e−ζmin a−R a 
+
+> 0μmax (s)ds
+
+da = 1 , (75) 
+
+Z A
+
+> 0
+
+kmax (a)e−ζmax a−R a 
+
+> 0μmin (s)ds
+
+da = 1 . (76) We next prove by contradiction that 
+
+ζmin ≤ ζmax . (77) Indeed, we have 
+
+Z A
+
+> 0
+
+kmin (a)e−ζmin a−R a 
+
+> 0μmax (s)ds
+
+da 
+
+=
+
+Z A
+
+> 0
+
+kmax (a)e−ζmax a−R a 
+
+> 0μmin (s)ds
+
+da (78) implying 
+
+Z A
+
+> 0
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+ e−ζmin a − e−ζmax a da 
+
+=
+
+Z A
+
+> 0
+
+e−ζmax a
+
+×
+
+
+
+kmax (a)e− R a  
+
+> 0μmin (s)ds
+
+− kmin (a)e− R a 
+
+> 0μmax (s)ds
+
+
+
+da. 
+
+(79) Since kmax (a)e− R a  
+
+> 0μmin (s)ds
+
+≥ kmin (a)e− R a 
+
+> 0μmax (s)ds
+
+, we get from (79) that 
+
+Z A
+
+> 0
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+ e−ζmin a − e−ζmax a da ≥ 0.
+
+(80) We suppose that ζmin > ζmax . Thus, we get 
+
+e−ζmin a − e−ζmax a ≤ 0 ∀a ∈ [0 , A ]. Since 
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+≥ 0 ∀a ∈ [0 , A ], we obtain that R A 
+
+> 0
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+ e−ζmin a − e−ζmax a da ≤
+
+0. Consequently, by virtue of (80), we have R A 
+
+> 0
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+ e−ζmin a − e−ζmax a da = 0 .The fact that a non-positive, continuous function with zero integral is identically equal to zero gives 
+
+kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+ e−ζmin a − e−ζmax a ≡ 0. By continuity and since e−ζmin a − e−ζmax a < 0 ∀ a ∈ (0 , A ],this implies kmin (a)e− R a  
+
+> 0μmax (s)ds
+
+= 0 , which contradicts the fact that R A 
+
+> 0
+
+kmin (a)e− R a 
+
+> 0μmax (s)ds
+
+da > 1 (recall that 
+
+(kmin , μ max ) ∈ B). 9
+
+Step 3: Admissibility of S: For every (k, μ ) ∈ S we get R A 
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da ≥ R A 
+
+> 0
+
+kmin (a)e− R a 
+
+> 0μmax (s)ds
+
+da . Since 
+
+(kmin , μ max ) ∈ B we obtain from definition (68) that 
+
+R A 
+
+> 0
+
+kmin (a)e− R a 
+
+> 0μmax (s)ds
+
+da > 1. Therefore, we get 
+
+R A 
+
+> 0
+
+k(a)e− R a 
+
+> 0μ(s)ds
+
+da > 1 for every (k, μ ) ∈ S. Conse-quently, definitions (43), (45), and (68) imply that 
+
+S ⊆ B. (81) Then working similarly as above, we can conclude that for every (k, μ ) ∈ S there exists a unique ζ ∈ [ζmin , ζ max ] such that R A 
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da = 1 .
+
+Step 4: Fundamental identity: We show next that the map-ping 
+
+P : S → [ζmin , ζ max ] , (82) that assigns for every (k, μ ) ∈ S the unique ζ ∈ [ζmin , ζ max ]
+
+for which R A 
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da = 1 , i.e., P (k, μ ) = ζ, is a Lipschitz mapping (in the topology of C0([0 , A ]; R2
+
+> ≥0
+
+)). Let arbitrary (k, μ ) ∈ S, (˜k, ˜μ) ∈ S be given. Then there exist 
+
+ζ, ˜ζ ∈ [ζmin , ζ max ] such that 
+
+Z A
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da =
+
+Z A
+
+> 0
+
+˜k(a)e−˜ζa −R a 
+
+> 0˜μ(s)ds
+
+da = 1 .
+
+(83) Then, 
+
+Z A
+
+> 0
+
+k(a)e−ζa −R a 
+
+> 0μ(s)ds
+
+da =
+
+Z A
+
+> 0
+
+˜k(a)e−˜ζa −R a 
+
+> 0˜μ(s)ds
+
+da = 1 
+
+(84) implying 
+
+Z A
+
+> 0
+
+k(a)e− R a  
+
+> 0μ(s)ds
+
+
+
+e−ζa − e−˜ζa 
+
+da (85) 
+
+=
+
+Z A
+
+> 0
+
+e−˜ζa ˜k(a)e− R a  
+
+> 0˜μ(s)ds
+
+− k(a)e− R a 
+
+> 0μ(s)ds
+
+
+
+da. 
+
+(86) 
+
+Step 5: Core Lipschitz estimate: Suppose that ζ ≤ ˜ζ. Then, 
+
+e−ζa − e−˜ζa ≥ 0 for all a ∈ [0 , A ] and we get that 
+
+Z A
+
+> 0
+
+k(a)e− R a  
+
+> 0μ(s)ds
+
+
+
+e−ζa − e−˜ζa 
+
+da 
+
+=
+
+Z A
+
+> 0
+
+k(a)e− R a  
+
+> 0μ(s)ds
+
+
+
+e−ζa − e−˜ζa 
+
+da. (87) Therefore, we get from (86) that 
+
+Z A
+
+> 0
+
+k(a)e− R a  
+
+> 0μ(s)ds
+
+
+
+e−ζa − e−˜ζa 
+
+da 
+
+≤
+
+Z A
+
+> 0
+
+e−˜ζa ˜k(a)e− R a  
+
+> 0˜μ(s)ds
+
+− k(a)e− R a  
+
+> 0μ(s)ds
+
+da 
+
+(88) Since 0 < ζ min ≤ ζ ≤ ˜ζ ≤ ζmax , we obtain that e−ζa −
+
+e−˜ζa ≥ a(˜ζ − ζ)e−ζmax a ∀ a ∈ [0 , A ]. Thus, we obtain 
+
+(˜ζ − ζ)
+
+Z A
+
+> 0
+
+ae −ζmax ak(a)e− R a 
+
+> 0μ(s)ds
+
+da 
+
+≤
+
+Z A
+
+> 0
+
+e−˜ζa da max 
+
+> r∈[0 ,A ]
+
+ ˜k(r)e− R r  
+
+> 0˜μ(s)ds
+
+− k(r)e− R r  
+
+> 0μ(s)ds
+
+
+
+= 1 − e−˜ζA 
+
+˜ζ
+
+× max 
+
+> r∈[0 ,A ]
+
+ ˜k(r)e− R r  
+
+> 0˜μ(s)ds
+
+− k(r)e− R r  
+
+> 0μ(s)ds
+
+
+
+≤ 1 − e−˜ζA 
+
+ζmin 
+
+× max 
+
+> r∈[0 ,A ]
+
+ ˜k(r)e− R r  
+
+> 0˜μ(s)ds
+
+− k(r)e− R r  
+
+> 0μ(s)ds
+
+
+
+(89) By definition (45) of the set S and since (k, μ ) ∈ S, we get that 
+
+Z A
+
+> 0
+
+ae −ζmax ak(a)e− R a 
+
+> 0μ(s)ds
+
+da (90) 
+
+≥ e−ζmax A
+
+Z A
+
+> 0
+
+ak min (a)e− R a 
+
+> 0μmax (s)ds
+
+da. (91) Hence, we obtain the following estimate when ζ ≤ ˜ζ:
+
+˜ζ − ζ ≤ L1 max 
+
+> r∈[0 ,A ]
+
+ ˜k(r)e− R r  
+
+> 0˜μ(s)ds
+
+− k(r)e− R r  
+
+> 0μ(s)ds
+
+
+
+(92) where 
+
+L1 := eζmax A − 1
+
+ζmin 
+
+R A 
+
+> 0
+
+ak min (a)e− R a 
+
+> 0μmax (s)ds
+
+da . (93) Exploiting the fact that (kmin , μ max ) ∈ B, (kmax , μ min ) ∈ B,and estimates (70), (72), we obtain from (93) that L1 ≤ L
+
+where 
+
+L := A  2A∥kmax ∥∞
+
+2A∥kmax ∥∞−1
+
+R A 
+
+> 0
+
+a k min (a)I(a) da 
+
+
+
+ln 
+
+R A 
+
+> 0
+
+kmin (a)I(a) da 
+
+ , (94) with 
+
+I(a) := e− R a  
+
+> 0μmax (s)ds
+
+. (95) Exchanging the roles of ζ, ˜ζ ∈ [ζmin , ζ max ], we obtain the following estimate without any assumption about ζ, ˜ζ ∈
+
+[ζmin , ζ max ]:
+
+˜ζ − ζ ≤ L1 max 
+
+> r∈[0 ,A ]
+
+ ˜k(r)e− R r  
+
+> 0˜μ(s)ds
+
+− k(r)e− R r  
+
+> 0μ(s)ds
+
+
+
+.
+
+(96) 
+
+Step 6: Reduction to sup norms: Exploiting definition (45) of the set S, and the fact that (k, μ ) ∈ S, (˜k, ˜μ) ∈ S, we also 10 
+
+get 
+
+˜ζ − ζ ≤ L1 max 
+
+> r∈[0 ,A ]
+
+
+
+e− R r  
+
+> 0˜μ(s)ds
+
+˜k(r) − k(r)
+
+
+
++ L1 max 
+
+> r∈[0 ,A ]
+
+
+
+k(r) e− R r  
+
+> 0˜μ(s)ds
+
+− e− R r  
+
+> 0μ(s)ds
+
+
+
+≤ L1∥˜k − k∥∞
+
++ L1∥kmax ∥∞ max 
+
+> r∈[0 ,A ]
+
+
+
+e− R r  
+
+> 0˜μ(s)ds
+
+− e− R r  
+
+> 0μ(s)ds
+
+
+
+(97) Since e− R r  
+
+> 0˜μ(s)ds
+
+− e− R r  
+
+> 0μ(s)ds
+
+≤ R r 
+
+> 0
+
+|μ(s)− ˜μ(s)|ds , we get 
+
+˜ζ − ζ ≤ L1∥˜k − k∥∞
+
++ L1∥kmax ∥∞ max 
+
+> r∈[0 ,A ]
+
+Z r
+
+> 0
+
+|μ(s) − ˜μ(s)|ds 
+
+
+
+= L1∥˜k − k∥∞ + L1∥kmax ∥∞
+
+Z A
+
+> 0
+
+|μ(s) − ˜μ(s)| ds 
+
+≤ L1∥˜k − k∥∞ + L1∥kmax ∥∞ A ∥˜μ − μ∥∞ (98) Thus, we get for all (k, μ ) ∈ S, (˜k, ˜μ) ∈ S
+
+˜ζ − ζ ≤ L1∥˜k − k∥∞ + L1∥kmax ∥∞A∥˜μ − μ∥∞, (99) where L1 is given by (93). 
+
+B. Proof of stability under Lotka-Sharpe parameter errors 
+
+Proof: [Proof of Theorem 2] The perturbed closed system is 
+
+˙η1 = ˙ηnom 1 (η) − ∆u(η, e 1, e 2), (100) 
+
+˙η2 = ˙ηnom 2 (η) − ∆u(η, e 1, e 2), (101) where 
+
+˙ηnom 1 (η) = − βx∗
+
+> 1
+
+(0) γ2
+
+(1 − e−η1 ) −  1 + β(1 + ε)
+
+×
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − 1) , (102) 
+
+˙ηnom 2 (η) = 1 − βx∗
+
+> 1
+
+(0) γ2
+
+(1 − e−η1 ) − β(1 + ε)
+
+×
+
+
+
+ζ1 − ζ2 + 1
+
+x∗
+
+> 1
+
+(0) γ2
+
+
+
+(eη2 − 1) . (103) and 
+
+∆u(η, e 1, e 2) = − e2 − (ˆ a − a) + β ∆gain (η, e 1, e 2). (104) 
+
+∆gain (η, e 1, e 2) := ˆS(η) − S(η) , (105) where functions S(·), ˆS(·) and constant ˆa are defined in Appendix A. Next, we have that 
+
+˙V1 = − ϕ1 ϕ2
+
+ Q
+
+ϕ1
+
+ϕ2
+
+
+
+− d(η)∆ u(η, e 1, e 2), (106) where 
+
+d(η) := ϕ1(η1) + (1 + ε)ϕ2(η2), (107) We first verify that c∗ 
+
+> δ
+
+> 0. At η = 0 and e1 = e2 = 0 , one has 
+
+u(0; 0 , 0) = u∗ > 0 by (10), and V1(0) = 0 . By continuity of 
+
+u in (η, e 1, e 2) and of V1 in η, both conditions defining c∗ 
+
+> δ
+
+in (51) hold for all sufficiently small c and δ, so the supremum in (51) is taken over a non-empty set and c∗ 
+
+> δ
+
+> 0. Since c < c ∗ 
+
+> δ
+
+,the set Ωc is compact and contained in D∗. Since r(η) is continuous, it attains its maximum on Ωc. Define 
+
+R(c) := max 
+
+> η∈Ωc
+
+r(η). (108) Then R(c) ∈ (0 , min {a, b }) and 
+
+Ωc ⊂ T R(c) := {η : r(η) ≤ R(c)}. (109) Hence, by Lemma 2, there exists CR(c) > 0 such that 
+
+|∆u(η, e 1, e 2)| ≤ CR(c)(|e1| + |e2|),
+
+∀ η ∈ Ωc, |e1| + |e2| ≤ δ. (110) Additionally, 
+
+|d(η)| ≤ p1 + (1 + ε)2 r =: cεr, cε := p1 + (1 + ε)2,
+
+(111) and 
+
+ϕ1 ϕ2
+
+ Q
+
+ϕ1
+
+ϕ2
+
+
+
+≥ λ∗(ϕ21 + ϕ22) = λ∗r2, (112) where 
+
+λ∗ := λmin (Q) > 0. (113) Hence ˙V1 ≤ − λ∗r2 + cε|∆u| r. (114) By Young’s inequality, 
+
+cε|∆u| r ≤ λ∗
+
+2 r2 + c2
+
+> ε
+
+2λ∗
+
+∆2
+
+> u
+
+, (115) so 
+
+˙V1 ≤ − λ∗
+
+2 (ϕ21 + ϕ22) + c2
+
+> ε
+
+2λ∗
+
+¯∆2, (116) where ¯∆ := sup 
+
+> η∈T R(c)
+
+|∆u(η, e 1, e 2)| , (117) and therefore 
+
+˙V1 < 0 whenever ϕ21 + ϕ22 > c2
+
+> ε
+
+λ2
+
+> ∗
+
+¯∆2, (118) so Ωc is forward-invariant. The explicit expressions for βc, μ c
+
+are obtained as 
+
+βc(s, t ) := 
+
+r Mc
+
+mc
+
+e− λ∗  
+
+> 4Mc t
+
+s (119) 
+
+μc(δ) := cε
+
+λ∗
+
+r Mc
+
+mc
+
+CR(c) δ (120) where 
+
+mc := 12 min 
+
+ e−3B1(c)
+
+a , (1 + ε)e−3B2(c)
+
+b
+
+
+
+(121) 
+
+Mc := 12 max 
+
+ e3B1(c)
+
+a , (1 + ε)e3B2(c)
+
+b
+
+
+
+(122) 
+
+B1(c) := 1 + ca (123) 
+
+B2(c) := 1 + c
+
+(1 + ε)b (124) 11 
+
+Furthermore, one can simplify, by majorization, 
+
+Mc
+
+mc
+
+≤ e3( B1(c)+ B2(c)) 
+
+
+
+q + 1
+
+q
+
+
+
+(125) where 
+
+q := (1 + ε)q0e−3c x ∗ 
+
+> 1(0) γ2
+
+(1− q0(1+ ε) ) (126) 
+
+q0 := 11 + ( ζ1 − ζ2)x∗
+
+> 1
+
+(0) γ2
+
+(127) 
+
+VIII. N UMERICAL RESULTS 
+
+All code, datasets and models are publicly available in [15]. 
+
+A. Learning GLS operator 
+
+To learn GLS , we first need to construct a dataset of biologically relevant k, μ, g profiles. Consider the family of functions: 
+
+k(a) = kbase + kamp exp 
+
+
+
+− (a − kcenter )2
+
+2k2
+
+> σ
+
+
+
+,μ(a) = μbase + μjuv ,amp e−μjuv a + μsen ,amp aμsen ,g(a) = gbase + gamp exp 
+
+
+
+− (a − gcenter )2
+
+2g2
+
+> σ
+
+
+
+.
+
+We choose a Gaussian fertility profile k, centered at early adult ages, to reflect the biological fact that fertility typically becomes viable only after maturation and is concentrated within a finite reproductive window [7]. Likewise, the mor-tality profile μ is designed to reproduce the broadly observed bathtub-shaped age pattern, with elevated mortality at the beginning and end of life and lower mortality during prime ages [6]. Finally, the interaction profile g is taken to peak in mature individuals, reflecting the idea that ecologically important interactions such as hunting or complex foraging are often strongest when individuals have reached adult body condition and accumulated sufficient experience and skill. To generate variability across families, we sample the pa-rameters independently from uniform distributions over pre-scribed ranges. Specifically, 
+
+kbase ∼ Unif(0 .40 , 0.80) kamp ∼ Unif(2 .00 , 3.00) 
+
+kcenter ∼ Unif(0 .11 , 0.35) kσ ∼ Unif(0 .05 , 0.23) 
+
+μbase ∼ Unif(0 .03 , 0.10) μjuv ,amp ∼ Unif(0 .05 , 0.19) 
+
+μjuv ∼ Unif(3 .5, 5.5) μsen ,amp ∼ Unif(0 .03 , 0.17) 
+
+μsen ∼ Unif(1 .7, 2.9) gbase ∼ Unif(0 .05 , 0.13) 
+
+gamp ∼ Unif(0 .20 , 0.50) gcenter ∼ Unif(0 .37 , 0.63) 
+
+gσ ∼ Unif(0 .05 , 0.31) 
+
+For each sample (K, μ ), we compute the net reproduction number R0 = R 10 k(a) Π( a) da , and retain only those samples satisfying R0 > 1.2 such that we ensure ζ1, ζ 2 > 0 enabling positive dilution (4b). To learn the mapping GLS , we sample 1000 different pairs of 
+
+(( k, μ ), ζ ) where ζ is identifies via a numerical precision root-finding algorithm. We then train a Fourier Neural Operator (FNO) [22] consisting of 4 layers with 16 Fourier modes and a hidden size of 64 neurons per layer. We use a learning rate of 4 × 10 −3 with the AdamW optimizer [23] achieving a training mean squared error of 3.4 × 10 −5 after 100 epochs. We present an example of the training functions (k, μ ) as well as the performance of the FNO qualitatively in 4. Notice that, across magnitudes of ζ, the error of the FNO residuals remains concentrated between ±0.001 indicating very strong performance in learning bGLS .In Figure 5, we validate Corollary 2 by simulating the closed-loop system with (ˆζ1, ˆζ2) obtained from the learned operator bGLS . We choose an initial condition in which the prey population dominates and regulate the system toward a target equilibrium where both species have similar concentrations. The trajectories converge to the prescribed equilibrium and the control remains positive for all simulated times, in agreement with (4b). This numerical example illustrates that the neural approximation of GLS preserves the stabilizing behavior pre-dicted by the theory and supports the practical use of operator learning in the feedback design. 
+
+IX. A DAPTIVE EXAMPLE WHEN MORTALITY AND FERTILITY ARE UNKNOWN 
+
+In Section VIII, the numerical implementation relied on a one-time learning of ζ1 and ζ2 under the assumption that the kernels (k, μ ) were known. In practice, however, exact knowl-edge of the fertility and mortality profiles may be unavailable, making a purely offline deployment of bGLS intractable. As a final remark, to showcase the value in learning bGLS with a neural operator, we present a simple adaptive design together with an illustrative simulation, for the case in which the learned operator must be re-evaluated online. In this section we do not pursue a theoretical study of stability under adaptive update laws. This would be possible but would require a large page budget, which bringing little additional insight relative to [19]. 
+
+A. Adaptive design 
+
+Among the uncertain quantities, the boundary kernel k is the simplest to adapt. Indeed, the boundary condition for both state components is of the form 
+
+xi(t, 0) = 
+
+Z a
+
+> 0
+
+ki(α, t )xi(α, t )dα , i ∈ { 1, 2} , (128) which is linear in k and involves no time or age derivatives of the parameter. This suggests the direct gradient-type update law 
+
+∂ˆki(t, a )
+
+∂t = Γ k,i 
+
+xi(t, a )1 + R A 
+
+> 0
+
+xi(α, t )2dα xi(t, 0) 
+
+−
+
+Z A
+
+> 0
+
+ˆki(α, t )xi(α, t )dα 
+
+
+
+, (129) where Γk,i > 0 is a gain parameter. A similar modular construction can be used to estimate the age-dependent mor-tality profile μi. For each i ∈ { 1, 2}, rewrite the population dynamics as 
+
+∂txi(a, t ) = ri(a, t ) − μi(a)xi(a, t ), (130) 12 0.00 0.25 0.50 0.75 1.00 
+
+Age a
+
+1
+
+2
+
+3
+
+> k(a)
+
+(a) Example Fertilities 
+
+0.00 0.25 0.50 0.75 1.00 
+
+Age a
+
+0.1
+
+0.2
+
+> μ(a)
+
+(b) Example Mortalities 
+
+0.5 1.0 1.5 2.0
+
+True ζ
+
+−0.012 
+
+−0.006 
+
+0.000 
+
+0.006    
+
+> ζ − ˆζ
+> 01 2 345 6 789
+
+(c) FNO Residuals ∧GLS 
+
+Samples 0 1 2 3 4 5 6 7 8 9      
+
+> Fig. 4. Example of various (k, μ )used in training and performance of learned operator bGLS . (c) highlights the residuals of all 100 test examples during training in blue and the samples corresponding to (a) and (b) in orange.
+
+0.00.51.0
+
+> Age  a
+
+0.0 2.5 5.0 7.5 10 .0
+
+Time t
+
+246810 
+
+0.00.51.0
+
+> Age  a
+
+0.0 2.5 5.0 7.5 10 .0
+
+Time t
+
+246
+
+0 5 10 
+
+Time t
+
+0.91.01.11.2
+
+> u(t)
+
+u∗
+
+(a) State x1(a, t ) (b) State x2(a, t ) (c) Dilution u(t)                    
+
+> Fig. 5. Simulation profiles of the (a) population x1, (b) population x2(t), and (c) dilution control using (ˆ ζ1,ˆζ2) = bGLS (k, μ )in the control law (28) .k1, k 2and μ1, μ 2correspond with samples eight and nine in Figure 4 We consider the initial condition case where there are a large amount of species x1compared to species x2in the beginning, but become similarly concentrated due dilution choice u∗= 0 .83 (x∗
+> 1(0) = 8.45 , x ∗
+> 2(0) = 7 .42 ) is to obtain a larger species x1.
+
+where ri(a, t ) collects the known transport and interaction terms. In particular, 
+
+r1(a, t ) = − ∂ax1(a, t ) − u(t)
+
+−
+
+Z A
+
+> 0
+
+g1(α)x2(α, t ) dαx 1(a, t ), (131) 
+
+r2(a, t ) = − ∂ax2(a, t ) − u(t)
+
+− 1
+
+R A 
+
+> 0
+
+g2(α)x1(α, t ) dα . (132) For the clarity of presentation, we treat the functions 
+
+g1(a), g 2(a) as known. The estimation of g1 is easy, whereas the estimation of g2 requires overparametrization. Since our goal here is pedagogical — to elucidate the applicability of the neural opeartor GLS in adaptive control, we proceed with only k and μ treated as unknown. For each fixed age a, (130) is a scalar linear equation in time with unknown parameter μi(a). Introducing the filters 
+
+∂tσi(a, t ) = −αiσi(a, t ) + xi(a, t ), (133) 
+
+∂tρi(a, t ) = −αiρi(a, t ) + ri(a, t ), (134) with αi > 0, one obtains the pointwise regression 
+
+Yi(a, t ) = μi(a)σi(a, t ), (135) where 
+
+Yi(a, t ) = ρi(a, t ) − xi(a, t ) + αiσi(a, t ) + e−αitxi, 0(a).
+
+(136) Neglecting the exponentially decaying transient, this suggests the gradient update 
+
+∂t ˆμi(a, t ) = Γ μ,i 
+
+σi(a, t )1 + σi(a, t )2
+
+
+
+Yi(a, t ) − ˆμi(a, t )σi(a, t )
+
+
+
+,
+
+(137) with Γμ,i > 0 is the gain parameter. The main advantage of this design is that this preserves the full age dependence of μi; the trade-off is that it requires the spatial derivative ∂axi, which will require finite difference estimation in practice as it is typically not measurable. 
+
+B. Illustrative simulation 
+
+To construct a numerical dataset for bGLS , it is not sufficient to use the (k, μ ) samples from Section VIII, since the adaptive 13 0.00.51.0
+
+> Age  a
+
+0 5 10 15 
+
+Time t
+
+2.55.07.510 .0
+
+0.00.51.0
+
+> Age  a
+
+0 5 10 15 
+
+Time t
+
+2.55.07.510 .0
+
+0 10 
+
+Time t
+
+0.40.60.8  
+
+> u(t)
+> adaptive u(t)
+> no adaptation u(t)
+> u∗
+
+(a) State x1(a,t) (b) State x2(a,t) (c) Dilution u(t)0.00.51.0
+
+> Age  a
+
+0 5 10 15 
+
+Time t
+
+123
+
+> ˆk1
+
+0.00.51.0
+
+> Age  a
+
+0 5 10 15 
+
+Time t
+
+0.10 0.15 0.20 0.25 
+
+> ˆμ1
+
+0 10 
+
+Time t
+
+10 −6
+
+10 −5
+
+10 −4
+
+10 −3
+
+10 −2            
+
+> ζ error
+> |ˆζFNO 1−ˆζnum 1||ˆζFNO 2−ˆζnum 2|
+
+(d) Estimate ˆ k1(a,t) (e) Estimate ˆ μ1(a,t) (f) FNO ζ error            
+
+> Fig. 6. Adaptive control simulation where k, μ, g are samples eight and nine from Figure 4 and ˆki,ˆμiare initialized with samples zero and one from Figure 4. The blue lines in (a), (b), (d), (e) are the final states achieved and the red dashed lines are the target equilibrium and true k, μ
+> functions for (a), (b) and (d), (e) respectively. All the initial conditions and the dilution point are the same as in Figure 5 and the controller uses the adaptive update laws in Section IX-A along with bGLS (ˆ ki(·, t ),ˆμi(·, t )) = ˆ ζi(t)to compute the control law u(t).
+
+controller may produce estimates ˆk and ˆμ with substantially different structure. We therefore generate a new dataset by simulating 100 sampled triples (k, μ, g ) as in Section VIII where g is known and k, μ are unknown and hence updated with adaptive estimators. Further, at each time step, we use a machine-precision root-finding solver to compute ˆζ from the adaptive estimates (ˆk, ˆμ) to obtain u(t). From each trajectory, we sample 200 random time points, yielding a diverse training set of 20 ,000 pairs (ˆk, ˆμ). We train for 100 epochs using the same FNO architecture and training settings as in Section VIII, achieving a test error of 2 × 10 −4.Figure 6 shows a representative adaptive closed-loop simu-lation under the same biological functions (ki, μ i, g i) as in Fig-ure 5, but with mismatched initial estimates ˆk and ˆμ. At each time t, the control input is computed from ˆζi = bGLS (ˆki, ˆμi),where ˆki and ˆμi are the current adaptive estimates generated from (129) and (137) respectively. Despite the incorrect initial-ization, the learned operator combined with adaptation drives the system to the target dilution and the desired predator– prey equilibrium. This illustrates that the learned FNO remains effective when driven by online parameter estimates rather than the true profiles, which is the practically relevant setting since mortality and fertility rates are typically not known exactly. 
+
+X. C ONCLUSIONS 
+
+In this work, we gave the first stabilizing feedback design for an age-structured predator–prey system with an approxi-mated Lotka–Sharpe parameter ζ. Specifically, we established Lipschitz continuity of the implicitly defined Lotka–Sharpe operator on a biologically admissible domain, which in turn guarantees the existence of uniformly accurate neural-operator approximations. We then quantified how approximation errors in ζ propagate through the three operators defining the feed-back law and used these bounds to derive a robust stability result guaranteeing semi-global practical asymptotic stability under a positivity constraint on the control input. Overall, these results provide the first mathematically rigorous foundation for stabilizing biologically relevant age-structured predator–prey systems by learning-based feedback in which the feedback law necessarily depends on an approximate Lotka–Sharpe operator. 
+
+APPENDIX 
+
+A. Functions and constants used in Theorem 2 
+
+S(η) = (1+ ε)( ζ2 −ζ1)−εa −m1e−η1 +(1+ ε)m2eη2 (138) 14 
+
+ˆS(η) − S(η) = (1 + ε)( e1 − e2) − ε(ˆ a − a)
+
+− ( ˆ m1 − m1)e−η1 + (1 + ε)( ˆ m2 − m2)eη2
+
+(139) 
+
+ˆa := 1
+
+x∗
+
+> 1
+
+(0)  γ2 + Γ 2(e1) (140) 
+
+m1 := κ1
+
+x∗
+
+> 1
+
+(0) γ2⟨π0,1, n 1⟩ , (141) 
+
+ˆm1 := κ1 + K1(e1)
+
+x∗
+
+> 1
+
+(0)  γ2 + Γ 2(e1)  ⟨π0,1, n 1⟩ + P1(e1) (142) 
+
+m2 := γ1x∗
+
+> 2
+
+(0) ⟨π0,2, n 2⟩
+
+κ2
+
+, (143) 
+
+ˆm2 := 
+
+ γ1 + Γ 1(e2)x∗
+
+> 2
+
+(0)  ⟨π0,2, n 2⟩ + P2(e2)
+
+κ2 + K2(e2) (144) 
+
+Γ1(e2) := Gγ (g1, ζ 2 − e2, μ 2) − γ1 (145) 
+
+Γ2(e1) := Gγ (g2, ζ 1 − e1, μ 1) − γ2 (146) 
+
+K1(e1) := Gκ(k1, μ 1, ζ 1 − e1) − κ1 (147) 
+
+K2(e2) := Gκ(k2, μ 2, ζ 2 − e2) − κ2 (148) 
+
+P1(e1) := ⟨G π (k1, μ 1, ζ 1 − e1) − π0,1, n 1⟩ , (149) 
+
+P2(e2) := ⟨G π (k2, μ 2, ζ 2 − e2) − π0,2, n 2⟩ (150) 
+
+B. Lipschitzness of operators other than the Lotka-Sharpe 
+
+Lemma 1 (Lipschitz continuity of Gγ , Gκ, Gπ in ζ): Let 
+
+g, k ∈ C0([0 , A ]; R≥0), μ ∈ C0([0 , A ]; R≥0), and let 
+
+[ζmin , ζ max ] ⊂ R≥0 be a compact interval. Then: 
+
+(i) The map ζ 7 → G γ (g, ζ, μ ) is Lipschitz on [ζmin , ζ max ] with constant 
+
+Lγ := A∥g∥∞eζmax A. (151) 
+
+(ii) The map ζ 7 → G κ(k, μ, ζ ) is Lipschitz on [ζmin , ζ max ] with constant 
+
+Lκ := A2∥k∥∞eζmax A. (152) 
+
+(iii) The map ζ 7 → G π (k, μ, ζ ) is Lipschitz on [ζmin , ζ max ], in the sup norm, with constant 
+
+Lπ := A2
+
+2 ∥k∥∞eζmax A. (153) 
+
+Proof: (i) By definition, 
+
+Gγ (g, ζ, μ ) = 
+
+Z A
+
+> 0
+
+g(a) e− R a  
+
+> 0(ζ+μ(s)) ds
+
+da. (154) Differentiating under the integral with respect to ζ,
+
+∂∂ζ Gγ (g, ζ, μ ) = −
+
+Z A
+
+> 0
+
+a g (a) e− R a  
+
+> 0(ζ+μ(s)) ds
+
+da. (155) Taking absolute values and bounding e−ζa ≤ eζmax A and a ≤
+
+A,
+
+∂∂ζ Gγ ≤ A∥g∥∞eζmax A = Lγ . (156) By the mean value theorem, for any ζ, ˜ζ ∈ [ζmin , ζ max ],
+
+|G γ (g, ζ, μ ) − G γ (g, ˜ζ, μ )| ≤ Lγ |ζ − ˜ζ|. (157) 
+
+(ii) By definition, 
+
+Gκ(k, μ, ζ ) = 
+
+Z A
+
+> 0
+
+a k (a) e− R a  
+
+> 0(ζ+μ(s)) ds
+
+da. (158) Differentiating under the integral, 
+
+∂∂ζ Gκ(k, μ, ζ ) = −
+
+Z A
+
+> 0
+
+a2 k(a) e− R a  
+
+> 0(ζ+μ(s)) ds
+
+da. (159) Bounding a2 ≤ A2 and e−ζa ≤ eζmax A,
+
+∂∂ζ Gκ ≤ A2∥k∥∞eζmax A = Lκ. (160) The mean value theorem gives the result. 
+
+(iii) By definition, 
+
+Gπ (k, μ, ζ )( a) = 
+
+Z Aa
+
+k(s) eR sa (ζ+μ(l)) dl ds. (161) Differentiating under the integral with respect to ζ,
+
+∂∂ζ Gπ (k, μ, ζ )( a) = 
+
+Z Aa
+
+(s − a) k(s) eR sa (ζ+μ(l)) dl ds. (162) Since R Aa (s − a) ds = (A−a)2 
+
+> 2
+
+≤ A2 
+
+> 2
+
+, bounding k(s) ≤ ∥ k∥∞
+
+and eζ(s−a) ≤ eζmax A,
+
+∂∂ζ Gπ (k, μ, ζ )( a) ≤ A2
+
+2 ∥k∥∞eζmax A = Lπ . (163) Since this bound is uniform in a ∈ [0 , A ], the mean value theorem gives 
+
+∥G π (k, μ, ζ ) − G π (k, μ, ˜ζ)∥∞ ≤ Lπ |ζ − ˜ζ|. (164) 
+
+C. Bound on control perturbation in terms of Lotka-Sharpe error 
+
+Lemma 2 ( ∆u bounded in terms of |e1| + |e2|): Fix δ >
+
+0. For every R ∈ (0 , min {a, b }) there exists CR > 0 such that 
+
+|∆u(η, e 1, e 2)| ≤ CR(|e1| + |e2|) (165) for all η ∈ T R := {η : r(η) ≤ R} and |e1| + |e2| ≤ δ.
+
+Proof: Fix δ > 0 and R ∈ (0 , min {a, b }). Let η ∈ T R =
+
+{η : r(η) ≤ R}. Since r(η) = pϕ1(η1)2 + ϕ2(η2)2, with 
+
+ϕ1(η1) = a(1 − e−η1 ) and ϕ2(η2) = b(eη2 − 1) , and since 
+
+R < min {a, b }, it follows that 
+
+1 − Ra ≤ e−η1 ≤ 1 + Ra , 1 − Rb ≤ eη2 ≤ 1 + Rb . (166) Hence there exist constants E1,R , E 2,R > 0 such that 
+
+e−η1 ≤ E1,R , eη2 ≤ E2,R , ∀ η ∈ T R. (167) Let |e1| + |e2| ≤ δ. Since ˆζi = ζi − ei, the arguments ζ1 − e1
+
+and ζ2 − e2 lie in compact intervals, and the mappings Gγ ,15 
+
+Gκ, and Gπ are Lipschitz in ζ on these intervals. Hence there exist constants LΓi,δ , L Ki,δ , L Pi,δ > 0 such that 
+
+|Γ1(e2)| ≤ LΓ1,δ |e2|, (168) 
+
+|Γ2(e1)| ≤ LΓ2,δ |e1|, (169) 
+
+|K1(e1)| ≤ LK1,δ |e1|, (170) 
+
+|K2(e2)| ≤ LK2,δ |e2|, (171) 
+
+|P1(e1)| ≤ LP1,δ |e1|, (172) 
+
+|P2(e2)| ≤ LP2,δ |e2|. (173) Since the interval [ζ1 − δ, ζ 1 + δ] is compact and the map 
+
+ζ 7 → G γ (g2, ζ, μ 1) is continuous and strictly positive, it attains a positive minimum on this interval. Hence there exists γ2 > 0
+
+such that 
+
+γ2 + Γ 2(e1) = Gγ (g2, ζ 1 − e1, μ 1)
+
+≥ min  
+
+> ζ∈[ζ1−δ,ζ 1+δ]
+
+Gγ (g2, ζ, μ 1) =: γ2 > 0. (174) Similarly, there exist κ2 > 0 and π1 > 0 such that 
+
+κ2 + K2(e2) ≥ κ2 > 0, ⟨π0,1, n 1⟩ + P1(e1) ≥ π1 > 0.
+
+(175) By Lemma 1 and the lower bound in (174), the map ζ 7 →   
+
+> 1
+> x∗
+> 1(0) Gγ(g2,ζ,μ 1)
+
+is Lipschitz on [ζ1 − δ, ζ 1 + δ], and hence there exists La,δ > 0 such that 
+
+|ˆa − a| ≤ La,δ |e1|. (176) Using the lower bounds in (174), (175)and the Lipschitz continuity of Gγ , Gκ, and Gπ , it follows that there exist constants Lm1,δ , L m2,δ > 0 such that 
+
+| ˆm1 − m1| ≤ Lm1,δ |e1|, | ˆm2 − m2| ≤ Lm2,δ |e2|. (177) By definition, 
+
+∆gain (η, e 1, e 2) := ˆS(η) − S(η), (178) where 
+
+ˆS(η) − S(η) = (1 + ε)( e1 − e2) − ε(ˆ a − a)
+
+− ( ˆ m1 − m1)e−η1 + (1 + ε)( ˆ m2 − m2)eη2 .
+
+(179) Therefore, for all η ∈ T R,
+
+|∆gain (η, e 1, e 2)| ≤ (1 + ε)( |e1| + |e2|) + ε|ˆa − a|
+
++ | ˆm1 − m1|e−η1 + (1 + ε)| ˆm2 − m2|eη2
+
+≤(1 + ε)( |e1| + |e2|) + εL a,δ |e1|
+
++ Lm1,δ E1,R |e1| + (1 + ε)Lm2,δ E2,R |e2|≤Lgain ,R,δ (|e1| + |e2|), (180) for some constant Lgain ,R,δ > 0. Finally, using 
+
+∆u(η, e 1, e 2) = −e2 − (ˆ a − a) + β ∆gain (η, e 1, e 2), (181) we obtain 
+
+|∆u(η, e 1, e 2)| ≤ |e2| + |ˆa − a| + β|∆gain (η, e 1, e 2)|≤ |e2| + La,δ |e1| + βL gain ,R,δ (|e1| + |e2|)
+
+≤ CR,δ (|e1| + |e2|), (182) for all η ∈ T R, where CR,δ := max {1, L a,δ } + βL gain ,R,δ .Since δ is fixed throughout the lemma, we write CR := CR,δ ,noting that CR depends on both R and δ.
+
+REFERENCES 
+
+[1] M. Bargo and Y. Simpor´ e, “Global stabilization and emergence tracking via aquatic control in an age-structured mosquito model,” 
+
+Nonlinear Analysis: Real World Applications , vol. 92, p. 104629, 2026. [Online]. Available: https://www.sciencedirect.com/science/article/pii/ S1468121826000295 [2] L. Bhan, M. Krsti´ c, and Y. Shi, “Stabilization of nonlinear systems with unknown delays via delay-adaptive neural operator approximate predictors,” 2025. [Online]. Available: https://arxiv.org/abs/2509.26443 [3] L. Bhan, Y. Shi, and M. Krsti´ c, “Neural operators for bypassing gain and control computations in PDE backstepping,” IEEE Transactions on Automatic Control , vol. 69, no. 8, pp. 5310–5325, 2024. [4] ——, “Adaptive control of reaction–diffusion PDEs via neural operator-approximated gain kernels,” Systems & Control Letters , vol. 195, p. 105968, 2025. [Online]. Available: https://www.sciencedirect.com/ science/article/pii/S0167691124002561 [5] T. Chen and H. Chen, “Universal approximation to nonlinear operators by neural networks with arbitrary activation functions and its application to dynamical systems,” IEEE transactions on neural networks , vol. 6, no. 4, pp. 911–917, 1995. [6] C. Y. C. Chu, H.-K. Chien, and R. D. Lee, “Explaining the optimality of u-shaped age-specific mortality,” Theor. Popul. Biol. , vol. 73, no. 2, pp. 171–180, Mar. 2008. [7] I. Delbaere, S. Verbiest, and T. Tyd´ en, “Knowledge about the impact of age on fertility: a brief review,” Ups. J. Med. Sci. , vol. 125, no. 2, pp. 167–174, May 2020. [8] D. Dochain, Automatic Control of Bioprocesses . John Wiley & Sons, 2013. [9] P.-E. Haacker, I. Karafyllis, M. Krsti´ c, and M. Diagne, “Stabilization of age-structured chemostat hyperbolic PDE with actuator dynamics,” 
+
+International Journal of Robust and Nonlinear Control , 2024. [10] M. Iannelli and F. Milner, “The basic approach to age-structured population dynamics,” Lecture Notes on Mathematical Modelling in the Life Sciences. Springer, Dordrecht , 2017. [11] H. Inaba, Age-Structured Population Dynamics in Demography and Epidemiology . Springer, 2017, vol. 1. [12] I. Karafyllis and M. Krsti´ c, “Stability of integral delay equations and stabilization of age-structured models,” ESAIM: Control, Optimisation and Calculus of Variations , vol. 23, no. 4, pp. 1667–1714, 2017. [13] I. Karafyllis, D. Theodosis, and M. Krsti´ c, “The age-structured chemostat with substrate dynamics as a control system,” 2025. [Online]. Available: https://arxiv.org/abs/2511.09963 [14] M. Krsti´ c, I. Karafyllis, L. Bhan, and C. Veil, “Neural operators for control of age-structured population PDEs,” Honolulu, Hawaii, USA, Dec. 2026, submitted to 2026 IEEE 65th Conference on Decision and Control (CDC). [15] ——, “Neural operators for control of age-structured population PDEs,” https://github.com/lukebhan/NeuralOperatorsLoktaSharpePredatoryPrey, 2026, github repository. [16] M. Krsti´ c, L. Bhan, and Y. Shi, “Neural operators of backstepping controller and observer gain functions for reaction–diffusion PDEs,” 
+
+Automatica , vol. 164, p. 111649, Jun. 2024. [17] A.-C. Kurth and O. Sawodny, “Control of age-structured population dynamics with intraspecific competition in context of bioreactors,” 
+
+Automatica , vol. 152, p. 110944, 2023. [18] A.-C. Kurth, K. Schmidt, and O. Sawodny, “Tracking-control for age-structured population dynamics with self-competition governed by integro-PDEs,” Automatica , vol. 133, p. 109850, 2021. [19] M. Lamarque, L. Bhan, Y. Shi, and M. Krsti´ c, “Adaptive neural-operator backstepping control of a benchmark hyperbolic PDE,” Automatica , vol. 177, p. 112329, 2025. [20] M. Lamarque, L. Bhan, R. Vazquez, and M. Krsti´ c, “Gain scheduling with a neural operator for a transport PDE with nonlinear recirculation,” 
+
+IEEE Transactions on Automatic Control , 2025. [21] S. Lanthaler, Z. Li, and A. M. Stuart, “Nonlocality and nonlinearity implies universality in operator learning,” Constructive Approximation ,vol. 62, pp. 261–303, 2025. [Online]. Available: https://doi.org/10.1007/ s00365-025-09718-3 [22] Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar, “Fourier Neural Operator for Parametric Partial Differential Equations,” May 2021. [23] I. Loshchilov and F. Hutter, “Decoupled weight decay regularization,” in 
+
+International Conference on Learning Representations , 2019. [Online]. Available: https://openreview.net/forum?id=Bkg6RiCqY7 16 
+
+[24] L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis, “Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators,” Nature machine intelligence , vol. 3, no. 3, pp. 218–229, 2021. [25] K. Lyu, J. Wang, Y. Zhang, and H. Yu, “Neural operators for adaptive control of traffic flow models,” IFAC-PapersOnLine , vol. 59, no. 8, pp. 13–18, 2025, 5th IFAC Workshop on Control of Systems Governed by Partial Differential Equations - CPDE 2025. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S2405896325006433 [26] A. G. McKendrick, “Applications of mathematics to medical problems,” 
+
+Proceedings of the Edinburgh Mathematical Society , vol. 44, pp. 98– 130, 1925. [27] K. Schmidt, I. Karafyllis, and M. Krsti´ c, “Yield trajectory tracking for hyperbolic age-structured population systems,” Automatica , vol. 90, pp. 138–146, 2018. [28] F. Sharpe and A. Lotka, “A problem in age-distribution,” The London, Edinburgh, and Dublin Philosophical Magazine and Journal of Science ,vol. 21, no. 124, pp. 435–438, Apr. 1911. [29] C. Veil, M. Krsti´ c, P. McNamee, and O. Sawodny, “Stabilization of age-structured competing populations,” arXiv preprint arXiv:2507.23013 ,2025. [30] C. Veil, M. Krsti´ c, I. Karafyllis, M. Diagne, and O. Sawodny, “Stabiliza-tion of predator–prey age-structured hyperbolic PDE when harvesting both species is inevitable,” IEEE Transactions on Automatic Control ,vol. 71, no. 1, pp. 123–138, 2026. [31] C. Veil, P. McNamee, M. Krsti´ c, and O. Sawodny, “Stabilization of age-structured competition (predator-predator) population dynamics,” in 
+
+2025 IEEE 64th Conference on Decision and Control (CDC) , 2025, pp. 2058–2063. [32] S. Wang, M. Diagne, and M. Krsti´ c, “Backstepping Neural Operators for 2x2 Hyperbolic PDEs,” Jul. 2024. [33] Y. Zhang, R. Zhong, and H. Yu, “Neural operators for boundary stabilization of stop-and-go traffic,” in Proceedings of the 6th Annual Learning for Dynamics & Control Conference , ser. Proceedings of Machine Learning Research, A. Abate, M. Cannon, K. Margellos, and A. Papachristodoulou, Eds., vol. 242. PMLR, 15–17 Jul 2024, pp. 554–565. [Online]. Available: https://proceedings.mlr.press/v242/ zhang24c.html 
+
+Miroslav Krsti ´ c is a Distinguished Professor of Mechanical and Aerospace Engineering, holds the Alspach endowed chair, and is the founding director of the Center for Control Systems and Dynamics at UC San Diego. He also serves as Senior Associate Vice Chancellor for Research at UCSD. As a graduate student, Krstic won the UC Santa Barbara best dissertation award and student best paper awards at CDC and ACC. Krstic has been elected Fellow of IEEE, IFAC, ASME, SIAM, AAAS, IET (UK), and AIAA (Assoc. Fellow) - and as a foreign member of the Serbian Academy of Sciences and Arts and of the Academy of Engineering of Serbia. He has received the IEEE Roger W. Brockett Control Systems Award, Richard E. Bellman Control Heritage Award, Bode Lecture Prize, SIAM Reid Prize, ASME Oldenburger Medal, Nyquist Lecture Prize, Paynter Outstanding Investigator Award, Ragazzini Education Award, IFAC Non-linear Control Systems Award, IFAC Ruth Curtain Distributed Parameter Systems Award, IFAC Adaptive and Learning Systems Award, IFAC Time-Delay Systems Lifetime Achievement Award, Chestnut textbook prize, AV Balakrishnan Award for the Mathematics of Systems, Control Systems Society Distinguished Member Award, the PECASE, NSF Career, and ONR Young Investigator awards, the Schuck (’96 and ’19) and Axelby paper prizes, and the first UCSD Research Award given to an engineer. Krstic is a Fellow-Ambassador of the French CNRS and has also been awarded the Miller Distinguished Visiting Professorship and Springer Visiting Professorship at UC Berkeley, the Distinguished Visiting Fellowship of the Royal Academy of Engineering, the Invitation Fellowship of the Japan Society for the Promotion of Science, and four honorary professorships outside of the United States. He serves as Editor-in-Chief of Systems & Control Letters and has been serving as Senior Editor in Automatica and IEEE Transactions on Automatic Control, as editor of two Springer book series, and has served as Vice President for Technical Activities of the IEEE Control Systems Society and as chair of the IEEE CSS Fellow Committee. Krstic has coauthored nineteen books on adaptive, nonlinear, and stochastic control, extremum seeking, control of PDE systems including turbulent flows, and control of delay systems. 
+
+Iasson Karafyllis is a Professor in the De-partment of Mathematics, NTUA, Greece. He is a coauthor (with Z.-P. Jiang) of the book Stability and Stabilization of Nonlinear Systems, Springer-Verlag London, 2011 and a coau-thor (with M. Krstic) of the books Predictor Feedback for Delay Systems: Implementations and Approximations, Birkh ¨ auser, Boston 2017 and Input-to-State Stability for PDEs, Springer-Verlag London, 2019. Since 2013 he is an As-sociate Edi-tor for the International Journal of Control and for the IMA Journal of Mathematical Control and Informa-tion. Since 2019 he is an Associate Editor for Systems and Control Letters and Mathematics of Control, Signals and Systems. His research interests include mathematical control theory and nonlinear systems theory. 
+
+Luke Bhan received his B.S. and M.S. degrees in Computer Science, Math, and Physics from Vanderbilt University in 2022. He is currently pursuing his Ph.D. degree in Electrical and Com-puter Engineering at the University of California, San Diego. His research interests include neu-ral operators, learning-based control, nonlinear delay systems, and partial differential equations. 
+
+Carina Veil (Member, IEEE) is a postdoctoral researcher at KTH Royal Institute of Technol-ogy, Stockholm. Sweden. She received a B.Sc in biomedical engineering, M.Sc. in engineering cybernetics, and Ph.D in mechanical engineer-ing from the University of Stuttgart, Germany, in 2017, 2020, and 2023, respectively. Prior to joining KTH, she has been a postdoctoral re-searchers at University of Stuttgart (2023-2025), Stanford University (2025-2026), as well as a visiting researcher at University of California San Diego in 2024. Her research interests include controlling complex sys-tems, with a special interest for health and sustainability applications, soft robots, and partial differential equations.

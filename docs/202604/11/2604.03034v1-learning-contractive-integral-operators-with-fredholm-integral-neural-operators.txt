@@ -1,0 +1,2228 @@
+Title: Learning Contractive Integral Operators with Fredholm Integral Neural Operators
+
+URL Source: https://arxiv.org/pdf/2604.03034v1
+
+Published Time: Mon, 06 Apr 2026 00:57:43 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+# LEARNING CONTRACTIVE INTEGRAL OPERATORS WITH 
+
+# FREDHOLM INTEGRAL NEURAL OPERATORS 
+
+Kyriakos C. Georgiou 1, Constantinos Siettos 2, ∗
+
+, and Athanasios N. Yannacopoulos 3, †
+
+> 1
+
+Department of Electrical Engineering and Information Technologies, University of Naples “Federico II” , Naples, Italy 
+
+> 3
+
+Dipartimento di Matematica e Applicazioni “Renato Caccioppoli”, University of Naples “Federico II” , Naples, Italy 
+
+> 4
+
+Department of Statistics and Stochastic Modelling and Applications Laboratory, Athens University of Economics and Business , Athens, Greece 
+
+## ABSTRACT 
+
+We generalize the framework of Fredholm Neural Networks, to learn non-expansive integral oper-ators arising in Fredholm Integral Equations (FIEs) of the second kind in arbitrary dimensions. We first present the proposed Fredholm Integral Neural Operators (FREDINOs), for FIEs and prove that they are universal approximators of linear and non-linear integral operators and corresponding so-lution operators. We furthermore prove that the learned operators are guaranteed to be contractive, thereby strictly satisfying the mathematical property required for the convergence of the fixed point scheme. Finally, we also demonstrate how FREDINOs can be used to learn the solution operator of non-linear elliptic PDEs, via a Boundary Integral Equation (BIE) formulation. We assess the proposed methodology numerically, via several benchmark problems: linear and non-linear FIEs in arbitrary dimensions, as well as a non-linear elliptic PDE in 2D. Built on tailored mathemat-ical/numerical analysis theory, FREDINOs offer high-accuracy approximations and interpretable schemes, making them well suited for scientific machine learning/numerical analysis computations. 
+
+Keywords : Fredholm neural networks, Operator learning, Numerical analysis, Deep neural networks, Contractive integrals 
+
+## 1 Introduction 
+
+In recent years, there has been rapidly growing interest in neural operators as a flexible and powerful framework for learning operators between function spaces, attracting considerable interest across scientific computing and applied mathematics. Following DeepONet [20], which marked a new research era in operator learning with machine learn-ing, a large body of work focused on learning evolution and solution operators for PDEs and dynamical systems, including Fourier NOs [17, 15], Graph NOs [18], Riemannian NOs [21], and, more recently, RandONets [11]. The neural-operator literature has been driven primarily by methods that learn solution maps, or time-evolution operators associated with PDEs. By contrast, work that explicitly formulates the task as learning integral operators is much more limited, with notable works including Fourier NOs (FNOs) [17, 15], Graph-NOs [18] and more recently, Neural Integral Equations [26]. While DeepONets [20] are formulated as general operator-learning architectures, they can also be interpreted within the framework of integral-operator learning whenever the target solution map admits an integral representation. In such cases, the branch and trunk networks implicitly define a separable approximation of the kernel, leading to a finite-rank representation of the corresponding integral operator. In this context, Fourier NOs [17, 15] parametrize the integral kernel directly in Fourier space, while Graph NOs [18] learn kernel integral operators by combining a Nystrom approximation with domain truncation, implemented with graph neural networks. In [15], the authors provide a universal approximation theorem for these operators and show that they are discretization-invariant, 
+
+> ∗
+
+Corresponding author: constantinos.siettos@unina.it 
+
+> †
+
+Corresponding author: ayannaco@aueb.gr 
+
+> arXiv:2604.03034v1 [math.NA] 3 Apr 2026
+
+PRIME AI paper 
+
+meaning the same model generalizes across different resolutions without retraining. In [24], the authors proposed “In-tegral Neural Networks”, a class of deep networks that replace conventional discrete weight tensors with continuous weight functions and layer transformations defined via integral operations over hypercubes. More recently, in [26], the authors presented “Neural Integral Equations”, which consist of replicating a fixed-point argument, learning the unknown, non-linear integral kernel using an iterative solver until convergence of the iterations. These approaches, are used as end-to-end, black-box operator approximators trained by nonlinear (typically gradient-based) optimization of network weights. Here, building on our previous work on Fredholm NNs [12, 13], we advance both theoretically and computation-ally our numerical analysis-informed Fredholm NNs to the integral operator learning framework. Fredholm Neural Networks (FNNs/ Fredholm NNs) [12, 13], provide an interpretable numerical analysis-informed machine-learning framework for solving and learning linear and nonlinear integral equations through Krasnosel’skii–Mann fixed-point iterations. In this setting, the resulting scheme emulates a deep neural network whose depth and width, weights and biases are prescribed by the underlying mathematical theory [12], while for the solution of the inverse problem the in-tegral kernel is explicitly parameterized and trained end-to-end [13]. This way, Fredholm NNs bridge the gap between fully black-box deep neural network-learning approaches and methods informed by numerical analysis. It is worth recalling that the idea of constructing neural networks that emulate classical numerical analysis schemes can be traced back to [22], where the Runge–Kutta method was represented as a deep neural network and subsequently employed for the learning of discretized PDEs. This perspective has recently received renewed attention in the context of nu-merical analysis grounded machine learning, where neural architectures are designed so as to reflect the structure of established iterative and discretization methods. Building on the idea of Runge–Kutta neural networks, in [7] proposed a recursively recurrent neural network (R2N2) superstructure that learns numerical fixed-point algorithms, including Krylov, Newton–Krylov, and Runge–Kutta schemes. Along similar numerical-analysis-informed lines, recent studies have also considered neural network architectures that can be systematically interpreted through existing numerical schemes, as in [5] for linear dynamical systems. Within this line of research, in [2], the authors presented the Cholesky Newton-Kantorovich Neural Operator, a neural operator learning paradigm that emulates Newton–Kantorovich–type iterations by learning the Cholesky factors of the linearized PDE operator, enabling machine-precision accuracy on both forward and inverse nonlinear PDE problems. Finally, in [10], we have proposed RandONets which may be viewed as an interpretable DeepONet variant, in which the branch and trunk networks are constructed from single-layer neural networks, while training is carried out through linear-algebra-based regularization techniques, such as Tikhonov regularization, and pivoted QR decomposition with regularization, thereby yielding a more structured and transparent operator-learning framework. More recently, RandONets have been used to learn operators of PDEs lo-cally from spatio-temporal patches, and have been coupled with Newton-Krylov iterative methods to perform system level tasks [11]. Within this context, the proposed NO that we call Fredholm Integral Neural Operator (FREDINO) bridges custom/“white-box” interpretable deep neural network architectures with a fixed point training scheme that learns and rigorously guarantees the resulting learned operator to be a contraction as required. In the FREDINO, the pa-rameters, i.e., weights, biases, and activation functions, directly correspond to specific components of the integral equation. Consequently, learning the integral operator amounts to finding the optimal parameter values that define a Fredholm NN whose outputs align with the training data. Our scheme ensures that the learned operator is (locally) non-expansive. We assess this property also on unseen resolutions during the model testing phase. With the proposed approach, we are not only learning an operator that satisfies the specific integral equation for any input and output functions; we are essentially learning the entire method of successive approximations algorithm. This paper is organized as follows: in section 2 we provide the necessary theoretical background pertaining to integral operators, Fredholm Integral Equations and Fredholm Neural Networks. In section 3 we prove that the proposed Fredholm Neural Operators are universal approximators for contractive integral operators and discuss how this setting ensures the learned integral operators are contractive. In section 4, we present an application of the FREDINO to non-linear elliptic PDEs via potential theory. Finally, in section 5, we assess FREDINOs via various linear and non-linear integral operators of Fredholm-type in aribitary dimensions as well as non-linear PDEs in 2D. We conclude and discuss further research directions in 6. 
+
+## 2 Mathematical formulation and background 
+
+In this work, we will be considering both linear and nonlinear integral operators. We begin by considering linear integral operators of the form: 
+
+(T f )( x) = 
+
+Z
+
+> D
+
+K(x, z )f (z)dz, (1) 
+
+2PRIME AI paper 
+
+where x, z ∈ D , D ⊂ R is a bounded and compact domain, K : D × D → R is the kernel function, f : D → Rd, and the corresponding nonlinear operator: 
+
+(T f )( x) = 
+
+Z
+
+> D
+
+K(x, z )G(f (z)) dz, (2) where G : R → R is a Lipschitz function. Note that we will also use the notation TK and TK,G , wherever it is important to highlight the specific choices. Such operators arise for example in Fredholm Integral Equations of the second kind, which are of the form: 
+
+f (x) = g(x) + 
+
+Z
+
+> D
+
+K(x, z )f (z)dz. (3) We then consider nonlinear integral operators of the form 
+
+f (x) = g(x) + 
+
+Z
+
+> D
+
+K(x, z )G(f (z)) dz, g : D → Rd. (4) Throughout this paper, we will be considering the Hilbert space H := L2(D; Rd) endowed with the inner product 
+
+⟨f, g ⟩ = R 
+
+> D
+
+f (x)g(x)dx . (The results below are generalizable to other spaces, e.g., C(D, Rd) or Lebesgue spaces). We also consider the space 
+
+Z = L2(D × D ) := 
+
+
+
+K : D × D → R
+
+Z
+
+> D
+
+Z
+
+> D
+
+|K(x, z )|2 dx dz < ∞
+
+
+
+, (5) with corresponding norm 
+
+∥K∥L2(D×D ) =
+
+ Z
+
+> D
+
+Z
+
+> D
+
+|K(x, z )|2dx dz 
+
+1/2
+
+, (6) so that for the kernels we have K ∈ Z = L2(D × D). Therefore, we define the set: 
+
+T := {T K : H → H : ∃K ∈ Z such that TK u(x) = 
+
+Z
+
+> D
+
+K(x, z )u(z)dz }, (7) consisting of compact operators. Extensions are of course possible. Importantly, using the Cauchy-Schwarz inequality, we have : 
+
+| T u(x)| ≤ ∥ K∥L2(D) ∥u∥L2(D). (8) Squaring and integrating the above w.r.t to x, we get: 
+
+Z
+
+> D
+
+| TK u(x)|2 dx ≤
+
+ Z
+
+> D
+
+∥K(x, ·)∥2
+
+> L2(D)
+
+dx 
+
+
+
+∥u∥2 
+
+> L2(D)
+
+= ∥K∥2
+
+> L2(D×D )
+
+∥u∥2
+
+> L2(D)
+
+. (9) Therefore, we have: 
+
+∥T K u∥2 
+
+> L2(D)
+
+≤ ∥ K∥2 
+
+> L2(D×D )
+
+∥u∥2
+
+> L2(D)
+
+. (10) Now taking the supremum over all u̸ = 0 , we get: 
+
+∥T K ∥L2→L2 = sup 
+
+> u̸=0
+
+∥T K u∥L2(D)
+
+∥u∥L2(D)
+
+≤ ∥ K∥L2(D×D ). (11) 
+
+Remark 2.1. Since D is bounded and compact, in the case K is continuous, we will also be considering the Banach space X := C D; Rd, endowed with the norm ∥f (x)∥∞ = sup x∈D |f (x)|, with x ∈ Rd. Then, the main results that are shown below will also hold in for TK : X → X .Hereinafter, we will use ∥ · ∥ to represent the norms in either of the aforementioned spaces, using the subscript when necessary to distinguish for clarity. In this work, we tackle the problem of learning the integral operator by modelling the unknown kernel function K and non-linearity G (using neural networks) from information of the solution f of the equations (3) or (4), to provide a consistent finite-dimensional approximation of the integral operator. We will see how we can do this using a forward pass through Fredholm Neural Networks. Therefore, we provide background on non-expansive integral operators, which are used in Fredholm NNs, below. 
+
+3PRIME AI paper 
+
+2.1 Non-expansive integral operators and FIEs 
+
+We start by recalling the definition of a contraction operator. 
+
+Definition 2.2 (Contractive operator) . Consider an operator T : X → X (equivalently T : H → H ). We say that T
+
+is a q−contraction if: 
+
+∥T f1 − T f2∥ ≤ q∥f1 − f2∥, (12) for some q < 1. If q = 1 , then we say the operator is non-expansive. When T is a contraction, it is well known that the FIE can be solved using the Neumann series f (x) =P∞
+
+> n=0
+
+(T (n)g)( x), whose convergence is guaranteed by the Banach Fixed-Point Theorem. Simultaneously, such equations can also be solved numerically utilizing appropriate discretization schemes, such as the Nystr¨ om method. Furthermore, we recall the Krasnoselskii-Mann (KM) method (see e.g., [16] for further details). In the particular case, when q = 1 , we consider the Hilbert space H.
+
+Proposition 2.3 (Krasnosel’skii-Mann (KM) method) . Consider the FIEs (3) or (4) defined by a non-expansive oper-ator T : H → H and a sequence {κn}, κ n ∈ (0 , 1) , such that P 
+
+> n
+
+κn(1 − κn) = ∞. Then, the iterative scheme: 
+
+f (n+1) (x) = (1 − κn)f (n)(x) + κn(g(x) + T f (n))( x) = f (n)(x) + κn
+
+ g(x) + ( T f (n))( x) − f (n)(x) (13) 
+
+with f0(x) = g(x), converges to the fixed point solution of the FIE, f ∗(x).
+
+It is straightforward to see that, when T is a contraction, we can set κn = 1 , for all n, in which we can work on the original Banach space X and obtain: 
+
+f (n)(x) = g(x) + 
+
+Z
+
+> D
+
+K(x, z )f (n−1) (z)dz, n ≥ 1, (14) which converges to the fixed point solution. This is the Picard iteration (method of successive approximations), which is easily seen to coincide with the Neumann series expansion. The Fredholm NN framework presents a novel way of presenting DNNs, by establishing a connection between the model architecture and the KM and Picard iterations for solving FIEs. This theory has been developed in [12, 13]. For completeness, we now present the main results in detail below. 
+
+2.2 Feedforward Fredholm NNs 
+
+As a first step, it is useful to define the following discretized version of the fixed point approximation, which is the basis for the construction of the Fredholm NN [12]. We note that in [12] the approach was introduced only for 1D FIEs; as mentioned above, this is extended in the current work as we will also be considering higher dimensional problems. Therefore the definitions below are generalized to account for this extension. 
+
+Definition 2.4 (Discretized Krasnoselskii-Mann operator) . Consider a function f satisfying the FIE (3) or (4). Con-sider a z−grid Z = {z1, . . . z N }, with zi ∈ Rd, |Z| = N and such that x ∈ Z. Then, we define the following discrete operator (PN representing a single iteration of the KM-algorithm using the discretized version of the integral operator 
+
+T (with fixed g : R → R), by: 
+
+(PN f )( x) := (1 − κn)f (x) + κn
+
+ g(x) + 
+
+> N
+
+X
+
+> i=1
+
+K(x, z j )f (zj )∆ z
+
+= κng(x) + 
+
+> N
+
+X
+
+> j=1
+
+f (zj )
+
+
+
+K(x, z j )κn∆z + (1 − κn)1{zj =x}
+
+
+
+. (15) 
+
+Remark 2.5. Note that in the definition above the grid Z can be constructed in various ways, e.g., uniformly or using quasi-Monte Carlo sequences. Indeed, when considering FIEs in higher dimensions we will use a low discrepancy sequence, namely Sobol sampling for the numerical approximation to the integral. 
+
+Definition 2.6 (M −layer fixed point estimate) . We define the M −layer fixed point estimate of the solution to the FIE as the following representation arising from applying the discretized KM operator PN for the given choice of g(x),
+
+M times: 
+
+f (M )(x) = ( P(M ) 
+
+> N
+
+g)( x) = PN ◦ (PN ◦ (· · · ◦ (PN g)( x))) (16) 
+
+4PRIME AI paper 
+
+The above definitions give rise to the connection between fixed point approximations and neural networks that is the basis of Fredholm NNs. Notice that the form of the discretized KM operator in (15) matches the linear transformations that connect the output of one layer of a fully connected neural network to the next layer. Finally, composing the operator as in (16) becomes equivalent to “passing through” the neural network to obtain the output, which is the fixed point approximation to the solution of the FIE. 
+
+Proposition 2.7 (Fredholm Neural Network construction) . Consider a KM constant κ = κn for all n, and a dis-cretization Z = {z1, . . . , z N } of the domain D ⊂ Rd. The M -layer approximation of the solution to the linear FIE 
+
+(3) can be implemented as a DNN with input x ∈ Rd, M hidden layers, a linear activation function and a single output node, where the weights and biases are given by: 
+
+W1 =   κg (z1), . . . , κg (zN ) ⊤, b1 = ( 0 , 0, . . . , 0 ) ⊤ (17) 
+
+for the first hidden layer, 
+
+Wm =
+
+
+
+KD (z1) K (z1, z 2) κ∆z · · · K (z1, z N ) κ∆zK (z2, z 1) κ∆z KD (z2) · · · K (z2, z N ) κ∆z
+
+... ... . . . ...... ... ... ...
+
+K (zN , z 1) κ∆z K (zN , z 2) κ∆z · · · KD (zN )
+
+
+
+, (18) 
+
+and 
+
+bm = ( κg (z1), . . . , κg (zN ) ) ⊤ , (19) 
+
+for hidden layers m = 2 , . . . , M − 1, where KD (z) := K (z, z ) κ∆z + (1 − κ), and: 
+
+WM =   K(z1, x )κ∆z, . . . , K (zi−1, x )κ∆z, K D (x), K (zi+1 , x )κ∆z, . . . , K (zN , x )κ∆z ⊤, (20) 
+
+bM =  κg (x), for the final layer, assuming zi = x.Then, letting Am be the map defined by Am(x) = Wmx + bm, for m = 1 , . . . , M , the output of the neural network is given by: 
+
+ˆf (x) = 
+
+
+
+AM ◦ · · · ◦ A 1
+
+
+
+(x). (21) Based on the constructions above we can formulate the Universal Approximation Theorem for Fredholm Neural Net-works (Fredholm NNs) below (see [12] for the proof for the one dimensional case, and we note that the d−dimensional result follows easily by following the same steps). 
+
+Theorem 2.8 (Fredholm NNs as universal approximators of linear FIE solutions [12]) . Consider the linear integral operator, T : V → V defined in (2) , where V is either X or H. Consider the space V′ ⊂ V defined by Z′ := {f ∈V : g + T f = f, for some g, K }. Then, for any f ∈ Z ′ and for any given approximation error ϵ, there exists a fully connected Fredholm NN (denoted by F(x; g, K )) with M hidden layers as described in Proposition 2.7, and activation function given by: 
+
+σ(x) = 
+
+κg (x), for layer = 1 ,x, for layer ≥ 2, (22) 
+
+such that ∥f (x) − F (x; g, K )∥L2(D) ≤ ϵ.
+
+Note that the proof of Theorem 2.10 as given in [12] generalizes trivially for x ∈ Rd, as required. 
+
+2.3 Recurrent Fredholm Neural Networks 
+
+We now turn to the non-linear FIE of the form (4). As briefly discussed in [12], the approximation of the fixed point solution can again be modeled with a Fredholm NN, but requires an additional recurrent layer for the application of the function G(·). This is a recurrent neural network (RNN), and in particular an Elman network structure [8]. Although in [12], we considered an iterative process for the non-linear FIE case, here we focus on this RNN approach. This structure is shown in Fig. 1. 
+
+5PRIME AI paper 
+
+An important note is that we do not use the KM algorithm in this case, but rather the Picard iteration, i.e,: 
+
+(PN f )( x) := g(x) + 
+
+> N
+
+X
+
+> j=1
+
+K(x, z j )f (zj )∆ z. (23) The reason is that the implementation of the KM algorithm as a Fredholm NN requires the rearangement as shown in (15). However, applying the non-linearity G(·) to the summand means that this no longer holds, and therefore the KM algorithm cannot be represented as a Fredholm Neural Network connections as described in the linear case. The difference in construction is described in detail in the result below. 
+
+Proposition 2.9 (Recurrent Fredholm NN construction) . The M -layer approximation of the solution of the non-linear FIE (4) can be implemented as a RNN with input x ∈ Rd, M hidden layers, a linear activation function and a single output node, where the weights and biases are given by: 
+
+W1 = ( g(z1), . . . , g (zN ) ) ⊤ , b1 = ( 0 , 0, . . . , 0 ) ⊤ (24) 
+
+for the first hidden layer, 
+
+Wm =
+
+
+
+K (z1, z 1) K (z1, z 2) ∆ z · · · K (z1, z N ) ∆ zK (z2, z 1) ∆ z K (z2, z 2) · · · K (z2, z N ) ∆ z
+
+... ... . . . ...... ... ... ...
+
+K (zN , z 1) ∆ z K (zN , z 2) ∆ z · · · K (zN , z N )
+
+
+
+, (25) 
+
+and 
+
+bm = ( g(z1), . . . , g (zN ) ) ⊤ , (26) 
+
+for hidden layers m = 2 , . . . , M − 1, and: 
+
+WM = ( K(z1, x )∆ z, . . . , K (zN , x )∆ z )⊤ , (27) 
+
+bM =  g(x), for the final layer. Then, considering the recurrent input non-linearity G(·) : R → R applied to each node and letting Am be the map defined by Am(x) = WmG(x) + bm, for m = 1 , . . . , M , the output of the neural network is given by: 
+
+ˆf (x) = 
+
+
+
+AM ◦ · · · ◦ A 1
+
+
+
+(x). (28) The corresponding Universal Approximation Theorem can be formulated as follows. 
+
+Theorem 2.10 (Fredholm NNs as universal approximators of non-linear FIE solutions) . Consider the contractive integral operator T : X → X , defined in (2) . Consider the space X ′ ⊂ X defined by X ′ := {f ∈ X : g + T f =
+
+f, for some g, K, G }. Then, for any f ∈ X ′ and for any given approximation error ϵ, there exists a fully connected DNN (denoted F(x; g, K, G )) with M hidden layers as described in Proposition 2.9, with recurrent input non-linearity function G, activation function given by: 
+
+σ(x) = 
+
+κg (x), for layer = 1 ,x, for layer ≥ 2, (29) 
+
+such that ∥f (x) − F (x; g, K, G )∥L2(D) ≤ ϵ.
+
+## 3 FREDINOs: Fredholm Integral Neural Operators as universal approximators 
+
+In this section, we provide the main theoretical results for the proposed method. Recall that we consider the problem of learning the unknown, non-expansive, integral operators (1) or (2). By using the Fredholm NN framework, we can tackle this problem by learning the unknown functions K : D × D → R and G : R → R, such that: (a) the integral equation is satisfied, (b) the learned integral operator, defined by the approximated kernel and non-linearity, is strictly non-expansive. 
+
+6PRIME AI paper 
+
+x1
+
+x2
+
+x3
+
+x4
+
+κg (z1)
+
+κg (z2)
+
+κg (z3)
+
+κg (z4)
+
+> f1(z1)
+> f1(z2)
+> f1(z3)
+> f1(z4)
+> f2(z1)
+> f2(z2)
+> f2(z3)
+> f2(z4)
+
+f3(x1)
+
+f3(x2)
+
+f3(x3)
+
+f3(x4)
+
+> (a)
+
+x1
+
+x2
+
+x3
+
+x4
+
+g(z1)
+
+g(z2)
+
+g(z3)
+
+g(z4)
+
+> f1(z1)
+> f1(z2)
+> f1(z3)
+> f1(z4)
+> f2(z1)
+> f2(z2)
+> f2(z3)
+> f2(z4)
+
+f3(x1)
+
+f3(x2)
+
+f3(x3)
+
+f3(x4)
+
+> (b)
+
+Figure 1: Schematic of: (Left) The Feedfroward Neural Network (Right) The Recurrent Fredholm Neural Network. The recurrent layer applies the non-linearity G(·) pointwise to the output of each node. The grid points zi ∈ Rd can be sampled either uniformly or using quasi-Monte Carlo methods such as Sobol sampling. To accurately set-up the universal approximation theorems that motivate Fredholm Neural Operators (Frehdolm NOs), we first discuss the nature of the integral equations. Specifically, we highlight that there exist infinitely many kernels 
+
+K (and functions G in the non-linear case) that can be used to define the same integral operator, in this setting. Indeed, considering first the linear case, let {gi, f i} for i = 1 , . . . , N be the (finite) pairs that satisfy the IE defined by the integral operator with kernel K, i.e., 
+
+fi(x) = gi(x) + ( TK fi)( x), (30) for all i = 1 , . . . , N , where TK fi(x) := R 
+
+> D
+
+K(x, y )fi(z)dz . Then, if we define the map A : L2(D × D ) → L2(D)
+
+with A(Φ) = ( TΦf1, . . . , TΦfN ), the null space of the map reads: ker( A) = {Φ : TΦfi = 0 , for all i = 1 , . . . , N }.Trivially, ker( A) is non-empty, and hence, for any Φ ∈ ker( A), we can define ˜K := K + Φ and we have: 
+
+fi(x) = gi(x) + ( T ˜K fi)( x), (31) for all i = 1 , . . . , N .Non-uniqueness holds also in the non-linear case, where we want to learn both K (one of the infinite kernels that satisfy the integral equation) and G to define the integral operator. One can follow a similar argument as above. These observations motivate the formulation of the universal approximation theorems that follow in terms of the family of kernels K (and non-linearities G), satisfying the IEs. We begin with the linear case. 
+
+Theorem 3.1 (FREDINOs as universal approximators of linear integral operators) . Consider the Hilbert space H =
+
+L2(D; Rd) and let the integral operator TK : H → H , be defined by TK u = R 
+
+> D
+
+K(x, z )u(z)dz , for any u ∈ H ,with kernel K : D × D → R. Furthermore, let SK represent the solution operator of the corresponding FIE 
+
+f (x) = g(x) + ( TK f )( x), for any g ∈ H , i.e., (SK )g = f . Then: 1. There exists a surrogate model (a neural network) for the kernel, Kθ : D × D → R, for some parameters 
+
+θ ∈ Θ, where Θ ⊂ RP , P ∈ N such that: 
+
+∥T − T Kθ ∥ < ϵ 1, (32) 
+
+7PRIME AI paper 
+
+for any ϵ1 > 0, where TKθ is the learned operator, defined by: 
+
+(TKθ u)( x) := 
+
+Z
+
+> D
+
+Kθ (x, z )u(z)dz. (33) 
+
+Similarly, for the learned solution operator SKθ g, we have for any ϵ2 > 0:
+
+∥SK g − SKθ g∥L2(D) < ϵ 2. (34) 
+
+3. If T is a contraction, with constant ρ < 1, then the learned operator Tθ is also contractive, i.e., for any 
+
+u, v ∈ H :
+
+∥T Kθ u − T Kθ v∥L2(D) ≤ ρθ ∥u − v∥L2(D), (35) 
+
+for ρθ < 1.4. There exists a Fredholm Neural Network F(·; ·, K θ ), with M hidden layers, such that for any ϵ3 > 0 and all 
+
+g ∈ H :
+
+∥S K g − F (·; g, K θ )∥L2(D) < ϵ 3. (36) 
+
+Proof. We prove each of the above statements. 
+
+1. Recall that, given data for the functions u and v, there is not a unique integral kernel K such that v = TK u.The choice of a unique kernel satisfying the equation will be achieved using regularization. If no regularization is employed we can still provide an existence result, where it suffices to construct a kernel that approximates any of the kernels satisfying the IE defined by the integral operator. We assume K ∈ L2(D × D ), and recall the class of integral operators: 
+
+T := {T K : H → H : TK u(x) = 
+
+Z
+
+> D
+
+K(x, z )u(z)dz for some K : D × D → R, K ∈ L2(D × D )}, (37) We now consider the set of neural networks: 
+
+N := {N (·, ·; θ) : N (·, ·; θ) : D × D → R, θ ∈ Θ ⊂ RP , P ∈ N}, (38) which consists of neural networks with inputs (x, z ) ∈ D × D parameterized by the weights θ ∈ Θ. The structure of the networks is such that N (·, ·; θ) ∈ Z for every θ ∈ Θ. Finally, we consider the set of corresponding operators: 
+
+TΘ := {L θ := TN (·,·;θ) : θ ∈ Θ ⊂ RP , P ∈ N }. (39) Clearly, TΘ ⊂ T. We will show that TΘ is dense in T in the strong operator topology. We recall the density result of the set of neural networks N in the space L2(D × D ). This implies that for any 
+
+K ∈ L2(D × D ) and any ϵ1 > 0, there exists a neural network N (·, ·; θϵ) ∈ N , such that Kϵ(·, ·) := N (·, ·; θϵ) is an approximation of the kernel function K in Z in the sense that: 
+
+∥Kθϵ − K∥L2(D×D ) < ϵ 1. (40) Based on the above, we obtain the approximated integral operator: 
+
+Lθϵ := TKθϵ ∈ TΘ u 7 → L θϵ u := TKθϵ u, with Lθϵ u(x) = TKθϵ u(x) = 
+
+Z
+
+> D
+
+Kθϵ (x, z )u(z)dz. (41) The operator Tθϵ ∈ TΘ in turn approximates the operator TK ∈ T. This follows by the Banach-Steinhaus theorem. Indeed, for any u ∈ X it holds that: 
+
+∥L θϵ u − T K u∥L2(D) ≤ ∥ Kθϵ − K∥L2(D×D )∥u∥L2(D) ≤ ϵ′∥u∥L2(D). (42) This implies that the family of operators {L θϵ }ϵ> 0 is pointwise bounded. Consider a sequence (ϵn)n∈N such that ϵn → 0, and set θn = θϵn for each n ∈ N. Define the corresponding sequence of neural networks (N (·, ·; θn)) n∈N generating the sequence of functions (Kn)n∈N ⊂ Z (by setting Kn(·, ·) := 
+
+N (·, ·; θn)), It holds that Kn → K in L2(D × D ). Moreover, define the sequence of operators Ln = TKn . By (42) we 
+
+8PRIME AI paper 
+
+have that ∥L nu − T K ∥L2(D) → 0, for n → ∞ . The sequence (Lnu)n∈N is bounded for all u ∈ L2(D) i.e., (Ln)n∈N
+
+is pointwise bounded. By the Banach-Steinhaus theorem the sequence (Ln)n∈N is also uniformly bounded, hence it converges in the operator norm topology to TK (i.e., ∥L n − T K ∥L(X,X ) → 0 as n → ∞ ). We can now prove the convergence of the solution operator (34). Let Kθ be such that TKθ approximates TK . Further-more, we have assumed that the true solution operator SK exists, i.e., I − T K is invertible. Therefore, by the result above, we can choose ϵ1 such that: 
+
+∥(I − T K ) − (I − T Kθ )∥ = ∥T K − T Kθ ∥ < ϵ 1 < 1
+
+∥(I − T K )−1∥ (43) We write I − T Kθ = ( I − T K ) − (TKθ − T K ). Then, by we factorize to obtain: 
+
+I − T Kθ = ( I − T K )( I − C), (44) where we define the operator C := ( I − T K )−1(TKθ − T K ). By (43), we have: 
+
+∥C∥ ≤ ∥ (I − T K )−1∥ ∥T Kθ − T K ∥ < 1. (45) Hence, C is a contraction and therefore I − C is invertible by the Neumann series, (I − C)−1 = P∞ 
+
+> n=0
+
+Cn, with: 
+
+∥(I − C)−1∥ ≤ 11 − ∥ C∥ . (46) From the factorization we deduce 
+
+(I − T Kθ )−1 = ( I − C)−1(I − T K )−1. (47) Hence 
+
+∥(I − T Kθ )−1∥ ≤ ∥(I − T K )−1∥
+
+1 − ∥ (I − T K )−1∥ ∥T Kθ − TK ∥ . (48) We now compute the difference of the inverses. Using the resolvent identity, we obtain: 
+
+SK − SKθ = ( I − T K )−1 − (I − T Kθ )−1 = ( I − T K )−1(TK − T Kθ )( I − T Kθ )−1. (49) Taking norms, we obtain 
+
+∥SK − SKθ ∥ ≤ ∥ (I − T K )−1∥ ∥T K − T Kθ ∥ ∥ (I − T Kθ )−1∥, (50) and substituting (48) we get 
+
+∥SK − SKθ ∥ ≤ ∥(I − T K )−1∥2
+
+1 − ∥ (I − T K )−1∥ ∥T K − T Kθ ∥ ∥T K − T Kθ ∥ ≤ ϵ1
+
+1 − ϵ1∥(I − T K )−1∥ =: ϵ2. (51) As ϵ1 → 0, this bound approaches ϵ2 → ϵ1, and the result (34) follows. 
+
+2. We can now prove that the learned operator TKθ is a contraction in the case where the corresponding integral operator is a contraction. For linear operators, this is equivalent to ∥T Kθ ∥L2(D) := ρθ < 1. By assumption, we already have ∥TK ∥L2(D) = ρ < 1. Then, for any u ∈ X :
+
+∥T θ u∥L2(D) = ∥T Kθ u − T K u + TK u∥L2(D) ≤ T Kθϵ u − T K u∥L2(D) + ∥T K u∥L2(D) < (ϵ + ρ)∥u∥L2(D). (52) We can select ϵ < 1 − ρ, so that we obtain ∥T Kθ ∥L2(D)∥u∥L2(D) < ∥u∥L2(D), i.e., ∥T Kθ ∥L2(D) := ρθ < 1, as required. 
+
+3. It now remains to show that the solution operator SK can be approximated by the learned integral operator, and, by extension, the Fredholm Neural Network of a given depth M . Because the true operator is contractive, the inverse 
+
+(I − T )−1 exists and we can use the Neumann series to represent it, which in turn gives us the solution operator as: 
+
+SK g = ( I − T K )−1g =
+
+> ∞
+
+X
+
+> i=0
+
+T (i) 
+
+> K
+
+g. (53) 
+
+9PRIME AI paper 
+
+This converges absolutely in L2, in the sense that the numerical series P∞ 
+
+> i=0
+
+∥T (i) 
+
+> K
+
+g∥L2(D) converges. For an approx-imation Kθ , we have 
+
+SKθ g = ( I − T Kθ )−1g =
+
+> ∞
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g, (54) Now, we can consider the error in the Fredholm Neural Network with M hidden layers and defined on a grid with N
+
+nodes, denoted F(·; g, K θ ), which approximates the solution operator: 
+
+∥S K g − F (·; g, K θ )∥L2(D) = ∥S K g − S Kθ g + SKθ g − F (·; g, K θ )∥L2(D) ≤∥S K g − S Kθ g∥L2(D) + ∥S Kθ g − F (·; g, K θ )∥L2(D) (55) For the second term, we have from Theorem 2.10 that there exists a Fredholm NNs such that this bound is as small as we want, as the number of layers M increases. For the first term, considering (10), we have: 
+
+∥S K g − S Kθ g∥L2(D) ≤
+
+> ∞
+
+X
+
+> i=0
+
+∥ T (i) 
+
+> K
+
+− T (i)
+
+> Kθ
+
+g∥L2(D) ≤ ∥ g∥L2(D)
+
+> ∞
+
+X
+
+> i=0
+
+∥Ki − Kiθ ∥L2(D×D ) (56) Then, using the property for the difference of powers: 
+
+Ki − Kiθ =
+
+> i−1
+
+X
+
+> j=0
+
+Ki−1−j (K − Kθ )Kjθ , (57) we get (omitting for simplicity the underscores for the norms): 
+
+∥Ki − Kiθ ∥ ≤ 
+
+> i−1
+
+X
+
+> j=0
+
+∥Ki−1−j ∥∥ (K − Kθ )∥∥ Kjθ ∥, (58) and considering that ∥K∥, ∥Kθ ∥ < ρ m := min {ρ, ρ θ } < 1, we get: 
+
+∥Ki − Kiθ ∥L2(D×D ) ≤ ϵ1
+
+> i−1
+
+X
+
+> j=0
+
+ρi−1 
+
+> m
+
+= ϵ1iρ i−1 
+
+> m
+
+, (59) Plugging the above in (56), we finally get: 
+
+∥S K g − S Kθ g∥L2(D) ≤ ∥ g∥L2(D)
+
+> ∞
+
+X
+
+> i=0
+
+∥Ki − Kiθ ∥L2(D×D ) ≤ ϵ1∥g∥
+
+> ∞
+
+X
+
+> i=0
+
+iρ i−1 
+
+> m
+
+= ϵ1∥g∥L2(D)
+
+(1 − ρm)2 . (60) Hence, we obtain: 
+
+∥S K g − F (·; g, K θ )∥L2(D) ≤ ϵ1∥g∥L2(D)
+
+(1 − ρm)2 + ∥S Kθ g − F (·; g, K θ )∥L2(D) (61) The error in the Fredholm NN approximation arises from two sources: the use of M hidden layers in the network and the N nodes corresponding to the integral discretization. Hence, we can write: 
+
+SKθ g − F (·; g, K θ ) = SKθ g −
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g +
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g − F (·; g, K θ ), (62) and taking the norm, we have 
+
+∥S Kθ g − F (·; g, K θ )∥L2(D) ≤ SKθ −
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g
+
+> L2(D)
+
++
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g − F (·; g, K θ )
+
+> L2(D)
+
+. (63) 
+
+10 PRIME AI paper 
+
+For the first term, recall that ∥Kθ ∥ < ρ m < 1, and we have 
+
+SKθ g −
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g
+
+> L2(D)
+
+=
+
+> ∞
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g −
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g
+
+> L2(D)
+
+=
+
+> ∞
+
+X 
+
+> i=M+1
+
+T (i) 
+
+> Kθ
+
+g
+
+> L2(D)
+
+≤
+
+> ∞
+
+X 
+
+> i=M+1
+
+∥Kθ ∥iL2(D×D )∥g∥L2(D) = ρM +1 
+
+> m
+
+1 − ρm
+
+∥g∥L2(D). (64) The second term captures the error induced by the discretization. For clarity, below let Kθ,N represent the discretized kernel operator used in the Fredholm Neural Network. Then, we obtain: 
+
+> M
+
+X
+
+> i=0
+
+T (i) 
+
+> Kθ
+
+g − F (·; g, K θ )
+
+> L2(D)
+
+=
+
+> M
+
+X
+
+> i=0
+
+ Kiθ − Kiθ,N 
+
+g
+
+> L2(D)
+
+≤ ∥ g∥L2(D)
+
+> M
+
+X
+
+> i=0
+
+Kiθ − Kiθ,N L2(D×D ) . (65) Now assuming that: 
+
+∥Kθ − Kθ,N ∥L2(D×D ) = δ(N ), (66) and taken that MX
+
+> i=0
+
+Kiθ − Kiθ,N L2(D×D ) <
+
+> ∞
+
+X
+
+> i=0
+
+Kiθ − Kiθ,N L2(D×D ) (67) we can use (58) and (59) to get: 
+
+> M
+
+X
+
+> i=0
+
+T iKθ g − F (·; g, K θ ) ≤ ∥ g∥L2(D)δ(N )
+
+> ∞
+
+X
+
+> i=0
+
+iρ i−1 
+
+> m
+
+≤ δ(N )∥g∥L2(D)
+
+(1 − ρm)2 (68) and 
+
+∥S K g − F (·; g, K θ )∥ ≤ ϵ1∥g∥L2(D)
+
+(1 − ρm)2 + ρM +1 
+
+> m
+
+1 − ρm
+
+∥g∥L2(D) + δ(N )∥g∥L2(D)
+
+(1 − ρm)2 . (69) As M, N increase ρMm , δ (N ) → 0, and therefore, for any ϵ3 > 0, we can select M, N and ϵ1 such that 
+
+∥S K g − F (·; g, K θ )∥L2(D) ≤ ϵ3, (70) as required. We now turn to the non-linear integral operator case. We formulate a similar theorem to the UAT above, based on the notion of that we can approximate both the kernel K and non-linearity G, from which the operator is defined. Given the building blocks for the linear case, we formulate the following result directly using the Recurrent Fredholm NN approximation. 
+
+Theorem 3.2 (FREDINOs as universal approximators of non-linear integral operators) . Let K : D × D → R and 
+
+G : D → D be a pair of kernel and non-linearity satisfying the integral equation f (x) = g(x) + ( TK,G f )( x), where the operator TK,G : H → H , (TK,G )u = R 
+
+> D
+
+K(x, z )G(u(z)) dz , is a contraction with contraction constant ρ < 1.Furthermore, suppose that: 
+
+CK := sup 
+
+> x∈D
+
+Z
+
+> D
+
+|K(x, y )|dy < ∞, and (71) 
+
+|G(x) − G(y)| ≤ LG|x − y|, (72) 
+
+for ally x, y ∈ D and assume that CK LG < 1. Finally, let SK,G represent the solution operator of the integral equation f (x) = g(x) + ( TK,G f )( x), i.e., (SK,G )g = f . Then, for ϵ > 0, there exist neural networks Kθ and Gϑ, for some parameter set ˜θ = {θ, ϑ } ∈ Θ ⊂ RP , P ∈ N, and a Recurrent Fredholm NN F(·; ·, K θ , G ϑ), with M hidden layers, such that: 
+
+∥S g − F (·; g, K θ , G ϑ)∥L2(D) < ϵ, (73) 
+
+and the learned operator: 
+
+(T˜θ u)( x) := 
+
+Z
+
+> D
+
+Kθ (x, z )Gϑ
+
+ u(z)dz, (74) 
+
+11 PRIME AI paper 
+
+is contractive, i.e., 
+
+∥T ˜θ u − T ˜θ v∥L2(D) ≤ ρ˜θ ∥u − v∥L2(D), (75) 
+
+for ρ˜θ < 1.Proof. As above, we will use the density result of the set of neural networks N in the space L2(D × D ). This will allow us to approximate both K and G. Specifically, we have that for any K ∈ L2(D × D ) and any ϵ > 0, there exists a neural network N (·, ·; θ ∈ Θ) , such that Kθ (·, ·) := N (·, ·; θ) is an approximation of the kernel function K in Z in the sense that: 
+
+∥Kθ − K∥L2(D×D ) < ϵ K , (76) for any ϵK > 0. Similarly, for any G, there exists network N (·; ϑ ∈ Θ) such that 
+
+∥Gϑ − G∥L2(D) < ϵ G, (77) for any ϵG > 0 and where Gϑ = N (·; ϑ). The above are guaranteed by the argument in Theorem 3.1. This now allows us to consider bounds for the approximations of G and K.We start by assuming that there exists constant LGϑ such that |Gϑ(x) − Gϑ(y)| ≤ LGϑ |x − y|. Then, consider 
+
+u, v ∈ X and, for any x ∈ D :
+
+|(T˜θ u)( x)−(T˜θ v)( x)| =
+
+Z
+
+> D
+
+Kθ (x, z )Gϑ(u(z)) dz −
+
+Z
+
+> D
+
+Kθ (x, z )Gϑ(v(z)) dz 
+
+≤
+
+Z
+
+> D
+
+|Kθ (x, z )|LGϑ |u(z) − v(z)|dz ≤ LGϑ ∥u − v∥
+
+Z
+
+> D
+
+|Kθ (x, z )|dz =: LGϑ CKθ ∥u − v∥L2(D),
+
+(78) from which we have ∥T ˜θ u − T ˜θ v∥L2(D) ≤ LGϑ CKθ ∥u − v∥L2(D).
+
+Hence, it suffices to show that LGϑ CKθ =: ρ˜θ < 1. We can do this by comparing to the corresponding constants LG
+
+and CK := R 
+
+> D
+
+|K(x, z )|dz . To this end, assuming that ∥Kθ − K∥L2(D) < ϵ K , for any x ∈ D we have: 
+
+Z
+
+> D
+
+|Kθ (x, z )|dz −
+
+Z
+
+> D
+
+|K(x, z )|dz ≤
+
+Z
+
+> D
+
+|| Kθ (x, z )| − | K(x, z )|| dz 
+
+≤
+
+Z
+
+> D
+
+|Kθ (x, z ) − K(x, z )|dz < cϵ K , (79) where c > 0 is the volume of D, and therefore: ∥CKθ − CK ∥L2(D) < Cϵ K . Since ϵK → 0, we can deduce that 
+
+CK → C.We now turn to the approximation Gϑ, for which we can write ∥Gϑ − G∥L2(D) < ϵ G. We want to show that the Lipschitz constant Lϑ is arbitrarily close to LG. This follows as shown below: 
+
+|Gϑ(x) − Gϑ(y)| ≤ | Gϑ(x) − G(x)| + |G(x) − G(y)| + |G(y) − Gϑ(y)| ≤ 2ϵG + LG|x − y|. (80) As above, we know that there exists a choice of parameters ϑ, such that ϵG → 0, and therefore LGϑ → LG. From (79) and (80), it follows that: 
+
+∥T ˜θ u − T ˜θ v∥L2(D) ≤ ρ˜θ ∥u − v∥L2(D) → LGCK ∥u − v∥L2(D), (81) and hence ρ˜θ < 1, since CK LG < 1, by assumption. We now turn to the solution operator. Since we are in the non-linear case, note that we have: 
+
+SK,G g = lim  
+
+> n→∞
+
+T (n)g and SKθ ,G ϑ g = lim  
+
+> n→∞
+
+T (n)  
+
+> Kθ,G ϑ
+
+g. (82) For brevity, we will use the notation S ≡ SK,G and T˜θ ≡ TKθ ,G ϑ , S ˜θ ≡ SKθ ,G ϑ , and we also omit the norm subscripts. We now want to prove that S˜θ g → SG g. To this end, we can consider an inductive argument. Consider first the case 
+
+12 PRIME AI paper 
+
+where n = 1 :
+
+∥T ˜θ u−T u∥ =
+
+Z
+
+> D
+
+Kθ (x, z )Gϑ(u(z)) dz −
+
+Z
+
+K(x, z )G(u(z)) dz 
+
+≤
+
+Z
+
+> D
+
+Kθ (x, z )Gϑ(u(z)) dz −
+
+Z
+
+> D
+
+Kθ (x, z )G(u(z)) dz +
+
+Z
+
+> D
+
+Kθ (x, z )G(u(z)) dz −
+
+Z
+
+> D
+
+K(x, z )G(u(z)) dz 
+
+≤
+
+Z
+
+> D
+
+|Kθ (x, z )|| Gϑ(u(z)) − G(u(z)) |dz +
+
+Z
+
+> D
+
+|G(u(z)) || Kθ (x, z ) − K(x, z )|dz. (83) Hence, for any u ∈ H :
+
+∥T ˜θ u − T u∥ ≤ ˜ϵ := CKθ ϵG + mε K , (84) where m := sup x∈D |G(u(x)) |.We now consider the case that n = 2 . Let u′ := T u and u′′ := T˜θ u. Then: 
+
+∥T (2) ˜θ u − T (2) u∥ = ∥T ˜θ u′′ − T u′∥ =∥T ˜θ u′ − T u′ + T u′ − T u′′ ∥ ≤ ∥T ˜θ u′ − T u′∥ + ∥T u′ − T u′′ ∥≤ ˜ϵ + ρ∥u′ − u′′ ∥ ≤ ˜ϵ + ρ˜ϵ, (85) where we have used (84) and the fact that T is a contraction. It easily follows that, for any n ≥ 2:
+
+∥T (n)˜θ u − T u(n)∥ ≤ 
+
+> n−1
+
+X
+
+> i=0
+
+˜ϵρ i, (86) and as n → ∞ :
+
+∥S˜θ g − Sg ∥ = ∥ lim  
+
+> n→∞
+
+T (n)˜θ u − lim  
+
+> n→∞
+
+T (n)u∥ = lim  
+
+> n→∞
+
+∥T (n)˜θ u − T u(m)∥ ≤ ˜ϵ
+
+1 − ρ . (87) Finally, we have to show that the (Recurrent) Fredholm Neural Network, F(·; g, K θ , G ϑ), with M hidden layers, can approximate the solution operator arbitrarily close. We have: 
+
+∥Sg − F (·; g, K θ , G ϑ)∥ = ∥Sg − SΘg + S˜θ g − F (·; g, K θ , G ϑ)∥≤ ∥ Sg − S˜θ g∥ + ∥S˜θ g − F (·; g, K θ , G ϑ)∥. (88) For the first term we have the bound given by (87). For the second term, we get: 
+
+∥S˜θ g − F (·; g, K θ , G ϑ)∥ = ∥S˜θ g − T (M )˜θ g + T (M )˜θ g − F (·; g, K θ , G ϑ)∥≤ ∥ SKθ ,G θ g − T (M )˜θ g∥ + ∥T (m)˜θ g − F (·; g, K θ , G ϑ)∥≤ ρM
+
+1 − ρ ∥T ˜θ g − g∥ + δ(M ) 1 − ρM
+
+1 − ρ , (89) where in the last step we have used the error bound for the M −th iteration in the fixed point estimation and the error bound induced by the integral discretization in the Recurrent Fredholm NN. By combining (87) and (89) we obtain the error bound when approximating the true solution operator with the Re-current Fredholm NN. It follows that, for any ϵ > 0, we can choose ϵK , ϵ G and the Fredholm NN depth, M , such that 
+
+∥Sg − F (·; g, K θ , G ϑ)∥ ≤ ˜ϵ
+
+1 − ρ + ρM
+
+1 − ρ ∥T ˜θ g − g∥ + δ(M ) 1 − ρM
+
+1 − ρ < ϵ, (90) completing the proof. 
+
+3.1 The Optimization Problem 
+
+With the theoretical framework described above, the operator learning problem can be formulated as a training prob-lem, whereby the goal is to minimize appropriately defined loss functions. We first, consider the linear problem. To clearly state the learning objective, we aim to estimate the unknown kernel 
+
+K, such that for any {g, f }, gi, f i ∈ H or X , the FIE f = g + TK f is satisfied. We model the unknown kernel Kθ ,
+
+13 PRIME AI paper 
+
+depending on some parameter set θ ∈ Θ. This kernel model is used in the Fredholm NN, denoted F(·; g, K θ ), whose output is the function f . Hence, we aim to solve the regularization problem: 
+
+min   
+
+> Kθ∈L2(D×D )
+
+∥f − F (·; g, K θ )∥2 
+
+> L2(D)
+
++ R(θ), (91) where 
+
+R(θ) = λK ∥Kθ ∥2
+
+> L2(D×D )
+
+. (92) Similarly, for the non-linear problem, we aim to estimate the unknown kernel K and non-linearity G, such that for any 
+
+{g, f }, gi, f i ∈ H or X , the FIE f = g + TK,G f is satisfied. We now consider the model Kθ , as well as a model for the non-linearity Gϑ, with ϑ ∈ Θ. The corresponding Recurrent Fredholm NN, F(·; g, K θ , G ϑ) is trained by solving the regularization problem: 
+
+min   
+
+> Kθ∈L2(D×D )
+
+∥f − F (·; g, K θ , G ϑ)∥2 
+
+> L2(D)
+
++ R(θ, ϑ ), (93) with 
+
+R(θ, ϑ ) = λK ∥Kθ ∥2 
+
+> L2
+
++ λG∥Gϑ∥2 
+
+> L2
+
+. (94) More details regarding the definition of these loss functions and how the Fredholm NN architecture enhances the training process is given below. However, it is first important to discuss the intuition and interpretation of the training framework described in this section. Fredholm NN consider a specific, fixed relationship between the weights and biases, which is determined by the form of underlying integral operator of the FIE. Here, since these values are unknown we essentially construct a trainable Fredholm NN : we are assuming that there exists a Fredholm NN that approximates the solution of the FIE, but whose parameters are unknown (as in classical NN training). However, given the deterministic relationship between the parameters (e.g., we know that the weights connecting each pair of consecutive hidden layers are the same and correspond to the discretized values of the kernel K(x, y )), we are essentially training on a constrained space of possible parameter values. In other words, we are training a deep neural network, but constrained by the mathematical formulation of the FIE, thereby reducing the space of possible parameter values and inducing interpretability in the model. Hence, in practice, this can be achieved by considering a simple model for the unknown parameters, which is much easier to train. Training the simple model therefore becomes equivalent to training the full Fredholm NN (as the Fredholm NN parameters are simply the outputs of the parameter models, Kθ , G ϑ). This is further discussed in the following section. 
+
+3.2 Ensuring the construction of contractive FREDINOs 
+
+In this section we discuss in more detail how the proposed methodology ensures that the learned models indeed define contractive operators. Recall that the solution to the given operator learning is not unique. To this end, we introduce the regularized problem for the integral operator: 
+
+min   
+
+> K∈L2(D×D ),∥K∥L2(D×D )<1
+
+∥f − T K f − g∥2 
+
+> L2(D)
+
++ λ∥K∥2
+
+> L2(D×D )
+
+, (95) or the equivalent problem for the solution operator 
+
+min  
+
+> K∈L2(D×D ),∥K∥L2(D×D )<1
+
+∥f − SK g∥2 
+
+> L2(D)
+
++ λ∥K∥2
+
+> L2(D×D )
+
+. (96) In both problems (95) and (96) we introduce a regularization term λ∥K∥2
+
+> L2(D×D )
+
+, which is a Tikhonov type regulariza-tion term that allows us to select a unique kernel K out of the infinite set of kernels that may fit our data. Formulation (96) of the problem is precisely suited for our treatment, using Fredholm NNs. since the constraint ∥K∥L2(D×D ) < 1
+
+forces us to learn a contractive integral operator that can generate the observed training data. This constraint is identi-cal to using the Fredholm NN pass during training, since its output converges only if the operator TK is a contraction so that the solution operator can be calculated by the Neumann series. Another equivalent way of formulating the optimization problem (96) is as below: 
+
+min  
+
+> K∈L2(D×D )
+
+∥f − SK g∥2 
+
+> L2(D)
+
++ λ∥K∥2 
+
+> L2(D×D )
+
++ I∥·∥ L2(D×D )<1(K) (97) where by I∥·∥ L2(D×D )<1(·), we denote the convex indicator function of the interior of the unit ball in L2(D × D ),which assumes the value 0 for any K such that ∥K∥L2(D×D ) < 1 and +∞ otherwise. 
+
+14 PRIME AI paper 
+
+Problem (97) is an infinite dimensional problem in the function space L2(D × D ), that will yield as solution the optimal kernel K, satisfying also the contraction property for the corresponding integral operator TK . In practice, problem (97) is replaced by an approximate, finite dimensional problem, that uses in lieu of the whole L2(D × D ) adense subset Kθ ⊂ L2(D × D ), which is finite dimensional (e.g., a neural network approximation of the kernels K
+
+generating the integral operators TK ). In fact, we replace problem (97) by the finite dimensional approximation 
+
+min    
+
+> Kθ∈K θ⊂L2(D×D )
+
+∥f − SK g − f ∥2 
+
+> L2(D)
+
++ λ∥Kθ ∥2 
+
+> L2(D×D )
+
++ I∥·∥ L2(D×D )<1(Kθ ). (98) Given that the Fredholm NN blows up if the associated kernel satisfies ∥Kθ ∥L2(D×D ) ≥ 1, we see that the set where 
+
+SKθ g = F(·; g, K θ ) (where F(·; g, K θ ) is the Fredholm NN generated by the approximate kernel Kθ ), coincides with the set where I∥·∥ L2(D×D )<1(Kθ ) = 0 . Hence, problem (98) in terms of kernel approximations Kθ ∈ K θ , coincides with problem 
+
+min  
+
+> Kθ∈K θ
+
+∥f − F (·; g, K θ )∥2 
+
+> L2(D)
+
++ λ∥Kθ ∥2
+
+> L2(D×D )
+
+, (99) as provided in the aforementioned loss functions. To summarize, our goal is to solve problem (97), which is approximated by the finite dimensional problem (98) which, as shown above, is equivalent to problem (99), formulated in terms of Fredholm NNs. This shows how we can use the custom Fredholm NN architecture to ensure that our results adhere to the contractivity requirement, i.e., the forward pass itself it equivalent to solving an optimization problem, but within the constrained space of contractive operators. An equivalent argument holds for the non-linear FIE problem. The schematic representation of the proposed frame-work is given in Fig. 2. 
+
+## 4 Learning Elliptic PDEs with the Fredholm Integral Neural Operators 
+
+Finally, we show how FREDINOS can be employed in the setting of elliptic PDEs. Given the connection between integral operators and the general theory of PDEs (see [4]), the proposed approach can find applications in many similar domains. In this paper, we focus on the case of semi-linear elliptic PDEs, continuing from our previous work in [13] where the application of Fredholm NNs to various elliptic PDEs was rigorously established, utilizing Potential Theory and the Boundary Integral Equation (BIE) method, in order to develop the Potential Fredholm Neural Network 
+
+(PFNN), which replicates the double layer potential formulation (also see [6, 23]). Specifically, the PFNN consists of a Fredholm NN for the solution of the BIE and an extra layer and a final hidden layer that replicates the double layer potential integral to obtain the solution to the PDE. A schematic of this is given in Fig. 3, and the mathematical representation for the semi-linear case is given below. Note that, for the present work, we consider specifically the 2D PDE example, in line with the methodology developed in [12, 13]. Higher dimensional cases require some different handling due to the corresponding fundamental solutions for d ≥ 3, and will be considered in subsequent work, as the goal of the present paper is to develop the core methodology of the Fredholm Neural Operator. Consider the 2D non-linear elliptic PDE: 
+
+∆u(x) = ψ(u(x), x ), x ∈ Ω = {x, y ∈ R : x2 + y2 ≤ 1}
+
+u(x) = g(x), x ∈ ∂Ω, (100) where ψ : R2 → R is a a non-linear source term. This can be solved using the fixed point scheme (see approach as described in [13]): 
+
+∆un+1 (x) − λu n+1 (x) = ˜ψ(un(x), x ), x ∈ Ω
+
+u(x) = g(x), x ∈ ∂Ω, (101) where ˜ψ(u(x), x ) := −λu (x) + ψ(u(x), x ), where each iteration is solved using the PFNN. As an equivalent representation, we can adopt a coupled, implicit integral formulation of the double layer potential and BIE, as follows (see [13] for proof of the following representation): 
+
+u(x) = 
+
+Z
+
+> ∂Ω
+
+(β(y)−β(x∗)) 
+
+ ∂Φ( x, y )
+
+∂n y
+
+− ∂Φ( x∗, y )
+
+∂n y
+
+
+
+dσ y + β(x∗)
+
+ 12 +
+
+Z
+
+> Ω
+
+λδ Φ( x, y )dy 
+
+
+
++
+
+Z
+
+> Ω
+
+Φ( x, y ) ˜ψ(u(y), y )dy +
+
+Z
+
+> ∂Ω
+
+β(y) ∂Φ( x∗, y (s)) 
+
+∂n y
+
+dσ y =: P(x; Φ θ , β, u ), x ∈ Ω, (102) 
+
+15 PRIME AI paper a. Training Data 
+
+> b. Kernel model
+> c. Non-linearity model
+> d. Fredholm NN forward pass
+> e. Estimated solutions
+> f. Calculate loss
+> Populates weights
+> Populates recurrent
+> activation
+
+Figure 2: The Fredholm Neural Operator (FREDINO) framework: The training data consists of a family of functions 
+
+gi and the corresponding solutions to the FIE fi, for i = 1 , . . . , n . We model the unknown integral kernel and the non-linearity with two neural networks Kθ (x, y ) and Gϑ(x). These models then populate the parameters of the Fredholm Neural Network. The loss function L(Θ) is calculated by comparing output of the populated Fredholm NN, 
+
+ˆfi, i = 1 , . . . , n with the training data. For brevity, the schematic refers to the case of the non-linear FIE, using the Recurrent Fredholm NN. The linear case is simpler, where we only consider Kθ .
+
+g(x) = 
+
+Z
+
+> ∂Ω
+
+β(y) ∂Φ( x, y )
+
+∂n y
+
+dσ y +
+
+Z
+
+> Ω
+
+Φ( x, y ) ˜ψ(u(y), y )dy + 12 β(x) =: D(x; Φ θ , β, u ), x ∈ ∂Ω, (103) where x ∈ Ω and x∗ ∈ ∂Ω is the corresponding point on the boundary, i.e., x = ( r cos( θ), r sin( θ)) and x∗ =(cos( θ), sin( θ)) , Φ is the fundamental solution of the Helmholtz PDE depending on the modified Bessel function of the second kind, Φ( x, y ) = − 12π K0(|x − y|), and δΦ( x, y ) := Φ( x, y ) − Φ( x∗, y ).By looking directly at the problem as a non-linear PDE however, the fundamental solution Φ in standard sense does not exist. Hence, we can rather consider the problem of learning a surrogate model Φθ such that (102) and (103) are satisfied, for any boundary function g(x). This way, we learn the operator A : X → X , with X := C(Ω , R), such that: 
+
+Au(x) = ˜ψ(u(x), x ), x ∈ Ω
+
+u(x) = g(x), x ∈ ∂Ω, (104) by learning Φθ and the corresponding integral operators that define the coupled integral equations (102), (103). The standard way to construct the loss function to solve this problem would be to combine two terms that incorporate the system of integral equations: 
+
+min   
+
+> Φθ∈L2(D×D )
+
+∥u − P (·; Φ θ , β, u )∥2 
+
+> L2(D)
+
++ ∥g − D (·; Φ θ , β, u )∥2 
+
+> L2(D)
+
++ R(θ), (105) the regularization term is given by R(θ) = λK ∥Φθ ∥22.
+
+16 PRIME AI paper Fredholm Neural Network 
+
+for the BIE 
+
+Potential 
+
+representation layer 
+
+Figure 3: The Potential Fredholm Neural Network (PFNN) for the solution of 2D linear elliptic PDEs: the first component is a Fredholm NN solving the Boundary Integral Equation and the final hidden layer corresponds to the double layer potential formulation of the solution to the PDE, ˜u(r, ϕ ).However, we can instead use the PFNN framework to ensure that the learned model is such that the integral operator in the BIE is a contraction, whilst simultaneously ensuring that the (102) and (103) are satisfied. Therefore, we denote the PFNN by PF (·; g, Φ) , which approximates the solution u(x), and construct the loss function: 
+
+min   
+
+> Φθ∈L2(D×D )
+
+∥u − P F (·; g, Φθ )∥2 
+
+> L2(D)
+
++ R(θ). (106) Notice how this approach essentially absorbs the second term of the loss function (105), by enforcing the PFNN architecture in the forward pass during training. This is in line with the notion mentioned above, whereby we construct a trainable Potential Fredholm NN whose output matches the solution of the PDE, and its architecture implicitly enforces the satisfaction of the BIE, simultaneously. 
+
+## 5 Numerical Results 
+
+In this section, we consider various examples to assess the proposed methodology, in particular linear and nonlinear integral operators of Frehdolm type in arbitratu dimensions as well as nonlinear elliptic PDEs in 2D. Throughout the numerical examples, we base the approach on the form of input functions used in [10]. Specifically, as inputs g we use a superposition of a Gaussian mixture, a cubic polynomial, and sinusoids: 
+
+g(x) = 
+
+> N1
+
+X
+
+> i=1
+
+wi exp   − si(x − ci)2 + a0 + a1x + a2x2 + a3x3 +
+
+> N2
+
+X
+
+> j=1
+
+Aj sin  2πf j x + ϕj
+
+, (107) with x ∈ Rd, N1 = 200 , N2 = 10 , and parameters sampled i.i.d. from simple uniform ranges: wi ∼ U ([ −1, 1] d),
+
+si ∼ U ([0 , 50] d), ci ∼ U ([0 , 1] d), a0, a 1, a 2, a 3 ∼ U ([ −1, 1] d) Aj ∼ U ([ −0.5, 0.5] d), fj ∼ U ([0 .5, 8] d) and ϕj ∼U([0 , 2π]d). Where necessary, transformations are performed to ensure appropriate scaling of the inputs. This is done in a way that ensures we still capture the richness of the input function space for the operator learning setting. Details are given in each example. In all the examples below, we run multiple instances for the models. For training, we consider a set of pairs {gi, f i}Mi=1 ,each of which contains data some arbitrary grid {xj }Nj=1 , resulting in the dataset {gi(xj ), f i(xj )}i,j , for i = 1 , . . . M 
+
+and j = 1 , . . . N . To test the models on unseen functions, we generate Mtest new input functions gtest i (x) from the same family and feed gtest i into the Fredholm NN, F(x; gtest i , K θ ) (or the PFNN). We assess the models by comparing the output ˆfi(xj ) = F(xj ; gtest i , K θ ), to the corresponding data fi(xj ), across i = 1 , · · · , M test and j = 1 , · · · , N .The relative error metrics as rel. L1, L 2 and L∞ are reported. We present the median and 90/10 percentiles of the errors for all examples. 
+
+17 PRIME AI paper 
+
+Furthermore, in all examples we also plot the successive norms ˆρ(k) 
+
+> θ
+
+:= ∥ ˆf (k) 
+
+> i
+
+− ˆf (k−1)  
+
+> i
+
+∥, where ˆf (k) 
+
+> i
+
+(x) is the output of layer k of the Fredholm Neural Network, corresponding to the k−th iteration of the fixed point estimation. This is used to show that the learned operator is indeed a contraction. All experiments were done in Python with an A100 GPU in Google Colab . We begin with a linear example, based on an FIE used in [12]. 
+
+5.1 Linear Integral Equations 
+
+To learn the integral operator, we consider some model for the kernel Kθ (x, z ), which will be fed into the Fredholm NN, F(·; gi, K θ ), for a given gi. Learning the operator then consists of adjusting the parameters of the kernel iteratively until the output F(x; gi, K θ ) is as close as possible to the training data fi(x), for all pairs of functions in the dataset. For training, the discretized version of the loss function (91) is used: 
+
+ˆL(θ) = 1
+
+N M 
+
+> M
+
+X
+
+> i=1
+> N
+
+X
+
+> j=1
+
+
+
+fi(xj ) − F (xj ; Kθ , g i)
+
+2
+
++ ˆR(θ), (108) where we use the Frobenius norm for the regularization term ˆR(θ) = λK ∥Kθ ∥2 
+
+> F
+
+.
+
+Example 5.1. We we solve the inverse problem, i.e., finding a kernel function K : [0 , 1] × [0 , 1] → R that satisfies the integral equation: 
+
+f (x) = g(x) + 
+
+Z 10
+
+K(x, z )f (z)dz. (109) The training dataset consists of {gi(xj ), f i(xj )}i,j , with i = 1 , . . . M = 600 , j = 1 , . . . N = 500 , where the gi
+
+functionals are given by (107) and the solutions fi(x) are generated using the true kernel: 
+
+K(x, z ) = λ  cos(25( x − z)) + cos(7( x − z)) . (110) Note that, due to linearity, inputs g can be centered and normalized so that R 10 g(z)dz = 0 and ∥g∥L2([0 ,1]) = 1 . This is done for simplicity in training. As a model of the kernel that will define our learned operator, Kθ (·, ·), we used a shallow neural network with a single hidden layer, 64 neurons and a tanh activation function. For the forward pass, we use a Fredholm NN with 20 hidden layers and N = 500 nodes per layer (corresponding to the x− grid over which we observe the training data), and set 
+
+κ = 1 (meaning the Fredholm NN will replicate the Picard iteration). The model is trained using the Adam optimizer and a piecewise decaying learning rate starting from λ = 1 E−02 , and 50,000 epochs. We perform 30 independent training runs. The mean and median loss is 5.72 E−07 and 3.10 E−07 respectively. As a first test, we calculate the relative errors across Mtest = 20 test functions and the 30 trained models, on the same grid used for training, which produces a mean rel. L1 = 4 .89 E−04 , rel. L2 = 5 .07 E−04 and rel. L∞ = 7 .31 E−04 . Table 1 also shows the median and percentile error metrics across 100 test functions on an unseen grid with N = 600 . In Fig. 4 we display the training loss, a comparison with true solution along with the 90-10 percentile bands, the convergence of towards the estimated solution showing the contractiveness of the learned operator and a contour of the estimated kernel. 
+
+5.2 High-dimensional Linear Integral Operators 
+
+We now demonstrate the method in higher dimensions with the example below. 
+
+Example 5.2. Consider the linear FIE (3) in R10 , and the problem of finding K : [0 , 1] 10 × [0 , 1] 10 → R. The domain is discretised using N = 1024 scrambled Sobol quasi-random nodes and we generate training data {gi, f i}Mi=1 , with 
+
+M = 200 , where gi is of the form (107) and the corresponding solutions fi are generated using the forward Fredholm NN with the true kernel: 
+
+K(x, z ) = λ exp −
+
+> 10
+
+X
+
+> i=1
+
+αi (xi − zi)2
+
+! 1 + γ cos  ω · (x − z) , (111) with γ = 0 .5, anisotropic inverse length scales αi linearly spaced in the interval [1 .5, 3.5] , and a frequency vector 
+
+ω ∈ R10 drawn as a fixed random unit direction scaled by 6/√d. The anisotropy in αi makes the kernel genuinely non-radial. The 1/√d scaling of ω ensures that the argument ω · (x − t) remains O(1) in all dimensions, and the overall scale λ is calibrated so that discrete integral operator W = K∆y has spectral norm ∥W ∥∞ = 0 .5, ensuring 
+
+18 PRIME AI paper 0 20000 40000 Epoch 
+
+10 −6
+
+10 −4
+
+10 −2
+
+> ˆL(θ)
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+0.0 0.5 1.0
+
+x
+
+−2
+
+0
+
+2Solution    
+
+> [P10 ( ˆf), P 90 ( ˆf)] Best ˆff
+> 0.000 0.002 3.033 3.034 3.035
+
+10 20 Iteration m
+
+10 −7
+
+10 −5
+
+10 −3
+
+10 −1
+
+> ρθ(m) :=  ‖ ˆf (m) − ˆf (m−1) ‖∞ [P10 (ˆ ρθ), P 90 (ˆ ρθ)]
+> P50 (ˆ ρθ)max ˆ ρθ
+
+0.0 0.5 1.0
+
+x
+
+0.00 0.25 0.50 0.75 1.00 
+
+> z
+
+−0.54 
+
+−0.36 
+
+−0.18 0.00 0.18 0.36 0.54 
+
+> Kθ(x, z )
+
+Figure 4: Results for Example 5.1: (Top left) The loss function evolution during training. (Top right) Comparison between the true solution to the integral equation ftest , for a given gtest in the test set, and the estimated solution 
+
+ˆftest (x), as calculated by the forward Fredholm NN with the best (minimum rel. L2 error) learned kernel Kθ . (Bottom left) The sup-norm of the consecutive layers in the Fredholm NN with the learned kernel, showing that the learned integral operator is a contraction and converges to the fixed point solution. (Right) The contour of the learned kernel model Kθ .
+
+the operator contributes meaningfully to the solution while remaining contractive. Note that the training functions gi
+
+are transformed as described in Example 5.1. The kernel network Kθ is a 3-hidden-layer MLP with SiLU activations and widths [128 , 128 , 64] , receiving as input the concatenated coordinates (x, z ) ∈ R20 . For the forward pass, we use a Fredholm NN with 40 hidden layers and 
+
+N = 1024 nodes per layer (corresponding to the Sobol samples), and set κ = 1 , as above. The model is trained using the Adam optimizer and a piecewise decaying learning rate starting from λ = 1 .0E−03 , and 30,000 epochs. Across 30 training instances, the mean and median loss is 1.54 E−06 and 1.49 E−06 respectively. To test the models we first calculate the relative errors on test functions using the same grid used for training. Across the 30 trained models and the Mtest = 100 test functions, we obtain mean rel. L1 = 1 .04 E−03 , rel. L2 = 1 .05 E−03 and rel. L∞ = 1 .21 E−03 .Table 1 shows the median and percentile error metrics across Mtest = 100 test functions on an unseen Sobol grid with 
+
+N = 2048 . Comprehensive results are displayed in Fig. 5. 
+
+5.3 Non-linear Integral Operators 
+
+For the extension to the non-linear IE of the form (4) we take advantage of the Recurrent Fredholm NN architecture. For the numerical implementation, we consider neural network models for the kernel Kθ (x, y ), as well as for the non-linearity, Gϑ : R → R. These will be fed into the Reccurent Fredholm NN, F(x; gi, K θ , G ϑ), for a given choice of the function gi. The discretized version of the loss function (93) used for training is given by: 
+
+ˆL(˜θ) ≡ ˆL(θ, ϑ ) = 1
+
+N M 
+
+> M
+
+X
+
+> i=1
+> N
+
+X
+
+> j=1
+
+
+
+fi(xj ) − F (xj ; gi, K θ , G ϑ)
+
+2
+
++ ˆR(θ, ϑ ), (112) with ˆR(θ, ϑ ) = λK ∥Kθ ∥2 
+
+> F
+
++ λG∥Gϑ∥2 
+
+> F
+
+.It is important to note that, in the case of the recurrent Fredholm NN, we have two independent models, Kθ , G ϑ. The standard training approach consists of updating θ, ϑ together at each iteration. However, the interaction of the two 
+
+19 PRIME AI paper 0 20000 Epoch 
+
+10 −6
+
+10 −5
+
+10 −4
+
+10 −3
+
+> ˆL(Θ)
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+0 500 1000 Grid node (sorted by ftrue )
+
+−2
+
+0
+
+2Solution  
+
+> ˆf(median)
+> f
+
+0 500 1000 Grid node (sorted by ftrue )
+
+10 −5
+
+10 −4
+
+10 −3
+
+10 −2
+
+> | ˆf (x) − f (x)|
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+0.000 0.001 0.002 0.003 
+
+| ˆf − ftrue |
+
+10 0
+
+10 1
+
+10 2
+
+10 3
+
+> Count
+
+0 20 40 Iteration m
+
+10 −8
+
+10 −6
+
+10 −4
+
+10 −2
+
+10 0
+
+> ˆρ(m)
+> θ :=  ‖ ˆf (m) − ˆf (m−1) ‖∞ [P10 (ˆ ρθ), P 90 (ˆ ρθ)]
+> P50 (ˆ ρθ)max ˆ ρθ
+
+0.0 0.5 1.0
+
+z (dim. 10) 0.00 0.25 0.50 0.75 1.00 
+
+> z (dim. 1)
+
+1.20 1.65 2.10 2.55 3.00 3.45 3.90 4.35 
+
+> Kθ
+
+Figure 5: Results for Example 5.2: (Top left) The loss function evolution during training. (Top middle) Comparison between the true solution to the integral equation f in the test set, and the estimated solution ˆf (x), as calculated by the forward Fredholm NN with the best (minimum rel. L2 error) learned kernel Kθ . For the illustration we plot the values at each grid node, with the nodes reordered so that f (x) increases monotonically. (Top right) The plot of the corresponding absolute errors, | ˆf (x) − f (x)|, at each grid node. (Bottom left) The distribution of the absolute errors for the test functions gtest , across all N = 1024 Sobol samples in R10 . (Bottom middle) The norm of the consecutive layers in the Fredholm NN with the learned kernel, showing the convergence to the fixed point solution. (Bottom right) The contour of a slice of the learned kernel model Kθ (x, z ) with x = (0 .5, · · · , 0.5) and z = ( z1, 0.5, . . . , 0.5, z 10 ).parameter sets via the integral operator induces a bias, which in turn can lead to poor modelling performance. A better approach is using alternating minimization to optimize the loss function. This approach has been used generally for minimizing non-linear functions (see [3]), and has been also been applied to various machine learning applications such as in [14, 19]. According to the Alternating Minimization, each training iteration consists of two phases: one phase where θ is trained and ϑ is considered fixed at its current value, and vice versa for the second phase. This is detailed in Algorithm 1. 
+
+Example 5.3. We consider the problem of learning a non-linear Fredholm Integral operator in D = [0 , 1] . Given an input g, the ground-truth solution f satisfies the nonlinear FIE given by (4) with for x ∈ [0 , 1] . We consider a Gaussian kernel given by: 
+
+K(x, z ) = C exp 
+
+
+
+− (x − z)2
+
+2ℓ2
+
+
+
+, (115) with ℓ = 0 .2, and where C is selected so that the spectral norm of the discretized kernel is 0.7 (again, to ensures that the signal from the kernel is sufficiently strong but remains contractive). The pointwise non-linearity we use is a Gaussian with two peaks, given by: 
+
+G(u) = a1 exp 
+
+
+
+− 12
+
+ u − m1
+
+s1
+
+ 
+
++ a2 exp 
+
+
+
+− 12
+
+ u − m2
+
+s2
+
+ 
+
+, (116) with (a1, a 2) = (0 .25 , 0.25) , (m1, m 2) = (0 .40 , −0.40) and (s1, s 2) = (0 .25 , 0.15) . To produce a diverse set of training inputs sufficiently covering the input domain, whilst also ensuring appropriate scaling for training purposes, the functions gi(x) are produced as follows: we generate g′ 
+
+> i
+
+from (107), centered to zero and normalized to unity and we then scale and add an offset, obtaining gi = αig′ 
+
+> i
+
++ βi, with αi, β i ∼ U (−1, 1) .For the models Kθ , G ϑ we use neural networks with 3 and 2 hidden layers, respectively and 64 nodes per layer, both with ReLU activation functions. For the forward pass, a Fredholm NN with N = 500 nodes per layer and 30 layers was used. For training, we use the alternating minimization scheme as described in Algorithm 1, with regularization 
+
+20 PRIME AI paper 
+
+Algorithm 1 Alternating Minimization for FREDINO training for the non-linear FIE. Set total number of epochs. Initialize parameters at ˜θ(0) = {θ(0) , ϑ (0) } and the corresponding models Kθ(0) , G ϑ(0) .
+
+while iteration j ≤ total epochs do Step 1. Phase (A) : Fix ϑ(j−1) and train to obtain: 
+
+θ(j) ≈ argmin 
+
+> θ
+
+ˆL(θ; ϑ(j−1) ), (113) where ˆL(θ; ϑ) is as given in (112), but with fixed ϑ = ϑ(j−1) .
+
+Step 2. Phase (B) : Fix θ(j) and train to obtain: 
+
+ϑ(j) ≈ argmin 
+
+> ϑ
+
+ˆL(ϑ; θ(j)), (114) where ˆL(θ; ϑ) is as given in (112), but with fixed θ = θ(j).
+
+Step 3. (Optional) Fine-tune parameters by training jointly ˜θ = ( θ, ϑ ) (e.g., using L-BFGS or Levenberg -Marquardt. 
+
+Step 4 . Update j ← j + 1 .
+
+end while return Trained parameter set ˜θ∗ = {θ∗, ϑ ∗} and models Kθ∗ , G ϑ∗ .constants λK = λG = 1 .0E−08 , and a piecewise decaying learning rate from 1.0E−03 to 1.0E−06 with 10,000 total epochs. Across 50 training instances, the mean and median loss is 1.92 E−08 and 1.80 E−08 , respectively. Across a batch of Mtest = 20 test functions the models achieve mean rel. L1 = 7 .79 E−04 , rel. L2 = 8 .72 E−04 and rel. 
+
+L∞ = 1 .48 E−03 , when tested on the training grid. As in the previous examples, the median and percentile relative error values when testing on Mtest = 100 test functions on unseen grid of size N = 800 are given in Table 1. The graphical results are shown in Fig. 6. 
+
+5.4 High-dimensional Non-Linear Integral Operators 
+
+As in the linear case, we also extend the non-linear FIE example to higher dimensions. We use the same kernel as in the high-dimensional linear FIE example, and the non-linearity is taken as in (116). 
+
+Example 5.4. Consider the linear FIE (4) in R10 , and the problem of finding K : [0 , 1] 10 × [0 , 1] 10 → R. The modelling parameters are as in example (5.2), i.e,: we consider a discretised domain with N = 1024 scrambled Sobol quasi-random nodes and generate training data {gi, f i}Mi=1 , with M = 200 , where gi is of the form (107) and the corresponding solutions fi are generated using the forward Fredholm NN with the true kernel as in (111), with the scale λ calibrated so that discrete integral signal is 0.7. The non-linearity is given as in (116) and the training functions 
+
+gi are transformed as described in Example 5.3. For the kernel network Kθ we again use a 3-hidden-layer MLP with SiLU activations and widths [128 , 128 , 64] , with input (x, z ) ∈ R20 . The model for the non-linearity Gϑ is a neural network with two hidden layers and 64 nodes per layer with a SiLU activation function. For the forward pass, we use a Fredholm NN with 30 hidden layers and 
+
+N = 1024 nodes per layer. Training is done with the two-phase approach described in 1 using the Adam optimizer and a piecewise decaying learning rate starting from λ = 1 .0E−03 , and 10,000 epochs, followed by an L-BFGS fine tuning with 500 epochs. Across 30 training instances, the mean and median loss is 6.58 E−07 and 4.82 E−07 , respectively. The relative errors calculated on the same grid used for training, and aggregated over the 30 model instances and 
+
+Mtest = 100 test functions result in mean rel. L1 = 1 .41 E−03 , rel. L2 = 1 .82 E−03 and rel. L∞ = 8 .36 E−03 . As in the previous examples, in Table 1 we also provide the median and percentile error metrics across Mtest = 100 test functions on an unseen Sobol grid with N = 2048 . The results are also displayed in Fig. 7. 
+
+5.5 Learning semi-linear elliptic PDE solution operator 
+
+Finally, we implement the approach detailed in section 4. Here, the dataset consists of the set of boundary condition and solution functions {gi(x∗ 
+
+> j
+
+), u i(xj )}, i = 1 , . . . , M , j = 1 , . . . N , and where xj = ( rj cos( θj ), r j sin( θj )) ∈ Ω and 
+
+x∗ 
+
+> j
+
+= (cos( θj ), sin( θj )) ∈ ∂Ω. The model Φθ is trained by minimizing the discretized version of (105) (equivalently 
+
+21 PRIME AI paper 0 2500 5000 7500 Epoch 
+
+10 −7
+
+10 −5
+
+10 −3
+
+> ˆL(˜θ)
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+0.0 0.5 1.0
+
+x
+
+0.68 
+
+0.70 Solution  
+
+> ˆf(median)
+> f
+
+0.0 0.5 1.0
+
+x
+
+10 −5
+
+10 −4
+
+> | ˆf (x) − f (x)|
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+1 10 20 30 Iteration m
+
+10 −7
+
+10 −5
+
+10 −3
+
+10 −1
+
+> ρ(m)
+> θ :=  ‖ ˆf (m) − ˆf (m−1) ‖∞
+> [P10 (ˆ ρθ), P 90 (ˆ ρθ)]
+> P50 (ˆ ρθ)max ˆ ρθ
+
+0.0 0.5 1.0
+
+x
+
+0.00 0.25 0.50 0.75 1.00 
+
+> z
+
+−1.28 
+
+−1.12 
+
+−0.96 
+
+−0.80 
+
+−0.64 
+
+−0.48 
+
+−0.32 
+
+−0.16 0.00 
+
+> Kθ
+
+−2 0 2
+
+u
+
+−0.2
+
+0.0
+
+> Gϑ(u)
+
+Figure 6: Results for Example 5.3: (Top left) The loss function evolution during training. (Top middle) Comparison between the true solution to the integral equation f for a given gtest i in the test set, and the estimated solution ˆf (x),as calculated by the forward Fredholm NN with the best (minimum rel. L2 error) learned kernel Kθ . (Top right) The corresponding absolute error plot | ˆf (x)−f (x)|. (Bottom left) The sup-norm of the consecutive layers in the Fredholm NN with the learned kernel, showing that the learned integral operator is a contraction and converges to the fixed point solution. (Bottom middle - right) The contour of the learned kernel model Kθ and plot of the non-linearity Gϑ (median values used). Rel L1 Rel L2 Rel L∞
+
+Example Median [P10 , P 90 ] Median [P10 , P 90 ] Median [P10 , P 90 ]
+
+5.1 4.15E-04 [1.84E-04, 1.00E-03] 4.38E-04 [1.97E-04, 1.05E-03] 6.31E-04 [3.07E-04, 1.48E-03] 5.2 7.31E-04 [4.44E-04, 1.12E-03] 7.31E-04 [4.53E-04, 1.17E-03] 1.06E-04 [5.47E-04, 2.41E-03] 5.3 2.29E-04 [3.91E-05, 1.12E-03] 2.75E-04 [4.57E-05, 1.26E-03] 6.11E-04 [8.35E-05, 1.87E-03] 5.4 1.82E-03 [2.17E-03, 4.68E-03] 2.63E-03 [2.87E-03, 6.20E-03] 2.12E-02 [1.60E-02, 4.18E-02] Table 1: For each model istance, j = 1 , . . . , R , the relative error metrics are computed per test function, gi, i =1, . . . , M test on the unseen grid of size N . The statistics are reported across all R × Mtest model and test function combinations. (106)): 
+
+ˆL(θ) = 1
+
+M N 
+
+> M
+
+X
+
+> i=1
+> N
+
+X
+
+> j=1
+
+ ui(xj ) − P F (xj ; g, Φθ )2 + ˆR(θ). (117) We implement this approach using a modified example of that studied in [13]. 
+
+Example 5.5. Consider now the 2D PDE: 
+
+Au(x) = ψ(u(x), x ), x ∈ Ω = {(x1, x 2) ∈ R2 : x21 + x22 ≤ 1}
+
+u(x) = g(x), x ∈ ∂Ω, (118) with ψ(u, x ) = tanh( u)−e1−x21−x22 +4 , and the problem of learning the elliptic operator A. For the basis of our model we consider the (elliptic) Helmholtz operator (∆ − λ) and learn an appropriate correction term to the fundamental solution. Hence, we will use the representations as given in (102) and (103), with ˜ψ(u, x ) = −λu + ψ(u, x ).
+
+22 PRIME AI paper 0 5000 10000 Epoch              
+
+> 10 −6
+> 10 −5
+> 10 −4
+> 10 −3
+> ˆL(˜θ)
+> [P10 , P 90 ][P25 , P 75 ]
+> P50 01000 2000 Grid node (sorted by ftrue )
+> −0.025
+> 0.000
+> 0.025
+> 0.050 Solution
+> ˆf(median)
+> f01000 2000 Grid node (sorted by ftrue )
+> 10 −5
+> 10 −4
+> 10 −3
+> | ˆf (x) − f (x)|
+> [P10 , P 90 ][P25 , P 75 ]
+> P50 0.000 0.005 0.010 0.015
+> |ˆf−ftrue |
+> 10 1
+> 10 3
+> Count
+
+0 20 40 Iteration m
+
+10 −8
+
+10 −6
+
+10 −4
+
+10 −2
+
+10 0
+
+> ˆρ(m)
+> θ :=  ‖ ˆf (m) − ˆf (m−1) ‖∞ [P10 (ˆ ρθ), P 90 (ˆ ρθ)]
+> P50 (ˆ ρθ)max ˆ ρθ
+
+0.0 0.5 1.0
+
+z (dim. 1) 0.00 0.25 0.50 0.75 1.00 
+
+> z (dim. 10)
+
+0.33 0.35 0.37 0.39 0.41 0.43 0.45 0.47 0.49 
+
+> Kθ
+
+−2 0 2
+
+u
+
+−0.6
+
+−0.4
+
+−0.2
+
+0.0
+
+0.2
+
+> Gϑ(u)
+
+Figure 7: Results for Example 5.4: (Top row, from left to right) a) The loss function evolution during training. b) Comparison between the true solution to the integral equation f in the test set, and the estimated solution ˆf (x), as calculated by the forward Fredholm NN with the best (minimum rel. L2 error) learned kernel Kθ and non-linearity 
+
+Gϑ. Again, for illustration we plot the values at each grid node, with the nodes reordered so that f (x) increases monotonically. Here, we use the unseen test grid. c) The plot of the corresponding absolute errors, | ˆf (x) − f (x)|. d) The distribution of the absolute errors for the test functions gtest , across all N = 1024 Sobol samples in R10 . (Bottom left) The norm of the consecutive layers in the Fredholm NN with the learned kernel, showing the convergence to the fixed point solution. (Bottom middle) The contour of a slice of the learned kernel model Kθ (x, z ) with x =(0 .5, · · · , 0.5) and z = ( z1, 0.5, . . . , 0.5, z 10 ). (Bottom left) The plot of the learned non-linearity Gϑ (median values used). To ensure consistency with the “physics” of the potential integral and the jump condition, we consider a model that exhibits the weak singularity as we approach the boundary. This is achieved by using the model that depends on the fundamental solution of the Helmholtz operator (which depends on K0(r), with r = |x − y|, which exhibits a singu-larity as r → 0). In order to avoid numerical issues due to the singularity, which can affect the minimization algorithm during model training, we use a smoothed approximation of the function, by taking into account its asymptotics ([1]). In particular, we use: 
+
+˜K0(r) ≈  1 − σ(r) 
+
+− ln( r
+
+2 ) − γ
+
+
+
++ σ(r)
+
+r π
+
+2r e−r
+
+
+
+, (119) where γ is the Euler-Mascheroni constant and σ(r) = 11+ e−5( r−1.5) is the transformed sigmoid function (of course, many different configurations are possible). This expression follows from the fact that K0(r) ≈ − ln( r 
+
+> 2
+
+) − γ +
+
+O(r2 ln r), as r → 0 and K0(r) ≈ p π 
+
+> 2r
+
+e−r (1 + O(1 /r )) , as r → ∞ .We therefore use Φ( x, y ) ≈ − 12π ˜K0(√λ|x − y|), and consider a shallow neural network for the correction term, so that the final model is a linear combination of the form: 
+
+Φθ (x, y ) = Φ( x, y ) + αC θ (x, y ), (120) where α ∈ (0 , 1) is the mixing constant (note that we let α be a learnable parameter to enhance model flexibility) and 
+
+Cθ is the trainable model that captures the correction for the given nonlinear PDE. The derivative ∂Φθ 
+
+> ∂n y
+
+can then be calculated using automatic differentiation. For our experiments, Cθ is a neural network with 2 hidden layers, 64 neurons per layer and a tanh activation function. For training, we use M = 200 realizations of the boundary functions gi(x∗). These functions are generated from (107), transformed to have zero mean and such that ∥gi∥∞ = αi, with log( αi) ∼ U (log(0 .05) , log(2 .0)) . The corresponding solutions for training, ui(x), are generated using the iterative process (101) as described in [13]. The model is trained for 200 epochs, using a piecewise decaying learning rate starting at 1.0E−03 and reaching 1.0E−06 . Finally, we use a light regularization constant λK = 1 .0E−10 . Across 20 training instances, the mean and median training loss is 
+
+23 PRIME AI paper 0 200 400 Epoch 
+
+10 −5
+
+10 −4
+
+10 −3
+
+10 −2
+
+> ˆL(θ)
+> [P10 , P 90 ][P25 , P 75 ]
+> P50
+
+0 5
+
+θ
+
+0.00 0.25 0.50 0.75 
+
+> r
+
+−0.08 0.00 0.08 0.16 0.24 0.32 0.40 0.48 0.56 ˆu(r, θ )0 5
+
+> θ
+> 0.00.20.40.60.8
+> r
+> 0.000 0.002 0.004 0.006 0.008 0.010 0.012 0.014 0.016
+> |ˆu − u|
+
+0 50 100 Iteration m
+
+10 −10 
+
+10 −7
+
+10 −4
+
+10 −1
+
+> ρ(m)
+> θ :=  ‖ ˆβ(m) − ˆβ(m−1) ‖∞
+> [P10 (ˆ ρθ), P 90 (ˆ ρθ)]
+> P50 (ˆ ρθ)max ˆ ρθ
+
+0.0 2.5 5.0
+
+θ1
+
+0246
+
+> θ2
+
+−2.4
+
+−2.1
+
+−1.8
+
+−1.5
+
+−1.2
+
+−0.9
+
+−0.6
+
+−0.30.0Φθ
+
+Figure 8: Results for Example 5.5: (Top left) The loss function evolution during training. (Top middle) Estimated 
+
+ˆu(r, θ ), as calculated by the forward Potential Fredholm NN with the best (minimum rel. L2 error) learned model 
+
+Φθ , for a given test boundary function gtest . (Top right) Absolute error between the approximated solution ˆu and the true test data u, for gtest . (Bottom left) The sup-norm of the consecutive layers in the Fredholm NN with the learned kernel, showing that the learned integral operator is a contraction and converges to the fixed point solution. (Right) The contour of the learned kernel model Kθ .
+
+3.35 E−06 and 2.78 E−06 . We use Mtest = 20 test boundary functions gtest i and perform two tests: firstly, we use the learned Φθ along with the true solution utest i to calculate the solution ˆutest i via (102) and compare to the true data. We refer to this as the reconstruction test. Secondly, we use the learned Φθ to construct the PFNN PF (·; gtest , Φθ ), and perform the full Picard iteration scheme to solve the PDE and compare to the true solutions (i.e., true solver test). The error metrics for the two tests are given in Table 2. In Fig. 8 we display the loss function, the fixed point convergence of the learned boundary function β and the the learned kernel Φθ . These plots show that we have obtained the required properties, i.e., contractiveness and the numerical blow-up of the fundamental solution on the diagonal. Finally, we also present an example of the learned solution contour and the corresponding absolute error, showing that the larger absolute errors appear near regions where the solution approaches zero, as expected. Rel L1 Rel L2
+
+Test Median [P10 , P 90 ] Median [P10 , P 90 ]
+
+> Run
+
+Recon. 4.39E-03 [3.22E-03, 5.28E-03] 7.72E-03 [6.70E-03, 9.34E-03] Solver 4.78E-03 [3.48E-03, 5.91E-03] 7.86E-03 [6.74E-03, 9.51E-03] 
+
+> Sample
+
+Recon. 3.84E-03 [2.47E-03, 7.18E-03] 6.74E-03 [5.22E-03, 1.22E-02] Solver 4.20E-03 [2.60E-03, 7.92E-03] 7.05E-03 [5.24E-03, 1.25E-02] Table 2: Errors for Example 5.5: per-run metrics are calculated over the 20 averages from the 20 test functions. Per-sample statistics are calculated over all 20 × 20 = 400 evaluations. 
+
+## 6 Conclusions & Discussion 
+
+In this work, building on the Fredholm NN framework that we introduced recently in [12, 13], we introduce the Fred-holm Integral Neural OperatorS (FREDINOs) to learn linear and non-linear contractive integral operators in arbitrary dimensions. We also show how the framework can be exploited in the setting of linear and non-linear elliptic PDEs. 
+
+24 PRIME AI paper 
+
+The satisfaction of the contraction property is achieved by the forward pass through the Fredholm NN that is per-formed during the training step. Hence, in this way, we are able to obtain the model that approximates the integral operator and simultaneously obtain the full structure of the trainable Fredholm NN that is used in the forward pass. This is equivalent to learning the full fixed-point algorithm. The approach highlights how incorporating explaibable numerical analysis-informed deep neural network architectures can allow us to obtain functions and operators that adhere to specific mathematical properties. We demonstrate the performance of FREDINOs via linear and non-linear integral operators of arbitrary dimensions, as well as in the context of a semi-linear elliptic PDE in 2D. From the proposed methods, interesting future research directions also arise, with one of the most interesting being the application of FREDINOs to higher-dimensional PDEs. In particular, for d ≥ 3 the Potential Fredholm Neural Network can still be constructed using the existing theory (see [9, 25]). However, the numerical scheme requires special treatment, as the fundamental solutions change from logarithmic functions of the form to Φ( x, y ) ∝ | x −
+
+y|−(d−2) . Hence, in addition to the known curse of dimensionality problem, we also have to deal with the dimension-dependent singular kernels. This will be the focus of future work. 
+
+## Acknowledgments 
+
+K.C. G. acknowledges support from the PNRR MUR Italy, project PE0000013-Future Artificial Intelligence Research-FAIR. C.S. acknowledges partial support from the PNRR MUR Italy, projects PE0000013-Future Artificial Intelli-gence Research-FAIR & CN0000013 CN HPC - National Centre for HPC, Big Data and Quantum Computing, and from the GNCS group of INdAM. A.N.Y. acknowledges the use of resources from the Stochastic Modelling and Applications Laboratory, AUEB. 
+
+## References 
+
+[1] Milton Abramowitz and Irene A Stegun. Handbook of mathematical functions with formulas, graphs, and math-ematical tables , volume 55. US Government printing office, 1948. [2] Aras Bacho, Aleksei G Sorokin, Xianjin Yang, Th´ eo Bourdais, Edoardo Calvello, Matthieu Darcy, Alexan-der Hsu, Bamdad Hosseini, and Houman Owhadi. Operator learning at machine precision. arXiv preprint arXiv:2511.19980 , 2025. [3] Dimitri P. Bertsekas. Nonlinear Programming . Athena Scientific, Belmont, MA, 2nd edition, 1999. [4] Carlos Alberto Brebbia and Stephen Walker. Boundary element techniques in engineering . Elsevier, 2016. [5] Chinmay Datar, Adwait Datar, Felix Dietrich, and Wil Schilders. Systematic construction of continuous-time neural networks for linear dynamical systems. SIAM Journal on Scientific Computing , 47(4):C820–C845, 2025. [6] Yuanhua Deng, Goong Chen, Wei-Ming Ni, and Jianxin Zhou. Boundary element monotone iteration scheme for semilinear elliptic partial differential equations. Mathematics of computation , 65(215):943–982, 1996. [7] Danimir T Doncevic, Alexander Mitsos, Yue Guo, Qianxiao Li, Felix Dietrich, Manuel Dahmen, and Ioannis G Kevrekidis. A recursively recurrent neural network (r2n2) architecture for learning iterative algorithms. SIAM Journal on Scientific Computing , 46(2):A719–A743, 2024. [8] Jeffrey L Elman. Distributed representations, simple recurrent networks, and grammatical structure. Machine learning , 7(2):195–225, 1991. [9] Eugene B Fabes, Max Jodeit, and Nestor M Rivi` ere. Potential techniques for boundary value problems on c1-domains. 1978. [10] Gianluca Fabiani, Ioannis G Kevrekidis, Constantinos Siettos, and Athanasios N Yannacopoulos. Randonets: Shallow networks with random projections for learning linear and nonlinear operators. Journal of Computational Physics , 520:113433, 2025. [11] Gianluca Fabiani, Hannes Vandecasteele, Somdatta Goswami, Constantinos Siettos, and Ioannis G Kevrekidis. Enabling local neural operators to perform equation-free system-level analysis. arXiv preprint arXiv:2505.02308 ,2025. [12] Kyriakos Georgiou, Constantinos Siettos, and Athanasios N Yannacopoulos. Fredholm neural networks. SIAM Journal on Scientific Computing , 47(4):C1006–C1031, 2025. [13] Kyriakos Georgiou, Constantinos Siettos, and Athanasios N Yannacopoulos. Fredholm neural networks for forward and inverse problems in elliptic pdes. arXiv preprint arXiv:2507.06038 , 2025. 
+
+25 PRIME AI paper 
+
+[14] Lening Guo, Jing Yu, Ning Zhang, and Chuangbai Xiao. Self-supervised multi-scale network for blind image deblurring via alternating optimization. arXiv preprint arXiv:2409.00988 , 2024. [15] Nikola Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: Learning maps between function spaces with applications to pdes. 
+
+Journal of Machine Learning Research , 24(89):1–97, 2023. [16] Dimitrios C Kravvaritis and Athanasios N Yannacopoulos. Variational methods in nonlinear analysis: with applications in optimization and partial differential equations . Walter De Gruyter Gmbh & Co Kg, 2020. [17] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895 , 2020. [18] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Andrew Stuart, Kaushik Bhattacharya, and Anima Anandkumar. Multipole graph neural operator for parametric partial differential equations. Advances in Neural Information Processing Systems , 33:6755–6766, 2020. [19] Huaizhang Liao, Zhixiong Yang, Han Zhang, Tuoyuan Yi, and Jingyuan Xia. Deep unfolded projected alternating minimization algorithm for blind image super-resolution. In Journal of Physics: Conference Series , volume 2356, page 012014. IOP Publishing, 2022. [20] Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear op-erators via deeponet based on the universal approximation theorem of operators. Nature machine intelligence ,3(3):218–229, 2021. [21] Ahmad Peyvan, Vivek Oommen, Ameya D Jagtap, and George Em Karniadakis. Riemannonets: Interpretable neural operators for riemann problems. Computer Methods in Applied Mechanics and Engineering , 426:116996, 2024. [22] Ramiro Rico-Martinez, K Krischer, IG Kevrekidis, MC Kube, and JL Hudson. Discrete-vs. continuous-time nonlinear signal processing of cu electrodissolution data. Chemical Engineering Communications , 118(1):25– 48, 1992. [23] J Sakakihara. An iterative boundary integral equation method for mildly nonlinear elliptic partial differential equations. Brebbia, CA (Springer-Verlag, NY) , pages 13–49, 1987. [24] Kirill Solodskikh, Azim Kurbanov, Ruslan Aydarkhanov, Irina Zhelavskaya, Yury Parfenov, Dehua Song, and Stamatios Lefkimmiatis. Integral neural networks. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pages 16113–16122, 2023. [25] Gregory Verchota. Layer potentials and regularity for the dirichlet problem for laplace’s equation in lipschitz domains. Journal of functional analysis , 59(3):572–611, 1984. [26] Emanuele Zappala, Antonio Henrique de Oliveira Fonseca, Josue Ortega Caro, Andrew Henry Moberly, Michael James Higley, Jessica Cardin, and David van Dijk. Learning integral operators via neural integral equations. Nature Machine Intelligence , 6(9):1046–1062, 2024. 
+
+26

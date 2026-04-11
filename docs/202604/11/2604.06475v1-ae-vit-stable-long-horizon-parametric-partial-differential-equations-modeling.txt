@@ -1,0 +1,364 @@
+Title: AE-ViT: Stable Long-Horizon Parametric Partial Differential Equations Modeling
+
+URL Source: https://arxiv.org/pdf/2604.06475v1
+
+Published Time: Thu, 09 Apr 2026 00:15:03 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# AE-V IT: S TABLE LONG -H ORIZON PARAMETRIC PARTIAL 
+
+# DIFFERENTIAL EQUATIONS MODELING 
+
+Iva Mikuš 
+
+University of Zagreb Faculty of Electrical Engineering and Computer Science 
+
+Boris Muha 
+
+University of Zagreb Faculty of Science Department of Mathematics 
+
+Domagoj Vlah 
+
+University of Zagreb Faculty of Electrical Engineering and Computer Science April 9, 2026 
+
+# ABSTRACT 
+
+Deep Learning Reduced Order Models (ROMs) are becoming increasingly popular as surrogate models for parametric partial differential equations (PDEs) due to their ability to handle high-dimensional data, approximate highly nonlinear mappings, and utilize GPUs. Existing approaches typically learn evolution either on the full solution field, which requires capturing long-range spatial interactions at high computational cost, or on compressed latent representations obtained from autoencoders, which reduces the cost but often yields latent vectors that are difficult to evolve, since they primarily encode spatial information. Moreover, in parametric PDEs, the initial condition alone is not sufficient to determine the trajectory, and most current approaches are not evaluated on jointly predicting multiple solution components with differing magnitudes and parameter sensitivities. To address these challenges, we propose a joint model consisting of a convolutional encoder, a transformer operating on latent representations, and a decoder for reconstruction. The main novelties are joint training with multi-stage parameter injection and coordinate channel injection. Parameters are injected at multiple stages to improve conditioning. Physical coordinates are encoded to provide spatial information. This allows the model to dynamically adapt its computations to the specific PDE parameters governing each system, rather than learning a single fixed response. Experiments on the Advection-Diffusion-Reaction equation and Navier-Stokes flow around the cylinder wake demonstrate that our approach combines the efficiency of latent evolution with the fidelity of full-field models, outperforming DL-ROMs, latent transformers, and plain ViTs in multi-field prediction, reducing the relative rollout error by approximately 5 times. 
+
+Keywords reduced-order modeling · parametric PDE surrogate · vision transformer · autoencoder · parameter conditioning 
+
+> arXiv:2604.06475v1 [cs.LG] 7 Apr 2026
+
+A PREPRINT - A PRIL 9, 2026 
+
+# 1 Introduction 
+
+Speeding up calculations of the solution to parametric time-dependent PDEs is important in many applications, such as hemodynamics [1], [2] and aerodynamics [3]. Precisely, for parametric PDE 
+
+
+
+ϕt + L(ϕ; λ) = f (·; λ) in Ω( λ)
+
+B(ϕ; λ) = 0 on ∂Ω( λ)
+
+ϕ(0 , ·) = ϕ0(·; λ),
+
+where L and B are parameter-dependent differential and boundary operators, λ denotes the parameters, and ϕ0 and f
+
+are the initial data and volume force, respectively, which may depend on parameters. Moreover, the domain also may depend on parameters, which adds additional geometric nonlinearity to the problem and is motivated by our long-term aim to adapt these methods to fluid-structure interaction problems. The goal is to design a surrogate model that quickly and effectively maps parameters to solutions, namely, to design an approximation of the mapping 
+
+(λ, t ) → ϕ(·, t ; λ). (1) Due to the success of deep learning in various domains and the universal approximation capabilities of neural networks, there is increasing interest in utilizing deep learning to obtain parametric PDE surrogates of evolutionary PDE. In terms of deep learning, the solution for the parameters λ at time t is usually interpreted as an image, graph, or point cloud. In this work, we focus on solutions that are either naturally on a rectangular grid or are interpolated to a rectangular grid so that convolutional neural networks can be used. Another assumption is that the data are collected with a fixed time step ∆t.Many surrogate and operator-learning models for evolutionary PDEs, including DeepONet [ 4], [ 5], and Fourier Neural Operators (FNO) [ 6 ], learn mappings from input functions (e.g., initial conditions or forcing terms) to solution trajectories. In these frameworks, physical or material parameters such as density, viscosity, or domain properties are typically incorporated only as part of the input function, for example, as constant fields or concatenated vectors, rather than as separate explicitly conditioned features. In cases of parametric PDE where parameters are material, fluid, domain properties, etc., such approaches may underperform because they do not have enough information about parameters. Furthermore, the initial condition may be the same for all parameter instances, so without parameter information, a neural network cannot differentiate the trajectories. In this work, we tackle this challenge by employing a fully convolutional neural encoder and decoder coupled with a vision transformer (ViT) [ 7], which we call AE-ViT. The encoder, the decoder, and ViT are enriched with parameter information through parameter injections across the model. For finer spatial awareness, we investigate the effect of coordinate positional channels on AE-ViT performance. To enhance autoregressive stability, we use short scheduled sampling [ 8]. Additionally, we demonstrate that our model is capable of learning multiple components of the solution jointly and that autoregressive relative errors remain stable beyond the scheduled sampling training window. We focus on the most dominant setting of in-distribution rollouts from unseen values of parameters within the training parameter range. While the extrapolation across parameters remains challenging, our goal here is stable long-horizon simulation within the calibrated regime. 
+
+1.1 Related work 
+
+In this subsection, we will categorize related deep learning methods for evolutionary parametric PDE into autoencoder-based approaches and models trained only on full-field solutions. 
+
+1.1.1 Autoencoder-based approaches 
+
+These works use an autoencoder to first obtain the latent representation of the solution. Usually, one constructs the encoder to obtain the latent representation, the processor to obtain the predicted latent evolution, and the decoder for decoding the predicted latent representation. In [ 9 ], [ 10 ] a multi-layer perceptron (MLP) is used to map parameters (which may include time) to the latent representation. A Transformer architecture [ 11 ] can be used to learn latent evolution, see [ 12 ], [ 13 ]. The parameters are not encoded in the architecture but are inferred implicitly from the available trajectory. Another approach is to model latent space evolution under the law l′(t; λ) = f (t, l (t); λ), where f
+
+is approximated by the neural network and the evolution of the latent space is obtained by classical ODE solvers [ 14 ]. Fourier Neural Operator (FNO) [ 6 ] is used to model latent evolution [ 15 ]. This model has not yet been adapted to the parametric setting. 2A PREPRINT - A PRIL 9, 2026 
+
+1.1.2 Evolution on full-field 
+
+FactFormer [ 16 ] is a transformer for PDE surrogate modeling that uses factorized axial attention. Instead of computing full attention across all grid points (which is unstable/expensive for high-res PDEs), they break it down into 1D factorized kernel integrals along each axis. This leverages the low-rank structure of PDE operators and reduces complexity. Another approach is to use vectorized conditional neural fields [ 17 ], combined with a transformer to predict the whole time trajectory in one step [18]. In contrast to scalable-attention approaches such as FactFormer and continuous-time neural fields such as VCNeF [ 18 ], our method emphasizes joint, parameter-aware operator learning. We show that this design is particularly effective for multi-field, scale-imbalanced parametric PDEs, where existing methods either separate training objectives or overlook the challenges of parameter conditioning. 
+
+1.2 Positioning Our Work and Main Novelties 
+
+Established operator-learning methods such as DeepONet and FNO are typically applied to initial-condition–to-trajectory settings rather than parameterized PDEs. Most existing parametric reduced-order models (ROMs) and latent evolution approaches (e.g., DL-ROM, Neural ODEs, and latent transformers) train encoders and evolution models separately. Our approach achieves improved predictive performance compared to these methods. We hypothesize that separate training can result in latent spaces that prioritize reconstruction accuracy over predictive robustness, which limits generalization across parameter spaces. In contrast, our approach emphasizes joint, parameter-aware operator learning, directly addressing this limitation. We combine the strengths of multiple paradigms: a convolutional encoder-decoder to reduce spatial resolution and a Vision Transformer (ViT) to capture non-local interactions. This design requires fewer trainable parameters than purely transformer- or autoencoder-based methods while maintaining stability over long-horizon autoregressive rollouts. Additionally, most latent evolution models are trained on a one-dimensional latent vector. Models on full-field, which rely only on convolution for processing spatial information, can fail to capture non-local correlation due to the inherently limited receptive field of convolutions. In order to mitigate this, transformer-based architectures such as FactFormer [ 16 ] and VCNeF have pushed scalability and temporal flexibility, respectively. VCNeF uses the initial condition and PDE parameters as inputs, enabling spatial and temporal interpolation as well as zero-shot super-resolution. By querying solutions directly as a function of time and space, VCNeF avoids autoregressive rollout and instead fits a global representation of the solution within a fixed temporal window. Long-horizon behavior under compounding error is not explicitly assessed. While this formulation provides flexibility in spatial resolution and efficient interpolation, existing evaluations of VCNeF focus on relatively short temporal horizons, typically limited to a few dozen solver time steps. FactFormer leverages factorized axial attention to scale to large grids but does not incorporate parameter conditioning and remains focused on initial condition trajectory prediction. VCNeF conditions on initial conditions and parameters while enabling continuous-time prediction and temporal super-resolution, but is memory-heavy since it uses an attention mechanism [ 11 ] on many query points over space and time. By using a convolutional encoder to reduce resolution and ViT as a processor, we model non-local interactions with much less memory and computational resources. The main contributions of this work can be summarized as the following: • Joint training of encoder, processor, and decoder with multi-stage parameter injection • Injection of coordinate channels to obtain better spatial awareness • Multi-field training to obtain the solution of the system of PDEs simultaneously • Accurate long-term autoregressive rollout predictions despite a short training scheduled sampling window of length 4
+
+• Theoretical motivation and intuitive interpretation of the model through a kernel regression perspective 
+
+# 2 Method 
+
+The training set consists of parameter-solution pairs (λ(i), ϕ (i) 
+
+> j
+
+), i = 1 . . . N S , j = 1 . . . N T , where NS is the number of training simulations, and NT is the number of training steps per simulation. We assume all simulations are sampled with the same time step ∆t, tj = j∆t and ϕ(i) 
+
+> j
+
+= ϕ(: , t j ; λ(i)) is the solution for parameter λ(i) of simulation i and time tj .The goal is to construct a neural network that will for given parameters λ calculate solution ϕ(: , t j , λ ) for j = 1 , . . . N T .Our proposed AE-ViT is a neural network that consists of the convolutional encoder, the vision transformer and the 3A PREPRINT - A PRIL 9, 2026 xλ
+
+> MLP
+> Convolution
+> Affine modulation
+> Group norm
+> Activation
+> Convolution
+> Group norm
+> ⊕
+> Activation
+
+Figure 1: ResNet block with parameter injection. Parameters are passed through MLP and injected into the ResNet block through affine modulation after the first convolution in the residual block. decoder. Parameter-injection modules generally do not include time as a parameter. While incorporating time can aid short-term training, it tends to degrade performance in time-extrapolation regimes, which is why our design omits it. 
+
+Scheduled sampling. Since the model is doing autoregressive rollout, it is important to be able to predict from its own outputs, not just from correct data. In order to do so, we use scheduled sampling with fixed window. More precisely, during one training step we consider a window of consecutive time steps. For each sample in the window, with probability p, correct ϕt is fed into the model instead of the model prediction ˆϕt. This mechanism exposes the model to its own prediction errors during training, improving robustness and reducing error accumulation at inference time. In order to stabilize training, p is large at the beginning of the training and it decreases as training progresses, feeding more and more model’s own predictions as inputs. Scheduled sampling does not increase GPU usage per training step, but it increases training time. In this work, we use inverse sigmoid decay, defined as 
+
+pi = kk + exp( i/k ) ,
+
+where i is optimization step, and k = 0 .3Tmax / log(0 .3Tmax ), with Tmax total number of training steps. 
+
+Encoder structure. In order to reduce spatial resolution and obtain a latent representation, a fully convolutional encoder is constructed. In order for the encoder to be aware of the PDE parameters feature-wise linear affine modulation (FiLM) transformation is used [19], [20], such that each hidden state h is transformed as 
+
+h ←− α(λ) ⊙ h ⊕ β(λ),
+
+where ⊕ and ⊙ are elementwise addition and multiplication, α, β are fully-connected MLPs mapping parameters λ to a vector in Rnc , and nc is the number of channels in the layer. Each channel ci is affinely modulated by parameter-dependent factor α(λ)i and bias β(λ)i. Additionally, we use ResNet blocks [ 21 ]. Modified residual block is shown in the Figure 1. We use Group Normalization [ 22 ] since it is batch size independent and stabilizes training of deep networks. In this setting, FiLM acts as a channel-wise reweighting mechanism rather than a pure affine transform. The number of groups for a layer is set to be min(32 , n c/4) . Such an encoder produces a tensor as its latent representation, thus preserving spatial relationships. The fully convolutional structure also reduces the number of training parameters. 
+
+Coordinate Encoding. In order for the model to have more spatial awareness, coordinate encoding channels can be added to the input. Physical coordinates x and y are normalized to [0 , 1] and for frequencies f = 2 , 4, . . . , 2k are encoded into 4k channels [ 23 ], [ 24 ]. For each frequency f , spatial information is encoded into 4 channels with values: 
+
+sin(2 πf x ), cos(2 πf x ), sin(2 πf y ), cos(2 πf y ), see Figure 2. 4A PREPRINT - A PRIL 9, 2026 
+
+Figure 2: Coordinate encoding. Spatial Fourier features are constructed by applying sinusoidal functions at multiple frequencies to the coordinate grid (x, y ). The resulting 2k channels per axis are concatenated with the original feature map, yielding an augmented tensor of size H × W × (C + 4 k), where H and W , denote grid height and width and C
+
+is the number of solution components. 
+
+Transformer. Transformers [ 11 ] are well suited for capturing long-term dependencies, which cannot be captured with the convolutional layers alone. We use a vision transformer encoder [ 7 ] with positional encoding. Each latent representation is divided into patches of patch size × patch size using a convolution with stride patch size and emb dim 
+
+number of out channels, where emb dim is the dimensionality of the transformer token. This embedding is then enriched by adding positional encoding that encodes the order of the patches. Since the sequence length is fixed, the positional encoding is implemented as a set of learnable parameters, each with a distinct learned value for each token position. Parameters λ can be transformed with an MLP and used as an additional token. This is then fed as input to the transformer layers. 
+
+Parametric transformer. Similarly to affine-parametrized convolutions, FiLM can be introduced after each Layer Normalization [ 25 ] in the transformer layer and on the computed query, key and value representations. To make the notation explicit, let Xt ∈ RN ×d denote the token matrix obtained from the encoder output at time t after patch embedding, positional encoding and, when used, parameter-token augmentation. For each attention head, let 
+
+WQ, W K , W V denote the learned projection matrices. The corresponding query, key and value matrices are then computed as 
+
+Qt = XtWQ, Kt = XtWK , Vt = XtWV . (2) Thus WQ, W K , W V are trainable parameters, while Qt, K t, V t are recomputed at each forward pass from the current encoded state Xt.A small multi-layer perceptron maps the parameters into per-head, per-channel scaling and shifting coefficients. For example, FiLM modulation of the value representation is written as 
+
+Vt ← Vt ⊙  1 + ηα V (λ) + ηβ V (λ),
+
+with analogous transformations for Qt and Kt. Here η is a learnable per-layer parameter bounded by a fixed cap in order to prevent destabilization. When η is close to zero, the layer behaves like standard attention, so the parameter dependence is introduced as a controlled perturbation rather than as a structural replacement. Modulation is applied to all transformer heads, enabling the attention operator to adapt globally to the parameter vector. This allows the model to represent a parameterized family of solution operators within a unified architecture. To 5A PREPRINT - A PRIL 9, 2026 stabilize layer normalization under conditioning, the affine modulation networks are initialized around zero [ 26 ], and the modulation is written as 
+
+x ← LayerNorm( x) ⊙  1 + θα LN (λ) + θβ LN (λ).
+
+We set θ = 1e −3. The bounded modulation strength ensures that, at initialization, parameter-dependent modulation has negligible influence, allowing training to begin in a regime close to the unconditioned transformer. As training progresses, the network learns to scale the modulation strength appropriately. Identity initialization is used to preserve the original model behavior and to ensure stable optimization [27], [28]. 
+
+Decoder. The decoder mirrors the encoder, with ResNet blocks and optional parametric FiLMs, except for the last layers, where it outputs the solutions at time t + ∆ t (without coordinate encoding) in the original resolution. The joint model is shown in Figure 3. The model is trained to predict solutions at time t + ∆ t from the solution at time t by minimizing mean squared error. In order to improve long-term temporal prediction, scheduled sampling is used, where during training, the model observes its own predictions. Throughout this work, we used scheduled sampling with prediction 4 steps in advance. Concretely, starting from the ground-truth state at time t, the model is unrolled for 4 consecutive steps, where at each step the input is chosen between the ground truth and the model prediction according to the scheduled sampling probability. The training loss is then defined as the average mean squared error over the entire rollout window: 
+
+L = 14
+
+> 4
+
+X
+
+> k=1
+
+ϕ(t + k∆t) − ˆϕ(t + k∆t) 2
+
+One can also add previous time steps as preceding tokens to the input of ViT. However, in this work, we do not use any preceding tokens. For the whole simulation, prediction is done autoregressively. In all our parameter injecting modules, we do not inject time, since time will go out of training range in the time extrapolation regime. Despite being optimized with only short-horizon supervision (scheduled sampling length 4), the model produces long-horizon trajectories that remain accurate over hundreds of steps. This indicates that the architecture learns a stable approximation of the underlying solution operator rather than merely minimizing one-step prediction error. We emphasize that the proposed model could naturally be trained on inputs of varying spatial resolutions. The only required modification concerns the transformer positional encodings, which must be adapted (e.g., by using relative positional biases) when the number of tokens changes. Since self-attention has quadratic complexity with respect to the number of tokens, the practical resolution limit is primarily determined by the token count rather than the input resolution itself. This limitation might be alleviated by employing sparse or linear-complexity attention mechanisms; however, exploring such variants is beyond the scope of this work. A useful way to view the transformer block is as a learned nonlocal interaction operator acting on the latent token representation. The operator-learning perspective developed in [ 29 ] is helpful in motivating this viewpoint; however, that work studies softmax-free Fourier- and Galerkin-type attentions, whereas the present model uses standard softmax attention. For this reason, we do not claim that the formulas below follow directly from [ 29 ]. Instead, we use that reference only as motivation for interpreting attention-based architectures as nonlocal operators. Let zti ∈ Rd denote the i-th token in Xt, and let qti , kti and vti denote the corresponding rows of Qt, Kt and Vt. Standard self-attention computes 
+
+atij (λ) = exp  ⟨qti , k tj ⟩/√dk
+
+
+
+> N
+
+P
+
+> ℓ=1
+
+exp  ⟨qti , k tℓ⟩/√dk
+
+ , zt+∆ ti =
+
+> N
+
+X
+
+> j=1
+
+atij (λ) vtj . (3) Because Qt, Kt and Vt are computed from Xt, the coefficients atij (λ) depend on the current encoded state, and therefore define a state-dependent family of interaction weights on the latent grid. 
+
+Model interpretation. For linear evolution problems, one often expects a state-independent kernel associated with a Green’s function or semigroup. For nonlinear problems, such as the Navier-Stokes equations considered below, the one-step solution operator is itself nonlinear, so it is natural that an effective interaction kernel in a surrogate model depends on the current state. Accordingly, we interpret the coefficients atij (λ) as a learned state-dependent effective kernel on latent tokens, rather than as a classical Green’s function of the underlying PDE. 6A PREPRINT - A PRIL 9, 2026 Under this interpretation, different parameter-injection mechanisms correspond to different ways of introducing parameter dependence into the learned operator. Depending on the architecture, one may distinguish the following three regimes: 1. Feature conditioning only. The encoder and decoder depend on λ, while the transformer block itself is not explicitly conditioned on λ. In this case the latent features are parameter-dependent, but the attention rule is shared across parameters: 
+
+ut+∆ t ≈ Dλ
+
+ T (Eλ(ut)) .
+
+2. Attention conditioning only. The encoder and decoder are parameter-independent, while the transformer block is conditioned on λ through FiLM modulation, parameter tokens, or both. In this case the attention rule itself depends on the parameters: 
+
+ut+∆ t ≈ D Tλ(E(ut)) .
+
+3. Fully conditioned architecture. Both the feature extraction/reconstruction maps and the transformer block depend on λ:
+
+ut+∆ t ≈ Dλ
+
+ Tλ(Eλ(ut)) .
+
+The architecture used in this work is closest to the third regime, since parameter injections are allowed in the encoder, the transformer and the decoder. The ablation results in Table 6 support this design choice: FiLM in the encoder and decoder (feature conditioning) and FiLM in the transformer attention (attention conditioning) achieve nearly identical error reductions individually (0.00521 vs. 0.00519 at T = 0 .4), suggesting that neither mechanism alone is sufficient and that the fully conditioned regime benefits from both simultaneously. 
+
+# 3 Examples 
+
+In this section, we validate our approach on two examples. The first is the Advection-Diffusion-Reaction equation, from [ 20 ], which will be used as a point of comparison with previous work. The second example is the Navier-Stokes equation with the cylinder wake, which is much more challenging due to the nonlinearity of the system and different scales in the solution components. For the Navier-Stokes equations, the models will be trained on both velocity fields and pressure jointly. To stabilize ViT and AE-ViT training, we use global gradient-norm clipping [ 30 ] with threshold c,meaning gradients are rescaled to have norm c whenever their global norm exceeds this value. We set c = 1 for all experiments. In all trained models the learning rate follows a three-phase schedule. It increases linearly during the first 10% of training steps (warm-up phase), remains constant for the subsequent 20% , and then decays according to a cosine annealing schedule for the remainder of training. AE-ViT is compared to ViT, DL-ROM, and AE + 1D transformer. ViT receives the solution at time t and PDE parameters as an additional attention token and performs one-step prediction to t + ∆ t. It uses the same number of attention layers and patch size as AE-ViT, but unlike AE-ViT, it does not reduce the input resolution, resulting in more tokens, and it does not employ a convolutional encoder/decoder or coordinate encoding. DL-ROM combines a vanilla autoencoder to obtain a latent representation of the solution and a fully-connected neural network to map from PDE parameters to the latent space, predicting the entire solution trajectory simultaneously. Following standard practice [ 10 ], parameters are not injected into the autoencoder and no coordinate encoding is used. AE + 1D transformer consists of a vanilla autoencoder and a 1D transformer applied to the latent representation to model temporal evolution, performing one-step prediction like ViT, without parameter injection in the autoencoder. In contrast, AE-ViT reduces the input resolution before the ViT module, resulting in fewer tokens, and uses a fully convolutional encoder and decoder, reducing the number of trainable parameters compared to the baselines. AE-ViT also incorporates PDE parameters and employs coordinate encoding, which enables efficient modeling of temporal evolution. We employ component-wise z-score normalization (zero mean, unit variance), with statistics computed per channel over the training dataset. Model parameters are normalized separately using their own dataset-level statistics. All reported errors are computed after transforming predictions back to the original (unnormalized) scale. Models are compared according to relative error, where one step relative error between ϕt and predicted ˆϕt is defined as 
+
+l( ˆϕt, ϕ t) = 
+
+rP
+
+> i,j
+
+( ˆϕt − ϕt)2
+
+> ij
+
+rP
+
+> i,j
+
+(ϕt)2
+
+> ij
+
+,
+
+7A PREPRINT - A PRIL 9, 2026 
+
+Figure 3: Basic overview of the model. The input is solution snapshot at time ϕt, which is passed through convolutional encoder, then split by patches, fed through transformer encoder, whose output is then concatenated into tensor and decoded via convolutional decoder to output predicted ϕt+∆ t. Parameters can be injected via multi-layer perceptron into encoder, transformer and decoder via affine modulations. 8A PREPRINT - A PRIL 9, 2026 Hyperparameter name Values Kernels per layer [32 , 64 , 64 , 128 , 256 ]Strides per layer [ 1, 2, 1, 1, 1]Nbr of transformer layers 4
+
+Learning rate 1e-5, 3e-5, 1e-4, 3e-4, 1e-3
+
+Weight decay 1e-4, 1e-3, 1e-2
+
+Embedding dimension 256 
+
+Patch size 2 × 2
+
+Encoder latent size 16 × 16 × 256 
+
+Table 1: AE-ViT hyperparameter search. We fix the architecture and vary learning rate and weight decay. The autoencoder has 5 hidden layers with 32 , 64 , 64 , 128 , 256 kernels respectively and strides 1, 2, 1, 1, 1. The decoder mirrors the encoder. The transformer has 4 layers, with embedding dimension 256 and splits encoded snapshot into 
+
+2 × 2 patches, resulting in 64 patches per snapshot. The encoder produces a latent representation of size 16 × 16 × 256 .We fix the architecture and find the best combination of learning rates and weight decays, where tried learning rates are 1e-5, 3e-5, 1e-4, 3e-4, 1e-3 and weight decays 1e-4, 1e-3, 1e-2 with 2 different (but fixed) random seeds, which determine network initialization, training data ordering and training. Performance of each configuration is consistent across seeds. where (ϕt)ij and ( ˆϕt)ij are the exact solution and prediction of the network on position (i, j ) at time t, respectively. Note that this is a discrete analogue of ∥ϕ(t., )− ˆϕ(t,. )∥L2(Ω( λ)) 
+
+> ∥ϕ(t,. )∥L2(Ω( λ))
+
+. For evaluation of all models, we use the relative rollout error: 
+
+1
+
+NtNtX
+
+> k=1
+
+l( ˆϕk∆t, ϕ k∆t), (4) where ˆϕk∆t is prediction of the model at time k∆t, calculated autoregressively from initial condition and parameters, and Nt is the number of time steps. This is a discrete analogue of L1(0 , N t∆t; L2(Ω( λ))) norm. In case of the system of equations, the relative error is evaluated for each solution component separately. 
+
+3.1 Advection-Diffusion-Reaction 
+
+For our first example, [20] is closely followed. Namely, the equation is 
+
+
+
+ϕt − ∇ · (μ1∇ϕ) + b(t) · ∇ ϕ + ϕ = f (·; μ2, μ 3), in Ω × (0 , T ]
+
+μ1∇ϕ · n = 0 in ∂Ω × (0 , T ],ϕ(x, 0) = 0 in Ω ,
+
+(5) where b(t) = [cos( t), sin( t)] , f (x; μ2, μ 3) = 10 exp( −(( x − μ2)2 + ( y − μ3)2)/0.07 2). Ω is unit square. All simulations are calculated up to T = 10 π using 1000 time steps. The equation has been solved with FEM using P1 
+
+elements, using 32 × 32 grid, resulting in 1024 degrees of freedom (DoFs). The sampled parameters (μ1, μ 2, μ 3) ∈ [0 .02 , 0.05] × [0 .4, 0.6] 2 are partitioned into Ptrain ,Pvalid , and Ptest . The training set consists of 800 simulations up to Ttrain = 4 π, or 400 time steps, the validation consists of 200 simulations, each up to T = 4 π, test set consists of 200 simulations, all simulated until time 10 π.We fix the architecture for AE-ViT and vary the learning rate and weight decay, as shown in Table 1. Our attempt to train the autoencoder and ViT separately was unsuccessful. More precisely, after the autoencoder was trained, ViT training on the autoencoder’s fixed latent representations would not converge. We assume it is because of high-dimensional latent representation and possible mismatch between spatial encoding and latent evolution. In order to fairly compare our additions to the architecture, we start with the baseline model, which consists of the encoder, ViT and the decoder, with parameters injected only as a ViT context token. After finding the best combination of learning rate and weight decay, we performed an ablation study on AE-ViT with different combinations of types of parameter injection and coordinate encoding to check the impact of proposed changes in our architecture and investigate its individual and combined contribution to the model performance. Ablation study specifications are given in Table 2. For training the DL-ROMs and the latent transformer we use the same convolutional structure in the encoder and the decoder as in our method. For DL-ROMs and latent transformers, encoder and decoder have additional linear layers for projecting latent tensor to latent vector and vice versa. In the latent transformer, we experiment with adding preceding 9A PREPRINT - A PRIL 9, 2026 coordinate encodings, nbr of Fourier frequencies 0, 4 parameter injection in the encoder and decoder True, False parameter injection in the transformer layer normalization True, False parametric token True, False parametric FiLM of query, key and value matrices True, False Table 2: Hyperparameters varied in the ablation study. We investigate effect of parameter injection through multiple places in the architecture and effect of having positional encoding. Hyperparameters Values Kernels per layer [32 , 64 , 64 , 128 , 256 ], [ 64 , 128 , 128 , 256 , 512 , 512 ]Stride size per layer [1, 2, 1, 1, 1], [ 1, 2, 2, 2, 2, 1]Latent dimension 32 , 64 , 128 , 256 
+
+Learning rate 3e-4, 1e-4
+
+Weight decay 1e-3, 1e-2
+
+Table 3: Autoencoder hyperparameter grid-search specifications. We trained multiple architectures, either with 6 layers with 64 , 128 , 128 , 256 , 512 , 512 kernels and strides 1, 2, 2, 2, 2, 1 or with 5 layers with 32 , 64 , 64 , 128 , 256 kernels respectively and strides 1, 2, 1, 1, 1, with varying latent dimensions 32 , 64 , 128 , 256 and learning rates 3e-4, 1e-4,weight decays 1e-3, 1e-2 and 5 different seeds for each configuration, resulting in 160 models. tokens (of 32 snapshots), or without preceding tokens, as in our model. Note that most of the parameters for these models belong to the projection of the latent tensor to a latent vector. For DL-ROM and latent transformer, we choose the autoencoder as the best among models hyperparameter by doing a grid-search, see Table 3. We observed that the best model in terms of the reconstruction error has latent dimension 
+
+256 and number of kernels and strides as in our AE-ViT model. This autoencoder is used for spatial compression for DL-ROM and 1D transformer. For the fully-connected network in DL-ROM that maps parameters to its latent representations, we used 6 hidden layers. We trained a series of models with 512 , 1024 , 2048 , and 4096 neurons per layer and stopped at 4096 since validation relative error stopped decreasing. The reported relative error is for the model having 4096 neurons per layer. For the 1D transformer, we choose the transformer hyperparameters as the best among the models hyperparameters by doing a grid-search, see Table 4. The best model has 8 layers and no preceding tokens, feedforward transformer dimension of 1024 , scheduled sampling window of length 8, learning rate 3e-4 and weight decay 1e-2.For ViT, the same transformer configuration as in AE-ViT is used. Comparison of models is given in Table 5. We observe that our AE-ViT significantly outperforms other models. To show the model’s long-term stability, we plot the relative rollout error over time steps. Results are in Figure 4, where mean relative rollout errors over time steps and standard deviation are shown. The relative rollout error increases approximately linearly, while the recurring dips in the rollout error are consistent with the periodic behavior of the solution after the transient. In Figure 5 we show the prediction for a specific sample. Number of transformer layers 4, 8 Transformer embedding dimension 256 Feedforward transformer dimension 512, 1024 Scheduled sampling window 4, 8 Preceding tokens length 0, 32 Learning rate 1e-3, 3e-4
+
+Weight decay 1e-2, 1e-3
+
+Table 4: Latent transformer hyperparameter grid search specifications. Learning rate was 1e-3, 3e-4, weight decay 1e-2,
+
+1e-3, transformer embedding dim 256 , feedforward transformer dimension 512 or 1024 , with 4 or 8 transformer layers, with scheduling sampling window 4 or 8. Models were trained either without preceding tokens, or preceding tokens of 
+
+32 prior latent codes. The best model has 8 layers, no preceding tokens, feedforward transformer dimension of 1024 ,scheduled sampling window of length 8, learning rate 3e-4 and weight decay 1e-2. Each configuration is trained across 
+
+4 different random seeds, resulting in 128 models 10 A PREPRINT - A PRIL 9, 2026 
+
+Figure 4: Mean relative rollout errors per step on test set (solid line), with standard deviation (lighter area). Relative rollout error grows linearly. Standard deviation increases as time progresses. 
+
+Figure 5: Rollout results after 1000 steps. First row: correct solution (left), prediction (middle), pointwise error(right) for parameters μ1 = 0 .0206 , μ 2 = 0 .544 , μ 3 = 0 .428 . Second row: correct solution (left), prediction (middle), pointwise error (right) for parameters μ1 = 0 .0264 , μ 2 = 0 .528 , μ 3 = 0 .553 .11 A PREPRINT - A PRIL 9, 2026 model relative rollout error (T=0.4) relative rollout error (T=1.0) parameter count AE-ViT (ours) 0.0029 0.0059 ≈ 6 million ViT 0.0997 0.2366 ≈ 4 million DL-ROM 0.0123 0.6473 ≈ 52 million AE + 1D transformer 0.0117 0.0229 ≈ 38 million Table 5: Comparison of different models in the Advection-Diffusion-Reaction case. We report only the best model performance for each instance. Across runs with different random seeds, the average of the best validation errors aligns with the overall best-performing model. Not only does AE-ViT outperform other autoencoder-based models, but it also has way fewer parameters. Furthermore, we see that the relative rollout error after the training window has the slowest increase in AE-ViT. Mean rollout error is reported for time intervals [0 , 0.4] (2 periods) and [0 , 1] (5 periods). Most parameters in AE+1D transformer and DL-ROM are in fully connected layers that map from latent 2D to a latent vector and vice versa. DL-ROM is not able to extrapolate in time since the time goes out of the training distribution. Transformer-based models have a similar rate of mean relative rollout error increase between different reported time intervals. Model mean relative rollout error (T=0.4) mean relative rollout error (T=1.0) Baseline 0.4274 0.6330 
+
+Coordinate encodings 0.0575 0.1317 
+
+FiLM in encoder and decoder 0.005207 0.010747 
+
+FiLM in transformer layer normalization 0.15602 0.31867 
+
+FiLM in transformer attention 0.005188 0.009559 
+
+Parameters token 0.008613 0.016004 
+
+Table 6: Mean relative rollout error comparison of baseline AE-ViT with respect to only one enhancement. We see that each of the proposed parameter injections and coordinate encodings greatly reduce the relative error, with the largest mean relative rollout error reduction with FiLM in transformer attention. We analyze contributions of our changes in the ablation study. The varied hyperparameters are FiLM in the attention, FiLM in the encoder and decoder, FiLM in the transformer layer normalization and parameters as an additional token. The number of frequencies in input coordinate encoding is either 0 or 4, resulting in 32 different combinations. All combinations are run with 5 fixed random seeds, resulting in 160 trained models. Since in the Advection-Diffusion-Reaction example, all trajectories start from the same initial condition, the error of the baseline AE-ViT without any parameter injection will naturally be big since the model cannot differentiate between the trajectories. For this study, we report the effect of adding parameters in comparison with baseline AE-ViT with rollout starting from the first step. In order to demonstrate that each of our proposed changes greatly reduces rollout relative error, we also report errors for models with only one enhancement, see Table 6. 
+
+3.2 Navier-Stokes flow around an obstacle 
+
+Further, we examine our model on the 2D Navier-Stokes equations in Ω( λ), where Ω( λ) is a rectangular pipe of length 
+
+5 and width 1 with a circular obstacle. 
+
+
+
+ut + u · ∇ u + ∇p = 1 
+
+> Re
+
+∆u in Ω( λ)
+
+∇ · u = 0 in Ω( λ)
+
+u(0 , x, y ) = 0 
+
+u = 0 on Γbot , Γtop and the edge of the circle with center (xc, y c) and radius rσn = 0 for x = 5 
+
+u(t, 0, y ) = 4(1 + A sin(2 πf t )) y(1 − y),
+
+(6) where Γtop , Γbot are the top and bottom sides of the rectangle, σ is the fluid stress tensor and n is the unit normal. The parameters are: magnitude of time-periodic perturbation A ∈ [0 .05 , 0.30] , center of the circle (xc, y c) ∈ [0 .9, 1.3] ×
+
+[0 .4, 0.6] , circle radius r ∈ [0 .06 , 0.12] , inflow frequency f = 0 .74 is fixed for all simulations. The Reynolds number Re is defined as the ratio of inertial to viscous forces in the flow and is given by Re = U L ν ,where U is the characteristic velocity, L is the characteristic length scale, and ν is the kinematic viscosity. In flow past a circular obstacle, the natural length scale is the obstacle size, here taken as radius r. In this study, the Reynolds number depends on the circle radius as Re ∈ [ 180 4r , 540 4r ]. This range was selected so that all considered cases exhibit vortex shedding and nontrivial wake dynamics. 12 A PREPRINT - A PRIL 9, 2026 Kernels per layer [32 , 64 , 64 , 128 , 256 ]Strides per layer [1, 2, 2, 2, 1]Learning rate 1e-4, 3e-4
+
+Weight decay 1e-3, 1e-2
+
+Latent dimension 64 , 128 , 256 
+
+Table 7: Ablation study for the autoencoder models. All trained autoencoders have 32 , 64 , 64 , 128 , 256 convolutional kernels per layer and respective strides of 1, 2, 2, 2, 1. We vary the learning rate to be either 1e-4, 3e-4, weight decay 
+
+1e-3 or 1e-2, latent dimension 64 , 128 or 256 . We train all combinations with 5 different random seeds, so in total 
+
+60 models, which are trained jointly on all channels. The best autoencoder in terms of mean validation relative reconstruction error over seeds is the one with learning rate 3e-4, weight decay 1e-2 and latent dimension 256 .
+
+ux uy p
+
+model T = 2 .7 T = 6 .75 T = 2 .7 T = 6 .75 T = 2 .7 T = 6 .75 
+
+AE-ViT (ours) 0.01725 0.0276 0.0724 0.1271 0.0999 0.1861 
+
+ViT 0.3876 0.4330 1.0225 1.0222 1.6385 1.8081 
+
+DL-ROM 0.1514 0.4147 1.0104 1.3706 0.9318 3.3751 
+
+AE + 1D transformer 0.0839 0.1391 0.4194 0.7166 0.9068 1.3438 
+
+Table 8: Comparison of different models. Models are trained up to T = 2 .7. Mean rollout relative error for each of the components of the solution of Navier-Stokes is reported for time intervals [0 , 2.7] and [0 , 6.75] . For models that were trained on one-step prediction (all except DL-ROM), the reported error is pure rollout error, starting only with initial conditions and parameters. All solutions are interpolated to a 64 × 320 rectangular grid and masked by the domain characteristic function in order to use the convolutional encoder and decoder. Since both velocities have 0 as a boundary condition on the obstacle edge, multiplying by the mask does not produce discontinuities in velocity fields, but due to the nature of the problems, gradients near the obstacle are sharp. Simulations are calculated with time step dt = 0 .002 , where results are saved every third step. Simulations are run for 10 inlet periods to allow the initial transient to decay, after which 5 periods are saved. We use 2 periods for training, resulting in 450 snapshots per training simulation. 800 different simulations are used for the training set. Our model learns the velocities in the x and y directions and pressure jointly. We train the model for 2 periods (up to T = 2 .7). Additionally, we evaluate the rollout starting from T = 0 over a total of 5 periods, up to T = 6 .75 .Due to the larger computational cost compared to the Advection-Diffusion-Reaction example (see equation (5)), we further restrict our hyperparameter search to AE-ViT with all proposed parameter injections and 4 coordinate encoding frequencies used in every search instance. First, we sweep over 5 different random seeds, learning rates 1e-4, 3e-4, 1e-3,weight decays 1e-4, 1e-3, 1e-2, with an encoder with 5 layers with 32 , 64 , 64 , 128 , 256 kernels per convolutional layer and respective strides 1, 2, 2, 2, 1, and ViT patch size 2. Models with learning rate 3e-4 and weight decay 1e-4 have the smallest relative rollout error on the validation set. We report on the relative test error for all channels in the training window T = 2 .7 and for additional 3 periods until T = 6 .75 . The best results are obtained with AE-ViT (ours) in all channels. For the autoencoder-based models (DL-ROM, AE + 1D transformer), we first choose the autoencoder with the lowest mean validation relative loss (equation (4)). Hyperparameters are shown in Table 7. The best autoencoder in terms of relative reconstruction error is the one with learning rate 3e-4, weight decay 1e-2 and latent dimension 256 . DL-ROM and transformer are trained on latent representations. The mean and standard deviation for each solution component and for each time step in the rollout are shown in Figure 6. Visual results for our model are shown in Figure 7. The results of comparison of all models involved are in Table 8. 
+
+# 4 Conclusion 
+
+In this work, we have developed a new architecture for autoregressive parametric PDE evolution, combining the strengths of autoencoders for resolution reduction and vision transformers for capturing long-range spatial interactions. We demonstrated that time evolution can be trained effectively and that the model is capable of joint convolutional autoencoder and vision transformer training, which is an advance over many existing approaches. Our proposed parameter injection and coordinate encoding greatly enhance the prediction accuracy. In the challenging example of estimating the velocity for the flow around a cylinder obstacle (see equation (6)), our proposed model achieves around 5 times lower relative error than the best of the alternative methods. Such a model is stable in the sense that the 13 A PREPRINT - A PRIL 9, 2026 
+
+Figure 6: Mean relative rollout error (solid line) with standard deviation (shaded area) on the test set over time for velocities ux (left), uy (middle), and pressure (right). Relative rollout error grows linearly for velocities ux, uy
+
+but has periodic spikes for pressure. Standard deviation increases as time progresses. Unlike velocity, pressure in incompressible flow is determined globally through a Poisson equation, making it more sensitive to phase errors in the periodic shedding cycle. A small phase drift in the predicted vortex positions leads to large pointwise pressure errors at shedding events, even when the overall flow structure is well captured. 
+
+Figure 7: Prediction results. Reference solution (left column), network prediction (middle column), and pointwise error (right column) for Re = 1 .557 e + 03 , A = 1 .9489 e − 01 , x c = 1 .019 , y c = 5 .637 e − 01 , r = 7 .772 e − 02 at time 
+
+T = 6 .75 . Velocity in the x−direction is in the first row, velocity in the y−direction is in the second row, and pressure is in the third row. relative error accumulates approximately linearly, even for 250 times more steps than the scheduled sampling window length, thus significantly reducing the training computational cost. The main limitations of the proposed method are dependence on the interpolation of the solutions to a rectangular domain, so it is not appropriate for domains that do not fit naturally in rectangular domains, and quadratic computational cost in the transformer layer. The future direction of this research involves mitigating these limitations and developing error and complexity bounds of our model with the use of neural network approximation theory. 
+
+# 5 Acknowledgments 
+
+This research was carried out using the advanced computing service provided by the University of Zagreb University Computing Centre - SRCE. This research was supported by the Croatian Science Foundation under the project number IP-2022-10-2962. BM was supported by the European Union – NextGenerationEU through the National Recovery and Resilience Plan 2021-2026. Institutional grant of University of Zagreb Faculty of Science IK IA 1.1.3. Impact4Math. 
+
+# References 
+
+[1] Stefano Buoso, Andrea Manzoni, Hatem Alkadhi, André Plass, Alfio Quarteroni, and Vartan Kurtcuoglu. Reduced-order modeling of blood flow for noninvasive functional evaluation of coronary artery disease. Biomechanics and Modeling in Mechanobiology , 18(6):1867–1881, Dec 2019. [2] Dongwei Ye, Valeria Krzhizhanovskaya, and Alfons G. Hoekstra. Data-driven reduced-order modelling for blood flow simulations with geometry-informed snapshots. Journal of Computational Physics , 497:112639, 2024. [3] Earl H. Dowell, Kenneth C. Hall, Jeffrey P. Thomas, Razvan Virgil Florea, Bogdan I. Epureanu, and Jennifer Heeg. Reduced order models in unsteady aerodynamics. 1999. 14 A PREPRINT - A PRIL 9, 2026 [4] Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3(3), 03 2021. [5] Junyan He, Shashank Kushwaha, Jaewan Park, Seid Koric, Diab Abueidda, and Iwona Jasiuk. Sequential deep operator networks (s-deeponet) for predicting full-field solutions under time-dependent loads. Engineering Applications of Artificial Intelligence , 127:107258, January 2024. [6] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations, 2021. [7] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov, Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner, Mostafa Dehghani, Matthias Minderer, Georg Heigold, Sylvain Gelly, Jakob Uszkoreit, and Neil Houlsby. An image is worth 16x16 words: Transformers for image recognition at scale, 2021. arXiv:2010.11929. [8] Samy Bengio, Oriol Vinyals, Navdeep Jaitly, and Noam Shazeer. Scheduled sampling for sequence prediction with recurrent neural networks, 2015. arXiv:1506.03099. [9] Stefanos Nikolopoulos, Ioannis Kalogeris, and Vissarion Papadopoulos. Non-intrusive surrogate modeling for parametrized time-dependent partial differential equations using convolutional autoencoders. Engineering Applications of Artificial Intelligence , 109:104652, 2022. [10] Nicola R. Franco, Andrea Manzoni, and Paolo Zunino. A deep learning approach to reduced order modelling of parameter dependent partial differential equations. Mathematics of Computation , 92:483–524, 2023. [11] Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Ł ukasz Kaiser, and Illia Polosukhin. Attention is all you need. In I. Guyon, U. Von Luxburg, S. Bengio, H. Wallach, R. Fergus, S. Vishwanathan, and R. Garnett, editors, Advances in Neural Information Processing Systems , volume 30. Curran Associates, Inc., 2017. [12] Alberto Solera-Rico, Carlos Sanmiguel Vila, Miguel Gómez-López, Yuning Wang, Abdulrahman Almashjary, Scott T M Dawson, and Ricardo Vinuesa. β-Variational autoencoders and transformers for reduced-order modelling of fluid flows. Nature Communications , 15(1):1361, February 2024. [13] AmirPouya Hemmasian and Amir Barati Farimani. Reduced-order modeling of fluid flows with transformers. 
+
+Physics of Fluids , 35(5), 2023. [14] Stefania Fresca, Luca Dede’, and Andrea Manzoni. A comprehensive deep learning-based approach to reduced order modeling of nonlinear time-dependent parametrized pdes. Journal of Scientific Computing , 87:1–36, 2021. [15] Zijie Li, Saurabh Patil, Francis Ogoke, Dule Shu, Wilson Zhen, Michael Schneier, John R. Buchanan, and Amir Barati Farimani. Latent neural pde solver: A reduced-order modeling framework for partial differential equations. 
+
+Journal of Computational Physics , 524:113705, 2025. [16] Zijie Li, Dule Shu, and Amir Barati Farimani. Scalable transformer for pde surrogate modeling, 2023. arXiv:2305.17560. [17] Yiheng Xie, Towaki Takikawa, Shunsuke Saito, Or Litany, Shiqin Yan, Numair Khan, Federico Tombari, James Tompkin, Vincent Sitzmann, and Srinath Sridhar. Neural fields in visual computing and beyond, 2022. arXiv:2111.11426. [18] Jan Hagnberger, Marimuthu Kalimuthu, Daniel Musekamp, and Mathias Niepert. Vectorized conditional neural fields: A framework for solving time-dependent parametric partial differential equations, 2024. arXiv:2406.03919. [19] Ethan Perez, Florian Strub, Harm de Vries, Vincent Dumoulin, and Aaron Courville. Film: Visual reasoning with a general conditioning layer, 2017. arXiv:1709.07871. [20] Nicola Farenga, Stefania Fresca, Simone Brivio, and Andrea Manzoni. On latent dynamics learning in nonlinear reduced order modeling, 2024. arXiv:2408.15183. [21] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recognition, 2015. arXiv:1512.03385. [22] Yuxin Wu and Kaiming He. Group normalization, 2018. arXiv:1803.08494. [23] Matthew Tancik, Pratul P. Srinivasan, Ben Mildenhall, Sara Fridovich-Keil, Nithin Raghavan, Utkarsh Singhal, Ravi Ramamoorthi, Jonathan T. Barron, and Ren Ng. Fourier features let networks learn high frequency functions in low dimensional domains, 2020. arXiv:2006.10739. [24] Ben Mildenhall, Pratul P. Srinivasan, Matthew Tancik, Jonathan T. Barron, Ravi Ramamoorthi, and Ren Ng. Nerf: Representing scenes as neural radiance fields for view synthesis, 2020. arXiv:2003.08934. [25] Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E. Hinton. Layer normalization, 2016. arXiv:1607.06450. 15 A PREPRINT - A PRIL 9, 2026 [26] William Peebles and Saining Xie. Scalable diffusion models with transformers, 2023. arXiv:2212.09748. [27] Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. Lora: Low-rank adaptation of large language models, 2021. arXiv:2106.09685. [28] Neil Houlsby, Andrei Giurgiu, Stanislaw Jastrzebski, Bruna Morrone, Quentin de Laroussilhe, Andrea Gesmundo, Mona Attariyan, and Sylvain Gelly. Parameter-efficient transfer learning for nlp, 2019. arXiv:1902.00751. [29] Shuhao Cao. Choose a transformer: Fourier or galerkin, 2021. arXiv:2105.14995. [30] Razvan Pascanu, Tomas Mikolov, and Yoshua Bengio. On the difficulty of training recurrent neural networks. In Sanjoy Dasgupta and David McAllester, editors, Proceedings of the 30th International Conference on Machine Learning , volume 28 of Proceedings of Machine Learning Research , pages 1310–1318, Atlanta, Georgia, USA, 17–19 Jun 2013. PMLR. 16

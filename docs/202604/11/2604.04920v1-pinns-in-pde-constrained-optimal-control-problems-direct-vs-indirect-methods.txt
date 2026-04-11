@@ -1,0 +1,772 @@
+Title: PINNs in PDE Constrained Optimal Control Problems: Direct vs Indirect Methods
+
+URL Source: https://arxiv.org/pdf/2604.04920v1
+
+Published Time: Tue, 07 Apr 2026 02:02:10 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# PINNs in PDE Constrained Optimal Control Problems: Direct vs Indirect Methods 
+
+Zhen Zhang, Shanqing Liu, Alessandro Alla, J´ erˆ ome Darbon, George Em Karniadakis 
+
+Abstract — We study physics-informed neural networks (PINNs) as numerical tools for the optimal control of semilinear partial differential equations. We first recall the classical direct and indirect viewpoints for optimal control of PDEs, and then present two PINN formulations: a direct formulation based on minimizing the objective under the state constraint, and an indirect formulation based on the first-order optimality system. For a class of semilinear parabolic equations, we derive the state equation, the adjoint equation, and the stationarity condition in a form consistent with continuous-time Pontryagin-type optimality conditions. We then specialize the framework to an Allen-Cahn control problem and compare three numerical approaches: (i) a discretize-then-optimize adjoint method, (ii) a direct PINN, and (iii) an indirect PINN. Numerical results show that the PINN parameterization has an implicit regularizing effect, in the sense that it tends to produce smoother control profiles. They also indicate that the indirect PINN more faithfully preserves the PDE contraint and optimality structure and yields a more accurate neural approximation than the direct PINN. 
+
+I. INTRODUCTION Optimal control problems constrained by partial differ-ential equations (PDEs) arise in a broad range of applica-tions, including heat transfer, diffusion-reaction processes, fluid flows, phase-field dynamics, and distributed parame-ter systems more generally [1, 2]. In these problems, the control acts on an infinite-dimensional dynamical system, while the objective functional must be optimized under the constraint that the state satisfies the governing PDE. This intrinsic coupling between optimization and dynamics leads to substantial computational and analytical difficulties, espe-cially for nonlinear equations, fine space-time discretizations, control constraints, and settings in which repeated forward and adjoint solves are required [3, 1]. For time-dependent systems, the difficulty is compounded by the need to prop-agate information both forward through the state equation and backward through the adjoint equation, often on large computational grids. A standard viewpoint distinguishes between direct and 
+
+indirect approaches [4, 5]. Direct methods discretize the state equation and then minimize the resulting finite-dimensional objective under the discrete dynamics. On the other hand, indirect methods derive, initially, the first-order necessary optimality conditions, typically a coupled state adjoint sys-tem together with a stationary condition, and then solve this                    
+
+> Zhen Zhang, Shanqing Liu, J´ erˆ ome Darbon, and George Em Karniadakis are with Division of Applied Mathematics, Brown University, {zhen zhang2, shanqing liu, jerome darbon, george karniadakis }@brown.edu
+> Alessandro Alla is with Department of Mathematics at Sapienza, Univer-sit` a di Roma, alessandro.alla@uniroma1.it
+
+optimality system numerically. Both viewpoints are classical in PDE-constrained optimization, and each has complemen-tary advantages: direct methods are often more robust at the optimization level, whereas indirect methods more explicitly exploit the variational structure of the control problem. In recent years, physics-informed neural networks (PINNs) have emerged as a flexible framework for the approximation of PDE solutions and related inverse problems [6, 7]. Their appeal in optimal control is natural, and is fruitful in the literature (see e.g [8, 9, 10, 11, 12, 13, 14]). The state, control, and possibly the adjoint can be represented by neural networks, while the governing equations, boundary conditions, and optimality relations are enforced through residual losses. This makes PINNs particularly attractive when one seeks low-dimensional parametric representations of the control and state, or when mesh-free training over the space-time domain is desirable. At the same time, for control problems it remains important to understand how dif-ferent PINN formulations relate to the underlying optimality system, and whether this distinction has a tangible effect on the quality of the computed control. We also note that PINNs have been used in the context of control problems with unknown state equations in [15]. In that work, the contribution of PINNs lies in first identifying the underlying state equation and subsequently using it for control within an indirect approach. In this paper, we focus on semilinear parabolic optimal control problems and study two PINN formulations for their numerical solution. The first is a direct formulation, in which the state and control networks are trained by minimizing a loss combining the PDE residual, the boundary and initial conditions, and the control objective. The second is an 
+
+indirect formulation, in which the training loss is built from the first-order optimality system, that is a system of equations consist of first-order system of the state equation and the adjoint equation, and the first-order optimality condition with respect to the control.We compare these two neural formulations with a classical discretize-then-optimize adjoint method on a one-dimensional Allen-Cahn control problem. This paper is organized as follows. First, we present a concise control-theoretic formulation of the semilinear parabolic optimal control problem and of its associated first-order optimality system. Second, we show how this structure leads to two distinct PINN formulations, namely a direct objective-based approach and an indirect KKT/Pontryagin-type approach. Third, through a numerical comparison on the Allen-Cahn equation, we show that the indirect formulation yields a more informative training signal and produces the 
+
+> arXiv:2604.04920v1 [math.OC] 6 Apr 2026
+
+most accurate neural approximation among the methods considered. These results suggest that, for PDE-constrained optimal control, enforcing the optimality system itself may be more effective than relying solely on objective min-imization within the PINN framework. From a practical perspective, the results indicate that successful PINN training benefits strongly from second-order optimization and double-precision arithmetic. They also show that PINNs offer a user-friendly framework and can serve as convenient initializers for other numerical approaches, including adjoint and indi-rect PINNs. II. P RELIMINARY 
+
+A. PDE-constrained optimal control 
+
+Let Ω ⊂ Rd be a bounded domain, let T > 0, and define Q := Ω × (0 , T ), Σ := ∂Ω × (0 , T ). We consider the semilinear parabolic state equation 
+
+
+
+∂ty − ν∆y + f (y) = Bu, in Q, ∂ny = 0 , on Σ,y(·, 0) = y0, in Ω,
+
+(1) where ν > 0 is the diffusion coefficient, u is the distributed control, B is a bounded control operator, and f is a possibly nonlinear reaction term. A standard control space is U := L2(Q), and the natural weak state space is 
+
+Y := L2(0 , T ; H1(Ω)) ∩ H1(0 , T ; H1(Ω) ∗).
+
+The optimal control problem consists in minimizing 
+
+J(y, u ) := βT
+
+2 ∥y(·, T ) − yd∥2 
+
+> L2(Ω)
+
++ βQ
+
+2 ∥u∥2 
+
+> L2(Q)
+
+, (2) subject to (1), where yd ∈ L2(Ω) is a desired terminal target and βT , β Q > 0 are weights. We shall use the following standard structural assumption. 
+
+Assumption 2.1: The nonlinearity f : R → R is of class 
+
+C1, locally Lipschitz, and its derivative is bounded from below, i.e., there exists cf ⩾ 0 such that 
+
+f ′(s) ⩾ −cf , ∀s ∈ R.
+
+The initial datum satisfies y0 ∈ L2(Ω) , and B : L2(Q) →
+
+L2(Q) is bounded. 
+
+Proposition 2.1: Under Assumption 2.1, for every u ∈ U ,the state equation (1) admits a unique weak solution y =
+
+S(u) ∈ Y . Moreover, the control-to-state map S : U → Y is well defined and locally Fr´ echet differentiable. 
+
+Remark 2.1: This class of control problems, with the state equation given by (1), includes, for instance, the Allen-Cahn equation f (y) = y3 − y, the degenerate Zeldovich equation 
+
+f (y) = y3 − y2, and the Zeldovich-Frank-Kamenetskii 
+
+f (y) = y(y − 1)( y − a) with a ∈ (0 , 1) ⊂ R. Numerical studies of controlled problems for these equationscan be found in the literature, see e.g. [16, 17]. 
+
+Remark 2.2: For the semilinear parabolic problems con-sidered here, Proposition 2.1 follows from standard mono-tonicity and energy estimates. The paper does not rely on a new well-posedness result, but rather on the corresponding optimality system and its numerical approximation. 
+
+B. Direct and indirect numerical viewpoints 
+
+Up to rare cases, problem of the form (2) can not be solved exactly. In the numerical approximation aspects, two classical viewpoints coexist in optimal control. 
+
+Direct methods optimize the reduced functional 
+
+j(u) := J(S(u), u ),
+
+possibly after discretizing the state equation first. In the PDE literature, this includes both optimize-then-discretize and discretize-then-optimize workflows, depending on whether one derives the first-order conditions before or after numer-ical discretization. 
+
+Indirect methods , instead, first derive the first-order op-timality system, typically through a Lagrange multiplier or Pontryagin maximum principle argument, and then solve the coupled state-adjoint-stationarity system. Indirect methods are often more structured and informative, but they require access to the adjoint dynamics and may be more delicate numerically. For the present paper, this distinction is especially relevant because it leads to two different PINN formulations. The direct PINN minimizes an objective-based (that is the cost functional of the control problem, e.g. (2)) loss under the state constraint, whereas the indirect PINN enforces the first-order optimality system itself. 
+
+C. Physics-informed neural networks 
+
+Physics-informed neural networks (PINNs) approximate unknown functions by neural networks and train them by minimizing residuals of governing equations, boundary con-ditions, and data or objective terms. For PDE-constrained optimization, one may represent the state, control, and pos-sibly the adjoint by neural networks, 
+
+Yθ (x, t ) ≈ y(x, t ), U ψ (x, t ) ≈ u(x, t ), Λϕ(x, t ) ≈ λ(x, t ) ,
+
+and define a composite loss from automatic-differentiation-based residuals. The attraction of this approach is twofold. First, the formulation is continuous in space and time, which avoids committing a priori to a specific grid in the optimization variables. Second, a system of equations derived from the maximum principle can be coupled in a unified loss, which makes PINNs particularly appealing for indirect formulations involving both state and adjoint equations. At the same time, the accuracy of PINNs depends on network expressivity, loss balancing, optimization, and col-location design. In particular, for optimal control problems, the choice between direct and indirect formulations can significantly affect optimization behavior and final solution quality. III. PINN FORMULATIONS FOR OPTIMAL CONTROL OF SEMILINEAR PDES 
+
+A. Problem formulation 
+
+In this paper, we focus on the unconstrained distributed control problem 
+
+min  
+
+> (y,u )
+
+J(y, u ) subject to (y, u ) satisfying (1) . (3) An admissible pair is any (y, u ) ∈ Y × U satisfying the state equation in the weak sense. Since the control cost in (2) is coercive in u, standard compactness arguments yield existence of at least one optimal pair for the class of problems considered here (see e.g [3]). We do not assume global convexity of the reduced problem because the semilinearity may render the optimization nonconvex. To derive first-order necessary conditions, introduce the Lagrangian 
+
+L(y, u, λ ) := βT
+
+2 ∥y(·, T ) − yd∥2 
+
+> L2(Ω)
+
++ βQ
+
+2 ∥u∥2
+
+> L2(Q)
+
++
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+λ  ∂ty − ν∆y + f (y) − B u dx dt. 
+
+(4) Here λ is the adjoint variable associated with the state constraint. 
+
+B. First-order optimality system and maximum principle 
+
+Assume that (y, u ) is a locally optimal pair with sufficient regularity, and let λ be the associated adjoint. Taking first variations in (4) yields the following continuous first-order system: 
+
+∂ty − ν∆y + f (y) = Bu, in Q, ∂ny = 0 , on Σ,y(·, 0) = y0, in Ω,
+
+(5) 
+
+
+
+−∂tλ − ν∆λ + f ′(y) λ = 0 , in Q, ∂nλ = 0 , on Σ,λ(·, T ) = −βT
+
+ y(·, T ) − yd
+
+, in Ω,
+
+(6) and the first-order optimality condition with respect to the control 
+
+βQ u − B ∗λ = 0 in Q. (7) Equivalently, 
+
+u = β−1 
+
+> Q
+
+B∗λ. (8) 
+
+Proposition 3.1: Suppose that Assumption 2.1 holds and that (y, u ) is a local minimizer of (3). Then, there exists an adjoint variable λ such that (5)–(7) hold. 
+
+C. Direct PINN formulation 
+
+In the direct formulation, the state and control are param-eterized by neural networks, 
+
+y ≈ Yθ , u ≈ Uψ ,
+
+and the loss is built from the state residual together with the objective. Let 
+
+ry (x, t ; θ, ψ ) := ∂tYθ − ν∆Yθ + f (Yθ ) − B Uψ .
+
+A generic direct PINN loss takes the form 
+
+Ldir (θ, ψ ) := wres Ly 
+
+> res
+
++ wbc Ly 
+
+> bc
+
++ wic Ly
+
+> ic
+
++ βT
+
+2 LT + βQ
+
+2 Lu, (9) where each term is estimated from collocation points. For example, if {(xj , t j )}Nint  
+
+> j=1
+
+⊂ Q denotes interior collocation points, {tbc  
+
+> j
+
+}Nbc  
+
+> j=1
+
+⊂ (0 , T ) boundary collocation points, and 
+
+{xi}NT 
+
+> i=1
+
+⊂ Ω terminal samples, then 
+
+Ly 
+
+> res
+
+≈ 1
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+|ry (xj , t j ; θ, ψ )|2 ,
+
+Ly 
+
+> bc
+
+≈ 1
+
+Nbc 
+
+> Nbc
+
+X
+
+> j=1
+
+∂nYθ (·, t bc  
+
+> j
+
+) 2 ,
+
+Ly 
+
+> ic
+
+≈ 1
+
+N0
+
+> N0
+
+X
+
+> i=1
+
+|Yθ (xi, 0) − y0(xi)|2 ,
+
+LT ≈ |Ω|
+
+NTNTX
+
+> i=1
+
+|Yθ (xi, T ) − yd(xi)|2 ,
+
+Lu ≈ |Q|
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+|Uψ (xj , t j )|2 .
+
+Thus Ly 
+
+> bc
+
+and Ly 
+
+> ic
+
+enforce the boundary and initial condi-tions, while LT and Lu approximate the two terms of the cost functional. The direct formulation is conceptually simple and does not require the adjoint variable explicitly. However, the objective appears only through scalar integral terms, and this may provide a weaker optimization signal than enforcing the full optimality system. 
+
+D. Indirect PINN formulation 
+
+In the indirect formulation, the state, control, and adjoint are trained so as to satisfy the first-order system (5)–(7). Introduce network approximations 
+
+y ≈ Yθ , u ≈ Uψ , λ ≈ Λϕ,
+
+and define the residuals 
+
+ry (x, t ; θ, ψ ) := ∂tYθ − ν∆Yθ + f (Yθ ) − B Uψ , (10) 
+
+rλ(x, t ; θ, ϕ ) := −∂tΛϕ − ν∆Λ ϕ + f ′(Yθ )Λ ϕ, (11) 
+
+rst (x, t ; ψ, ϕ ) := βQUψ − B ∗Λϕ. (12) A generic indirect PINN loss is then 
+
+Lind (θ,ψ, ϕ ) := wy Ly 
+
+> res
+
++ wλ Lλ 
+
+> res
+
++ wst Lst 
+
++ wy 
+
+> bc
+
+Ly 
+
+> bc
+
++ wλ 
+
+> bc
+
+Lλ 
+
+> bc
+
++ wic Ly 
+
+> ic
+
++ wT LλT . (13) Using the same sets of collocation points as above, one may write 
+
+Lλ 
+
+> res
+
+≈ 1
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+|rλ(xj , t j ; θ, ϕ )|2 ,
+
+Lst ≈ 1
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+|rst (xj , t j ; ψ, ϕ )|2 ,
+
+Lλ 
+
+> bc
+
+≈ 1
+
+Nbc 
+
+> Nbc
+
+X
+
+> j=1
+
+∂nΛϕ(·, t bc  
+
+> j
+
+) 2 ,
+
+LλT ≈ |Ω|
+
+NTNTX
+
+> i=1
+
+Λϕ(xi, T ) + βT
+
+ Yθ (xi, T ) − yd(xi) 2 .Here Lλ 
+
+> res
+
+penalizes the adjoint PDE residual, Lst penalizes the stationarity residual, and LλT enforces the terminal con-dition for the adjoint. The indirect formulation more closely mirrors the structure of classical indirect methods. In particular, a vanishing indirect PINN loss implies that the neural approximations satisfy the continuous first-order system at the collocation points. This typically yields a stronger and more informative training signal than the direct formulation, at the price of a larger and more tightly coupled loss. IV. N UMERICAL RESULTS 
+
+A. Problem formulation 
+
+We consider the Allen–Cahn equation on Ω = [0 , 1] with homogeneous Neumann boundary conditions: 
+
+yt = ε2 yxx − (y3 − y) + u(x, t ), (x, t ) ∈ Ω × (0 , T ],
+
+(14) subject to 
+
+yx(0 , t ) = yx(1 , t ) = 0 , t ∈ (0 , T ], (15) 
+
+y(x, 0) = cos( πx ), x ∈ Ω, (16) where ε = 0 .01 is the interface thickness parameter, T = 3 .0,and u(x, t ) is the distributed control. The optimal control problem seeks to minimize the cost functional 
+
+J(y, u ) = βT
+
+2
+
+Z 10
+
+y(x, T )2 dx + βQ
+
+2
+
+Z T
+
+> 0
+
+Z 10
+
+u(x, t )2 dx dt, 
+
+(17) subject to the state equation (14)–(16), with βT = 1 and 
+
+βQ = 10 −3. In the form of (1), this corresponds to ν = ε2,
+
+B = I, f (y) = y3 − y, and yd ≡ 0. The terminal cost drives the state toward y(x, T ) = 0 , while the control penalty regularizes the magnitude of u.For all three methods, we use the same reference dis-cretization of the state PDE when reporting trajectories and objective values. The spatial interval is partitioned by the uniform grid xi = ( i − 1)∆ x, i = 1 , . . . , N , with N = 513 
+
+and ∆x = 1 /512 , and the time interval is discretized by 
+
+tn = n∆t, n = 0 , . . . , N t, with ∆t = 0 .05 and Nt = 60 . The second derivative is approximated by the standard centered finite-difference operator Dxx together with Neumann ghost-point closures, Y n 
+
+> 0
+
+= Y n 
+
+> 2
+
+and Y nN +1 = Y nN −1, so that 
+
+∂xy(0 , t ) = ∂xy(1 , t ) = 0 is enforced to second order. The resulting semi-discrete system is advanced by the classical explicit four-stage Runge-Kutta (RK4) method. The same grid and quadrature are used to evaluate all controls produced by the PINN and adjoint approaches, ensuring that the final comparison is performed on a common discrete baseline. 
+
+B. Method 1: Adjoint method (discretize-then-optimize) 
+
+The adjoint baseline uses exactly the discretization de-scribed above. The control is represented by a piecewise-constant-in-time array U =  U ni
+
+ 
+
+> 1⩽i⩽N, 0⩽n⩽Nt−1
+
+, with 
+
+U ni ≈ u(xi, t n), yielding 513 × 60 = 30 ,780 optimization degrees of freedom. Let Y =  Y ni
+
+ denote the associated discrete state produced by the RK4 solver. The discrete ad-joint of the RK4 time-stepper is derived analytically and used to compute the exact gradient ∇UJ in a single backward sweep. Optimization is performed with a second-order opti-mizer SSBroyden proposed in [18]. The cost functional (17) is approximated by 
+
+JhT = βT
+
+2 ∆x
+
+> N
+
+X
+
+> i=1
+
+ Y Nt
+
+> i
+
+2, (18) 
+
+JhQ = βQ
+
+2 ∆x ∆t
+
+> Nt−1
+
+X
+
+> n=0
+> N
+
+X
+
+> i=1
+
+ U ni
+
+2, (19) so that Jh = JhT + JhQ.
+
+C. Method 2: PINN – direct formulation a) Neural network architecture: Two independent multi-layer perceptrons (MLPs) are used:  
+
+> •
+
+Yθ (x, t ): state network, mapping (x, t ) 7 → y, 
+
+> •
+
+Uψ (x, t ): control network, mapping (x, t ) 7 → u.Each MLP has input dimension 2, output dimension 1, two hidden layers of width 32 , and tanh activation, yielding 
+
+1,185 trainable parameters per network ( 2,370 total). The weights are initialized with Xavier uniform initialization. 
+
+b) Loss function: The PINN is trained by minimizing the composite loss 
+
+Ldir (θ, ψ ) = wres Ly 
+
+> res
+
++ wbc Ly 
+
+> bc
+
++ wic Ly
+
+> ic
+
++ βT
+
+2 LT + βQ
+
+2 Lu, (20) where, for the Allen–Cahn equation, 
+
+ry (x, t ; θ, ψ ) := ∂tYθ − ε2∂xx Yθ +  Y 3 
+
+> θ
+
+− Yθ
+
+ − Uψ .
+
+The loss components are 
+
+Ly 
+
+> res
+
+= 1
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+ry (xj , t j ; θ, ψ ) 2, (21) 
+
+Ly 
+
+> bc
+
+= 1
+
+Nbc 
+
+> Nbc
+
+X
+
+> j=1
+
+ |∂xYθ (0 , t j )|2 + |∂xYθ (1 , t j )|2, (22) 
+
+Ly 
+
+> ic
+
+= 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+Yθ (xi, 0) − y0(xi) 2, (23) 
+
+LT = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+Yθ (xi, T ) 2, (24) 
+
+Lu = TNint 
+
+> Nint
+
+X
+
+> j=1
+
+Uψ (xj , t j ) 2. (25) Thus LT and Lu are Monte Carlo approximations of the two terms in (17), and, since |Ω| = 1 , no additional spatial measure factor appears. All collocation points are generated without labeled data, and the training signal comes entirely from the PDE, boundary/initial conditions, and cost terms. The loss weights are set to wres = wbc = wic = 1 .c) Collocation points: Nint = 20 ,000 interior points are sampled uniformly in [0 , 1] × (0 , T ), and Nbc = 512 
+
+boundary times are sampled uniformly in (0 , T ). The initial condition and terminal condition are each evaluated on N =513 uniformly spaced grid points. The collocation points are drawn once with a fixed random seed and held constant throughout training (no resampling between epochs). 
+
+d) Optimizer: Training proceeds in two phases: 1) Adam warm-up : 1,000 steps with an initial learning rate of 10 −3 and a step-decay schedule (factor 0.3
+
+every 200 steps). 2) SSBroyden : 40 outer epochs, each running the SSBroy-den for up to 200 iterations. At the start of each epoch, the collocation batch is randomly regenerated. All computations use float64 precision throughout. 
+
+D. Method 3: PINN – indirect (KKT) formulation a) Neural network architecture: The same two-network architecture as the direct formulation (Section IV-C) is used: 
+
+Yθ for the state and Uψ for the control/adjoint. Since B = I,the first-order optimality condition reduces to βQu − λ = 0 .We therefore define the adjoint by construction as 
+
+Λψ (x, t ) := βQUψ (x, t ),
+
+so that u(x, t ) = Uψ (x, t ) and λ(x, t ) = Λ ψ (x, t ). In this way the optimality condition is enforced exactly and does not need a separate loss term. 
+
+b) Loss function: Following (13), the indirect PINN minimizes 
+
+Lind (θ, ψ ) = wy Ly 
+
+> res
+
++ wλ Lλ 
+
+> res
+
++ wy 
+
+> bc
+
+Ly
+
+> bc
+
++ wλ 
+
+> bc
+
+Lλ 
+
+> bc
+
++ wic Ly 
+
+> ic
+
++ wT LλT . (26) Here Ly
+
+> res
+
+, Ly
+
+> bc
+
+, and Ly 
+
+> ic
+
+are exactly the same as in the direct formulation. Since λ = Λ ψ = βQUψ is enforced by con-struction, the specialized indirect loss omits the stationarity term Lst . The remaining indirect terms are 
+
+Lλ 
+
+> res
+
+= 1
+
+Nint 
+
+> Nint
+
+X
+
+> j=1
+
+−∂tΛψ − ε2∂xx Λψ + (3 Y 2 
+
+> θ
+
+− 1)Λ ψ  
+
+> 2(xj,t j)
+
+,
+
+(27) 
+
+Lλ 
+
+> bc
+
+= 1
+
+Nbc 
+
+> Nbc
+
+X
+
+> j=1
+
+ |∂xΛψ (0 , t j )|2 + |∂xΛψ (1 , t j )|2, (28) 
+
+LλT = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+Λψ (xi, T ) + βT Yθ (xi, T ) 2. (29) Because yd ≡ 0 and βT = 1 here, the last term enforces the adjoint terminal condition λ(x, T ) = −y(x, T ). All loss weights are set to wy = wλ = wy 
+
+> bc
+
+= wλ 
+
+> bc
+
+= wic = wT = 1 .
+
+c) Collocation points and optimizer: Same as the direct formulation: Nint = 20 ,000 interior points, Nbc = 512 
+
+boundary times, 1,000 Adam warm-up steps followed by 
+
+40 SSBroyden epochs (up to 200 iterations each), all in 
+
+float64 .
+
+E. Solution evaluation 
+
+For all three methods, the reported state trajectory y(x, t )
+
+is obtained by feeding the converged control u(x, t ) into the RK4 solver (Section IV-C uses the same N = 513 ,
+
+∆t = 0.05 discretization as the adjoint method) rather than using the PINN’s direct neural-network prediction. This ensures that all methods are compared on the same numerical baseline and that the reported state satisfies the discrete state equation exactly for the given control. The objective values 
+
+JT , Ju, and J = JT + Ju are likewise computed from the solver trajectory using the trapezoidal rule. 
+
+F. Discussion of numerical results 
+
+Figures 1–3 highlight the main differences in formulation, convergence, and accuracy among the adjoint, direct PINN, and indirect PINN approaches. 
+
+a) Direct and indirect PINNs solve different optimiza-tion problems.: The key distinction between the two neural formulations is not merely the training strategy, but the problem being solved. In the direct PINN, the objective functional is placed directly into the loss together with the PDE, boundary, and initial-condition residuals. As a result, the optimization is a penalized surrogate of the original constrained optimal control problem, and the relative weights of the loss terms effectively modify the problem itself. In particular, the state equation is no longer enforced exactly, but only in a soft sense through a weighted residual. Conse-quently, a small total training loss does not necessarily imply that the original PDE-constrained problem has been solved accurately. This effect is clearly visible in Figs. 2 and 3: the direct PINN exhibits a relatively large control error, and its state predicted by the network does not fully match the state recomputed by the numerical solver using the converged control, especially at later times. These discrepancies indicate that the objective term can dominate the weighted loss before the state equation is sufficiently resolved, and the loss function cannot be reduced to zero, as shown in the loss history of direct PINN in Fig 1. By contrast, the indirect PINN is trained on the first-order optimality system itself. Its residual terms correspond to the state equation, adjoint equation, boundary and ini-tial conditions, and terminal optimality condition, and the optimality condition is satisfied by construction. Therefore, once these residuals are driven close to zero, the network approaches a true KKT point of the original optimal control problem, rather than the minimizer of a penalized surrogate. This explains why the indirect formulation gives substantially smaller control and state errors and is much closer to the reference solution, as shown in Figs. 2 and 3. 
+
+b) Implicit regularization and the role of smooth initial-ization.: Another important feature of the PINN solutions is their smoothness. In both PINN formulations, the control is represented by a smooth low-capacity neural network with tanh activations. This parameterization acts as an implicit regularizer: it suppresses high-frequency oscillations and favors low-complexity, smooth controls. The effect is evident in Fig. 2, where both PINN controls are visibly Fig. 1: Loss histories for the three approaches: adjoint opti-mization starting from scratch (top), direct PINN (middle), and indirect PINN (bottom). In the adjoint panel, the legend shows the total objective J , the terminal tracking term JT ,the control regularization term Ju, and the relative L2 error of the control, rel L2(u). In the direct PINN panel, the legend additionally separates the PDE, boundary-condition (BC), and initial-condition (IC) residual losses, together with JT ,
+
+Ju, and rel L2(u). In the indirect PINN panel, the legend further includes the residual losses associated with the adjoint equation ( PDE λ), adjoint boundary condition ( BC λ), and terminal optimality condition ( T (λ)), in addition to the state PDE/BC/IC residuals, the total loss, and rel L2(u). For the PINN cases, only the SSBroyden phase is shown after the short Adam warm-up, and the total wall-clock time of each method is indicated in the panel title. smoother than the control obtained by adjoint optimization starting from scratch. In the discrete adjoint method, the control is represented in a piecewise-constant form, and once 
+
+Fig. 2: Control profiles, shown from top to bottom: ad-joint starting from scratch, direct PINN, indirect PINN, and adjoint initialized from the direct PINN solution, which is treated as the reference value for this optimal control problem. The relative L2 errors of control are shown in titles. Note that according to the optimality condition, the terminal solution is y(T ) = −βQu(T ), β Q = 1 × 10 −3.Fig. 3: State trajectories corresponding to the converged controls, shown from top to bottom: adjoint starting from scratch, direct PINN, indirect PINN, and adjoint initialized from the direct PINN solution. For the PINN-based methods, each panel also compares the state predicted directly by the neural network with the state recomputed by the numerical solver using the converged PINN control. The relative L2
+
+error of each time snapshot is marked in the legend. oscillatory components appear, they are not easily removed during optimization. This is reflected both in the jagged control profile and in the corresponding fluctuations of the state. At the same time, the restarted adjoint result reveals that these oscillations are not intrinsic to the discrete adjoint formulation itself, but are strongly related to initialization. When the adjoint solver is initialized from the smooth direct-PINN control, it converges to a much better discrete optimum, which we treat here as the reference solution. This observation is important: although the direct PINN is not sufficiently accurate by itself, it provides a smooth initial guess that places the adjoint iteration in a much better basin of attraction. In this sense, the PINN acts not only as an optimizer, but also as a regularized initializer for classical solvers. 
+
+c) Second-order refinement and float64 are essential for meaningful PINN convergence.: The loss histories in Fig. 1 show that the indirect PINN continues to improve long after the total loss has already become very small. In particular, around iteration 4000 , the total loss has already dropped to approximately 10 −9, yet the relative control error is still far from its final value. Continued SSBroyden iterations further reduce the error by nearly one order of magnitude, from the 10 −1 level to the 10 −2 level. This late-stage improvement is crucial: it is precisely this regime that separates a visually plausible PINN solution from a quantitatively meaningful solution for optimal control. This behavior highlights two practical requirements. First, second-order or quasi-Newton refinement is indispensable once the optimization enters the small-residual regime; first-order training alone would likely stop too early. Second, double precision is equally important, because the remaining residuals and parameter updates become too small for robust refinement in single precision. The present results therefore support a clear practical guideline: for PDE-constrained PINNs with small or medium-sized networks, a short first-order warm-up followed by a second-order optimizer in 
+
+float64 is not merely helpful, but often necessary to obtain a trustworthy solution. 
+
+d) Practical use of direct PINN, indirect PINN, and adjoint refinement.: From a practical point of view, the three methods serve different purposes. The direct PINN is the easiest formulation to deploy, since it does not require deriving the adjoint equation or the full KKT system. It is therefore the most user-friendly entry point, and it can provide a smooth and physically reasonable initial guess at relatively low implementation cost. In the present example, this makes it a natural warm start for either the discrete adjoint solver or the indirect PINN. The indirect PINN, however, is the most accurate neural formulation. Because it targets the optimality system directly, it achieves much better agreement with the reference control and with the solver-recomputed state. In the current test, it is also competitive in wall-clock cost and even slightly faster than the adjoint optimization started from scratch, while giving a smoother and more accurate solution. More importantly, owing to the implicit regularization of the neural parameterization, the indirect PINN can outperform the ad-joint method when both are started from naive initial guesses. A practical workflow suggested by these results is therefore hybrid: use a direct PINN to obtain a smooth initial control, then refine with either an indirect PINN or a discrete adjoint solve. This combines ease of use, smoothness, and final accuracy. REFERENCES [1] M. Hinze, R. Pinnau, M. Ulbrich, and S. Ulbrich, Optimization with PDE Constraints , ser. Mathematical Modelling: Theory and Applications. Dordrecht: Springer, 2009, vol. 23. [2] M. Hinze, “Discretization of optimal control problems,” in Con-strained Optimization and Optimal Control for Partial Differential Equations , E. Casas and F. Tr¨ oltzsch, Eds. Basel: Birkh¨ auser, 2011. [3] F. Tr¨ oltzsch, Optimal Control of Partial Differential Equations: The-ory, Methods and Applications , ser. Graduate Studies in Mathematics. Providence, RI: American Mathematical Society, 2010, vol. 112. [4] A. Cohen and R. DeVore, “Approximation of high-dimensional para-metric pdes,” Acta Numerica , vol. 24, pp. 1–159, 2015. [5] H. Zhang, Y. Chen, E. Vanden-Eijnden, and B. Peherstorfer, “Sequential-in-time training of nonlinear parametrizations for solv-ing time-dependent partial differential equations,” arXiv preprint arXiv:2404.01145 , 2024. [6] M. Raissi, P. Perdikaris, and G. E. Karniadakis, “Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations,” 
+
+Journal of Computational Physics , vol. 378, pp. 686–707, 2019. [7] G. E. Karniadakis, I. G. Kevrekidis, L. Lu, P. Perdikaris, S. Wang, and L. Yang, “Physics-informed machine learning,” Nature Reviews Physics , vol. 3, no. 6, pp. 422–440, 2021. [8] C. J. Garc´ ıa-Cervera, M. Kessler, and F. Periago, “Control of partial differential equations via physics-informed neural networks,” Journal of Optimization Theory and Applications , vol. 196, no. 2, pp. 391–414, 2023. [9] S. Mowlavi and S. Nabi, “Optimal control of PDEs using physics-informed neural networks,” Journal of Computational Physics , vol. 473, p. 111731, 2023. [10] J. Barry-Straume, A. Sarshar, A. A. Popov, and A. Sandu, “Physics-informed neural networks for PDE-constrained optimization and con-trol,” Communications on Applied Mathematics and Computation ,2025. [11] K.-M. Na and C.-H. Lee, “Physics-informed deep learning approach to solve optimal control problem,” in AIAA SciTech 2024 Forum , 2024, p. 0945. [12] J. Barry-Straume, A. Sarshar, A. A. Popov, and A. Sandu, “Physics-informed neural networks for pde-constrained optimization and con-trol,” Communications on Applied Mathematics and Computation , pp. 1–24, 2025. [13] T. Meng, Z. Zhang, J. Darbon, and G. Karniadakis, “Sympocnet: Solv-ing optimal control problems with applications to high-dimensional multiagent path planning problems,” SIAM Journal on Scientific Com-puting , vol. 44, no. 6, pp. B1341–B1368, 2022. [14] Z. Zhang, C. Wang, S. Liu, J. Darbon, and G. E. Karniadakis, “A time-dependent symplectic network for nonconvex path planning problems with linear and nonlinear dynamics,” SIAM Journal on Scientific Computing , vol. 47, no. 4, pp. C769–C794, 2025. [15] A. Alla, G. Bertaglia, and E. Calzola, “A pinn approach for the online identification and control of unknown pdes,” Journal of Optimization Theory and Applications , vol. 206, no. 1, p. 8, 2025. [16] N. Altm¨ uller, L. Gr¨ une, and K. Worthmann, “Receding horizon optimal control for the wave equation,” in 49th IEEE Conference on Decision and Control (CDC) , 2010, pp. 3427–3432. [17] A. Alla, D. Kalise, and V. Simoncini, “State-dependent riccati equation feedback stabilization for nonlinear pdes,” Adv Comput Math , vol. 49, no. 9, 2023. [18] E. Kiyani, K. Shukla, J. F. Urb´ an, J. Darbon, and G. E. Karniadakis, “Optimizing the optimizer for physics-informed neural networks and kolmogorov-arnold networks,” Computer Methods in Applied Mechan-ics and Engineering , vol. 446, p. 118308, 2025.

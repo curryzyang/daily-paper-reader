@@ -1,0 +1,763 @@
+Title: Neural Operators for Multi-Task Control and Adaptation
+
+URL Source: https://arxiv.org/pdf/2604.03449v1
+
+Published Time: Tue, 07 Apr 2026 00:11:28 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Neural Operators for Multi-Task Control and Adaptation 
+
+David SeWell dsewell@utexas.edu 
+
+Xingjian Li xingjian.li@austin.utexas.edu 
+
+Stepan Tretiakov stepan@utexas.edu 
+
+Krishna Kumar krishnak@utexas.edu 
+
+David Fridovich-Keil dfk@utexas.edu The University of Texas at Austin 
+
+Abstract 
+
+Neural operator methods have emerged as powerful tools for learning mappings between infinite-dimensional function spaces, yet their potential in optimal control remains largely unexplored. We focus on multi-task control problems, whose solution is a mapping from task description (e.g., cost or dynamics functions) to optimal control law (e.g., feedback policy). We approximate these solution operators using a permutation-invariant neural operator ar-chitecture. Across a range of parametric optimal control environments and a locomotion benchmark, a single operator trained via behavioral cloning accurately approximates the solution operator and generalizes to unseen tasks, out-of-distribution settings, and vary-ing amounts of task observations. We further show that the branch–trunk structure of our neural operator architecture enables efficient and flexible adaptation to new tasks. We de-velop structured adaptation strategies ranging from lightweight updates to full-network fine-tuning, achieving strong performance across different data and compute settings. Finally, we introduce meta-trained operator variants that optimize the initialization for few-shot adaptation. These methods enable rapid task adaptation with limited data and consistently outperform a popular meta-learning baseline. Together, our results demonstrate that neural operators provide a unified and efficient framework for multi-task control and adaptation. 
+
+1 Introduction 
+
+In many control applications, one must solve not a single optimization problem but a family of related ones, such as navigating to different goal locations, tracking reference trajectories under varying vehicle parameters, or planning paths through environments with different obstacle and terrain configurations. Each such variation defines a distinct task, specified by the choice of dynamics, cost function, or constraints that characterize the control problem. The fundamental challenge is that even modest changes in these specifications can induce substantially different optimal policies, so a successful multi-task approach must capture how changes in task specifications translate into changes in the desired policy. This relationship is often highly nonlinear, making naive parameter-sharing or task-conditioning strategies insufficient in many practical scenarios. Furthermore, when the amount of available task data varies, some tasks may have many expert demonstrations while others have few. The learned model must be robust to this heterogeneity. This structure suggests that multi-task control is naturally formulated as a mapping between function spaces: from task-defining functions to optimal policies. This perspective motivates our use of neural operators, which are designed to approximate mappings between function spaces and are thus a natural model class for multi-task control. From this perspective, common approaches to multi-task control can be viewed as approximations to the underlying structure of the problem: a mapping between infinite-dimensional function spaces. Methods that learn a separate policy per task (Teh et al., 2017; Haldar & Pinto, 2023) ignore the shared structure across tasks and scale poorly. Task-embedding approaches represent tasks as finite-dimensional vectors, but their performance can be sensitive to architectural choices and variability in the number of data points for the task-defining function. Meta-learning methods such as Model-Agnostic Meta-Learning MAML (Finn et al., 1      
+
+> arXiv:2604.03449v1 [cs.LG] 3 Apr 2026 …
+> c1
+> c2
+> cN
+> π*1
+> π*2
+> …
+> π*N
+> Cost Policy
+> c(xt,ut)π(xt)
+> ∫c(xt,ut)dt
+
+## 𝒮 Figure 1: A point-to-point multi-task control problem. Left: A single point-to-point task. Middle: A series of tasks represented by their cost functions ci. Right: The corresponding optimal policies π∗ 
+
+> i
+
+where the small arrows correspond to the control outputs at different x,y positions. This is naturally modeled as a mapping between function spaces. 2017) learn a parameter initialization that enables rapid adaptation to new tasks with few gradient steps. Unlike neural operators, however, MAML does not explicitly model the mapping between function spaces. In contrast, neural operators are designed to learn mappings between function spaces directly, enabling zero-shot predictions at inference time. This makes them particularly well suited for settings where new policies must be produced quickly across many tasks at deployment. Neural operators have been successfully applied across a wide range of scientific computing problems, in-cluding weather forecasting, fluid dynamics, and materials science (Kovachki et al., 2023; Nghiem et al., 2023; Lu et al., 2021; Pathak et al., 2022; Tretiakov et al., 2025; Li et al., 2020a), supported by universal approximation guarantees for continuous operators between Banach spaces (Chen & Chen, 1995). A useful property of several neural operator (NO) architectures is their ability to represent complex, nonlinear map-pings between function spaces while remaining invariant to both the cardinality and ordering of samples in the input. Despite this natural fit, their application to control problems remains largely unexplored. In this work, we investigate the SetONet architecture (Tretiakov et al., 2025), built on DeepONet (Lu et al., 2021), as a model for multi-task control. We train an operator via behavioral cloning and show that it accurately approximates the mapping from task-defining functions to optimal policies. In practice, the pretrained operator may encounter tasks that differ from those seen during training. To handle this, we develop several adaptation strategies that exploit the branch–trunk decomposition of Se-tONet, ranging from last-layer updates to full-network fine-tuning. We further propose two meta-training variants, SetONet-Meta and SetONet-Meta-Full, which optimize the operator initialization for rapid few-shot adaptation via a bi-level objective inspired by MAML (Finn et al., 2017). We evaluate all methods on four parametric optimal control environments and a locomotion task from the iMuJoCo benchmark (HalfCheetah-v3) (Patacchiola et al., 2023). Our main contributions are: 
+
+• Neural operators for multi-task control. We establish neural operators as an effective model for multi-task control, a setting that has been relatively underexplored in the neural operator literature. We demonstrate through a series of experiments on environments of varying complexity that NOs can accurately approximate the solution operator over a distribution of tasks. Moreover, because the architecture operates on variable-size, unordered task data, the learned operator generalizes across amounts of data not seen during training. 
+
+• Structured adaptation for new tasks. While the pretrained operator performs well on tasks near the training distribution, accuracy degrades on out-of-distribution tasks or when training data is limited. We show that the neural operator architecture enables a spectrum of efficient adaptation strategies, from lightweight last-layer updates to full-network fine-tuning. Partial fine-tuning achieves 2accuracy comparable to full-network fine-tuning at a fraction of the cost, and cost-based fine-tuning allows adaptation without any explicit expert demonstrations. 
+
+• Meta-trained operators for few-shot adaptation. We propose two novel meta-training variants that optimize the operator initialization for rapid adaptation. SetONet-Meta restricts the inner loop to a subset of model parameters, providing data-efficient updates that are especially effective when pretraining data is limited or adapting to tasks that are close to the training distribution. SetONet-Meta-Full is a model that adapts the full set of model parameters, enabling rapid generalization to tasks outside the training distribution. Each of the meta-training models has trade-offs depending on initial training data, online compute limitations, and whether the downstream task is OOD. Both variants consistently outperform the MAML baseline across all environments. 
+
+2 Related Work 
+
+2.1 Data-Driven Optimal Control 
+
+Optimal control plays a foundational role in modeling and decision-making for complex dynamical sys-tems, with widespread applications in robotics, aerospace, and process engineering (Betts, 2010; Bertsekas, 2012; Rawlings et al., 2020). Classical approaches such as LQR and MPC provide strong theoretical guar-antees, but rely on repeatedly solving computationally intensive optimization problems online, which can limit their scalability to high-dimensional and highly nonlinear systems. These challenges have motivated learning-based and data-driven approaches that aim to approximate optimal control policies through of-fline learning, effectively amortizing the cost of repeated online optimization. A prominent strategy is to leverage the demonstrations generated by expert controllers and to recast control as a supervised learning problem (Hertneck et al., 2018; Karg & Lucia, 2020; Chen et al., 2018). This paradigm enables faster in-ference at runtime than classical methods and is often more suitable for real-time control tasks. Leveraging known dynamics and expert demonstrations, training the policy model can often be done more efficiently and accurately compared to model-free reinforcement learning (Reddy et al., 2019). 
+
+2.2 Multi-Task Control 
+
+Learning a controller that can adapt to different tasks remains a challenge. When the total number of tasks is limited, a common approach, particularly in reinforcement learning, is to learn a separate policy for each task. This is often followed by a distillation step, in which information shared across tasks is consolidated into a single policy, as proposed in (Teh et al., 2017). Variants of this distillation paradigm have been shown to improve performance by explicitly conditioning the final policy model with its task label (Haldar & Pinto, 2023). Although effective when the number of tasks is small and sufficient training data is available, such approaches struggle to scale: the computational cost of training and storing separate policies becomes prohibitively high for complex problems. Neural operators sidestep these scalability issues by learning a single mapping from task descriptions to policies, avoiding the need to train or store separate models as the number of tasks grows. Given such limitations, it is often preferable to learn a central policy that can perform well across a family of tasks (Ammar et al., 2014; Deisenroth et al., 2014). For parametric optimal control problems in which each task is uniquely defined by a set of problem-specific parameters, Drgoňa et al. (2024) propose aug-menting the policy’s state inputs with vectors of explicit task parameterizations. Although straightforward to implement, this assumption can be difficult to satisfy in practice, particularly in reinforcement learning settings where accurate task models are not always accessible. A common alternative is to introduce learned task representations (Sodhani et al., 2021; Humplik et al., 2019; Rakelly et al., 2019; Marza et al., 2024; Lan et al., 2019; Hansen et al., 2023). These approaches typically learn a task embedding separately from the policy, mapping task-relevant information to a fixed-dimensional vector. These learned representations can then be used in the policy training as conditioning explicitly or implicitly. Although effective in many settings, this formulation introduces a representational bottleneck: task descriptions must be compressed into a fixed-length vector, making performance sensitive to observation resolution, ordering, and task coverage. Moreover, the assumptions required for convergence guarantees and other theoretical results are often quite restrictive (Tutunov et al., 2018). 3More recently, set-based and attention-based architectures have been explored to handle variable-size task inputs in reinforcement learning. Mern et al. (2020) propose an attention-based input representation that is invariant to the ordering and number of objects in the observation, improving sample efficiency in environ-ments with exchangeable entities. Zhou et al. (2022) formalize this setting through entity-factored Markov decision processes (MDPs) and show that Deep Set and Self-Attention policy architectures enable composi-tional generalization to varying numbers of entities at test time. These approaches share some properties with the SetONet model used in our work; namely, a permutation-invariant encoder that accommodates variable-size inputs. However, they operate at the level of state representations and policy conditioning rather than learning a mapping between function spaces. The operator methods used in our work provide a principled framework for learning the infinite-dimensional mappings between tasks and control policies. Lastly, meta-learning provides an alternative paradigm for multi-task control, achieving task adaptation not through architecture design but through a training objective that explicitly optimizes for rapid adaptation from few examples. Methods such as MAML (Finn et al., 2017) and its variants (Collins et al., 2020; Barman et al., 2024) aim to learn a policy initialization from which task-specific policies can be obtained with limited data and a small number of gradient steps, without requiring explicit task representations. While conceptually appealing, these approaches incur additional computation overhead at online deployment, limiting their use in real-time control settings, where fast and reliable adaptation is critical. In contrast to these approaches, neural operators offer a principled approach that avoids both the representational bottleneck of fixed-dimensional task embeddings and the computational overhead of gradient-based adaptation at deployment. In Section 5.4, we empirically demonstrate these advantages by comparing NO based policies against a MAML baseline across several adaptation scenarios, including zero-shot generalization and rapid online fine-tuning. 
+
+2.3 Neural Operators 
+
+Neural operators (NOs) have emerged as a principled approach for learning mappings between infinite-dimensional function spaces, offering strong theoretical support (Kovachki et al., 2023; 2021; Lu et al., 2021) and robust empirical performance across a wide range of differential equations and broader scientific computing problems (Azizzadenesheli et al., 2024; Choi et al., 2024; Rashid et al., 2022; Li et al., 2025). By formulating task adaptation directly as an operator learning problem, neural operators naturally align with multi-task optimal control settings and enable efficient task-dependent adaptation with minimal online computational overhead. Despite this potential, their application to control problems remains relatively underexplored. Recent work has shown that solution operators can be learned in an unsupervised manner for mean-field games (Huang & Lai, 2024), with further error analysis and demonstrations of viability for certain open-loop control problems provided in Xu et al. (2025). However, much of the existing literature still focuses on single-task control formulations (Bhan et al., 2023), highlighting the need for broader investigation of neural operators as policy learners for general parametric control problems. Additionally, while comparisons and integrations of MAML-style meta-learning and neural operators have been explored in simulation and design contexts (Wang et al., 2024), their relative advantages and trade-offs in control applications remain poorly understood. Our work aims to address these gaps. 
+
+3 Preliminaries 
+
+In this section, we formulate the class of parametric optimal control problems that defines the multi-task control setting (Section 3.1), discuss imitation learning: a method for approximating optimal policies given expert demonstrations (Section 3.2) and introduce the neural operator architectures DeepONet and SetONet (Section 3.3). 
+
+3.1 Parametric Optimal Control Problems 
+
+Consider a dynamical system with state xt ∈ X ⊂ Rdx and control input ut ∈ U ⊂ Rdu at discrete times 
+
+t ∈ [T ] := {0, 1, . . . , T }. Let Φ ⊂ Rdϕ and Ψ ⊂ Rdψ denote the sets of cost and dynamics parameters. Each task is specified by a pair (ϕ, ψ) ∈ Φ × Ψ, where ϕ determines the stage and terminal costs (ℓ, ℓ T ) and ψ
+
+determines the dynamics g. We seek a feedback policy π : X × [T − 1] × Φ × Ψ → U that solves the following 4discrete-time parametric optimal control problem (pOCP): 
+
+π∗(· ; ϕ, ψ) ∈ arg inf  
+
+> π
+
+Ex0∼Px0
+
+[T −1∑
+
+> t=0
+
+ℓ(xt, π (xt, t ; ϕ, ψ), t ; ϕ) + ℓT (xT ; ϕ)
+
+]
+
+, (1) where Px0 denotes some known probability distribution over the initial state x0, the state trajectory evolves according to the closed-loop dynamics 
+
+xt+1 = g(xt, π (xt, t ; ϕ, ψ), ψ) ∀ t ∈ [T − 1] , (2) and the control input at time t is generated by the feedback policy π, i.e. 
+
+ut = π(xt, t ; ϕ, ψ) ∀ t ∈ [T − 1] . (3) For any fixed task (ϕ, ψ), and initial fixed state x0, the objective (1) together with (2) and (3) define a standard finite-horizon optimal control problem, which can be solved via classical approaches, e.g. shooting or collocation (Jacobson & Mayne, 1970; Hargraves & Paris, 1987). Although each task is generated by a finite-dimensional parameter, we assume that there is no direct access to (ϕ, ψ) and instead observe only pointwise evaluations of the induced cost or dynamics functions. Across the family of tasks, the resulting solutions define a mapping S from the task-defining functions parameterized by (ϕ, ψ) to the corresponding optimal feedback law π∗ ∈ Π = {π∗(· ; ϕ, ψ) : (ϕ, ψ) ∈ Φ × Ψ}; this is precisely the object we will aim to approximate with neural operators. To isolate the effects of cost and dynamics on the solution operator, we vary only one set of parameters at a time, with ϕ ∼ PΦ and ψ ∼ PΨ sampled independently. We therefore focus on approximating the following two solution operators: 
+
+Sψ : F → Π, Sϕ : G → Π, (4) For Sψ , we assume fixed dynamics parameters ψ, and for Sϕ, fixed cost parameters ϕ. The cost function space is denoted F = { (ℓ(· ; ϕ), ℓ T (· ; ϕ)) : ϕ ∈ Φ } and the dynamics function space G = { g(· ; ψ) : ψ ∈ Ψ }.Note that even though the input function space for Sψ does not depend on the dynamics of the system, 
+
+Π always does. Here, we assume that F and G are Banach spaces. Concretely, Sψ maps from F onto 
+
+{π∗(· ; ϕ, ψ) : ϕ ∈ Φ} ⊂ Π, and Sϕ maps from G onto {π∗(· ; ϕ, ψ) : ψ ∈ Ψ} ⊂ Π. The setting in which the input and output function spaces are accessible only through finite collections of pointwise samples is precisely the regime addressed by neural operator architectures, which we introduce in Section 3.3. 
+
+3.2 Imitation Learning 
+
+Given access to task functions ℓ(· ; ϕ), ℓ T (· ; ϕ) and g(· ; ψ) and an expert solver for the paramet-ric optimal control problem (1), we can generate demonstrations consisting of m state–action pairs 
+
+{(xj , t j , π ∗(xj , t j ; ϕ, ψ)) }mj=1 where uj = π∗(xj , t j ; ϕ, ψ) for a particular task (ϕ, ψ). Here we use π∗ to denote the optimal policy to the problem. Behavioral cloning (BC) (Pomerleau, 1988), is a widespread technique for training a parametric policy ˆπθ , by minimizing the following loss: 
+
+LBC (θ) = 1
+
+m
+
+> m
+
+∑
+
+> j=1
+
+∥∥ˆπθ (xj , t j , ϕ, ψ) − π∗(xj , t j ; ϕ, ψ)∥∥2. (5) In the single-task setting, this results in a policy that mimics the expert for one fixed choice of (ϕ, ψ). This form of imitation learning is appealing because it reduces the problem of learning a policy to a supervised learning problem. In the multitask setting, demonstrations are collected across a family of tasks; for example, ϕi ∼ PΦ for 
+
+i = 1 , . . . , N with ψ held fixed. The goal is then to learn a single model that, given the information identifying the current task, produces a task-specific policy. A naïve approach is to train a separate policy per task, but this scales poorly with the number of tasks and does not exploit any shared structure in the family of tasks. Alternatively, a single policy can be conditional on a task representation, but this introduces challenges discussed in Section 2.2. The operator learning perspective developed in Section 4.1 offers a principled 5alternative: rather than conditioning on a finite-dimensional task embedding, the model receives pointwise evaluations of the task-defining function and learns a mapping to a space of expert policies. This multi-task behavior cloning approach retains the simplicity of (5) while still being able to learn the shared structure across tasks. 
+
+3.3 Neural Operators 
+
+In this work, we will approximate the solution operators of (4) primarily using SetONet (Tretiakov et al., 2025), a neural operator architecture that builds on DeepONet (Lu et al., 2021). DeepONet is grounded in the universal approximation theorem for operators (Chen & Chen, 1995), which establishes that continuous operators between Banach spaces can be approximated to arbitrary accuracy by a neural network comprising two sub-networks called the branch network and trunk network . SetONet inherits this theoretical foundation and additionally introduces a permutation-invariant set encoder in the branch network, making it naturally compatible with variable-sized, unordered input data, properties that are particularly advantageous in control settings where the number and arrangement of task observations may vary. Other popular operator learning approaches such as Fourier Neural Operators (FNO) (Li et al., 2020a) and Graph Kernel Networks (Li et al., 2020b) impose spectral or locality-based inductive biases that, while effective for many PDE problems, are less clearly motivated in parametric optimal control. Here we briefly describe the SetONet setup and architecture. Consider the solution operator Sψ : F → Π (the dynamics-varying case is analogous). An input function ℓi ∈ F is observed only by pointwise evaluations at a finite number of context points x ∈ Rdx , and the output expert policy π∗ ∈ Π is predicted at a finite number of query locations y ∈ Rdy . The input and output functions may require multiple inputs as context ( xt, ut, t ), which we omit for brevity in this section. SetONet comprises a trunk network , which learns a collection of 
+
+p basis functions {b1, b 2, . . . , b p} in the policy space Π, and a branch network that maps a variable-sized set of input function evaluations to the associated coefficients {c1, c 2, . . . , c p} via a permutation-invariant set encoder. The basis functions bk may be vector-valued (e.g., bk ∈ Rdu for control outputs) and the coefficients 
+
+ck ∈ R. The operator is approximated as: 
+
+Sψ (ℓi)( y) ≈ T θ (ℓi)( y) = 
+
+> p
+
+∑
+
+> k=1
+
+ck(ℓi) bk(y), (6) where θ are the learned parameters of both the branch network ( θbranch ) and the trunk network ( θtrunk ). Labels come in the form of samples from the input and output function spaces ℓi ∈ F and π∗ 
+
+> i
+
+∈ Π evaluated at a finite number of sensor locations and query locations. Concretely, for each training instance i we assume access to (i) a context set of samples of an input function ℓi ∈ F at mi different sensor locations {xij }mi
+
+> j=1
+
+,
+
+Ci = {(xij , ℓ i(xij )) }mi
+
+> j=1
+
+, (7) and (ii) targets consisting of evaluations of the output policy π∗ 
+
+> i
+
+= Sψ (ℓi) ∈ Π at ni different query locations 
+
+{yik }ni
+
+> k=1
+
+, e.g., 
+
+{(yik , π ∗ 
+
+> i
+
+(yik )) }ni
+
+> k=1
+
+. (8) The neural operator Tθ is trained by minimizing the following empirical MSE over K pairs of input-output functions {(ℓi, π ∗ 
+
+> i
+
+)}Ki=1 :
+
+L(θ) = 1
+
+K
+
+> K
+
+∑
+
+> i=1
+
+1
+
+nini∑
+
+> k=1
+
+∥T θ (ℓi)( yik ) − π∗ 
+
+> i
+
+(yik )∥22 (9) This decomposition is illustrated in Figure 2 for the case where F is the space of cost functions and the output space Π is the space of optimal control policies. Because the branch network uses a set encoder, predictions are invariant to the ordering of samples in Ci and the context set size mi may vary freely across tasks and over time. There are no restrictions on the query locations, which can be arbitrarily chosen at training or test time. Although the expert trajectories used in our experiments are generated by open-loop solvers, the operator learns a feedback mapping conditioned on the current state. Along the expert trajectory, the open-loop and closed-loop representations coincide, and the additional state dependence allows the learned policy to generalize beyond the nominal trajectory. 6Figure 2: DeepONet/SetONet architecture: Here we show the mapping Tθ [ℓi] → ˆπi, with pointwise evaluations of ℓi (in red) and of ˆπi at the point y. The branch network maps sensor locations (x, u ) of a cost function ℓ(x, u ; ϕ) to task-dependent coefficients {ck(ℓ)}pk=1 . The red points indicate the pointwise samples of ℓi. The trunk maps query locations y = ( x, t ) to a set of learned basis functions {bk(y)}pk=1 . Their inner product yields the predicted control output at the query location y
+
+4 Methodology 
+
+We now describe how the behavioral cloning objective of Section 3.2 and the neural operator approach of Section 3.3 combine to produce a practical method for multi-task control. In Section 4.1, we show how the SetONet architecture can be trained to approximate the solution operators defined in Section 3.1 using ex-pert demonstrations collected across a distribution of tasks. In principle, the pretrained operator can predict policies for new tasks in a single forward pass. In practice, however, approximation error, limited training data, and distributional shift between training and deployment tasks can degrade zero-shot predictions. We therefore develop strategies for adapting the pretrained operator to new tasks at deployment: fine-tuning with expert demonstrations, fine-tuning with cost feedback when expert demonstrations are unavailable (Sec-tion 4.2), and a meta-training procedure that explicitly optimizes the operator for rapid few-shot adaptation (Section 4.3). 
+
+4.1 Multi-Task Behavioral Cloning via Operator Learning 
+
+We now instantiate the behavioral cloning objective of Section 3.2 within the operator learning approach of Section 3.3 to approximate the solution operators Sψ and Sϕ defined in (4). 
+
+Data generation. For concreteness, we will consider the cost-varying setting in which the dynamics ψ are fixed and ϕi ∼ PΦ for i = 1 , . . . , N (the dynamics-varying case is analogous). For each sampled task ϕi, we obtain an expert policy πexp  
+
+> i
+
+≈ π∗ 
+
+> i
+
+using a suitable optimal control solver (see Section 5.1 for specific solvers used) or RL algorithm (Soft Actor Critic (SAC) for iMuJoCo). We write πexp i to make clear that the policy we are sampling may not exactly match π∗ 
+
+> i
+
+. In the OCP environments, πexp  
+
+> i
+
+closely approximates the optimal feedback law; in the iMuJoCo environments, it is a learned policy that may be suboptimal. We consider each of these solvers as producing our expert training target πexp  
+
+> i
+
+. For brevity, we write ℓi for the cost function of the i-th task, encompassing both stage ℓi(xt, ut, t ) and terminal ℓi(xt, T ) costs (ℓ(· ; ϕi), ℓ T (· ; ϕi)). Each training instance is thus a pair of functions: a task-defining input ℓi and the corresponding expert policy 
+
+πexp  
+
+> i
+
+.
+
+Neural operators for behavioral cloning Instantiating the SetONet model of Section 3.3, we construct for each task i:1. A context set Ci = {(( xij , uij , t ij ), ℓ i(xij , uij , t ij )) }mi 
+
+> j=1
+
+of pointwise cost evaluations at mi sensor locations, which the branch network uses to encode the task identity without requiring access to ϕi.2. Supervised targets {(yik , π exp  
+
+> i
+
+(yik )) }ni 
+
+> k=1
+
+of expert policy evaluations at ni query locations, where 
+
+yik = ( xik , t ik ).7The context set structure above applies directly to the cost-varying setting, but our model accom-modates other task specifications with only a change in what the context encodes. In the dynamics-varying setting (with cost ϕ fixed, ψi ∼ PΨ), the context set consists of dynamics evaluations Ci =
+
+{(( xij , uij ), g(xij , uij ; ψi)) }mi
+
+> j=1
+
+, where each context point is a state–control pair and the observed value is the resulting next state. While we focus on specific representations of the input function for the cost-varying and dynamics-varying settings described above, we note that the choice of context encoding is not unique. Alternative representations, whether explicit or implicit, can be used provided they sufficiently char-acterize the task. Similarly, for a reference tracking scenario, an implicit representation of cost may be given by a set of waypoint locations. In all cases, the supervised targets for the output function space remain expert policy evaluations, the branch network receives the task-defining context, and the trunk network receives states and times at which the policy is to be predicted. The complete details for each environment are given in Section 5.2. We approximate the operator Sψ ≈ T θ by minimizing the empirical loss (9) on N sets of task contexts. Then, given a new context set Ci′ , Tθ predicts the corresponding feedback policy at arbitrary query locations: 
+
+Tθ (ℓi′ )( y) ≈ πexp  
+
+> i′
+
+(y) or Tθ (gi′ )( y) ≈ πexp  
+
+> i′
+
+(y) when the input function is the space of dynamics functions. At test time, this amounts to approximating an expert policy on an unseen task via a single forward pass, without re-solving the underlying optimal control problem (1). The formulation above and in Section 3.1 assumes that the context set consists of pointwise evaluations of a known input function. In practice, this assumption can be relaxed. For example, in our obstacle avoidance experiments the context set encodes obstacle geometry rather than evaluations of a smooth cost function, and in the iMuJoCo environments the context set consists of state-action transition samples rather than evaluations of a known dynamics model. In both cases, the branch network receives a set of tuples that implicitly characterize the task, and the architecture operates identically. 
+
+4.2 Task-Specific Adaptation 
+
+In the multi-task setting of Section 4.1, the operator Tθ is trained on tasks sampled from distributions PΦ
+
+and PΨ. At deployment, we may encounter a task that was not seen during training but is drawn from the same distribution. The operator Tθ trained in Section 4.1 provides a global approximation to the solution operator across the task distribution. When training data is limited or the target task differs substantially from the training distribution, the pretrained operator alone may not provide sufficient accuracy. In such cases, we can adapt the operator to the new task using a small amount of task-specific data. We consider two general adaptation settings depending on what information is available for the new task. 
+
+Adaptation with expert demonstrations. When a small number of expert state–action pairs Di =
+
+{(yj , u∗ 
+
+> j
+
+)}ni 
+
+> j=1
+
+are available for the target task, we can refine the operator by minimizing the imitation loss over these demonstrations. Given a new task i with sensor locations Ci, we minimize 
+
+θ∗ = arg min 
+
+> θ
+
+1
+
+ni
+
+∑  
+
+> (yj,u∗
+> j)∈D i
+
+∥∥Tθ (fi)( yj ) − u∗
+
+> j
+
+∥∥2, (10) where fi is encoded via Ci. This reduces adaptation to a supervised fine-tuning problem: the pretrained operator provides a warm start, and the demonstrations steer it toward the target task’s policy. 
+
+Adaptation with cost feedback. In settings where expert demonstrations are unavailable but the task-specific cost function and dynamics model are known, we can bypass the behavioral cloning objective entirely and instead fine-tune the operator by directly minimizing the control objective over unrolled trajectories. Given differentiable dynamics xt+1 = g(xt, ut; ψ) and cost ℓ(xt, ut, t ; ϕ), we roll out the current policy 
+
+ˆπθ = Tθ (ℓ) from a batch of initial states {x(k)0 } and minimize the total trajectory cost: 
+
+Lcost (θ) = 1
+
+M
+
+> M
+
+∑
+
+> m=1
+
+[T −1∑
+
+> t=0
+
+ℓ(x(m) 
+
+> t
+
+, ˆπθ (x(m) 
+
+> t
+
+, t ), t ; ϕ) + ℓT
+
+(x(m) 
+
+> t
+
+; ϕ)]
+
+, (11) where each trajectory is obtained by rolling out the policy from the initial state x(m)0 through the differentiable dynamics, and M is the number of initial conditions sampled. Gradients of (11) with respect to θ are 8computed via backpropagation through the entire rollout. This is particularly appealing for tasks where the cost structure is known but expert solutions are unavailable or expensive to obtain, as it leverages the pretrained policy as a warm start and refines it using only cost feedback and a dynamics model, bypassing the difficulty of training the policy from scratch. 
+
+Which parameters to adapt. Recall that Tθ (ℓi)( y) = ∑pk=1 ck(ℓi) bk(y), where the trunk produces basis functions {bk} shared across all tasks and the branch produces task-dependent coefficients {ck}. The branch– trunk decomposition admits a spectrum of fine-tuning strategies that range from full parameter updates to partial retraining of the policy model (Zhu et al., 2023; Goswami et al., 2022; Xu et al., 2023; Wu, 2024; Zhang et al., 2024). We consider three strategies, listed in decreasing order of adaptation capacity: 
+
+• Full-network fine-tuning. As a baseline, we update all trainable parameters θ = ( θbranch , θ trunk )
+
+during adaptation. Full updates typically yield the lowest error but incur the highest computational cost and are most susceptible to overfitting when few demonstrations are available. In subsequent sections we refer to this as SetONet-FT .
+
+• Branch-only fine-tuning. If the target policy lies approximately in the span of the learned basis functions, π(·) ≈ span {b1, . . . , b p}, it suffices to retrain only the branch network while keeping the trunk fixed. This restricts adaptation to finding new coefficients that best represent the target task’s policy in the existing basis, reducing both the number of trainable parameters and the risk of catas-trophic forgetting. This strategy follows naturally from the operator fine-tuning literature (Goswami et al., 2022; Zhang et al., 2024) and mirrors the common practice in robotics of fine-tuning a task-specific head on top of a frozen backbone (Brohan et al., 2024; Team et al., 2024). We refer to this variant as Full-Branch in our experiments. 
+
+• Last-layer fine-tuning. As the lightest-weight alternative, we freeze all parameters except the final output layer of the branch network ( Last-Branch ), the final output layer of the trunk network (Last-Trunk ), or both ( Last-Both ) (Xu et al., 2023; Zhu et al., 2023; Wu, 2024). By restricting updates to the output heads of each sub-network, this approach keeps the adaptation cost minimal while still allowing limited flexibility in both the coefficients and the basis functions. These three strategies offer a clear trade-off between adaptation capacity and computational cost. We com-pare them empirically in Section 5.3, where we find that branch-only fine-tuning achieves accuracy compara-ble to full-network updates at a fraction of the cost, suggesting that the pretrained basis functions transfer well across tasks, also highlighting the practical feasibility of fast online adaption of NO controllers. 
+
+4.3 Meta-Training for Rapid Adaptation 
+
+The approaches taken in Section 4.2 are based on a neural operator that was pretrained with the standard behavioral cloning objective (5) and subsequently adapted to new tasks. As shown in Section 5, this pretrained operator generalizes well across a range of tasks and adaptation strategies. Here we investigate replacing the behavioral cloning loss with one that is designed for fast adaptation. This can have benefits in a number of settings, for instance when the amount of task-specific data available at deployment is much smaller than what was used during training. Additionally, when pretraining data itself is limited, meta-training can compensate: as we show in Section 5.4, SetONet-Meta (meta update branch only) improves over the pretrained model on P2P-Cost-Small, where standard pretraining alone does not fully capture the task distribution. To target these settings, we modify the training pipeline using a bi-level formulation inspired by MAML (Finn et al., 2017) that trains a neural operator whose initialization is specifically optimized for few-shot task adaptation. This procedure is split into inner and outer loops; we consider two variants that differ in which parameters participate in the inner loop, yielding different trade-offs between adaptation speed and representational flexibility. A commonly cited limitation of meta-learning is that the learned initialization may not generalize well to tasks far from the training distribution. We show that by adapting both the branch and trunk networks during the inner loop, SetONet-Meta-Full (meta update full network) is able to adapt to an OOD task on the Quadrotor environment. 9Outer  Loop  - Meta  update  over  batch  of  tasks 
+
+Inner  Loop  - Per  Task  Adaptation 
+
+θk
+
+<latexit sha1_base64="hclLkF3Y8T1AyfV2caCf3ggU8W8=">AAACN3icbVBNbxMxEPUWaEugJZQjF4sIqb1Eu1VVeqxoDz0gFCSSVsqmq1ln0lj1elf2LCKy/K964W/0BhcOIMSVf4CTrBD9eJKl5zfzNDMvr5S0FMdfo5UHDx+trq0/bj15urH5rP18a2DL2gjsi1KV5iwHi0pq7JMkhWeVQShyhaf55dG8fvoJjZWl/kizCkcFXGg5kQIoSFn7faohV5C5lKZIkKWEn8nlBrSYet/iDdICaCpAuXd+2/37HPtMnrulhYz3fidrd+JuvAC/S5KGdFiDXta+TselqAvUJBRYO0ziikYODEmh0LfS2mIF4hIucBiohgLtyC3u9vx1UMZ8UprwNPGF+r/DQWHtrMhD53xle7s2F++rDWuaHIyc1FVNqMVy0KRWnEo+D5GPpUFBahYICCPDrlxMwYCgEHUrhJDcPvkuGex2k/3u/oe9zuHbJo519pK9YtssYW/YITthPdZngl2xb+wH+xl9ib5Hv6Lfy9aVqPG8YDcQ/fkLy/+tJw==</latexit> →ωbranch L(Dtr 
+
+i )
+
+SetONet-Meta 
+
+<latexit sha1_base64="xSQAURWsUXfe6oMOj5JH4N6W2EU=">AAACJ3icbVBNSxxBFOxRE83maxKPXhqXwOayzAQxnkRMDh5yMODqws5meNP7xm3s6Rm630iWYf6NF/9KLoJKMMf8E3vWQYymoKGoqke/V0mhpKUg+OMtLC49e7688qLz8tXrN2/9d+8PbV4agQORq9wME7CopMYBSVI4LAxClig8Sk6+NP7RKRorc31AswLHGRxrmUoB5KTY3440JAriKqIpEtQd3iLKgKYCVPWt7t3zr3Usf7go/qSKTF1/jP1u0A/m4E9J2JIua7Ef+5fRJBdlhpqEAmtHYVDQuAJDUiisO1FpsQBxAsc4clRDhnZcze+s+QenTHiaG/c08bn6cKKCzNpZlrhks7F97DXi/7xRSenWuJK6KAm1uPsoLRWnnDel8Yk0KEjNHAFhpNuViykYEOSq7bgSwscnPyWHn/rhZn/z+0Z3Z7etY4WtsXXWYyH7zHbYHttnAybYGfvFrti1d+5deL+9m7vogtfOrLJ/4P29BT6Kpak=</latexit> →ω L(Dtr 
+
+i )
+
+SetONet-Meta-Full 
+
+θ′
+
+i
+
+<latexit sha1_base64="Nr805E5gxqkt50jChBN/gjf3N9U=">AAACEXicbZC7SgNBFIZnvcZ4i1raLAYhNmFXJFoGtbCwiGAukKzL7OQkGTJ7YeZsMCz7Cja+io2FIrZ2dr6NkwuoiT8MfPznHOac34sEV2hZX8bC4tLyympmLbu+sbm1ndvZrakwlgyqLBShbHhUgeABVJGjgEYkgfqegLrXvxjV6wOQiofBLQ4jcHzaDXiHM4racnOFlk+xx6hIrtMfvkxdfpe0EO4xgQEVaXrk5vJW0RrLnAd7CnkyVcXNfbbaIYt9CJAJqlTTtiJ0EiqRMwFpthUriCjr0y40NQbUB+Uk44tS81A7bbMTSv0CNMfu74mE+koNfU93jnZWs7WR+V+tGWPnzEl4EMUIAZt81ImFiaE5isdscwkMxVADZZLrXU3Wo5Iy1CFmdQj27MnzUDsu2qVi6eYkXz6fxpEh++SAFIhNTkmZXJEKqRJGHsgTeSGvxqPxbLwZ75PWBWM6s0f+yPj4BvYWnmI=</latexit> L(Deval 
+
+i )
+
+θ′
+
+1
+
+θ′
+
+2
+
+θ′
+
+B …
+
+Meta  Update 
+
+θk+1
+
+𝒟 tr
+
+i
+
+<latexit sha1_base64="U9YU/XRnOK/re9L4wc8O4An+4oQ=">AAACBHicbVA9SwNBEN2LXzF+RS3THAbBKtyJRMugFpYRzAfkYtjbTJIlex/szgXDcYWNf8XGQhFbf4Sd/8a95ApNfDDweG+GmXluKLhCy/o2ciura+sb+c3C1vbO7l5x/6CpgkgyaLBABLLtUgWC+9BAjgLaoQTquQJa7vgq9VsTkIoH/h1OQ+h6dOjzAWcUtdQrlhyP4ohREV8nPX4fOwgPGMOEiiTpFctWxZrBXCZ2RsokQ71X/HL6AYs88JEJqlTHtkLsxlQiZwKSghMpCCkb0yF0NPWpB6obz55IzGOt9M1BIHX5aM7U3xMx9ZSaeq7uTE9Wi14q/ud1IhxcdGPuhxGCz+aLBpEwMTDTRMw+l8BQTDWhTHJ9q8lGVFKGOreCDsFefHmZNE8rdrVSvT0r1y6zOPKkRI7ICbHJOamRG1InDcLII3kmr+TNeDJejHfjY96aM7KZQ/IHxucPJe+ZFQ==</latexit> Deval 
+
+i
+
+<latexit sha1_base64="RFO6HdpUnPdHgzZYpBXVhzwibV4=">AAACPnicbVBNSxxBEO0xRs2amE085tK4SAyEZSaIegmIevDgQcFVYWd3qOmtdRt7eobuGsnSzC/LJb8htxxz8WAIXj3a+4H49aDh9XtVVNVLCyUtheGfYObV7Ou5+YU3tcW375be1z98PLF5aQS2RK5yc5aCRSU1tkiSwrPCIGSpwtP0Ynfkn16isTLXxzQssJPBuZZ9KYC8lNRbPNaQKkhiGiABj22ZJU5+j6qu26lq3CPOgAYClDuo1iZVXfe5SuTXe2PP/7ox4Q9yeAmq+pLUG2EzHIM/J9GUNNgUh0n9d9zLRZmhJqHA2nYUFtRxYEgKhVUtLi0WIC7gHNueasjQdtz4/IqveqXH+7nxTxMfqw87HGTWDrPUV442tk+9kfiS1y6pv9VxUhcloRaTQf1Sccr5KEvekwYFqaEnIIz0u3IxAAOCfOI1H0L09OTn5ORbM9pobhytN7Z3pnEssE9sha2xiG2ybbbPDlmLCfaT/WXX7F/wK7gK/gc3k9KZYNqzzB4huL0DnImvew==</latexit> →ω
+
+B∑
+
+i=1 
+
+L(ω→
+
+i, Deval 
+
+i )
+
+<latexit sha1_base64="u9sU0VCQMYC2x9i1DsEfGlt2G9k=">AAACBHicbVBNS8NAEN3Ur1q/qh57CRbBU0lEqseiF48V7Ae0NWy2k2bpZhN2J2IJOXjxr3jxoIhXf4Q3/41pm4O2Phh4vDfDzDw3ElyjZX0bhZXVtfWN4mZpa3tnd6+8f9DWYawYtFgoQtV1qQbBJbSQo4BupIAGroCOO76a+p17UJqH8hYnEQwCOpLc44xiJjnlSh99QHqXjFMn6SM8YOIqKpmfpiWnXLVq1gzmMrFzUiU5mk75qz8MWRyARCao1j3binCQUIWcCUhL/VhDRNmYjqCXUUkD0INk9kRqHmfK0PRClZVEc6b+nkhooPUkcLPOgKKvF72p+J/Xi9G7GCRcRjGCZPNFXixMDM1pIuaQK2AoJhmhTPHsVpP5VFGGWW7TEOzFl5dJ+7Rm12v1m7Nq4zKPo0gq5IicEJuckwa5Jk3SIow8kmfySt6MJ+PFeDc+5q0FI585JH9gfP4A2EqY3w==</latexit> ωk
+
+branch 
+
+<latexit sha1_base64="r2ivl01ATWpiUskgMKWeX8hFJnY=">AAACA3icbVBNS8NAEN3Ur1q/ot70EiyCp5KIVI9FLx4r2A9oa9lsp+2SzSbsTsQSAl78K148KOLVP+HNf2PS5qCtDwYe780wM88NBddo299GYWl5ZXWtuF7a2Nza3jF395o6iBSDBgtEoNou1SC4hAZyFNAOFVDfFdByvavMb92D0jyQtzgJoefTkeRDziimUt886OIYkN7FXtKPuwgPGKOKpJckpb5Ztiv2FNYicXJSJjnqffOrOwhY5INEJqjWHccOsRdThZwJSErdSENImUdH0EmppD7oXjz9IbGOU2VgDQOVlkRrqv6eiKmv9cR3006f4ljPe5n4n9eJcHjRi7kMIwTJZouGkbAwsLJArAFXwFBMUkKZ4umtFhtTRRmmsWUhOPMvL5LmacWpVqo3Z+XaZR5HkRySI3JCHHJOauSa1EmDMPJInskreTOejBfj3fiYtRaMfGaf/IHx+QNRQJib</latexit> ωk
+
+trunk Figure 3: Overview of the meta-training procedure. The inner loop adapts the parameters θk to each task i
+
+using the support set Dtr 
+
+i . SetONet-Meta updates only the branch coefficients θbranch , while SetONet-Meta-Full updates all parameters θ. The adapted parameters θ′
+
+i from a batch of B tasks are evaluated on held-out query sets Deval 
+
+i , and the outer loop computes the meta-gradient to update the shared initialization θk+1 .
+
+Bi-level training objective. We adopt the episodic training structure of MAML but apply it to the neural operator architecture. Denote the full parameter set as θ = ( θbranch , θ trunk ). In each training episode, we sample a batch of B tasks {i1, . . . , i B } and, for each task i, split the available data into a support set 
+
+Dtr 
+
+i used for inner-loop adaptation and a query set Deval 
+
+i used for outer-loop evaluation. Both sets contain context data (sensor location–value pairs for the branch) and target state–control pairs (at query locations for the trunk and loss computation). The inner loop performs a single gradient descent step on the support loss. We consider two choices for the scope of this update: 
+
+• SetONet-Meta (branch-only inner loop). Only the branch parameters θbranch,i for task i are up-dated in the inner loop while the trunk remains frozen: 
+
+θ′
+
+branch,i = θbranch − α∇θbranch LDtr 
+
+i (θbranch , θ trunk ). (12) This preserves the learned basis functions {bk} and restricts adaptation to finding new coefficients 
+
+{ck} that best represent the target task’s policy. The trunk parameters participate only in the outer loop, where they receive gradients that account for how well the basis functions support adaptation across the full task distribution. This strategy leverages the branch–trunk decomposition of the operator: the trunk learns basis functions that are optimized to be reused across tasks, while the branch learns an initialization from which a single gradient step yields a good task-specific policy. 
+
+• SetONet-Meta-Full (full-network inner loop). Both branch and trunk parameters θi for task i are updated in the inner loop: 
+
+θ′
+
+i = θ − α∇θ LDtr 
+
+i (θ), (13) This allows the operator to adapt both the coefficients and the basis functions to a new task in a single step. The outer loop optimizes a shared initialization from which full-network adaptation is effective, analogous to standard MAML. This variant has strictly greater adaptation capacity than the branch-only strategy, since it can reshape the basis functions for each task, but it updates 10 more parameters per step and may be more susceptible to overfitting when few demonstrations are available. In both cases, the outer loop updates all parameters, both θbranch and θtrunk , by minimizing the post-adaptation loss on the query sets, averaged across the task batch: 
+
+θ ← θ − β 1
+
+B ∇θB∑
+
+> i=1
+
+LDeval  
+
+> i
+
+(θ′
+
+> branch,i
+
+, θ ′
+
+> trunk,i
+
+), (14) where β is the outer learning rate. For SetONet-Meta, θ′ 
+
+> trunk,i
+
+= θtrunk (unchanged by the inner loop), so the outer gradient with respect to θtrunk flows only through the query loss evaluated at the adapted branch. For SetONet-Meta-Full, both components pass through the inner update via second-order differentiation. This architecture is shown in Figure 3 where we show the inner and outer training loops, as well as how the two proposed architectures fit in. 
+
+Relationship to standard training and MAML. Both meta-training variants occupy a middle ground between the standard pre-training pipeline of Section 3.3 and classical MAML. Like MAML, they use bi-level optimization to learn representations that are explicitly designed for rapid adaptation. SetONet-Meta-Full is closest to standard MAML in spirit, differing primarily in the architecture (a neural operator rather than a monolithic policy network); it learns a full-network initialization from which a single gradient step yields a good task-specific model. SetONet-Meta, by contrast, exploits the branch–trunk decomposition unique to neural operators: the trunk learns shared basis functions that remain fixed during adaptation, and the branch learns an initialization from which task-specific coefficients can be rapidly recovered. This restricted inner loop reduces the number of trainable parameters at adaptation time and lowers the risk of overfitting, at the cost of limiting representational flexibility to the span of the pretrained basis. 
+
+5 Experiments 
+
+We evaluate the neural operator model developed in Section 4 on four optimal control environments of in-creasing complexity and a higher-dimensional locomotion environment from the iMuJoCo benchmark (Sec-tion 5.1), where expert policies are trained via reinforcement learning. Our evaluation is organized into two parts. First, in Section 5.2, we demonstrate that a neural operator can accurately approximate the solu-tion operator across the task distribution and establish baseline accuracy across all environments (Table 2). We additionally examine how prediction accuracy varies with the number and ordering of context points provided at test time, including sizes not seen during training (i.e., task resolution invariance ). Second, in Section 5.3, we evaluate the adaptation strategies of Sections 4.2 and 4.3: fine-tuning with expert demon-strations, a per-task comparison against MAML (Figure 6), adaptation using cost feedback on environments where expert data is unavailable or expensive to obtain, and a detailed study of the meta-trained operator on HalfCheetah-v3 that examines how adaptation performance scales with the number of demonstrations and gradient steps (Figure 10). 
+
+5.1 Environments 
+
+We consider four optimal control environments and a reinforcement learning environment from the iMuJoCo benchmark, summarized in Table 1 and further described below. The Point-to-Point Cost (P2P-Cost) environment is a 2D point mass with linear dynamics and quadratic running and terminal costs, where each task corresponds to a different goal state xg and the expert is a linear quadratic regulator (LQR) controller. The context set consists of state–control–cost tuples C =
+
+{(( x, u, t ), ℓ (x, u, t ; ϕ)) } that encode the task-defining cost function. The stage and terminal costs are given by 
+
+ℓ(xt, ut; ϕ) = ( xt − xg )⊤Q (xt − xg ) + u⊤ 
+
+> t
+
+R ut, ℓT (xT ; ϕ) = ( xT − xg )⊤QT (xT − xg ), (15) 11 where Q, Q T ⪰ 0 and R ≻ 0 are fixed weight matrices shared across all tasks and the task parameter ϕ = xg
+
+specifies the goal location. The linear dynamics are given by 
+
+xt+1 = Axt + But, where A =
+
+
+
+1 0 ∆t 00 1 0 ∆t
+
+0 0 1 00 0 0 1
+
+ , B =
+
+
+
+0 00 0∆t 00 ∆t
+
+ , (16) where ∆t > 0 is a fixed constant indicating an Euler time discretization step size. This is a standard LQR problem and a direct instance of the parametric optimal control formulation (1). In the experiments that follow, we include a P2P-Cost-Small that allows us to test how different models perform when there is less data to train. 
+
+Point-to-Point Dynamics (P2P-Dynamics) This environment uses the same point-mass state and con-trol spaces as P2P-Cost but introduces parameter-dependent nonlinearities. The state is x = ( px, p y , v x, v y )
+
+and the control u = ( ax, a y ) is a commanded acceleration. The dynamics, discretized with an Euler step of size ∆t, are 
+
+xt+1 = xt + ∆ t
+
+
+
+vx,t 
+
+vy,t 
+
+clip (μ a x,t , −amax , a max )
+
+clip (μ a y,t , −amax , a max )
+
+ , (17) where clip (x, a, b ) = max( a, min( x, b )) . The control gain μ ∈ (0 , 1] attenuates the commanded acceleration, and per-axis acceleration saturation enforces ∥ ˙v∥∞ ≤ amax . After each step, velocities are additionally clipped to enforce ∥v∥∞ ≤ vmax . Each task is defined by a distinct dynamics parameterization ψ = ( μ, v max , a max ),making this an instance of equation 1 with fixed cost ϕ and varying dynamics. The context set encodes evaluations of the dynamics function: C = {(( x, u), g(x, u; ψ)) }. Because the clipping makes the dynamics nonlinear, expert trajectories are generated with iterative linear quadratic regulator (iLQR) (Tassa et al., 2012) rather than closed-form LQR. 
+
+Planar Quadrotor The planar quadrotor has a 6D state x = ( y, z, ϕ, ˙y, ˙z, ˙ϕ) and control u = ( Fz , τ )
+
+consisting of the total thrust and roll torque. The dynamics, discretized with an Euler step of size ∆t, are 
+
+xt+1 = xt + ∆ t
+
+
+
+˙yt
+
+˙zt
+
+˙ϕt
+
+− 1 
+
+> m
+
+Fz,t sin ϕt 
+
+> 1
+> m
+
+Fz,t cos ϕt − g 
+
+> 1
+> I
+
+τt
+
+
+
+, (18) where I = αmL 2 is the moment of inertia. Each task is defined by varying physical parameters ψ ∈ R3 =(m, L, α ): mass, arm length, and an inertia scaling factor. The context set encodes dynamics evaluations 
+
+C = {(( x, u), g(x, u; ψ)) }. Expert trajectories are computed with iLQR, targeting a fixed hover state. 
+
+Obstacle Avoidance This environment uses the same double-integrator dynamics as P2P-Cost (state 
+
+x ∈ R4, control u ∈ R2, with A and B as defined above), but each task is defined by a randomly generated field of nobs ∈ [2 , 6] circular obstacles, each parameterized by its center (x, y)i. The expert solves a constrained nonlinear programming problem (NLP) via IPOPT (Wächter & Biegler, 2006; Andersson et al., 2019), minimizing control effort subject to hard collision avoidance constraints. Unlike the other environments, the task-defining function is not directly available as a smooth cost; instead, the context set encodes the obstacle geometry as a collection of tuples C = {(xi, yi, r i)}nobs  
+
+> i=1
+
+, which serves as a finite-dimensional proxy for the underlying constraint structure. This is an instance of (1) with fixed dynamics, where the task variation enters through the constraint structure rather than the cost function directly. 
+
+iMuJoCo To test generalization beyond the model-based optimal control problems, we additionally eval-uate on HalfCheetah-v3 from the iMuJoCo benchmark (Patacchiola et al., 2023), which provides families of 12 Table 1: Summary of experimental environments. All OCP environments use the same SetONet architecture and training procedure; only the context and query definitions change across environments. The iMuJoCo environment encodes tasks through state–action transition data rather than analytical function evaluations. “Tasks” denotes the number of distinct task configurations and “Traj.” the number of expert trajectories per task.                                            
+
+> Environment dx/d uExpert Tasks Traj. Task parameters P2P-Cost 4/2 LQR 500 100 xg∈[−10 ,10] 2
+> P2P-Cost-Small 4/2 LQR 50 10 xg∈[−10 ,10] 2
+> P2P-Dynamics 4/2 iLQR 100 100 μ, v max , a max
+> Quadrotor 6/2 iLQR 100 20 m, L, α
+> Obstacle 4/2 NLP 500 60 nobs ,(x,y)i
+> HalfCheetah-v3 17/6 SAC 53 100 mass, limb, joints, friction
+
+MuJoCo agents whose physical parameters: body mass, limb length, joint range, and surface friction, are systematically varied from a default configuration. HalfCheetah-v3 ( dx = 17 , du = 6 , 53 configurations) is a high-dimensional locomotion task where expert policies are trained via Soft Actor-Critic (SAC) (Haarnoja et al., 2018) rather than computed from a known dynamics model, and the resulting demonstrations are collected as offline rollouts. All of our experiments are done on a single GPU (NVIDIA GeForce RTX 5070). They all use the same SetONet architecture and training procedure. The branch network uses a set encoder consisting of a multilayer perceptron (MLP) ϕ applied to each element of the context, followed by mean-pooling aggregation and a post-aggregation MLP ρ; the trunk network is a standard MLP. The full list of hyperparameters and architecture is included in the supplementary material. All models are trained using the Adam optimizer (Kingma & Ba, 2014) with a learning rate of η = 10 −3 to minimize the mean-squared-error loss (9). During training, the number of context points m is sampled uniformly from a predefined set at each iteration, encouraging the model to perform well across varying context resolutions. For each environment, the task dataset is split 80%/20% into training and held-out test tasks; all reported metrics are computed on held-out tasks not seen during training. States and context values are normalized to zero mean and unit variance using statistics computed from the training set. Models are implemented in JAX using the Equinox library (Kidger & Garcia, 2021). 
+
+5.2 Neural Operator Fitting and Task Resolution 
+
+We first evaluate the ability of the SetONet model to approximate the solution operator across each task distribution when trained with the behavioral cloning objective (5). Rather than reporting raw mean squared error (MSE), we use the relative L2 error Relative L2 error = ∥T θ (ℓi)( y) − u∗∥2
+
+∥u∗∥2
+
+, (19) which normalizes by the magnitude of the expert control signal and provides an interpretable, scale-consistent metric across environments. To assess generalization, we report this metric on held-out tasks not seen during training, and additionally perform model rollouts to test how well the learned policy performs on states that differ from those visited by the expert. We then examine task resolution invariance : the sensitivity of the operator’s predictions to the number and ordering of context points provided at test time, including context set sizes not seen during training. 
+
+Fitting the operator. For each environment, we train a SetONet on a distribution of tasks and evaluate on held-out tasks not seen during training. At test time, the trained operator receives a context set from the new task and predicts the corresponding feedback policy. We report results under two evaluation settings: 
+
+expert-states , in which the model predicts controls at the same states visited by the expert, and model-rollout ,in which the predicted policy is executed from the same initial condition without any expert feedback. The model-rollout setting is the more demanding test, as it exposes the model to compounding errors—a well-13 Table 2: Evaluation of the SetONet model across four OCP environments and a reduced-data variant (P2P-Small), using a single expert trajectory for demonstration and 32 trajectories for evaluation. The top section reports zero-shot predictions from the pretrained and meta-trained operators with no gradient updates. The lower sections report performance after 1 and 25 gradient steps of adaptation. Bold indicates the best result per method and column. “–” indicates divergence. The pretrained operator achieves low zero-shot error on P2P-Cost and Quadrotor, while dynamics-varying and obstacle environments benefit from adaptation, particularly via meta-trained initializations. All errors are reported as relative L2 (19)                                                                                      
+
+> Method P2P-Cost P2P-Small P2P-Dyn. Quadrotor Obstacle
+> 0 steps (zero-shot)
+> Pretrained .048 .101 .179 .063 .238
+> MAML .583 .920 .802 .549 1.00 SetONet-Meta .075 .084 .276 .185 .287 SetONet-Meta-Full .118 .130 .195 .148 .395
+> 1 gradient step
+> SetONet-FT .080 .090 .238 .069 .232
+> Last-Branch .045 .095 .180 .061 .238 Last-Both .047 .088 .182 .059 .237 MAML .581 .917 .898 .121 1.00 SetONet-Meta .074 .083 .255 .170 .287 SetONet-Meta-Full .117 .129 .099 .066 .311
+> 25 gradient steps
+> SetONet-FT .065 .090 .143 .065 .237
+> Last-Branch .044 .075 .177 .059 .231 Last-Both .048 .076 .171 .057 .234 MAML .569 .898 –.118 1.00 SetONet-Meta .069 .077 .094 .071 .285 SetONet-Meta-Full .096 .102 .081 .073 .306
+
+known challenge in imitation learning often referred to as distributional shift (Ross et al., 2011), where small prediction errors accumulate and push the state trajectory away from the expert’s distribution. To quantify expert-states accuracy, we compute the behavioral cloning loss (5) across all expert trajectories for each task and report the relative L2 error (19). The zero-shot rows of Table 2 (0 steps, Pretrained) report these errors for all four OCP environments and P2P-Cost-small. The pretrained operator achieves low relative error on P2P-Cost and Quadrotor, where the task variation is well-covered by the training distribution. P2P-Cost required more demonstration trajectories per task to achieve comparable error, which we attribute to the wide range of goal locations ( xg ∈ [−10 , 10] 2): distant goals produce larger control signals and correspondingly noisier relative error. The dynamics-varying (P2P-Dynamics) and obstacle environments show higher pretrained error, reflecting the greater diversity of these task distributions; these are the settings where adaptation yields the largest gains, as detailed in Section 5.3. Figure 4 provides a qualitative view of these results across three environments, overlaying expert-states predictions and model-rollout controls on the expert for representative held-out tasks. Across all three en-vironments, the learned operator produces model-rollout trajectories that closely follow the expert without any online correction. The Planar Quadrotor presents the most challenging fitting problem due to its higher-dimensional state space and coupled dynamics, yet the model still captures the qualitative control profile and the rollouts reach the correct targets despite minor transient deviations. 
+
+Task resolution invariance. A key property of the set-based context representation is that the learned operator can be evaluated with context sets of varying cardinality at test time, without retraining. This task resolution invariance arises because the branch network learns a set-based representation of the task from the context set, rather than relying on a fixed ordered discretization. The permutation-invariant aggregation ensures that this representation is well defined for variable-sized, unordered context sets. This is particularly 14 Task  2Task  1 Rollouts  
+
+> ux
+> P2P-Cost P2P-Dynamics Quadrotor
+> tt
+> uy
+> ux
+> uy
+> Fz
+> τ
+
+Figure 4: Operator fitting results across three environments. Each row group shows two control dimensions for a given environment, with columns displaying predictions on two representative tasks. We then show the corresponding state-space rollouts for the two tasks (T1, T2) along with 3 more (T3-T5). Solid green lines denote expert demonstrations, solid blue are SetONet predictions at the expert state locations, and dashed lines denote model-rollouts using the learned operator policy. appealing in control settings, where the amount of expert data may vary across tasks (e.g., in the number of trajectories or rollout lengths), allowing the model to flexibly leverage available data at inference time without retraining Figure 5 evaluates this property across all four environments. In each panel, the x-axis varies the number of context samples provided to the branch encoder at test time, including sizes both seen and not seen during training. Lines show the median relative L2 error over held-out tasks and shaded regions indicate the interquartile range (IQR). We report median and IQR rather than mean and standard deviation because the error distribution across tasks is right-skewed: a small number of particularly challenging configurations can produce large errors that disproportionately inflate the mean. For P2P-Cost, P2P-Dynamics, and the Planar Quadrotor, all three environments exhibit a consistent pattern: error is noticeably higher and more variable with very few context points (1–4), but decreases steadily and stabilizes by around 16–32 samples. Beyond this point, performance remains steady across the full range, including at context sizes not seen during training. This indicates that the branch encoder requires only a modest number of samples to extract reliable task information, and does not overfit to a particular context cardinality. In the dynamics-varying environments (P2P-Dynamics, Quadrotor), the initial decrease is expected: a single observation of xt+1 = g(xt, ut; ψ) provides limited information about the dynamics parameters, but a handful of samples suffices to approximately identify them. P2P-Cost exhibits a similar pattern, with error dropping sharply from 1 to 8 context points before leveling off. 15 1 
+
+> 4
+> 8
+> 16
+> 32
+> 64
+> 128
+> 256
+> K Samples
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6 P2P-Cost
+> Median
+> IQR (25-75%)
+> 1
+> 4
+> 8
+> 16
+> 32
+> 64
+> 128
+> 256
+> K Samples
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> P2P-Dynamics
+> 1
+> 4
+> 8
+> 16
+> 32
+> 64
+> 128
+> 256
+> K Samples
+> 0.000
+> 0.025
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> Quadrotor
+> 2
+> 3
+> 4
+> 5
+> 6
+> Num Obstacles
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> 0.30
+> Obstacle Avoidance
+
+Figure 5: Task resolution invariance across all four control environments. Lines show median relative L2
+
+error over held-out tasks; shaded regions indicate the inter-quartile range. Blue tick marks denote context sizes seen during training; red tick marks denote sizes not seen during training. The x-axis for the first three environments is the number of context samples; for Obstacle Avoidance it is the number of obstacles. The model was trained on obstacle configurations with 2, 4, and 6 obstacles. The Obstacle Avoidance environment (Figure 5, bottom right) presents a qualitatively different picture. Unlike the other three environments, the median error increases with the number of obstacles. We attribute this to the inherent growth in task complexity: configurations with more obstacles create tighter passages and more constrained feasible trajectories, making the mapping from obstacle configuration to collision-free policy harder to approximate. The widening IQR at higher obstacle counts further suggests that some configurations are significantly harder than others, likely those with narrow corridors or near-degenerate passages. Notably, the model maintains reasonable accuracy at obstacle counts not seen during training (3 and 5 obstacles, red ticks), demonstrating that the set-based representation interpolates smoothly between the training configurations ( nobs ∈ { 2, 4, 6}). This resolution invariance is a practical advantage: at deployment, the operator can produce reasonable policies from whatever context data is available, whether more or fewer samples than were used during training. 
+
+5.3 Task-Specific Adaptation 
+
+We now evaluate the adaptation strategies introduced in Section 4.2 on the held-out tasks not seen during training. This section focuses on fine-tuning using expert demonstrations (compared against a MAML base-line) and adaptation using cost feedback. Meta-trained operators are evaluated separately in Section 5.4. A central objective of this evaluation is to provide a systematic comparison between neural operator adaptation and meta-learning approaches popular in control and reinforcement learning, such as MAML. Through these comparisons, we demonstrate that efficient fine-tuning of neural operators is competitive, and often superior to MAML, without incurring additional meta-training cost. 
+
+Adaptation with expert demonstrations. Table 2 reports the mean relative L2 error across five OCP environments after 0, 1, and 25 gradient steps of adaptation using a single expert demonstration (standard deviations across seeds were negligible and are omitted for clarity). Among the non-meta-trained methods, Last-Branch and Last-Both, which update only the last layer of the branch network or the last layer of both 16 Figure 6: Per-task comparison of MAML against four SetONet-based methods across three OCP environ-ments after 25 gradient steps using 10 expert trajectories for adapting and evaluation. Each point represents a single held-out task, with the x-axis showing the method’s relative L2 error and the y-axis showing MAML’s error on the same task. Points above the diagonal ( y = x) indicate tasks where MAML performs worse. MAML is consistently dominated across nearly all tasks in P2P-Cost and P2P-Dynamics, while in the Quadrotor environment the gap narrows, with some tasks falling near the diagonal. networks, respectively, consistently perform well: a single gradient step is often sufficient to match or improve upon the pretrained operator, and 25 steps yield further gains on the dynamics-varying environments (P2P-Dynamics, Quadrotor). SetONet-FT, which updates the full network, shows the largest improvements on P2P-Dynamics, reducing error from .179 to .143 after 25 steps, but provides little benefit on P2P-Cost and Obstacle where the pretrained model is already accurate. MAML, by contrast, produces high error across all environments and step counts, often failing to improve over its poor zero-shot initialization. Figure 6 provides a per-task view of this gap: each point compares MAML’s error against one of the four SetONet-based methods on the same held-out task. In P2P-Cost and P2P-Dynamics, nearly all points lie above the diagonal, indicating that MAML is dominated on virtually every individual task. In the Quadrotor environment the margin narrows, with some tasks falling near the diagonal, though the SetONet methods still hold an overall advantage. 
+
+Adaptation with cost feedback. In some settings, expert demonstrations for the target task may be unavailable, the expert may have been trained on a cost function that we would like to modify, or only suboptimal policies may be accessible. Cost-based fine-tuning addresses these cases by adapting the operator directly on a downstream cost function, assuming knowledge of both the cost and environment dynamics. The operator is adapted by differentiating through model-rollouts, as described in Section 4.2. Figure 7a illustrates this on out-of-distribution P2P-Cost tasks. The surrogate is the same LQR objective used during training ((15)), differentiated end-to-end through the known linear dynamics. After fine-tuning, all three strategies (full network, branch-only, and last-layer ) converge to costs comparable to the expert, demonstrating that the operator can be adapted purely from the task objective without any expert data. Figure 7b applies cost-based fine-tuning to held-out obstacle avoidance tasks. Here the surrogate cost com-bines a soft collision penalty, wcoll 
+
+∑ 
+
+> i
+
+exp (−α(di,t − ri − m)), where di,t is the distance from the agent to obstacle i, ri is the obstacle radius, and m = 0 .2 is a safety margin, with a control regularization term 
+
+wctrl ∥ut∥2 and a terminal goal-reaching penalty, evaluated along a differentiable rollout through double-integrator dynamics ( wcoll = 10 , wctrl = ∆ t, α = 15 ). The pretrained SetONet spent an average of ∼3.5×
+
+the number of collision timesteps as the expert. All three fine-tuning strategies reduce collision time well be-low the expert while successfully reaching the goal on every task. Because the expert solver enforces collision avoidance through hard constraints rather than directly minimizing collision time, the fine-tuned models can achieve fewer collision timesteps by explicitly penalizing proximity to obstacles in the surrogate cost. Together, these two experiments demonstrate that cost-based adaptation can refine the operator directly from the task objective, without requiring any expert demonstrations. 17 SetONet  Last-Branch    
+
+> Distance  To  Goal  (m)
+> SetONet SetONet-FT Last-Branch Last-Both
+
+(a) P2P-Cost (out-of-distribution, cost-based adaptation) Timesteps  in  Collision 
+
+Expert  SetONet  SetONet-FT    
+
+> SetONet SetONet-FT Last-Branch Last-Both
+
+(b) Obstacle Avoidance (held-out tasks, cost-based adaptation) 
+
+Figure 7: Cost-based fine-tuning across two environments. (a) Out-of-distribution P2P-Cost tasks with both goal locations and start position outside the training region (gray). The distance is L2 in meters. The pretrained SetONet fails to reach distant goals (mean terminal distance of 3.12. After adaptation, all methods recover accurate trajectories, with Last-Branch (0.45) slightly outperforming SetONet-FT (0.48), indicating that the pretrained basis functions (trunk network) generalize well and only the coefficients require updating. 
+
+(b) Held-out obstacle avoidance tasks. All cost-based fine-tuning strategies reduce collision time well below the pretrained model 
+
+5.4 Meta-trained operator 
+
+The fine-tuning results above rely on a model that was pretrained with the standard behavioral cloning objective. We now evaluate whether the meta-training procedure of Section 4.3, which explicitly optimizes for rapid post-adaptation performance, can improve adaptation efficiency. Returning to Table 2, the zero-shot rows reveal a clear difference between the two meta-trained variants. SetONet-Meta achieves the lowest zero-shot error on P2P-Small (.084) and competitive error on P2P-Cost (.075), outperforming SetONet-Meta-Full in both cases. On P2P-Dynamics, however, SetONet-Meta-Full produces the best zero-shot result (.195), suggesting that the ability to adapt basis functions, not just coefficients, matters when the task variation is more complex. After 25 gradient steps, SetONet-Meta-Full achieves the lowest error on P2P-Dynamics (.081), while SetONet-Meta remains competitive on P2P-Small (.077). Both meta-trained variants underperform Last-Branch and Last-Both on P2P-Cost and Quadrotor, where the pretrained operator is already accurate and the additional meta-training offers little benefit. 18 SetONet-FT  SetONet-Meta-Full        
+
+> training goal training goal
+> new goal new goal
+> Quadrotor OOD Adaptation
+> L2Relative  Error
+
+Figure 8: Out-of-distribution fine tuning on a Quadrotor task. Left two panels show multiple representative trajectories for SetONet-FT and SetONet-Meta-Full adapting to a shifted goal location. The bar plot com-pares relative L2 error across all fine-tuning and meta-learning methods. We also evaluated meta-trained adaptation on an out-of-distribution (OOD) Quadrotor task in which the goal location is shifted outside the training region. Figure 8 compares all adaptation methods on this task. The pretrained SetONet as expected exhibits the largest error. SetONet-FT and SetONet-Meta-Full achieve the lowest errors, demonstrating the importance of trunk adaptation on an OOD task. We see that the meta-trained initialization enables effective adaptation even when the target task lies outside the training distribution. This is a setting where the pretrained basis functions do not generalize well, and adapting both coefficients and basis functions provides a clear advantage. 
+
+Meta-training on HalfCheetah-v3. We next evaluate the meta-trained operators on HalfCheetah-v3, where expert policies are trained via reinforcement learning (SAC). Figure 9 shows the first three control dimensions for representative held-out HalfCheetah-v3 configurations. Unlike the smooth, low-frequency control signals of the OCP environments, the expert policies here produce high-frequency, multi-dimensional outputs that the operator must approximate from noisy, suboptimal demonstrations, making accurate few-shot adaptation considerably more demanding. Figure 10 examines these trade-offs in greater depth, comparing four adaptation strategies across varying numbers of expert demonstrations (panels) and gradient steps (horizontal axis). Several patterns emerge. First, MAML and SetONet-Meta-Full consistently outperform SetONet-FT in the low-data regime (1 and 5 demonstrations), achieving lower error across all gradient step budgets. Since both MAML and SetONet-FT perform full-network adaptation, this advantage is attributable to the meta-trained initialization rather than the scope of parameters being updated: the bi-level training objective produces a starting point from which a single gradient step already yields a strong task-specific model. Second, SetONet-FT benefits most from additional demonstrations and gradient steps, closing the gap with the meta-trained methods at 10 demonstrations and overtaking them at 25 demonstrations with 50 or more gradient steps. This is expected— with sufficient data, the quality of the initialization matters less, and SetONet-FT is free to converge to any solution without constraints imposed by the inner-loop architecture chosen at meta-training time. Third, SetONet-Meta plateaus early, confirming that restricting the inner loop to the branch network alone limits adaptation capacity in this higher-dimensional environment. These results highlight a practical trade-off: when the adaptation budget is limited to a small support set and few gradient steps, the meta-trained initialization provides a significant advantage over standard pretraining. As more data and compute become available, standard fine-tuning catches up and eventually achieves the lowest error. The choice between strategies thus depends on the deployment setting: meta-training is preferable for rapid, low-resource adaptation, while standard fine-tuning is preferable when a larger adaptation budget is available. Practical choices can be made problem-specific, in cases where rapid task switching is required during online deployment, meta-training of the neural operator controller can provide a significant boost in efficiency. 19 Figure 9: Control predictions on a held-out HalfCheetah-v3 task, showing the first three control dimensions (u1, u 2, u 3, rows) for three methods (columns) over time. Each panel compares the method’s prediction (colored) against the expert (black) after 25 gradient steps using 10 expert trajectory demonstrations of 100 timesteps each. SetONet-FT most closely tracks the expert across all dimensions. 
+
+Figure 10: Adaptation performance on held-out HalfCheetah-v3 tasks as a function of the number of expert demonstrations (panels) and gradient steps (horizontal axis). Lines show mean relative L2 error over 5 seeds; shaded regions indicate ±1 standard deviation. With few gradient steps (1–5), the meta-trained variants outperform SetONet-FT, particularly in the low-data regime (1 and 5 demos). As the adaptation budget increases, MAML and SetONet-Meta-Full improve steadily while SetONet-FT has the largest decrease in error as the number of available samples is increased. 20 6 Conclusion 
+
+We have presented a general framework for multi-task optimal control based on neural operators, demon-strating that the operator learning perspective offers a principled and practical approach to learning control policies across families of related tasks. By modeling the mapping from task-defining functions to optimal feedback policies, neural operators naturally capture the shared structure underlying parametric control problems while remaining flexible enough to accommodate diverse task variations. Here we highlight a number of key results from this work. First, we showed through various experiments how the SetONet model can closely approximate the solution operators defined in equation 4. We demonstrated different forms of generalization on held-out tasks, including model rollouts that closely matched the expert and task resolution invariance, a property that is particularly valuable when the amount of available task information varies at deployment. Second, the branch–trunk decomposition enables effective task-specific adaptation, and we presented a number of adaptive model choices that target different parts of the network. We discussed the trade-offs of each, which depend on the available training data and its relationship to the downstream task. Third, we introduced two meta-training variants, SetONet-Meta and SetONet-Meta-Full, which explicitly optimize the initialization for rapid few-shot adaptation. SetONet-Meta provides data-efficient updates by restricting adaptation to the branch coefficients, while SetONet-Meta-Full adapts both coefficients and basis functions, yielding the largest gains on out-of-distribution tasks such as P2P-Dynamics and HalfCheetah-v3. Both consistently outperform MAML, which struggles to adapt in most environments. Finally, cost-based adaptation demonstrated that the operator can be refined directly from the task objective without any expert demonstrations, using only the cost function and the dynamics model. Cost-based adaptation opens several directions for further exploration. For example, online data collection strategies such as DAgger (Ross et al., 2011) could iteratively refine the operator by querying the expert only in states actually visited under the learned policy, improving closed-loop performance while limiting the total number of expert solves. More broadly, although we explored several strategies for adaptation and fine-tuning, many remain unexplored, including methods designed specifically for out-of-distribution settings (Kumar et al., 2022). In this work, we restricted attention to settings in which a single input function varies across tasks (either cost or dynamics). Extending the operator learning framework to problems where tasks are defined by simultaneous variation in multiple function spaces is an open and practically relevant direction: for instance, in the point-to-point environments, one could vary both the cost function and the dynamics simultaneously. Recent work on meta-learning with neural operators (Wang et al., 2024) takes a 
+
+multi-operator approach to this problem, but focuses on a single application domain and does not provide theoretical analysis, leaving the general setting largely unexplored. 
+
+References 
+
+Haitham Bou Ammar, Eric Eaton, Paul Ruvolo, and Matthew Taylor. Online multi-task learning for policy gradient methods. In International conference on machine learning , pp. 1206–1214. PMLR, 2014. Joel AE Andersson, Joris Gillis, Greg Horn, James B Rawlings, and Moritz Diehl. Casadi: a software framework for nonlinear optimization and optimal control. Mathematical Programming Computation , 11 (1):1–36, 2019. Kamyar Azizzadenesheli, Nikola Kovachki, Zongyi Li, Miguel Liu-Schiaffini, Jean Kossaifi, and Anima Anand-kumar. Neural operators for accelerating scientific simulations and design. Nature Reviews Physics , 6(5): 320–328, 2024. Asit Barman, Swalpa Kumar Roy, Swagatam Das, and Paramartha Dutta. Exploring the horizons of meta-learning in neural networks: A survey of the state-of-the-art. IEEE Transactions on Emerging Topics in Computational Intelligence , 2024. Dimitri Bertsekas. Dynamic programming and optimal control: Volume I , volume 4. Athena scientific, 2012. John T Betts. Practical methods for optimal control and estimation using nonlinear programming . SIAM, 2010. 21 Luke Bhan, Yuanyuan Shi, and Miroslav Krstic. Neural operators for bypassing gain and control computa-tions in pde backstepping. IEEE Transactions on Automatic Control , 69(8):5310–5325, 2023. Anthony Brohan, Noah Brown, Justice Carbajal, Yevgen Chebotar, Xi Chen, Krzysztof Choromanski, Tianli Ding, Danny Driess, Avinava Dubey, Chelsea Finn, et al. Rt-2: Vision-language-action models transfer web knowledge to robotic control, 2023. URL https://arxiv. org/abs/2307.15818 , 1:2, 2024. Steven Chen, Kelsey Saulnier, Nikolay Atanasov, Daniel D Lee, Vijay Kumar, George J Pappas, and Manfred Morari. Approximating explicit model predictive control using constrained neural networks. In 2018 Annual American control conference (ACC) , pp. 1520–1527. IEEE, 2018. Tianping Chen and Hong Chen. Universal approximation to nonlinear operators by neural networks with arbitrary activation functions and its application to dynamical systems. IEEE transactions on neural networks , 6(4):911–917, 1995. Byoung-Ju Choi, Hong Sung Jin, and Bataa Lkhagvasuren. Applications of the fourier neural operator in a regional ocean modeling and prediction. Frontiers in Marine Science , 11:1383997, 2024. Liam Collins, Aryan Mokhtari, and Sanjay Shakkottai. Task-robust model-agnostic meta-learning. Advances in Neural Information Processing Systems , 33:18860–18871, 2020. Marc Peter Deisenroth, Peter Englert, Jan Peters, and Dieter Fox. Multi-task policy search for robotics. In 
+
+2014 IEEE international conference on robotics and automation (ICRA) , pp. 3876–3881. IEEE, 2014. Ján Drgoňa, Aaron Tuor, and Draguna Vrabie. Learning constrained parametric differentiable predictive control policies with guarantees. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 54(6): 3596–3607, 2024. Chelsea Finn, Pieter Abbeel, and Sergey Levine. Model-agnostic meta-learning for fast adaptation of deep networks. In International conference on machine learning , pp. 1126–1135. PMLR, 2017. Somdatta Goswami, Katiana Kontolati, Michael D Shields, and George Em Karniadakis. Deep transfer operator learning for partial differential equations under conditional shift. Nature Machine Intelligence , 4 (12):1155–1164, 2022. Tuomas Haarnoja, Aurick Zhou, Pieter Abbeel, and Sergey Levine. Soft actor-critic: Off-policy maximum entropy deep reinforcement learning with a stochastic actor. In International conference on machine learning , pp. 1861–1870. Pmlr, 2018. Siddhant Haldar and Lerrel Pinto. Polytask: Learning unified policies through behavior distillation. arXiv preprint arXiv:2310.08573 , 2023. Nicklas Hansen, Hao Su, and Xiaolong Wang. Td-mpc2: Scalable, robust world models for continuous control. 
+
+arXiv preprint arXiv:2310.16828 , 2023. Charles R Hargraves and Stephen W Paris. Direct trajectory optimization using nonlinear programming and collocation. Journal of guidance, control, and dynamics , 10(4):338–342, 1987. Michael Hertneck, Johannes Köhler, Sebastian Trimpe, and Frank Allgöwer. Learning an approximate model predictive controller with guarantees. IEEE Control Systems Letters , 2(3):543–548, 2018. Han Huang and Rongjie Lai. Unsupervised solution operator learning for mean-field games via sampling-invariant parametrizations. arXiv preprint arXiv:2401.15482 , 2024. Jan Humplik, Alexandre Galashov, Leonard Hasenclever, Pedro A Ortega, Yee Whye Teh, and Nicolas Heess. Meta reinforcement learning as task inference. arXiv preprint arXiv:1905.06424 , 2019. David H. Jacobson and David Q. Mayne. Differential Dynamic Programming . Number 24 in Modern Analytic and Computational Methods in Science and Mathematics. Elsevier, New York, 1970. 22 Benjamin Karg and Sergio Lucia. Efficient representation and approximation of model predictive control laws via deep learning. IEEE transactions on cybernetics , 50(9):3866–3878, 2020. Patrick Kidger and Cristian Garcia. Equinox: neural networks in JAX via callable PyTrees and filtered transformations. Differentiable Programming workshop at Neural Information Processing Systems 2021 ,2021. Diederik P Kingma and Jimmy Ba. Adam: A method for stochastic optimization. arXiv preprint arXiv:1412.6980 , 2014. Nikola Kovachki, Samuel Lanthaler, and Siddhartha Mishra. On universal approximation and error bounds for fourier neural operators. Journal of Machine Learning Research , 22(290):1–76, 2021. Nikola Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: Learning maps between function spaces with applications to pdes. Journal of Machine Learning Research , 24(89):1–97, 2023. Ananya Kumar, Aditi Raghunathan, Robbie Jones, Tengyu Ma, and Percy Liang. Fine-tuning can distort pretrained features and underperform out-of-distribution. arXiv preprint arXiv:2202.10054 , 2022. Lin Lan, Zhenguo Li, Xiaohong Guan, and Pinghui Wang. Meta reinforcement learning with task embedding and shared policy. arXiv preprint arXiv:1905.06527 , 2019. Xingjian Li, Kelvin Kan, Deepanshu Verma, Krishna Kumar, Stanley Osher, and Ján Drgoňa. Zero-shot transferable solution method for parametric optimal control problems. arXiv preprint arXiv:2509.18404 ,2025. Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895 , 2020a. Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: Graph kernel network for partial differential equations. arXiv preprint arXiv:2003.03485 , 2020b. Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature machine intelligence , 3(3):218–229, 2021. Pierre Marza, Laetitia Matignon, Olivier Simonin, and Christian Wolf. Task-conditioned adaptation of visual features in multi-task policy learning. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 17847–17856, 2024. John Mern, Dorsa Sadigh, and Mykel J Kochenderfer. Exchangeable input representations for reinforcement learning. In 2020 American Control Conference (ACC) , pp. 3971–3976. IEEE, 2020. Truong X Nghiem, Ján Drgoňa, Colin Jones, Zoltan Nagy, Roland Schwan, Biswadip Dey, Ankush Chakrabarty, Stefano Di Cairano, Joel A Paulson, Andrea Carron, et al. Physics-informed machine learn-ing for modeling and control of dynamical systems. In 2023 American Control Conference (ACC) , pp. 3735–3750. IEEE, 2023. Massimiliano Patacchiola, Mingfei Sun, Katja Hofmann, and Richard E Turner. Comparing the efficacy of fine-tuning and meta-learning for few-shot policy imitation. In Conference on Lifelong Learning Agents ,2023. Jaideep Pathak, Shashank Subramanian, Peter Harrington, Sanjeev Raja, Ashesh Chattopadhyay, Morteza Mardani, Thorsten Kurth, David Hall, Zongyi Li, Kamyar Azizzadenesheli, et al. Fourcastnet: A global data-driven high-resolution weather model using adaptive fourier neural operators. arXiv preprint arXiv:2202.11214 , 2022. 23 Dean A Pomerleau. Alvinn: An autonomous land vehicle in a neural network. Advances in neural information processing systems , 1, 1988. Kate Rakelly, Aurick Zhou, Chelsea Finn, Sergey Levine, and Deirdre Quillen. Efficient off-policy meta-reinforcement learning via probabilistic context variables. In International conference on machine learning ,pp. 5331–5340. PMLR, 2019. Meer Mehran Rashid, Tanu Pittie, Souvik Chakraborty, and NM Anoop Krishnan. Learning the stress-strain fields in digital composites using fourier neural operator. Iscience , 25(11), 2022. James Blake Rawlings, David Q Mayne, Moritz Diehl, et al. Model predictive control: theory, computation, and design , volume 2. Nob Hill Publishing Madison, WI, 2020. Siddharth Reddy, Anca D Dragan, and Sergey Levine. Sqil: Imitation learning via reinforcement learning with sparse rewards. arXiv preprint arXiv:1905.11108 , 2019. Stéphane Ross, Geoffrey Gordon, and Drew Bagnell. A reduction of imitation learning and structured pre-diction to no-regret online learning. In Proceedings of the fourteenth international conference on artificial intelligence and statistics , pp. 627–635. JMLR Workshop and Conference Proceedings, 2011. Shagun Sodhani, Amy Zhang, and Joelle Pineau. Multi-task reinforcement learning with context-based representations. In International conference on machine learning , pp. 9767–9779. PMLR, 2021. Yuval Tassa, Tom Erez, and Emanuel Todorov. Synthesis and stabilization of complex behaviors through online trajectory optimization. In 2012 IEEE/RSJ International Conference on Intelligent Robots and Systems , pp. 4906–4913. IEEE, 2012. Octo Model Team, Dibya Ghosh, Homer Walke, Karl Pertsch, Kevin Black, Oier Mees, Sudeep Dasari, Joey Hejna, Tobias Kreiman, Charles Xu, et al. Octo: An open-source generalist robot policy. arXiv preprint arXiv:2405.12213 , 2024. Yee Teh, Victor Bapst, Wojciech M Czarnecki, John Quan, James Kirkpatrick, Raia Hadsell, Nicolas Heess, and Razvan Pascanu. Distral: Robust multitask reinforcement learning. Advances in neural information processing systems , 30, 2017. Stepan Tretiakov, Xingjian Li, and Krishna Kumar. Setonet: A deep set-based operator network for solving pdes with permutation invariant variable input sampling. arXiv e-prints , pp. arXiv–2505, 2025. Rasul Tutunov, Dongho Kim, and Haitham Bou Ammar. Distributed multitask reinforcement learning with quadratic convergence. Advances in neural information processing systems , 31, 2018. Andreas Wächter and Lorenz T Biegler. On the implementation of an interior-point filter line-search algo-rithm for large-scale nonlinear programming. Mathematical programming , 106(1):25–57, 2006. Qi Wang, Jian Lou, Yang Li, and Li Yang. Meta-fourier neural operators for multi-task modeling of film cooling in gas turbine endwalls. Engineering Applications of Artificial Intelligence , 131:107858, 2024. Sidi Wu. Fine-tuning deeponets to enhance physics-informed neural networks for solving partial differential equations. arXiv preprint arXiv:2410.14134 , 2024. Wuzhe Xu, Yulong Lu, and Li Wang. Transfer learning enhanced deeponet for long-time prediction of evolution equations. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 37, pp. 10629–10636, 2023. Wuzhe Xu, Jiequn Han, and Rongjie Lai. Self-supervised amortized neural operators for optimal control: Scaling laws and applications. arXiv preprint arXiv:2512.24897 , 2025. Zecheng Zhang, Christian Moya, Lu Lu, Guang Lin, and Hayden Schaeffer. D2no: Efficient handling of heterogeneous input function spaces with distributed deep neural operators. Computer Methods in Applied Mechanics and Engineering , 428:117084, 2024. 24 Allan Zhou, Vikash Kumar, Chelsea Finn, and Aravind Rajeswaran. Policy architectures for compositional generalization in control. arXiv preprint arXiv:2203.05960 , 2022. Min Zhu, Handi Zhang, Anran Jiao, George Em Karniadakis, and Lu Lu. Reliable extrapolation of deep neural operators informed by physics or sparse observations. Computer Methods in Applied Mechanics and Engineering , 412:116064, 2023. 25

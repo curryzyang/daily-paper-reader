@@ -1,0 +1,980 @@
+Title: Linearly Solvable Continuous-Time General-Sum Stochastic Differential Games
+
+URL Source: https://arxiv.org/pdf/2604.07479v1
+
+Published Time: Fri, 10 Apr 2026 00:13:53 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Linearly Solvable Continuous-Time General-Sum Stochastic Differential Games 
+
+Monika Tomar and Takashi Tanaka 
+
+Abstract — This paper introduces a class of continuous-time, finite-player stochastic general-sum differential games that ad-mit solutions through an exact linear PDE system. We formulate a distribution planning game utilizing the cross-log-likelihood ratio to naturally model multi-agent spatial conflicts, such as congestion avoidance. By applying a generalized multivariate Cole-Hopf transformation, we decouple the associated non-linear Hamilton-Jacobi-Bellman (HJB) equations into a system of linear partial differential equations. This reduction enables the efficient, grid-free computation of feedback Nash equilib-rium strategies via the Feynman-Kac path integral method, effectively overcoming the curse of dimensionality. 
+
+I. I NTRODUCTION 
+
+Stochastic games provide a natural framework for model-ing interacting decision makers under uncertainty, and they arise in control, economics, traffic systems, and networked multi-agent settings. In such problems, the feedback Nash equilibrium is especially important because it is a closed-loop, state-dependent, and strongly time-consistent solution concept [1]. The difficulty, however, is that computing feed-back Nash equilibria in stochastic differential games typi-cally leads to coupled nonlinear Hamilton-Jacobi-Bellman (HJB) or Hamilton-Jacobi-Bellman-Isaacs (HJBI) equations. Consequently, even when existence and characterization re-sults are available [2], the resulting equilibrium PDE systems are often analytically intractable and numerically challeng-ing. To avoid grid-based computation, [3] maps infinite-horizon ergodic games to a system of coupled Ergodic BSDEs which still necessitate complex forward-backward solvers. For a risk-sensitive ergodic setup, the solution of the coupled HJBs is characterized in [4] via a multi-parameter eigenvalue problem. One of the main exceptions to this general picture is the linearly solvable or Kullback–Leibler (KL) control frame-work. In a single agent control problem, [5] formulated a Markov Decision Process in the discrete-time setting, where control is modeled as a change of transition probabilities pe-nalized by a KL divergence, the Bellman equation becomes linear after an exponential desirability transformation. A cor-responding continuous-time version of the stochastic optimal control problem was developed in [6] where the resultant non-linear HJB was linearlizable by a similar non-linear transform (namely Cole-Hopf Transformation) which allows 
+
+> M. Tomar and T. Tanaka are with the Edwardson School of Industrial Engineering, School of Aeronautics and Astronautics, Elmore Family School of Electrical and Computer Engineering, Purdue University, West Lafayette, IN, USA, respectively. Email: tomarm@purdue.edu, tanaka16@purdue.edu This work is supported by AFOSR DSCT program under grant FA9550-25-1-0347 and DARPA COMPASS program under grant HR0011-25-3-0210
+
+for the transformed linear problem to admit Monte Carlo simulations of Path Integrals. An explicit connection was established between the MDPs and the Path Integral problem in [7]. Subsequent work extended this line of research to var-ious game-theoretic settings. For instance, a KL cost based Markov game in an adversarial zero-sum discrete time setting is modeled in [8], where the resultant Bellman Equation was shown to be linearizable without needing a change of variables. In multi-agent settings, linearly solvable structure has been established in special classes such as mean-field traffic routing games [9] where the equilibrium for the mean-field game in the discrete time setting was shown equivalent to a single Bellman equation which was linearized using a Cole-Hopf transformation. Another recent work [10] expanded on the idea of using the log-transform to linearize a general-sum discrete time game, where the costs are KL costs and the players control the probabilistic transitions of passive dynamics of a common underlying MDP. In a continuous-time setting, a two-player zero-sum stochastic differential game is modeled that is linearly solvable via the path-integral control method [11]. To the best of our knowledge, there is no general-sum continuous-time stochastic differential game formulation that is linearly solvable via the Path Integral approach. Motivated by the success of path integral approach in computational advances of the HJB equation, this paper introduces a class of nonlinear stochastic general-sum dif-ferential games for a finite number of heterogeneous players that become linearly solvable via the Path integral approach. Through an equivalent information theoretic representation, the proposed setup models a measure-theoretic planning game in which players select controlled probability distribu-tions over their trajectories. Each player’s objective balances individual costs, KL divergence from baseline distributions, and cross-log-likelihood terms coupling the agent’s mea-sures. Broadly, these cross terms regulate interactions over shared resources, driving emergent behaviors that range from mutual resource partitioning to aggregation, and more gen-erally to asymmetric interactions when pairwise couplings are not symmetric. When formulated to penalize distribu-tional overlap, a practical application of this mechanism is congestion avoidance. There are many ways of modeling congestion avoidance explored in the literature, primarily encoding interactions through macroscopic density effects or route/lane occupancy [12], [13], or through pairwise geometric separation and proximity penalties [14], or barrier-function constraints [15]. The cross-log-likelihood structure in our formulation penalizes overlap of the agents’ prob-
+
+> arXiv:2604.07479v1 [math.OC] 8 Apr 2026
+
+ability measures directly: an agent incurs a high cost for assigning probability mass to trajectories that other agents also heavily favor, while being biased towards available cost-effective reference distributions. Congestion is therefore resolved at the distributional planning stage, leading to emergent distributional separation and proactive congestion avoidance while preserving exact linearizability of the cou-pled HJB system. The paper is organized as follows: We formulate the measure-theoretic general-sum game with cross-log-likelihood interactions, establish its equivalence to a nonlin-ear stochastic differential game, and derive the coupled HJB equations for feedback Nash equilibrium. We then introduce a multivariate Cole-Hopf transformation that decouples and linearizes the entire system, enabling solution via forward Monte Carlo sampling through the Feynman-Kac formula. Finally, we validate the framework on an asymmetric multi-player collision-avoidance scenario demonstrating emergent distributional separation among the agents. The next section formalizes the game and its equivalent stochastic differential-game representation. II. P ROBLEM FORMULATION 
+
+We consider a N -player continuous-time dynamic general-sum game over a finite time horizon [0 , T ]. Each player deploys a team of identical microscopic agents to a common state space X = Rn and let Ω := C([0 , T ], Rn) denote the path space of continuous state trajectories. We assume that the dynamics of different microscopic agents are decoupled. Let the state for each agent xt ∈ X follow the Ito stochastic differential equation (SDE): 
+
+dx t = f (xt) dt + g(xt) dv t, 0 ≤ t ≤ T (1) where vt ∈ Rm is an exogenous input containing both the control drift and stochastic disturbances. We assume that 
+
+f : Rn → Rn and g : Rn → Rn×m are sufficiently regular to ensure the existence of a strong unique solution [16] to (1). All agents in the same team are driven by the same control law, but individually they are subject to independent stochastic disturbances. For agents belonging to player i’s team, where i ∈ N := {1, . . . , N }, we first describe the controlled dynamics under player i’s chosen probability measure P i on Ω. Under P i, the input process evolves as 
+
+dv t = uit dt + dw it, (2) where uit is the feedback control selected by player i, and 
+
+wit is a m-dimensional standard Wiener process under P i.Next, let ¯uit denote a nominal feedback policy for player 
+
+i, and define the process ¯wit by 
+
+d ¯wit := ( uit − ¯uit) dt + dw it (3) Under a mild Novikov condition [16], there exists a reference (or baseline) probability measure Ri on Ω under which ¯wit
+
+is a m-dimensional standard Wiener process such that P i is absolutely continuous with respect to Ri (denoted by P i ≪
+
+Ri). Equivalently, under the reference measure Ri, the input admits the representation 
+
+dv t = ¯ uit dt + d ¯wit (4) In this sense, player i’s strategy may be understood either as the choice of a controlled measure P i or, equivalently, as the choice of a feedback control uit relative to the nominal pair 
+
+(Ri, ¯uit). Let P = ( P 1, . . . , P N ) denote the joint strategy profile. For a given profile P , Player i incurs the cost: 
+
+Ji(P ) := EP i
+
+"Z T
+
+> 0
+
+Cit (xt) dt + Ψ i(xT )
+
+#
+
++
+
+αii EP i
+
+
+
+log dP i
+
+dR i (ω)
+
+
+
++ X 
+
+> j̸=i
+
+αij EP i
+
+
+
+log dP j
+
+dR j (ω)
+
+
+
+(5) where dP i/dR i is the Radon–Nikodym derivative, ω ∈
+
+Ω represents a sample trajectory, xt(ω) is the state at time t, Cit : X → R is the running cost, and Ψi :
+
+X → R is the terminal cost. Consequently, given P −i := (P 1, . . . , P i−1, P i+1 , . . . , P N ), the player i solves 
+
+inf   
+
+> Pi≪Ri
+
+Ji(P i, P −i)
+
+The weighting parameters αij represent the interactions between the players. We define the interaction matrix α ∈
+
+RN ×N and its inverse as 
+
+α =
+
+
+
+α11 · · · α1N
+
+... . . . ...
+
+αN 1 · · · αN N 
+
+ , αii > 0, β := α−1
+
+(6) where we assume α is non-singular. The objective functional encapsulates three primary behaviors. The first term repre-sents the standard expected trajectory cost. The second term is a self-KL divergence that penalizes player i’s deviation from its nominal plan, effectively acting as a control effort penalty. This third term couples players through the log-likelihood ratios, dP j /dR j , which measures how heavily player j targets a trajectory relative to its baseline Rj . For repulsive interactions ( αij > 0), player i minimizes cost by avoiding trajectories where this ratio is high (strategies heavily favored by j) and shifting toward trajectories where it is low (cost-effective strategies of Rj vacated by j). Intuitively, this structure drives proactive conflict avoidance (aggregation if αij < 0) while biasing these evasion strate-gies towards efficient nominal plans. Since the interaction matrix is not restricted to be symmetric, these incentives also capture asymmetric objectives. A similar coupling cost was considered in [12] as a tax to induce congestion avoidance behavior. 
+
+Problem 1. Find a Nash Equilibrium strategy profile P ∗ =(P ∗ 
+
+> 1
+
+, . . . , P ∗ 
+
+> N
+
+) for game (5) such that, for all players i ∈N and any admissible measure P i ≪ Ri, the following inequality holds: 
+
+Ji(P i∗, P −i∗) ≤ Ji(P i, P −i∗), (7) given the fixed reference measures Ri, the interaction matrix 
+
+α in (6), and where strategies P i are induced by closed-loop state feedback policies. III. MAIN RESULTS We now state the first result, which translates the abstract measure-theoretic game (5) into an equivalent nonlinear stochastic differential game with explicit control costs. 
+
+Theorem 1. Subject to the dynamics (1) –(2) , the Measure-theoretic game given by (5) is equivalent to the following stochastic differential game, where each player i ∈ N
+
+minimizes: 
+
+min  
+
+> ui
+
+EP i
+
+" Z T
+
+> 0
+
+Cit (xt) + αii 
+
+2 ∥uit − ¯uit∥2
+
++ X 
+
+> j̸=i
+
+n αij 
+
+2 (∥¯ujt ∥2 − ∥ ujt ∥2) + αij (ujt − ¯ujt )⊤uit
+
+o!
+
+dt 
+
++ Ψ i(xT )
+
+#
+
+(8) 
+
+Proof: The proof is structured in two parts: determining the explicit control cost equivalent to the self-KL divergence term, and then evaluating the cross divergence term under the measure P i.
+
+Step 1: Control Cost due to Self-KL Divergence. Using Girsanov’s theorem [16], and (3) the Radon-Nikodym deriva-tive of P i with respect to Ri is given by: 
+
+log dP i
+
+dR i (ω) = 
+
+Z T
+
+> 0
+
+(uit − ¯uit)⊤dw it + 12
+
+Z T
+
+> 0
+
+∥uit − ¯uit∥2 dt (9) Taking the expectation under P i, the stochastic integral with respect to wit vanishes due to the martingale property, yielding: 
+
+EP i
+
+
+
+log dP i
+
+dR i (ω)
+
+
+
+= 12 EP i
+
+"Z T
+
+> 0
+
+∥uit − ¯uit∥2 dt 
+
+#
+
+(10) This indicates that the relative entropy cost is equivalent to the mean-square deviation from the nominal input ¯uit.
+
+Step 2: Coupling Cost due to Cross-Log-Likelihood. For any player j̸ = i, the log Radon-Nikodym derivative between their controlled measure P j and the reference measure Rj
+
+is derived analogously to (9), utilizing the standard Wiener process d ¯wjt under Rj :
+
+log dP j
+
+dR j (ω) = 
+
+Z T
+
+> 0
+
+(ujt − ¯ujt )⊤d ¯wjt − 12
+
+Z T
+
+> 0
+
+∥ujt − ¯ujt ∥2 dt 
+
+(11) Under the expectation of player i’s measure P i, the system evolves according to dv t = uit dt + dw it. We can rewrite d ¯wjt
+
+in terms of player i’s processes: 
+
+d ¯wjt = dv t − ¯ujt dt = ( uit − ¯ujt ) dt + dw it (12) Substituting (12) into (11) gives: 
+
+log dP j
+
+dR j (ω) = 
+
+Z T
+
+> 0
+
+(ujt − ¯ujt )⊤ (uit − ¯ujt ) dt + dw it
+
+
+
+− 12
+
+Z T
+
+> 0
+
+∥ujt − ¯ujt ∥2 dt (13) Taking the expectation under P i, the stochastic integral R (·)⊤dw it vanishes. Consolidating the remaining terms inside the deterministic integral yields: 
+
+EP i
+
+
+
+log dP j
+
+dR j (ω)
+
+
+
+= EP i
+
+"Z T
+
+> 0
+
+
+
+(ujt − ¯ujt )⊤(uit − ¯ujt ) − 12 ∥ujt − ¯ujt ∥2
+
+
+
+dt 
+
+#
+
+= EP i
+
+"Z T
+
+> 0
+
+12 (ujt − ¯ujt )⊤(2 uit − ujt − ¯ujt ) dt 
+
+#
+
+(14) Substituting (10) and (14) back into the original objective (5) recovers the equivalent cost functional (8). ■
+
+Remark 1. Theorem 1 gives an equivalent parametriza-tion of each player’s strategy: relative to a fixed nominal pair ( Ri, ¯ui), a feedback control ui induces an absolutely continuous path measure P i, and conversely, any admis-sible measure P i ≪ Ri determines the associated unique drift adjustment. The coupling term αij EP i [log( dP j /dR j )] 
+
+therefore expresses how player i evaluates player j’s likeli-hood ratio on trajectories sampled from P i; in the control representation, this becomes the explicit cross term in ui
+
+and uj , so the interaction is at the level of relative measure changes on the common path space. Before analyzing the solutions, we characterize the Feed-back Nash Equilibrium via the coupled Hamilton-Jacobi-Bellman (HJB) equations. 
+
+Lemma 1. Consider the stochastic differential game defined in Theorem 1 subject to the dynamics (1) –(2) . Let Ji(t, x ) be Player i’s value function on [0 , T ] × X . Then, the Feedback Nash Equilibrium is governed by the following system of coupled nonlinear HJB equations for i ∈ { 1, . . . , N }:
+
+− ∂tJi = Cit (x) + ( f (x) + ¯ ui)⊤∇xJi+12 Tr  g(x)g(x)⊤∇2
+
+> xx
+
+Ji
+
+− 12 ∇J⊤(β⊤ ⊗ g(x)) diag 1≤j≤N (αij Im) ( β ⊗ g(x)⊤)∇J,
+
+(15) 
+
+Ji(T, x ) = Ψ i(x), (16) 
+
+where ∇J := [ ∇xJ1⊤, . . . , ∇xJN ⊤]⊤ ∈ RN n is the stacked gradient vector. Proof: Applying the dynamic programming principle to the equivalent cost in Theorem 1, the HJB equation for Player i is given by: 
+
+−∂tJi = min 
+
+> ui
+
+"
+
+Cit (x) + 
+
+> N
+
+X
+
+> j=1
+
+αij 
+
+2 (uj − ¯ujt )⊤(2 ui − uj − ¯ujt )+ ( f (x) + g(x)ui)⊤∇xJi
+
++ 12 Tr  g(x)g(x)⊤∇2
+
+> xx
+
+Ji #
+
+, (17) with the terminal condition Ji(T, x ) = Ψ i(x).Since αii > 0, the function on the right-hand side of (17) is convex in ui. Taking the derivative of the RHS with respect to ui yields the first-order necessary optimality condition: 
+
+> N
+
+X
+
+> j=1
+
+αij (uj − ¯ujt ) + g(x)⊤∇xJi = 0 , i = 1 , . . . , N. 
+
+(18) Stacking the conditions from (18) for all N players into a single linear system allows us to solve for the optimal feedback policies collectively. For brevity, we occasionally omit the explicit state dependence (x) for the drift f and diffusion g. Defining the stacked optimal control u∗ =[( u1∗ − ¯u1)⊤, . . . , (uN ∗ − ¯uN )⊤]⊤, we have (α ⊗ Im)u∗ =
+
+−(IN ⊗ g⊤)∇J. Multiplying by β ⊗ Im yields the explicit equilibrium strategies: 
+
+
+
+u1∗ − ¯u1
+
+...
+
+uN ∗ − ¯uN
+
+ = −(β ⊗ g⊤)
+
+
+
+∇xJ1
+
+...
+
+∇xJN
+
+ (19) Plugging u∗ from (19) back into (17) directly yields the explicit coupled nonlinear PDEs in (15). ■
+
+We now state the second main result, relating the solution of the coupled nonlinear HJB PDEs in Lemma 1 to a system of decoupled linear equations. To achieve this, we first introduce a change of variables. 
+
+Definition 1 (Multivariate Cole-Hopf Transformation) . Let 
+
+Zit (x) be the transformed desirability function for player i.We define the transformation mapping the value functions 
+
+Jit (x) to Zit (x) as: 
+
+
+
+J1 
+
+> t
+
+(x)
+
+...
+
+JNt (x)
+
+ = −α
+
+
+
+log Z1 
+
+> t
+
+(x)
+
+...
+
+log ZNt (x)
+
+ (20) Equivalently, multiplying by β = α−1, we have Zit (x) = exp 
+
+
+
+− PNj=1 βij Jjt (x)
+
+
+
+.
+
+Theorem 2. Under the transformation (20) , the system of coupled nonlinear HJB PDEs (15) with terminal conditions 
+
+(16) is equivalent to the following system of decoupled linear PDEs for each player i ∈ N :
+
+−∂tZit = ( f (x) + ¯ uig(x)) ⊤∇xZit + 12 Tr  g(x)g(x)⊤∇2
+
+> xx
+
+Zit
+
+
+
+−
+
+
+
+> N
+
+X
+
+> j=1
+
+βij Cjt (x)
+
+ Zit , (21) 
+
+ZiT (x) = exp 
+
+−
+
+> N
+
+X
+
+> j=1
+
+βij Ψj (x)
+
+ (22) 
+
+Proof: Differentiating the transformation (20) yields the following relations: 
+
+∂tJi = −
+
+> N
+
+X
+
+> j=1
+
+αij 
+
+∂tZj
+
+Zj , (23) 
+
+∇xJi = −
+
+> N
+
+X
+
+> j=1
+
+αij 
+
+∇xZj
+
+Zj , (24) 
+
+∇2
+
+> xx
+
+Ji =
+
+> N
+
+X
+
+> j=1
+
+αij 
+
+ ∇xZj (∇xZj )⊤
+
+(Zj )2 − ∇2
+
+> xx
+
+Zj
+
+Zj
+
+
+
+(25) Substituting (23)-(25) into the HJB equation (15), we observe that the term 12 Tr( gg ⊤∇2
+
+> xx
+
+Ji) generates both linear terms (involving ∇2
+
+> xx
+
+Zj ) and quadratic terms (involving 
+
+∇xZj (∇xZj )⊤). By the definition of the interaction matrix α and the equilibrium control structure, the explicit nonlinear cross-coupling term in the HJB (15) exactly cancels the quadratic terms generated by the Hessian of the logarithm. After this cancellation, the system reduces to: 
+
+α
+
+
+
+> ∂tZ1
+> Z1
+
+...
+
+> ∂tZN
+> ZN
+
+ =
+
+
+
+C1
+
+> t
+
+...
+
+CNt
+
+ − (α ⊗ f ⊤)
+
+
+
+> ∇xZ1
+> Z1
+
+...
+
+> ∇xZN
+> ZN
+
+ − 12 α
+
+
+
+> Tr( gg ⊤∇2
+> xx Z1)
+> Z1
+
+... 
+
+> Tr( gg ⊤∇2
+> xx ZN)
+> ZN
+
+
+
+(26) Left-multiplying (26) by the inverse matrix β = α−1
+
+perfectly decouples the system. Multiplying the i-th row by 
+
+Zit yields the linear PDE (21). The terminal condition (22) directly follows from applying Definition 1 to the terminal cost JiT (x) = Ψ i(x). ■
+
+Corollary 1 (Feynman-Kac Path Integral Solution) . By the Feynman-Kac lemma, the solution to the linear PDE (21) 
+
+subject to the boundary condition (22) admits the following probabilistic path integral representation: 
+
+Zit (x) = ERi
+
+"
+
+exp 
+
+−
+
+> N
+
+X
+
+> j=1
+
+βij 
+
+Z Tt
+
+Cjs (xs) ds 
+
+
+
+× exp 
+
+−
+
+> N
+
+X
+
+> j=1
+
+βij Ψj (xT )
+
+ xt = x
+
+#
+
+,
+
+(27) 
+
+where the expectation is taken with respect to the base mea-sure Ri corresponding to the nominally controlled forward 
+
+dx s = f (xs) ds + g(xs)(¯ uis + d ¯wis) (28) Remark 2 (Sampling Independence) . The decoupled nature of the linear PDEs allows the expectation in (27) for each player to be evaluated independently via forward Monte Carlo trajectory sampling. This entirely bypasses the need for spatial discretization grids, thereby overcoming the curse of dimensionality typically associated with solving multi-agent HJB equations. IV. OPTIMAL CONTROL COMPUTATION AND MEASURE RECOVERY In this section, we demonstrate how the optimal control can be evaluated via forward trajectory sampling, and we formally connect this result back to the original measure-theoretic general-sum game defined in (5). 
+
+A. Path Integral Control via Monte Carlo Sampling 
+
+Recall from the stacked first-order conditions (19) and the Cole-Hopf transformation (20) that the optimal control for player i is given by ui∗ 
+
+> t
+
+= ¯ uit + g(xt)⊤∇x log Zit (xt),or equivalently, ui∗ 
+
+> t
+
+= ¯uit + 1  
+
+> Zit(xt)
+
+g(xt)⊤∇xZit (xt). The following theorem establishes how this gradient can be computed directly from forward sampling without taking spatial derivatives. 
+
+Theorem 3 (Path Integral Control under the Reference Measure) . Let Rit,x denote the reference path measure from Corollary 1 (with dynamics (28) ), and let Sit (ω) := 
+
+PNj=1 βij 
+
+ R Tt Cjs (xs)ds + Ψ j (xT ) be the interaction-adjusted path cost from (27) . Then the optimal feedback control satisfies 
+
+ui∗ 
+
+> t
+
+(x) = ¯ uit + lim 
+
+> δt →0
+
+1
+
+δt 
+
+ERit,x 
+
+h
+
+e−Sit (ω)δ ¯wit
+
+i
+
+ERit,x 
+
+e−Sit (ω) , (29) 
+
+where δ ¯wit := ¯ wit+δt − ¯wit.Proof: Under the reference measure Rit,x , the desirability function has the Feynman-Kac representation 
+
+Zit (x) = ERit,x 
+
+h
+
+e−Sit (ω)i
+
+Moreover, the standard path-integral first-variation identity gives 
+
+g(x)⊤∇xZit (x) = lim 
+
+> δt →0
+
+1
+
+δt ERit,x 
+
+h
+
+e−Sit (ω) δ ¯wit
+
+i
+
+(30) Dividing by 
+
+Zit (x) = ERit,x 
+
+h
+
+eSit (ω)i
+
+yields 
+
+g(x)⊤∇x log Zit (x) = lim 
+
+> δt →0
+
+1
+
+δt 
+
+ERit,x 
+
+h
+
+e−Sit (ω) δ ¯wit
+
+i
+
+ERit,x 
+
+e−Sit (ω)
+
+Substituting this into 
+
+ui∗ 
+
+> t
+
+(x) = ¯ uit + g(x)⊤∇x log Zit (x)
+
+proves (29). ■
+
+Remark 3. Theorem 3 shows that the optimal control correc-tion ui∗ 
+
+> t
+
+(x) − ¯uit is a weighted average of the reference noise realizations. Trajectories with lower interaction-adjusted cost 
+
+Sit (ω) receive higher exponential weight and therefore exert greater influence on the optimal control update. 
+
+B. Recovery of the Optimal Probability Measure 
+
+We now return to the original KL formulation. The ob-jective is to identify the optimal path measure P i∗ 
+
+> t,x
+
+≪ Rit,x 
+
+induced by the optimal feedback control. 
+
+Theorem 4 (Optimal Measure) . For each player i, let P i∗
+
+> t,x
+
+denote the path measure induced by the optimal closed-loop control ui∗ starting from xt = x. Then the optimal measure is the exponentially tilted reference measure 
+
+dP i∗
+
+> t,x
+
+dR it,x 
+
+(ω) = e−Sit (ω)
+
+Zit (x) , ∀ω ∈ Ω. (31) 
+
+Proof: Define the normalized process M is := exp   −
+
+R st
+
+PNj=1 βij Cjr (xr ) dr  Zis(xs)  
+
+> Zit(x)
+
+for s ∈ [t, T ]. Applying Itˆ o’s lemma under the reference measure Rit,x and substituting the linear PDE for Zi, the drift terms cancel, yielding 
+
+dM is = M is
+
+ g(xs)⊤∇x log Zis(xs)⊤d ¯wis
+
+= M is
+
+ ui∗ 
+
+> s
+
+(xs) − ¯uis
+
+⊤d ¯wis, (32) where the second equality follows from the optimal con-trol relation. Thus, M is is the density process (stochas-tic exponential) mapping the reference noise to the opti-mally controlled noise, meaning Girsanov’s theorem gives 
+
+M iT = dP i∗
+
+> t,x
+> dR it,x
+
+(ω). Evaluating M iT using the terminal con-dition ZiT (xT ) = exp   − PNj=1 βij Ψj (xT ) directly yields 
+
+M iT = e−Sit (ω)/Z it (x), which completes the proof. ■
+
+V. S IMULATION 
+
+We illustrate the proposed framework using a two-player, one-dimensional game over the horizon t ∈ [0 , T ] with state space X = R. This example is designed to highlight the effect of the cross-log-likelihood coupling term in the game. 
+
+A. Game Setup 
+
+To ensure that all equilibrium behavior is driven purely by the game’s cost structure rather than asymmetric initial conditions or priors, both players share a common initial state x0 = 0 and an identical baseline reference process R:
+
+dx t = σdw t
+
+The controlled process associated with each player i ∈ { 1, 2}
+
+allows control to enter through the same channel as the diffusion: 
+
+dx t = σ ui(t, x t)dt + dw t
+
+
+
+Each player is assigned a quadratic well shaped state cost with moving well center as shown in 1. The well centers are defined as m1(t) = −a(t/T ) and m2(t) = a(t/T ). Both wells begin at the origin and separate linearly over time, meaning Player 1 progressively prefers the left side of the 0 1 2 3         
+
+> Time ( t)
+> −2
+> −1
+> 0
+> 1
+> 2
+> State ( x)
+> γ= −0.60
+> P1 Mean
+> P2 Mean
+> Well Centers
+> 0123
+> Time ( t)
+> γ= +0.00
+> 0123
+> Time ( t)
+> γ= +0.60
+
+Fig. 1. Equilibrium Measures. −2 −1 0 1 2           
+
+> State ( x)
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Terminal Density
+> γ= −0.60
+> P1 Density
+> P2 Density
+> −2 −1 012
+> State ( x)
+> γ= +0.00
+> −2 −1 012
+> State ( x)
+> γ= +0.60
+
+Fig. 2. Terminal Densities. state space with the terminal goal of x = + a, while Player 2 prefers the right with the terminal goal of x = −a, penalized by the following running and terminal costs: 
+
+Ci(t, x ) = q
+
+2
+
+ x − mi(t)2, Ψi(x) = qT
+
+2
+
+ x − mi(T )2.
+
+The interaction between the players is governed by the cou-pling matrix α(γ) =  1 γγ 1
+
+ and its inverse β(γ) = β(γ)−1,where |γ| < 1. The parameter γ dictates the interaction regime: a positive γ creates a repulsive effect (congestion avoidance), while a negative γ encourages spatial overlap (cohesion). 
+
+B. Computation 
+
+We evaluate the equilibrium using two methods. First, to recover the optimal measure P ∗ 
+
+> i
+
+from the initial condition (Theorem 4), we draw an ensemble of trajectories under the common reference process R and assign each trajec-tory ω the weight wi ∝ exp( −Si(ω)) , where Si(ω) =
+
+P2 
+
+> j=1
+
+βij 
+
+R T 
+
+> 0
+
+Cj dt + Ψ j
+
+
+
+. Second, to compute the opti-mally controlled trajectories, we use the state-feedback law 
+
+u∗ 
+
+> i
+
+(t, x ) as given in Theorem 3. 
+
+C. Results 
+
+Figures 1 and 4 demonstrate the distributional be-havior across three distinct interaction regimes (γ ∈{− 0.6, 0.0, 0.6}). Notably, both figures represent the exact same Nash equilibrium computed via two different computa-tional perspectives. Figure 1 depicts the equilibrium measure obtained by reweighting uncontrolled reference trajectories, while 4 illustrates the trajectories resulting from the closed-loop optimal control law. When uncoupled ( γ = 0 .0), the game reduces to a standard single-agent optimal control; the empirical mean trajectories follow their respective moving wells while maintaining the baseline reference. In the re-pulsive regime ( γ = 0 .6), the cross-divergence cost penal-izes overlapping distributions. Consequently, players exhibit proactive congestion avoidance, taking wider, sub-optimal 0.0 0.5 1.0 1.5 2.0 2.5 3.0        
+
+> Time ( t)
+> 0
+> 1
+> 2
+> 3
+> 4
+> D(t)
+> Separation D(t) = | [x1
+> t] − [x2
+> t]|
+> γ= −0.60
+> γ= +0.00
+> γ= +0.60
+
+Fig. 3. Expectation Distance. 0 1 2 3         
+
+> Time ( t)
+> −2
+> −1
+> 0
+> 1
+> 2
+> State ( x)
+> γ= −0.60
+> P1 Mean
+> P2 Mean
+> Well Centers
+> 0123
+> Time ( t)
+> γ= +0.00
+> 0123
+> Time ( t)
+> γ= +0.60
+
+Fig. 4. Feedback Controlled Equilibrium Trajectories. tracking routes to maintain a spatial buffer. Conversely, in the attractive regime ( γ = −0.6), players actively compromise their individual state cost goals to stay closer to the origin, increasing the shared probability mass. Finally, Figure 3 quantifies the temporal separation between these distribu-tions, while Figure 2 illustrates the spatial deviation from the terminal target induced by the cross-log-likelihood coupling. We also consider an additional asymmetric coupling regime in which the off-diagonal interaction terms have opposite signs defined by α(γ) =  1 −γγ 1
+
+. Unlike the symmetric benchmark cases, this non-reciprocal regime penalizes one player for overlap while the other is encouraged toward it, as illustrated in Figure 5. This shows that the proposed game framework captures reciprocal behaviors, such as mutual congestion avoidance or cohesion, while also accounting for nonreciprocal interactions like pursuit-evasion. VI. C ONCLUSION 
+
+We presented a class of measure-theoretic general sum dynamic game and it’s equivalent continuous time nonlinear stochastic differential game. We showed that the resulting coupled nonlinear HJB equations can be exactly decoupled and linearized via a multivariate Cole-Hopf transformation. The linearized system admits a Feynman-Kac path-integral representation, allowing optimal Nash equilibrium strategies to be computed through forward Monte Carlo sampling with-out spatial discretization, thereby circumventing the curse of dimensionality. Simulations on a two-player problem show that the proposed game can capture reciprocal behaviors like congestion avoidance or cohesion, as well as asymmetric interactions like pursuit-evasion at the distributional level. REFERENCES [1] T. Basar and G. J. Olsder, Dynamic Noncooperative Game Theory ,2nd ed., ser. Classics in Applied Mathematics. Philadelphia, PA: SIAM, 1998, vol. 23. 0 1 2 3         
+
+> Time ( t)
+> −2
+> −1
+> 0
+> 1
+> 2
+> State ( x)
+> γ= −0.60
+> P1 Mean
+> P2 Mean
+> Well Centers
+> 0123
+> Time ( t)
+> γ= +0.00
+> 0123
+> Time ( t)
+> γ= +0.60
+
+Fig. 5. Asymmetric Interaction based Equilibrium Measures 
+
+[2] R. Buckdahn and J. Li, “Stochastic differential games and viscosity solutions of Hamilton–Jacobi–Bellman–Isaacs equations,” SIAM Jour-nal on Control and Optimization , vol. 47, no. 1, pp. 444–475, 2008. [3] S. N. Cohen and V. Fedyashov, “Nash equilibria for nonzero-sum ergodic stochastic differential games,” Journal of Applied Probability ,vol. 54, no. 4, pp. 977–994, 2017. [4] M. K. Ghosh, K. S. Kumar, C. Pal, and S. Pradhan, “Nonzero-sum risk-sensitive stochastic differential games: A multi-parameter eigenvalue problem approach,” Systems & Control Letters , vol. 172, p. 105443, 2023. [5] E. Todorov, “Linearly-solvable Markov decision problems,” Advances in neural information processing systems , vol. 19, 2006. [6] H. J. Kappen, “Linear theory for control of nonlinear stochastic systems,” Physical review letters , vol. 95, no. 20, p. 200201, 2005. [7] E. A. Theodorou and E. Todorov, “Relative entropy and free energy dualities: Connections to path integral and kl control,” in 2012 ieee 51st ieee conference on decision and control (cdc) . IEEE, 2012, pp. 1466–1473. [8] K. Dvijotham and E. Todorov, “Linearly solvable Markov games,” in 
+
+2012 American Control Conference (ACC) . IEEE, 2012, pp. 1845– 1850. [9] T. Tanaka, E. Nekouei, A. R. Pedram, and K. H. Johansson, “Linearly solvable mean-field traffic routing games,” IEEE Transactions on Automatic Control , vol. 66, no. 2, pp. 880–887, 2020. [10] B. C. Soper, C. J. Miller, and D. M. Merl, “Linearly Solvable General-Sum Markov Games,” in 2024 60th Annual Allerton Conference on Communication, Control, and Computing . IEEE, 2024, pp. 1–8. [11] A. Patil, Y. Zhou, D. Fridovich-Keil, and T. Tanaka, “Risk-minimizing two-player zero-sum stochastic differential game via path integral control,” in 2023 62nd IEEE Conference on Decision and Control (CDC) . IEEE, 2023, pp. 3095–3101. [12] A. R. Pedram and T. Tanaka, “Linearly-solvable mean-field ap-proximation for multi-team road traffic games,” in 2019 IEEE 58th Conference on Decision and Control (CDC) . IEEE, 2019, pp. 1243– 1248. [13] A. Festa and S. G¨ ottlich, “A mean field game approach for multi-lane traffic management,” IFAC-PapersOnLine , vol. 51, no. 32, pp. 793– 798, 2018. [14] T. Mylvaganam, M. Sassano, and A. Astolfi, “A differential game approach to multi-agent collision avoidance,” IEEE Transactions on Automatic Control , vol. 62, no. 8, pp. 4229–4235, 2017. [15] M. A. Pereira, A. D. Saravanos, O. So, and E. A. Theodorou, “Decentralized safe multi-agent stochastic optimal control using deep FBSDEs and ADMM,” arXiv preprint arXiv:2202.10658 , 2022. [16] B. Øksendal, “Stochastic differential equations,” in Stochastic differ-ential equations: an introduction with applications . Springer, 2003, pp. 38–50.

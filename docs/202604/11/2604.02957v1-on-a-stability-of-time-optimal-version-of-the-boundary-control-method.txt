@@ -1,0 +1,736 @@
+Title: On a stability of time-optimal version of the Boundary Control method
+
+URL Source: https://arxiv.org/pdf/2604.02957v1
+
+Published Time: Mon, 06 Apr 2026 00:42:12 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# On a stability of time-optimal version of the Boundary Control method 
+
+## Mikhail I. Belishev ∗
+
+Key words: BC-method, time-optimal determination of manifolds and pa-rameters, triangular factorization, wave visualization, stability. 
+
+MSC: 47Axx, 47B25, 35R30. 
+
+Abstract 
+
+Let Ω be a Riemannian manifold with boundary. The time-optimal version of the BC-method determines the parameters in the T -neigh-borhood Ω T of ∂Ω from the boundary observations (response operator) 
+
+R2T on the time segment [0 , 2T ]. It visualizes the invisible waves supported in Ω T , by reconstructing the operator W T that creates these waves. The visualization is based on the triangular factorization of the operator CT := W T ∗W T in the form CT := F T ∗F T with a factor F T = U T W T , where U T is a unitary operator. The factorization CT 7 → F T has certain continuity properties, due to which the time-optimal reconstruction R2T 7 → CT 7 → F T 7 → W T
+
+turns out to be continuous (stable) in the sense of relevant operator topologies (convergences). As an example, determination of the potential q in the wave equa-tion utt − ∆u + qu = 0 from R2T is considered. We show that 
+
+R2Tj → R2T implies qj → q in H−2(Ω T ). However, the question of quantitative estimates of stability (the rate of convergence) remains open. 
+
+> ∗
+
+St. Petersburg Department of Steklov Mathematical Institute of Russian Academy of Sciences, Fontanka 27, St. Petersburg, Russia, 191023; belishev@pdmi.ras.ru 
+
+1
+
+> arXiv:2604.02957v1 [math-ph] 3 Apr 2026
+
+# 0 Introduction 
+
+• A principal feature and advantage of the boundary control method (BCm, [1]) is a time-optimality of the procedure that determines manifolds and pa-rameters from the time-domain boundary inverse data (observations). The optimality means that for determination in the T -neighborhood of the bound-ary, the observations R2T on the time segment [0 , 2T ] are sufficient, while the observations on [0 , 2T ′] with T ′ < T are insufficient and the observations on [0 , 2T ′] with T ′ > T are redundant. This feature of the time-optimal recon-struction (TOR) reflects the fundamental property of the wave motion, which is the finiteness of the wave propagation velocity. Meanwhile, there are other versions of the BCm that use R2T ′
+
+, T ′ > T : see, e.g., [4, 26, 28, 29, 31, 32]. 
+
+• The stability of BCm has been and continues to be studied in a series of papers by [16, 22, 27, 19, 32]. However, to our knowledge, all known quanti-tative results (estimates) are obtained for the versions, which work with the data [0 , 2T ′] with T ′ > T . Moreover, some experts doubt the existence of similar estimates for TOR [27]. Meanwhile, the physically natural character of TOR and examples of its successful numerical implementation [7, 8, 21, 23] inspire hope for the existence of at least a qualitative stability. The latter is the subject of our paper. Let Ω be a manifold with the boundary Γ, Ω T ⊂ Ω the T -neighborhood of Γ. We show that a convergence 
+
+R2Tj → R2T at Γ × [0 , 2T ] leads to a convergence V Tj → V T of the operators, which visualize invisible waves supported in Ω T . The latter convergence is equivalent to a convergence W Tj → W T of the operators which create waves in Ω T . So, if Ω is known , which is the case in the given paper, R2Tj → R2T
+
+leads to W Tj → W T . This is our main result. Its application, in which the wave evolution is governed by the equation utt − ∆u + qu = 0, is con-sidered and, eventually, we arrive at convergence of the potentials qj → q
+
+in H−2(Ω T ). However, the important, difficult and challenging question on the quantitative estimates (the rate of convergence) in TOR remains open. Interesting results in this direction are recently obtained in [20]. 
+
+• The plan of the paper is as follows. Section 1 is a portion of operator theory concerning triangular factoriza-tion (TF) of positive operators. The concept of convergence regular on a nest of subspaces is introduced. A known result (Theorem 1 from [15]) is presented in a form convenient for subsequent application. Section 2 contains a brief description of the TOR for a dynamical system 2with boundary control governed by the wave equation utt − ∆u + qu = 0. In Section 3 we show that Theorem 1 is applicable to TOR and provides a result on the weak operator convergence W Tj → W T . Its consequence is some convergence qj → q.
+
+• In the paper, we deal with a (small enough) times T < T 0 such that the subdomain Ω T0 is covered by the regular semigeodesic coordinates with the base on Γ. This is done only for technical simplicity: some TOR operators turn out to be unitary (and not just isometric, as in the general case) and so on. All results in the paper are valid for arbitrary T < T ∗, where T∗ := inf {T > 0 | ΩT = Ω } ⩽ ∞ is the filling time. 
+
+• The author thanks A.F.Vakulenko for kind consultations. 
+
+# 1 Operator theory preliminaries 
+
+Unless otherwise stated, all operators are considered bounded. An operator C in a Hilbert space is nonnegative , if ( Cf, f ) ⩾ 0 holds for all f ; positive if ( Cf, f ) > 0 holds for all f̸ = 0; and positive definite if (Cf, f ) ⩾ c∥f ∥2 with a constant c > 0 holds for all f . We write C ⩾ O,
+
+C > O, and C ⩾ c I respectively. 
+
+## 1.1 Convergences 
+
+• Let F and H be the Hilbert spaces, A, A j : F → H (j = 1 , 2, · · · → ∞ )the operators. Defining the uniform (norm), strong and weak convergence, we write Aj
+
+> u
+
+→ A, Aj
+
+> s
+
+→ A and Aj
+
+> w
+
+→ A if ∥Aj − A∥ → 0, ∥(Aj − A)f ∥ → 0and (( Aj − A)f, h ) → 0 hold respectively for all f ∈ F and h ∈ H .We denote by |A| := √A∗A ⩾ O, |A| : F → F the operator module and use the polar decomposition A = Φ |A| with the operator phase Φ : F → H ,which is an isometric operator mapping Ran |A| ⊂ F onto Ran A ⊂ H .The operators Φ ∗Φ and ΦΦ ∗ are the projections in F onto Ran |A| and onto Ran A respectively. If Ran |A| = F and Ran A = H then Φ is a unitary operator, and Φ ∗Φ = IF , ΦΦ ∗ = IH holds. 
+
+Lemma 1. Let A = Φ |A| and Aj = Φ j |Aj | be the polar decompositions with the unitary Φ and Φj . If Aj
+
+> u
+
+→ A holds then the convergences |Aj | u
+
+→ | A|,
+
+Φj
+
+> s
+
+→ Φ and Φ∗
+
+> j
+> s
+
+→ Φ∗ occur. 
+
+3Proof. Representing 
+
+∥| Aj |2 −| A|2∥ = ∥A∗ 
+
+> j
+
+(Aj −A)+( A∗ 
+
+> j
+
+−A∗)A∥ ⩽ ∥A∗ 
+
+> j
+
+∥∥ Aj −A∥+∥A∗ 
+
+> j
+
+−A∗∥∥ A∥
+
+and using the known A∗
+
+> j
+> u
+
+→ A∗, we get ∥| Aj |2 − | A|2∥ → 0. The latter implies 
+
+∥| Aj | − | A|∥ → 0 (see, e.g., [18]), so that |Aj | u
+
+→ | A| holds. Representing (Φ j − Φ) |A| = Aj − A − Φj (|Aj | − | A|)and taking f ∈ F arbitrarily, we have 
+
+∥(Φ j − Φ) |A|f ∥ ⩽ ∥(Aj − A)f ∥ + ∥(|Aj | − | A|)f ∥ → 0.
+
+Since Ran |A| is dense in F and ∥Φj ∥ are uniformly bounded, we get Φ j
+
+> s
+
+→ Φ. For h ∈ H we have 
+
+∥(Φ ∗ 
+
+> j
+
+− Φ∗)h∥2 = 2 ∥h∥2 − 2ℜ(Φ ∗ 
+
+> j
+
+h, Φ∗h) = 2 ∥h∥2 − 2ℜ(h, Φj Φ∗h) → 0in view of Φ j
+
+> s
+
+→ Φ proved above. Note and recall that the strong convergence of the unitary operator se-quence, in general, does not provide the limit to be unitary. Also, the con-jugation A 7 → A∗ is not continuous in the strong operator topology. 
+
+• For a lineal set G , by PG we denote the projection on G . If U is a unitary operator then PU G = U P G U ∗ holds. Let Aj
+
+> ·
+
+→ A be one of the convergences. We say that it is regular on a subspace F ′ ⊂ F (and write Aj 
+
+> ·,r
+
+→ A) if PAj F ′
+
+> s
+
+→ PAF ′ holds [15] 1. If Aj
+
+regularly converges on a family f = {F α} we say that the convergence is regular on f.
+
+Lemma 2. Assume that Aj = Φ j |Aj |, A = Φ |A|, all Φj and Φ are unitary, and Aj
+
+> u,r
+
+→ A holds on a subspace F ′ ⊂ F . Then the convergence |Aj | u,r
+
+→ | A|
+
+occurs on F ′.                       
+
+> 1The case F′=F=H,Aj=j−1Iu
+> →A=O,PAjF=I̸→O=PAis a trivial example of the irregular convergence. For more interesting examples see [15].
+
+4Proof. The regularity of Aj
+
+> u
+
+→ A on F ′ means that 
+
+PAj F ′ = PΦj |Aj |F ′ = Φ j P|Aj |F ′ Φ∗
+
+> j
+> s
+
+→ PA′ = PΦ|A|F ′ = Φ P|A|F ′ Φ∗
+
+holds. Therefore, we have Θj P|Aj |F ′ Θ∗
+
+> j
+> s
+
+→ P|A|F ′
+
+with a unitary Θ j := Φ ∗ 
+
+> j
+
+Φ, whereas Θ j
+
+> s
+
+→ IH holds by Lemma 1. For h ∈ H ,one has 0 ← ∥  Θj P|Aj |F ′ Θ∗ 
+
+> j
+
+− P|A|F ′
+
+ h∥ = ∥Θj
+
+ P|Aj |F ′ Θ∗ 
+
+> j
+
+− Θ∗ 
+
+> j
+
+P|A|F ′
+
+ h∥ == ∥  P|Aj |F ′ Θ∗ 
+
+> j
+
+− Θ∗ 
+
+> j
+
+P|A|F ′
+
+ h∥ = ∥P|Aj |F ′ Θ∗ 
+
+> j
+
+h − Θ∗ 
+
+> j
+
+P|A|F ′ h∥.
+
+In view of Θ ∗
+
+> j
+> s
+
+→ IH , the terms in ∥ · ∥ are of the form 
+
+P|Aj |F ′ Θ∗ 
+
+> j
+
+h = P|Aj |F ′ h + oj (1) , Θ∗ 
+
+> j
+
+P|A|F ′ h = P|A|F ′ h + ˜ oj (1) with ∥oj (1) ∥ and ∥˜oj (1) ∥ tending to 0. As a result, we arrive at ∥P|Aj |F ′ h −
+
+P|A|F ′ h∥ → 0 that proves the Lemma. 
+
+## 1.2 Triangular factorization 
+
+• Let f = {F s}s∈[0 ,T ] be a nest in a Hilbert space F , i.e., a family of extending subspaces [24, 17]. Let Xs be the projection in F onto F s. We assume f to be continuous: 
+
+F s ⊂ F s′
+
+, 0 ⩽ s < s ′ ⩽ T ; Xσ →
+
+> σ→s
+
+Xs F 0 = {0}, F T = F .
+
+(the projectors converge strongly). An operator F is triangular w.r.t. a nest f if F F s ⊂ F s (equivalently, 
+
+F X s = XsF X s) holds for all s ∈ [0 , T ]. An operator C ⩾ O admits the triangular factorization (TF) w.r.t. the nest f if the representation C = F ∗F
+
+holds with a triangular F . Such a factorization is not unique: if U is unitary and triangular then U F satisfies ( U F )∗(U F ) = C and also provides a TF of 
+
+C. One way to ensure uniqueness is to fix the diagonal of the factor. For further convenience, we introduce this notion in more general situation: see [12, 13, 15] for detail and motivation. 
+
+• Let H be one more Hilbert space. For an operator W : F → H ,the subspaces H s := W F s, s ∈ [0 , T ] form a nest. By P s we denote the 5projections in H onto H s. Fix a T < ∞ and choose a partition Ξ = 
+
+{sk}nk=0 : 0 = s0 < s 1 < · · · < s n = T of [0 , T ] of the range rΞ 
+
+> W
+
+:= max 
+
+> k=1 ,...,K
+
+(sk − sk−1). Denote ∆ Xsk := Xsk − Xsk−1 , ∆ P sk := P sk − P sk−1 , and put 
+
+DΞ 
+
+> W
+
+:= 
+
+> n
+
+X
+
+> k=1
+
+∆P sk W ∆Xsk . (1) The operator 
+
+DW := w- lim  
+
+> rΞ
+> W→0
+
+DΞ 
+
+> W
+
+=
+
+Z 
+
+> [0 ,T ]
+
+dP s W dX s : F → H (2) is called a diagonal of W w.r.t. the nest f. For its adjoint one has D∗ 
+
+> W
+
+=R  
+
+> [0 ,T ]
+
+dX sW ∗dP s : H → F , where the integral converges (or diverges) in the same sense as for DW . The relation ∥DW ∥ ⩽ ∥W ∥ is valid [12]. The diagonal intertwines the projections: the relations 
+
+DW Xs = P sDW , D∗ 
+
+> W
+
+P s = XsD∗ 
+
+> W
+
+s ∈ [0 , T ] (3) hold. 
+
+• Now, let H = F and let C be a positive operator in F . Assume that its positive square root √C has the diagonal D√C = R  
+
+> [0 ,T ]
+
+d ˜P s√C dX s, where ˜P s projects in F onto √CF s. As is easily seen from (3), the operator 
+
+F := D∗√C
+
+√C is triangular: F F s ⊂ F s holds. If, in addition, the diagonal satisfies the conditions Ran D√C = F , D√C D∗√C = IF ,
+
+then the TF 
+
+C = F ∗F, F = D∗√C
+
+√C (4) holds and is referred to as canonical [12]. Its peculiarity and advantage is that the triangular factor F is determined constructively via the factorizable operator C. Also, we have |F | = √F ∗F = √C, so that a possible look at (4) is that by F = D∗|W ||W | one recovers a triangular operator from its module. 
+
+• The triangular factorization C = F ∗F is stable if Cj → C and Cj = F ∗ 
+
+> j
+
+Fj ,
+
+C = F ∗F imply Fj → F (with a relevant understanding of convergences). The following result is established in [15]. 6Theorem 1. Let Cj
+
+> s
+
+→ C hold, operators Cj and C admit the canonical TF (4) on a nest f, and pCj
+
+> s,r
+
+→ √C hold on f. Let the integral sums, which define D√C and D√Cj by (1), converge to their limits (2) uniformly w.r.t. to j. Then the convergence of the triangular factors Fj
+
+> w,r
+
+→ F occurs. 
+
+## 1.3 Towards application 
+
+Below, in an inverse problem, we deal with the operators Wj , W : F → H ,for which the following holds. 
+
+(i) All operators are injective, so that Cj := W ∗ 
+
+> j
+
+Wj and C := W ∗W , are positive. The relations Wj F s = W F s = H s, s ∈ [0 , T ] hold. 
+
+(ii) All Wj and W have the diagonals DWj and DW , whereas the integrals (2) converge to their limits uniformly w.r.t. j. The diagonals satisfy DWj =
+
+DW =: D, where D : F → H is a unitary operator. 
+
+(iii) Operators Cj and C admit the canonical factorization (4) 
+
+Cj = F ∗ 
+
+> j
+
+Fj , F j = D∗√Cj
+
+√Cj = D∗|Wj ||Wj |; C = F ∗F, F = D∗√C
+
+√C = D∗|W ||W |.
+
+(iv) The equalities Fj = U W j and F = U W are satisfied with the same unitary operator U : H → F .Then, summarizing the previous results, we arrive at the following. 
+
+Proposition 1. 1. If the convergence Wj 
+
+> u,r
+
+→ W holds on a nest f ⊂ F ,then, by Lemmas 1 and 2, the convergence |Wj | s, r
+
+→ | W | (and, moreover, 
+
+|Wj | u, r
+
+→ | W |) also holds. 
+
+2. If the convergence |Wj | s, r
+
+→ | W | on f holds, then we have Fj 
+
+> w,r
+
+→ F by Theorem 1. The latter, due to (iv) , follows to Wj 
+
+> w,r
+
+→ W .
+
+# 2 Dynamical system with boundary control 
+
+## 2.1 Images 
+
+• Let (Ω , g ) be a C∞-smooth compact Riemannian manifold of dimension 
+
+n ⩾ 2 with a C∞-smooth boundary Γ. By τ we denote the distance function 
+
+τ (x) := dist ( x, Γ). We denote Ω T := {x ∈ Ω | τ (x) < T } and put T∗ := inf {T > 0 | ΩT = Ω }.7The set γ(x) := {γ ∈ Γ | dist ( x, γ ) = τ (x)} is a geodesic projection of x on Γ. We put T0 := sup {T > 0 | ♯γ (x) = 1 , x ∈ ΩT } ⩽ T∗ and in what follows, unless otherwise is specified, deal with T < T 0, so that the projection of any x ∈ ΩT consists of a unique point γ(x) ∈ Γ (see the comments in Introduction). In this case, the pair ( γ(x), τ (x)) constitutes the semi-geodesic coordinates (s.g.c.) of x. We also write x = x(γ, τ ) for (γ, τ ) ∈ ΣT := Γ × [0 , T ] and call Σ T a screen . The length and volume elements in s.g.c. are dl 2 = dτ 2 + ˜ gij (γ, τ )dγ i dγ j , where γi are the local coordinates on Γ, and dv = β(γ, τ )dΓdτ , where β := pdet {˜gij } is a smooth function satisfying β|τ =0 = 1, β > 0 in Ω T , and dΓ is a surface element at the boundary. 
+
+• Put H := L2(Ω), H T := {y ∈ H | supp y ⊂ ΩT } ⊂ H , F T := L2(Σ T ). Recall that T < T 0 is accepted and introduce the image operator IT : H T →
+
+F T ,˜y = ( IT y)( γ, τ ) := β 12 (γ, τ ) y(x(γ, τ )) , (γ, τ ) ∈ ΣT .
+
+We call ˜ y the image of y and say that IT visualizes y on the screen Σ T . As is easy to check, IT is a unitary operator and 
+
+IT ∗ : F T → H T ; (IT ∗f )( x) = β− 12 f (γ(x), τ (x)) , x ∈ ΩT
+
+holds. The adjoint operator transfers the nest fT := {F s}s∈[0 ,T ], F s := 
+
+{f ∈ F T | supp f ⊂ Γ × [0 , s ]} to the nest hT := {H s}s∈[0 ,T ], H s := {y ∈
+
+H T | supp f ⊂ Ωs} by IT ∗H s = F s.
+
+## 2.2 System and operators 
+
+In this section T > 0 is arbitrarily fixed; we will return to T < T 0 later. 
+
+• A dynamical system αT with boundary control (DSBC) is the system of the form 
+
+utt − ∆u + qu = 0 in H , t ∈ (0 , T ); (5) 
+
+u|t=0 = ut|t=0 = 0 in H ; (6) 
+
+u = f on Γ × [0 , T ], (7) where ∆ is the Beltrami-Laplace operator on (Ω , g ), f is a boundary control ,
+
+u = uf (x, t ) is a solution ( wave ). A potential q is a real function of the class 
+
+CN (Ω) with a large enough N specified later as necessary. 8The map f 7 → uf is continuous from L2, d Γdτ (Γ ×[0 , T ]) to C([0 , T ]; L2(Ω)) [25]. There are system theory attributes of αT . We denote Σ T := Γ × [0 , T ]. 
+
+1. The outer space of controls is F T = L2, d Γdτ (Σ T ). It contains the contin-uous nest fT of the delayed control subspaces 
+
+F T,s := {f ∈ F T | f |0⩽t⩽T −s= 0 }, s ∈ [0 , T ]; here s is the action time and T − s is the delay, so that F T, 0 = {0} and 
+
+F T,T = F T holds. 
+
+2. The inner space of states (waves) is H T = L2(Ω T ). It contains the nest of the reachable subspaces 
+
+U s := {uf (s) | f ∈ F T } ⊂ H s, s ∈ [0 , T ],
+
+where the embedding corresponds to the finiteness of the wave propagation velocity into Ω. Meanwhile, thanks to the Holmgren-John-Tataru Theorem [30], which is crucial for the BCm, the equality U s = H s holds for all s > 0, so the nest {U s}s∈[0 ,T ] coincides with hT = {H s}s∈[0 ,T ]. This fact is referred to as a boundary controllability of the system αT .
+
+3. As it follows from the regularity results [25], the control operator W T :
+
+F T → H T , W T f := uf (·, T ) is bounded. If Wj , j = 1 , 2, . . . correspond to the systems with potentials qj and ∥qj ∥CN (Ω) are uniformly bounded, then 
+
+∥Wj ∥ are also uniformly bounded. For times T < T ∗, operator W T is injective. 
+
+4. The response operator RT : F T → F T , Dom RT = {f ∈ H1(Σ T ) | f |t=0 =0} =: ˙H1(Σ T ), RT f := ∂ν uf on Σ T (∂ν is the derivative w.r.t. the outward normal to Γ) describes the response of system αT on the action of controls. It acts continuously from Dom RT (endowed with the Sobolev H1-norm) to 
+
+F T ([25], Theorem 2.2, (b)) but is unbounded as operator in F T .
+
+5. The operator CT := W T ∗W T ⩾ O is bounded in F T and injective for 
+
+T < T ∗. It connects the metrics of the outer and inner spaces by (CT f, g )F T = ( W T f, W T g)H T = ( uf (·, T ), u g(·, T )) H T ,
+
+and is called the connecting operator . The relation 
+
+CT = 2 −1 ST ∗R2T J2T ST (8) holds, where ST : F T → F 2T extends controls from [0 , T ] to [0 , 2T ] by oddness w.r.t. t = T , J2T : F 2T → J2T acts by ( J2T f )( ·, t ) = R t 
+
+> 0
+
+f (·, s ) ds ,9and R2T is the response operator of the system α2T [2, 3]. Thus, CT is explicitly expressed via response operator, which plays the role of the inverse data in time-domain inverse problems. 
+
+• However, one should be careful when using the representation (8). As such, it is only applicable to controls f satisfying ST f ∈ Dom R2T J2T , while it is unknown whether the operator R2T J2T is bounded or unbounded. It is bounded in one-dimensional cases, but we have never encountered a general-ization to n ⩾ 2 in the literature. Moreover, there is some reason to expect that it is unbounded, while the boundedness of CT is provided due to the bordering by ST and ST ∗. An accurate handle with CT requires to define it on admissible f ’s and then extend it to CT by continuity. However, no effi-cient representation of CT that allows its application to all f ∈ F T is known. This question has remained open for over 30 years. However, this is not an obstacle for numerical realization because in calculations one uses (and has to invert) not CT itself but its large size Gram matrix {(CT fi, f j )}Ni,j =1 , where the controls fi can be chosen admissible for (8) [7, 28, 29, 8]. One more remark to (8) is the following. If the norms ∥qj ∥CN (Ω) are uniformly bounded, then the norms ∥W Tj ∥ of the control operators of the systems with potentials qj are also uniformly bounded. As a consequence, 
+
+∥CTj ∥ are uniformly bounded. If ∥R2Tj − R2T ∥ ˙H1(Σ 2T )→F T → 0 holds, then by (8) we have ∥(CTj − CT )f ∥ → 0 for all f provided ST f ∈ ˙H1(Σ 2T ). Such f ’s constitute a set dense in F T . Therefore, due to the uniform boundedness of 
+
+CTj , the convergence CTj
+
+> s
+
+→ CT holds. Thus, we have 
+
+Proposition 2. The condition ∥qj ∥CN (Ω) ⩽ const and the convergence ∥R2Tj −
+
+R2T ∥ ˙H1(Σ 2T )→F T → 0 imply CTj
+
+> s
+
+→ CT .
+
+# 3 Stability of TOR 
+
+## 3.1 TOR 
+
+• Let’s briefly recall how the TOR procedure works [9, 3, 6]. We start with the properties of the control and connecting operators that ensure the execution of the procedure and, later, allow to analyze its stability. 
+
+(i) For any T < T ∗ operator W T is injective, so that the connecting operator 
+
+CT = W T ∗W T is positive. Due to the boundary controllability of the system 
+
+αT one has W T F s = H s, s ∈ [0 , T ]. 10 (ii) Operator W T has the diagonal and the remarkable equality 
+
+DW T = IT ∗Y T (9) holds, where IT : H T → F T is the image operator and Y T = Y T ∗
+
+: F T →
+
+F T changes the time by t 7 → T −t. This is proved by the use of the Geometric Optics relations, which describe propagation of singularities (discontinuities) of the waves uf and evolution of their amplitudes [9, 3]. However, the proof requires q ∈ CN (Ω) with a sufficiently large N depending on dim Ω, and in what follows we will assume that this condition is satisfied. The proof [9, 3] ensures the weak convergence of the integral (2) for the general case T < T ∗, but a simple analysis shows that for T < T 0 the integral converges strongly. Also, the same proof provides that if a family of potentials obeys ∥qj ∥CN (Ω) ⩽ const, then the integrals (2) for DW Tj , converge uniformly w.r.t. j (uniformly strongly if T < T 0). By (9), we have DW Tj = DW T =
+
+IT ∗Y T .
+
+(iii) The connecting operators Cj and C corresponding the potentials qj
+
+and q admit the canonical factorization (4) 
+
+CTj = F T ∗ 
+
+> j
+
+F Tj , F Tj = D∗√CTj
+
+q
+
+CTj ; CT = F T ∗F T , F T = D∗√CT
+
+√CT
+
+.
+
+(10) 
+
+(iv) The equalities F Tj = U T W Tj and F T = U T W T are valid with the same operator U T = D∗ 
+
+> WT
+> (9)
+
+= Y T IT : H T → F T , which is isometric for T < T ∗
+
+and unitary for T < T 0.Applying Proposition 1, we get 
+
+Proposition 3. Assume that ∥qj ∥CN (Ω) , ∥q∥CN (Ω) ⩽ const is valid with a relevant N . Then 
+
+1. if the convergence W Tj 
+
+> u,r
+
+→ W T holds on a nest fT ⊂ F T , then the conver-gence 
+
+q
+
+CTj 
+
+> s,r
+
+→ √CT (and, moreover, 
+
+q
+
+CTj 
+
+> u,r
+
+→ √CT ) also holds; 
+
+2. if the convergence 
+
+q
+
+CTj 
+
+> s,r
+
+→ √CT holds on fT , then we have F Tj 
+
+> w,r
+
+→ F T .The latter, due to (iv) , leads to W Tj 
+
+> w,r
+
+→ W T .
+
+(v) Since the operator L = −∆ + q which governs the evolution of the system αT , does not depend on the time, the evolution is invariant w.r.t. the time shift t 7 → t − σ, which implies uft = uft and leads to 
+
+uftt = uftt 
+
+> (5)
+
+= −Lu f . (11) 11 For q ∈ CN (Ω) with a large enough N , one has uf (·, t ) ∈ H2(Ω) for the controls of the class M T := {f ∈ C∞(Σ T ) | f vanishes near t = 0 } dense in 
+
+F T [5]. As is easy to see, the graph graph L = {⟨ uf (·, T ), Lu f (·, t )⟩ | f ∈ M T } (11) 
+
+= {⟨ W T f, −W T ftt ⟩ | f ∈ M T }
+
+(12) determines the metric g together with potential q. Respectively, the graph of the operator ˜L := IT LI T ∗ is graph ˜L = {⟨ V T f, −V T ftt ⟩ | f ∈ M T }, (13) where the operator V T : F T → F T ,
+
+V T := IT W T = IT IT ∗Y T F T = Y T F T (14) visualizes the waves on the screen Σ T . This graph determines metric ˜ g (that is g in s.g.c.) and potential ˜ q (q in s.g.c.) on Σ T .
+
+• Let a positive T < T 0 be fixed. The TOR procedure works as follows. Given the operator R2T , the external observer acts according to the scheme 
+
+R2T (8) 
+
+7→ CT 7 → √CT (10) 
+
+7→ F T (14) 
+
+7→ V T .
+
+If the manifold is unknown , the observer finds the metric ˜ g and potential ˜ q
+
+on the screen Σ T (in s.g.c.) from the graph (13), endowed the screen with metric ˜ g that turns it to an isometric copy (Σ T , ˜g) of (Ω T , g ), and claims that the inverse problem is solved. If (Ω T , g ) is known (so that the image operator IT is given) and the only problem is to determine the potential q on it, the observer recovers the control operator W T (14) 
+
+= IT ∗V T , and finds q from the graph (12). 
+
+## 3.2 Stability 
+
+• A stability of the TOR is analyzed by the use of Proposition 3 as follows. Assume that a convergence R2Tj → R2T yields CTj
+
+> s
+
+→ CT and, hence, 
+
+q
+
+CTj
+
+> s
+
+→√CT . Then the observer checks whether the latter convergence is regular on the nest fT = {F T,s }s∈[0 ,T ].
+
+⋆ If it is not regular, the observer reports that the uniform convergence 
+
+W Tj
+
+> u
+
+→ W T is absent. However, a weaker convergence or divergence are not excluded, but nothing more can be said. 12 ⋆⋆ If the convergence is regular, i.e., 
+
+q
+
+CTj 
+
+> s,r
+
+→ √CT is valid, then the con-vergences V Tj 
+
+> w,r
+
+→ V T and W Tj 
+
+> w,r
+
+→ W T hold. 
+
+• In the latter (affirmative) case, the convergence W Tj 
+
+> w,r
+
+→ W T follows to a convergence of the potentials. Recall that the boundedness ∥qj ∥CN (Ω) ⩽ const is assumed, where N is large enough to satisfy all the previous accepted requirements: justification of the geometric optics, H2(Ω)-smoothness of the waves uf for the smooth f ’s, and others. 
+
+Lemma 3. The convergence W Tj 
+
+> w,r
+
+→ W T leads to ∥qj − q∥H−2(Ω T ) → 0.Proof. Fix an f ∈ M T , put g := ( JT )2f = ( R t 
+
+> 0
+
+)2f ∈ M T and note that 
+
+ugtt = uf holds by (11). Subscribing the wave equations, we have (ufj − uf ) − ∆( ugj − ug) + qj (ugj − ug) = ( qj − q)ug.
+
+Taking t = T , multiplying by a test function ω ∈ H20 (Ω T ), integrating by parts, and tending j → ∞ , we get 0 ← (( W Tj − W T )f, ω )H T − (( W Tj − W T )g, ∆ω)H T == (( qj − q) ug(·, T ), ω )) H T := ⟨qj − q, η ⟩
+
+with η = ug(·, T )ω ∈ H20 (Ω T ). Using the known facts (see, e.g., [5]), one can show that such η’s form a set dense in H20 (Ω). Meanwhile, understanding 
+
+⟨qj − q, η ⟩ as the coupling in the triple H−20 (Ω T ) ⊂ H T = L2(Ω T ) ⊂ H2(Ω T )(i.e., qj − q as an H−2-functionals), we see that ⟨qj − q, η ⟩ → 0 holds on a dense set, while the norms ∥qj − q∥H−2(Ω T ) are obviously uniformly bounded. As a result, we arrive at qj − q → 0 in H−2(Ω T ). 
+
+## 3.3 Comments 
+
+• According to traditional views in the IP-community, an inverse problem is considered to be completely solved if 
+
+1) Uniqueness is established, i.e., the injectivity of the correspondence ”ob-jects to be determined 7 → inverse data” is proven; 
+
+2) A procedure that recovers the objects is developed; 
+
+3) A stability of the determination procedure is established; 
+
+4) Necessary and sufficient conditions for solvability of the problem ( inverse data characterization ) are found. 13 For time-domain problems, the BC-method provides the TOR procedure that settles 1) and 2) [3, 6]. It also offers some insight into 4) [14]. Our paper gives at least some answer to the question 3) . However, to claim that the time-optimal reconstruction problem is completely solved would be overstatement. We guess and hope that these results can be substantially improved. First of all, this concerns the quantitative stability estimates for TOR that is very important, difficult and challenging problem. 
+
+• The original version of TOR has appeared in [2]. In the same paper, repre-sentation (8) based on the A.S.Blagoveshchenskii relations, and the concept of the amplitude integral (later interpreted as an operator diagonal) have been proposed, It generalizes M,S.Brodskii’s operator construction known as triangular truncation integral [24]. The approach [2], with no substan-tial modifications, is generalized in [11] for the reconstruction of Riemannian manifolds. In [10], a variant of TOR uses visualization of Gaussian beams for reconstruction. 
+
+# References 
+
+[1] M.I.Belishev. On an approach to multidimensional inverse problems for the wave equation. Soviet Mathematics. Doklady , 36 (1988), no 3, 481–484. [2] M.I.Belishev. Boundary control and wave fields continuation. LOMI PREPRINT , P–1–90, 1990 (in Russian). [3] M.I.Belishev. Boundary control in reconstruction of manifolds and met-rics (the BC method). Inverse Problems , 13(5): R1–R45, 1997. [4] M.I.Belishev. On uniqueness of recovering the low order terms in the wave equation from dynamical boundary data. Journal of Mathematical Sciences 101 (2000), no 5, 3408–3421. DOI:10.1007/BF02680142. [5] M.I.Belishev. Local controllability in classes of differentiable functions for the wave equation. Journal of Mathematical Sciences , Vol. 238, No. 5, May, 2019. DOI 10.1007/s10958-019-04259-0. [6] M.I.Belishev. New Notions and Constructions of the Boundary Control Method. Inverse Problems and Imaging, Vol. 16, No. 6, December 2022, pp. 1447-1471. doi:10.3934/ipi.2022040. 14 [7] M.I.Belishev, V.Yu.Gotlib. Dynamical variant of the BC-method: the-ory and numerical testing. Journal of Inverse and Ill-Posed Problems ,7, 3: 221–240, 1999. [8] M.I.Belishev, I.B.Ivanov, I.V.Kubyshkin, V.S.Semenov. Numerical test-ing in determination of sound speed from a part of boundary by the BC-method. Journal of Inverse and Ill-Posed Problems , 24 (2016), Is-sue 2, Pages 159–180, DOI: 10.1515/jiip-2015-0052 [9] M.I.Belishev, A.P.Kachalov. Operator integral in multidimensional spec-tral inverse problem. Zapiski Nauch. Semin. POMI , 215 (1994), 9–37. (in Russian). Translated in Journal of Mathematical Sciences 06/1997; 85(1):1559-1577. DOI:10.1007/BF02355317. [10] M.I.Belishev, A.P.Kachalov. Boundary control and quasiphotones in the problem of reconstruction of a Riemannian manifold via dynamical data. 
+
+Zapiski Nauch. Semin. POMI , 203 (1992), No 22, 21–51. (in Russian). Translated in Journal of Mathematical Sciences , v. 79 , no 4, 1996. [11] M.I.Belishev, Ya.V.Kurylev. To the reconstruction of a Riemannian manifold via its spectral data (BC-method). Comm. Part. Diff. Eq. , 17 (1992), No 5/6, 767–804. [12] M.I.Belishev and S.A.Simonov. Triangular and functional models of operators and systems. Algebra i Analiz, Vol. 36 (2024), No. 5, . (in Russian). arXiv:2401.16054v1 [math-ph] 29 Jan 2024. [13] M.I.Belishev and S.A.Simonov. A model and characterization of a class of symmetric semibounded operators . arXiv:2504.01000v1 [math-ph] 1 Apr 2025. [14] M.I.Belishev, A.F.Vakulenko. On characterization of inverse data in the boundary control method. Rend. Istit. Mat. Univ. Trieste , Volume 48 (2016), 49–77. DOI: 10.13137/2464-8728/13151. [15] M.I.Belishev, A.F.Vakulenko. On stability of triangular factorization of positive operators. Zapiski Nauch. Semin. POMI , 541, 2025, 71-51. (in Russian). Translation see in arXiv: 2509.22765v1 [math.FA] 26 Sep 2025. 15 [16] M.Bellassaued, D.S.Fereira. Stability estimates for the anisotropic wave equation from the Dirichlet-to-Neumann map. arXiv: 1005.0318v1 [math.AP] 3 May 2010. [17] K.R.Davidson. Nest algebras. Pitman Research Notes in Mathematics Series , 1988, ISSN 0269-3674;191. ISBN 0-582-01993-1. [18] Yu. B. Farforovskaya and Ludmila Nikolskaia. An inequality for commu-tators of normal operators Acta Sci. Math. (Szeged) , 71 (2005), 751–765. [19] Spyridon Filippas, Lauri Oksanen. On the blowup of quantitative unique continuation estimates for waves and applications to stability estimates. 
+
+arXiv: 2502.13040v1 [math.AP] 18 Feb 2025. [20] Spyridon Filippas, Lauri Oksanen. On the stability of an inverse problem for waves via the Boundary Control method. Journal of Differential Equations , 453, (2026), 113900. [21] I.B.Ivanov, M.I.Belishev, V.S.Semenov. The reconstruction of sound speed in the Marmousi model by the boundary control method. http://arxiv.org/abs/1609.07586 [22] S.Liu, L.Oksanen. A Lipschitz stable reconstruction formula for the inverse problem for the wave equation. arXiv :1210.1094v1 [math.AP] 3 Oct 2012. [23] M.V.Klibanov, A.Timonov. Deep Learning and successive iterations for an inverse problem of the variable density reconstruction by the Bound-ary Control method Euroasian Journal of Mathematical and Computer Applications , ISSN 2306–6172, Volume 10, Issue 3 (2022) 37–57. [24] I.Ts.Gohberg, M.G.Krein. Theory and Applications of Volterra Opera-tors in Hilbert Space. Transl. of Monographs No. 24, Amer. Math. Soc ,Providence. Rhode Island, 1970. [25] I.Lasiecka, R.Triggiani. Recent advances in regularity of second-order hyperbolic mixed problems, and applications. In Christopher K. R. T. (ed.) et al. Jones, editor, Dynamics reported. Expositions in dynamical systems , volume 3, pages 104–162. Berlin: Springer-Verlag, 1994. 16 [26] Yaroslav V Kurylevyz and Matti Lassas. The multidimensional Gel’fand inverse problem for non-self-adjoint operators. Inverse Problems , 13 (1997) 1495–1501. Printed in the UK PII: S0266-5611(97)81835-7. [27] C.Montalto. Stable determination of a simple metric, a covector field and a potential from the hyperbolic Dirichlet-to-Neumann map. arXiv: 
+
+1205.6425v1 [math.AP] 29 May 2012. [28] L.N.Pestov. On determining an absorption coefficient and a speed of sound in the wave equation by the BC method. J. Inverse Ill-Posed Probl., Ahead of Print DOI 10.1515/jip-2013-0012 © de Gruyter 2013. [29] Leonid Pestov, Victoria Bolgova and Oksana Kazarina Numerical re-covering a density by the BC method. Inverse Problems and Imaging ,Volume 4, No. 4, 2010, 703–712. doi:10.3934/ipi.2010.4.703. [30] D.Tataru. Unique continuation for solutions to PDE’s: between Hor-mander’s and Holmgren’s theorem. Comm. PDE , 20 (1995), 855–884. [31] Tianyu Yang and Yang Yang. A Non-Iterative Reconstruction Algorithm for the Acoustic Inverse Boundary Value Problem. arXiv : 2009.00641v1 [math.AP] 1 Sep 2020. [32] Yang Yang. A formula for time-to-frequency wave boundary data con-version by the boundary control method. arXiv:2602.13612v1 [math.AP] 14 Feb 2026. 
+
+17
