@@ -1,0 +1,2148 @@
+Title: A Convergent Hybridizable Discontinuous Galerkin Method for Einstein--Scalar Equations
+
+URL Source: https://arxiv.org/pdf/2604.04613v1
+
+Published Time: Tue, 07 Apr 2026 02:00:46 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+A CONVERGENT HYBRIDIZABLE DISCONTINUOUS GALERKIN METHOD FOR EINSTEIN–SCALAR EQUATIONS 
+
+MUKUL DWIVEDI AND ANDREAS RUPP 
+
+Abstract. We propose and analyze a hybridized discontinuous Galerkin (HDG) method for the spherically symmetric Einstein–scalar system in Bondi gauge. After rewriting the model as a local first-order PDE–ODE system by introducing suitable scaled variables, we construct a semidiscrete scheme in which the element unknowns are computed locally and the coupling is carried by traces on the mesh skeleton. In the present radial setting, these traces can be eliminated recursively, so that only the main evolution variable is advanced in time, while the metric variables are recovered from discrete constraint relations. We prove local semidiscrete well-posedness, derive a global L2–stability estimate, establish an optimal order L2 error bound for the main evolution variable for polynomial degree k ≥ 1, and obtain reconstruction error estimates for the metric variables and the associated mass functional. Numerical experiments verify the predicted spatial convergence rate and illustrate qualitative features of the Einstein– scalar dynamics, including large-data collapse profiles and smooth-pulse evolution. 
+
+1. Introduction 
+
+Numerical solutions of the Einstein equations play a fundamental role in modern gravitational physics, enabling the simulation of black holes, neutron stars, and gravitational wave sources; see, for instance, [3, 23, 28, 29]. The field of numerical relativity traces its origins to the earliest computational formulations of Einstein’s theory and the first numerical explorations of black-hole spacetimes [1, 31]. Following a prolonged period of challenges concerning coordinate choices, boundary conditions, and numerical stability, significant breakthroughs were achieved through the development of robust formulations and suitable gauge conditions. These advances ultimately enabled stable and accurate simulations of binary black-hole mergers; see [2, 5, 41, 42] and the references therein. For the detailed background on numerical relativity and the Bondi-gauge formulation considered here, we refer to the references above and to [8]. From a practical standpoint, numerical relativity has achieved remarkable success. Nonethe-less, the stability and convergence analysis of high-order methods for the full nonlinear Einstein system remains mathematically difficult. Under suitable decompositions and gauge choices, Ein-stein’s equations become highly nonlinear hyperbolic systems, and rigorous numerical analysis in this setting is still rather limited. It is therefore natural to begin with symmetry-reduced models. Among these, the spherically symmetric Einstein–scalar field system is particularly important, since it retains key analytical and physical features such as gravitational collapse, horizon forma-tion, and long-time metric evolution. The foundational PDE theory for this model was developed by Christodoulou; see [9, 10, 11, 12, 13]. More recently, Chen et al. [8] proved L2-stability and optimal-order convergence of a discontinuous Galerkin method for the Bondi-gauge formulation, including large-data regimes that lead to collapse toward black-hole-type profiles. We briefly recall the model following the derivation in Bondi gauge in [8] and the classical works on the spherically symmetric Einstein–massless-scalar system [9]. In geometric units ( G = c = 1 ), the Einstein field equations are 
+
+Gμν = 8 π T μν , (1.1) 
+
+2020 Mathematics Subject Classification. Primary 65M60, 65M12; Secondary 83C05. 
+
+Key words and phrases. Einstein–scalar equations, HDG scheme, L2 stability, optimal error estimates. This work has been supported by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) – 577175348.   
+
+> 1
+> arXiv:2604.04613v1 [math.NA] 6 Apr 2026 2MUKUL DWIVEDI AND ANDREAS RUPP
+
+where Gμν := Rμν − 12 gμν R is the Einstein tensor. Here, gμν is the spacetime metric, Rμν is the Ricci tensor, and R is the scalar curvature. For a massless scalar field ϕ, the stress–energy tensor is 
+
+Tμν = ∂μϕ ∂ ν ϕ − 12 gμν gαβ ∂αϕ ∂ β ϕ. 
+
+In spherical symmetry, adopting Bondi-type null coordinates (t, r, θ, φ ) with areal radius r ≥ 0,one may write the metric in the Bondi–Sachs form [4, 8, 47] 
+
+ds 2 = −g(t, r ) ˜ g(t, r ) dt 2 − 2 g(t, r ) dt dr + r2 dΩ2, dΩ2 = dθ 2 + sin 2 θ dφ 2, (1.2) where g and ˜g are positive metric coefficients. The reduced equations in (1.2) are obtained by combining two ingredients. First, suitable com-ponents of the Einstein equations provide radial “constraint” relations for the metric coefficients. Second, the conservation law ∇μT μν = 0 yields the wave equation for ϕ, which couples back to the metric through g and ˜g; see [8, §2 and Appendix A] for a detailed derivation in the present normalization. To express the resulting system in a simple first-order form, one introduces the auxiliary variables 
+
+u(t, r ) := (r ϕ (t, r )) 
+
+> r
+
+, (1.3a) 
+
+˜u(t, r ) := ϕ(t, r ) = 1
+
+r
+
+∫ r
+
+> 0
+
+u(t, s ) ds. (1.3b) Here, the averaging relation (1.3b) encodes regularity at r = 0 , and it is already the first place where a nonlocal dependence on the full interval [0 , r ] enters the formulation. With this notation (and using the same normalization as [8], in which the factor 4π is absorbed), the symmetry-reduced Einstein–scalar system becomes the coupled PDE–ODE system [8]: 
+
+ut −
+
+( 12 ˜g u 
+
+)
+
+> r
+
+= − 12 ˜gr ˜u, (1.4a) 
+
+gr = 1
+
+r g (u − ˜u)2, (1.4b) 
+
+˜gr = 1
+
+r (g − ˜g). (1.4c) We consider r ∈ [0 , b ] for a fixed outer radius b > 0 and (t, r ) ∈ [0 , T ] × [0 , b ]. The outer boundary data are prescribed at r = b by 
+
+u(t, b ) = Ub(t), g(t, b ) = 1 , (1.5) while regularity at the center r = 0 requires rϕ (t, r ) → 0 as r → 0 and ˜g remains bounded. Auseful point for both analysis and numerics is that the constraint equations (1.4b) and (1.4c) can be integrated explicitly (for each fixed t), which makes the nonlocal structure completely visible: 
+
+˜g(r) = 1
+
+r
+
+∫ r
+
+> 0
+
+g(s) ds, (1.6a) 
+
+g(r) = exp 
+
+(
+
+−
+
+∫ br
+
+1
+
+s (u − ˜u)2 ds 
+
+)
+
+. (1.6b) Thus, even though (1.4a) is written as a local transport equation, its coefficients and source term depend on spatial averages and integrals through (1.3b), (1.6a), and (1.6b). A key structural feature is that (1.3b) and the representation of ˜g are nonlocal in r. To localize these equations, we introduce w(t, r ) := r ˜u(t, r ) and z(t, r ) := r ˜g(t, r ). Then, from (1.3b), 
+
+wr = ( r˜u)r = u. 
+
+Likewise, using (1.6a), 
+
+zr = ( r˜g)r = g. 
+
+The corresponding center conditions are 
+
+w(t, 0) = 0 , z(t, 0) = 0 . (1.7) HDG FOR EINSTEIN SCALAR EQUATION 3
+
+Thus, the model (1.3b)–(1.4) is equivalently represented by the local first-order system 
+
+ut −
+
+( 12 ˜g u 
+
+)
+
+> r
+
+= − 12 ˜gr ˜u, (1.8a) 
+
+wr = u, (1.8b) 
+
+gr = 1
+
+r g (u − ˜u)2, (1.8c) 
+
+zr = g, (1.8d) with ˜u = w/r , ˜g = z/r for r > 0, center conditions (1.7), and outer conditions (1.5). This local form is the starting point for our HDG formulation. We also record a basic bound for the metric coefficients, which will be repeatedly used to identify the correct upwind directions and to control the coefficients in the numerical fluxes. 
+
+Lemma 1.1 (Bounds for the metric coefficients) . Assume g and ˜g satisfy (1.4b) –(1.4c) with the outer normalization g(b) = 1 . Then for every fixed t and all r ∈ (0 , b ],
+
+0 < ˜g(r) ≤ g(r) ≤ 1.
+
+Proof. From (1.4b), we have gr = 1 
+
+> r
+
+g(u − ˜u)2 ≥ 0 for r > 0. Hence, g is nondecreasing in r and 
+
+g(r) ≤ g(b) = 1 . Moreover, (1.6a) implies ˜g(r) ≤ g(r), and (1.6b) implies g > 0. This immediately yields 0 < ˜g ≤ 1. □
+
+These considerations suggest that the spherically symmetric Einstein–scalar system (1.4) pro-vides a natural model for testing new high-order discontinuous discretizations. To obtain a nu-merical method with a better computational structure, high-order accuracy, and fewer globally coupled degrees of freedom, we consider a hybridizable discontinuous Galerkin (HDG) approach. HDG methods were first developed for second-order elliptic problems [17], and have since been suc-cessfully extended to many other classes of partial differential equations. These include convection– diffusion problems [15, 38], Stokes and incompressible flow systems [16, 18, 36, 39, 40, 45], the Helmholtz equation [6, 30, 22], and elasticity equations [19, 32, 44]. More recently, HDG tech-niques have also been developed for nonlinear dispersive and fully nonlinear problems, includ-ing the Ostrovsky equation [26], the Camassa–Holm–Kadomtsev–Petviashvili equation [25], the Monge–Ampère problem [37], and KdV-type equations [7, 24, 48]. A defining feature of HDG is that the globally coupled unknowns are numerical traces on the mesh skeleton, while the element unknowns are recovered locally. This structure not only reduces the size of the global algebraic system compared with standard DG methods, but also makes HDG particularly attractive from the solver point of view. In this direction, Lu et al. developed homogeneous multigrid methods for HDG discretizations and provided an analysis of injection operators for geometric multigrid solvers for HDG methods [34, 35]. Related multiscale and localized formulations have also been investigated in the HDG setting; see, for instance, [33]. For the Bondi-gauge Einstein–scalar sys-tem considered here, such a structure is particularly attractive because the evolution equation is coupled with radial constraint relations, and therefore a method based on local reconstruction and reduced global coupling provides a natural and efficient discretization framework. The main contribution of this paper is to formulate and analyze a hybridized trace-based semidiscretization for the Bondi–gauge Einstein–scalar system (1.4) on a finite radial interval. After introducing the auxiliary variables w = r˜u and z = r˜g, the nonlocal structure of the model is rewritten in the local first-order form (1.8), while the discrete reconstruction is carried out through the local reconstruction formulae, which makes it possible to couple the elements only through single-valued traces. In the present one-dimensional radial setting, these traces can in fact be eliminated recursively, so that only the principal evolution variable uh is advanced in time, while the remaining quantities are reconstructed from the discrete constraint relations. On the analytical side, we prove local semidiscrete well–posedness, derive a global L2–stability estimate, establish an optimal order L2 error bound for uh for polynomial degree k ≥ 1, and obtain corresponding reconstruction estimates for the metric variables and the associated mass functional. The numerical experiments support the theory and demonstrate that the method reproduces the 4 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+expected qualitative behavior of the Einstein–scalar dynamics, including collapse toward black-hole profiles. In this sense, the paper shows that HDG provides not only a reduced discrete coupling structure but also a rigorous and effective framework for high-order approximation of this symmetry-reduced Einstein system. The paper is organized as follows. In Section 2, we introduce the HDG discretization and derive the local and global trace formulations. Section 3 is devoted to the semidiscrete well-posedness and the L2-stability estimate. In Section 4, we prove the optimal error estimate and the corresponding reconstruction-error bounds. Section 5 presents numerical experiments that verify the theoretical rates and illustrate black-hole formation and the associated metric behavior. We close with a brief discussion in Section 6. 2. A hybridizable discontinuous Galerkin discretization 
+
+We discretize the local first–order Einstein–scalar system (1.8) in space on [0 , b ] and keep time continuous. 2.1. Mesh, skeleton notation, and discrete spaces. Let 0 = r0 < r 1 < · · · < r N = b be a partition of [0 , b ] and set 
+
+Ii := ( ri−1, r i), i = 1 , . . . , N, hi = ri − ri−1, Th := {Ii}Ni=1 , h = max hi.
+
+We denote the set of mesh nodes by 
+
+Fh := {ri}Ni=0 , F∂h := {r0, r N }, F0 
+
+> h
+
+:= Fh \ F ∂h .
+
+For an integer k ≥ 0, let P k(Ii) be the polynomials of degree at most k on Ii, and define the broken space 
+
+V kh := {v ∈ L2(0 , b ) : v|Ii ∈ P k(Ii) for i = 1 , . . . , N }.
+
+We use the standard volume inner product 
+
+(v1, v 2)Ii := 
+
+∫
+
+> Ii
+
+v1v2 dr, (v1, v 2)Th := 
+
+> N
+
+∑
+
+> i=1
+
+(v1, v 2)Ii ,
+
+and the oriented boundary pairing 
+
+⟨ψ, η n ⟩∂I i := ψ(ri) η(ri) − ψ(ri−1) η(ri−1),
+
+where the outward normal on ∂I i is n(ri−1) = −1 and n(ri) = +1 . We also introduce the boundary–restricted trace spaces 
+
+M Rh := L2(Fh \ { r0}), M Lh := L2(Fh \ { rN }), M 0 
+
+> h
+
+:= L2(F0 
+
+> h
+
+).
+
+Fix an element Ii. Let us consider system (1.8) in Ii, and prescribe the following 
+
+u(t, r i) = ̂u i(t), g(t, r i) = ̂g i(t), w(t, r i−1) = ̂w i−1(t), z(t, r i−1) = ̂z i−1(t), (2.1) along with the initial data u0|Ii . Assume the unique solvability of the local system (1.8) on an element Ii = ( ri−1, r i) for given data (2.1) and a sufficiently smooth initial condition u0|Ii , and denote the corresponding elementwise solution by (u, w, g, z )|Ii . Define (u, w, g, z ) on [0 , b ] by collecting these element solutions. This piecewise function (u, w, g, z ) is a global (classical) solution of the original problem on 
+
+[0 , b ] if and only if the traces of the quantities that are differentiated in r are single-valued at every interior node. Concretely, for each ri ∈ F 0 
+
+> h
+
+(with i = 1 , . . . , N − 1) we require 
+
+w|Ii (t, r i) = w|Ii+1 (t, r i) := ̂w i(t), z|Ii (t, r i) = z|Ii+1 (t, r i) := ̂z i(t),u|Ii (t, r i) = u|Ii+1 (t, r i) := ̂u i(t), g|Ii (t, r i) = g|Ii+1 (t, r i) := ̂g i(t). (2.2) The physical boundary data close the system by fixing the remaining inflow values at r = 0 
+
+and r = b by ̂
+
+u N (t) = Ub(t),̂ g N (t) = 1 ,̂ w 0(t) = 0 ,̂ z 0(t) = 0 .
+
+Our HDG discretization is then designed as a discrete analogue of this characterization: element unknowns are computed locally for given traces, and the traces are determined globally by enforc-ing a weak form of (2.2) together with the boundary conditions. HDG FOR EINSTEIN SCALAR EQUATION 5
+
+2.2. HDG method. For a fixed element Ii = ( ri−1, r i), assume that the traces ̂u h(ri),̂ g h(ri),̂
+
+w h(ri−1),̂z h(ri−1), and a function uh|Ii ∈ P k(Ii) are provided. We define the local reconstructions on Ii as 
+
+wh(r) := ̂w h(ri−1) + 
+
+∫ rri−1
+
+uh(s) ds, (2.3a) 
+
+gh(r) := ̂g h(ri) exp 
+
+(
+
+−
+
+∫ ri
+
+> r
+
+1
+
+s
+
+(
+
+uh(s) − ˜uh(s)
+
+)2
+
+ds 
+
+)
+
+, (2.3b) 
+
+zh(r) := ̂z h(ri−1) + 
+
+∫ rri−1
+
+gh(s) ds, (2.3c) where, for r > 0, ˜uh(r) := wh(r) 
+
+> r
+
+with the endpoint value ˜uh(0) := uh(0) . Thus, we seek the local unknown uh ∈ P k(Ii) that satisfies 
+
+((uh)t, ϕ u
+
+)
+
+> Ii
+
++
+
+( 12 ˜gh uh, (ϕu)r
+
+)
+
+> Ii
+
+−
+
+〈̂ 
+
+Fu,h , ϕ u n
+
+〉
+
+> ∂I i
+
++
+
+( 12 (˜ gh)r ˜uh, ϕ u
+
+)
+
+> Ii
+
+= 0 ∀ϕu ∈ P k(Ii),
+
+(2.4) where, for r > 0, ˜gh(r) := zh(r) 
+
+> r
+
+with the endpoint value ˜gh(0) := gh(0) , and the numerical flux on 
+
+Ii is ̂
+
+Fu,h (ri) := 12 ˜gh(ri)̂u h(ri), (2.5a) ̂
+
+Fu,h (ri−1) := 12 ˜gh(ri−1) uh(ri−1). (2.5b) Consequently, we assemble criteria for the global trace unknowns ̂u h,̂g h ∈ M Rh ,̂ w h,̂z h ∈ M Lh
+
+from which uh, w h, g h and zh can be derived in an element local procedure via nodal transmission conditions ̂
+
+Fu,h |Ii (ri) = ̂ Fu,h |Ii+1 (ri), (2.6a) 
+
+wh|Ii (ri) = wh|Ii+1 (ri), (2.6b) 
+
+zh|Ii (ri) = zh|Ii+1 (ri), (2.6c) 
+
+gh|Ii (ri) = gh|Ii+1 (ri), (2.6d) for i = 1 , . . . , N − 1. The boundary data are ̂
+
+u h(t, b ) = Ub(t),̂ g h(t, b ) = 1 ,̂ w h(t, 0) = 0 ,̂ z h(t, 0) = 0 . (2.7) 2.3. Local well–posedness. For a given uh ∈ V kh , the transmission conditions (2.6) and the boundary conditions (2.7) determine the traces uniquely. More precisely, the traces are given by the recursive formulas ̂
+
+w h(ri) = wh|Ii+1 (ri) = wh|Ii (ri) = ̂w h(ri−1) + 
+
+∫ ri
+
+> ri−1
+
+uh(s) ds, (2.8a) ̂
+
+g h(ri) = gh|Ii (ri) = gh|Ii+1 (ri) = ̂g h(ri+1 ) exp 
+
+(
+
+−
+
+∫ ri+1 
+
+> ri
+
+1
+
+s
+
+(uh(s) − ˜uh(s))2 ds 
+
+)
+
+, (2.8b) ̂
+
+z h(ri) = zh|Ii+1 (ri) = zh|Ii (ri) = ̂z h(ri−1) + 
+
+∫ ri
+
+> ri−1
+
+gh(s) ds, (2.8c) 
+
+12 ˜gh(ri)̂u h(ri) = 12 ˜gh(ri) uh|Ii+1 (ri) = ⇒̂u h(ri) = uh|Ii+1 (ri), (2.8d) for i = 1 , . . . , N −1, where all chains are started by values in (2.7) and ˜gh(ri) > 0 from (2.13). Thus, in the present one-dimensional radial setting, the trace variables can be eliminated recursively once 
+
+uh is known, and the semidiscrete evolution may be viewed as an ODE for the coefficients of uh
+
+alone. 6 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+Theorem 2.1 (Local semidiscrete well-posedness) . Let Ub ∈ C([0 , T ]) and let uh(0) ∈ V kh be given. Then there exists T∗ ∈ (0 , T ] such that the scheme (2.4) , (2.6) , and (2.7) admits a unique solution 
+
+uh ∈ C1([0 , T ∗]; V kh ).
+
+The associated traces ̂u h,̂g h,̂w h,̂z h are uniquely determined by (2.8) .Proof. Choose on each element Ii a basis {φi,m }km=0 of P k(Ii), and write 
+
+uh|Ii (r, t ) = 
+
+> k
+
+∑
+
+> m=0
+
+Ui,m (t) φi,m (r).
+
+Let U (t) ∈ RN (k+1) be the coefficient vector. For a given U , the traces are uniquely determined by (2.8). In particular, ̂w h and wh depend linearly on U . On the first element I1 = (0 , r 1),
+
+wh(r) = 
+
+∫ r
+
+> 0
+
+uh(s) ds, 
+
+hence wh(r) = r p h(r) for a unique polynomial ph ∈ P k(I1). Therefore ˜uh(r) = ph(r) on I1, and 
+
+uh(r) − ˜uh(r) = r q h(r) for some polynomial qh ∈ P k−1(I1), as uh(0) = ˜ uh(0) . It follows that 
+
+> 1
+> r
+
+(uh − ˜uh
+
+)2 extends continuously to r = 0 and depends polynomially on U . On the remaining elements, r ≥ ri−1 > 0, so there is no singularity. Hence, by (2.3b) and (2.8b), the maps 
+
+U 7 → gh, U 7 →̂g h
+
+are locally Lipschitz. The same is then true for U 7 → zh, U 7 →̂z h by (2.3c) and (2.8c). For i ≥ 2,
+
+˜gh = zh
+
+r , (˜ gh)r = gh − ˜gh
+
+r ,
+
+so U 7 → ˜gh and U 7 → (˜ gh)r are locally Lipschitz on Ii. On I1,
+
+zh(r) = 
+
+∫ r
+
+> 0
+
+gh(s) ds, ˜gh(r) = 1
+
+r
+
+∫ r
+
+> 0
+
+gh(s) ds =
+
+∫ 10
+
+gh(θr ) dθ. 
+
+Moreover, differentiating (2.3b) gives 
+
+(gh)r = 1
+
+r gh (uh − ˜uh)2,
+
+so (gh)r is continuous on I1, and therefore 
+
+(˜ gh)r (r) = 
+
+∫ 10
+
+θ (gh)r (θr ) dθ. 
+
+Thus U 7 → ˜gh and U 7 → (˜ gh)r are locally Lipschitz on I1 as well. Finally, ̂u h(b) = Ub(t), while ̂
+
+u h(ri) = uh|Ii+1 (ri) at the interior nodes; hence the only explicit time dependence enters through 
+
+Ub, and the trace ̂u h is continuous in t and locally Lipschitz in U .Testing (2.4) with the basis functions φi,m yields a finite-dimensional system 
+
+Mh ˙U (t) = R(t, U (t)) ,
+
+where Mh is the block diagonal mass matrix. Each block is the mass matrix on P k(Ii), hence Mh is symmetric positive definite and therefore invertible. By the preceding argument, R is continuous in t and locally Lipschitz in U . Therefore 
+
+˙U (t) = M −1 
+
+> h
+
+R(t, U (t)) 
+
+is a finite-dimensional ODE with continuous time dependence and locally Lipschitz state depen-dence. By the Picard–Lindelöf theorem, there exists T∗ ∈ (0 , T ] such that this ODE admits a unique solution 
+
+U ∈ C1([0 , T ∗]; RN (k+1) ).
+
+This defines a unique semidiscrete solution 
+
+uh ∈ C1([0 , T ∗]; V kh ),
+
+and the associated traces are uniquely recovered from (2.8). □HDG FOR EINSTEIN SCALAR EQUATION 7
+
+Lemma 2.2 (Exact discrete constraint reconstruction) . Let (uh, w h, g h, z h,̂u h,̂w h,̂g h,̂z h) be a solution of (2.3) –(2.7) . Then, for each fixed t ∈ [0 , T ],
+
+(wh)r = uh on each Ii, (2.9) 
+
+(gh)r = 1
+
+r gh (uh − ˜uh)2 on each Ii, (2.10) 
+
+(zh)r = gh on each Ii. (2.11) 
+
+Moreover, the transmission conditions (2.6) imply the global representation formulas 
+
+wh(r) = 
+
+∫ r
+
+> 0
+
+uh(s) ds, gh(r) = exp 
+
+(
+
+−
+
+∫ br
+
+1
+
+s
+
+(uh(s) − ˜uh(s))2 ds 
+
+)
+
+, zh(r) = 
+
+∫ r
+
+> 0
+
+gh(s) ds, 
+
+(2.12) 
+
+for all r ∈ [0 , b ]. Consequently, 
+
+0 < g h(r) ≤ 1, 0 < ˜gh(r) = zh(r)
+
+r ≤ gh(r) ≤ 1 for all r ∈ (0 , b ], (2.13) 
+
+and 
+
+(˜ gh)r = 1
+
+r (gh − ˜gh) ≥ 0, (˜ gh)r ≤ gh
+
+r on (0 , b ]. (2.14) 
+
+Finally, ˜uh(0) = uh(0) and ˜gh(0) = gh(0) .Proof. Differentiating (2.3a) and (2.3c) gives (2.9) and (2.11) respectively. Likewise, differentiating (2.3b) yields (2.10). Because ̂w h(0) = 0 and ̂z h(0) = 0 , and wh and zh are single-valued at ri ∈ F 0
+
+> h
+
+by (2.6b) and (2.6c), local formulae (2.3a) and (2.3c) patch together into the global identity 
+
+wh(r) = 
+
+∫ r
+
+> 0
+
+uh(s) ds, zh(r) = 
+
+∫ r
+
+> 0
+
+gh(s) ds. (2.15) For gh, the continuity relation (2.6d) together with ̂g h(b) = 1 shows that the elementwise formula (2.3b) patches into the global representation 
+
+gh(r) = exp 
+
+(
+
+−
+
+∫ br
+
+1
+
+s
+
+(uh(s) − ˜uh(s))2 ds 
+
+)
+
+.
+
+This proves (2.12). The bound 0 < g h ≤ 1 follows immediately from the exponential representation, and (2.10) implies that gh is nondecreasing in r. Since 
+
+˜gh(r) = zh(r)
+
+r = 1
+
+r
+
+∫ r
+
+> 0
+
+gh(s) ds, (2.16) we obtain 0 < ˜gh(r) ≤ gh(r) ≤ 1 for r > 0. Finally, differentiating zh = r˜gh and using (2.11) yields 
+
+(˜ gh)r = 1
+
+r (gh − ˜gh),
+
+and the limit ˜uh(0) = uh(0) follows from (2.15), and the limit ˜gh(0) = gh(0) follows from (2.16). This proves (2.13)–(2.14). □
+
+3. Stability 
+
+We now show that the local reconstruction preserves the exact metric identities of the continuous problem and therefore yields an unconditional L2-stability estimate. 
+
+Theorem 3.1 (L2-stability) . Let (uh, w h, g h, z h,̂u h,̂w h,̂g h,̂z h) be a semidiscrete solution of (2.3) –
+
+(2.7) . Then, for all t ∈ [0 , T ],
+
+12
+
+ddt ∥uh(t)∥2 
+
+> Th
+
++ Dh(t) ≤ 14 Ub(t)2 + 14
+
+(1 − gh(t, 0) ), (3.1) 8 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+where 
+
+Dh(t) := 14 gh(t, 0) uh(t, 0) 2 + 14 ˜gh(t, b ) (uh(t, b ) − Ub(t))2
+
++ 14 
+
+> N−1
+
+∑
+
+> i=1
+
+˜gh(t, r i) (uh|Ii (ri)( t) −̂u h(ri)( t))2 ≥ 0. (3.2) 
+
+Proof. Take ϕu = uh in (2.4) on each element Ii, an elementwise integration by parts and summing over all elements yields 
+
+12
+
+ddt ∥uh∥2 
+
+> Th
+
++
+
+〈 14 ˜gh u2 
+
+> h
+
+−̂ Fu,h uh, n 
+
+〉
+
+> ∂Th
+
+= 14
+
+((˜ gh)r , u 2 
+
+> h
+
+− 2uh ˜uh
+
+)
+
+> Th
+
+. (3.3) By Lemma 2.2, (˜ gh)r ≥ 0, (˜ gh)r ≤ gh 
+
+> r
+
+. Moreover, u2 
+
+> h
+
+− 2uh ˜uh ≤ (uh − ˜uh)2. Therefore, 
+
+14
+
+((˜ gh)r , u 2 
+
+> h
+
+− 2uh ˜uh
+
+)
+
+> Th
+
+≤ 14
+
+( gh
+
+r (uh − ˜uh)2, 1
+
+)
+
+> Th
+
+= 14
+
+((gh)r , 1)
+
+> Th
+
+= 14
+
+∫ b
+
+> 0
+
+(gh)r dr 
+
+= 14
+
+(gh(b) − gh(0) ) = 14
+
+(1 − gh(0) ), (3.4) where we used (2.10) and ̂g h(b) = 1 . It remains to analyze the boundary pairing in (3.3). For an interior node ri ∈ F 0 
+
+> h
+
+, define 
+
+Φi := 
+
+( 14 ˜gh u2 
+
+> h
+
+−̂ Fu,h uh
+
+)∣ ∣∣Ii
+
+(ri) −
+
+( 14 ˜gh u2 
+
+> h
+
+−̂ Fu,h uh
+
+)∣ ∣∣Ii+1 
+
+(ri).
+
+By the definition of ˜g and (2.6c), ˜gh(ri) is single-valued. Set Fi := ̂ Fu,h |Ii (ri) = ̂ Fu,h |Ii+1 (ri),where the equality comes from (2.6a). Thus, at ri, we take 
+
+Fi = 12 ˜gh(ri)̂u h(ri).
+
+Hence 
+
+Φi = 14 ˜gh(ri) ( uh|Ii (ri)) 2 − Fi uh|Ii (ri) − 14 ˜gh(ri) ( ̂u h(ri)) 2 + Fîu h(ri)= 14 ˜gh(ri) ( uh|Ii (ri)) 2 − 12 ˜gh(ri)̂u h(ri)uh|Ii (ri) + 14 ˜gh(ri) ( ̂u h(ri)) 2
+
+= 14 ˜gh(ri) (uh|Ii (ri) −̂u h(ri))2. (3.5) At the left boundary r = 0 , using ˜gh(0) = gh(0) and the left end flux ̂ Fu,h (0) = 12 gh(0) uh(0) , we obtain 
+
+Φ0 = −
+
+( 14 gh(0) uh(0) 2 − 12 gh(0) uh(0) 2)
+
+= 14 gh(0) uh(0) 2. (3.6) At the right boundary r = b, the numerical flux is ̂ Fu,h (b) = 12 ˜gh(b) Ub, and therefore 
+
+Φb = 14 ˜gh(b) uh(b)2 − 12 ˜gh(b) Ub uh(b) = 14 ˜gh(b) (uh(b) − Ub
+
+)2 − 14 ˜gh(b) U 2
+
+> b
+
+≥ 14 ˜gh(b) (uh(b) − Ub
+
+)2 − 14 U 2 
+
+> b
+
+, (3.7) since 0 ≤ ˜gh(b) ≤ 1. Collecting (3.5), (3.6), and (3.7), we end up with 
+
+〈 14 ˜gh u2 
+
+> h
+
+−̂ Fu,h uh, n 
+
+〉
+
+> ∂Th
+
+≥ D h(t) − 14 Ub(t)2. (3.8) Substituting (3.4) and (3.8) into (3.3) yields (3.1). □
+
+Corollary 3.2 (Global well-posedness) . Under the assumptions of Theorem 2.1 , the local solution extends uniquely to all of [0 , T ].HDG FOR EINSTEIN SCALAR EQUATION 9
+
+Proof. By Theorem 3.1, ∥uh(t)∥Th remains bounded on every bounded time interval. Since V kh is finite-dimensional, the coefficient vector of uh remains bounded as well. The standard continuation criterion for finite-dimensional ODEs then yields a unique extension to the whole interval [0 , T ]. □
+
+4. Optimal error analysis 
+
+We assume that the exact solution of (1.8) satisfies 
+
+u ∈ L∞(0 , T ; W k+1 ,∞(0 , b )) and ut ∈ L∞(0 , T ; Hk+1 (0 , b )) . (4.1) Then the exact quantities w, g, z, ˜u, and ˜g are sufficiently smooth on [0 , T ]×[0 , b ], and in particular 
+
+˜gr ∈ L∞((0 , T ) × (0 , b )) .
+
+Remark 4.1. The regularity assumption imposed above is used only as an input for the numerical analysis on the fixed time interval [0 , T ]. In this setting, classical and generalized solution theories are available in the work of Christodoulou [9] on [0 , ∞) × (0 , ∞), which includes large-data regimes. The recent DG analysis of Chen et al. [8] derives a priori estimates and global existence on 
+
+[0 , ∞) × [0 , b ] for a class of large initial data, including r = 0 .
+
+On each element Ii, we define Πu ∈ P k(Ii) by 
+
+(Π u − u, v )Ii = 0 ∀v ∈ P k−1(Ii), (Π u)( ri−1) = u(ri−1). (4.2) This is the Gauss–Radau projection; see, for example, [20, 46]. We set 
+
+η := u − Πu, ξ := uh − Πu, e := u − uh = η − ξ, (4.3) and 
+
+˜e := ˜ u − ˜uh, δg := g − gh, ˜δg := ˜ g − ˜gh. (4.4) We choose the initial data by uh(0) = Π u(0) , so that ξ(0) = 0 . The standard approximation, inverse, and trace estimates yield 
+
+∥η∥Th + h∥ηr ∥Th + ∥η∥L∞(0 ,b ) + h∥ηr ∥L∞(0 ,b ) + ∥ηt∥Th ≤ Ch k+1 , (4.5a) 
+
+( N∑
+
+> i=1
+
+∣∣η|Ii (ri)∣∣2
+
+)1/2
+
+≤ Ch k+ 12 , (4.5b) 
+
+∥vh∥L∞(0 ,b ) ≤ Ch − 12 ∥vh∥Th , (4.5c) 
+
+∥(vh)r ∥Th ≤ Ch −1∥vh∥Th , (4.5d) 
+
+( N∑
+
+> i=1
+
+∣∣vh|Ii (ri−1)∣∣2 +
+
+> N
+
+∑
+
+> i=1
+
+∣∣vh|Ii (ri)∣∣2
+
+)1/2
+
+≤ Ch − 12 ∥vh∥Th (4.5e) for all vh ∈ V kh , where ηr |Ii = (ur − Πu) 
+
+> r
+
+|Ii and ηt = ut − Πut = (u − Πu)
+
+> t
+
+; see [14, Ch. 3]. Now we make the following bootstrap assumption: 
+
+∥ξ(t)∥Th ≤ h 32 , 0 ≤ t ≤ T. (4.6) By (4.3), (4.5), and (4.6), we obtain 
+
+∥e(t)∥L∞(0 ,b ) ≤ ∥ ξ(t)∥L∞(0 ,b ) + ∥η(t)∥L∞(0 ,b ) ≤ Ch, ∥er (t)∥Th ≤ Ch 12 , 0 ≤ t ≤ T. (4.7) 
+
+Lemma 4.2. Assume (4.6) . Then, for 0 ≤ t ≤ T ,
+
+∥˜e∥L∞(0 ,b ) ≤ C(hk+1 + h− 12 ∥ξ∥Th
+
+), (4.8a) 
+
+∥(˜ e)r ∥L∞(0 ,b ) ≤ C(hk + h− 32 ∥ξ∥Th
+
+), (4.8b) 
+
+∥(˜ e)r ∥Th ≤ C(hk + h−1∥ξ∥Th
+
+), (4.8c) 
+
+∥δg ∥L∞(0 ,b ) + ∥˜δg ∥L∞(0 ,b ) ≤ C∥e∥Th , (4.8d) 
+
+∥(δg )r ∥Th + ∥(˜δg )r ∥Th ≤ C∥e∥Th , (4.8e) 
+
+where the constant C > 0 is generic and independent of h.10 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+Proof. For any v ∈ H1(0 , b ), we write 
+
+˜v(r) := 1
+
+r
+
+∫ r
+
+> 0
+
+v(s) ds =
+
+∫ 10
+
+v(θr ) dθ, (˜v)r (r) = 
+
+∫ 10
+
+θ v r (θr ) dθ. 
+
+Thus, by Hölder’s inequality, it is easy to see that 
+
+∥˜v∥L∞(0 ,b ) ≤ ∥ v∥L∞(0 ,b ), ∥˜v∥Th ≤ C∥v∥Th , ∥(˜v)r ∥L∞(0 ,b ) ≤ ∥ vr ∥L∞(0 ,b ), ∥(˜v)r ∥Th ≤ C∥vr ∥Th .
+
+(4.9) Applying these bounds to v = e = η − ξ and using (4.5) gives (4.8a)–(4.8c). Next, set 
+
+α := u − ˜u, αh := uh − ˜uh.
+
+Then, using definition (1.3b) and ˜uh(r) = wh(r) 
+
+> r
+
+= 1
+
+> r
+
+∫ r 
+
+> 0
+
+uh(s) ds from (2.12), for r ∈ Ii, we have 
+
+αr = 1
+
+r
+
+((r˜u)r − ˜u) = (˜ u)r , αh
+
+r = 1
+
+r
+
+((r˜uh)r − ˜uh
+
+) = (˜ uh)r = (˜ u)r − (˜ e)r ,
+
+for all i = 1 , . . . , N . By (4.8b) and (4.6), we write 
+
+∥∥∥ αh
+
+r
+
+∥∥∥L∞(0 ,b )
+
+≤ ∥ (˜ u)r ∥L∞(0 ,b ) + ∥(˜ e)r ∥L∞(0 ,b ) ≤ C + C(hk + h−3/2∥ξ∥Th
+
+) ≤ C, 
+
+for h ≤ 1, and therefore ∥∥∥∥
+
+|α| + |αh|
+
+r
+
+∥∥∥∥L∞(0 ,b )
+
+≤ C. (4.10) By (1.6b) and (2.12), 
+
+g(r) = exp 
+
+(
+
+−
+
+∫ br
+
+1
+
+s α(s)2 ds 
+
+)
+
+, gh(r) = exp 
+
+(
+
+−
+
+∫ br
+
+1
+
+s αh(s)2 ds 
+
+)
+
+.
+
+Since the exponential map is Lipschitz on [0 , ∞), we obtain 
+
+|δg (r)| ≤ 
+
+∫ br
+
+1
+
+s
+
+∣∣α(s)2 − αh(s)2∣∣ ds 
+
+≤
+
+∥∥∥∥
+
+|α| + |αh|
+
+r
+
+∥∥∥∥L∞(0 ,b )
+
+∫ br
+
+|α(s) − αh(s)| ds 
+
+≤ C∥α − αh∥Th . (4.11) Now α − αh = e − ˜e, so the bounds (4.9) imply ∥α − αh∥Th ≤ ∥ e∥Th + ∥˜e∥Th ≤ C∥e∥Th . This proves (4.8d) for δg , and the estimate for ˜δg follows from 
+
+˜δg (r) = 1
+
+r
+
+∫ r
+
+> 0
+
+δg (s) ds. 
+
+For the derivatives, using (1.4b) and (2.10), we obtain 
+
+(δg )r = 1
+
+r
+
+(gα 2 − ghα2
+
+> h
+
+) = δg
+
+α2
+
+r + gh
+
+α + αh
+
+r (α − αh).
+
+Hence, by (4.10), (2.13), and (4.8d), 
+
+∥(δg )r ∥Th ≤ C∥δg ∥L∞(0 ,b ) + C∥α − αh∥Th ≤ C∥e∥Th .
+
+The estimate for (˜δg )r again follows from the averaging operator formula (4.9). Thus, (4.8e) holds. □
+
+The exact solution satisfies the corresponding identity and scheme (2.4) with u and ˜g. Sub-tracting the discrete relation from the exact one, taking ϕu = ξ in (2.4), and using (4.2) and (4.3), HDG FOR EINSTEIN SCALAR EQUATION 11 
+
+we obtain the following error equation: 
+
+> N
+
+∑
+
+> i=1
+
+(ηt, ξ )Ii + 12
+
+> N
+
+∑
+
+> i=1
+
+(˜ g η, ξ r )Ii + Q1 + Q2
+
+=
+
+> N
+
+∑
+
+> i=1
+
+(
+
+(ξt, ξ )Ii + 12 (˜ g ξ, ξ r )Ii
+
+)
+
+− 12 
+
+> N−1
+
+∑
+
+> i=1
+
+˜g(ri) ξ|Ii+1 (ri) ξ|Ii (ri) + 12
+
+> N
+
+∑
+
+> i=1
+
+˜g(ri−1) ξ|Ii (ri−1)2,
+
+(4.12) where 
+
+Q1 := − 12
+
+> N
+
+∑
+
+> i=1
+
+((uh˜δg )r , ξ ) 
+
+> Ii
+
++ 12 
+
+> N−1
+
+∑
+
+> i=1
+
+˜δg (ri)
+
+(
+
+uh|Ii (ri) − uh|Ii+1 (ri)
+
+)
+
+ξ|Ii (ri)+ 12 ˜δg (b)
+
+(
+
+uh(b) − Ub
+
+)
+
+ξ|IN (b), (4.13) 
+
+Q2 := 12
+
+> N
+
+∑
+
+> i=1
+
+(˜gr ˜e + ( ˜δg )r ˜uh, ξ )
+
+> Ii
+
+. (4.14) Indeed, the terms containing η on the element boundaries vanish because 
+
+η|Ii (ri−1) = 0 , η|Ii+1 (ri) = 0 , i = 1 , . . . , N − 1,
+
+by the definition of the projection (4.2), and at r = b the exact and discrete inflow data are both equal to Ub.
+
+Lemma 4.3. Assume (4.6) . Then, for 0 ≤ t ≤ T ,
+
+|Q1| + |Q2| ≤ C(∥ξ∥2 
+
+> Th
+
++ ∥η∥2
+
+> Th
+
+). (4.15) 
+
+Proof. We first estimate Q1. From (4.13), 
+
+|Q1| ≤ 12 ∥(uh)r ∥Th ∥˜δg ∥L∞(0 ,b ) ∥ξ∥Th + 12 ∥uh∥L∞(0 ,b ) ∥(˜δg )r ∥Th ∥ξ∥Th
+
++ 12 ∥˜δg ∥L∞(0 ,b ) 
+
+> N−1
+
+∑
+
+> i=1
+
+∣∣∣uh|Ii (ri) − uh|Ii+1 (ri)
+
+∣∣∣∣∣∣ξ|Ii (ri)
+
+∣∣∣
+
++ 12 ∥˜δg ∥L∞(0 ,b ) |uh(b) − Ub| | ξ|IN (b)|. (4.16) By (4.7) and the regularity of the exact solution, ∥uh∥L∞(0 ,b ) +∥(uh)r ∥Th ≤ C. Hence, this estimate and Lemma 4.2 imply that first two volume terms of (4.16) are bounded by 
+
+12 ∥(uh)r ∥Th ∥˜δg ∥L∞(0 ,b ) ∥ξ∥Th + 12 ∥uh∥L∞(0 ,b ) ∥(˜δg )r ∥Th ∥ξ∥Th ≤ C∥e∥Th ∥ξ∥Th ≤ C(∥ξ∥2 
+
+> Th
+
++∥η∥2
+
+> Th
+
+).
+
+For the boundary terms in (4.16), since (Π u)|Ii+1 (ri) = u(ri), we have 
+
+uh|Ii (ri) − uh|Ii+1 (ri) = ξ|Ii (ri) − ξ|Ii+1 (ri) − η|Ii (ri), i = 1 , . . . , N − 1,
+
+and at r = b,
+
+uh(b) − Ub = ξ|IN (b) − η|IN (b).
+
+Therefore,  
+
+> N−1
+
+∑
+
+> i=1
+
+∣∣∣uh|Ii (ri) − uh|Ii+1 (ri)
+
+∣∣∣∣∣∣ξ|Ii (ri)
+
+∣∣∣ + |uh(b) − Ub| ∣∣ξ|IN (b)∣∣
+
+≤ C
+
+( N∑
+
+> i=1
+
+∣∣ξ|Ii (ri)∣∣2 +
+
+> N
+
+∑
+
+> i=2
+
+∣∣ξ|Ii (ri−1)∣∣2 +
+
+> N
+
+∑
+
+> i=1
+
+∣∣η|Ii (ri)∣∣2
+
+)
+
+≤ Ch −1(∥ξ∥2 
+
+> Th
+
++ ∥η∥2
+
+> Th
+
+)12 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+by (4.5b) and (4.5e). Since Lemma 4.2 gives ∥˜δg ∥L∞(0 ,b ) ≤ C∥e∥Th , and thus using (4.5a) and (4.6), we get h−1∥e∥Th ≤ Ch k + Ch 12 ≤ C on [0 , T ], the boundary part of Q1 is also bounded by 
+
+C(∥ξ∥2 
+
+> Th
+
++ ∥η∥2 
+
+> Th
+
+). Thus 
+
+|Q1| ≤ C(∥ξ∥2 
+
+> Th
+
++ ∥η∥2
+
+> Th
+
+).
+
+For Q2, by (4.14), 
+
+|Q2| ≤ C∥˜e∥Th ∥ξ∥Th + C∥(˜δg )r ∥Th ∥ξ∥Th ,
+
+where we also used ∥˜uh∥L∞(0 ,b ) ≤ C. By Lemma 4.2 and (4.9), 
+
+∥˜e∥Th ≤ C∥e∥Th , ∥(˜δg )r ∥Th ≤ C∥e∥Th ,
+
+so 
+
+|Q2| ≤ C∥e∥Th ∥ξ∥Th ≤ C(∥ξ∥2 
+
+> Th
+
++ ∥η∥2
+
+> Th
+
+).
+
+This proves (4.15). □
+
+Theorem 4.4 (Optimal error estimate) . Let k ≥ 1. Assume (4.1) and choose the initial data by 
+
+uh(0) = Π u(0) . Then there exist h0 > 0 and C > 0, independent of h, such that for all 0 < h ≤ h0,
+
+sup 
+
+> 0≤t≤T
+
+∥u(t) − uh(t)∥Th ≤ Ch k+1 . (4.17) 
+
+Proof. From (4.12), 
+
+> N
+
+∑
+
+> i=1
+
+(
+
+(ξt, ξ )Ii + 12 (˜ g ξ, ξ r )Ii
+
+)
+
+− 12 
+
+> N−1
+
+∑
+
+> i=1
+
+˜g(ri) ξ|Ii+1 (ri) ξ|Ii (ri) + 12
+
+> N
+
+∑
+
+> i=1
+
+˜g(ri−1) ξ|Ii (ri−1)2
+
+=
+
+> N
+
+∑
+
+> i=1
+
+(ηt, ξ )Ii + 12
+
+> N
+
+∑
+
+> i=1
+
+(˜ g η, ξ r )Ii + Q1 + Q2. (4.18) On the left-hand side, an elementwise integration by parts gives 
+
+> N
+
+∑
+
+> i=1
+
+(
+
+(ξt, ξ )Ii + 12 (˜ g ξ, ξ r )Ii
+
+)
+
+− 12 
+
+> N−1
+
+∑
+
+> i=1
+
+˜g(ri) ξ|Ii+1 (ri) ξ|Ii (ri) + 12
+
+> N
+
+∑
+
+> i=1
+
+˜g(ri−1) ξ|Ii (ri−1)2
+
+= 12
+
+ddt ∥ξ∥2 
+
+> Th
+
+− 14 (˜ gr , ξ 2)Th + 14 ˜g(0) ξ|I1 (0) 2 + 14 
+
+> N−1
+
+∑
+
+> i=1
+
+˜g(ri)
+
+(
+
+ξ|Ii (ri) − ξ|Ii+1 (ri)
+
+)2
+
++ 14 ˜g(b) ξ|IN (b)2. (4.19) Therefore, 
+
+> N
+
+∑
+
+> i=1
+
+(
+
+(ξt, ξ )Ii + 12 (˜ g ξ, ξ r )Ii
+
+)
+
+− 12 
+
+> N−1
+
+∑
+
+> i=1
+
+˜g(ri) ξ|Ii+1 (ri) ξ|Ii (ri) + 12
+
+> N
+
+∑
+
+> i=1
+
+˜g(ri−1) ξ|Ii (ri−1)2
+
+≥ 12
+
+ddt ∥ξ∥2 
+
+> Th
+
+− C∥ξ∥2 
+
+> Th
+
+. (4.20) Here we used the boundedness of ˜gr from (4.1) and the nonnegativity of ˜g from Lemma 1.1. The first term on the right-hand side of (4.18) can be estimated using (4.1) and (4.5) as follows 
+
+∣∣∣∣∣
+
+> N
+
+∑
+
+> i=1
+
+(ηt, ξ )Ii
+
+∣∣∣∣∣ ≤ ∥ ηt∥Th ∥ξ∥Th ≤ Ch k+1 ∥ξ∥Th ≤ Ch 2k+2 + C∥ξ∥2 
+
+> Th
+
+.
+
+For the second term, let ¯˜gi := 1
+
+> hi
+
+∫ 
+
+> Ii
+
+˜g(r) dr ∈ R. Since ¯˜gi ξr ∈ P k−1(Ii), the orthogonality of the projection (4.2) gives (η, ¯˜gi ξr )Ii = 0 . Hence 
+
+(˜ g η, ξ r )Ii = ((˜ g − ¯˜gi)η, ξ r
+
+) 
+
+> Ii
+
+.
+
+Using ∥˜g − ¯˜gi∥L∞(Ii) ≤ Ch i and (4.5d), we obtain 
+
+∣∣∣∣∣
+
+12
+
+> N
+
+∑
+
+> i=1
+
+(˜ g η, ξ r )Ii
+
+∣∣∣∣∣ =
+
+∣∣∣∣∣
+
+12
+
+> N
+
+∑
+
+> i=1
+
+((˜ g − ¯˜gi)η, ξ r
+
+)
+
+> Ii
+
+∣∣∣∣∣ ≤ Ch ∥η∥Th ∥ξr ∥Th ≤ Ch 2k+2 + C∥ξ∥2 
+
+> Th
+
+.HDG FOR EINSTEIN SCALAR EQUATION 13 
+
+Finally, Lemma 4.3 gives 
+
+|Q1| + |Q2| ≤ C(∥ξ∥2 
+
+> Th
+
++ ∥η∥2
+
+> Th
+
+) ≤ C∥ξ∥2 
+
+> Th
+
++ Ch 2k+2 .
+
+Combining these bounds with (4.18) and (4.20), we obtain 
+
+12
+
+ddt ∥ξ∥2 
+
+> Th
+
+≤ C∥ξ∥2 
+
+> Th
+
++ Ch 2k+2 , 0 ≤ t ≤ T. 
+
+Since ξ(0) = 0 , Grönwall’s inequality yields 
+
+∥ξ(t)∥Th ≤ Ch k+1 , 0 ≤ t ≤ T. 
+
+Finally, the triangle inequality and the estimate (4.5) imply 
+
+∥u(t) − uh(t)∥Th ≤ Ch k+1 ,
+
+for all t ≤ T . This completes the proof. □
+
+We now justify the bootstrap assumption (4.6). By Corollary 3.2, we have uh ∈ C1([0 , T ]; V kh ),and hence the map t 7 → ∥ ξ(t)∥Th is continuous. The estimate proved above gives 
+
+sup 
+
+> 0≤t≤T
+
+∥ξ(t)∥Th ≤ Ch k+1 .
+
+Since k ≥ 1, we have k + 1 > 32 , and therefore 
+
+Ch k+1 ≤ 12 h 32
+
+for all sufficiently small h. Thus, the estimate improves the bootstrap assumption. The standard continuity argument then shows that (4.6) is valid on the whole interval [0 , T ].
+
+Corollary 4.5 (Errors of the reconstructed variables) . Under the assumptions of Theorem 4.4 ,
+
+sup 
+
+> 0≤t≤T
+
+(
+
+∥w(t) − wh(t)∥L∞(0 ,b ) + ∥z(t) − zh(t)∥L∞(0 ,b ) + ∥g(t) − gh(t)∥L∞(0 ,b )
+
++ ∥˜g(t) − ˜gh(t)∥L∞(0 ,b ) + ∥˜u(t) − ˜uh(t)∥Th
+
+)
+
+≤ Ch k+1 . (4.21) 
+
+Proof. By (2.12) and the exact reconstruction formulas, 
+
+w(r) − wh(r) = 
+
+∫ r
+
+> 0
+
+(u(s) − uh(s)) ds, z(r) − zh(r) = 
+
+∫ r
+
+> 0
+
+(g(s) − gh(s)) ds. 
+
+Hence 
+
+∥w − wh∥L∞(0 ,b ) ≤ C∥u − uh∥Th , ∥z − zh∥L∞(0 ,b ) ≤ C∥g − gh∥L∞(0 ,b ).
+
+Moreover, Lemma 4.2 gives 
+
+∥g − gh∥L∞(0 ,b ) + ∥˜g − ˜gh∥L∞(0 ,b ) ≤ C∥u − uh∥Th .
+
+The averaging operator bound (4.9) also yields 
+
+∥˜u − ˜uh∥Th ≤ C∥u − uh∥Th .
+
+Combining these estimates with Theorem 4.4 proves (4.21). □
+
+Corollary 4.6 (Error estimate for the Bondi mass) . Define the mass aspect by 
+
+M(t, r ) := r
+
+2
+
+(
+
+1 − ˜g(t, r )
+
+g(t, r )
+
+)
+
+, mh(t, r ) := r
+
+2
+
+(
+
+1 − ˜gh(t, r )
+
+gh(t, r )
+
+)
+
+, (4.22) 
+
+and define the Bondi masses M (t) := M(t, b ) and Mh(t) := mh(t, b ). Under the assumptions of Theorem 4.4 , there exists a constant C > 0, independent of h, such that 
+
+sup 
+
+> 0≤t≤T
+
+|M (t) − Mh(t)| ≤ Ch k+1 .14 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+Proof. Since the outer boundary condition gives g(t, b ) = 1 and gh(t, b ) = 1 , we have 
+
+M (t) = b
+
+2
+
+(1 − ˜g(t, b )), Mh(t) = b
+
+2
+
+(1 − ˜gh(t, b )).
+
+Therefore 
+
+|M (t) − Mh(t)| = b
+
+2 |˜g(t, b ) − ˜gh(t, b )|.
+
+The result now follows from Corollary 4.5. □
+
+5. Numerical experiments 
+
+In this section, we present numerical experiments for the HDG method (2.4)-(2.7). The aims are twofold. First, we verify the optimal order of convergence proved by Theorem 4.4 and Corollary 4.5. Second, we show that the method captures the main geometric features of the Einstein–scalar system (1.8), in particular, the collapse toward black-hole-type profiles. The first two tests below are adapted from the benchmark problems in [8]. All computations are performed on uniform meshes of the interval [0 , b ]. Since the HDG scheme in this paper is semidiscrete, we discretize the resulting ODE system in time using the classical fourth-order Runge–Kutta method [21, 27, 49]. In the convergence test, the time step is chosen sufficiently small, for example ∆t = 0 .01 , so that the temporal error is negligible compared with the spatial error. A useful feature of the present HDG formulation is that the variables wh, gh, zh, ˜uh, and ˜gh are reconstructed from uh through the discrete constraint relations. Therefore, at each Runge–Kutta stage, only the coefficients of uh are advanced in time, while the remaining quantities are recovered by elementwise integration and recursion. In particular, the method does not require a separate global evolution for the metric variables. This considerably reduces the implementation cost and is one of the main advantages of the present HDG formulation. 5.1. Example 1. (Accuracy test and large-data collapse benchmark; cf. [8, Ex. 1] ). We take 
+
+b = 10 , ˜u0(r) = 0 .45 tanh(3( r − 5)) ,
+
+and define the initial data for the evolution variable by u0(r) = ( r˜u0(r)) r . The outer boundary data are chosen as Ub(t) = u0(b). This is a large data set, and it leads to a rapid transition to the formation of a black-hole region [8, 11]. The profile of ˜u0 is steep near r = 5 , which produces a strong inward concentration of the scalar field during the evolution. To test the spatial accuracy of the method, we compute the solution up to the final time 
+
+T = 0 .5. Since no explicit exact solution is available, we use a reference solution computed on a very fine mesh, for example, with Nref = 6400 , together with a sufficiently accurate polynomial approximation and a very small time step, see [8]. We consider P k elements for 1 ≤ k ≤ 5. The errors are measured by 
+
+Eu = ∥uref (·, T ) − uh(·, T )∥L2(0 ,b ), Eg = ∥gref (·, T ) − gh(·, T )∥L2(0 ,b ),
+
+where uref and gref are reference solutions computed at Nref . The results in Figure 1 show the expected order k + 1 for uh. For the reconstructed metric variable gh, the observed slope is close to k + 2 , which is better than the bound proved in Corollary 4.5. At present, this higher rate should be viewed as an observed superconvergent effect of the reconstruction rather than as a rigorously established theorem. A plausible explanation is that gh is obtained through the nonlinear integral reconstruction (2.3b), which may exhibit additional cancellations on uniform meshes in the smooth regime. We therefore interpret this behavior as an observed higher-order effect of the metric reconstruction. To interpret the long-time behavior, we compare the numerical profiles with the continuous asymptotic picture described in [8, 11]. In particular, if the continuous solution has a nonzero final mass M∞ := lim t→∞ M (t), then one expects convergence toward a black-hole end state with a horizon radius 2M∞. In the computations, we monitor the discrete finite-radius mass HDG FOR EINSTEIN SCALAR EQUATION 15 
+
+proxy Mh(t) defined in (4.22), which serves as the numerical counterpart of this quantity. In the normalization g(t, b ) = 1 , this corresponds formally to the limiting profile; see [11]: 
+
+g(t, r ) → g∞(r) = 
+
+{0, 0 ≤ r < 2M∞,
+
+1, 2M∞ ≤ r ≤ b, as t → ∞ .
+
+While ˜g is the radial average of g,
+
+˜g∞(r) = 
+
+
+
+0, 0 ≤ r ≤ 2M∞,
+
+1 − 2M∞
+
+r , 2M∞ < r ≤ b. 
+
+Hence g is expected to approach a step profile, whereas ˜g remains continuous and develops a kink at r = 2 M∞ as t → ∞ . This is consistent with the numerical results given in Figure 2, where we plot the profiles of ˜uh, ˜gh, and gh at several representative times. log(h)                                            
+
+> -4-3.5-3-2.5-2-1.5
+> log(Eu)
+> -25
+> -20
+> -15
+> -10
+> -5
+> 0
+> k=1
+> k=2
+> k=3
+> k=4
+> k=5
+> (a)uherrors;guideslopesk+1.
+> log(h)
+> -4-3.5-3-2.5-2-1.5
+> log(Eg )
+> -35
+> -30
+> -25
+> -20
+> -15
+> -10
+> -5
+> k=1
+> k=2
+> k=3
+> k=4
+> k=5
+> (b)gherrors;guideslopesk+2.
+
+Figure 1. Convergence history for Example 5.1. Panel (a) shows the error of uh
+
+with guide slopes k + 1 , while panel (b) shows the error of gh with guide slopes 
+
+k + 2 .16 MUKUL DWIVEDI AND ANDREAS RUPP r     
+
+> 0246810
+> ~uh
+> -0.5
+> 0
+> 0.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh               
+
+> (a)t=0:11819;fromlefttoright:~uh,~gh,gh.
+> r
+> 0246810
+> ~uh
+> -0.5
+> 0
+> 0.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh               
+
+> (b)t=9:9044;fromlefttoright:~uh,~gh,gh.
+> r
+> 0246810
+> ~uh
+> -0.5
+> 0
+> 0.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh          
+
+> (c)t=293:1149;fromlefttoright:~uh,~gh,gh.
+
+Figure 2. Solutions of the Einstein–scalar system for Example 5.1. In each row, from left to right, the three panels show ˜uh, ˜gh, and gh.5.2. Example 2. (Long-time evolution for a lower-energy large data set [8, Ex. 2] ). 
+
+In this example, we consider a large data set with a smaller effective concentration, so that the collapse develops more slowly and the intermediate evolution can be observed more clearly. We take 
+
+b = 10 , ˜u0(r) = tanh (m(r − rc)), rc = 6 , m = 15.1 ,
+
+and define 
+
+u0(r) = ( r˜u0(r)) r = tanh (m(r − rc)) + mr sech 2(m(r − rc)).
+
+The outer boundary data are again chosen as Ub(t) = u0(b). This initial condition has a finite Bondi mass and no horizon at the initial time. Compared with Example 5.1, the collapse is slower, so we present the numerical results of the evolution over a sufficiently larger time. The numerical profiles of ˜uh, ˜gh, and gh are shown in Figure 3 at several representative times. 5.3. Example 3. (A Gaussian-pulse evolution). In addition to the two large-data benchmark tests, it is useful to include a smoothly localized pulse that is not designed to form a black hole HDG FOR EINSTEIN SCALAR EQUATION 17 r     
+
+> 0246810
+> ~uh
+> -1
+> -0.5
+> 0
+> 0.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(a) t = 0:1; from left to right: ~uh, ~gh, gh.     
+
+> r
+> 0246810
+> ~uh
+> 1
+> 1.5
+> 2
+> 2.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(b) t = 80:005; from left to right: ~uh, ~gh, gh.     
+
+> r
+> 0246810
+> ~uh
+> 1
+> 1.5
+> 2
+> 2.5
+
+~uh     
+
+> r
+> 0246810
+> ~gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+~gh     
+
+> r
+> 0246810
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(c) t = 5000:05; from left to right: ~uh, ~gh, gh.
+
+Figure 3. Solutions of the Einstein–scalar system for Example 5.2. In each row, from left to right, the three panels show ˜uh, ˜gh, and gh.rapidly. A natural reference point is the Bondi-coordinate study of Pürrer et al. [43, Sec. 4], who considered Gaussian-like initial data in their analysis of critical and subcritical Einstein–scalar evolutions. Motivated by this literature, we consider the localized pulse on the finite interval [0 , b ]:
+
+˜u0(r) = A r 2 exp 
+
+(
+
+− (r − r0)2
+
+σ2
+
+)
+
+, b = 20 , A = 8 × 10 −3, r0 = 8 , σ = 1 .5,
+
+and define the evolution variable by 
+
+u0(r) = ( r˜u0(r)) r = A exp 
+
+(
+
+− (r − r0)2
+
+σ2
+
+) ( 
+
+3r2 − 2r3(r − r0)
+
+σ2
+
+)
+
+.
+
+At the outer boundary, we impose zero inflow Ub(t) = 0 . The factor r2 guarantees regularity at the center and produces a smooth pulse which is initially concentrated away from r = 0 . Compared with Examples 5.1 and 5.2, this test is not intended as a collapse benchmark, but as a qualitative smooth-pulse evolution study on a larger computational domain. 18 MUKUL DWIVEDI AND ANDREAS RUPP 
+
+Typical output times are chosen as 
+
+t = 0 , t = 20 , t = 60 ,
+
+which represent the initial pulse, an intermediate stage during inward motion and focusing, and a later stage where the pulse has moved further toward the center while remaining fully visible in the computational window. In addition to the profiles of ˜uh, ˜gh, and gh, we monitor the numerical Bondi-mass proxy Mh(t) defined by (4.22). The numerical results are displayed in Figure 4. At 
+
+t = 0 , the scalar profile ˜uh is a smooth positive pulse centered away from the origin. At later times, the pulse moves inward and becomes more concentrated, while a small trailing undershoot appears behind the main peak. In addition to the profiles of ˜uh, ˜gh, and gh, we plot in Figure 5 the finite-radius Bondi-mass proxy Mh(t), which follows from (4.22) and the boundary condition gh(t, b ) = 1 .Over the displayed time interval, this quantity changes slowly. This supports the interpretation of the experiment as a smooth weak-field pulse evolution rather than a rapid transition toward a black-hole-type end state. We emphasize that this figure is intended as a qualitative diagnostic of the reconstructed metric behavior. 6. Conclusion 
+
+In this paper, we developed a hybridizable discontinuous Galerkin method for the spherically symmetric Einstein–scalar system in Bondi gauge. This method has a clear computational struc-ture. The globally coupled unknowns are reduced to trace variables on the mesh skeleton, while the element variables are reconstructed locally. We proved local well-posedness of the semidiscrete scheme and derived a global L2-stability estimate. We then established an optimal order error bound for the main evolution variable for polynomial degree k ≥ 1. The analysis further yielded error estimates for the reconstructed variables wh, gh, zh, ˜uh, and ˜gh, as well as an error estimate for the Bondi mass. These results show that the proposed HDG method is not only stable and convergent, but also accurate for the geometrically relevant quantities of the Einstein–scalar sys-tem. The numerical experiments support the theory and illustrate the practical behavior of the method. The present work provides the first HDG analysis for this Bondi-gauge Einstein–scalar model and shows that HDG offers a natural alternative to standard DG methods in this setting. Several extensions remain of interest. These include a fully discrete error analysis and a mathematical proof of the observed superconvergence of the reconstructed metric variable. 
+
+Code availability 
+
+The code used to generate the numerical results reported in this paper is publicly available at https://github.com/AndreasRupp/hdg_einstein_scalar. 
+
+References  
+
+> [1] R. Arnowitt, S. Deser, and C. W. Misner. The dynamics of general relativity. In Gravitation: An introduction to current research, pages 227–265. Wiley, New York-London, 1962. [2] J. G. Baker, J. Centrella, D.-I. Choi, M. Koppitz, and J. Van Meter. Gravitational-wave extraction from an inspiraling configuration of merging black holes. Phys. Rev. Lett., 96(11):111102, 2006. [3] R. Bartnik. Einstein equations in the null quasispherical gauge. Classical Quantum Gravity, 14(8):2185–2194, 1997. [4] H. Bondi, M. G. J. van der Burg, and A. W. K. Metzner. Gravitational waves in general relativity. VII. Waves from axi-symmetric isolated systems. Proc. Roy. Soc. London Ser. A, 269:21–52, 1962. [5] M. Campanelli, C. O. Lousto, P. Marronetti, and Y. Zlochower. Accurate evolutions of orbiting black-hole binaries without excision. Phys. Rev. Lett., 96(11):111101, 2006. [6] H. Chen, P. Lu, and X. Xu. A hybridizable discontinuous Galerkin method for the Helmholtz equation with high wave number. SIAM J. Numer. Anal., 51(4):2166–2188, 2013. [7] Y. Chen, B. Dong, and J. Jiang. Optimally convergent hybridizable discontinuous Galerkin method for fifth-order Korteweg–de Vries type equations. ESAIM Math. Model. Numer. Anal., 52(6):2283–2306, 2018. [8] Y. Chen, C.-W. Shu, and S.-T. Yau. On the convergence of the discontinuous Galerkin scheme for Einstein-scalar equations. Math. Comp., 95(358):557–587, 2026. [9] D. Christodoulou. Global existence of generalized solutions of the spherically symmetric Einstein-scalar equa-tions in the large. Comm. Math. Phys., 106(4):587–621, 1986. HDG FOR EINSTEIN SCALAR EQUATION 19
+
+r     
+
+> 05101520
+> ~uh
+> 0
+> 0.2
+> 0.4
+> 0.6
+
+~uh
+
+r    
+
+> 05101520
+> ~gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+
+~gh
+
+r    
+
+> 05101520
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(a) t = 0; from left to right: ~uh, ~gh, gh.
+
+r     
+
+> 05101520
+> ~uh
+> 0
+> 0.2
+> 0.4
+> 0.6
+
+~uh
+
+r    
+
+> 05101520
+> ~gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+
+~gh
+
+r    
+
+> 05101520
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(b) t = 20; from left to right: ~uh, ~gh, gh.
+
+r     
+
+> 05101520
+> ~uh
+> 0
+> 0.2
+> 0.4
+> 0.6
+
+~uh
+
+r    
+
+> 05101520
+> ~gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+
+~gh
+
+r    
+
+> 05101520
+> gh
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+
+gh
+
+(c) t = 60; from left to right: ~uh, ~gh, gh.
+
+Figure 4. Solutions of the Einstein–scalar system for the Gaussian-pulse test of Example 5.3. In each row, from left to right, the three panels show ˜uh, ˜gh, and 
+
+gh.
+
+[10] D. Christodoulou. The problem of a self-gravitating scalar field. Comm. Math. Phys., 105(3):337–361, 1986. [11] D. Christodoulou. A mathematical theory of gravitational collapse. Comm. Math. Phys., 109(4):613–647, 1987. [12] D. Christodoulou. The structure and uniqueness of generalized solutions of the spherically symmetric Einstein-scalar equations. Comm. Math. Phys., 109(4):591–611, 1987. [13] D. Christodoulou. The formation of black holes and singularities in spherically symmetric gravitational collapse. Comm. Pure Appl. Math., 44(3):339–373, 1991. [14] P. G. Ciarlet. The finite element method for elliptic problems, volume Vol. 4 of Studies in Mathematics and its Applications. North-Holland Publishing Co., Amsterdam-New York-Oxford, 1978. [15] B. Cockburn, B. Dong, J. Guzmán, M. Restelli, and R. Sacco. A hybridizable discontinuous Galerkin method for steady-state convection-diffusion-reaction problems. SIAM J. Sci. Comput., 31(5):3827–3846, 2009. [16] B. Cockburn and J. Gopalakrishnan. The derivation of hybridizable discontinuous Galerkin methods for Stokes flow. SIAM J. Numer. Anal., 47(2):1092–1125, 2009. [17] B. Cockburn, J. Gopalakrishnan, and R. Lazarov. Unified hybridization of discontinuous Galerkin, mixed, and continuous Galerkin methods for second order elliptic problems. SIAM J. Numer. Anal., 47(2):1319–1365, 2009. [18] B. Cockburn, J. Gopalakrishnan, N. C. Nguyen, J. Peraire, and F.-J. Sayas. Analysis of HDG methods for Stokes flow. Math. Comp., 80(274):723–760, 2011. 20 MUKUL DWIVEDI AND ANDREAS RUPP t
+
+0 10 20 30 40 50 60
+
+> Mh(t)
+
+3.919
+
+3.92
+
+3.921
+
+3.922
+
+3.923
+
+3.924
+
+3.925
+
+Mh(t)
+
+Figure 5. Time history of the numerical Bondi-mass proxy for Example 5.3. 
+
+[19] B. Cockburn and K. Shi. Superconvergent HDG methods for linear elasticity with weakly symmetric stresses. IMA J. Numer. Anal., 33(3):747–770, 2013. [20] B. Cockburn and C.-W. Shu. TVB Runge-Kutta local projection discontinuous Galerkin finite element method for conservation laws. II. General framework. Math. Comp., 52(186):411–435, 1989. [21] B. Cockburn and C.-W. Shu. Runge-Kutta discontinuous Galerkin methods for convection-dominated problems. J. Sci. Comput., 16(3):173–261, 2001. [22] J. Cui and W. Zhang. An analysis of HDG methods for the Helmholtz equation. IMA J. Numer. Anal., 34(1):279–295, 2014. [23] R. A. d’Inverno, M. R. Dubal, and E. A. Sarkies. Cauchy-characteristic matching for a family of cylindrical solutions possessing both gravitational degrees of freedom. Classical Quantum Gravity, 17(16):3157–3170, 2000. [24] B. Dong. Optimally convergent HDG method for third-order Korteweg–de Vries type equations. J. Sci. Comput., 73(2-3):712–735, 2017. [25] M. Dwivedi, R. Gutendorf, and A. Rupp. A hybridizable discontinuous Galerkin method for the non–local Camassa–Holm–Kadomtsev–Petviashvili equation. arXiv preprint arXiv:2601.13800, 2026. [26] M. Dwivedi and A. Rupp. A hybridizable discontinuous Galerkin method for the Ostrovsky equation. arXiv preprint arXiv:2602.13786, 2026. [27] M. Dwivedi and T. Sarkar. Stability of fully discrete local discontinuous Galerkin method for the generalized Benjamin–Ono equation. arXiv preprint arXiv:2405.08360, 2024. [28] R. Gómez, R. A. Isaacson, J. S. Welling, and J. Winicour. Numerical relativity on null cones. In Dynamical spacetimes and numerical relativity (Philadelphia, PA, 1985), pages 236–255. Cambridge Univ. Press, Cam-bridge, 1986. [29] R. Gómez, L. Lehner, R. L. Marsa, and J. Winicour. Moving black holes in 3D. Phys. Rev. D (3), 57(8):4778– 4788, 1998. [30] R. Griesmaier and P. Monk. Error analysis for a hybridizable discontinuous Galerkin method for the Helmholtz equation. J. Sci. Comput., 49(3):291–310, 2011. [31] S. G. Hahn and R. W. Lindquist. The two-body problem in geometrodynamics. Ann. Physics, 29:304–331, 1964. [32] H. Kabaria, A. J. Lew, and B. Cockburn. A hybridizable discontinuous Galerkin formulation for non-linear elasticity. Comput. Methods Appl. Mech. Engrg., 283:303–329, 2015. [33] P. Lu, R. Maier, and A. Rupp. A localized orthogonal decomposition strategy for hybrid discontinuous Galerkin methods. ESAIM Math. Model. Numer. Anal., 59(2):1213–1237, 2025. [34] P. Lu, A. Rupp, and G. Kanschat. Analysis of injection operators in geometric multigrid solvers for HDG methods. SIAM J. Numer. Anal., 60(4):2293–2317, 2022. [35] P. Lu, A. Rupp, and G. Kanschat. Homogeneous multigrid for HDG. IMA J. Numer. Anal., 42(4):3135–3153, 2022. [36] P. Lu, W. Wang, G. Kanschat, and A. Rupp. Homogeneous multigrid for HDG applied to the Stokes equation. IMA J. Numer. Anal., 44(5):3124–3152, 2024. [37] N. C. Nguyen and J. Peraire. Hybridizable discontinuous Galerkin methods for the two-dimensional Monge-Ampère equation. J. Sci. Comput., 100(2):Paper No. 44, 32, 2024. HDG FOR EINSTEIN SCALAR EQUATION 21 
+
+[38] N. C. Nguyen, J. Peraire, and B. Cockburn. An implicit high-order hybridizable discontinuous Galerkin method for nonlinear convection-diffusion equations. J. Comput. Phys., 228(23):8841–8855, 2009. [39] N. C. Nguyen, J. Peraire, and B. Cockburn. A hybridizable discontinuous Galerkin method for Stokes flow. Comput. Methods Appl. Mech. Engrg., 199(9-12):582–597, 2010. [40] N. C. Nguyen, J. Peraire, and B. Cockburn. An implicit high-order hybridizable discontinuous Galerkin method for the incompressible Navier-Stokes equations. J. Comput. Phys., 230(4):1147–1170, 2011. [41] F. Pretorius. Evolution of binary black-hole spacetimes. Phys. Rev. Lett., 95(12):121101, 4, 2005. [42] F. Pretorius. Numerical relativity using a generalized harmonic decomposition. Classical Quantum Gravity, 22(2):425–451, 2005. [43] M. Pürrer, S. Husa, and P. C. Aichelburg. News from critical collapse: Bondi mass, tails, and quasinormal modes. Phys. Rev. D, 71(10):104005, 2005. [44] W. Qiu, J. Shen, and K. Shi. An HDG method for linear elasticity with strong symmetric stresses. Math. Comp., 87(309):69–93, 2018. [45] S. Rhebergen and B. Cockburn. A space-time hybridizable discontinuous Galerkin method for incompressible flows on deforming domains. J. Comput. Phys., 231(11):4185–4204, 2012. [46] G. R. Richter. An optimal-order error estimate for the discontinuous Galerkin method. Math. Comp., 50(181):75–88, 1988. [47] R. K. Sachs. Gravitational waves in general relativity. VIII. Waves in asymptotically flat space-time. Proc. Roy. Soc. London Ser. A, 270:103–126, 1962. [48] A. Samii, N. Panda, C. Michoski, and C. Dawson. A hybridized discontinuous Galerkin method for the nonlinear Korteweg–de Vries equation. J. Sci. Comput., 68(1):191–212, 2016. [49] Z. Sun and C.-W. Shu. Strong stability of explicit Runge-Kutta time discretizations. SIAM J. Numer. Anal., 57(3):1158–1182, 2019. 
+
+Department of Mathematics, Saarland University, Saarbrücken, Germany 
+
+Email address : {mukul.dwivedi;andreas.rupp}@uni-saarland.de

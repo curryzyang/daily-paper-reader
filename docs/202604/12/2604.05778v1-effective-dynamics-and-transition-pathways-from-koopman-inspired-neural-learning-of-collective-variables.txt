@@ -1,0 +1,1164 @@
+Title: Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables
+
+URL Source: https://arxiv.org/pdf/2604.05778v1
+
+Published Time: Wed, 08 Apr 2026 01:22:35 GMT
+
+Number of Pages: 30
+
+Markdown Content:
+# Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables 
+
+Alexander Sikorski 1,2 , Luca Donati 2,1 , Marcus Weber 1, and Christof Sch¨ utte 1,2,* 1Zuse Institute Berlin (ZIB), Takustr. 7, 14195 Berlin, Germany 
+
+> 2
+
+Freie Universit¨ at Berlin, Department of Mathematics and Computer Science, Arnimallee 6, 14195 Berlin, Germany 
+
+> *
+
+schuette@zib.de 
+
+Abstract 
+
+The ISOKANN (Invariant Subspaces of Koopman Operators Learned by Artificial Neu-ral Networks) framework provides a data-driven route to extract collective variables (CVs) and effective dynamics from complex molecular systems. In this work, we integrate the theo-retical foundation of Koopman operators with Krylov-like subspace algorithms, and reduced dynamical modeling to build a coherent picture of how to describe metastable transitions in high-dimensional systems based on CVs. Starting from the identification of CVs based on dominant invariant subspaces, we derive the corresponding effective dynamics on the latent space and connect these to transition rates and times, committor functions, and transition pathways. The combination of Koopman-based learning and reduced-dimensional effective dynamics yields a principled framework for computing transition rates and pathways from simulation data. Numerical experiments on one-, two-, and three-dimensional benchmark potentials illustrate the ability of ISOKANN to reconstruct the coarse-grained kinetics and reproduce transition times across enthalpic and entropic barriers. 
+
+1
+
+> arXiv:2604.05778v1 [math.DS] 7 Apr 2026
+
+# 1 Introduction 
+
+The exploration of high-dimensional stochastic dynamical systems, such as those arising in molecular dynamics, is often hindered by the complexity and dimensionality of the underlying processes. Effective low-dimensional descriptions are therefore indispensable for understanding, simulating, and interpreting the dominant mechanisms that govern such systems. The notion of collective variables (CVs) provides a natural framework for this reduction: by identifying a few appropriately chosen variables that capture the essential slow degrees of freedom, one may represent the dynamics of the full system through an effective, coarse-grained model. Traditional approaches to coarse-graining rely on physical intuition or prior knowledge of relevant coordinates. In recent years, however, algorithmic identification of CVs has emerged as a promising alternative, exploiting advances in data-driven and machine-learning techniques to discover optimal reaction coordinates directly from simulation data. Examples include time-lagged independent component analysis (TICA) [1], variational approaches to Markov processes (VAMP, VAMPnets) [2], approaches based on normalizing flows [3] and dominant subspace learning methods such as ISOKANN [4], which minimize the deviation between effective and full dynamics in the sense of stochastic model reduction [5, 6]. These approaches extend earlier theoretical developments on optimal reaction coordinates and exact coarse-graining without time-scale separation [7], as well as mathematical analyses of pathwise error bounds and effective dynamics [8, 9, 10]. At the same time, rigorous frameworks for connecting microscopic and effective dynamics have clarified under what conditions a reduced dynamics provides a faithful description of the original stochastic process [11]. Yet, despite these advances and some algorithmic progress [12], a unified understanding of how the data-driven identification of CVs interacts with the 
+
+mathematical and algorithmic characterization of their effective dynamics remains incomplete. The aim of this work is to demonstrate how these two aspects—the algorithmic deter-mination of collective variables and the analysis of their effective dynamics—can be pursued jointly and consistently. We illustrate this interplay using simple yet representative examples, showing explicitly how the main transition rates and pathways of the effective dynamics re-constructed from the learned CVs compare to the rates and pathways of the underlying full dynamics. Through these case studies, we provide evidence that data-driven discovery of CVs, when guided by principles from stochastic reduction theory, can lead to quantitatively reliable and physically interpretable coarse-grained models. In the remainder of this article, we first review the theoretical foundations of collective vari-ables (CVs) including their relation to the spectral properties of the Koopman operator as well as the fundamentals of the associated effective dynamics (Section 2). Building on this, Section 3 introduces the ISOKANN framework, detailing both its mathematical underpinnings and its practical algorithmic realization through neural networks and the inner simplex transforma-tion. Section 4 then develops the formulation of effective transition kinetics in both the full and the reduced dynamics, including committor functions, reactive fluxes, and transition rates. Section 5 presents a sequence of numerical experiments in one-, two-, and three-dimensional systems that illustrate how ISOKANN recovers dominant eigenmodes, coarse-grained poten-tials, diffusion tensors, and transition pathways. Finally, Section 6 summarizes the conceptual insights and outlines directions for future research on data-driven identification of CVs and effective stochastic models. 22 Collective Variables (CVs) in Molecular Dynamics 
+
+In this section, the transfer operator theory for CVs is shortly introduced and connected with the relation between slow modes of the full dynamics with the dominant eigenmodes of the Koopman operator and the effective dynamics that is induced by a CV on its latent space. 
+
+2.1 Koopman Operators, Dominant Eigenvalues and Slow Modes 
+
+For a stochastic process (xt)t∈R depending on time t with states xt ∈ X ⊆ Rd (e.g., MD), the Koopman operator Kτ is a transfer operator of the process. It acts on functions f as 
+
+(Kτf)( x) = E[f(xt+τ) | xt = x].
+
+We assume that the process xt is ergodic and admits a unique invariant measure μ with non-negative density μ(x) such that μA = R 
+
+> A
+
+μ(x)dx for each measurable set A ⊂ X. We consider 
+
+Kτ as an operator acting on the weighted Hilbert space H = L2μ, the linear function space of square integrable functions, equipped with scalar product ⟨f, g ⟩μ = R f(x)g(x)μ(x)dx . That is, 
+
+Kτ is a linear (but infinite-dimensional) operator whose eigenfunctions φ ∈ H satisfy: 
+
+Kτφ = Λφ 
+
+where Λi ∈ C.Subsequently, we assume that the process xt is reversible and μ is absolutely continuous. This is an assumption made for simplicity, the general case is described in detail in [11]. Under this assumption, Kτ is self-adjoint and its eigenvalues are real-valued and discrete. Let Λ0, Λ 1, . . . 
+
+denote the Koopman eigenvalues in descending order and let φi denote the eigenfunction of Λi
+
+such that ⟨φi, φ i⟩μ = δij . We always have Λ0 = 1 with φ0 = 1, and that any function f ∈ H 
+
+can be written as 
+
+f =
+
+> ∞
+
+X
+
+> i=0
+
+⟨f, φ i⟩μφi.
+
+Then, the Koopman operator Kτ admits eigenfunctions whose spectral properties reflect slow transitions between macrostates: 
+
+Knτ f =
+
+> ∞
+
+X
+
+> i=0
+
+Λni ⟨f, φ i⟩μφi, (1) such that information coded in the slow modes or dominant macrostates φi, the eigenfunctions of the dominant first eigenvalues Λ close to Λ0 = 1, decays slowest and information of higher eigenfunctions with eigenvalues Λ ≪ 1 decays exponentially fast. If the eigenvalues of Kτ admit a spectral gap, that is, 
+
+1 = Λ0 > Λ 1 ≥ . . . Λ m ≫ Λm+1
+
+then the m + 1 dominant eigenvalues Λ0, . . . , Λ m and the associated eigenfunctions are called the slow modes and the process is called metastable . In this case, the process exhibits m + 1
+
+distinct metastable sets A, each having the property that exit from the set is a rare event, that is, exit from the set takes very long on average and happens on timescales τ/ | log (Λ)|, cf. [11]. 3For example, the Markov process (Xt) given by the diffusive molecular dynamics process 
+
+dX t = − ∇V(Xt)dt + σdWt, (2) with smooth potential V that is growing to infinity fast enough, constant noise intensity σ > 0 
+
+and d-dimensional Wiener noise process Wt, is reversible with absolutely continuous invariant density μ(x) ∝ exp (− βV (x)) , where β = 2/σ 2. The evolution of expectation values, f(x, t ) = 
+
+E[f(Xt+τ)|X0 = x], under this dynamics is described by 
+
+∂tf(x, t ) = Lf(x, t ),
+
+where the generator of the process is given by 
+
+Lf = σ2
+
+2 ∆f − ∇V · ∇ f, (3) such that the Koopman operator satisfies 
+
+Kτ = exp (τL).
+
+Since the dynamics is reversible with invariant density μ, L is self-adjoint in H, i.e., it is identical to its adjoint L∗ and the Koopman operator coincides with the evolution operator of the operator L∗. That is, in H, the evolution equation for probability densities under the dynamics, reads 
+
+∂tρ = L∗ρ = Lρ, 
+
+where ρ is defined as the probability density with respect to the invariant density μ with ρ → 1
+
+as t → ∞ , indicating convergence of the system toward equilibrium. Note that ρ should not be confused with the probability density with respect to the Lebesgue measure solution of the usual Fokker-Planck equation in L2(dx ).
+
+Kτ and L have the same eigenfunctions and the eigenvalues λ of L are related to the Koopman eigenvalues Λ by Λ = exp (τλ ), showing that the lowest eigenvalues λ ≈ 0 of L correspond to the dominant eigenvalues Λ ≈ 1 of Kτ. That is, if there are only two dominant eigenvalues 
+
+λ0 = 0 and λ1 ≈ 0 with two distinct metastable sets, the expected exit from these sets happens on timescale 1/ |λ1|, see [13, 11]. The transfer operator theory was first introduced for molecular dynamics in [14], and has led to several hundreds articles about specific theoretical approaches [15, 11], data-based ap-proximation as discussed in [16], Markov State Models (MSMs), as reviewed in [17], variational approaches utilizing neural nets as in [2], and many other directions. 
+
+2.2 Collective Variables 
+
+The notion of collective variables (CV), often also called reaction coordinates , is used in different versions in the literature, and considerable theory has been developed recently. The basic concept is that the collective variable is an abstract, low-dimensional set of coordinates which represents progress along transition pathways between an initial state and a target state that mostly belong to different metastable sets. In fact, there are two slightly different ways to understand the last sentence: (I) A CV is understood as a classical reaction coordinate, i.e., 4it describes the progress of a specific transition between two metastable sets and therefore is crafted for this process in particular. In this case, the committor function, as introduced in Sec. 4 below, has been demonstrated to be the optimal reaction coordinate [7, 18]. (II) The CV allows for a description of many such transition processes (the “important” ones), is “global” for the system under investigation, and provides a parametrization of the transition manifold 
+
+of the system as described in [19]. We will herein adopt (II). In general, a CV is a nonlinear, smooth map ξ : X → Rm that reduces the dimension 
+
+d = dim (X) to a significantly smaller dimension m ≪ d with the main additional requirement that the “projection” of full-dimensional molecular dynamics to the CV allows for a “good” reproduction of the long-term dynamical behavior of the system under investigation. We call 
+
+Z = ξ(X) the latent space of the CV. Let ξ : X → Rm be a smooth ( C1) function, where m ≤ d, and let Lz = {x ∈ X | ξ(x) = z}
+
+be the z-level set of ξ, that is, Lz = {x ∈ X : ξ(x) = z}. The coordinate projection Πξ averages a given function along the level sets of a coordinate function ξ:
+
+Πξf(x) = Eμ(f(x′)|ξ(x′) = ξ(x)) . (4) That is, Πξf is constant along the level sets Lz, and is defined by the average of f along these level sets. Therefore, Πξf is often also understood as a function z on the latent space, z ∈ ξ(X),in the sense of ˜f(z) = ( Πξf)( ξ−1(z)) , with 
+
+Πξf(x) = 
+
+Z
+
+> Lξ(x)
+
+f(x)μξ(x)(x)dx, 
+
+where μz = μξ(x) is a probability measure on Lz, the marginal of μ conditional to ξ(x) = z, such that 
+
+Eμ(f) = 
+
+Z
+
+> X
+
+f(x)μ(dx ) = 
+
+Z
+
+> Z
+
+Z
+
+> Lz
+
+f(x)μz(dx ) ˜μ(z)dz =
+
+Z
+
+> Z
+
+Eμ(f(x)|ξ(x) = z) ˜μ(z)dz, 
+
+where ˜ μ(z) is the measure induced by μ on the latent space Z = ξ(X). Because of this, one often simplifies notation and writes Πξf(z) as function in latent space Z which represents ξ(X) via the coordinate representation z = ξ(x). For the canonical measure μ(x) = Z−1 exp (− βV (x)) , a particular case is given by the function f = 1 with Πξ1(z) = R 
+
+> Lz
+
+1(x)μz(x)dx , which allows to denote the free energy function associated with the CV, 
+
+Fξ(z) = − 1β log Πξ1(z). (5) The full process (Xt) defines a dynamics in m-dimensional latent space spanned by ξ by 
+
+zt = ξ(Xt),
+
+and an application of Ito’s lemma yields, based on (2), 
+
+dz t = ( Lξ)( Xt)dt + σ∇ξ(Xt) · dWt, (6) which is not closed since the right hand side not only depends on the value of the collective variable, zt, but also on the state of the original full dynamics, Xt. For circumventing this 5problem, there are mainly two options: (A) use elaborated closing relations for Xt by introducing memory terms that aim to approximate the correlations missing by terms only depending on 
+
+zt, or (B) bring (6) into a closed Markovian form by replacing the coefficients in (6) with their projections via Πξ to the latent space. While (A) is used in the literature mainly via so-called generalized Langevin equations [20, 21] or learning the effective dynamics via Long short-term memory (LSTM) [12], we will herein follow approach (B) which has attracted a lot of attention in the literature recently [22, 8, 23, 9, 24, 6, 5]. The specific approach utilized herein stems from [19] and is based on the following key idea: Find CVs ξ for which the Markovian closed form, called the effective dynamics induced by ξ, exhibits (approximately) the same slow modes than the original dynamics. 
+
+2.3 Effective Dynamics and Inherited Slow Modes 
+
+The effective dynamics given by the CV ξ is the dynamics in latent space (dimension m) induced by the full dynamics (2). That is, the full dynamics is projected onto the latent space via the projection operator Πξ. In [5], the effective dynamics is discussed in the general case (not only for diffusion processes). For simplicity of presentation, we here restrict ourselves to the case that the dynamics is given by (2). According to [8, 23], in this case, the effective dynamics is then given by 
+
+dz t = eb(zt) dt + σ · A(zt) dWt , (7) where zt denote the state on the latent space at time t. The coefficients eb : Rm → Rm,
+
+A : Rm → Rm×m live on the latent space Z (no longer full state space), together with the process Wt, with 
+
+ebl(z) = Πξ(Lξl)( z),
+
+(AA ⊤)lk (z) = Πξ
+
+ dX
+
+> i,j =1
+
+∂ξ l
+
+∂x i
+
+∂ξ k
+
+∂x j
+
+
+
+(z), (8) for z ∈ Rm, so we can assume that A = A(z) is an m × m square matrix. We also have the following alternative formula 
+
+ebl(z) = lim  
+
+> s→0+
+
+E
+
+ ξl(Xs) − zl
+
+s X0 ∼ μz
+
+
+
+,
+
+(AA ⊤)lk (z) = lim  
+
+> s→0+
+
+E
+
+ (ξl(Xs) − zl)( ξk(Xs) − zk)⊤
+
+s X0 ∼ μz
+
+
+
+,
+
+(9) where the conditional expectations are with respect to the ensemble of trajectories of the full dynamics (2) with the initial distribution μz on Lz.The generator ˜L of (7) results from the generator L of the full process being projected to latent space, 
+
+ΠξLf(x) = ( ˜L˜f)( ξ(x)) ,
+
+with f(x) = ˜f(ξ(x)) , which is given by 6˜L =
+
+> m
+
+X
+
+> l=1
+
+ebl
+
+∂∂z l
+
++ 12
+
+> m
+
+X
+
+> k,l =1
+
+(˜σ˜σ⊤)kl (z) ∂2
+
+∂z k∂z l
+
+, (10) where ˜ σ˜σ⊤ = σ2AA ⊤. The effective Koopman operator then is defined by ˜Kτ = exp (τ ˜L).
+
+Like the effective generator ˜L, ˜Kτ acts on functions on the latent space and is the latent space variant of the projected Koopman operator ΠξKτΠξ. If Kτ is self-adjoint then ˜Kτ is too (on the correctly weighted Hilbert space ˜H on ξ(X)). Concerning the eigenvalues of ˜Kτ we have the following statement [5] (Thm. 4.1): For each eigenvalue Λ and eigenfunction φ of Kτ we have that: (1) For each eigenvalue ˜Λ of ˜Kτ with eigenfunction ˜ φ we have the estimate 
+
+Λ − ˜Λ ≤ E (φ − ˜φ ◦ ξ) − ( 1 − Λ)∥φ − ˜φ ◦ ξ∥μ,
+
+with E(f) = ⟨(Id − Kτ)f, f ⟩μ where ◦ denote concatenation, i.e., ( ˜φ ◦ ξ)( x) = ˜φ(ξ(x)) .(2) If there is a function ˜ φ on the latent space such that φ(x) = ˜φ(ξ(x)) , then Λ is also an eigenvalue of ˜Kτ with eigenfunction ˜ φ.(3) When ordering the spectrum of Kτ and ˜Kτ in decreasing order, we have 
+
+Λi ≥ ˜Λi. (11) Consequently, whenever we want that the slow modes of ˜Kτ are similar to the ones of Kτ, we have to look for CVs ξ for which the dominant eigenfunction φ are almost constant on the level sets Lz, because then we will find a ˜ φ such that φ(x) ≈ ˜φ(ξ(x)) .Given this criterion, the obvious choice for a CV of dimension m would be given by the first nontrivial dominant eigenfunctions, 
+
+ξ(x) = ( φ1(x), . . . , φ m(x)) ,
+
+since, then, the slow modes of the full dynamics, i.e., dominant eigenvalues of Kτ, were inherited by the effective dynamics, i.e., the dominant eigenvalues of ˜Kτ. However, algorithmically, this choice is problematic since the eigenfunctions of Kτ are unknown and computation is difficult. Nevertheless, there is a growing variety of numerical approaches using neural networks and deep learning for identifying the dominant eigenfunctions, e.g., see [2, 25], or the subspace spanned by them [4]. 
+
+# 3 Identification of CVs via ISOKANN 
+
+ISOKANN stands for Invariant Subspaces of Koopman Operators Learned by Artificial Neural Networks . It is a data-driven method to identify CVs in form of membership functions that span an invariant subspace of the Koopman operator associated with a stochastic dynamics system [4]. 73.1 Theoretical Background of ISOKANN 
+
+In order to introduce the general idea behind ISOKANN, let us again consider the generator L of the dynamical process under consideration and the associated Koopman operator Kτ = exp (τL).Assume that the subspace Sm = span {φ0, . . . , φ m} of the dominant eigenfunctions of Kτ can be spanned by a partition of unity χ0, . . . , χ m, i.e., 
+
+Sm = span {χ0, . . . , χ m},
+
+> m
+
+X
+
+> i=0
+
+χi = 1, χi ≥ 0. 
+
+ISOKANN aims to compute such a partition of unity χ0, . . . , χ m.Let χ(x) ∈ R(m+1) denote the vector χ(x) = ( χ0(x), . . . , χ m(x)) ⊤, and let φ(x) denote the same for the eigenfunctions φi. Then Lφ = Lφ with (( Lφi)( x)) = ( L · φ(x)) i, where L denotes the (m + 1) × (m + 1) diagonal matrix that contains the eigenvalues λ0, . . . , λ m of L, Lij =
+
+λiδij . Since both, the χi and the φi, span the subspace Sm, there is an invertible matrix 
+
+C ∈ R(m+1)×(m+1) such that, for each x ∈ X,
+
+χ(x) = Cφ (x), and φ(x) = C−1χ(x).
+
+Consequently, the matrix Q = CLC −1 ∈ R(m+1)×(m+1) satisfies 
+
+Lχ = Qχ. (12) We can compute the eigenvalues and eigenvectors of Q: Let ei denote the i-th unit vector containing 1 at entry i and otherwise 0. Then we see that v⊤ 
+
+> i
+
+= e⊤ 
+
+> i
+
+C−1 is the left eigenvector of 
+
+Q for eigenvalue λi,
+
+v⊤ 
+
+> i
+
+Q = λiv⊤ 
+
+> i
+
+,
+
+such that Q inherits the dominant eigenvalues λ0, . . . , λ m of L.
+
+3.2 Effective Dynamics for ISOKANN 
+
+By choosing χ as the CV, the effective dynamics in the ISOKANN latent space χ(X) is given in terms of the (m + 1)-dimensional column vector z = χ(x), and the projection Πξ is averaging over the level sets of χ. For ISOKANN, we can use (12) to see that the effective dynamics (7) has the form 
+
+dz t = Qztdt + ˜σ(zt)dWt, (13) with z-dependent (m + 1) × (m + 1) noise intensity matrix ˜ σ(z) = σA (z) with A from 
+
+(AA ⊤)lk (z) = Πξ
+
+ dX
+
+> i,j =1
+
+∂χ l
+
+∂x i
+
+∂χ k
+
+∂x j
+
+
+
+(z),
+
+or from (9) with ξ = χ. The resulting diffusion tensor is ˜D(z) = 12 σ2A(z)A(z)⊤ = 12 ˜σ(z)˜σ(z)⊤. (14) 8In general, the diffusion tensor is positive semidefinite since the dynamics on the latent space, i.e. the full simplex, are constrained by Pm0 zl = 1, implying that one direction does not contribute to diffusion. Following (10), the associated effective generator has the form ˜Lf(z) = ( Qz)⊤ · ∇ zf(z) + 12 Tr 
+
+
+
+˜σ˜σ⊤(z)∇2zf(z)
+
+
+
+, (15) where Tr denote the trace operator. Using the left eigenvectors vi of Q, we see that ˜φi(z) = v⊤ 
+
+> i
+
+z leads to ˜L ˜φi = ˜λi ˜φi, (16) that is, ˜L inherits the dominant eigenvalues of L, and the associated eigenfunctions ˜ φi(z) = v⊤ 
+
+> i
+
+z
+
+are linear in z.
+
+Dimension reduction m+1 → m: χ contains m+1 different functions χ0, . . . , χ m. Since they form a partition of unity, we have that χm = 1−Pm−1i=0 χi and can thus reduce by one dimension. Let χ′ = ( χ0, . . . , χ m−1) be the reduced m-dimensional vector of the m first χ-functions, and let the matrix Q be written in block form: 
+
+Q =
+
+"
+
+Q′ ba⊤ c
+
+#
+
+where Q′ ∈ Rm×m, a, b ∈ Rm×1, and c ∈ R. Denoting with 1 ∈ Rm×1 the vector containing only ones, this yields 
+
+Qχ =
+
+"
+
+(Q′ − b1⊤)χ′ + b
+
+(a⊤ − c1⊤)χ′ + c
+
+#
+
+such that the m-dimensional form of the effective dynamics (13) reads 
+
+dz ′ 
+
+> t
+
+= bdt + Qz ′
+
+> t
+
+dt + ˜σ(z′
+
+> t
+
+)dW ′ 
+
+> t
+
+, (17) where Q = Q′ − b1⊤, W ′ 
+
+> t
+
+an m-dimensional vector of independent standard Wiener processes, and ˜ σ given by the same formula as above (just one dimension smaller). Thus, the reduced effective dynamics of ISOKANN is an Ornstein-Uhlenbeck process with linear drift and state-dependent noise intensity. This reduction of dimension from m + 1 → m, or equivalently from working with z to z′,reflects the fact that the (m+1)-tuple z lies on the unit m-simplex embedded in Rm+1,
+
+∆m =
+
+
+
+z ∈ [0, 1 ]m+1 :
+
+> m
+
+X
+
+> l=0
+
+zl = 1
+
+
+
+, (18) and therefore contains one redundant coordinate. Eliminating this redundancy amounts to pro-jecting ∆m onto an intrinsic m-dimensional representation in Rm, yielding the reduced simplex ¯∆m =
+
+
+
+z′ ∈ [0, 1 ]m :
+
+> m−1
+
+X
+
+> l=0
+
+z′ 
+
+> l
+
+≤ 1
+
+
+
+. (19) 9Equation (17) therefore represents the projection of (13) onto this lower-dimensional simplex, see Fig. 1. One advantage of this perspective is that the diffusion matrix becomes strictly positive definite: ˜D(z′) ≻ 0. Indeed the Jacobian matrix ∇χ of the CV χ has full rank m on the reduced simplex and the noise σ acts in all directions in full dynamics. 1 φ1
+
+φ2
+
+φ3
+
+x
+
+φ1 ≡ 1
+
+> φ(x)
+
+φ1
+
+φ2
+
+φ3
+
+> 1
+> 1
+> 1
+> χ(x)
+
+χ1
+
+χ2
+
+χ3
+
+Figure 1: Illustration of the transformation from eigen- to χ-functions. Left: Dominant eigen-functions φi(x). Middle: Eigenfunction components plotted in the plane φ1 ≡ 1, with an enclosing simplex indicated. Right: The transformation that maps this simplex to the unit simplex sends φ to χ, which then lies on the unit simplex. 
+
+3.3 The ISOKANN algorithm 
+
+Without sufficient sampling of rare but essential transitions between metastable states, any method approximating eigenfunctions will struggle. Therefore, in [26] optimal importance sam-pling was integrated into ISOKANN, yielding a dramatic variance reduction when estimating the action of the Koopman operator. In the following, we focus on the algorithmic application of ISOKANN in higher-dimensional cases by incorporating the Inner Simplex Algorithm, which enables the computation of multi-dimensional χ functions. In order to compute the invariant subspace Sm in terms of the vector valued χ function, ISOKANN combines three different techniques: an iterative procedure similar to the power iter-ation, representation of χ through neural networks and data-driven Monte-Carlo approximation of the action of Kτ.Let us first look at the iteration that lies at the core of the method. Similarly to the power iteration, the Arnoldi iteration, or more general Krylov-subspace methods, the underlying idea is that the iterative application of Kτ to any generic initial function will converge to the dominant eigenfunction, 
+
+Knτ b0 → cφ 0, b0 ∈ H , c ∈ R,
+
+which is a direct consequence of the eigenexpansion (1). Since we are not interested in the dominant eigenfunction φ0 ≡ 1 itself, but in the following slowest decaying eigenfunctions, we modify this power iteration scheme by constructing a se-quence of linear operators An such that the iteration χ(n+1) = Anχ(n) converges to the dominant subspace of Kτ.To retain the exponentially decaying contributions from these slower eigenfunctions, we com-10 pose the application of the Koopman operator with a dynamically chosen linear transformation 
+
+Sn,
+
+χ(n+1) = SnKτχ(n), (20) where χ(n) : X → Rm+1 denotes the current iterate and Sn ∈ R(m+1)×(m+1) is a matrix computed for each iteration such that it rescales the dominant modes to unit magnitude, ensuring stability and preventing collapse to the trivial eigenfunction. This construction allows to retain the m+1
+
+dimensional dominant subspace whereas all faster modes keep decaying, ensuring convergence of S(n) 
+
+> m
+
+= span {χ(n) 
+
+> 1
+
+, . . . , χ (n)
+
+> m+1
+
+} to Sm.Assuming convergence, i.e. χ(n) ≈ SnKτχ(n) for some large n, we see that the matrix K(n) =
+
+S−1n is the finite dimensional representation of Kτ on the dominant subspace S(n) 
+
+> m
+
+, K(n)χ ≈ Kτχ.Since Kτ = exp (τL) we also have K(n) ≈ exp (τQ) which in turn allows us to obtain the rate matrix Q directly from K(n) through the matrix logarithm. Since X can be high-dimensional, we approximate χ(n) using a neural network χθn with trainable parameters θn. Neural networks can represent smooth low-dimensional manifolds em-bedded in high-dimensional space, which is particularly suited for this task of learning reaction coordinates with low intrinsic dimension. However, it also means that the equality in (20) must be realized through a training task. Here we choose the classical regression by minimizing the residual in terms of the mean squared error (MSE) over a set of data points xi ∈ X, i = 1, . . . , N .The loss function then reads 
+
+L(θn+1) = 1N
+
+> N
+
+X
+
+> i=1
+
+χθn+1 (xi) − Tn(xi) 2 , with Tn(xi) = SnKτχθn (xi) (21) where the target Tn is based on the previous iteration and as such is independent of the current iteration’s weights (i.e. with ”frozen gradients” w.r.t. the parameter optimization for θn+1). The evaluation of the Koopman operator Kτχ(n)(xi) = Kτχθn (xi) is realized through the Monte-Carlo approximation of its expectation value formulation (2.1): 
+
+Kτχ(n)(xi) = 1M
+
+> M
+
+X
+
+> k=1
+
+χ(n)(yi,k )
+
+where yi,k ∼ P(Xτ|X0 = xi) are M independent samples that evolved in time τ from their starting positions xi. In this regard, the training data for ISOKANN consists of two tensors: 
+
+X ∈ Rd×N, Y ∈ Rd×M×N
+
+where the columns xi = X:,i ∈ Rd are the N initial points of the short burst simulations and 
+
+yi,k = Y:,k,i ∈ Rd the endpoints of the respective M bursts. 
+
+Estimation of Sn through the inner simplex algorithm: Let us for a moment consider the ISOKANN iteration (20) without the regularizing effect of Sn, i.e. with Sn = Id. In particular, consider the image of the data points: Kτχ(n)(X) = Kτχ(n)(xi) | xi ∈ X ⊂ Rm+1.Due to the spectral properties of Kτ (Λ ≤ 1, single eigenvalue 1) this set will, for n → ∞ ,converge to a unique fixed point in Rm+1.11 The inner simplex algorithm (ISA) [27] counteracts this contraction by identifying the most extremal points of each iterate Kτχ(n)(X) and constructing the linear map Sn that sends these points to the vertices of the unit simplex in Rm+1. In each iteration, the extremal points are selected recursively by maximal distance to the span of all previously chosen points, starting with the point of largest magnitude. Thus, ISA determines a simplex inscribed in the convex hull of the data, successively expanding (m + 1) independent directions to unit scale and thereby stabilizing the iteration (20). Because the slowest modes will dominate the extrema, their contributions prevail under iteration, while faster modes decay. Note that unlike the Koopman operator, which is evaluated at each data point xi individually, the estimation of Sn in ISA is computed over the entire set Kτχ(n)(X); once determined, the resulting matrix Sn can then be applied to each vector in Kτχ(n)(X).The ISA generalizes the shift–scale operation used in earlier ISOKANN works [4, 26, 28, 29, 30] from the one-dimensional case – where χ represented a 1-simplex in R2 and Sn was an explicit affine-linear map – to the higher-dimensional setting. Conceptually, ISA can be viewed as a higher-dimensional analogue of this shift–scale step, and itself is a subroutine of PCCA+ [31, 32, 33], the method that originally inspired the idea of χ-functions. 
+
+Algorithm 1: ISOKANN Algorithm for m + 1 dimensions 
+
+Input: Initial features X ∈ Rd×N with columns denoted xi;Propagated samples Y ∈ Rd×M×N with columns denoted yi,k ;Neural network χθ : Rd → Rm+1
+
+Output: Trained network χθ approximating Sm
+
+Initialize parameters θ0 randomly. Set n ← 0.
+
+repeat 
+
+/* Monte Carlo Koopman evaluation */ 
+
+Ki ← 1M
+
+PMk=1 χθn (yi,k ) ∀i = 1, . . . , N ;
+
+/* Inner Simplex Algorithm to construct S */ 
+
+begin 
+
+j1 ← arg max k ∥Kk∥;
+
+for i = 1 to m do 
+
+ji+1 ← arg max k dist (Kk, span {Kj1 , . . . , K ji });
+
+end 
+
+S ← [ Kj1 Kj2 · · · Kjm+1 ]−1;
+
+end 
+
+/* Form training targets */ 
+
+Ti ← S K i ∀i = 1, . . . , N ;
+
+/* Mean-squared training loss */ 
+
+L(θ) ← 1N
+
+PNi=1 ∥χθ(xi) − Ti∥2;
+
+/* Update network parameters */ 
+
+θn+1 ← arg min θ L(θ);
+
+n ← n + 1;
+
+until convergence ;
+
+return χθ.12 Algorithmic considerations We now discuss several practical aspects relevant to imple-mentation. 
+
+• Initialization: For the power-iteration scheme to work, the initial iterate χ0 must contain nonzero contributions from the dominant modes. In practice, random initialization of the neural network parameters satisfies this condition almost surely. 
+
+• Architecture: In ISOKANN, the neural network χθ : Rd → Rm+1 acts as a black-box regressor; thus, the specific architecture is not crucial. We typically employ fully connected feed-forward networks with 2–4 hidden layers and sigmoid or ReLU activations. For sigmoid activations, the final layer uses the identity function, allowing the output to map onto [0, 1 ].
+
+• Features: A suitable choice of features can greatly simplify learning. Accordingly, X
+
+and Y may represent physically meaningful features (e.g., normalized pairwise particle distances) rather than raw coordinates. 
+
+• Network reuse: Although in theory each ISOKANN iterate χ(n) is represented by a sep-arate network χθn , in practice we continue training a single model, updating its weights iteratively. This approach treats each iteration as a refinement rather than a full retrain-ing. 
+
+• Training loop: The training consists of an inner loop of stochastic gradient descent over multiple epochs and potentially minibatches, nested inside the outer ISOKANN iteration. Reusing network weights allows the number of training epochs per ISOKANN iteration to be reduced to one, ensuring that each epoch trains on the most recent target update. 
+
+• Inner simplex algorithm: The ISA constructs the matrix Sn mapping the extremal points of Kτχ(n) onto a unit simplex and thereby defines the training targets T . Since the orientation of the simplex (i.e., vertex permutation) is arbitrary, it is necessary to permute the components of T to align with the previous χ(n), for example by maximizing the diagonal of their covariance. 
+
+• Optimizer: We employ either Adam or Nesterov Momentum (learning rate 10 −3), ob-serving that the latter can outperform Adam when the optimization stagnates. To prevent overfitting – which is especially important because the network is evaluated at unseen po-sitions during the Koopman estimation – we add Tikhonov regularization with decay rate 
+
+10 −4.
+
+• Convergence: Assessing convergence is nontrivial; in practice, we use a fixed number of outer iterations informed by prior experience, or alternatively monitor empirical or validation loss values. 
+
+• Validation loss: The validation loss is bounded below by the Monte-Carlo noise level in the Koopman estimation. Thus, it may be advantageous to trade a large number of validation points for fewer, higher-fidelity samples (i.e., larger number M of yi,k per xi). In this case, S should still be computed on the training data, since sparse validation points may not span the full range of χ. This setup can lead to the seemingly paradoxical 13 situation where the empirical loss stagnates when approaching the data noise level while the validation loss keeps decreasing indicating further improvement. 
+
+• Initial samples X: The initial data points xi used for training do not need to be drawn from the stationary distribution of the dynamics. Their distribution mainly affects the weighting of residuals in the loss function rather than the target mapping itself. Con-sequently, ISOKANN remains robust when trained on non-stationary data and readily supports adaptive sampling strategies, e.g. where new points are generated based on the evolving reaction coordinate χ(n).
+
+• Koopman samples Y: For a single training point xi with M Koopman samples, the losses 
+
+L1(θ) = χθ(xi) − 1M
+
+> M
+
+X
+
+> k=1
+
+Sχ θn (yi,k )
+
+> 2
+
+= χθ(xi)2 − 2M χθ(xi)
+
+> M
+
+X
+
+> k=1
+
+Sχ θn (yi,k ) + 1M2
+
+> M
+
+X
+
+> k=1
+
+Sχ θn (yi,k )
+
+!2
+
+(22) 
+
+L2(θ) = 1M
+
+> M
+
+X
+
+> k=1
+
+∥χθ(xi) − Sχ θn (yi,k )∥2
+
+= χθ(xi)2 − 2M χθ(xi)
+
+> M
+
+X
+
+> k=1
+
+Sχ θn (yi,k ) + 1M
+
+> M
+
+X
+
+> k=1
+
+(Sχ θn (yi,k )) 2 (23) yield identical gradients, ∇θL1 = ∇θL2. Thus, averaging over multiple Koopman samples can equivalently be realized by multiple replicas of single Koopman samples. Increasing M reduces variance only as O(1/M ) while increasing computational cost lin-early. In practice, much of the averaging effect may already be achieved implicitly through regularization by the network’s smoothness and the distribution of nearby training points: values of χθ at close states tend to co-vary smoothly, approximating a local ensemble av-erage. Consequently, rather than increasing M, it can be more effective to sample a larger number of distinct initial states xi with fewer Koopman samples each – down to M = 1 in the extreme case – trading fidelity for broader coverage of the state space. 
+
+• Single trajectory data: Since X does not need to sample the stationary distribution, it is possible to restrict attention to a subset of the state space, effectively analyzing the dynamics on this subset. Using the M = 1 argument above, one might consider using a single trajectory as xi and its time-shifted points as yi. However, this data only reflects the transport of χ values along the trajectory. In this setting, we recommend sufficient regularization and, for reversible processes, augmenting the trajectory with its time-reversed counterpart. With these precautions, ISOKANN can extract the slowest process from a single simulation trajectory [29]. 14 4 Transition Rates and Pathways 
+
+There is extensive literature on computing the transition rates and pathways in diffusive or molecular processes, ranging from TPS [34], interface methods like milestoning [35] or TIS [36], or transition path theory (TPT) [37, 38, 39], see [40] for a conceptual review. We will herein concentrate on TPT and how it can be used to investigate mean first passage times, committor functions, and dominant transition pathways in full and effective dynamics. 
+
+4.1 Transition kinetics of the full dynamics 
+
+While the slow modes of the full dynamics are given by the dominant eigenfunctions of its Koopman operator Kτ and its generator L, we can also understand the transition kinetics into a selected set A ⊆ X with a smooth boundary or between A and a disjoint set B ⊆ X. In order to provide a short review, we first introduce the first hitting time τx(B) of set B if started in 
+
+x ∈ X, which is a random time formally defined by τx(B) = inf t≥0{Xt ∈ B|X0 = x}. The mean first passage time (MFPT) from x to B, mB(x) = E(τx(B)) , is given by the boundary value problem 
+
+LmB(x) = − 1, x ∈ X \ B and mB(x) = 0, x ∈ B. (24) The committor function q(x) is the probability to reach B before A when starting from x:
+
+q(x) = P(τx(B) < τ x(A)) , for x ∈ X \ (A ∪ B), (25) and can also be characterized as the unique solution of a boundary value problem, 
+
+Lq(x) = 0 for x ∈ X \ (A ∪ B), and q(x) = 0, for x ∈ A, q(x) = 1, for x ∈ B. (26) TPT describes the ensemble of reactive trajectories [39, 41]— those paths that go from A to B
+
+without returning. The reactive density 
+
+μAB (x) = μ(x)q(x)( 1 − q(x)) ,
+
+is the stationary probability density of finding the system while on a reactive trajectory (for reversible systems). For processes of the form (2), the reactive probability flux associated with transitions from A to B is 
+
+jAB (x) = 12 μ(x) σ2 ∇q(x), (27) where μ(x) ∝ exp (− βV (x)) again denotes the invariant density of the process, and μA =
+
+R 
+
+> A
+
+μ(x) dx denotes the stationary density of the set A. The reactive transition rate from A to 
+
+B is given by the total flux through any surface S separating A and B,
+
+kAB = 1μA
+
+Z
+
+> S
+
+jAB (x) · nS(x) dS (x), (28) where nS is the unit normal to any dividing surface S separating A from B. In the reversible case, this flux is independent of the chosen dividing surface. Equivalently, one can express the 15 rate via the Dirichlet form: 
+
+kAB = 1μA
+
+σ2
+
+2
+
+Z
+
+> X\(A∪B)
+
+μ(x) ∇q(x)⊤ ∇q(x) dx. (29) The transition pathways are extracted from the reactive flux field jAB : Its streamlines (in-tegral curves) give the most probable reaction pathways. These can be visualized as “reaction tubes” showing how probability flows between A and B; high-magnitude regions of jAB identify the dominant reaction tubes or channels and bottlenecks of the transition. 
+
+4.2 Transition kinetics of the effective dynamics 
+
+In what follows, we consider the computation of kinetic quantities for the effective dynamics after dimension reduction, such as MFPT, committor, reactive flux and transition rate for disjoint sets ˜A, ˜B of the latent space Z which is identified with the reduced simplex ¯∆m (19). In (17) the reduced coordinates on the simplex were denoted by z′ to emphasize the projection from the full simplex. From this point onward, for simplicity of notation, we omit the prime and continue to denote all quantities (variables, functions and operators) using the same symbols as for the effective dynamics. When the sets ˜A, ˜B ⊆ ¯∆m for the effective dynamics are chosen, we have to define the sets 
+
+A, B with respect to them, 
+
+A = χ−1( ˜A), and B = χ−1(˜B),
+
+assuming that χ is invertible. While the formula for the effective MFPT and the effective committor ˜ q are still given by (24) and (26) by replacing L, x, A, and B by ˜L, z, ˜A, and ˜B, the equation for the reactive flux and the transition rate now read ˜jAB (z) = 12 ˜μ(z) ˜σ˜σ⊤(z) ∇˜q(z) (30) ˜kAB = 1
+
+˜μ˜A
+
+12
+
+Z 
+
+> Z\(˜A∪˜B)
+
+˜μ(z) ∇˜q(z)⊤ ˜σ˜σ⊤(z)∇˜q(z) dz, (31) where ˜ μ denotes the invariant density of the effective dynamics, and ˜ μ˜A = R˜A ˜μ(z) dz .In the case m = 1, after reduction of the effective dynamics to dimension 1, the generator is scalar in latent space Z = [ 0, 1 ],˜Lf(z) = ( a + λz )∇zf(z) + 12 ˜σ2(z)∇2zf(z),
+
+By defining the rate function ϕ and the effective potential (or Pontryagin’s potential going back to [42]), 
+
+ϕ(z) =
+
+Z zz∗
+
+2(a + λy )
+
+˜σ(y)2 dy, (32) 
+
+Vχ(z) = log 
+
+ 12 ˜σ(z)2
+
+− ϕ(z) + const , (33) 16 the effective invariant density can be written ˜μ(z) = 1Zχ
+
+exp (− Vχ(z)) , Zχ =
+
+Z 10
+
+exp (− Vχ(z)) dz. 
+
+The potential Vχ still depends on the reference point z∗, but different choices of z∗ only add a constant to Vχ, which cancels out in normalized quantities such as ˜ μ.The MFPT of the effective dynamics from z to set ˜B = [ zB, 1 ] can be written down explicitly, ˜m˜B(z) =
+
+Z zB
+
+> z
+
+2
+
+˜σ(z)2 eVχ(z)
+
+Z z0
+
+e−Vχ(u) du dz. (34) Furthermore, the effective committor to go from set ˜A = [ 0, z A] to set ˜B = [ zB, 1 ] with zA < z B
+
+can be written in the following form for z ∈ [zA, z B]:˜q(z) = 1Zq
+
+Z zzA
+
+2
+
+˜σ(z)2 eVχ(z)dz, with Zq =
+
+Z zB
+
+> zA
+
+2
+
+˜σ(z)2 eVχ(z)dz. (35) For the reactive flux and the reactive transition rate from ˜A to ˜B this leads to ˜jAB (z) = ˜kAB = 1ZqZχ
+
+. (36) In the case m > 1 , the effective generator (10) on the reduced simplex ¯∆m reads ˜Lf(z) = ( b + Qz ) · ∇ zf(z) + 12 Tr 
+
+
+
+(˜σ˜σ⊤)( z)∇2zf(z)
+
+
+
+, (37) where b and Q were defined in (17). The corresponding effective potential is given by 
+
+Vχ(z) = 
+
+Z
+
+> γ:z∗→z
+
+ψ(y) · dy, (38) where 
+
+ψ(z) = 2(˜σ˜σ⊤)−1
+
+ 12 ∇z · (˜σ˜σ⊤) − ( b + Qz )( z)
+
+
+
+(39) and the line integral is taken along any smooth path γ ⊂ ¯∆m from a starting point z∗ to z. Since, under the reduction procedure, the diffusion matrix ˜ σ˜σ⊤ defined in (14) is positive definite, it is invertible everywhere on ¯∆m. Moreover, the reversibility of the effective generator ensures that the integrand ψ(z) is curl-free and that the effective potential is path-independent. Note that if m = 1, (38) reduces to (33). Finally, the effective invariant density is given by ˜μ(z) = 1Zχ
+
+exp (− Vχ(z)) , Zχ =
+
+Z 
+
+> ¯∆m
+
+exp (− Vχ(z)) dz, 
+
+Unlike the m = 1 case, explicit expressions for the effective mean first-passage time ˜m˜B
+
+and the effective committor ˜ q cannot be derived. However, both quantities can be computed numerically by solving the corresponding boundary-value problems on ¯∆m. Specifically, the 17 effective MFPT satisfies ˜L ˜m˜B(z) = − 1, z ∈ ¯∆m \ ˜B, ˜m˜B(z) = 0, z ∈ ˜B, 
+
+while the effective committor solves ˜L˜q(z) = 0, z ∈ ¯∆m \ ( ˜A ∪ ˜B), ˜q(z) = 0 on ˜A, ˜q(z) = 1 on ˜B. (40) 
+
+# 5 Numerical Experiments 
+
+In this section, we apply the ISOKANN approach to compute collective variables (CVs) and ef-fective dynamics for three benchmark systems, each increasing in complexity. The primary goal is to validate the theoretical framework introduced in the previous sections by comparing the full stochastic dynamics with the ISOKANN-based reduced representation, and the corresponding transition kinetics derived from transition path theory. For all three systems, we model diffusive dynamics in the full space given by overdamped Langevin dynamics, see (2). The ISOKANN algorithm is capable of constructing χ-functions even in very high-dimensional state spaces. However, to facilitate direct comparison with ground truth, we limit our examples to systems of up to three dimensions, which allows us to discretize the full-dimensional dynamics and compare the reduced models directly. In these examples, we discretize the infinitesimal generator of the full dynamics using the Square-Root Approximation (SqRA) [43, 44, 45], and then compute the χ-functions using the PCCA+ algorithm [31, 32, 33]. The respective χ-function computed via ISOKANN are χ
+
+functions conceptually equivalent and lead to essentially the same effective dynamics, see Fig. 2. However, the ISOKANN χ-functions are only given on sample points and do not allow for convenient illustration. This approach isolates the errors introduced by the effective dynamics, providing a clear benchmark for our ISOKANN-based reduced models. For higher-dimensional systems, the χ-functions are typically approximated from short burst simulations by neural networks via ISOKANN. 
+
+5.1 One-dimensional system 
+
+As a first benchmark, we consider the overdamped Langevin dynamics in the one-dimensional (d = 1) potential energy function 
+
+V(x) = ( x2 − 1)2, β = 1, 
+
+represented in Fig. 3, which provides an analytically tractable reference model. The full gener-ator L was discretized on the uniform grid [− 2, 2 ], partitioned into 63 equal intervals of width 
+
+∆x = 0.063 using SqRA. The associated χ-function shown in Fig. 3(b) was obtained from PCCA+ assuming m = 1. The χ-function smoothly interpolates between the two metastable basins, closely matching the true committor of the process. Using the χ-function as collective variable, we computed the effective potential Vχ(z) via equation (13). The result is displayed in Fig. 3(c), which shows that Vχ exhibits the double-well structure of the original potential V(x) in latent space, but appears deformed due to the nonlinear transformation induced by the collective variable. While V(x) describes the mech-18 Figure 2: Comparison of the three components of χ : R3 → R3 obtained from either ISOKANN (blue) or direct discretization through the SqRA (red) for the potential from Section 5.3. Each plot displays one component of χ evaluated at one of 10 000 training samples, where the samples displayed on the horizontal axis were sorted by the respective χ value (different for each subfig-ure) obtained from SqRA to allow for a visual comparison. The random fluctuations that are seemingly visible for the χ-functions computed via ISOKANN are the values on samples rather far away from all other samples; the gradients of the χ-functions are still smooth functions and agree well for SqRA and ISOKANN. The difference in scale of the second component results from details of the ISA algorithm and do not have a significant impact on the effective dynamics. anistic energy landscape in full space, Vχ(z) represents the free-energy profile in latent space that incorporates both the enthalpic and entropic contributions of the system. In Fig. 3(d), we show the effective diffusion coefficient ˜D(z) computed via (14). It describes how thermal fluctuations are transmitted onto the latent space through the collective variable: lower values are observed within the metastable regions, where motion is constrained by the underlying potential, while higher values close to z ≈ 0.5 indicate that barrier transitions are facilitated by increased entropic freedom. Using Vχ(z) and ˜D(z), we discretized the effective generator defined in (15) in latent space 
+
+[0, 1 ] by applying SqRA. The resulting eigenvalue spectrum of the original and the effective generators (Fig. 3(e)) shows agreement and exhibits a clear separation between the dominant slow mode and the remaining fast modes, consistent with the expected metastability of the system. 
+
+Figure 3: 1D system. (a) Potential energy function; (b) χ-function; (c) Effective potential; (d) Effective diffusion; (e) Eigenvalues. To assess kinetic consistency, we compared MFPTs and committor functions computed for the full dynamics via (24)–(26) and the effective dynamics via (34)–(35), respectively. Fig. 4(a) 19 shows the MFPT mB(x) in full space from a point x to xB = 1, which corresponds to the right minimum of the potential, while Fig. 4(b) shows the projection of mB(x) onto the latent space and the effective MFPT ˜m˜B. Similarly, Figs. 4(c) and (d) show, respectively, the committor function in full space between the sets A = {x ∈ R : x ≤ −1} and B = {x ∈ R : x ≥ 1}, and the corresponding projection in latent space together with the effective committor. In both cases, the curves of the projected and effective quantities coincide, demonstrating exact agreement between the full dynamics and its effective representation. The exact agreement between projected and full space quantities arises from the fact that, in one dimension ( d = 1), the projection onto the latent space reduces to a coordinate transfor-mation, with the mapping z = χ(x) being invertible. Consequently, no dynamical information is lost under this transformation, and the effective dynamics is fully equivalent to the original one. In the following examples, we will show that such exact agreement is not always guaranteed. The effective dynamics reproduces the kinetic behavior of the full system only when a clear spectral gap exists in the eigenvalue spectrum, ensuring a separation between slow and fast modes. 
+
+Figure 4: 1D system. (a) MFPT in full space; (b) MFPT in latent space; (c) Committor in full space; (d) Committor in latent space; 
+
+5.2 Two-dimensional system: enthalpic vs. entropic pathways 
+
+As a second benchmark, we consider a two-dimensional ( d = 2) overdamped Langevin dynamics evolving on the potential energy surface 
+
+V(x, y ) = 0.2 
+
+
+
+x12 + y12 + 20 exp  − 4x 2 − 0.8 (y + 1)8
+
+− 20 ln 
+
+h
+
+exp   − ( x + 1)2 − 0.1 (y + 1)4
+
++ exp   − ( x − 1)2 − 0.1 (y + 1)4i 
+
+,
+
+(41) with β = 1, visualized in Fig. 5(a). The system exhibits two dominant metastable regions separated by an enthalpic barrier corresponding to a high-energy saddle in the potential energy function. In addition, the two basins are connected by an entropic transition channel, i.e. by a region of the configuration space with high configuration multiplicity which raises the entropic contribution and consequently lowers the effective free energy barrier. We discretized the full space [− 1.5, 1.5 ]2 into 10.000 equal square bins of size 0.03 × 0.03 , then discretized the full generator L using SqRA. We estimated a single χ-function, see Fig. 5(b), which identifies the dominant reaction coordinate between the metastable basins. In Figs. 5(c-d) we show the effective potential Vχ(z) and the effective diffusion coefficient 20 ˜D(z) built on the latent space [0, 1 ] defined by the χ-function. These quantities capture the energetic structure of the potential energy function and the interplay between the two dom-inant metastable sets. However, since the χ-function cannot distinguish whether transitions occur through the enthalpic barrier or via the entropic channel, the effective potential and dif-fusion coefficient should be interpreted as an averaged description of the dynamics, merging the contributions of both pathways into a single effective process. Similar to the one-dimensional case, we discretized the effective generator ˜L by applying SqRA, using the effective potential and diffusion coefficient defined on the latent space. The eigenvalue spectrum of the full and effective generators is shown in Fig. 5(e). The two dominant eigenvalues are identical, indicating that the effective dynamics successfully reproduces the stationary distribution on the latent space and the principal transition between the metastable basins. In contrast, the eigenvalues associated with faster modes show significant deviations, as expected from the dimensionality reduction (cf. 11). 
+
+Figure 5: 2D system. (a) Potential energy function; (b) χ-function; (c) Effective potential; (d) Effective diffusion; (e) Eigenvalues. We compared MFPTs and committor functions for the full and effective dynamics. The MFPT in full space from a point (x1, x 2) to the set of points B = χ−1(zB = 0.94 ) is displayed in Fig. 6(a), while its projection onto the latent space and the effective MFPT estimated by equation (34) is shown in Fig. 6(b). Similarly, the committor functions are shown in in Figs. 6(c-d), with the sets ˜A = {z ∈ [0, 1 ] | z < 0.06 }, ˜B = {z ∈ [0, 1 ] | z > 0.94 },
+
+in latent space, and their corresponding pre-images A = χ−1( ˜A), and B = χ−1(˜B) in full space. This choice was made deliberately to investigate the effect of different transition pathways (enthalpic versus entropic) in situations where the latent space is unable to resolve their physical nature. Despite this limitation, the effective dynamics reproduces the projected committor with high accuracy. Finally, Fig. 6(f) compares the full TPT transition rate kAB , as defined in (29), to the ef-fective rate ˜kAB from (31), as function of rA, where ˜A = [ 0, r A] and ˜B as above. The close agreement between kAB and ˜kAB confirms that the single collective variable χ retains the es-sential kinetic features of the two-dimensional process, even when distinct physical transition mechanisms coexist. This example illustrates a scenario in which the projection is performed from a multidimen-sional system ( d > 1 ) onto a one-dimensional latent space ( m = 1). Unlike the previous case, the transformation z = χ(x1, x 2) is no longer invertible, and the projection entails a loss of in-formation. Nevertheless, when the eigenvalue spectrum exhibits a pronounced gap between the 21 second and third eigenvalues λ1 and λ2, the effective dynamics can still reproduce the relevant kinetic quantities such as MFPTs and TPT rates between metastable regions. 
+
+Figure 6: 2D system. (a) MFPT in full space; (b) MFPT in latent space; (c) Committor in full space; (d) Committor in latent space; (f) TPT rates of full and effective dynamics. 
+
+5.3 Three-dimensional system with multiple χ-functions 
+
+As final example, we consider a three-dimensional ( d = 3) overdamped Langevin dynamics with the potential energy function 
+
+V(x, y, z ) = − 15 exp 
+
+h
+
+− 6.5 (x − 0.4 )2 − 11 (x − 0.4 )( y − 0) − 5.5 (y − 0)2 − 6.5 (z − 0.6 )2i
+
+− 10 exp 
+
+h
+
+− 1.5 (x − 0.2 )2 − 15 (y + 0.8 )2 − 5 (z + 0.4 )2 + 4 (x − 0.2 )( z + 0.4 )
+
+i
+
+− 12 exp 
+
+h
+
+− 3 (x + 1)2 − 1 (y − 0.5 )2 − 16.5 (z + 0.6 )2i
+
++ 12 exp 
+
+h
+
+− 1 (x + 0.5 )2 − 1 (y − 0.6 )2 − 10 (z − 0.1 )2i
+
++ 0.8 (x4 + y4 + z4), (42) with β = 1, shown in Fig. 7(a). The system consists of three metastable regions, two of which are particularly deep and separated by a pronounced enthalpic barrier, while the third region acts as an intermediate metastable state that forms an entropic transition channel. The full space 
+
+[− 1.5, 1.5 ]3 was discretized into 216.000 cubic bins of size 0.05 × 0.05 × 0.05 , and the generator 
+
+L was approximated using SqRA. We estimated three χ-functions via PCCA+ ( m = 2) shown in Figs. 7(b-d). Removing the redundant coordinate χ2 = 1 − χ0 − χ1 yields the two-dimensional latent reduced simplex ¯∆2 = z ∈ [0, 1 ]2 : z0 + z1 ≤ 1 ,
+
+on which the full dynamics is projected. Using this two-dimensional latent space, we computed the effective potential Vχ(z0, z 1) via (38), together with the components of the effective diffusion tensor ˜D11 (z0, z 1), ˜D22 (z0, z 1), and ˜D12 (z0, z 1), as defined in (14). These quantities, reported in Figs. 7(e–h) respectively, reveal a structured free-energy landscape in the latent space ¯∆2,with clear basins corresponding to the metastable sets of the original dynamics. In contrast to the lower-dimensional cases, the diffusion tensor exhibits anisotropy and non-vanishing off-diagonal components, representing the coupling of thermal fluctuations along distinct transition channels. 22 Figure 7: 3D system. (a) Potential energy function; (b,c,d) Three χ-functions; (e) Effective potential on ¯∆2; (f-h) Diffusion tensor entries on ¯∆2.The spectrum of the effective generator ˜L shows three dominant eigenvalues that match those of the full dynamics, while the subsequent ones, ˜λ3, ˜λ4, . . . , are consistently smaller than those of the full dynamics, as expected. The full-space committor function q(x1, x 2, x 3), its projection onto ¯∆2, and the corresponding effective committor ˜ q(z0, z 1), evaluated by solving (40), are displayed in Figs. 8(b-d), where the committor sets in ¯∆2 are defined as ˜A = (z0, z 1) ∈ [0, 1 ]2 ∥(z0, z 1) − ( 0, 1 )∥2 ≤ 0.3 ,
+
+˜B = (z0, z 1) ∈ [0, 1 ]2 ∥(z0, z 1) − ( 1, 0 )∥2 ≤ 0.3 ,
+
+with A = χ−1( ˜A) and B = χ−1(˜B) corresponding pre-images in full space. Figs. 8(c) and 8(d) also display the reactive fluxes, jAB and ˜jAB , highlighting the main reaction channels. Comparing Figs. 8(c) and 8(d) demonstrates that the coarse-grained model retains both the topology and the transition ordering of the underlying process. Finally, Fig. 8(e) compares the full TPT transition rate kAB with the effective rate ˜kAB as a function of the boundary parameter rA in the definition of the set ˜A. The close agreement between the two rates confirms that the reduced dynamics not only reproduces the correct spatial structure of the transition but also preserves the associated kinetics. Small discrepancies between full TPT rates kAB and effective TPT rates ˜kAB arise from the combined effect of dimensionality reduction, which introduces memory effects neglected in the effective Markovian representation of the system, and numerical approximations induced by the discretization of space and the calculation of the effective potential and the diffusion tensor components. The fact that these differences remain modest indicates that the reduced model successfully captures the dominant kinetic behavior. 23 Figure 8: 3D system. (a) Eigenvalues of L and ˜L; (b) Committor in full space; (c) Committor 
+
+q projected on ¯∆2; (d) Effective committor ˜ q; (e) TPT rates of full and effective dynamics. 
+
+5.4 Discussion 
+
+Across all examples, the CV χ of ISOKANN allows to consistently reconstruct the dominant eigenmodes and corresponding kinetic observables of the underlying stochastic process. The one-dimensional case validates the formal connection between χ-functions, committor functions, and effective potential and diffusion tensor. The two- and three-dimensional systems highlight how the algorithm balances energetic and entropic contributions and generalizes to higher-dimensional latent spaces. Together, these numerical experiments confirm that Koopman-inspired learning of invariant subspaces provides a robust route to constructing effective stochas-tic models with faithful transition rates and pathways. 
+
+# 6 Conclusions and Outlook 
+
+This work presents a unified framework that bridges data-driven learning of collective variables (CVs) with the theoretical foundations of effective stochastic dynamics. Building on transfer-operator and Koopman operator theory, the authors introduce the ISOKANN method as a systematic approach to extract low-dimensional variables that preserve the slow dynamical modes of complex stochastic systems, such as those encountered in molecular dynamics. At its core, ISOKANN identifies nonlinear mappings, called χ- or membership functions, that span the invariant subspace of the dominant eigenmodes of the Koopman operator. By combining neural-network representations with iterative power-like updates and geometric nor-malization (via the Inner Simplex Algorithm), the method discovers collective variables without prior physical intuition. The learned χ-functions define a latent space in which an effective dy-namics , a projected Ornstein–Uhlenbeck process with state-dependent noise, can be derived analytically. This effective dynamics is Markovian and is guaranteed to inherit the dominant eigenvalues and eigenfunctions of the full generator, ensuring that metastable transitions and relaxation timescales are faithfully reproduced. The study further links this operator-theoretic perspective to transition path theory (TPT), showing how committor functions, mean first-passage times, reactive fluxes, and transition rates can be computed consistently in both the original and effective dynamics. This connection provides a rigorous kinetic interpretation of the ISOKANN-derived effective dynamics. Through numerical experiments on benchmark one-, two-, and three-dimensional potential landscapes, the authors demonstrate that effective dynamics based on ISOKANN robustly re-constructs the dominant reaction coordinates and reproduces transition rates and pathways across both enthalpic and entropic barriers. The approach accurately captures metastable con-nectivity and reactive flux structure while reducing the dimensionality of the problem. 24 Future research on ISOKANN will have to tackle two main challenges: its extension to higher-dimensional molecular systems and to non-reversible processes. While the theoretical formulation of ISOKANN directly generalizes to high-dimensional input spaces, practical ap-plications reveal that the main obstacle is the speed of convergence of the iterative ISOKANN algorithm when identifying collective variables in very large state spaces. Improving conver-gence efficiency, through accelerated subspace updates and adaptive sampling, is a current focus of our ongoing research. With regard to non-reversible dynamics, such as Langevin systems in joint position–velocity space, recent theoretical advances already provide a pathway: [46] in-cludes first rigorous results describing how effective dynamics and spectral subspaces can be consistently defined for such cases. These results lay the foundation for extending ISOKANN to general molecular processes beyond the reversible setting considered here. A further direction of development concerns adaptive collective-variable learning and feed-back coupling. The general aim is to iteratively refine the present CVs by sampling along the transition pathways generated by the effective dynamics they induce. This feedback loop cou-ples the learning of χ-functions with guided sampling in latent space: new trajectory data are drawn preferentially from regions of high reactive flux or uncertainty, and the resulting updated ISOKANN model improves the resolution of transition channels and rare events. Such adaptive coupling between model learning and dynamical exploration promises a self-consistent route toward efficient discovery of collective variables and accurate reconstruction of effective kinetics in complex, high-dimensional systems. In summary, ISOKANN offers a principled and interpretable machine-learning framework for stochastic model reduction: it merges neural representation learning with Koopman spectral theory and stochastic reduction analysis. The results underline that algorithmic discovery of CVs and the consistent formulation of the induced effective dynamics can advance the quan-titative understanding of complex molecular systems, opening perspectives toward adaptive learning, non-reversible dynamics, and data-driven coarse-grained modeling in high dimensions. 
+
+Acknowledgments 
+
+This work has been partially funded by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through grant CRC 1114/2-3 (Projects B03, A04, A05, and B05) and under Germany’s Excellence Strategy – The Berlin Mathematics Research Center MATH+ (EXC-2046/1 project ID: 390685689). 
+
+# A Derivation of the effective potential 
+
+In what follows, we derive the effective potential for the effective dynamics. In the case m = 1, the effective Fokker-Planck operator acting on probability density func-tions ˜ ρ(z) defined on the latent space Z = [ 0, 1 ] reads ˜L∗ ˜ρ(z) = − ∂ (a + λz ) ˜ρ(z)
+
+∂z + 12∂2 ˜σ2(z) ˜ρ(z)
+
+∂z 2
+
+= − ∂˜J(z)
+
+∂z ,
+
+(43) 25 where we introduced the probability current 
+
+˜J(z) = ( a + λz ) ˜ρ(z) − 12∂ ˜σ2(z) ˜ρ(z)
+
+∂z .
+
+Stationary solutions of (43) satisfy ∂˜J∂z = 0, implying that the current ˜J(z) is constant on [0, 1 ].Imposing reflecting boundary conditions at z = 0 and z = 1 gives ˜J(0) = ˜J(1) = 0, and thus ˜J(z) = 0 on [0, 1 ]. Consequently, the unique invariant density of the effective dynamics is given by ˜μ(z) = 1Zχ
+
+exp (− Vχ(z)) , Zχ =
+
+Z 10
+
+exp (− Vχ(z)) dz, 
+
+where we introduced the effective potential 
+
+Vχ(z) = log 
+
+ 12 ˜σ(z)2
+
+− ϕ(z) + const , (44) 
+
+ϕ(z) =
+
+Z zz∗
+
+2 a + λy 
+
+˜σ(y)2 dy. (45) In the case m > 1 , the effective Fokker-Planck operator on ¯∆m takes the form ˜L∗ ˜ρ(z) = − ∇z ·  (b + Qz ) ˜ρ(z) + 12
+
+> m
+
+X
+
+> k,ℓ =1
+
+∂2
+
+∂z k∂z ℓ
+
+ ˜σ˜σ⊤
+
+> kℓ
+
+(z) ˜ρ(z)
+
+
+
+, (46) where we introduced the probability current ˜J(z) = ( b + Qz ) ˜ρ(z) − 12 ∇z ·
+
+
+
+(˜σ˜σ⊤)( z) ˜ρ(z)
+
+
+
+.
+
+Unlike the m = 1 case, stationarity with reflecting boundaries does not imply ˜J(z) = 0 on ¯∆m. To eliminate probability currents, we need reversibility, which is guaranteed by the self-adjointness of ˜L on ˜H. Under this condition, ˜J(z) = 0 on ¯∆m, leading to 
+
+(b + Qz ) ˜ρ(z) = 12 ∇z ·
+
+
+
+(˜σ˜σ⊤)( z) ˜ρ(z)
+
+
+
+, (47) Under dimension reduction ( m+1 → m), the matrix ˜ σ˜σ⊤ defined in (14) is positive definite, and therefore invertible. Thus, (47) can be rewritten as 
+
+−∇z log ˜ μ(z) = 2(˜σ˜σ⊤)−1
+
+ 12 ∇z · (˜σ˜σ⊤) − ( b + Qz )( z)
+
+
+
+= ψ(z).
+
+(48) Since the effective dynamics is reversible, the vector field ψ(z) is curl–free on ¯∆m:
+
+∂ψ k
+
+∂z l
+
+= ∂ψ l
+
+∂z k
+
+.
+
+Hence, there exists an effective invariant density ˜μ(z) = 1Zχ
+
+exp (− Vχ(z)) , Zχ =
+
+Z 
+
+> ¯∆m
+
+exp (− Vχ(z)) dz, 
+
+26 where the effective potential is defined, up to an additive constant, by 
+
+Vχ(z) = 
+
+Z
+
+> γ:z∗→z
+
+ψ(y) · dy, (49) with the line integral taken along any smooth path γ ⊂ ¯∆m from a starting point z∗ to z. The curl-free condition ensures that the effective potential is path-independent. A practical strategy is to evaluate the integral from z∗ to z coordinate by coordinate along the axes: 
+
+Vχ(z) = Vχ(z∗) + 
+
+> m−1
+
+X
+
+> l=0
+
+Z zl
+
+> z∗
+> l
+
+ψi
+
+ z′
+
+> 1
+
+, . . . , z l−1, y l, z ∗
+
+> l+1
+
+, . . . , z ∗
+
+> m
+
+ dy l.
+
+For example, for the case m = 2, we obtain 
+
+Vχ(z0, z 1) = Vχ(z∗
+
+> 0
+
+, z ∗
+
+> 1
+
+) + 
+
+Z z1
+
+> z∗
+> 0
+
+ψ0(y0, z ∗
+
+> 1
+
+) dy 0 +
+
+Z z1
+
+> z∗
+> 1
+
+ψ1(z∗
+
+> 0
+
+, y 1) dy 1
+
+!
+
+Since Vχ is defined up to an additive constant, we can set Vχ(z∗
+
+> 0
+
+, z ∗
+
+> 1
+
+) = 0.
+
+# References 
+
+[1] Gabriel P´ erez-Hern´ andez, Frank Paul, Thomas Giorgino, Gianni De Fabritiis, and Frank No´ e. Identification of slow molecular order parameters for markov model construction. The Journal of Chemical Physics , 139(1):015102, 2013. [2] A. Mardt, L. Pasquali, H. Wu, and F. No´ e. Vampnets for deep learning of molecular kinetics. Nature Communications , 9(5), 2018. [3] H. Wu and F. No´ e. Reaction coordinate flows for model reduction of molecular kinetics. 
+
+The Journal of Chemical Physics , 160:044109, 2024. [4] R. J. Rabben, S. Ray, and M. Weber. Isokann: Invariant subspaces of Koopman operators learned by a neural network. The Journal of Chemical Physics , 153(11):114109, 2020. [5] Wei Zhang and Christof Sch¨ utte. On finding optimal collective variables for complex sys-tems by minimizing the deviation between effective and full dynamics. Multiscale Modeling & Simulation , 23(2):924–958, 2025. [6] Feliks N¨ uske, P´ eter Koltai, Lorenzo Boninsegna, and Cecilia Clementi. Spectral properties of effective dynamics from conditional expectations. Entropy , 23(2):134, 2021. [7] Jianfeng Lu and Eric Vanden-Eijnden. Exact dynamical coarse-graining without time-scale separation. The Journal of Chemical Physics , 141(4):044109, 2014. [8] Wei Zhang, Carsten Hartmann, and Christof Sch¨ utte. Effective dynamics along given reaction coordinates and reaction rate theory. Faraday Discussions , 195:365–394, 2016. [9] F. Legoll, T. Leli` evre, and S. Olla. Pathwise estimates for an effective dynamics. Stochastic Processes and their Applications , 127:2841–2863, 2017. 27 [10] T. Leli` evre and W. Zhang. Pathwise estimates for effective dynamics: The case of nonlinear vectorial reaction coordinates. Multiscale Modeling & Simulation , 17, 2019. [11] Christof Sch¨ utte, Stefan Klus, and Carsten Hartmann. Overcoming the timescale barrier in molecular dynamics: Transfer operators, variational principles, and machine learning. 
+
+Acta Numerica , 32:517–673, 2023. [12] P. R. Vlachas, J. Zavadlav, M. Praprotnik, and P. Koumoutsakos. Accelerated simulations of molecular systems through learning of effective dynamics. Journal of Chemical Theory and Computation , 18(1):538–549, 2022. [13] A. Bovier, M. Eckhoff, V. Gayrard, and M. Klein. Metastability and low lying spectra in reversible Markov chains. Comm. Math. Phys. , 228:219–255, 2002. [14] C. Sch¨ utte, A. Fischer, W. Huisinga, and P. Deuflhard. A direct approach to conformational dynamics based on hybrid Monte Carlo. J. Comp. Physics Special Issue on Computational Biophysics , 151:146–168, 1999. [15] C. Sch¨ utte and M. Sarich. Metastability and Markov State Models in Molecular Dynamics: Modeling, Analysis, Algorithmic Approaches . Courant Lecture Notes No. 32. American Mathematical Society, 2014. [16] S. Klus, F. N¨ uske, P. Koltai, H. Wu, I. Kevrekidis, C. Sch¨ utte, and F. No´ e. Data-driven model reduction and transfer operator approximation. Journal of Nonlinear Science ,28:985–1010, 2018. [17] G. R Bowman, V. S Pande, and F. No´ e. An introduction to Markov state models and their application to long timescale molecular simulation , volume 797. Springer Science & Business Media, 2013. [18] Weinan E, Weiqing Ren, and Eric Vanden-Eijnden. Transition pathways in complex sys-tems: Reaction coordinates, isocommittor surfaces, and transition tubes. Chemical Physics Letters , 413(1-3):242–247, 2005. [19] A. Bittracher, P. Koltai, S. Klus, R. Banisch, M. Dellnitz, and C. Sch¨ utte. Transition manifolds of complex metastable systems. Journal of Nonlinear Science , 28, 2018. [20] J. Kappler, J. O. Daldrop, F. N. Bruenig, M. D. Boehle, and RR Netz. Memory-induced acceleration and slowdown of barrier crossing. J Chem Phys. , 148(1), 2018. [21] C. Ayaz, L. Tepper, F. N. Br¨ unig, J. Kappler, J. O. Daldrop, and R. R. Netz. Non-markovian modeling of protein folding. Proceedings of the National Academy of Sciences of the United States of America , 118(4):e2023856118, 2021. [22] F. Legoll and T. Lelievre. Effective dynamics using conditional expectations. Nonlinearity ,23(9):2131, 2010. [23] Wei Zhang and Christof Sch¨ utte. Reliable approximation of long relaxation timescales in molecular dynamics. Entropy , 19(7):367, 2017. 28 [24] F. Legoll, T. Leli` evre, and U. Sharma. Effective dynamics for non-reversible stochastic differential equations: A quantitative study. Nonlinearity , 32:4779–4816, 2019. [25] W. Zhang, T. Li, and C. Sch¨ utte. Solving eigenvalue PDEs of metastable diffusion processes using artificial neural networks. Journal of Computational Physics , 465:111377, 2022. [26] Alexander Sikorski, Enric Ribera Borrell, and Marcus Weber. Learning koopman eigenfunc-tions of stochastic diffusions with optimal importance sampling and ISOKANN. Journal of Mathematical Physics , 65(1):013502, 2024. [27] Marcus Weber and Tobias Galliat. Characterization of transition states in conformational dynamics using fuzzy sets. Technical Report 02-12, ZIB, Takustr. 7, 14195 Berlin, 2002. [28] Luca Donati, Christof Sch¨ utte, and Marcus Weber. The kramers turnover in terms of a macro-state projection on phase space. Mol. Phys. , 0(0):e2356748, 2024. [29] Alexander Sikorski, Robert Julian Rabben, Surahit Chewle, and Marcus Weber. Capturing the macroscopic behavior of molecular dynamics with membership functions , pages 41–58. De Gruyter, Berlin, Boston, 2025. [30] Luca Donati, Surahit Chewle, Dominik St Pierre, Vijay Natarajan, and Marcus Weber. Topological analysis reveals multiple pathways in molecular dynamics. J. Chem. Theory Comput. , 21(20):10385–10397, 2025. [31] Peter Deuflhard and Marcus Weber. Robust Perron cluster analysis in conformation dy-namics. Linear Algebra Appl. , 398:161–184, 2004. [32] Susanna Kube and Marcus Weber. A coarse graining method for the identification of transition rates between molecular conformations. J. Chem. Phys. , 126(2):024103, 2007. [33] Marcus Weber. Implications of PCCA+ in Molecular Simulation. Computation , 6(1), 2018. [34] P. G. Bolhuis, D. Chandler, C. Dellago, and P. Geissler. Transition path sampling: throwing ropes over mountain passes, in the dark. Annu. Rev. Phys. Chem. , 59:291, 2002. [35] A. K. Faradjian and R. Elber. Computing time scales from reaction coordinates by mile-stoning. J. Chem. Phys. , 120:10880–10889, 2004. [36] D. Moroni, T. van Erp, and P. Bolhuis. Investigating rare events by transition interface sampling. Physica A , 340:395–401, 2004. [37] W. E and E. Vanden-Eijnden. Metastability, conformation dynamics, and transition path-ways in complex systems. In Multiscale modelling and simulation , volume 39 of Lect. Notes Comput. Sci. Eng. , pages 35–68. Springer, Berlin, 2004. [38] W. E and E. Vanden-Eijnden. Towards a theory of transition paths. Journal of statistical physics , 123:503–523, 2006. [39] W. E and E. Vanden-Eijnden. Transition-path theory and path-finding algorithms for the study of rare events. Annual Review of Physical Chemistry , 61:391–420, 2010. 29 [40] A. M. Berezhkovskii and A. Szabo. Committors, first-passage times, fluxes, markov states, milestones, and all that. The Journal of Chemical Physics , 150(5):054106, 2019. [41] P. Metzner, C. Sch¨ utte, and E. Vanden-Eijnden. Illustration of transition path theory on a collection of simple examples. J. Chem. Phys. , 125(8), 2006. 084110. [42] A.A. Andronov, L.S. Pontryagin, and A.A. Vitt. On statistical considerations of dynam-ical systems. Zhurnal `Eksperimental’no˘ ı i Teoretichesko˘ ı Fiziki , 3:165–180, 1933. English translation in “Noise in Nonlinear Dynamical Systems”, F. Moss & P. V. E. McClintock (eds), Cambridge University Press, 1989, Vol.1, p. 329. [43] Han Cheng Lie, Konstantin Fackeldey, and Marcus Weber. A square root approximation of transition rates for a Markov State Model. SIAM. J. Matrix Anal. Appl. , 34:738–756, 2013. [44] L. Donati, M. Heida, B. G. Keller, and M. Weber. Estimation of the infinitesimal generator by square-root approximation. J. Phys. Condens. Matter , 30:425201, 2018. [45] L. Donati, M. Weber, and B. G. Keller. Markov models from the square root approximation of the Fokker–Planck equation: Calculating the grid-dependent flux. J. Phys. Condens. Matter , 33:115902, 2021. [46] W. Zhang and C. Sch¨ utte. Understanding recent deep-learning techniques for identify-ing collective variables of molecular dynamics. Proceedings in Applied Mathematics and Mechanics , 23:e202300189, 2023. 30

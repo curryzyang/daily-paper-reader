@@ -1,0 +1,1491 @@
+Title: Global boundary stabilization of 1d systems of scalar conservation laws
+
+URL Source: https://arxiv.org/pdf/2604.05054v1
+
+Published Time: Wed, 08 Apr 2026 00:07:12 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# Global boundary stabilization of 1d systems of scalar conservation laws 
+
+## Georges Bastin ∗, Jean-Michel Coron † and Amaury Hayat ‡
+
+Abstract 
+
+We study a system of several one-dimensional scalar conservation laws cou-pled through boundary feedback conditions that combine physical boundary constraints with static feedback control laws. Our first contribution establishes the well-posedness of the system in the space of L∞ entropy solutions. Our second contribution provides a set of sufficient dissipative conditions on the boundary coupling that ensure global exponential stability in the L1 and L∞
+
+norms. 
+
+Keywords: hyperbolic systems; Scalar conservation laws; Entropic solutions, Dissipative boundary conditions. 
+
+2020 Mathematics Subject Classification: 35B40; 35L40; 35L50; 35L65; 93D23; 93D30. 
+
+# Contents 
+
+1 Introduction 22 Main results 43 Entropy solutions and boundary traces 74 Open-loop well-posedness 85 A delay lemma (finite speed of propagation) 96 Closed-loop well-posedness via a method of steps 9
+
+6.1 Stepwise construction . . . . . . . . . . . . . . . . . . . . . . . . . . . . 96.2 Uniqueness . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 10 
+
+7 Exponential stability in the L1-norm 10 8 Exponential stability in the L∞-norm 13 
+
+> ∗
+
+Department of Mathematical Engineering, ICTEAM, UCLouvain, Louvain-La-Neuve, Belgium. (georges.bastin@uclouvain.be) 
+
+> †
+
+Laboratoire Jacques-Louis Lions, Sorbonne Université, Université de Paris, CNRS, INRIA, équipe Cage, Paris, France. (jean-michel.coron@sorbonne-universite.fr) 
+
+> ‡
+
+CERMICS, Ecole des Ponts ParisTech, Champs-sur-Marne, France. (amaury.hayat@enpc.fr) 
+
+1
+
+> arXiv:2604.05054v1 [math.AP] 6 Apr 2026
+
+9 Conclusion 17 A Proof of Lemma 8.2 17 B Proof of Theorem 4.1 and Proposition 4.2 18 C Proof of Lemma 5.1 19 
+
+# 1 Introduction 
+
+Boundary feedback stabilization of hyperbolic balance laws is a classical theme in control theory, motivated by applications where actuation and sensing are naturally available at the boundaries: open-channel flow, gas pipelines, traffic flow, and more generally transport phenomena on networks. In the smooth (classical) regime, a large body of work relates exponential stability to dissipative boundary conditions, typically expressed through a contraction property of the boundary map in suitable norms. Reference can be made to the pioneering work of Greenberg–Li [ 15 ], Qin [ 24 ], Zhao [ 26 ], and Li [ 21 ] as well as to the modern synthesis and extensions in [ 10 , 4, 16 ]. In parallel, an approach through time-delay systems allows for sharp dissipativity conditions in 
+
+W 2,p -norm [12]. In these works the solution of the hyperbolic balance laws is required to be classical and the stability is usually studied in either C1 or H2 norm. In many applications, however, discontinuities may occur in finite time, and the relevant notion of solution is that of entropy solutions . For scalar conservation laws, entropy well-posedness in R goes back to Kružkov [ 19 ], and the initial–boundary value problem requires a careful entropy formulation of boundary conditions. The Bardos–Le Roux–Nédélec (BLN) theory [ 2] provides the canonical admissibility condition at the boundary; alternative and complementary viewpoints include the viscosity/Riemann-problem approach of Dubois– LeFloch [ 13 ] and subsequent developments in the general boundary-value framework [ 1]. A crucial technical ingredient to study boundary feedback stabilization is the existence of (strong) boundary traces for bounded entropy solutions: this is by now well established in broad generality, notably through the works of Kwon–Vasseur and Panov [ 20 , 22 ] and, for bounded domains with Dirichlet-type data, through the analysis of Coclite–Karlsen–Kwon [ 9]. We also refer to standard monographs for background on hyperbolic conservation laws, BV estimates, and front-tracking/semigroup methods; see e.g. [8, 18]. On the control side, stability and boundary stabilization results for non-classical solutions are comparatively more recent. For scalar laws, we can mention the asymptotic stabilization of entropy solutions (in the case of a convex flux) in [ 23 ] and [ 7], and the stabilization of a shock steady-state for the Burgers equation in [ 6]. For systems of scalar conservation laws coupled by boundary interconnections, the semi-global exponential stability in BV norm using saturated controls is obtained in [ 14 ]. For 2 × 2
+
+systems of conservation laws, the local stabilization in BV norms is addressed in [ 11 ]while the local stabilization of H2-solutions with a single shock is addressed in [5]. In the present paper, we consider the following system of one-dimensional scalar 
+
+2conservation laws 
+
+ut + ( f (u)) x = 0 , t ∈ (0 , +∞), x ∈ (0 , 1) , (1.1) 
+
+u(t, 0) = G(u(t, 1)) , (1.2) where u = ( u1, . . . , u n)⊤, the flux f belongs to C2(Rn; Rn), and the map G : Rn → Rn
+
+is globally Lipschitz with G(0) = 0 .We assume that the flux is diagonal i.e. f (u) = ( f1(u1), . . . , f n(un)) ⊤, which implies that (1.1) represents n scalar conservation laws 
+
+∂tui + ∂xfi(ui) = 0 i ∈ { 1, . . . , n } (1.3) which are decoupled on the interior spatial domain x ∈ (0 , 1) but coupled through the boundary conditions (1.2) . We also assume that the characteristic velocities are strictly positive : 
+
+∃ a > 0 such that f ′ 
+
+> i
+
+(s) ≥ a ∀s ∈ R, ∀i ∈ { 1, ..., n }. (1.4) The coupling of the n scalar conservation laws is induced by the boundary condition (1.2) with the function G representing a combination of physical boundary constraints and potential static feedback control laws. Such couplings arise naturally in networked transport models as shown for instance in [ 3] and [ 4, Section 4.2] with an example of ramp-metering control in road traffic networks. It should also be noted that the positivity condition (1.4) on the direction of the characteristics allows to consider that the system (1.1) –(1.2) is a closed-loop interconnection of two causal input-output systems as represented in Figure 1. 
+
+Figure 1: A closed-loop interconnection of two causal input-output systems. 
+
+Well-posedness with a nonlocal feedback. Our first contribution (Theorem 2.1) establishes global well-posedness of the system (1.1) – (1.2) , under a global Lipschitz assumption on f : it is shown that the system has a unique entropy solution with u(t, 0) 
+
+and u(t, 1) denoting, respectively, the incoming and outgoing strong boundary traces of the solution that are shown to exist. The main difficulty to prove the theorem is that the boundary condition (1.2) is non-local in space. However, since scalar conservation laws are delay-type systems, the outgoing trace u(t, 1) is independent, over sufficiently small time intervals, of the most recent values of the incoming signal u(t, 0) . This allows to construct an iterative approach for proving the theorem where, for each successive time slab, the outgoing signal u(t, 1) is first computed as the output of an open-loop system which is known to be well-posed (in the BLN framework [ 2, 9, 1 ] together with strong traces [ 20 , 22 , 9]), and then injected in the feedback loop through the function 3G to initiate the next step. In particular, with this approach, the non local boundary condition (1.2) can be enforced without any smallness or contraction argument in the entropy setting. 
+
+Global exponential stability in L1 and L∞. Our second contribution is a set of sufficient conditions on G guaranteeing global exponential stability in the L1 and L∞
+
+norms respectively. Note that global exponential stability is usually impossible when using norms which are too regular (such as C1 or H2 norms). For this reason, almost all existing results deal with local exponential stability [ 10 , 4, 16 , 24 , 12 ]. However, note that global exponential stability has been established for some particular semilinear systems in [17]. For the L1-norm, we introduce a weighted entropy/Lyapunov functional inspired by entropy-based network analyses [ 3] and we derive a dissipation inequality in which the boundary term naturally involves fi (Theorem 2.4). This yields a flux-dependent stability criterion, which is qualitatively different from the classical smooth theory where the Jacobian G′(0) and matrix norms dominate the condition [ 4, 12 ]. We then identify an important subclass (notably concave fluxes) for which the criterion reduces to a flux-independent weighted contraction property of G in ℓ1 (Theorem 2.6). For the L∞-norm, we prove global exponential stability under a weighted ℓ∞
+
+contraction of G (Theorem 2.7), in the spirit of dissipative boundary conditions for hyperbolic systems [ 10 , 4]. A notable feature is that, unlike the global well-posedness, the L∞ stability does not require global Lipschitzness of f : the boundary contraction prevents amplitude growth along successive traversals of the domain and allows global-in-time control of the solution through a truncation argument. 
+
+Local exponential stability in L∞. The global exponential stability result requires a somewhat strong assumption on the fi in that f ′ 
+
+> i
+
+(s) ≥ a > 0. Nevertheless, a consequence of our result is that one can remove this constraint if we only look at the local exponential stability (see Corollary 2.10). 
+
+Organization of the paper. Section 3 recalls the entropy formulation and strong trace properties. Section 4 establishes open-loop well-posedness and stability estimates, relying on [ 9]. Section 5 proves a delay lemma reflecting finite speed of propagation. Sec-tion 6 combines these tools into the method-of-steps construction proving Theorem 2.1. Finally, Sections 7 and 8 develop Lyapunov arguments yielding global exponential stability in L1 and L∞ under the proposed dissipativity conditions on G. Theorems 2.4 and 2.6 are proved in Section 7, and Theorem 2.7 is proved in Section 8. 
+
+# 2 Main results 
+
+Let T > 0, our functional framework is 
+
+u ∈ C([0 , T ]; L1(0 , 1)) ∩ L∞((0 , T ) × (0 , 1)) , (2.1) where we denote L1(0 , 1) = L1((0 , 1); Rn) and L∞((0 , 1) × (0 , T )) = L∞((0 , 1) ×
+
+(0 , T ); Rn). Our first result is: 
+
+Theorem 2.1 (Well-posedness of the closed-loop problem) . Let T > 0 and assume 
+
+u0 ∈ L∞(0 , 1) . If f is globally Lipschitz, then there exists a unique entropy solution u
+
+4of (1.1) –(1.2) on (0 , T ) × (0 , 1) (in the sense of Definition 3.1) with initial condition 
+
+u(0 , x ) = u0(x) for a.e. x ∈ (0 , 1) , (2.2) 
+
+such that: 
+
+• u ∈ C([0 , T ]; L1(0 , 1)) ∩ L∞((0 , T ) × (0 , 1)) ;
+
+• u admits strong traces u(·, 0) , u (·, 1) ∈ L∞(0 , T ) which satisfy the boundary condition 
+
+(1.2) a.e. on (0 , T ).Moreover, u0 7 → u is continuous from L1(0 , 1) to C0([0 , T ]; L1(0 , 1)) .Remark 2.2 . Note that the global Lipschitz assumption on f is necessary in the absence of additional information on G. Otherwise, even in the scalar case n = 1 , blow-up may occur. For instance, consider G(U ) = 2 U and f (U ) = 1 + U 2 for U ≥ 1. For an initial value u0 ≥ 1, the amplitude of the solution is doubled each time the characteristic curve traverses the domain [0 , 1] , since the boundary condition becomes u(t, 0) = 2 u(t, 1) . At the same time, the traversal time of [0,1] is halved given that the transport velocity is 
+
+f ′(u(t, x )) = 2 u(t, x ). Consequently, the solution blows up in finite time. The proof of Theorem 2.1 (Section 6) will use two ingredients: 
+
+• open-loop well-posedness for the initial boundary value problem (1.1) with boundary conditions of the form 
+
+u(t, 0) = w(t), (2.3) where w ∈ L∞(0 , T ) is given (Section 4). 
+
+• a finite speed of propagation/delay lemma (Lemma 5.1) showing that, because the outgoing trace u(t, 1) at time t is not influenced by the most recent values of the incoming signal u(t, 0) , the system (1.1) of scalar conservation laws can be considered as an open-loop system over a sufficiently short time interval. Our next contribution is to give conditions on the map G which guarantee the global exponential stability of systems of scalar conservation laws of the form (1.1) –(1.2) in 
+
+L1 and L∞ norms, according to the following definition. 
+
+Definition 2.3. The system (1.1) –(1.2) is said globally exponentially stable in the 
+
+L1-norm (resp. in the L∞-norm), if there exist C > 0 and γ > 0 such that for any 
+
+u0 ∈ L∞(0 , 1) and for any T > 0, there exists a unique entropy solution u of (1.1) –(1.2) with initial condition u0 in the sense of Definition 3.1 with 
+
+• u ∈ C([0 , T ]; L1(0 , 1)) ∩ L∞((0 , T ) × (0 , 1)) ,
+
+• u admits strong traces u(·, 0) , u (·, 1) ∈ L∞(0 , T ) which satisfy the boundary condition (1.2) a.e. on (0 , T ),and 
+
+∥u(t, ·)∥L1(0 ,1) ≤ Ce −γt ∥u0∥L1(0 ,1) , ∀t ∈ [0 , +∞), (2.4) 
+
+(resp. ∥u(t, ·)∥L∞(0 ,1) ≤ Ce −γt ∥u0∥L∞(0 ,1) , ∀t ∈ [0 , +∞)) . (2.5) Our main results are the following. 5Theorem 2.4 (Global exponential stability in the L1-norm) . Assume that f is globally Lipschitz and that there exist μ > 0 and pi > 0 such that 
+
+> n∑
+> i=1
+
+pi
+
+> (
+
+|fi(yi) − fi(0) |e−μ − | fi(Gi(y)) − fi(0) |)
+
+≥ 0, ∀y = ( y1, ..., y n) ∈ Rn. (2.6) 
+
+Then the system (1.1) –(1.2) is globally exponentially stable for the L1 norm (in the sense of Definition 2.3) 
+
+The stability condition (2.6) depends on the fi and is a priori very different from the usual stability conditions in higher norms. For instance in [ 12 ] the following result is shown for the W 2,p norm. 
+
+Theorem 2.5 ([ 12 ]) . Let 1 ≤ p ≤ +∞, the system (1.1) –(1.2) is locally exponentially stable for the W 2,p norm if there exist ∆i > 0, i ∈ { 1, . . . , n }, such that, with ∆ = diag(∆ 1, . . . ∆n) ∈ Rn×n,
+
+|∆G′(0)∆ −1|p < 1. (2.7) In Theorem 2.5, | · | p refers to the classical matrix norm 
+
+|M |p := max {| M z |p; z ∈ Rn such that |z|p ≤ 1}, ∀ p ∈ [1 , +∞], (2.8) with, for z = ( z1, . . . , z n)⊤ ∈ Rn, |z|p := (∑ni=1 |zi|p)1/p if p ∈ [1 , +∞) and |z|∞ := max {| zi|; i ∈ { 1, . . . , n }} . In the literature this condition is also written (see for instance [12]) 
+
+ρp := inf   
+
+> ∆=diag(∆ 1,... ∆n),∆i>0
+
+|∆G′(0)∆ −1|p < 1. (2.9) Note that (2.7) is equivalent to 
+
+|∆G′(0) z|p < |∆z|p, ∀z ∈ Rn \ { 0}. (2.10) The same conditions are found in [ 11 , Theorem 1.2] and [ 14 , Theorem 3.4] to obtain the stability in the BV-norm. Note that locally around yi = 0 , we recover (2.10) from (2.6) . Under some assumptions on the concavity of the fi it is even possible to get a sufficient condition for the global exponential stability in the L1-norm that does not depend on the fi as in the following theorem. 
+
+Theorem 2.6. Assume that the fi are concave and that there exists μ > 0 and ∆i > 0,
+
+i ∈ { 1, . . . , n }, such that, with ∆ = diag(∆ 1, . . . ∆n) ∈ Rn×n,
+
+|∆G(z)|1 ≤ e−μ|∆z|1, ∀z ∈ Rn. (2.11) 
+
+Then the system (1.1) –(1.2) is globally exponentially stable for the L1 norm (in the sense of Definition 2.3). 
+
+Interestingly, this result also holds in the L∞ norm without any assumption on the concavity of the fi.
+
+Theorem 2.7 (Global exponential stability in the L∞-norm) . Assume that there exists 
+
+μ > 0 and ∆i > 0, i ∈ { 1, . . . , n }, such that, with ∆ = diag(∆ 1, . . . ∆n) ∈ Rn×n,
+
+|∆G(z)|∞ ≤ e−μ|∆z|∞, ∀z ∈ Rn. (2.12) 
+
+Then the system (1.1) –(1.2) is globally exponentially stable for the L∞ norm (in the sense of Definition 2.3). 
+
+6Remark 2.8 (Linear feedback) . If the feedback law is linear, i.e. if G(z) = Kz for some matrix K ∈ Rn×n, then (2.12) is equivalent to 
+
+ρ∞(K) < 1, (2.13) where 
+
+ρ∞(K) := inf {| ∆K∆−1|∞; ∆ ∈ D n}. (2.14) In (2.14) , Dn denotes the set of diagonal n × n matrices with strictly positive diagonal entries. Note that it is proved in [ 15 ], [ 24 ], [ 26 ], [ 21 , Theorem 1.3], [ 10 ], and [ 4, Section 4.1] that ρ∞(G′(0)) < 1 is a sufficient condition for the local exponential stability of the system (1.1) –(1.2) in the Ck-norm with k ≥ 1. It is also proved in [ 14 ] that the condition (2.13) ensures a semi-global exponential stability in the BV norm. 
+
+Remark 2.9 . Note that, in contrast with the well-posedness result of Theorem 2.1, the global Lipschitzness of f is not needed for the exponential stability results of Theorem 2.7. This is allowed thanks to the assumptions (2.6) and (2.12) on G, which imply that the system (1.1)–(1.2) is well-posed for all time T > 0.In many physical cases, the condition (1.4) is too strong (one can think of Burgers, LWR or Buckley-Leverett equations, for instance). Let us however remark that this assumption can be removed if we look at the local exponential stability. Indeed a direct consequence of Theorem 2.7 is the following Corollary. 
+
+Corollary 2.10 (Local stability in L∞). Assume that f satisfies 
+
+f ′ 
+
+> i
+
+(0) > 0, ∀i ∈ { 1, ..., n }, (2.15) 
+
+instead of (1.4) and that 
+
+ρ∞(G′(0)) < 1, (2.16) 
+
+then the system (1.1) –(1.2) is (locally) exponentially stable for the L∞ norm. Moreover, the exponential estimate holds for any decay rate μ satisfying 
+
+μ < min  
+
+> i∈{ 1,..,n }
+
+f ′ 
+
+> i
+
+(0) [ − ln( ρ∞(G′(0)))] . (2.17) 
+
+# 3 Entropy solutions and boundary traces 
+
+We recall the definition of an entropy solution. 
+
+Definition 3.1 (Kružkov entropy inequalities in the interior [ 19 ]) . A function u ∈
+
+L∞((0 , T ) × (0 , 1)) is an entropy solution of (1.1) in the interior if for every k ∈ R and every nonnegative φ ∈ C1 
+
+> c
+
+([0 , T ) × (0 , 1)) ,  
+
+> ∫T
+> 0
+> ∫10
+> (
+
+|ui − k|φt + sgn( ui − k)(
+
+fi(ui) − fi(k))
+
+φx
+
+> )
+
+dx dt 
+
++ 
+
+> ∫10
+
+|u0,i (x) − k|φ(0 , x ) dx ≥ 0, ∀ i ∈ { 1, ..., n }. (3.1) 7Remark 3.2 . If u ∈ L∞((0 , T ) × (0 , 1)) is an entropy solution of (1.1) in the interior, then one has for any convex η (see [19]) of class C1,  
+
+> ∫T
+> 0
+> ∫10
+> (
+
+η(ui)φt + qi(ui)φx
+
+> )
+
+dx dt + 
+
+> ∫10
+
+η(u0,i )φ(0 , x )dx ≥ 0, ∀ i ∈ { 1, ..., n }, (3.2) for every function φ ∈ C1 
+
+> c
+
+([0 , T ) × (0 , 1); [0 , +∞)) provided that 
+
+q′
+
+> i
+
+(z) = η′(z)f ′ 
+
+> i
+
+(z), ∀z ∈ R. (3.3) The function qi is called the entropy flux associated to the entropy η.The boundary traces of an entropy solution are defined in the following proposition. 
+
+Proposition 3.3 (Strong traces) . Let u ∈ L∞((0 , T ) × (0 , 1)) be an entropy solution in the sense of Definition 3.1. Then there exist (strong) boundary traces u(·, 0) , u (·, 1) ∈
+
+L∞(0 , T ) such that (up to redefining u on a null set), 
+
+lim  
+
+> ε→0, ε> 0
+> ∫T
+> 0
+
+|u(t, ε ) − u(t, 0) | dt = 0 , lim  
+
+> ε→0, ε> 0
+> ∫T
+> 0
+
+|u(t, 1 − ε) − u(t, 1) | dt = 0 . (3.4) 
+
+Remark 3.4 . The existence of such strong traces for conservation laws goes back to the works of Vasseur, Kwon and Panov and are also proved in the setting of bounded domains with Dirichlet conditions by Coclite, Karlsen and Kwon, see [20, 22, 9]. 
+
+# 4 Open-loop well-posedness 
+
+In order to prove Theorem 2.1 we analyse the following open-loop system with a prescribed boundary datum w:
+
+> 
+
+ut + ( f (u)) x = 0 in (0 , T ) × (0 , 1) ,u(0 , x ) = u0(x) for a.e. x ∈ (0 , 1) ,u(t, 0) = w(t) for a.e. t ∈ (0 , T ).
+
+(4.1) Note that imposing the boundary condition u(t, 0) = w(t) a priori makes sense under the positivity condition (1.4) on the direction of the characteristics. See Bardos–Le Roux–Nédélec (BLN) [2] and modern treatments such as [9, 1] in more general cases. 
+
+Theorem 4.1 (Open-loop well-posedness) . Assume u0 ∈ L∞(0 , 1) , w ∈ L∞(0 , T )
+
+and f ∈ C1(Rn). Then there exists a unique entropy solution u to (4.1) such that 
+
+u ∈ C([0 , T ]; L1(0 , 1)) ∩L∞((0 , T )×(0 , 1)) and u admits strong boundary traces u(t, 0) = 
+
+w(t) and u(t, 1) . Moreover, for two data (u0, w ) and (v0, z ) with corresponding solutions 
+
+u, v one has the L1 stability estimate 
+
+∥ui(t, ·) − vi(t, ·)∥L1(0 ,1) ≤ ∥ u0,i − v0,i ∥L1(0 ,1) + 
+
+> ∫t
+> 0
+
+|f (wi(s)) − f (zi(s)) | ds, 
+
+∀t ∈ [0 , T ], ∀ i ∈ { 1, ..., n }. (4.2) This theorem is essentially a consequence of [ 9, Theorem 1.1–1.2] and its proof is given in Appendix B. 
+
+Proposition 4.2 (Maximum principle) . Under the assumptions of Theorem 4.1, 
+
+∥u∥L∞((0 ,T )×(0 ,1)) ≤ max 
+
+> {
+
+∥u0∥L∞(0 ,1) , ∥w∥L∞(0 ,T )
+
+> }
+
+. (4.3) This is shown in Appendix B. 85 A delay lemma (finite speed of propagation) 
+
+Assumption (1.4) implies that information travels to the right with a finite speed. Let 
+
+¯a(w) = max {f ′(v) | | v| ≤ ∥ u0∥L∞(0 ,1) + ∥w∥L∞(0 ,1) }, (5.1) 
+
+δ(w) := 1¯a(w). (5.2) 
+
+Lemma 5.1 (Output independent of input for short times) . Let uw, u z be the open-loop entropy solutions of (4.1) with the same initial datum u0 ∈ L∞(0 , 1) and two (possibly different) input boundary data w, z ∈ L∞(0 , T ). Then their outgoing traces coincide on 
+
+(0 , ¯δ) with ¯δ = min( δ(w), δ (z)) :
+
+uw(t, 1) = uz (t, 1) for a.e. t ∈ (0 , ¯δ). (5.3) 
+
+More generally, if w = z a.e. on (0 , ˜t) for some ˜t ∈ (0 , T ), then uw(t, 1) = uz (t, 1) for a.e. t in (0 , ˜t + ¯δ) ∩ (0 , T ).
+
+This is shown in Appendix C. 
+
+# 6 Closed-loop well-posedness via a method of steps 
+
+We now prove Theorem 2.1. The construction exploits Lemma 5.1. 
+
+## 6.1 Stepwise construction 
+
+First note that when f is globally Lipschitz, then, for any w ∈ L∞
+
+¯a(w) ≤ Cf , (6.1) where Cf is the Lipschitz constant of f . As a consequence, denoting τ = C−1 
+
+> f
+
+,
+
+0 < τ ≤ δ(w), ∀w ∈ L∞. (6.2) Let T > 0 and N ∈ N such that N τ > T and denote 
+
+tn = min( nτ, T ). (6.3) We inductively construct an input function w ∈ L∞(0 , T ) and the corresponding open-loop solution u of (4.1) such that w(t) = G(u(t, 1)) a.e. in (0 , T ).
+
+Step n = 1 . Choose an arbitrary “dummy” input ˜w(1) ∈ L∞(0 , T ) and let ˜u(1) be the open-loop solution of (4.1) with input ˜w(1) . Define 
+
+w(t) := G(˜u(1) (t, 1)) for a.e. t ∈ (0 , t 1). (6.4) By Proposition 3.3 and the Lipschitz continuity of G, we have w ∈ L∞(0 , t 1).9Now let u(1) be the open-loop solution on (0 , t 1) with input w (which is unique from Theorem 4.1). By Lemma 5.1 (with t0 = 0 ), the corresponding outgoing traces ˜u(1) (t, 1) 
+
+and u(1) (t, 1) coincide a.e. on (0 , t 1), hence 
+
+w(t) = G(u(1) (t, 1)) for a.e. t ∈ (0 , t 1), (6.5) so the boundary feedback condition (1.2) is satisfied on (0 , t 1).
+
+Induction step. Assume that we have defined w on (0 , t n) and constructed u(n),the open-loop solution on (0 , t n) with input w, such that w(t) = G(u(n)(t, 1)) for a.e. 
+
+t ∈ (0 , t n). Choose any extension ˜w(n+1) ∈ L∞(0 , T ) such that ˜w(n+1) = w a.e. on 
+
+(0 , t n).Let ˜u(n+1) solve (4.1) (on (0 , T )) with input ˜w(n+1) . Define for a.e. t ∈ (tn, t n+1 ):
+
+w(t) := G(˜u(n+1) (t, 1)) . (6.6) Let u(n+1) be the open-loop solution on (0 , t n+1 ) with this input w. By Lemma 5.1 (applied with τ = tn), ˜u(n+1) (t, 1) and u(n+1) (t, 1) coincide on (tn, t n+1 ) since w and 
+
+˜w(n+1) coincide on (0 , t n) by definition. Hence, 
+
+w(t) = G(u(n+1) (t, 1)) (6.7) holds a.e. on (tn, t n+1 ).After at most N steps we obtain w on (0 , T ) and an entropy solution u on (0 , T ) ×
+
+(0 , 1) of the system (4.1) which satisfies the boundary feedback relation (1.2) . It is therefore an entropy solution of the system (1.1) –(1.2) since, from Theorem 4.1, 
+
+u ∈ C([0 , T ]; L1(0 , 1)) ∩ L∞((0 , T ) × (0 , 1)) .
+
+## 6.2 Uniqueness 
+
+Let u, v be two entropy solutions of the closed-loop problem (1.1) –(1.2) with initial condition u0 ∈ L∞(0 , 1) . Set wu(t) := G(u(t, 1)) and wv(t) := G(v(t, 1)) . On (0 , t 1),Lemma 5.1 (with ˜t = 0 ) implies that u(·, 1) = v(·, 1) a.e. hence wu = wv a.e. on (0 , t 1).By open-loop uniqueness (Theorem 4.1), we infer u = v on (0 , t 1) × (0 , 1) .Assume inductively that u = v on (0 , t n) × (0 , 1) . Then wu = wv a.e. on (0 , t n), and Lemma 5.1 (with ˜t = tn) yields u(·, 1) = v(·, 1) a.e. on (tn, t n+1 ). Thus wu = wv a.e. on (tn, t n+1 ), and open-loop uniqueness gives u = v on (0 , t n+1 ) × (0 , 1) . This ends the proof of the induction and, after finitely many steps, u ≡ v on (0 , T ) × (0 , 1) .This completes the proof of Theorem 2.1. 
+
+# 7 Exponential stability in the L1-norm 
+
+We now prove Theorem 2.4. Let T > 0 and u be an entropy solution of (1.1) –(1.2) .We define 
+
+V (t) =  
+
+> ∫10
+> n∑
+> i=1
+
+pie−μx |ui(t, x )|dx, (7.1) which from Theorem 2.1 belongs to C([0 , T ]; R+). Let ϕ ∈ C1 
+
+> c
+
+((0 , T ); R+), 
+
+> ∫T
+> 0
+
+V (t)ϕtdt =  
+
+> n∑
+> i=1
+> ∫T
+> 0
+> ∫10
+
+|ui(t, x )|pie−μx ϕt dx dt. (7.2) 10 Let us denote 
+
+Wi =
+
+∫ T
+
+> 0
+
+∫ 10
+
+|ui(t, x )|pie−μx ϕt dx dt, (7.3) and define 
+
+Wi,ε =
+
+∫ T
+
+> 0
+
+∫ 10
+
+|ui(t, x )|χε(x)pie−μx ϕt dx dt, (7.4) where χε is defined by 
+
+χε(x) = 
+
+
+
+x/ε for x ∈ (0 , ε ]1 for x ∈ (ε, 1 − ε](1 − x)/ε for x ∈ (1 − ε, 1] .
+
+(7.5) Using Definition 3.1 with k = 0 , this gives 1
+
+Wi,ε ≥ − 
+
+∫ T
+
+> 0
+
+∫ 10
+
+sgn( ui)(
+
+fi(ui) − fi(0) )
+
+(χ′
+
+> ε
+
+(x) − μχ ε(x)) pie−μx ϕ(t) dx dt 
+
+= −
+
+∫ T
+
+> 0
+
+( 1
+
+ε
+
+∫ ε
+
+> 0
+
+sgn( ui)(
+
+fi(ui) − fi(0) )
+
+pie−μx dx 
+
+)
+
+ϕ(t)dt 
+
++
+
+∫ T
+
+> 0
+
+( 1
+
+ε
+
+∫ 11−ε
+
+sgn( ui)(
+
+fi(ui) − fi(0) )
+
+pie−μx dx 
+
+)
+
+ϕ(t)dt 
+
++
+
+∫ T
+
+> 0
+
+∫ 10
+
+sgn( ui)(
+
+fi(ui) − fi(0) )
+
+μχ ε(x)pie−μx ϕ(t) dx dt. 
+
+(7.6) Letting ε → 0 in the above inequality and in (7.4), together with (3.4) we obtain 
+
+Wi ≥ μ
+
+∫ T
+
+> 0
+
+∫ 10
+
+sgn( ui)(
+
+fi(ui) − fi(0) )
+
+pie−μx ϕ(t) dx dt 
+
++
+
+∫ T
+
+> 0
+
+[
+
+sgn( ui(t, 1)) (
+
+fi(ui(t, 1)) −fi(0) )
+
+e−μ−sgn( ui(t, 0)) (
+
+fi(ui(t, 0)) −fi(0) )]
+
+piϕ(t)dt. 
+
+(7.7) Using the fact that u satisfies (1.2) and (1.4) 
+
+Wi ≥ aμ 
+
+∫ T
+
+> 0
+
+∫ 10
+
+|ui|pie−μx ϕ(t) dx dt 
+
++
+
+∫ T
+
+> 0
+
+(
+
+|fi(ui(t, 1)) − fi(0) |e−μ − | fi(Gi(u(t, 1))) − fi(0) |
+
+)
+
+piϕ(t)dt (7.8) where Gi(u) is the i-th component of G(u) and where we used the fact that, from (1.4) ,
+
+fi is strictly increasing and therefore sgn (fi(u) − fi(0)) = sgn (u). Finally, summing and using (7.1) we obtain 
+
+∫ T
+
+> 0
+
+V (t)ϕt(t)dt ≥ aμ 
+
+∫ T
+
+> 0
+
+V (t)ϕ(t)dt 
+
++
+
+∫ T
+
+> 0
+> n
+
+∑
+
+> i=1
+
+(
+
+|fi(ui(t, 1)) − fi(0) |e−μ − | fi(Gi(u(t, 1))) − fi(0) |
+
+)
+
+piϕ(t)dt. (7.9)  
+
+> 1
+
+Strictly speaking the definition of entropy solutions requires φ : ( t, x ) 7 → χε(x)pie−μx ϕ(t)
+
+to belong to C1 
+
+> c
+
+((0 , T ) × (0 , 1); R+) and therefore χε ∈ C1 
+
+> c
+
+((0 , 1); R+). However the function χε
+
+can be approximated by functions (χε,k )k∈N in C1 
+
+> c
+
+((0 , 1); R+) such that |χ′
+
+> ε,k
+
+|L∞(0 ,1) ≤ 2/ε and 
+
+lim k→+∞ χ′
+
+> ε,k
+
+(x) = χ′
+
+> ε
+
+(x), for every x ∈ (0 , 1) \ { ε, 1 − ε}. Then (7.6) holds with χε replaced by χε,k 
+
+and letting k → +∞ in these (7.6) with χε,k , one gets the desired (7.6). 
+
+11 Using (2.6) we obtain  
+
+> ∫T
+> 0
+
+V (t)ϕt(t)dt ≥ aμ  
+
+> ∫T
+> 0
+
+V (t)ϕ(t)dt, (7.10) which holds for any ϕ ∈ C1 
+
+> c
+
+((0 , T ); R+) and implies that 
+
+V (t) ≤ V (0) e−aμt , ∀t ∈ [0 , T ]. (7.11) From (7.1) we obtain directly that there exists C depending only on pi and μ such that 
+
+∥u(t, ·)∥L1(0 ,1) ≤ Ce −aμt ∥u0∥L1(0 ,1) , ∀t ∈ [0 , T ]. (7.12) This completes the proof of Theorem 2.4. We now prove Theorem 2.6. We observe that, instead of considering the Lyapunov function candidate (7.1), we could also consider the more general function 
+
+V (t) =  
+
+> ∫10
+> n∑
+> i=1
+
+pie−μx |hi(ui(t, x )) |dx, (7.13) where hi is a C1 convex function which satisfies 
+
+αU ≤ hi(U ) ≤ βU, ∀U ∈ R, (7.14) where α and β are two positive constants. We choose 
+
+hi(U ) =  
+
+> ∫U
+> 0
+
+1
+
+f ′ 
+
+> i
+
+(s)ds. (7.15) Since the fi are concave, it follows that, from (1.4) , the hi are convex. Moreover, by (1.4) and since f is globally Lipschitz, the hi satisfy also (7.14) . Proceeding as previously, applying (3.2) with entropy ηi and associated entropy flux qi(U ) = |U | (note that sgn (hi(U )) = sgn (U )), for any ϕ ∈ C1 
+
+> c
+
+([0 , T ); R+) we have  
+
+> ∫T
+> 0
+
+V (t)ϕt(t)dt ≥ aμ  
+
+> ∫T
+> 0
+
+V (t)ϕ(t)dt + 
+
+> ∫T
+> 0
+> n∑
+> i=1
+> (
+
+|ui(t, 1) |e−μ − | Gi(u(t, 1)) |)
+
+piϕ(t)dt. 
+
+(7.16) Selecting now pi = ∆ i, under the assumption (2.11), we have 
+
+> n∑
+> i=1
+> (
+
+|ui(t, 1) |e−μ − | Gi(u(t, 1)) |)
+
+pi ≥ 0, (7.17) hence ∫ T
+
+> 0
+
+V (t)ϕt(t)dt ≥ aμ  
+
+> ∫T
+> 0
+
+V (t)ϕ(t)dt, (7.18) and similarly as previously the exponential stability in the L1 norm holds. This completes the proof of Theorem 2.6. 12 8 Exponential stability in the L∞-norm 
+
+We now prove Theorem 2.7. Our proof is partly inspired by [ 10 ] (see also [ 4, Section 4.1]). Let T > 0 and let 
+
+ν ∈ (0 , μ ). (8.1) Let us first assume that f is globally Lipschitz. Then, according to Theorem 2.1, (1.1) –(1.2) has a unique entropy solution u. We now define V : [0 , T ] → [0 , +∞) by (compare with (7.1)) 
+
+V (t) = ∥ (
+
+∆1e−νx |u1(t, x )|, . . . , ∆ne−νx |un(t, x )∥)⊤
+
+∥L∞(0 ,1) , (8.2) which from Theorem 2.1 belongs to L∞((0 , T ); R+). In contrast with the V of section 7, this new V may be discontinuous. However, since u ∈ C([0 , T ]; L1(0 , 1)) , V (t) is well defined for every t ∈ [0 , T ] and not only for almost every t ∈ [0 , T ]. In (8.2) , Rn is equipped with the | · | ∞-norm. Hence 
+
+V (t) = max {∆i∥e−νx ui(t, x )∥L∞(0 ,1) ; i ∈ { 1, . . . , n }} . (8.3) For a (strictly) positive integer m, let us define Vm : [0 , T ] → [0 , +∞) by 
+
+Vm(t) :=  
+
+> (∫10
+> n∑
+> i=1
+
+∆2mi e−2mνx u2mi (t, x ) dx  
+
+> )12m
+
+. (8.4) From Theorem 2.1 we know that u ∈ C([0 , T ]; L1(0 , 1)) ∩ L∞((0 , T ) × (0 , 1)) from which we gain directly that u ∈ C([0 , T ]; L2m(0 , 1)) and therefore Vm now belongs to 
+
+C([0 , T ]; R+).Let us prove that 
+
+lim  
+
+> m→+∞
+
+Vm(t) = V (t), ∀t ∈ (0 , T ). (8.5) For a fixed t ∈ [0 , T ], let M : [0 , 1] → [0 , +∞) be defined by 
+
+M (x) := max {∆ie−νx |ui(t, x )|; 1 ≤ i ≤ n}. (8.6) One has 
+
+M 2m(x) = max {∆2mi e−2mνx u2mi (t, x ); 1 ≤ i ≤ n} ≤ 
+
+> n∑
+> i=1
+
+∆2mi e−2mνx u2mi (t, x ). (8.7) Integrating (8.7) on [0 , 1] , one gets 
+
+∥M ∥L2m(0 ,1) :=  
+
+> (∫ 10
+
+M 2m(x) dx  
+
+> )12m
+
+≤ Vm(t). (8.8) For the upper-bound of Vmn∑
+
+> i=1
+
+∆2mi e−2mνx u2mi (t, x ) ≤ n max {∆2mi e−2mνx u2mi (t, x ); 1 ≤ i ≤ n} = nM 2m(x). (8.9) 13 Integrating this inequality on [0 , 1] and taking the (2 m)-th root, we get 
+
+Vm ≤ n 12m |M |L2m(0 ,1) . (8.10) Finally (8.5) follows from (8.8), (8.10) and the following classical result 
+
+lim  
+
+> m→+∞
+
+∥M ∥L2m(0 ,1) = ∥M ∥L∞(0 ,1) . (8.11) Let ϕ ∈ C1 
+
+> c
+
+((0 , T ); R+). One has, 
+
+∫ T
+
+> 0
+
+V 2mm (t)ϕtdt =
+
+> n
+
+∑
+
+> i=1
+
+Wm,i , (8.12) with 
+
+Wm,i := 
+
+∫ T
+
+> 0
+
+∫ 10
+
+∆2mi e−2mνx u2mi (t, x )ϕt dx dt. (8.13) Let us define, for ε ∈ (0 , 1/2] ,
+
+Wm,i,ε := 
+
+∫ T
+
+> 0
+
+∫ 10
+
+u2mi (t, x )χε(x)∆ 2mi e−2mνx ϕt dx dt, (8.14) where χε is again defined by (7.5). Let qm,i : R → R be such that 
+
+dq m,i 
+
+dz (z) = z2m−1f ′ 
+
+> i
+
+(z), ∀z ∈ R, and qm,i (0) = 0 . (8.15) Recalling that u is an entropy solution and applying (3.2) with η(z) = z2m and 
+
+φ(t, x ) = ϕ(t)χε(x)e−2mνx , one has 
+
+Wm,i,ε ≥ − 
+
+∫ T
+
+> 0
+
+∫ 10
+
+qm,i (ui(t, x )) ( χ′
+
+> ε
+
+(x) − 2mνχ ε(x)) ∆ 2mi e−νx ϕ(t) dx dt 
+
+= −
+
+∫ T
+
+> 0
+
+( 1
+
+ε
+
+∫ ε
+
+> 0
+
+qm,i (ui(t, x ))∆ 2mi e−2mνx dx 
+
+)
+
+ϕ(t)dt 
+
++
+
+∫ T
+
+> 0
+
+( 1
+
+ε
+
+∫ 11−ε
+
+qm,i (ui(t, x ))∆ 2mi e−2mνx dx 
+
+)
+
+ϕ(t)dt 
+
++ 2 mν 
+
+∫ T
+
+> 0
+
+∫ 10
+
+qm,i (ui(t, x ))∆ 2mi e−2mνx χε(x)piϕ(t) dx dt. 
+
+(8.16) Letting ε → 0 in (8.16) and in (8.14), and using (3.4) we obtain, 
+
+Wm,i ≥ 2mν 
+
+∫ T
+
+> 0
+
+∫ 10
+
+qm,i (ui(x))∆ 2mi e−2mνx ∆2mi ϕ(t) dx dt +
+
+∫ T
+
+> 0
+
+Bm,i (t)ϕ(t) dt, (8.17) with 
+
+Bm,i (t) := ∆ 2mi
+
+(
+
+qm,i (ui(t, 1)) e−2mν − qm,i (u(t, 0)) )
+
+. (8.18) Using the fact that u satisfies (1.2), we have 
+
+Bm,i (t) := ∆ 2mi
+
+(
+
+qm,i (ui(t, 1)) e−2mν − qm,i (Gi(u(t, 1))) )
+
+, (8.19) where, again, Gi(u) is the i-th component of G(u). Let ¯f > 0 be such that 
+
+fi(z) ≤ ¯f , ∀z ∈ [−∥ ui∥L∞((0 ,T )×(0 ,1)) , ∥ui∥L∞((0 ,T )×(0 ,1)) ], ∀i ∈ { 1, . . . , n }. (8.20) 14 From (1.4), (8.15), and (8.20), one has 
+
+a
+
+2m|ξ|2m ≤ qm,i (ξ) ≤ ¯f
+
+2m|ξ|2m, ∀ξ ∈ R, ∀m ∈ N \ { 0}, ∀i ∈ { 1, . . . , n }. (8.21) From (8.19) and (8.21), one has 
+
+Bm(t) ≥
+
+> n∑
+> i=1
+
+12m
+
+> (
+
+a 
+
+> (n∑
+> i=1
+
+∆2mi u2mi (t, 1) e−2mν 
+
+> )
+
+− ¯f 
+
+> (n∑
+> i=1
+
+∆2mi Gi(u(t, 1)) 2m
+
+> ))
+
+, (8.22) with 
+
+Bm(t) := 
+
+> n∑
+> i=1
+
+Bm,i (t). (8.23) We have the following result, which is classical, except maybe for the uniform conver-gence statement. 
+
+Lemma 8.1. For every z = ( z1, . . . , z n)⊤ ∈ Rn
+
+lim  
+
+> m→+∞
+> (n∑
+> i=1
+
+z2mi 
+
+> )12m
+
+= |z|∞ (8.24) 
+
+and this convergence is uniform on every bounded set of Rn.Proof of Lemma 8.1. It suffices to point out that 
+
+0 ≤ 
+
+> (n∑
+> i=1
+
+z2mi 
+
+> )12m
+
+− | z|∞ ≤ (n 12m − 1) |z|∞. (8.25) Note that 
+
+lim  
+
+> m→+∞
+
+a 12m = 1 and lim 
+
+> m→+∞
+
+¯f 12m (t) = 1 . (8.26) Using (2.12), (8.1), (8.22), and Lemma 8.1, we get the existence of m0 ≥ 1 such that 
+
+Bm(t) ≥ 0, ∀t ∈ [0 , T ], ∀m ≥ m0. (8.27) From now on we assume that m ≥ m0. From (8.12) , (8.17) , (8.21) , (8.23) , and (8.27) ,we get ∫ T
+
+> 0
+
+V 2mm (t)ϕtdt ≥ 2mνa   
+
+> n∑
+> i=1
+> ∫T
+> 0
+> ∫10
+
+∆2mi e−2mνx u2mi (t, x )ϕ(t) dx dt. (8.28) Now from (8.28) , for every ϕ ∈ C1 
+
+> c
+
+((0 , T ); R+) and for every 0 ≤ t1 ≤ t2 ≤ T , it can be checked that 
+
+V 2mm (t2) − V 2mm (t1) ≤ − 2mνa  
+
+> ∫t2
+> t1
+
+V 2mm (t) dt. (8.29) Indeed, one can proceed as for the proof of (7.7) (see in particular the footnote of page 11: with a standard approximation procedure, one gets that, for every ε ∈ (0 , (t2 −t1)/2] ,(8.28) holds for 
+
+ϕ(t) = ϕε(t) = 
+
+> 
+
+0 for t ∈ (0 , t 1](t − t1)/ε for t ∈ (t1, t 1 + ε]1 for t ∈ (t1 + ε, t 2 − ε)(t2 − t)/ε for t ∈ [t2 − ε, t 2]0 for t ∈ (t2, 1] ,
+
+(8.30) 15 and, letting ε → 0+ in (8.28) with this ϕ, one gets (8.29) if t2 > t 1, while (8.29) is trivial if t1 = t2. Let us point out that (8.29) implies that 
+
+Vm is a non-increasing function on [0 , T ]. (8.31) Note that, by the convexity of ξ ∈ R → ξ2m,
+
+V 2mm (t2) − V 2mm (t1) ≥ 2mV 2m−1 
+
+> m
+
+(t1) ( Vm(t2) − Vm(t1)) . (8.32) From (8.29), (8.32), and (8.31), one gets 
+
+V 2m−1 
+
+> m
+
+(t1) ( Vm(t2) − Vm(t1)) ≤ − νa  
+
+> ∫t2
+> t1
+
+V 2mm (t) dt ≤ − νa (t2 − t1) V 2mm (t2). (8.33) One has the following lemma, whose proof is given in Appendix A. 
+
+Lemma 8.2. Let θ : [0 , T ] → [0 , +∞) be a continuous non-increasing function such that, for some positive integer m ≥ 1 and for some constant c > 0,
+
+θ2m−1(t1) ( θ(t2) − θ(t1)) ≤ − c(t2 − t1)θ2m(t2), ∀ 0 ≤ t1 ≤ t2 ≤ T. (8.34) 
+
+Then, 
+
+θ(t) ≤ e−ct θ(0) , ∀t ∈ [0 , T ]. (8.35) By (8.31) and (8.33) , the assumptions of this lemma are satisfied for θ := Vm and 
+
+c := νa . Hence, by this lemma, 
+
+V (t) ≤ e−νat V (0) , ∀t ∈ [0 , T ], (8.36) which concludes the proof of Theorem 2.7 if f is globally Lipschitz since, by (8.3) , there exists C ≥ 1 independent of u, t, and T such that 
+
+1
+
+C ∥u(t, ·)∥L∞(0 ,1) ≤ V (t) ≤ C∥u(t, ·)∥L∞(0 ,1) . (8.37) If f is not globally Lipschitz, one can no longer get the existence of the solution u of (1.1) –(1.2) as a direct application of Theorem 2.1. To show, without this assumption of global Lipschitzness, the existence and uniqueness of the solution u (and that it satisfies the exponential stability estimate) on [0 , +∞), one can proceed as follows. For 
+
+u0 given and T > 0 arbitrary, let ¯f > 0 to be chosen and define ˜fi that coincides with 
+
+fi on {y ∈ Rn | | y| < ¯f } and is extended on Rn in a globally Lipschitz way such that its Lipschitz constant is 
+
+C ˜fi ≤ 2 sup 
+
+> |y|≤ ¯f
+
+{| ∂ufi(y)|} . (8.38) The system (1.1) , (1.2) with ˜fi instead of fi satisfies the assumption of Theorem 2.1 and there exists a unique entropy solution u ∈ L∞((0 , T ) × (0 , 1)) which satisfies, from (2.5), 
+
+∥u∥L∞((0 ,T )×(0 ,1)) ≤ C∥u0∥L∞ , (8.39) where C only depends on the ∆i. Thus if we choose ¯f > C ∥u0∥L∞ (note that u might depend on ¯f but u0 does not), then u is also a solution of (1.1), (1.2) with fi (indeed, 
+
+fi(u(t, x )) = ˜fi(u(t, x )) for a.e. (t, x ) ∈ (0 , T ) × (0 , 1) ). This shows that (1.1) , (1.2) admits an entropy solution in L∞((0 , T ) × (0 , 1)) with strong boundary traces and satisfies (2.5) on [0 , T ) instead of [0 , +∞) where C does not depend on T . Extending the solution on [0 , +∞) can be done classically as in [10, 16]. 16 Remark 8.3 . Since (8.36) holds for every ν ∈ (0 , μ ), letting ν → μ− leads to 
+
+˙˜V (t) ≤ e−μat ˜V (0) , ∀t ∈ [0 , T ], (8.40) for ˜V defined by 
+
+> ˜
+
+V (t) := 
+
+> ∥∥∥∥(
+
+∆1e−μx |u1(t, x )|, . . . , ∆ne−μx |un(t, x )|)⊤ ∥∥∥∥L∞(0 ,1) 
+
+. (8.41) 
+
+# 9 Conclusion 
+
+In this paper, we have established the well-posedness and the global exponential stability of 1D systems of scalar conservation laws closed by a nonlocal boundary feedback. While the existing literature on the boundary stabilization of hyperbolic systems mostly focuses on local stability for classical solutions in regular functional spaces (such as C1
+
+or H2), our work addresses the natural framework of weak entropy solutions, where shocks can form in finite time. A key novelty of our approach are the resulting explicit dissipativity conditions on the feedback map to guarantee global exponential stability in both L1 and L∞ norms. Notably, we do not require the solutions to have bounded variations (class BV functions) and our L∞ stability framework succeeds in guaranteeing exponential decay without requiring the flux to be globally Lipschitz. We also provide a local exponential stability result in L∞ norm under weaker assumptions. This work paves the way for several subsequent open problems. Among others, future research directions include: Investigating the existence and characterization of forward invariant sets for the closed-loop system under boundary feedback; Removing the diagonal assumption on the fluxes to address general systems of conservation laws that are fully coupled in the interior domain; Relaxing the strict wave speed assumption (1.4) in the global exponential stability to encompass systems where characteristic velocities may vanish or change sign; Extending these well-posedness and boundary stabilization strategies to scalar conservation laws in multi-dimensional spatial domains. 
+
+# A Proof of Lemma 8.2 
+
+Since θ is non-negative and non-increasing, if there exists some t0 ∈ [0 , T ] such that 
+
+θ(t0) = 0 , then θ(t) = 0 for all t ∈ [t0, T ]. In this case, the inequality θ(t) ≤ θ(0) e−ct 
+
+holds trivially for every t ∈ [t0, T ]. Thus, we may assume θ(t) > 0 for every t ∈ [0 , T ).Fix t ∈ [0 , T ) and let h > 0 such that t + h ≤ T . Setting t1 = t and t2 = t + h in (8.34), we have: 
+
+θ2m−1(t)( θ(t + h) − θ(t)) ≤ − chθ 2m(t + h). (A.1) Dividing both sides by hθ 2m−1(t) (which is positive), we obtain: 
+
+θ(t + h) − θ(t)
+
+h ≤ − cθ2m(t + h)
+
+θ2m−1(t) . (A.2) We consider the upper right Dini derivative, defined as 
+
+D+θ(t) = lim sup 
+
+> h→0+
+
+θ(t + h) − θ(t)
+
+h . (A.3) 17 Taking the limit as h → 0+ on the right hand side and using the continuity of θ as well as (A.2), we get 
+
+D+θ(t) ≤ lim 
+
+> h→0+
+> (
+
+−cθ2m(t + h)
+
+θ2m−1(t)
+
+> )
+
+= −c θ2m(t)
+
+θ2m−1(t) = −cθ (t). (A.4) Let us now define the auxiliary function g(t) = θ(t)ect . We compute the upper right Dini derivative of g(t):
+
+D+g(t) := lim sup 
+
+> h→0+
+
+θ(t + h)ec(t+h) − θ(t)ect 
+
+h . (A.5) Using the expansion ech = 1 + ch + o(h), we have 
+
+D+g(t) = ect lim sup  
+
+> h→0+
+> [
+
+θ(t + h) − θ(t)
+
+h + cθ (t + h)
+
+> ]
+
+, (A.6) which, with (A.4), leads to 
+
+D+g(t) ≤ ect [−cθ (t) + cθ (t)] = 0 . (A.7) Since g(t) is continuous and its upper right Dini derivative is non-positive, g(t) is non-increasing on [0 , T ] (see, for example, [ 25 , Chaper 5, Section 1, Proposition p. 99]). Therefore, we have g(t) ≤ g(0) , which gives 
+
+θ(t)ect ≤ θ(0) ec(0) = θ(0) . (A.8) This concludes the proof of Lemma 8.2. 
+
+# B Proof of Theorem 4.1 and Proposition 4.2 
+
+We start with the proof of Theorem 4.1. Since the conservation laws of (4.1) are decoupled in open-loop, one only needs to establish the result for a single scalar equation. Therefore, in the following, index i is dropped to simplify the notations. For a scalar equation, the existence of a unique entropy solution in the sense of Definition 3.1 which has strong boundary traces is given in [ 9, Theorem 1.1–1.2]. Deriving the estimate is relatively classical: using a doubling of variable [ 19 , Proof of Theorem 1; (3.2)] and from the definition of entropy solutions one obtains the following, for any 
+
+ϕ ∈ C1 
+
+> c
+
+([0 , T ); R+) and χ ∈ { C1((0 , 1); R+) | χ(0) = χ(1) = 0 },  
+
+> ∫T
+> 0
+> ∫10
+> (
+
+|u(t, x )−v(t, x )|ϕ′(t)χ(x)+ sgn (u(t, x )−v(t, x ))[ f (u(t, x )) −f (v(t, x ))] χ′(x)ϕ(t)
+
+> )
+
+dxdt 
+
++ 
+
+> ∫10
+
+|u0 − v0|χ(x)ϕ(0) dx ≥ 0. (B.1) Setting 
+
+χε :=  
+
+> 
+> xε
+
+for x ∈ [0 , ε ],
+
+1 for x ∈ [ε, 1 − ε), 
+
+> 1−xε
+
+otherwise .
+
+(B.2) 18 equation (B.1) holds also with χε in place of χ (see (7.6) ). We obtain by taking ε → 0
+
+and using the existence of strong traces of the solution together with (4.1) (see also (7.6)–(7.7) above)   
+
+> ∫T
+> 0
+> ∫10
+
+|u(t, x ) − v(t, x )|ϕ′(t) dx dt + 
+
+> ∫10
+
+|u0 − v0|ϕ(0) dx 
+
+− 
+
+> ∫T
+> 0
+
+sgn (u(t, 1) − v(t, 1))( f (u(t, 1)) − f (v(t, 1))) ϕ(t)dt 
+
++ 
+
+> ∫T
+> 0
+
+sgn (w(t) − z(t))( f (w(t)) − f (z(t))) ϕ(t)dt ≥ 0.
+
+(B.3) Since f is non-decreasing, we get   
+
+> ∫T
+> 0
+> ∫10
+
+|u(t, x )−v(t, x )|ϕ′(t) dx dt + 
+
+> ∫10
+
+|u0−v0|ϕ(0) dx + 
+
+> ∫T
+> 0
+
+|f (w(t)) −f (z(t)) |ϕ(t)dt ≥ 0.
+
+(B.4) For t given, choosing ϕ as an approximation of 1[0 ,t ], the indicator function of [0 , t ] and letting it converge to 1[0 ,t ], we have exactly (4.2) . This ends the proof of Theorem 4.1. For Proposition 4.2, one only needs to note that, thanks to Remark 3.2, one can choose the entropy η : z → (u − k)+ := max (u − k, 0) for any k ∈ R. The associated entropy flux is q : z → (f (u) − f (k)) + because f is increasing. Then, proceeding as above, we obtain, for any k ∈ R and for any ϕ ∈ C1 
+
+> c
+
+([0 , T ); R+),  
+
+> ∫T
+> 0
+> ∫10
+
+(u(t, x )−k)+ϕ′(t) dx dt + 
+
+> ∫10
+
+(u0(x)−k)+ϕ(0) dx + 
+
+> ∫T
+> 0
+
+(f (w(t)) −f (k)) +ϕ(t)dt ≥ 0.
+
+(B.5) Thus, for any t ∈ (0 , T ), choosing ϕ as an approximation of the characteristic function of [0 , t ), we obtain  
+
+> ∫10
+
+(u(t, x ) − k)+dx ≤ 
+
+> ∫10
+
+(u0(x) − k)+dx + 
+
+> ∫t
+> 0
+
+(f (w(t)) − f (k)) +dt. (B.6) Now, assume that (4.3) does not hold, then one can choose 2
+
+k ∈
+
+> (
+
+max 
+
+> {
+
+∥u0∥L∞(0 ,1) , ∥w∥L∞(0 ,T )
+
+> }
+
+, ∥u0∥L∞(0 ,T )×(0 ,1) 
+
+> )
+
+and get that ∫ 10
+
+(u(t, x ) − k)+dx ≤ 0, (B.7) which implies that u(t, x ) ≤ k a.e. on (0 , T ) × (0 , 1) but contradicts the fact that 
+
+k < ∥u0∥L∞(0 ,T )×(0 ,1) .
+
+# C Proof of Lemma 5.1 
+
+Proof. Lemma 5.1 is a finite speed of propagation statement: data at the input boundary 
+
+x = 0 cannot influence a neighborhood of x = 1 before the travel time ¯δ. Let us deal       
+
+> 2Again, this entropy is not C1, however (3.2) still hold for continuous, convex and piecewise C1
+> functions by approaching them weakly by convex C1functions.
+
+19 with the scalar case, and since (4.1) is diagonal the non-scalar case follows directly. Let 
+
+I(t) := ( ¯δ−1(t − ˜t), 1) defined for t ∈ [0 , ¯δ), we want to study 
+
+E(t) := 
+
+∫
+
+> I(t)∩(0 ,1)
+
+|uw(t, x ) − uz (t, x )|dx. (C.1) Note that E is absolutely continuous since uw and uz belong to C([0 , T ]; L1(R)) . Using the same doubling of variables as in Appendix B (see also [ 19 , Theorem 1, (3.2)]) but with χε(x) defined by 
+
+χε(t, x ) := 
+
+
+
+0 for x ∈ [0 , ¯δ−1(t − ˜t)+] 
+
+> x−¯δ−1(t−˜t)+
+> ε
+
+for x ∈ [¯δ−1(t − ˜t)+, ¯δ−1(t − ˜t)+ + ε],
+
+1 for x ∈ [¯δ−1(t − ˜t)+ + ε, 1 − ε), 
+
+> 1−xε
+
+otherwise .
+
+(C.2) one has 
+
+∫ T
+
+> 0
+
+∫ 1¯δ−1t
+
+|uw(t, x )−uz (t, x )|ϕ′(t) dx dt −¯δ−1
+
+∫ T
+
+> 0
+
+|uw(t, ¯δ−1(t−˜t)+)−uz (t, ¯δ−1(t−˜t)+)|ϕ(t)dt 
+
+−
+
+∫ T
+
+> 0
+
+sgn (uw(t, 1) − vz (t, 1))( f (uw(t, 1)) − f (uz (t, 1))) ϕ(t)dt 
+
++
+
+∫ T
+
+> 0
+
+sgn (uw(t, ¯δ−1(t−˜t)+)−uz (t, ¯δ−1(t−˜t)+)( f (uw(t, ¯δ−1(t−˜t)+)) −f (uz (t, ¯δ−1(t−˜t)+))) ϕ(t)dt ≥ 0.
+
+(C.3) where we used that ∂tχε(t, x ) = −( ¯δε )−11(¯δ(t−˜t)+,¯δ(t−˜t)++ε) (x)1(˜ t,T )(t) (here 1[a,b ] refers to the indicator function of [a, b ]) and 
+
+lim  
+
+> ε→0
+
+− ¯δ−1
+
+ε 1t> ˜t
+
+∫ T
+
+> 0
+
+∫ ¯δ−1(t−˜t)++ε
+
+> ¯δ−1(t−˜t)+
+
+|uw(t, x ) − uz (t, x )|ϕ(t)dxdt =
+
+− ¯δ−1
+
+∫ T
+
+> 0
+
+|uw(t, ¯δ−1(t − ˜t)+) − uz (t, ¯δ−1(t − ˜t)+)|ϕ(t)dt. (C.4) Using now that ¯δ−1 > |f ′(s)| for any s ∈ [∥uw∥L∞((0 ,T )×(0 ,1)) , ∥uz ∥L∞((0 ,T )×(0 ,1)) ] (see Proposition 4.2 and the definition of ¯δ given by (5.2)), we have 
+
+∫ T
+
+> ˜t
+
+[
+
+sgn (uw(t, ¯δ−1(t − ˜t)+) − uz (t, ¯δ−1(t − ˜t)+)( f (uw(t, ¯δ−1(t − ˜t))) − f (uz (t, ¯δ−1(t − ˜t)+))) 
+
+−¯δ−1|uw(t, ¯δ−1(t − ˜t)+) − uz (t, ¯δ−1(t − ˜t)+)|]
+
+ϕ(t)dt ≤ 0, (C.5) and, since w = z a.e. on (0 , ˜t) by assumption, and using (4.1) 
+
+∫ ˜t
+
+> 0
+
+sgn (uw(t, 0) − uz (t, 0))( f (uw(t, 0)) − f (uz (t, 0))) ϕ(t)dt = 0 . (C.6) As a consequence from (C.5), (C.6), choosing ϕ as an approximation of 1[0 ,t ) in (C.3), we have 
+
+∫ 1¯δ−1(t−˜t)
+
+|uw(t, x ) − uz (t, x )|dx 
+
+≤ − 
+
+∫ t
+
+> 0
+
+sgn (uw(t, 1) − vz (t, 1))( f (uw(t, 1)) − f (uz (t, 1))) dt ≤ 0. (C.7) 20 Hence, uw = uz a.e. on ( ¯δ−1(t − ˜t)+, 1) as long as t < ˜t + ¯δ and since both solutions admit strong traces at x = 1 we deduce that uw(t, 1) = uz (t, 1) and this holds for a.e. 
+
+t ∈ (0 , ˜t + ¯δ).
+
+# Acknowledgements 
+
+The authors would like to thank the ANR-Tremplin StarPDE (ANR-24-ERCS-0010) and the Hi!Paris Chair DESCARTES. 
+
+# References 
+
+[1] Boris Andreianov and Karima Sbihi. Well-posedness of general boundary-value problems for scalar conservation laws. Trans. Am. Math. Soc. , 367(6):3763–3806, 2015. [2] Claude Bardos, Alain-Yves Le Roux, and J. C. Nedelec. First order quasilinear equations with boundary conditions. Commun. Partial Differ. Equations , 4:1017– 1034, 1979. [3] G. Bastin, B. Haut, J.-M. Coron, and B. d’Andréa Novel. Lyapunov stability analysis of networks of scalar conservation laws. Netw. Heterog. Media , 2(4):751– 759, 2007. [4] Georges Bastin and Jean-Michel Coron. Stability and boundary stabilization of 1-D hyperbolic systems , volume 88 of Prog. Nonlinear Differ. Equ. Appl. Basel: Birkhäuser/Springer, 2016. [5] Georges Bastin, Jean-Michel Coron, Amaury Hayat, and Peipei Shang. Boundary feedback stabilization of hydraulic jumps. IFAC Journal of Systems and Control ,7:100026, 2019. [6] Georges Bastin, Jean-Michel Coron, Amaury Hayat, and Peipei Shang. Exponential boundary feedback stabilization of a shock steady state for the inviscid Burgers equation. Math. Models Methods Appl. Sci. , 29(2):271–316, 2019. [7] Sébastien Blandin, Xavier Litrico, Maria Laura Delle Monache, Benedetto Piccoli, and Alexandre Bayen. Regularity and Lyapunov stabilization of weak entropy solutions to scalar conservation laws. IEEE Transactions on Automatic Control, 2017. [8] Alberto Bressan. Hyperbolic Systems of Conservation Laws: The One-Dimensional Cauchy Problem . Oxford University Press, 2000. [9] G. M. Coclite, K. H. Karlsen, and Y.-S. Kwon. Initial-boundary value problems for conservation laws with source terms and the Degasperis-Procesi equation. J. Funct. Anal. , 257(12):3823–3857, 2009. [10] Jean-Michel Coron and Georges Bastin. Dissipative boundary conditions for one-dimensional quasi-linear hyperbolic systems: Lyapunov stability for the C1-norm. 
+
+SIAM J. Control Optim. , 53(3):1464–1483, 2015. 21 [11] Jean-Michel Coron, Sylvain Ervedoza, Shyam Sundar Ghoshal, Olivier Glass, and Vincent Perrollaz. Dissipative boundary conditions for 2 × 2 hyperbolic systems of conservation laws for entropy solutions in BV. J. Differential Equations ,262(1):1–30, 2017. [12] Jean-Michel Coron and Hoai-Minh Nguyen. Dissipative boundary conditions for nonlinear 1-D hyperbolic systems: sharp conditions through an approach via time-delay systems. SIAM J. Math. Anal. , 47(3):2220–2240, 2015. [13] François Dubois and Philippe G. LeFloch. Boundary conditions for nonlinear hyperbolic systems of conservation laws. Journal of Differential Equations , 71(1):93– 122, 1988. [14] Mathias Dus. BV exponential stability for systems of scalar conservation laws using saturated controls. SIAM J. Control Optim. , 59(2):1656–1679, 2021. [15] J. M. Greenberg and Tatsien Li. The effect of boundary damping for the quasilinear wave equation. J. Differ. Equations , 52:66–75, 1984. [16] Amaury Hayat. Boundary stability of 1-D nonlinear inhomogeneous hyperbolic systems for the C1 norm. SIAM J. Control Optim. , 57(6):3603–3638, 2019. [17] Amaury Hayat. Global exponential stability and input-to-state stability of semi-linear hyperbolic systems for the L2 norm. Systems Control Lett. , 148:Paper No. 104848, 8, 2021. [18] Helge Holden and Nils Henrik Risebro. Front Tracking for Hyperbolic Conservation Laws , volume 152 of Applied Mathematical Sciences . Springer, 2002. [19] S. N. Kruzhkov. First order quasilinear equations in several independent variables. 
+
+Math. USSR, Sb. , 10:217–243, 1970. [20] Young-Sam Kwon and Alexis Vasseur. Strong traces for solutions to scalar conservation laws with general flux. Arch. Ration. Mech. Anal. , 185(3):495–513, 2007. [21] Ta-tsien Li. Global classical solutions for quasilinear hyperbolic systems , volume 32 of Res. Appl. Math. Chichester: Wiley; Paris: Masson, 1994. [22] E. Yu. Panov. Existence of strong traces for quasi-solutions of multidimensional conservation laws. J. Hyperbolic Differ. Equ. , 4(4):729–770, 2007. [23] Vincent Perrollaz. Asymptotic stabilization of entropy solutions to scalar conserva-tion laws through a stationary feedback law. Annales de l’Institut Henri Poincaré C, Analyse Non Linéaire , 30(5):879–915, 2013. [24] Tiehu Qin. Global smooth solutions of dissipative boundary value problems for first order quasilinear hyperbolic systems. Chin. Ann. Math., Ser. B , 6:289–298, 1985. [25] H. L. Royden. Real analysis. New York: Macmillan Publishing Company; London: Collier Macmillan Publishing, 3rd ed. edition, 1988. 22 [26] Y-C. Zhao. Classical solutions for quasilinear hyperbolic systems. Thesis, Fudan University (in Chinese) , 1986. 23

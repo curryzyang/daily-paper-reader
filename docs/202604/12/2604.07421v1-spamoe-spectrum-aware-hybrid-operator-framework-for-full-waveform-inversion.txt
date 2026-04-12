@@ -1,0 +1,720 @@
+Title: SPAMoE: Spectrum-Aware Hybrid Operator Framework for Full-Waveform Inversion
+
+URL Source: https://arxiv.org/pdf/2604.07421v1
+
+Published Time: Fri, 10 Apr 2026 00:05:22 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# SPAM OE: S PECTRUM -A WARE HYBRID OPERATOR FRAMEWORK FOR FULL -W AVEFORM INVERSION 
+
+Zhenyu Wang 2∗
+
+, Peiyuan Li 1∗
+
+, Yongxiang Shi 1∗
+
+, Ruoyu Wu 3, Chenfei Liao 4, Lei Zhang 1†
+
+> 1
+
+School of Science, China University of Mining and Technology, Beijing 
+
+> 2
+
+School of Artificial Intelligence, China University of Mining and Technology, Beijing 
+
+> 3
+
+City University of Hong Kong (Dongguan) 
+
+> 4
+
+The Hong Kong University of Science and Technology (Guangzhou) 
+
+## ABSTRACT 
+
+Full-waveform inversion (FWI) is pivotal for reconstructing high-resolution subsurface velocity models but remains computationally intensive and ill-posed. While deep learning approaches promise efficiency, existing Convolutional Neural Networks (CNNs) and single-paradigm Neural Operators (NOs) struggle with one fundamental issue: frequency entanglement of multi-scale geological features. To address this challenge, we propose Spectral-Preserving Adaptive MoE (SPAMoE) , a novel spectrum-aware framework for solving inverse problems with complex multi-scale structures. Our approach introduces a Spectral-Preserving DINO Encoder that enforces a lower bound on the high-to-low frequency energy ratio of the encoded representation, mitigating high-frequency collapse and stabilizing subsequent frequency-domain modeling. Furthermore, we design a novel Spectral Decomposition and Routing mechanism that dynamically assigns frequency bands to a Mixture-of-Experts (MoE) ensemble comprising FNO, MNO, and LNO. On the ten OpenFWI sub-datasets, experiments show that SPAMoE reduces the average MAE by 54.1% relative to the best officially reported OpenFWI baseline, thereby establishing a new architectural framework for learning-based full-waveform inversion. 
+
+Keywords Full-Waveform Inversion · Neural Operator · Spectral-Preserving Encoder · Mixture of Experts 
+
+## 1 Introduction 
+
+As shown in Figure 1, seismic full-waveform inversion (FWI) has become an important technique in modern geo-physics [ 1]. FWI is essentially a highly nonlinear and ill-posed inverse problem, aiming to recover high-resolution subsurface physical parameter fields, such as velocity models, from observed seismic wavefields. As exploration targets become increasingly complex and the demand for imaging accuracy continues to rise, FWI exhibits stronger capability than traditional velocity analysis and traveltime tomography in characterizing complex geological structures. However, conventional physics-constrained iterative inversion methods have long been limited by cycle-skipping, high computational cost, and strong sensitivity to the initial model, which is particularly pronounced in high-resolution and structurally complex scenarios [ 2 ]. These challenges have motivated growing interest in data-driven alternative modeling paradigms. In recent years, advances in deep learning for scientific computing have propelled research on data-driven FWI [ 3 , 4 ], aiming to achieve a more practical trade-off between computational efficiency and optimization stability. Among these approaches, neural operators (NOs) [ 5 ] learn mappings between PDE solutions in function spaces and exhibit resolution-invariant modeling capability, providing a promising path to rapidly approximate wave-equation-related operators and build end-to-end inversion models. From a spectral perspective, the multi-scale information in FWI shows clear frequency dependence: low-frequency components mainly constrain large-scale background velocities and macroscopic structures, providing a more stable global trend for inversion; whereas high-frequency components 
+
+> ∗
+
+These authors contributed equally. 
+
+> †
+
+Corresponding author. 
+
+> arXiv:2604.07421v1 [cs.LG] 8 Apr 2026
+
+SPAMoE for Full-Waveform Inversion  
+
+> Figure 1: Schematic illustration of seismic full-waveform Inversion (FWI).
+
+are more sensitive to fine geological features such as faults, thin layers, and sharp interfaces, largely determining the resolution and detail quality of the final imaging. Nevertheless, existing neural-operator-based FWI methods typically process information from different frequency bands through a single pathway, which makes information from different frequency bands prone to becoming entangled and interfering with each other during learning in multi-scale scenarios. As a result, the recovery of fine geological details is limited, and it becomes difficult to achieve simultaneously strong performance on both global backgrounds and local details. Therefore, how to explicitly decouple and specifically handle inversion information from different frequency bands within a learning framework remains a key yet insufficiently addressed problem. To tackle the coupling of multi-scale components in the velocity model—from smooth backgrounds to sharp faults—in the frequency domain, and to enable effective modeling after frequency decoupling, we propose SPAMoE (Spectral-Preserving Adaptive MoE), a spectrum-aware framework for learning-based FWI. First , SPAMoE employs a Spectral-Preserving DINO [ 6] Encoder. Beyond aligning waveform observations to a structure-consistent latent representation, this encoder enforces a lower bound on the prediction’s high-to-low frequency energy ratio (HL). By mitigating high-frequency collapse and maintaining balanced frequency content, it provides a reliable foundation for subsequent frequency-domain modeling in the MoE module. Second , SPAMoE introduces an Adaptive Spectral Mixture-of-Experts consisting of three components: Concentric Soft Frequency-Band Decomposition, an Adaptive Frequency-Preference Mechanism, and a Spectral Energy Attention Router. Together, these components establish a complete data flow: frequency decoupling via soft-band decomposition, adaptive band allocation guided by frequency preference, and dynamic activation of complementary experts based on global spectral-energy patterns. Through these designs, SPAMoE organically connects “alignment–decoupling–modeling–learning” within a unified framework, providing a more robust pathway for high-resolution inversion in complex geological settings. We conduct systematic evaluations of SPAMoE on the OpenFWI [ 7] benchmark. Experimental results show that SPAMoE yields substantial improvements over single neural operators and multiple mainstream learning-based inversion baselines on FWI, with particularly stable recovery of complex structures and high-frequency details (e.g., faults and sharp interfaces). Moreover, SPAMoE also demonstrates strong performance on the pipe flows task (see the supplementary material B), suggesting that the proposed “spectral decoupling–expert specialization–adaptive routing” modeling strategy has certain generality and future potential. The key contributions of this work are threefold: • We propose a Spectrum-Aware Hybrid Neural Operator framework (SPAMoE). This framework explicitly decouples high and low-frequency information flows, effectively alleviating the frequency coupling inherent in traditional end-to-end models. • We design two core modules: a Spectral-Preserving DINO Encoder to maintain balanced frequency content, and an Adaptive Spectral Mixture-of-Experts that performs frequency decomposition, routing, and operator modeling to improve multi-scale geological structure reconstruction. • We evaluate SPAMoE on all ten official OpenFWI sub-datasets and show that it consistently outperforms the official OpenFWI baselines, reducing the averaged MAE by 54.1% relative to the strongest baseline. 2SPAMoE for Full-Waveform Inversion 
+
+## 2 Related Work 
+
+2.1 Encoder-Neural Operator Architectures 
+
+For complex PDE tasks, single neural operators are often insufficient. Consequently, researchers have designed encoder-neural operator architectures that integrate feature extraction capabilities: for instance, U-NO [ 8 ] and U-FNO [ 9]introduce convolutional encoders to enhance multi-scale feature aggregation; MINO [ 10 ] leverages Transformers to capture irregular mesh geometry; while VANO [ 11 ] and DA-NO [ 12 ] further explore variational modeling in the latent space. Although these architectures demonstrate potential in handling complex PDEs, FWI remains particularly challenging due to its multi-scale nature, which leads to complex spectral content and strong cross-band coupling. In practice, generic encoders may not explicitly preserve such spectral balance. We introduce a Spectral-Preserving DINO Encoder that enforces a lower bound on the high-to-low frequency energy ratio of the encoded representation, helping prevent high-frequency collapse during encoding and yielding a more spectrum-faithful latent space for subsequent operator learning. 
+
+2.2 Neural Operators in FWI and MoE in PDE 
+
+Neural operators have been applied in seismic wavefield simulation [ 13 , 14 ] and direct inversion [ 15 ]. However, existing methods rely on a single operator pathway, leading to frequency coupling during optimization. In deep learning-based PDE solving, MoE has been employed in Physics-Informed Neural Networks [ 16 ], soft domain decomposition [ 17 ], DeepONet ensembles [ 18 ], and boundary condition learning with model selection [ 19 ]. Nevertheless, most existing MoE methods for PDEs are based on spatial domain decomposition. For FWI, the core challenge lies in the complexity of the spectral dimension [ 1], rendering these direct spatial decomposition methods unsuitable for FWI. Meanwhile, the excellent performance of FreqMoE [ 20 ] demonstrates the superiority of routing using spectral features. However, it relies solely on spectral features and lacks perception of the global spectrum. The Adaptive Spectral MoE framework proposed in this paper explicitly decouples high- and low-frequency information flows and utilizes an attention mechanism to dynamically activate complementary operator experts. This fills the gap in dynamic routing for multi-path complementary neural operators based on global perception of spectral energy. 
+
+## 3 Methodology 
+
+3.1 Overall Framework 
+
+As illustrated in Figure 2, we propose the Spectral-Preserving Adaptive MoE (SPAMoE) framework. The framework consists of two synergistic core modules: (Section 3.3) a Spectral-Preserving DINO Encoder, and (Section 3.4) an Adaptive Spectral Mixture-of-Experts model, including spectral decomposition and routing mechanisms. The overall workflow of SPAMoE is as follows: First, the Spectral-Preserving DINO Encoder maps the observations x
+
+in the time-receiver domain to a spatially aligned latent representation z. Then, the Adaptive Spectral MoE performs differentiable spectral decomposition and routing decisions on z in the frequency domain, sparsely activates a set of complementary expert operators, and finally produces the predicted velocity model ˆy.
+
+3.2 Preliminaries Problem Definition of Full-Waveform Inversion. FWI can be formulated as an ill-posed inverse scattering problem, whose goal is to reconstruct the subsurface velocity model from seismic wavefields observed at the surface. Given observations x ∈ RNs×T ×Nr , where Ns, T , and Nr denote the number of sources, the number of temporal samples, and the number of receivers, respectively, our goal is to reconstruct the velocity model in the spatial domain y ∈ RH×W .To this end, we learn a nonlinear mapping Φθ : x → y by minimizing the reconstruction error: 
+
+θ∗ = argmin 
+
+> θ
+
+E(x,y ) [L(Φ θ (x), y )] , (1) where L denotes the objective function measuring the discrepancy between the predicted and ground-truth velocity models. 
+
+Frequency-Domain Analysis and Energy Metrics. To analyze spectral characteristics of physical fields, we consider the centered 2D discrete Fourier transform bu = U(u) ∈ CH×W (see Appendix A1 for details). We partition the frequency domain according to the normalized radial frequency r(ω) ∈ [0 , 1] (see Appendix A2 for details). Let ΩL
+
+and ΩH denote the low- and high-frequency sets, respectively: 
+
+ΩL = {ω | r(ω) < r split }, ΩH = {ω | r(ω) ≥ rsplit }. (2) 3SPAMoE for Full-Waveform Inversion 
+
+> Figure 2: Overview of the SPAMoE framework. (a) The Spectral-Preserving DINO Encoder projects time-receiver domain seismic observations into spatially aligned latent representations; (b) Adaptive Spectral MoE uses the spectral energy distribution as routing features to activate experts, decomposes the full-spectrum representation into multiple concentric soft frequency bands, and adaptively fuses the band-wise features as inputs to the experts.
+
+To quantify spectral deviation, we define the low-/high-frequency spectral energies EL(u) and EH (u), as well as the high-to-low frequency energy ratio HL( u) (see Appendix A3 for details). This metric serves as a core indicator in our subsequent theoretical analysis. 
+
+3.3 Spectral-Preserving DINO Encoder 
+
+To cope with the spectral complexity of FWI, we adopt a Spectral-Preserving DINO Encoder. This encoder not only aligns the waveform observations with the spatial velocity representation, but also establishes a lower bound on the high-to-low frequency energy ratio (HL) of the encoder output under assumptions A1–A3 (as shown in Theorem 1), helping keep the frequency content balanced and providing a reliable foundation for subsequent frequency-domain operations in the MoE module. Next, we describe the design of the structure alignment and the spectral-preservation guarantee. 
+
+Multi-Source Observation Reorganization and Network Implementation. For the observation tensor x, different source-excited wavefields can be viewed as multiple independent observations of the same subsurface medium, exhibiting intrinsic spatial correlations along the receiver dimension. Instead of treating each shot gather independently as batch samples, we explicitly concatenate the source dimension Ns into the receiver dimension Nr to form a unified panoramic observation matrix: 
+
+x′ = Reshape( x) ∈ RT ×(Ns·Nr ). (3) This transformation flattens the original 3D tensor into a 2D global observation plane, enabling the model to aggregate scattering signatures across all shots jointly. We then feed x′ into a Vision Transformer backbone pre-trained via self-supervision (DINO) to obtain the latent representation: 
+
+z = Eθ (x′) ∈ RC×H×W . (4) This design ensures that z is geometrically aligned with the target model y, providing a unified spatial input to the subsequent spectral MoE module. 
+
+Theoretical Analysis of Spectral Preservation. To theoretically ensure that the encoder does not induce systematic high-frequency collapse, we introduce a linear readout operator R : RC×H×W → RH×W , and define a comparable 4SPAMoE for Full-Waveform Inversion spatial field uc = R(Eθ (x′)) ∈ RH×W . The downstream prediction is written as ˆyc = F (uc), where F denotes the downstream operator. We adopt the following testable assumptions: 
+
+A1:High-Frequency Non-Contractiveness. The encoder preserves the major energy in the high-frequency band. That is, there exists δ ≥ 1 such that EH (uc) ≥ δ E H (y), where EH denotes the spectral energy in the high-frequency band (see Appendix A3 for details). 
+
+A2:Controllable Low-Frequency Energy. The low-frequency energy of the encoder output is of the same order as that of the ground truth. That is, there exists κ ≥ 1 such that EL(uc) ≤ κ E L(y), where EL denotes the spectral energy in the low-frequency band (see Appendix A3 for details). 
+
+A3:Boundedness of the Downstream Operator. The amplification factors of the downstream operator F on band energies are bounded. That is, there exist 0 < m ≤ M < ∞ such that for each band, mE H (uc) ≤ EH (F (uc)) ≤
+
+M E H (uc), mE L(uc) ≤ EL(F (uc)) ≤ M E L(uc).
+
+In our empirical setting, we observe that these assumptions are satisfied; see supplementary materials D.3 for diagnostics. Based on these assumptions, we establish the following theorem to characterize the spectral preservation property of the overall framework: 
+
+Theorem 1 (Spectral Preservation of the Spectral-Preserving DINO Encoder) . Under assumptions (A1)–(A3), let the final prediction be ˆyc = F (uc). Then for any sample, the high-to-low frequency energy ratio (HL) admits the following lower bound: 
+
+HL(ˆ yc) ≥ mM · δκ · HL( y). (5) 
+
+Proof. The complete proof is provided in the supplementary material D. This theorem indicates that as long as the Spectral-Preserving DINO Encoder does not compress high-frequency components ( δ ≥ 1) and does not induce uncontrolled low-frequency amplification (finite κ), and the downstream MoE operator does not introduce extreme band distortions (moderate m and M ), the HL ratio of the final prediction remains controlled by a constant of the same order as the ground truth y, thereby exhibiting spectral preservation. 
+
+3.4 Adaptive Spectral Mixture-of-Experts 
+
+FWI velocity models typically contain both smooth backgrounds and sharp interfaces across multiple scales. A fixed single-path model often struggles to disentangle the frequency components associated with different scales. To address this issue, we propose an Adaptive Spectral MoE, which consists of Concentric Soft Frequency-Band Decomposition, Adaptive Frequency-Preference Mechanism, Spectral Energy Attention Router, and Complementary Neural-Operator Experts. 
+
+Concentric Soft Frequency-Band Decomposition. We adopt a differentiable frequency partition using Gaussian soft masks. In the centered spectral coordinate system, let the number of bands be K, and the center of the k-th band be 
+
+ck = k−1 
+
+> K−1
+
+. We define the Gaussian concentric soft-band mask as: 
+
+Mk(i, j ) = exp  −γ(r(i, j ) − ck)2 , (6) where γ denotes band sharpness. We then apply the mask in the frequency domain and perform an inverse transform to obtain the feature for each band: 
+
+zk = U−1(bz ⊙ Mk) ∈ RC×H×W . (7) 
+
+Adaptive Frequency-Preference Mechanism. After obtaining band-wise features, strictly binding each expert to a fixed band limits flexibility. To allow each expert to adaptively select suitable frequency regions while retaining its inductive bias, we introduce a learnable frequency-preference parameter for each expert. Each expert thus receives a soft combination of {zk} rather than a single band. For each expert e ∈ { 1, . . . , N E }, we define a learnable scalar fe ∈ [0 , 1] . The mixing weights are computed based on its distance to the band center ck:
+
+se,k = −η (fe − ck)2, πe,k = exp( se,k )
+
+PKt=1 exp( se,t ) . (8) where η denotes frequency-affinity sharpness. The input feature to expert e is constructed as: 
+
+˜ze =
+
+> K
+
+X
+
+> k=1
+
+πe,k zk. (9) 5SPAMoE for Full-Waveform Inversion With this mechanism, each expert is able to adaptively focus on the most suitable frequency components around its preferred band. 
+
+Spectral Energy Attention Router. The above two subsections define the expert inputs based on frequency-domain features. We further require a routing mechanism that is explicitly sensitive to the spectral characteristics of the input signal and aligns well with expert inputs. Therefore, we design a lightweight spectral attention-based router driven by spectral energy. The router only uses the spectral energy distribution to generate gating weights, while the latent feature 
+
+z retaining full phase information is delivered to the activated experts for processing. Moreover, in the FWI context, inter-sample spectral energy distributions are crucial indicators for distinguishing different geological structures [21]. Specifically, we first compute the energy map of the centered spectrum, A = pPz (ω) ∈ RH×W , where P denotes the power spectrum (see Appendix A3 for details). To capture global spectral dependencies, we build a self-attention layer: 
+
+Q, K, V = ϕqkv (A), (10) 
+
+Attention( Q, K, V ) = softmax 
+
+ ⟨Q, K ⟩C
+
+√dk
+
+
+
+V, (11) 
+
+A′ = ϕagg (Attention( Q, K, V )) , (12) where ϕqkv denotes a linear projection, ⟨·⟩ C denotes the channel-wise inner product, ϕagg is an aggregation network, and dk is the scaling factor. The spectral attention mechanism aggregates global spectral-energy patterns and identifies dominant band characteristics. We then map the aggregated spectral feature A′ to expert gating scores g ∈ RNE , and apply a Top-k [ 22 ] strategy to generate sparse routing decisions: 
+
+T (x) = TopK( g, N k), αe(x) = exp( ge)
+
+P  
+
+> j∈T (x)
+
+exp( gj ) . (13) With this design, the router adaptively activates the most suitable combination of experts according to the spectral energy of each sample. 
+
+Complementary Neural-Operator Experts. For the FWI setting, we construct an expert set with complementary inductive biases as follows: Low-Frequency Expert (FNO) [ 23 ]: It leverages global spectral convolutions to recover background velocity structures: 
+
+OF N O (˜ z) = F−1 (W ⊙ F (˜ z)) . (14) Mid-Frequency Expert (MNO) [ 24 ]: It models transitional stratigraphic structures via hierarchical multi-scale convolu-tional kernels: 
+
+OM N O (˜ z) = 
+
+> S
+
+X
+
+> s=1
+
+ϕs(Ks ∗ ˜z). (15) High-Frequency Expert (LNO) [25]: It captures faults and sharp interfaces using position-dependent local operators: 
+
+OLN O (˜ z)( x) = 
+
+Z
+
+> Ωx
+
+K(x, y )˜ z(y) dy, (16) where Ωx denotes the local neighborhood of location x, and the operator targets high-frequency local variations. 
+
+MoE Fusion. The final output is obtained via sample-wise weighted fusion: 
+
+ˆy = X 
+
+> e∈T (x)
+
+αe(x) Oe(˜ z) (17) where T (x) is the set of selected expert indices, αe(x) denotes the gating weight, and Oe denotes the operator implemented by expert e.
+
+## 4 Experiments 
+
+4.1 Datasets 
+
+We evaluate SPAMoE on all ten official 2D sub-datasets of the OpenFWI benchmark, including CurveVel-A/B, FlatVel-A/B, CurveFault-A/B, FlatFault-A/B, and Style-A/B. We strictly follow the official train/validation splits for all 6SPAMoE for Full-Waveform Inversion                                                                                                                                                                                          
+
+> Family Subset InversionNet VelocityGAN UPFWI FNO Ours (SPAMoE)
+> MAE ↓RMSE ↓SSIM ↑MAE ↓RMSE ↓SSIM ↑MAE ↓RMSE ↓SSIM ↑MAE ↓RMSE ↓SSIM ↑MAE ↓RMSE ↓SSIM ↑
+> Vel FlatVel-A 0.0111 0.0180 0.9895 0.0118 0.0178 0.9916 0.0621 0.1233 0.9563 0.0494 0.0839 0.8587 0.0035 0.0069 0.9982
+> FlatVel-B 0.0351 0.0876 0.9461 0.0328 0.0787 0.9556 0.0677 0.1493 0.8874 0.0727 0.1457 0.8334 0.0129 0.0350 0.9872
+> CurveVel-A 0.0685 0.1202 0.8223 0.0482 0.0976 0.8758 0.0805 0.1411 0.8443 0.1043 0.1592 0.7286 0.0245 0.0627 0.9431
+> CurveVel-B 0.1497 0.2801 0.6661 0.1268 0.2611 0.7111 0.1777 0.3179 0.6614 0.2028 0.3141 0.5596 0.0474 0.1470 0.8915
+> Fault FlatFault-A 0.0172 0.0362 0.9798 0.0319 0.0531 0.9798 0.0876 0.2060 0.9340 0.0411 0.0838 0.9184 0.0061 0.0171 0.9938
+> FlatFault-B 0.1055 0.1723 0.7208 0.0925 0.1553 0.7552 0.1416 0.2220 0.6937 0.1346 0.1936 0.6709 0.0363 0.0878 0.9084
+> CurveFault-A 0.0260 0.0602 0.9592 0.0216 0.0505 0.9687 0.0500 0.0966 0.9495 0.0509 0.1013 0.8952 0.0107 0.0295 0.9861
+> CurveFault-B 0.1646 0.2412 0.6163 0.1571 0.2336 0.6033 0.3452 0.5010 0.3941 0.1849 0.2595 0.5729 0.0891 0.1587 0.7714
+> Style Style-A 0.0610 0.0989 0.8910 0.0612 0.1000 0.8883 0.1429 0.2342 0.7846 0.0848 0.1299 0.8388 0.0308 0.0564 0.9602
+> Style-B 0.0586 0.0893 0.7599 0.0649 0.0979 0.7249 0.1702 0.2609 0.6102 0.0693 0.1038 0.7139 0.0368 0.0626 0.8707 Avg. 0.0697 0.1204 0.8351 0.0649 0.1146 0.8451 0.1326 0.2252 0.7716 0.0995 0.1575 0.7590 0.0298 0.0664 0.9311
+
+Table 1: Quantitative comparison on OpenFWI (10 sub-datasets). Lower MAE/RMSE and higher SSIM indicate better performance. Best results are in bold .
+
+experiments. For all geological families, “A” versions correspond to smoother, lower-complexity structures, while “B” versions include more irregular layering, stronger nonlinearity, and higher-frequency reflections. 
+
+Dataset composition. The Vel sub-datasets (FlatVel-A/B and CurveVel-A/B) contain 24k/6k training and validation samples; the Fault sub-datasets (FlatFault-A/B and CurveFault-A/B) provide 48k/6k samples; and the Style-A/B sub-datasets contain 60k/7k samples. Each sample consists of five seismic shot gathers S ∈ R5×1000 ×70 and a ground-truth velocity map V ∈ R1×70 ×70 . Following OpenFWI, the five shots are concatenated along the receiver axis to form a single-channel input S′ ∈ R1×1000 ×350 .
+
+Preprocessing. We apply a log transform followed by per-sub-dataset min–max normalization to the seismic inputs, and use per-sub-dataset min–max scaling for the velocity maps. No additional augmentation is used. 
+
+4.2 Experimental Setup Implementation. All models are implemented in PyTorch 2.8. We train the model with the AdamW optimizer and a warmup cosine schedule with restarts. Detailed hyperparameters are provided in the supplementary material E.2. 
+
+Comparison methods. We compare our SPAMoE model against the three official OpenFWI baselines: InversionNet [ 3], VelocityGAN [ 4 ], and UPFWI [ 26 ], and additionally include FNO [ 23 ] as our operator-based baseline. We choose InversionNet, VelocityGAN, and UPFWI because they are the standard OpenFWI 2D baselines [ 7] and cover repre-sentative paradigms for learning-based seismic FWI: supervised CNN-based direct inversion, supervised GAN-based inversion, and physics-informed unsupervised inversion with differentiable forward modeling. 
+
+4.3 Main Results 
+
+Table 1 summarizes the quantitative comparison of our method against InversionNet, VelocityGAN, UPFWI and FNO on the ten OpenFWI sub-datasets, evaluated using mean absolute error (MAE), root mean squared error (RMSE) and structural similarity (SSIM) [ 27 ]. For baselines with multiple loss settings reported in OpenFWI, we use the best officially reported results for fair comparison. We follow the official OpenFWI evaluation protocol, using the same metric definitions and code from the OpenFWI repository under the official splits. Our method achieves the best performance on all 10/10 sub-datasets . In terms of averaged metrics, compared with the strongest baseline VelocityGAN, we reduce MAE from 0.0649 to 0.0298 (a 54.1% relative drop) and RMSE from 0.1146 to 0.0664 (a 
+
+42.1% relative drop) while improving SSIM from 0.8451 to 0.9311. Compared with the operator baseline FNO, our method further reduces MAE by 70.1% and RMSE by 57.8% . These results indicate that our architecture delivers consistent reconstruction advantages across diverse geological structures and data distributions. A comparison between the subsurface velocity maps predicted by our model and the FNO baseline is shown in Figure 3. 
+
+Discussion: We observe particularly pronounced gains on the more challenging “B” sub-datasets, which typically exhibit higher structural complexity and stronger high-frequency reflections. For example, compared with VelocityGAN, our method reduces MAE by 62.6% on CurveVel-B, 60.8% on FlatFault-B, and 43.3% on CurveFault-B. Our method also yields substantial improvements on the easier “A” sub-datasets (e.g., 68.5% on FlatVel-A and 64.5% on FlatFault-A), indicating that the advantage is not limited to highly complex cases. For sub-datasets with stronger style perturbations such as Style-B, our method still achieves a clear gain, reducing MAE by 37.2%. Overall, these results support that 7SPAMoE for Full-Waveform Inversion                     
+
+> Figure 3: Comparison of subsurface velocity maps predicted by SPAMoE and the FNO baseline. Top row: ground-truth velocity maps; middle row: SPAMoE predictions; bottom row: FNO predictions.
+> Encoder Type MAE ↓RMSE ↓SSIM ↑
+> None (original, 1000 ×350) 0.1342 0.2579 0.7045 None (resize to 70 ×70) 0.1881 0.3165 0.6110 ConvNeXt-based (DINOv3) 0.0643 0.1713 0.8615 ViT-based (DINOv3) 0.0603 0.1664 0.8626
+> Table 2: Effect of Spectral-Preserving DINO Encoder on CurveVel-B (FNO backbone). ViT-based and ConvNeXt-based encoders are implemented using DINOv3 and trained under identical settings.
+
+decomposing multi-scale spectral information with adaptive modeling is effective across diverse geological conditions in full-waveform inversion. 
+
+4.4 Ablation Study 
+
+We conduct ablation studies on three representative OpenFWI sub-datasets, CurveFault-A, CurveVel-A, and FlatVel-A, which respectively cover three typical geological regimes: smooth structures, curved stratified layers, and faulted structures. Focusing on the four key components of SPAMoE, we design the following experiments. Unless otherwise stated, we ablate one component at a time while keeping the rest unchanged. Figure 4 provides spectral visualizations for Ablation Experiments 1 and 4. 
+
+1. Effect of Spectral-Preserving DINO Encoder. With all other components enabled, the mean MAE over the three sub-datasets is 0.0131 with the encoder and 0.0681 without it, showing that the Spectral-Preserving DINO Encoder substantially reduces the overall reconstruction error and serves as a key source of the performance gains. We further compare different encoder designs on CurveVel-B with a fixed FNO backbone (Table 2). Compared with directly using the original-resolution input 1000 ×350 or naively interpolating the waveform to 70 ×70 , introducing a Spectral-Preserving DINO Encoder markedly improves reconstruction accuracy. Figure 4b shows that incorporating the encoder significantly outperforms the method without it in terms of spectral anisotropy and energy distribution, and the ViT-based variant further achieves the best MAE and RMSE among all configurations. We therefore use the ViT-based DINOv3 [6] encoder as the default choice in subsequent experiments. 
+
+2. Effect of Spectral Energy Attention Router. We compare the spectral energy attention router with a conventional router that relies only on spatial latent features. Across the three sub-datasets, the spectral energy attention router 8SPAMoE for Full-Waveform Inversion                   
+
+> (a) Spectra under different band partition/mixing strategies. (b) Spectra with and without the encoder. Figure 4: Spectral visualizations of ablation study.
+> Model CurveFault-A FlatVel-A CurveVel-A FlatFault-A
+> FNO 0.01000 0.00242 0.02704 0.00544 MNO 0.01072 0.00225 0.02897 0.00692 LNO 0.00998 0.00223 0.02752 0.00589
+> MoE (Ours) 0.02244 0.00186 0.02664 0.00540
+> Table 3: Performance comparison of the proposed Adaptive Spectral MoE against single expert operators (FNO, MNO, and LNO) in terms of MAE.
+
+achieves an average MAE of 0.01355, representing a 38.9% relative improvement over the conventional router, which attains an MAE of 0.02218. This result indicates that routing based solely on latent spatial features is insufficient for optimal expert assignment, and that incorporating attention over the amplitude energy map is crucial. 
+
+3. Effect of Concentric Soft Frequency-Band Decomposition. Using concentric soft frequency-band decomposition (Gaussian concentric soft masks) outperforms hard frequency-band partitioning (Step-function masks), reducing the MAE averaged over the three sub-datasets from 0.01721 to 0.01355 (a 21.3% relative reduction). The first two columns of Figure 4a illustrate the band-wise spectral differences induced by the two partitioning schemes, which supports the advantage of a differentiable frequency decomposition. 
+
+4. Effect of Adaptive Frequency-Preference Mechanism. Compared with the full model, removing the adaptive frequency-preference mechanism increases the MAE averaged over the three sub-datasets from 0.01355 to 0.01645 (a 17.6% relative increase). The first and last columns of Figure 4a visualize the band-wise spectra with and without this mechanism. These results suggest that, relative to a static assignment that fixes frequency bands to experts, adaptive frequency preference enables more flexible allocation of frequency components to suitable experts, thereby enhancing expert specialization and improving inversion accuracy. 
+
+5. Effect of Multi-Operator MoE vs. Single-Operator Baselines. We first compare the MAE of the multi-operator MoE against single-operator counterparts on the three primary ablation sub-datasets (Table 3). MoE achieves lower MAE than all single-operator models on two of the three sub-datasets, with CurveFault-A being the only exception. To further validate the general advantage of MoE beyond this exception, we evaluate on an additional sub-dataset FlatFault-A, where MoE again outperforms all single-operator baselines. These results suggest that the proposed MoE architecture is generally more effective than single-operator designs, while the degraded performance on CurveFault-A may be related to sharper discontinuities and stronger high-frequency components in faulted structures. 9SPAMoE for Full-Waveform Inversion 
+
+## 5 Conclusion 
+
+In this paper, we proposed SPAMoE, a unified framework for full-waveform inversion. By integrating a Spectral-Preserving DINO Encoder and an Adaptive Spectral Mixture-of-Experts module, SPAMoE effectively addresses the challenges of multi-scale frequency entanglement and the subsequent modeling of disentangled components. Experiments show that SPAMoE reduces the average MAE over the ten OpenFWI sub-datasets from 0.0649 (the best reported baseline) to 0.0298, a 54.1% relative reduction. In addition, SPAMoE also achieves strong performance on the pipe flows task (see the supplementary material B), suggesting that the proposed framework has the potential to generalize to other challenging PDE learning problems. 
+
+## A Detailed Definition of Notation 
+
+A1. Centered Representation of the 2D Discrete Fourier Transform. As described in section 3.2 of the main text, we define the operator shift( ·) to move the zero-frequency component to the center of the spectrum. Let the two-dimensional discrete fourier transform be denoted by bv = F(u) ∈ CH×W . The centered spectral representation is then defined as bu = U(u) = shift( bv) = shift( F(u)) , and we define the inverse transform as u = U−1(bu).
+
+A2. Definition of the Frequency Coordinate Grid. As described in section 3.2, we define the normalized radial frequency r(ω), where ω = ( i, j ) denotes the discrete frequency index in the centered spectrum; that is, r(ω) = r(i, j ).The detailed definition is provided in the supplementary material C. 
+
+A3. Definition of Spectral Energy. As described in section 3.2 of the main text, the power spectrum is defined as 
+
+Pu(ω) = |bu(ω)|2. Given two frequency sets ΩL and ΩH , the spectral energy of the field u in the low-frequency and high-frequency bands is defined as EL(u) = P 
+
+> ω∈ΩL
+
+Pu(ω), E H (u) = P 
+
+> ω∈ΩH
+
+Pu(ω). The high-to-low frequency energy ratio is further defined as 
+
+HL( u) = EH (u)
+
+EL(u) + ε , (18) where ε > 0 is a numerical stability term introduced to avoid division by zero. 
+
+## References 
+
+[1] Jean Virieux and Stéphane Operto. An overview of full-waveform inversion in exploration geophysics. Geophysics ,74(6):WCC1–WCC26, 2009. [2] Yu Geng, Wenyong Pan, and Kristopher A Innanen. Frequency-domain full-waveform inversion with non-linear descent directions. Geophysical Journal International , 213(2):739–756, 2018. [3] Yue Wu and Youzuo Lin. Inversionnet: An efficient and accurate data-driven full waveform inversion. IEEE Transactions on Computational Imaging , 6:419–433, 2019. [4] Zhongping Zhang, Yue Wu, Zheng Zhou, and Youzuo Lin. Velocitygan: Subsurface velocity image estimation using conditional adversarial networks. In 2019 IEEE Winter Conference on Applications of Computer Vision (WACV) , pages 705–714. IEEE, 2019. [5] Nikola Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: Learning maps between function spaces with applications to pdes. Journal of Machine Learning Research , 24(89):1–97, 2023. [6] Oriane Siméoni, Huy V Vo, Maximilian Seitzer, Federico Baldassarre, Maxime Oquab, Cijo Jose, Vasil Khalidov, Marc Szafraniec, Seungeun Yi, Michaël Ramamonjisoa, et al. Dinov3. arXiv preprint arXiv:2508.10104 , 2025. [7] Chengyuan Deng, Shihang Feng, Hanchen Wang, Xitong Zhang, Peng Jin, Yinan Feng, Qili Zeng, Yinpeng Chen, and Youzuo Lin. Openfwi: Large-scale multi-structural benchmark datasets for full waveform inversion. Advances in Neural Information Processing Systems , 35:6007–6020, 2022. [8] Md Ashiqur Rahman, Zachary E Ross, and Kamyar Azizzadenesheli. U-no: U-shaped neural operators. arXiv preprint arXiv:2204.11127 , 2022. [9] Gege Wen, Zongyi Li, Kamyar Azizzadenesheli, Anima Anandkumar, and Sally M Benson. U-fno—an enhanced fourier neural operator-based deep-learning model for multiphase flow. Advances in Water Resources , 163:104180, 2022. [10] Yaozhong Shi, Zachary E Ross, Domniki Asimaki, and Kamyar Azizzadenesheli. Mesh-informed neural operator: A transformer generative approach. arXiv preprint arXiv:2506.16656 , 2025. 10 SPAMoE for Full-Waveform Inversion [11] Jacob H Seidman, Georgios Kissas, George J Pappas, and Paris Perdikaris. Variational autoencoding neural operators. arXiv preprint arXiv:2302.10351 , 2023. [12] Siva Viknesh and Amirhossein Arzani. Differentiable autoencoding neural operator for interpretable and integrable latent space modeling. arXiv preprint arXiv:2510.00233 , 2025. [13] Yan Yang, Angela F Gao, Kamyar Azizzadenesheli, Robert W Clayton, and Zachary E Ross. Rapid seismic waveform modeling and inversion with neural operators. IEEE Transactions on Geoscience and Remote Sensing ,61:1–12, 2023. [14] Caifeng Zou, Zachary E Ross, Robert W Clayton, Fan-Chi Lin, and Kamyar Azizzadenesheli. Ambient noise full waveform inversion with neural operators. Journal of Geophysical Research: Solid Earth , 130(11):e2025JB031624, 2025. [15] Min Zhu, Shihang Feng, Youzuo Lin, and Lu Lu. Fourier-deeponet: Fourier-enhanced deep operator networks for full waveform inversion with improved accuracy, generalizability, and robustness. Computer Methods in Applied Mechanics and Engineering , 416:116300, 2023. [16] Rafael Bischof and Michael A Kraus. Mixture-of-experts-ensemble meta-learning for physics-informed neural networks. In Proceedings of 33. forum bauinformatik , 2022. [17] Zheyuan Hu, Ameya D Jagtap, George Em Karniadakis, and Kenji Kawaguchi. Augmented physics-informed neural networks (apinns): A gating network-based soft domain decomposition methodology. Engineering Applications of Artificial Intelligence , 126:107183, 2023. [18] Ramansh Sharma and Varun Shankar. Ensemble and mixture-of-experts deeponets for operator learning. arXiv preprint arXiv:2405.11907 , 2024. [19] Dwyer Deighan, Jonas A. Actor, Ravi G. Patel, et al. Mixture of neural operator experts for learning boundary conditions and model selection. arXiv preprint arXiv:2502.04562 , 2025. [20] Tianyu Chen, Haoyi Zhou, Ying Li, Hao Wang, Zhenzhe Zhang, Tianchen Zhu, Shanghang Zhang, and Jianxin Li. Freqmoe: Dynamic frequency enhancement for neural pde solvers. arXiv preprint arXiv:2505.06858 , 2025. [21] Greg Partyka, James Gridley, and John Lopez. Interpretational applications of spectral decomposition in reservoir characterization. The leading edge , 18(3):353–360, 1999. [22] Noam Shazeer, Azalia Mirhoseini, Krzysztof Maziarz, Andy Davis, Quoc Le, Geoffrey Hinton, and Jeff Dean. Out-rageously large neural networks: The sparsely-gated mixture-of-experts layer. arXiv preprint arXiv:1701.06538 ,2017. [23] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895 , 2020. [24] Björn Lütjens, Catherine H Crawford, Campbell D Watson, Christopher Hill, and Dava Newman. Multiscale neural operator: Learning fast and grid-independent pde solvers. arXiv preprint arXiv:2207.11417 , 2022. [25] Hongyu Li, Ximeng Ye, Peng Jiang, Guoliang Qin, and Tiejun Wang. Local neural operator for solving transient partial differential equations on varied domains. Computer Methods in Applied Mechanics and Engineering ,427:117062, 2024. [26] Peng Jin, Xitong Zhang, Yinpeng Chen, Sharon Xiaolei Huang, Zicheng Liu, and Youzuo Lin. Unsupervised learning of full-waveform inversion: Connecting cnn and partial differential equation in a loop. arXiv preprint arXiv:2110.07584 , 2021. [27] Zhou Wang, Alan C Bovik, Hamid R Sheikh, and Eero P Simoncelli. Image quality assessment: from error visibility to structural similarity. IEEE transactions on image processing , 13(4):600–612, 2004. [28] Zongyi Li, Daniel Zhengyu Huang, Burigede Liu, and Anima Anandkumar. Fourier neural operator with learned deformations for pdes on general geometries. Journal of Machine Learning Research , 24(388):1–26, 2023. [29] Karn Tiwari, Niladri Dutta, NM Krishnan, et al. Latent mamba operator for partial differential equations. arXiv preprint arXiv:2505.19105 , 2025. 11 SPAMoE for Full-Waveform Inversion 
+
+## A Table of Notions 
+
+Table 4 provides a comprehensive list of notations used in the main method and theoretical analysis. 
+
+## B Additional Experiments on Pipe Flows 
+
+B.0.1 Experiment Introduction 
+
+This experiment aims to verify the generalization capability of our proposed model in addressing fluid dynamics problems, specifically its ability to solve PDEs under irregular geometric boundaries. We selected the classic pipe flows problem as our testing benchmark. Although the pipe flows problem is primarily governed by the Navier-Stokes equations-differing in physical mechanism from the wave equation involved in FWI—both share significant mathematical commonalities: they rely on capturing features within specific frequency domains of complex physical fields and are highly sensitive to variations in boundary conditions. By conducting experiments on the pipe flows dataset, we aim to demonstrate that our model not only performs excellently in FWI tasks but also possesses the potential to analyze and process other types of PDE problems with complex spectral characteristics, enabling precise modeling of fluid dynamic behaviors within confined spaces. 
+
+B.0.2 Dataset Introduction 
+
+The dataset used in this experiment is derived from the standard benchmark data generated in the Geo-FNO [ 28 ]paper, which primarily simulates steady-state fluid flow within a two-dimensional pipe. A distinguishing feature of this dataset is the random variation in the pipe’s geometry, which poses a challenge for the model in learning the nonlinear relationship between grid mapping and physical fields. 
+
+Data Composition We divided the complete Pipe dataset into a training set of 1,000 samples and a test set of 200 samples. Each sample consists of input data and target output data. The input data comprises the geometric coordinates of the grid points, X ∈ R129 ×129 and Y ∈ R129 ×129 , while the target output data represents the fluid velocity field. This experiment focuses primarily on the horizontal velocity component, Q ∈ R129 ×129 .
+
+Preprocessing For the input data, we first applied a log transform followed by min–max normalization. For the output data, we applied min–max normalization as preprocessing. 
+
+B.0.3 Experimental Setup 
+
+To fairly evaluate model performance, we adopted a rigorous comparative experimental setup. We selected the LaMO model, which has demonstrated superiority in handling complex geometric PDE problems, as our primary baseline. Both our model and LaMO were trained and tested on the exact same dataset generated by Geo-FNO, using the same split ratio (1,000 samples for training and 200 samples for testing). Furthermore, we adopted the same evaluation metric as LaMO—the Relative ℓ 2 Error—as our core metric, The evaluation was conducted on the test set, and the results were averaged. This metric eliminates dimensional influence and objectively reflects the overall degree of deviation between the predicted physical field and the ground truth. The calculation formula is as follows: 
+
+Relative ℓ2 = ∥ˆy − y∥2
+
+∥y∥2
+
+(19) where ˆy represents the velocity field predicted by the model, and y represents the ground truth velocity field. 
+
+B.0.4 Result 
+
+Experimental results show that the LaMO model achieves a relative ℓ2 error of 0.0038 on this dataset, whereas our method further reduces the error to 0.0025, corresponding to an improvement of approximately 34.2%. As visualized in Figure 5, our predicted flow fields exhibit close agreement with the ground-truth pipe-flow turbulence, indicating higher fidelity in capturing fine-scale structures of the velocity distribution. These results provide strong evidence for the effectiveness of our architectural design: even when transferred from seismic inversion to fluid dynamics, the proposed model maintains robust fitting capability. Beyond validating its spectral modeling advantages consistent with those observed in FWI, this also highlights its potential as a general-purpose PDE solver for a broader range of scientific computing tasks. 12 SPAMoE for Full-Waveform Inversion 
+
+Symbol Meaning 
+
+x ∈ RNs×T ×Nr Seismic observations with Ns shots, T temporal samples, and Nr
+
+receivers. 
+
+x′ ∈ RT ×(NsNr ) Reshaped panoramic observation. 
+
+y ∈ RH×W Ground-truth subsurface velocity model. 
+
+ˆy ∈ RH×W Predicted subsurface velocity model. 
+
+Eθ Spectral-Preserving DINO Encoder. 
+
+z ∈ RC×H×W Spatially aligned latent representation output by the encoder. 
+
+R Linear readout operator projecting latent features to a comparable spatial field. 
+
+uc ∈ RH×W Comparable spatial field used for spectral analysis and theoretical derivations. 
+
+F Downstream prediction operator (e.g., FNO). 
+
+ˆyc = F (uc) Downstream prediction expressed in the theoretical analysis. 
+
+ω = ( i, j ) Discrete frequency index in the centered 2D Fourier domain, where 
+
+(i, j ) denotes the frequency coordinate after zero-frequency shifting. 
+
+U(·) Centered 2D discrete Fourier transform (DFT) operator. 
+
+bu = U(u) ∈ CH×W Centered spectral representation of a spatial field u.
+
+Pu(ω) Power spectrum at frequency index ω, defined as |bu(ω)|2.
+
+r(ω) = r(i, j ) ∈ [0 , 1] Normalized radial frequency associated with frequency index ω =(i, j ).
+
+rsplit Threshold separating low- and high-frequency regions. 
+
+ΩL Low-frequency index set {ω | r(ω) < r split }.
+
+ΩH High-frequency index set {ω | r(ω) ≥ rsplit }.
+
+EL(u) Low-frequency spectral energy of field u.
+
+EH (u) High-frequency spectral energy of field u.
+
+HL( u) High-to-low frequency energy ratio of u.
+
+K Number of concentric soft frequency bands. 
+
+ck Normalized center of the k-th frequency band. 
+
+Mk (i, j ) Gaussian soft mask applied to the k-th frequency band at location 
+
+(i, j ).
+
+γ Band sharpness parameter. 
+
+zk ∈ RC×H×W Band-wise latent feature reconstructed from the k-th frequency band. 
+
+fe ∈ [0 , 1] Learnable frequency-preference parameter of expert e.
+
+η Frequency-affinity sharpness. 
+
+πe,k Mixing weight of frequency band k for expert e.
+
+˜ze Input feature to expert e after adaptive frequency-preference mixing. 
+
+g ∈ RNE Router logits. 
+
+T (x) Index set of Top-E experts selected by the router for sample x.
+
+αe(x) Normalized gating weight of expert e for sample x.
+
+Oe Operator implemented by expert e.
+
+δ High-frequency non-contractiveness constant. 
+
+κ Low-frequency controllability constant. 
+
+m Lower bound of downstream operator amplification. 
+
+M Upper bound of downstream operator amplification. 
+
+I Interpolation operator used as a baseline frontend. 
+
+HI (ω) Frequency response of interpolation operator I.
+
+α Upper bound of |HI (ω)| over the high-frequency region ΩH .
+
+β Lower bound of |HI (ω)| over the low-frequency region ΩL.Table 4: Comprehensive notation list for the main method and theoretical analysis. 
+
+13 SPAMoE for Full-Waveform Inversion 
+
+Figure 5: Qualitative comparison of pipe flow velocity fields on the Pipe Flows dataset. From left to right, each column shows the ground-truth velocity field, the prediction of our model, and the corresponding absolute error.Each row corresponds to a different test sample. 
+
+## C Supplementary Definitions 
+
+The normalized radial frequency r(i, j ) is defined on the centered spectrum as 
+
+r(i, j ) = 
+
+r
+
+−1 + 2jW −1
+
+2
+
++
+
+
+
+−1 + 2iH−1
+
+2
+
+max 
+
+> p,q
+
+r
+
+−1 + 2qW −1
+
+2
+
++
+
+
+
+−1 + 2pH−1
+
+2 , (20) where H and W denote the height and width of the spatial grid, respectively. 14 SPAMoE for Full-Waveform Inversion This formulation maps the discrete frequency coordinates to a normalized Cartesian domain [−1, 1] × [−1, 1] , with the spectral center corresponding to zero frequency. The resulting quantity r(i, j ) ∈ [0 , 1] therefore provides a monotonic measure of the physical frequency magnitude with respect to the radial distance from the spectrum center. Based on this radial metric, the frequency domain can be naturally decomposed into concentric bands by thresholding 
+
+r(i, j ), which enables frequency-aware partitioning and subsequent band-wise processing in our spectral routing module. 
+
+## D Theoretical Proofs 
+
+This appendix provides a formal proof of the spectral preservation theorem of the Spectral-Preserving DINO Encoder presented in the main text. 
+
+D.1 Spectral Preservation of the Spectral-Preserving DINO Encoder 
+
+Let the output of the Spectral-Preserving DINO Encoder be z = Eθ (x) ∈ RC×H×W , and introduce a linear readout operator R : RC×H×W → RH×W , which defines a comparable spatial field 
+
+uc = R(Eθ (x)) ∈ RH×W .
+
+The downstream prediction is written as 
+
+ˆyc = F (uc).
+
+We consider the following empirically testable assumptions: 
+
+A1:High-Frequency Non-Contractiveness. The encoder preserves the dominant energy in the high-frequency band. That is, there exists δ ≥ 1 such that 
+
+EH (uc) ≥ δ E H (y). (21) 
+
+A2:Controllable Low-Frequency Energy. The low-frequency energy of the encoder output is of the same order of magnitude as that of the ground truth. That is, there exists κ ≥ 1 such that 
+
+EL(uc) ≤ κ E L(y). (22) 
+
+A3:Boundedness of the Downstream Operator. The amplification factors of the downstream prediction operator F
+
+on different frequency bands are bounded. That is, there exist constants 0 < m ≤ M < ∞ such that for each frequency band, 
+
+mE H (uc) ≤ EH (F (uc)) ≤ M E H (uc), (23) 
+
+mE L(uc) ≤ EL(F (uc)) ≤ M E L(uc). (24) Based on the above assumptions, we establish the following theorem characterizing the overall spectral preservation capability of the framework: 
+
+Theorem 2 (Spectral Preservation of the Spectral-Preserving DINO Encoder) . Under assumptions (A1)–(A3), let the final prediction be ˆyc = F (uc). Then, for any sample, the high-to-low frequency energy ratio (HL) satisfies the following lower bound: 
+
+HL(ˆ yc) ≥ mM · δκ · HL( y). (25) 
+
+Proof. From assumption (23), the high-frequency energy satisfies 
+
+EH (ˆ yc) = EH (F (uc)) ≥ mE H (uc). (26) Combining this with the high-frequency non-contraction assumption (21), we obtain 
+
+EH (ˆ yc) ≥ m · δ E H (y). (27) Similarly, from assumption (23), the low-frequency energy satisfies 
+
+EL(ˆ yc) = EL(F (uc)) ≤ M E L(uc). (28) 15 SPAMoE for Full-Waveform Inversion Substituting into the definition of HL yields 
+
+HL(ˆ yc) = EH (ˆ yc)
+
+EL(ˆ yc) + ε ≥ m · δ E H (y)
+
+M E L(uc) + ε (29) 
+
+= mM · δ · EH (y)
+
+EL(uc) + ε/M . (30) Since EL(uc) + ε ≥ EL(uc) + ε/M , it follows that 
+
+HL(ˆ yc) ≥ mM · δ · EH (y)
+
+EL(uc) + ε . (31) Using assumption (22), we further obtain 
+
+HL(ˆ yc) ≥ mM · δ · EH (y)
+
+κE L(y) + ε (32) 
+
+= mM · δκ · EH (y)
+
+EL(y) + ε/κ (33) 
+
+≥ mM · δκ · HL( y), (34) which proves (25). 
+
+D.2 Interpolation Inevitably Suppresses High-Frequency Energy Theorem 3 (Interpolation Imposes an Upper Bound on the HL Ratio) . Let the interpolation operator I : RH×W →
+
+RH×W satisfy a multiplicative frequency-domain response 
+
+dI(u)( ω) = HI (ω)bu(ω), (35) 
+
+and suppose there exist constants α ∈ (0 , 1) and β > 0 such that 
+
+|HI (ω)| ≤ α, ∀ω ∈ ΩH , (36) 
+
+|HI (ω)| ≥ β, ∀ω ∈ ΩL. (37) 
+
+Then, for any u̸ = 0 , the following holds: 
+
+HL( I(u)) ≤ α2
+
+β2 HL( u). (38) 
+
+Proof. By the definition of the power spectrum and assumption (35), 
+
+PI(u)(ω) = | dI(u)( ω)|2 (39) 
+
+= |HI (ω)bu(ω)|2 (40) 
+
+= |HI (ω)|2 Pu(ω). (41) Therefore, the high-frequency energy satisfies 
+
+EH (I(u)) = X
+
+> ω∈ΩH
+
+PI(u)(ω) = X
+
+> ω∈ΩH
+
+|HI (ω)|2Pu(ω) (42) 
+
+≤ α2 X
+
+> ω∈ΩH
+
+Pu(ω) = α2EH (u). (43) Similarly, the low-frequency energy satisfies 
+
+EL(I(u)) = X
+
+> ω∈ΩL
+
+|HI (ω)|2Pu(ω) (44) 
+
+≥ β2 X
+
+> ω∈ΩL
+
+Pu(ω) = β2EL(u). (45) 16 SPAMoE for Full-Waveform Inversion                             
+
+> Metric Encoder Interpolation GT
+> Ratio 1(Mean) 19.032 3.876 ×10 −6–
+> Ratio 2(Mean) 34.904 1.786 ×10 −7–HL (Mean) 0.105 0.084 0.111
+> gH(Range) [0 .882 ×10 −2,1.262 ×10 2] [0 .405 ×10 5,1.096 ×10 6]–
+> gL(Range) [0 .527 ×10 −2,0.348 ×10 2] [1 .217 ×10 6,0.269 ×10 8]–Table 5: Empirical verification of spectral assumptions (A1)–(A3) using a Spectral-Preserving DINO Encoder and an interpolation baseline.
+
+Substituting into the definition of HL yields 
+
+HL( I(u)) = EH (I(u)) 
+
+EL(I(u)) + ε ≤ α2EH (u)
+
+β2EL(u) + ε (46) 
+
+≤ α2
+
+β2 · EH (u)
+
+EL(u) + ε = α2
+
+β2 HL( u), (47) which proves (38). This theorem shows that as long as interpolation attenuates the high-frequency band, i.e., α < 1, it will strictly reduce the HL ratio, leading to oversmoothing. 
+
+D.3 Empirical Validation 
+
+Table 5 reports empirical statistics for verifying assumptions (21) – (23) . All results are obtained using the same downstream operator F (FNO), the same test set (CurveVel-A), and an identical frequency-domain decomposition, ensuring a controlled comparison between the Spectral-Preserving DINO Encoder and the bilinear interpolation frontend. In the following, we empirically validate assumptions (21)–(23) one by one. 
+
+D.3.1 Metric Definitions 
+
+To facilitate empirical verification of assumptions (21) – (23) , we define the following scalar metrics computed for each test sample and summarized statistically in Table 5. 
+
+High-frequency preservation ratio ( Ratio 1). To evaluate assumption (21), we define 
+
+Ratio 1 = EH (uc)
+
+EH (y) , (48) which directly measures whether the encoder output preserves or contracts high-frequency energy relative to the ground truth. Assumption (21) is satisfied if there exists δ ≥ 1 such that Ratio 1 ≥ δ.
+
+Low-frequency controllability ratio ( Ratio 2). To evaluate assumption (22), we define 
+
+Ratio 2 = EL(uc)
+
+EL(y) . (49) This ratio quantifies the extent to which the low-frequency energy of the encoder output is bounded by that of the ground truth. Assumption (22) holds if there exists a finite κ ≥ 1 such that Ratio 2 ≤ κ.
+
+Downstream frequency-band gains ( gH , gL). To evaluate assumption (23) , we define the empirical gain factors of the downstream operator F on the high- and low-frequency bands as 
+
+gH = EH (ˆ y)
+
+EH (uc) , gL = EL(ˆ y)
+
+EL(uc) . (50) Assumption (23) requires the existence of constants 0 < m ≤ M < ∞ such that both gH and gL lie within the interval 
+
+[m, M ].17 SPAMoE for Full-Waveform Inversion 
+
+D.3.2 Validation of (21) : High-Frequency Non-Contraction 
+
+Assumption (21) is evaluated by the high-frequency preservation ratio Ratio 1 defined in (48) . As shown in the first row of Table 5, the Spectral-Preserving DINO Encoder achieves a mean value of Ratio 1 = 19 .032 , which is significantly larger than 1. Therefore, there exists a constant δ ≈ 19 such that (21) holds on average. In contrast, the interpolation frontend yields a mean value of Ratio 1 = 3 .876 × 10 −6, which violates (21) for any 
+
+δ ≥ 1. This indicates that interpolation fails to preserve high-frequency energy. 
+
+D.3.3 Validation of (22) : Low-Frequency Controllability 
+
+Assumption (22) is evaluated by the low-frequency controllability ratio Ratio 2 defined in (49) . As reported in the second row of Table 5, the encoder yields a mean ratio of Ratio 2 = 34 .904 , indicating that the low-frequency energy of the encoder output remains bounded by a finite multiple of the ground truth. Hence, assumption (22) holds with 
+
+κ ≈ 35 .Although the interpolation frontend yields a much smaller numerical ratio, this result does not indicate improved controllability. Instead, it reflects a collapse of spectral energy across both frequency bands, which leads to a reduced high-to-low frequency ratio, as reflected by the HL statistics. 
+
+D.3.4 Validation of (23) : Boundedness of the Downstream Operator 
+
+Assumption (23) is evaluated using the empirical frequency-band gains gH and gL defined in (50) . The last two rows of Table 5 report the observed ranges of these gains. Under the encoder frontend, the empirical ranges of gH and gL are of comparable orders of magnitude and exhibit substantial overlap, indicating that the downstream operator admits bounded amplification factors for both frequency bands. Therefore, finite constants m and M satisfying (23) exist. In contrast, under the interpolation frontend, the gain range of gL is several orders of magnitude larger than that of gH ,indicating a strong imbalance in frequency responses. As a result, assumption (23) is violated in practice. 
+
+D.3.5 Summary 
+
+In summary, the empirical results in Table 5 demonstrate that the Spectral-Preserving DINO Encoder satisfies all three assumptions: (21) , (22) , and (23) , with explicit numerical evidence supporting the existence of the corresponding constants δ, κ, m, and M . By contrast, the interpolation frontend violates the high-frequency non-contractiveness and bounded response assumptions, and exhibits a strong low-frequency bias, thereby explaining its inferior spectral fidelity and oversmoothing behavior. These findings provide direct empirical support for the spectral preservation theorem presented in the main text. 
+
+## E Implementation Details 
+
+This section presents a comprehensive overview of the experimental setup, covering benchmark datasets, evaluation metrics, and implementation details to ensure a rigorous and reproducible analysis. 
+
+E.1 Training Detail 
+
+We train one independent model per OpenFWI 2D sub-dataset (CurveVel-A/B, FlatVel-A/B, CurveFault-A/B, FlatFault-A/B, and Style-A/B). All models share the same architecture and loss design, while optimization hyperparameters follow a unified configuration (Table 6). Training is conducted on dual RTX 4090 GPUs with a per-GPU batch size of 32. Unless otherwise stated, all settings below apply to all sub-datasets. We report three standard image-level reconstruction metrics on the OpenFWI test sets: mean absolute error (MAE), root mean squared error (RMSE), and peak signal-to-noise ratio (PSNR). MAE and RMSE are computed between the predicted and ground-truth velocity maps (lower is better), while PSNR measures reconstruction fidelity in decibels (higher is better). 18 SPAMoE for Full-Waveform Inversion 
+
+Category Hyperparameter FlatVel CurveVel FlatFault CurveFault Style A B A B A B A B A B
+
+Optimization (AdamW) Initial LR (LR, ×10 −3) 1.0 1.0 1.0 0.1 1.0 1.0 1.0 1.0 1.0 1.0 Weight Decay 0.05 0.05 0.05 1e-4 0.05 0.05 0.05 0.05 0.05 0.05 Batch Size 32 32 32 32 32 32 32 32 32 32 Training Epochs 200 200 200 150 200 200 200 200 200 200 Warmup Epochs 5 5 5 5 5 5 5 5 5 5
+
+T0 / Tmult 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 10 / 2 Loss Weights Grad L1 ( λgrad ) 0.15 0.15 0.15 0.15 0.15 0.15 0.15 0.15 0.15 0.15 Fourier Mag L1 ( λf f t ) 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 0.10 Load Balance ( λce ) 0.20 0.20 0.20 0.20 0.20 0.20 0.20 0.20 0.20 0.20 Router G1 ( λg1v ) 0.60 0.60 0.60 0.60 0.60 0.60 0.60 0.60 0.60 0.60 Router G2 ( λg2v ) 0.40 0.40 0.40 0.40 0.40 0.40 0.40 0.40 0.40 0.40 Architecture (SPAMoE) Hidden / Enc Channels 64/128 64/128 64/128 64/128 64/128 64/128 64/128 64/128 64/128 64/128 Top-k Experts 2 2 2 2 2 2 2 2 2 2Band Sharpness ( γ) 20.0 20.0 20.0 20.0 20.0 20.0 20.0 20.0 20.0 20.0 Freq. Affinity ( η) 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 10.0 Backbone ViT ViT ViT ViT ViT ViT ViT ViT ViT ViT Expert Specs FNO Modes (H, W ) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) FNO Layers 8 8 8 8 8 8 8 8 8 8MNO Scales 3 3 3 3 3 3 3 3 3 3MNO Layers 3 3 3 3 3 3 3 3 3 3LNO Modes (H, W ) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) LNO Layers 3 3 3 3 3 3 3 3 3 3Data Spec Input Size ( T × R) 1k×350 1k×350 1k×350 1k×350 1k×350 1k×350 1k×350 1k×350 1k×350 1k×350 
+
+Output Size ( H × W ) 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 70 ×70 
+
+Table 6: Comprehensive hyperparameter configurations for SPAMoE across 10 OpenFWI sub-datasets. This table covers optimization settings, loss weight distributions, core model architecture, and expert-specific parameters. 
+
+Category Hyperparameter FlatVel CurveVel FlatFault CurveFault Style A B A B A B A B A B
+
+Optimization (AdamW) Initial LR (LR, ×10 −3) 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 0.1 Weight Decay 0.05 0.05 0.05 1e-4 0.05 0.05 0.05 0.05 0.05 0.05 Batch Size / Epochs 32 / 200 32 / 200 32 / 200 32 / 150 32 / 200 32 / 200 32 / 200 32 / 200 32 / 200 32 / 200 Architecture (Baseline) Hidden Channels ( C) 64 64 64 64 64 64 64 64 64 64 FNO Modes (H, W ) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) (16, 16) FNO Layers 8 8 8 8 8 8 8 8 8 8Data Spec Input / Output Resolution 1000 × 350 → 70 × 70 
+
+Table 7: Hyperparameter configurations for the baseline model using only FNO. 
+
+E.2 Hyperparameters Details 
+
+For completeness and reproducibility, Table 6 provides detailed hyperparameter configurations for SPAMoE across the ten OpenFWI sub-datasets, covering optimization settings, loss weights, model architecture, and expert-specific parameters. Table 7 lists the hyperparameter configurations of the baseline (Only FNO) model. 
+
+E.3 Evaluation Metric 
+
+For the FWI task, we strictly follow the evaluation protocol of the OpenFWI benchmark. Specifically, we adopt exactly the same metric definitions and implementation code as provided in the OpenFWI open-source repository, ensuring fair and directly comparable evaluations. The employed metrics include Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and Structural Similarity Index (SSIM) [27]. For the pipe-flow task, we use the relative ℓ2 error, consistent with the evaluation setting of LaMO [ 29 ], enabling a fair comparison with prior work. 19 SPAMoE for Full-Waveform Inversion 
+
+> Figure 6: Additional qualitative results of our framework on OpenFWI. Each column corresponds to one of the ten OpenFWI sub-datasets, visualizing reconstructed velocity models not shown in the main paper.
+
+## F Visualization 
+
+F.1 Additional Main Result 
+
+To complement the qualitative results presented in the main paper, we provide additional reconstructed velocity models produced by our framework on OpenFWI in Figure 6 . These examples are included for completeness and are not shown in the main text due to space limitations. For each sub-dataset, we select four representative velocity models predicted by our method for qualitative visualization. As shown, the proposed framework can stably reconstruct a variety of typical geological structures, including smooth varying background layers, curved stratified formations, and clear fault interfaces. For regions with highly mixed structural components and strong spatial variability, a small number of examples exhibit locally smoother boundary transitions or reduced fine-scale contrast, reflecting the inherent difficulty of disentangling multi-scale features in such complex scenarios. 
+
+F.2 Visualization of Intermediate Representations 
+
+To verify the effectiveness of the spectral partitioning module, we analyze the intermediate features captured prior to the routing stage (Figure 7). The visualization confirms that the module successfully decouples the input into low-, high-, and medium-frequency paths, thereby providing appropriate inputs for the subsequent MoE experts. Inspecting the decoupled low-, high-, and mid-frequency visualizations and their corresponding spectra, we observe that the low-frequency components predominantly capture large-scale background variations and smooth stratified trends, which are responsible for the global velocity distribution and long-wavelength structures. In contrast, high-frequency components emphasize sharp discontinuities, fine-scale layer boundaries, and fault-related features, exhibiting concentrated energy in the outer spectral regions. The mid-frequency components mainly represent transitional structures between these two components, such as moderately varying layers and curved interfaces, bridging global context and local details. Consequently, this spectral partitioning provides structurally and spectrally complementary representations, enabling each expert to focus on the frequency band most relevant to its modeling capacity. 20 SPAMoE for Full-Waveform Inversion 
+
+Figure 7: Total 12 columns show 4 samples per sub-dataset (from left to right: FlatVel-A, CurveFault-A, CurveVel-A). Rows from top to bottom visualize the low-, high-, and medium-frequency components partitioned by the Encoder, paired with their 2D amplitude spectrums. This demonstrates the model’s ability to decouple physical features before MoE expert selection. 
+
+21
