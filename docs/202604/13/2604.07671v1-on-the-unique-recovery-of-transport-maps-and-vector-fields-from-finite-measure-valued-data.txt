@@ -1,0 +1,1556 @@
+Title: On the Unique Recovery of Transport Maps and Vector Fields from Finite Measure-Valued Data
+
+URL Source: https://arxiv.org/pdf/2604.07671v1
+
+Published Time: Fri, 10 Apr 2026 00:33:22 GMT
+
+Number of Pages: 33
+
+Markdown Content:
+# On the Unique Recovery of Transport Maps and Vector Fields from Finite Measure-Valued Data 
+
+Jonah Botvinick-Greenhouse 1 and Yunan Yang 21Center for Applied Mathematics, Cornell University, Ithaca, NY 
+
+> 2
+
+Department of Mathematics, Cornell University, Ithaca, NY April 10, 2026 
+
+Abstract 
+
+We establish guarantees for the unique recovery of vector fields and transport maps from finite measure-valued data, yielding new insights into generative models, data-driven dynamical systems, and PDE inverse problems. In particular, we provide general condi-tions under which a diffeomorphism can be uniquely identified from its pushforward action on finitely many densities, i.e., when the data {(ρj , f #ρj )}mj=1 uniquely determines f . As a corollary, we introduce a new metric which compares diffeomorphisms by measuring the discrepancy between finitely many pushforward densities in the space of probability mea-sures. We also prove analogous results in an infinitesimal setting, where derivatives of the densities along a smooth vector field are observed, i.e., when {(ρj , div( ρj v)) }mj=1 uniquely determines v. Our analysis makes use of the Whitney and Takens embedding theorems, which provide estimates on the required number of densities m, depending only on the intrinsic dimension of the problem. We additionally interpret our results through the lens of Perron–Frobenius and Koopman operators and demonstrate how our techniques lead to new guarantees for the well-posedness of certain PDE inverse problems related to continuity, advection, Fokker–Planck, and advection-diffusion-reaction equations. Finally, we present illustrative numerical experiments demonstrating the unique identification of transport maps from finitely many pushforward densities, and of vector fields from finitely many weighted divergence observations. 
+
+# 1 Introduction 
+
+The problem of estimating transport maps and vector fields from measure-valued data is pervasive across data science, machine learning, and engineering. Such problems arise promi-nently in modern sampling and generative modeling frameworks that aim to transform a reference noise distribution into a target data distribution, including approaches based on optimal transport, normalizing flows, and diffusion processes [1–3]. Beyond machine learning, measure-valued datasets are intrinsic to many physical and biological settings, where experi-mental observations are naturally represented as time-indexed empirical distributions rather than labeled particle trajectories. In these contexts, a common goal is to infer transport maps, vector fields, or dynamical laws from the evolution of distributions, in order to recover interpretable physical or biological structure [4–10]. Closely related problems arise in inverse formulations of partial differential equations (PDEs) governed by continuity, Fokker–Planck, or advection-diffusion equations, where one seeks to recover an underlying vector field or drift from measure-valued solution data [11– 14]. Similar questions also appear in data-driven dynamical systems, where the objective is 1
+
+> arXiv:2604.07671v1 [stat.ML] 9 Apr 2026
+
+to identify Perron–Frobenius operators from their action on a finite collection of probability measures [15]. More broadly, regression problems over spaces of probability measures , where inputs and outputs are related by pushforward or transport operators, have recently attracted significant attention [16, 17]. Despite the rapid growth of these applications, fundamental questions of well-posedness and identifiability remain poorly understood. In particular, it is often unclear whether a transport map or vector field can be uniquely determined from its action on a finite number of probability measures, even in idealized noiseless settings. The goal of this paper is to provide foundational results addressing this gap. We establish practical conditions under which a transport map or vector field is uniquely identifiable from finitely many measure-valued observations. Our results yield new identifiability guarantees that apply across data-driven dynamical systems, PDE inverse problems, and generative modeling. At a technical level, our analysis combines tools from measure transport with classical embedding results originating in the work of Whitney and Takens. These embedding theo-rems allow us to translate identifiability questions for maps and vector fields into topological conditions on finite collections of probability densities, yielding explicit bounds on the number of densities required for unique recovery. We now formalize the setting. Let M and N be smooth, compact, d-dimensional Rie-mannian manifolds, and let f ∈ C1(M, N ) be a diffeomorphism. For a probability measure 
+
+ρ ∈ P (M ), the pushforward f#ρ ∈ P (N ) describes the redistribution of mass induced by 
+
+f (see Section 2.2 for a precise definition). In general, the pushforward of a single measure does not uniquely identify the underlying map, i.e., the equality f#ρ = g#ρ does not imply 
+
+f = g. However, in many applications one observes the action of f on multiple measures 
+
+ρ1, . . . , ρ m ∈ P (M ), which motivates the following question. (Q1) When do the m pairs of measures 
+
+{(ρ1, f #ρ1), . . . , (ρm, f #ρm)}
+
+uniquely determine the map f ?
+
+Using the Whitney embedding theorem, we provide a positive answer to (Q1). We show that when m > 2d + 1 there is a generic subset D of strictly positive C1 densities D1+(M, Rm), such that for ( ρ1, . . . , ρ m) ∈ D, the pushforward action of a diffeomorphism f uniquely determines f . Here, uniqueness means that 
+
+f#ρj = g#ρj for 1 ≤ j ≤ m =⇒ f = g
+
+for diffeomorphisms f, g ∈ C1(M, N ). The term “generic” is used in a precise topological sense: the set of densities for which the result holds is open and dense in an appropriate function space. We next consider the corresponding infinitesimal problem. Suppose f = ft is the time-t
+
+flow map generated by a vector field v. Under mild regularity assumptions, the associated curve of measures ρt = ( ft)# ρ satisfies the continuity equation 
+
+∂tρt + div( ρtv) = 0 .
+
+Consequently, the first-order perturbation of ρ induced by v is given by 
+
+∂tρt|t=0 = −div( ρv ).
+
+In general, the equality div( ρv ) = div( ρw ) does not imply v = w, since weighted divergence-free components may remain invisible. As in (Q1), however, many applications involve ob-serving the action of a vector field on multiple densities. This leads to the following question. 2(Q2) When do the m density–divergence pairs 
+
+{(ρ1, div( ρ1v)) , . . . , (ρm, div( ρmv)) }
+
+uniquely determine the vector field v?
+
+Using similar topological arguments, we show that if m > 2d+1, then for ( ρ1, . . . , ρ m) ∈ D,
+
+the generic set constructed in response to (Q1), the equalities div( ρj v) = div( ρj w), for 1 ≤ j ≤ m, =⇒ v = w. 
+
+Thus, a finite collection of density-weighted divergence observations suffices to uniquely re-cover the underlying vector field. Our main results addressing (Q1) and (Q2) are summarized in Theorem 3.1. A more realistic data regime arises when the densities ρj are not freely chosen, but are instead generated by an underlying time-dependent process. In many applications, measure-valued observations are collected sequentially in time, and successive densities are linked by the evolution of an unknown or partially known dynamical system. The simplest and most structured instance of this setting occurs when the densities are generated by the repeated pushforward action of a diffeomorphism, modeling either a discrete-time dynamical system or the stroboscopic sampling of a continuous-time physical process. Concretely, suppose that there exists a diffeomorphism h ∈ Diff 2(M, M ) such that 
+
+ρj =  hj−1 
+
+> #
+
+ρ1, j = 1 , 2, . . . , m, 
+
+where ρ1 is an initial density and hj−1 denotes the ( j − 1)-fold composition of h with itself. In this time-dependent setting, the available measure-valued data are no longer independent inputs, but are instead dynamically correlated through the unknown map h. This raises a fundamental question: to what extent do the identifiability guarantees established in the static setting still hold when the data are generated along a single trajectory in density space? This motivates the following question. (Q3) How do our answers to (Q1) and (Q2) change when the measure-valued data are time-dependent, that is, when ρj =  hj−1 
+
+> #
+
+ρ1 for some dynamical system h ∈ Diff 2(M, M )?
+
+While our analysis of (Q1) and (Q2) relied on Whitney’s embedding theorem, the time-dependent problem (Q3) requires a fundamentally different set of tools. Here we instead draw on Takens’ time-delay embedding theory. We show that a carefully constructed delay-coordinate map, built from suitable quotients of pushforward densities, allows one to lift the identifiability results from the static setting to the time-dependent regime. Under certain assumptions on the dynamics (see Assumption 3.2), this approach yields conditions under which (Q3) admits a positive answer. Our main theoretical results for the time-dependent setting are summarized in Theorem 3.3. Takens’ embedding theorem has played a central role in nonlinear time-series analysis and has inspired a wide range of data-driven methods for reconstruction, prediction, and control from partial observations [18–22]. To our knowledge, this work is the first to make a direct connection between Takens-style delay embeddings and the well-posedness of measure-valued inverse problems involving dynamical system recovery from finitely many density snapshots. Building on these identifiability results, we derive new metrics on the space of diffeo-morphisms and smooth vector fields that are defined through the comparison of finitely 3many pushforward measures, or finitely many infinitesimal measure perturbations (see Corol-lary 3.4). As a representative example, we show that for m > 2d + 1 strictly positive densities (ρ1, . . . , ρ m) belonging to the generic set D, the quantity 
+
+D(f, g ) := 
+
+> m
+
+X
+
+> j=1
+
+D f#ρj , g #ρj
+
+, (1) defines a genuine metric on the space of diffeomorphisms Diff 1(M, N ). Here, D denotes any metric on the space of probability measures P(N ), such as the Wasserstein distance [23] or the Maximum Mean Discrepancy (MMD) [24]. Analogous constructions yield metrics for smooth vector fields via their action on densities through weighted divergence operators. These met-rics are intrinsically adapted to measure-valued data and provide a general framework for solving inverse problems and training generative models using only finitely many observed distributions. We further interpret our answers to (Q1)–(Q3) through the lens of data-driven dynamical systems, identifying conditions under which Perron–Frobenius and Koopman operators can be uniquely recovered from their action on finitely many densities or observables (see Sec-tion 4.1). In addition, we apply our main results to establish new well-posedness guarantees for inverse problems associated with continuity, advection, Fokker–Planck, and advection-diffusion-reaction equations (see Section 4.2). Finally, we discuss the significance of our re-sults in the context of generative models, highlighting how they can inform well-posedness analysis and the design of new architectures (see Section 4.3). A schematic overview of the main results and their relationships is provided in Figure 1. The rest of the paper is structured as follows. Section 2 reviews preliminary notation and background material, including the classical embedding theorems of Whitney and Takens. Section 3 contains the statements of our main results and discussion of their significance. In Section 4, we highlight applications of our results across data-driven dynamical systems, PDE inverse problems, and generative models. The complete proofs of our main theorems and their corollaries then appear in Section 5. Finally, in Section 6, we present illustrative numerical experiments demonstrating unique pushforward map and vector field recovery from finite measure-valued datasets. Conclusions follow in Section 7. 
+
+# 2 Preliminaries 
+
+We begin by establishing necessary notation and definitions that will be used throughout the paper. Section 2.1 introduces the relevant function spaces that play a role in our analysis, Section 2.2 defines the pushforward measure and change of variables formula, while Section 2.3 introduces classical embedding theorems. 
+
+2.1 Defining the Function Spaces 
+
+Recall from Section 1 that M and N denote smooth ( C∞) compact d-dimensional Riemannian manifolds. Let r be a smooth Riemannian metric on M inducing the inner product ⟨· , ·⟩ rx :
+
+TxM × TxM → R. Given n ∈ N, we will write C1(M, Rn) to denote the space of continuously differentiable maps between M and Rn, which is a Banach space when equipped with the norm 
+
+∥Y ∥C1 := sup 
+
+> x∈M
+
+|Y (x)| + sup 
+
+> x∈M
+
+∥dY x∥. (2) We write |Y (x)| to denote the Euclidean norm of Y (x) ∈ Rn and ∥dY x∥ to denote the operator norm of the differential dY x : TxM → Rn, where TxM denotes the tangent space at x ∈ M. 
+
+4Whitney embedding Whitney embedding 
+
+> Takens embedding
+
+Pushforward uniqueness Divergence uniqueness 
+
+Time-dependent data 
+
+Applications 
+
+> Time-dependence
+> Infinitesimal case
+> Time-dependence
+
+(Q1): Do f#ρ1, . . . , f #ρm
+
+uniquely identify f ?
+
+Thm. 3.1: Yes, for a generic set of densities D.
+
+(Q2): Do div( ρ1v), . . . , div( ρmv)uniquely identify v?
+
+Thm. 3.1: Yes, for a generic set of densities D.
+
+(Q3): Do these results gen-eralize if ρj =  hj−1 
+
+> #
+
+ρ1?
+
+Thm. 3.3: Yes, under a techni-cal condition (Assumption 3.2). 
+
+• A new metric comparing pushfor-ward actions (Cor. 3.4). 
+
+• Data-driven dynamics (Sec. 4.1) 
+
+• PDE inverse problems (Sec. 4.2) 
+
+• Generative models (Sec. 4.3). 
+
+• Measure-valued data fitting (Sec. 6). 
+
+Figure 1: Flowchart of our main results. Note that (2) depends on the choice of Riemannian metric r on M , as 
+
+∥dY x∥ := sup   
+
+> v∈TxM, ∥v∥r=1
+
+|dY x(v)|, ∥v∥r = p⟨v, v ⟩rx .
+
+Since M is compact, any choice of the Riemannian metric will induce an equivalent topology on C1(M, Rn). More generally, Cℓ(M, Rn) is the space of ℓ-times continuously differentiable Rn-valued functions. Throughout, we write Yj (x) ∈ R as shorthand for the j-th component of Y (x) ∈ Rn,i.e., Yj (x) := Y (x) · ej , where ej is the j-th standard unit basis vector in Rn. Moreover, we 5Symbol Meaning 
+
+M, N Smooth, compact d-dimensional Riemannian manifolds 
+
+P(M ) Borel probability measures over M
+
+⟨· , ·⟩ rx Riemannian metric on M at xCℓ(M, Rn) ℓ-times continuously differentiable functions 
+
+Cℓ
+
+> +
+
+(M, Rn) componentwise positive functions in Cℓ(M, Rn)
+
+Dℓ
+
+> +
+
+(M, Rn) functions in Cℓ
+
+> +
+
+(M, Rn) componentwise integrating to 1 Diff ℓ(M, N ) Cℓ diffeomorphisms between M and N
+
+Xℓ(M ) Cℓ vector fields on Mdf x Differential of a function f at the point xJf (x) Jacobian determinant of f at xf#ρ Pushforward of the measure ρ under f
+
+Ψ(k)(y,f ) k-dimensional delay map for observable y and system f
+
+Wk Generic set of embeddings in C1(M, Rk), k ≥ 2d + 1 
+
+G Generic set of pairs ( y, f ) for which Ψ (2 d+1) (y,f ) is an embedding Table 1: Notation used throughout Section 3. define 
+
+Cℓ
+
+> +
+
+(M, Rn) := {Y ∈ Cℓ(M, Rn) : Yj (x) > 0, ∀x ∈ M, 1 ≤ j ≤ n}, (3) which is the subset of Cℓ(M, Rn) functions that have strictly positive coordinate evaluations. Since we are primarily interested in working with probability densities, we also define 
+
+Dℓ
+
+> +
+
+(M, Rn) := 
+
+(
+
+Y ∈ Cℓ
+
+> +
+
+(M, Rn) : 
+
+Z
+
+> M
+
+Yj (x) d x = 1 , 1 ≤ j ≤ n
+
+)
+
+, (4) which is the subset of Cℓ
+
+> +
+
+(M, Rn) functions where each coordinate evaluation integrates to 1. We note that the integral in (4) is computed with respect to the Riemannian volume, which depends on the underlying metric. Throughout, Cℓ
+
+> +
+
+(M, Rn) and Dℓ
+
+> +
+
+(M, Rn) are endowed with the subpsace topology inherited from Cℓ(M, Rn). We also write Diff ℓ(M, N ) to denote the space of Cℓ diffeomorphisms between M and N , as well as Xℓ(M ) to denote the Cℓ vector fields mapping M → T M .Given a function y ∈ C1(M, R) and a vector field v ∈ X1(M ), we write ∇y and div( v)to denote the Riemannian gradient and divergence, respectively. Finally, given vector fields 
+
+v, w : M → T M we write ⟨v, w ⟩ as shorthand for the function x 7 → ⟨ v(x), w (x)⟩rx .
+
+2.2 Pushforward Measures 
+
+We will denote by P(M ) the space of Borel probability measures over M . Given ρ ∈ P (M ), its pushforward under a measurable map f : M → N is the measure f#ρ ∈ P (N ) defined by (f#ρ)( B) := ρ(f −1(B)), for all Borel measurable sets B ⊆ N . As a slight abuse of notation we will also use ρ to denote the corresponding density of the measure, when it exists. If 
+
+ρ ∈ P (M ) admits a C1 density and f ∈ Diff 1(M, N ), then the pushforward measure f#ρ
+
+satisfies (f#ρ)( x) = ρ  f −1(x) | det df −1 
+
+> x
+
+|, ∀x ∈ N. (5) The formula (5) is known as a change of variables formula. In (5), df −1 
+
+> x
+
+: TxN → Tf −1(x)M
+
+is the differential of the map f −1 evaluated at x ∈ N , and the term | det df −1 
+
+> x
+
+| describes 6how volumes are distorted under the pushforward operation, ensuring that f#ρ remains a probability measure. Throughout, we also write Jf −1 (x) to denote the Jacobian determinant of f −1 at x ∈ N .
+
+2.3 Embedding Theorems 
+
+The classical embedding theorems due to Hassler Whitney and Floris Takens play a central role in our analysis. To this end, we first precisely define what is meant by an embedding. 
+
+Definition 2.1 (Embedding) . A map Y ∈ C1(M, Rn) is said to be an embedding if 
+
+(i) Y is injective; 
+
+(ii) dY x : TxM → Rn is injective, for all x ∈ M ;
+
+(iii) Y is a homeomorphism onto its image. In the subsequence discussions, we are primarily concerned with embeddings of compact manifolds, in which case Definition 2.1 (iii) does not need to be checked. In this setting, (iii) 
+
+follows from (i) , as Y can be viewed as an invertible continuous map between compact sets, which can be shown to be a homeomorphism; see [25, Prop. 13.26]. The Whitney embedding theorem asserts that the collection of embeddings in C1(M, Rk)is “topologically large” if k ≥ 2d+1. In particular, Whitney showed that the set of embeddings is generic , i.e., it is open and dense in the C1(M, Rk) topology. 
+
+Definition 2.2 (Generic) . Let X be a topological space. A subset S ⊆ X is said to be generic 
+
+if S is open and dense. 
+
+Theorem 2.3 (Whitney Embedding [26]) . Let k ≥ 2d + 1 . Then, the set 
+
+Wk := {Y ∈ C1(M, Rk) : Y is an embedding }
+
+is generic in C1(M, Rk).
+
+At an intuitive level, the genericity assumption in Theorem 2.3 reflects two complementary facts: first, that embeddings are stable under small C1 perturbations, and second, that within the space C1(M, Rk), embeddings form a dense subset. In other words, any sufficiently small perturbation of an embedding remains an embedding, and any C1 map can be approximated arbitrarily well by one. Takens’ embedding theorem extends this perspective to a dynamical setting, where the collection of observables used to form the embedding is no longer freely chosen, but instead arises from successive partial observations along the time evolution of a dynamical system. In this sense, Takens’ theorem can be viewed as a dynamical analogue of Whitney’s result, replacing independent observables with time-delayed measurements while retaining generic embedding guarantees. We now define the time-delay map and state Takens’ embedding theorem. 
+
+Definition 2.4 (Time-Delay Map) . Let y ∈ C1(M, R), let h ∈ Diff 1(M, M ), and let k ∈ N.The time-delay map Ψ(k)(y,h ) : M → Rk is defined by setting Ψ(k)(y,h )(x) := ( y(x), y (h(x)) , . . . , y (hk−1(x))) , x ∈ M. 
+
+Theorem 2.5 (Takens Embedding [19]) . There exists a generic subset G ⊂ C1(M, R) ×
+
+Diff 1(M, M ) such that for all (y, h ) ∈ G it holds that Ψ(2 d+1) (y,h ) is an embedding of M .
+
+7The time-delay map can be constructed based only upon partial observations {y(hj (x)) }j
+
+of the trajectory {hj (x)}j and gives rise to a new dynamical system in time-delay coordi-nates , i.e., Ψ (2 d+1) (y,h ) (x) 7 → Ψ(2 d+1) (y,h ) (h(x)), which is topologically equivalent to the dynamics 
+
+x 7 → h(x) on M and preserves crucial properties including the structure of periodic orbits and Lyapunov exponents. Since appending smooth components to an embedding preserves injectivity, Theorem 2.5 also implies that Ψ (k)(y,h ) is an embedding for any k ≥ 2d + 1, provided that ( y, h ) ∈ G.
+
+# 3 Main Results 
+
+In this paper, we organize the discussion around the central questions (Q1)-(Q3), which ask when finite collections of measure-valued data suffice for unique identification . Specifically, given a finite set of probability measures ρ1, . . . , ρ m, we seek conditions under which the following implications hold: (K1) For diffeomorphisms f, g ∈ Diff 1(M, N ), 
+
+f#ρj = g#ρj for 1 ≤ j ≤ m
+
+implies that f = g.(K2) For vector fields v, w ∈ X1(M ), div( ρj v) = div( ρj w) for 1 ≤ j ≤ m
+
+implies that v = w.The conclusion (K1) is helpful for guaranteeing that one can uniquely identify a diffeomor-phism from its pushforward action on m densities. This is important for understanding the well-posedness of regression over the space of probability measures, which includes certain ap-plications in data-driven dynamical systems (see Section 4.1) and many generative modeling tasks (see Section 4.3). The conclusion (K2) is essential for analyzing the well-posedness of certain PDE inverse problems where one wishes to uniquely identify the differential operator from its action on finitely many densities. While in this section we focus on establishing cri-teria under which (K2) holds, in Section 4.2 we use these guarantees to establish new results for the identification of vector fields governing continuity, advection, and advection-diffusion-reaction equations. 
+
+Time-Independent Recovery. We now present our main results concerning the unique recovery of pushforward maps from finite measure-valued data. Our first main result, Theo-rem 3.1, shows that there is a generic set of densities in D1+(M, Rm) such that the pushforward action on these densities uniquely identifies the diffeomorphism, while the derivative of these densities along a flow uniquely recovers the vector field. 
+
+Theorem 3.1. Fix m > 2d + 1 . There exists a generic subset D ⊂ D1+(M, Rm) such that for every (ρ1, . . . , ρ m) ∈ D, both (K1) and (K2) hold. 
+
+Note that the required number of densities in Theorem 3.1 is one greater than the em-bedding dimension in Whitney’s embedding theorem (see Theorem 2.3). This is a conse-quence of our proof technique, in which we divide the first m − 1 pushforward densities, 
+
+f#ρ1, . . . , f #ρm−1, by the m-th pushforward density f#ρm, thereby canceling all Jacobian determinant factors appearing in the change of variables formula (5). Following this cancella-tion, we then use tools from Whitney’s embedding theorem to obtain the desired uniqueness results. The full proof is presented in Section 5. 8Time-Dependent Recovery. While Theorem 3.1 establishes unique recovery for generic densities in D1+(M, Rm), it does not address the case in which the densities ρj are generated by a time-dependent process. In particular, situations where the measures arise through iterated pushforward by a dynamical system, 
+
+ρj = ( hj−1)#ρ1, 1 ≤ j ≤ m, (6) for some diffeomorphism h, fall outside the scope of Theorem 3.1. In (6), h0 denotes the identity map. Such temporally correlated data, however, are common in practical applications, where distributions are observed sequentially along the evolution of an underlying system. To treat this setting, we introduce the following technical assumption. 
+
+Assumption 3.2. We assume ( ρ1, h ) ∈ D1+(M ) × Diff 2(M, M ) satisfies ( ρ1/h #ρ1, h ) ∈ G.Here, G is the generic set of observables and dynamical systems appearing in Theorem 2.5. Assumption 3.2 implies that Ψ (k)(y,h ) = ( y(x), y (h(x)) , . . . , y (hk−1(x))) is an embedding where y := ρ1/h #ρ1 and k ≥ 2d + 1. Note that Assumption 3.2 imposes an additional degree of smoothness on the dynamics, requiring h ∈ Diff 2(M, M ). This condition ensures that the observable ρ1/h #ρ1 lies in C1(M, R), which is necessary for the application of Takens-type embedding arguments. Under Assumption 3.2, we are able to extend the identifiability results of Theorem 3.1 to the time-dependent setting. 
+
+Theorem 3.3. Fix m > 2d + 1 . Let (ρ1, h ) ∈ D1+(M ) × Diff 2(M, M ) satisfy Assumption 3.2, and define ρ1, . . . , ρ m following (6) . Then both (K1) and (K2) hold. 
+
+The proof of Theorem 3.3 mirrors that of Theorem 3.1, canceling Jacobian factors by taking ratios of the corresponding pushforward densities. The key difference is that we invoke Takens’ embedding theorem (Theorem 2.5) rather than Whitney’s (Theorem 2.3). The proof is postponed to Section 5. 
+
+Pushforward- and Divergence-Based Metrics. As a corollary of Theorems 3.1 and 3.3, we define new metrics over the space of diffeomorphisms and vector fields based on comparison of pushforward measures and divergence operators evaluated on finite collections of densities. 
+
+Corollary 3.4 (Metrics via pushforward and divergence operators) . Let m > 2d + 1 . Let 
+
+D(·, ·) be a metric on P(N ) and let d(·, ·) be a metric on C(M, R). Suppose that either (a) (ρ1, . . . , ρ m) ∈ D, where D is the generic set appearing in Theorem 3.1, or (b) ρj := hj−1# ρ1 for 1 ≤ j ≤ m, where the pair (ρ1, h ) satisfies Assumption 3.2. Then the following hold: (i) The function 
+
+D(f, g ) := 
+
+> m
+
+X
+
+> j=1
+
+D f#ρj , g #ρj
+
+
+
+defines a metric on Diff 1(M, N ).(ii) The function 
+
+D(v, w ) := 
+
+> m
+
+X
+
+> j=1
+
+d div( ρj v), div( ρj w)
+
+defines a metric on X1(M ).
+
+9Additionally, it is straightforward to verify that if ∥ · ∥ is any norm on C(M, R), then by linearity of the divergence operator 
+
+∥v∥D =
+
+> m
+
+X
+
+> j=1
+
+∥div( ρj v)∥ , v ∈ X1(M ), (7) defines a norm on X1(M ) when assumption (a) or (b) of Corollary 3.4 holds. In Section 4.3, we discuss stability properties of the metric D in the context of generative modeling, and in Section 6, we use D and D to construct loss functions which can be used to numerically recover pushforward maps and vector fields from finite measure-valued data. 
+
+# 4 Application to Learning from Distributions 
+
+In this section, we examine the implications of the main theoretical results presented earlier in Section 3 for a range of measure-valued learning tasks that arise throughout data-driven science and engineering. In Section 4.1, we consider applications to data-driven dynamical systems, focusing on the unique recovery of Perron–Frobenius and Koopman operators. In Section 4.2, we establish new theoretical guarantees for the unique solution of certain PDE inverse problems, including those associated with continuity, Fokker–Planck, and advection-diffusion-reaction equations. Finally, in Section 4.3, we discuss how our results may inform the design and analysis of generative models. 
+
+4.1 Unique Recovery of Perron–Frobenius and Koopman Operators 
+
+Perron–Frobenius Operator Recovery. Across a wide range of physical, biological, and engineering applications, one seeks to infer an underlying dynamical evolution rule f : M →
+
+M from observed measurement data. In some settings, the available data consists of state trajectories {f j (x)}j generated from a fixed initial condition x ∈ M , in which case model identification proceeds by directly fitting the observed trajectories. A second, and increasingly common, data regime arises when one observes a tempo-ral sequence of probability distributions {ρ(tj )}j ⊂ P (M ), reflecting uncertainty, noise, or population-level variability in the system state. In this setting, the dynamics are naturally described by the Perron–Frobenius operator (PFO), also known as the transfer operator, which governs the evolution of densities under the action of the map f . The PFO lifts the finite-dimensional, nonlinear dynamics on M to a linear evolution on an infinite-dimensional space of measures, and has been widely used for modeling, analysis, and prediction of dynamical systems from data across diverse biological and engineering applications [27–29]. 
+
+Definition 4.1 (Perron–Frobenius Operator [30]) . Given a measure space ( X, B, μ ), and a non-singular dynamical system f : X → X, i.e., μ(B) = 0 implies μ(f −1(B)) = 0 for all 
+
+B ∈ B, the PFO is the unique linear operator T : L1
+
+> μ
+
+(X) → L1
+
+> μ
+
+(X) defined by the relationship 
+
+Z
+
+> B
+
+T ϕ dμ =
+
+Z 
+
+> f−1(B)
+
+ϕ dμ, ∀B ∈ B, ϕ ∈ L1
+
+> μ
+
+(X). (8) In our setting, we take X = M to be a smooth, compact Riemannian manifold, let 
+
+B denote the Borel σ-algebra on M , and let μ be the associated volume measure. For a diffeomorphism f ∈ Diff 1(M, M ), the PFO defined in (8) reduces, when acting on densities, to the classical change-of-variables formula. In particular, for any ρ ∈ D1+(M, R), we have (T ρ)( x) = ρ f −1(x) Jf −1 (x) = ( f#ρ)( x),
+
+10 where Jf denotes the Jacobian determinant of f .As a consequence, Theorems 3.1 and 3.3 admit an immediate reformulation in terms of Perron–Frobenius operators. From this perspective, Theorem 3.1 asserts that the PFO associated with a diffeomorphism is uniquely determined by its action on m smooth densities belonging to a generic set. More precisely, let Tf and Tg denote the PFOs corresponding to 
+
+f, g ∈ Diff 1(M, M ). If ( ρ1, . . . , ρ m) ∈ D, where D is the generic set appearing in Theorem 3.1 ,
+
+and 
+
+Tf ρj = Tgρj , 1 ≤ j ≤ m, 
+
+then it follows that f = g, and hence Tf = Tg.Similarly, Theorem 3.3 provides conditions under which a finite trajectory of densities 
+
+{T j ρ : 1 ≤ j ≤ m}
+
+generated by repeated application of the PFO suffices to recover the underlying dynamical op-erator. This interpretation highlights the relevance of our results to data-driven identification of transfer operators from finitely many measure-valued observations. 
+
+Koopman Operator Recovery. The PFO is adjoint to the well-known Koopman opera-tor, which has also been used in a variety of data-driven prediction, estimation, and control applications [29, 31, 32]. While the PFO acts on the space of densities, the Koopman operator evolves observables y : X → R, which are measurement functions mapping the state of the dynamical system to a real number. 
+
+Definition 4.2 (Koopman Operator [30]) . Given a measure space ( X, B, μ ) and a non-singular system f : X → X, the Koopman operator K : L∞ 
+
+> μ
+
+(X) → L∞ 
+
+> μ
+
+(X) is defined by 
+
+Kϕ = ϕ ◦ f .While the main theory of this paper focuses on the unique recovery of Perron–Frobenius operators from measure-valued data, analogous questions can be posed for the Koopman operator. In particular, one may ask whether a dynamical system or vector field can be uniquely identified from its action on a finite collection of scalar observables. In direct analogy with (K1) and (K2), we consider the following conditions. Given a finite set of observables y1, . . . , y m ∈ C1(M, R), we ask when the implications below hold: (K3) For diffeomorphisms f, g ∈ Diff 1(M, M ), 
+
+yj ◦ f = yj ◦ g for 1 ≤ j ≤ m
+
+implies that f = g.(K4) For vector fields v, w ∈ X1(M ), 
+
+⟨∇ yj , v ⟩ = ⟨∇ yj , w ⟩ for 1 ≤ j ≤ m
+
+implies that v = w.We now restate Theorem 3.1 in the context of Koopman operators. 
+
+Proposition 4.3. Fix m ≥ 2d + 1 . There exists a generic subset Wm ⊂ C1(M, Rm) such that, for every (y1, . . . , y m) ∈ Wm, both (K3) and (K4) hold. 
+
+Similarly, there is an analogue of Theorem 3.3 for Koopman operators. 11 Proposition 4.4. Fix m ≥ 2d+1 . There exists a generic subset G ⊂ C1(M, R)×Diff 1(M, M )
+
+such that for every pair (y, h ) ∈ G, defining the observables 
+
+yj := y ◦ hj−1, 1 ≤ j ≤ m, 
+
+both (K3) and (K4) hold. 
+
+The proofs of Propositions 4.3 and 4.4, which are presented in Section 5, are considerably less involved than those of Theorems 3.1 and 3.3. This simplification stems from the fact that, in the Koopman setting, no Jacobian determinant arises from the action of the operator. In addition, Proposition 4.4 does not require any auxiliary technical assumptions, and the number of observables needed for identifiability is m ≥ 2d + 1 rather than m > 2d + 1. Both propositions follow as direct applications of Whitney’s and Takens’ embedding the-orems. Finally, in analogy with Corollary 3.4, one may also define metrics on the spaces of diffeomorphisms and vector fields by comparing the action of Koopman operators on the finite family of observables {yj }.
+
+Corollary 4.5 (Metrics via composition and gradient operators) . Let m ≥ 2d + 1 and let 
+
+d(·, ·) be a metric on C(M, R). Suppose that either (a) (y1, . . . , y m) ∈ Wm, where Wm is the generic set appearing in Proposition 4.3, or (b) yj := y1 ◦ hj−1 for 1 ≤ j ≤ m where (y, h ) ∈ G, the generic set from Proposition 4.4. Then the following hold: (i) The function 
+
+D(f, g ) := 
+
+> m
+
+X
+
+> j=1
+
+d yj ◦ f, y j ◦ g
+
+defines a metric on Diff 1(M, M ).(ii) The function 
+
+D(v, w ) := 
+
+> m
+
+X
+
+> j=1
+
+d ⟨∇ yj , v ⟩, ⟨∇ yj , w ⟩
+
+defines a metric on X1(M ).
+
+Similar to (7), if ∥ · ∥ is a norm over C(M, R) then 
+
+∥v∥D =
+
+> m
+
+X
+
+> j=1
+
+∥⟨∇ ρj , v ⟩∥ , v ∈ X1(M ),
+
+defines a norm on X1(M ) whenever assumptions (a) or (b) of Corollary 4.5 hold. 
+
+4.2 PDE Inverse Problems 
+
+Our theory can be directly applied to provide new well-posedness guarantees for inverse prob-lems arising from evolution equations of the form 
+
+∂tρ(t, x ) + L[ρ(t, x )] = 0 , ρ(0 , x ) = ρ0(x), t ∈ (0 , T ), x ∈ M. (9) In particular, we consider (9) based upon the following choices for L[·]: 
+
+
+
+Continuity Eqn. (CE) L[ρ] = div( ρv )Advection Eqn. (AE) L[ρ] = ⟨∇ ρ, v ⟩
+
+Advection-Diffusion-Reaction (ADR) Eqn. L[ρ] = div( ρv ) − div( D∇ρ) + R(ρ)
+
+. (10) 12 In (10), v : M → T M is a vector field, D : T M → T M is a symmetric positive-definite diffusion tensor, and R(·) is a reaction functional. Collectively, these equations model a wide range of complex physical and biological phenomena, from fluid transport to chemically reacting systems. They have also been employed in numerous computational inverse problems, including the identification of tumor-growth dynamics from patient-specific data [4, 12, 13, 33, 34]. Note that when R(ρ) = 0 the ADR equation reduces to a Fokker–Planck equation, and when additionally D = 0 it reduces to the CE. While the theoretical foundations of many inverse problems associated with (10) have been studied extensively, rigorous guarantees for the unique recovery of the underlying vector field v from finite snapshot data remain limited. In this section, we leverage our main theoretical results to address the following question: (Q4) Given finitely many solution snapshots {ρ(tj , x )}mj=0 of Equation (9) , and assuming that the diffusion tensor D and reaction functional R are known, under what conditions does this data uniquely determine the vector field v?
+
+Throughout this section, we assume that the solution snapshots are uniformly spaced in time, i.e., tj = j ∆t ∈ [0 , T ]. By interpreting the solution operators of the CE and AE as pushforward and composition operators, respectively, we are able to use our main time-dependent results (Theorem 3.3 and Proposition 4.4) to uniquely recover the time-∆ t flow map f∆t : M → M from the observed data {ρ(tj , x )}mj=0 . In order to recover the vector field 
+
+v, we must assume access to additional data incorporating time-derivatives of the observed states: 
+
+{(ρ(tj , x ), ∂ tρ(tj , x )) }mj=0 , or equivalently {(ρ(tj , x ), L[ρ(tj , x ))] }mj=0 .
+
+In what follows, we write f∆t = f (v)∆t , L = L(v), and ρ(t) = ρ(v)(t) to highlight the dependence of the flow map, differential operator, and PDE solution on the vector field v.
+
+Corollary 4.6 (Inversion for CEs and AEs) . Let v, w ∈ X2(M ), fix m > 2d + 1 , and let 
+
+t 7 → ρ(v)(t) and t 7 → ρ(w)(t), t ∈ [0 , T ], be strong solutions of either (a) continuity equations (CEs), where (ρ0, f (v)∆t ) satisfies Assumption 3.2, or (b) advection equations (AEs), where (ρ0, f (v)∆t ) ∈ G, the generic set from Theorem 2.5. If ρ(v)(tj , x ) = ρ(w)(tj , x ) for all x ∈ M and 0 ≤ j ≤ m, then the time-∆t flow maps coincide pointwise, i.e., 
+
+f (v)∆t (x) = f (w)∆t (x) for all x ∈ M. 
+
+If, in addition, L(v)ρ(v)(tj , ·)(x) = L(w)ρ(w)(tj , ·)(x) for all x ∈ M and 0 ≤ j ≤ m − 1,then the vector fields coincide pointwise, i.e., 
+
+v(x) = w(x) for all x ∈ M. 
+
+In Corollary 4.6, we assume sufficient regularity on the vector fields v, w ∈ X2(M ) and initial data ρ0 ∈ C1(M, R) such that t 7 → ρ(v)(t) and t 7 → ρ(w)(t) yield classical solutions of the CE and AE. Further work is needed to extend Corollary 4.6 to encompass ADR equations. Indeed, our main analytical technique for proving Corollary 4.6 involves interpreting the solution map to CEs and AEs as pushforward and composition operators over the space M ,while the solution map of the ADR equation generally lacks this structure. However, we can still provide guarantees for the unique recovery of the vector field governing an ADR equation when we observe the action of its differential operator on m initial conditions belonging to the generic set D.13 Corollary 4.7 (Inversion for ADR equations) . Fix m > 2d + 1 , and let (ρ1, . . . , ρ m) ∈ D,where D is the generic set from Theorem 3.1. Further assume that v, w ∈ X1(M ), that the diffusion tensor D : T M → T M is bounded and measurable, and that the reaction functional 
+
+R : L1(M ) → L1(M ). If 
+
+L(v)[ρj ] = L(w)[ρj ], weakly for 1 ≤ j ≤ m, 
+
+where L is the differential operator of the ADR equation, then 
+
+v(x) = w(x) for all x ∈ M. 
+
+In Corollary 4.7, we have assumed only boundedness and integrability of the diffusion tensor and reaction functional, respectively. Moreover, D ⊆ C1(M, Rm) while the ADR operator L[·] involves first- and second-order spatial derivatives. Thus, to make sense of the quantity L[ρj ] in Corollary 4.7, these derivatives are interpreted in the weak sense by integration against test functions in C∞ 
+
+> c
+
+(M ). These details, along with the complete proofs of Corollary 4.6 and Corollary 4.7, appear in Section 5. 
+
+4.3 Generative models 
+
+Many modern generative models are formulated in terms of measure transport between a known reference distribution and a target data distribution. Prominent examples include diffusion models [1], normalizing flows [3], and flow matching methods [2]. Normalizing flows aim to learn an explicit pushforward map between the two distributions, either through a discrete transformation or as the flow of a time-dependent vector field, whereas diffusion models connect the source and target distributions via a continuous solution path governed by a Fokker–Planck equation. Depending on the training objective and modeling choices, some of these approaches admit a unique transport map or flow vector field, while others are inherently underconstrained and allow multiple minimizers. Uniqueness guarantees in generative modeling are therefore of fundamental importance, as they form a prerequisite for more refined notions of well-posedness, including stability. In particular, stability analysis is essential for understanding the robustness of learned gen-erative models to data noise, model misspecification, and adversarial perturbations. From this perspective, our results provide a foundational characterization of when inverse problems based on measure transport admit unique solutions. This, in turn, creates a pathway toward systematic stability analyses of existing generative models and may inform the design of new generative modeling frameworks with built-in identifiability guarantees. More concretely, consider a probability measure ν ∈ P (M ) representing the target data distribution. The goal of generative modeling is to find some f which satisfies f#ρ = ν for a reference noise distribution ρ ∈ P (M ) that is easy to sample from, e.g., a multivariate Gaussian measure. In general situations, there are infinitely many such f , and thus the generative modeling problem is inherently ill-posed without further structure. Already, efforts have been made to achieve uniqueness by constraining the functional form of f , as in diffusion models [1], or by only allowing certain paths of transport, as is the case in flow matching or methods based on optimal transport [2]. Our theoretical results motivate a new way forward, in which the class of admissible models is constrained by the pushforward action of the generative model on a finite family of measures {ρj }mj=1 ⊆ P (M ). This collection can arise naturally in time-dependent physical modeling problems, as de-scribed in Sections 4.1 and 4.2, or may be introduced only to promote uniqueness. For example, as motivated by Theorem 3.1, rather than considering one reference noise distribu-tion ρ, one can construct a finite collection ( ρ1, . . . , ρ m) ∈ D, and instead enforce f#ρj = νj
+
+14 for 1 ≤ j ≤ m. Another option, motivated by Corollary 4.6, involves constructing f as the flow map of a continuity equation which interpolates a finite family of probability measures at prescribed time marginals. While our theory guarantees uniqueness in these settings, an important direction of future study involves exploring how the existence of such generative models depends on the chosen pushforward constraints. When the generative modeling procedure yields a unique pushforward map, we can rep-resent it as a function F : P(M )m → Diff 1(M, M ), where given the target measures ν =(ν1, . . . , ν m) ∈ P (M )m, the output f = F(ν) satisfies f#ρj = νj for 1 ≤ j ≤ m. A similar formulation also exists in the time-dependent setting. Quantifying how the generative model changes under perturbations of the data ν is important for understanding generalization abil-ity, robustness to noise, and finite-sample complexity. Concretely, one may be interested in bounds of the form 
+
+d(F(ν), F(ν⋆)) ≤ Θ( Dm(ν, ν ⋆)) , (11) where d(·, ·) is a metric on Diff 1(M, M ) and Dm is a metric on P(M )m, and Θ( ·) quantifies the type of stability, e.g., logarithmic, linear, Lipschitz, or H¨ older. Understanding how the stability quantified by (11) depends on F, d, and Dm can improve our understanding of existing models and inform the design of new architectures. When ( ρ1, . . . , ρ m) ∈ D, the generic set introduced in Theorem 3.1, our main theory developed in Section 3, already provides insights regarding stability bounds of the form (11). Towards this, suppose that f, g ∈ Diff 1(M, M ) satisfy f = F(ν) and g = F(ν⋆), i.e., f#ρj = νj
+
+and g#ρj = ν⋆j for 1 ≤ j ≤ m. In this situation, we assume the target measures νj have been perturbed but that the reference measures ρj remain fixed. It then follows that 
+
+D(F(ν), F(ν⋆)) = 
+
+> m
+
+X
+
+> j=1
+
+D(f#ρj , g #ρj ) = 
+
+> m
+
+X
+
+> j=1
+
+D(νj , ν ⋆j ) = Dm(ν, ν ⋆), (12) which shows a Lipschitz stability bound of the form (11) with Θ( x) = x. In (12), D(·, ·) is the metric on Diff 1(M, M ) introduced in Corollary 3.4, D(·, ·) is a metric over P(M ), and Dm(·, ·)is the corresponding metric over P(M )m defined by summing D over each index. The stability bound (12) depends on the choice of metric D(·, ·) over the space of probabil-ity measures [35], which in turn determines both D(·, ·) and Dm(·, ·). To further understand the implications of (12), it is important to study how the metric D(·, ·) we introduced in Corollary 3.4 is related to other common notions of distance over Diff 1(M, M ), and how this relationship depends on D(·, ·). 
+
+# 5 Proof of Results 
+
+This section contains the complete proofs of all theorems, corollaries, and propositions stated in Sections 3 and 4. 
+
+5.1 Proofs for Section 3 
+
+We now present the proofs of our main results. Throughout Section 5.1, m > 2d + 1 is fixed. We begin by establishing several crucial lemmas, which are dedicated to proving the existence of the generic set D, appearing in Theorem 3.1. A key ingredient in our construction of D
+
+involves taking preimages and forward images of known generic sets, e.g., Wm−1 appearing in Theorem 2.3, under suitable functions. Lemmas 5.1, 5.2, and 5.3 establish the functions and their regularity properties we use to accomplish this. 15 Lemma 5.1. Define 
+
+F : C1+(M, Rm) → C1+(M, Rm)
+
+by 
+
+F[Y ]( x) =  Y1(x)Ym(x), . . . , Y m−1(x)Ym(x), Y m(x), x ∈ M, (13) 
+
+for Y (x) = ( Y1(x), . . . , Y m(x)) ∈ C1+(M, Rm). Then F is a homeomorphism. Proof. First, note that F is invertible with inverse F−1 : C1+(M, Rm) → C1+(M, Rm) given by 
+
+F−1[Y ]( x) = Y1(x)
+
+Ym(x) , . . . , Ym−1(x)
+
+Ym(x) , Y m(x)
+
+!
+
+, x ∈ M. (14) Moreover, since pointwise multiplication and division are continuous operations over C1+(M, R), we have F and F−1 are both continuous over C1+(M, Rm). Thus, F is a homeomorphism. 
+
+Lemma 5.2. Consider the coordinate projection 
+
+π : C1+(M, Rm) → C1+(M, Rm−1),
+
+defined for Y (x) = ( Y1(x), . . . , Y m(x)) ∈ C1+(M, Rm) by 
+
+π[Y ]( x) =  Y1(x), . . . , Y m−1(x), x ∈ M. (15) 
+
+Then π is continuous and open. Proof. The continuity of π is immediate by its definition (15). We now define the map ˜ π : C1(M, Rm) → C1(M, Rm−1), given by ˜ π[Y ] = ( Y1, . . . , Y m−1). Since C1 is a Banach space with norm (2) and the map ˜ π is continuous, surjective, and linear, it follows by the open mapping theorem that ˜ π is an open map. Since C1+(M, Rm) is open in 
+
+C1(M, Rm) it then follows that π is also an open mapping. Indeed, for any open set O ⊆ C1+(M, Rm) it holds that O is also open in C1(M, Rm). Thus, 
+
+π(O) = ˜ π(O) is open in C1(M, Rm−1). Because π(O) ⊆ C1+(M, Rm−1) and C1+(M, Rm−1)is open in C1(M, Rm−1), it follows that π(O) is open in C1+(M, Rm−1) with the subspace topology. Therefore π is open. 
+
+Lemma 5.3. Define 
+
+I : C1+(M, Rm) → D1+(M, Rm)
+
+by 
+
+I[Y ]( x) = Y1(x)
+
+R 
+
+> M
+
+Y1(z) d z , . . . , Ym(x)
+
+R 
+
+> M
+
+Ym(z) d z
+
+!
+
+, x ∈ M, (16) 
+
+for Y (x) = ( Y1(x), . . . , Y m(x)) ∈ C1+(M, Rm). Then I is continuous and surjective. Proof. We will first establish that the map I is continuous. To prove this, it suffices to establish continuity of the map y 7 → y/ R 
+
+> M
+
+y dx over the domain C1+(M, R) with respect to the norm (2). Towards this, we will assume that yℓ ∈ C1+(M, R) for each ℓ ∈ N and that 
+
+yℓ ℓ→∞ 
+
+−−−→ y ∈ C1+(M, R). Then, we have that 
+
+y
+
+R 
+
+> M
+
+y dx − yℓ
+
+R 
+
+> M
+
+yℓ dx C1
+
+≤ y − yℓ
+
+R 
+
+> M
+
+y dx C1
+
++ yℓ
+
+ 1
+
+R 
+
+> M
+
+y dx − 1
+
+R 
+
+> M
+
+yℓ dx
+
+
+
+> C1
+
+≤ 1
+
+R 
+
+> M
+
+y dx ∥y − yℓ∥C1 + ∥yℓ∥C1
+
+1
+
+R 
+
+> M
+
+y dx − 1
+
+R 
+
+> M
+
+yℓ dx
+
+> ℓ→∞
+
+−−−→ 0, (17) 16 where (17) follows from the assumption that yℓ ℓ→∞ 
+
+−−−→ y in C1, which allows us to deduce convergence of the integrals R 
+
+> M
+
+yℓ dx ℓ→∞ 
+
+−−−→ R 
+
+> M
+
+y dx. Thus the proof of continuity is complete. The fact that I is surjective is clear from the definition of I, since I[Y ] = Y if Y ∈
+
+D1+(M, Rm) and D1+(M, Rm) ⊆ C1+(M, Rm). The following lemma establishes conditions under which density is preserved under forward and inverse images. While the result is standard, it plays a crucial role in our analysis, so we include a quick proof for completeness. 
+
+Lemma 5.4. Let X and Y be topological spaces, and let f : X → Y be continuous. Then: (i) If B ⊆ Y is dense and f is open, then f −1(B) is dense in X.(ii) If A ⊆ X is dense and f is surjective, then f (A) is dense in Y .Proof. (i) It suffices to show that f −1(B) intersects every non-empty open subset of X. Let 
+
+U ⊆ X be a non-empty open set. Since f is open, f (U ) is an open subset of Y . Because B is dense in Y , we have B ∩ f (U )̸ = ∅, so choose y ∈ B ∩ f (U ). By definition of f (U ), there exists 
+
+x ∈ U with f (x) = y. Hence, x ∈ U ∩ f −1(B). As U was arbitrary, it follows that f −1(B)is dense in X. (ii) By [36, Theorem 2.9(c)], one has f (A) ⊆ f (A). Since A is dense in X,we have A = X. Because f is surjective, f (X) = Y . Hence, f (A) = Y and f (A) is dense in 
+
+Y .In Lemma 5.5 below, we introduce a new generic set Q that is closely related to the generic set D appearing in the proof of Theorem 3.1. 
+
+Lemma 5.5. The set 
+
+Q := 
+
+
+
+Y ∈ C1+(M, Rm) : 
+
+ Y1
+
+Ym
+
+, . . . , Ym−1
+
+Ym
+
+
+
+is an embedding 
+
+
+
+(18) 
+
+is open and dense in C1+(M, Rm).Proof. We begin by defining the set 
+
+W+ := {Y ∈ C1+(M, Rm−1) : Y is an embedding }. (19) Note that W+ = C1+(M, Rm−1) ∩ Wm−1, where Wm−1 is the set defined in Theorem 2.3. Since C1+(M, Rm−1) ⊆ C1(M, Rm−1) is open, Theorem 2.3 implies that W+ is open and dense in C1+(M, Rm−1). Define a map Λ : C1+(M, Rm) → C1+(M, Rm−1) by Λ := π ◦ F −1, where F−1 and π are given in (14) and (15), respectively. Observe that Q = Λ −1(W+). By Lemmas 5.1 and 5.2, the map Λ is continuous and open. Therefore, Lemma 5.4 (i) yields that Q is open and dense. At several points in the proofs of our main results, we scale embeddings or compose them with auxiliary mappings. The following lemma shows that these modified functions remain embeddings. 
+
+Lemma 5.6. Let n ≥ 1. If Y = ( Y1, . . . , Y n) ∈ C1+(M, Rn) is an embedding, then the following maps defined over M are also embeddings: (i) Z(x) := ( c1Y1(x), . . . , c kYn(x)) where c ∈ Rn>0.(ii) H(x) := log( Y (x)) = (log( Y1(x)) , . . . , log( Yn(x))) .
+
+17 Proof. (i) : We can rewrite Z = L ◦ Y , where L : Rn>0 → Rn>0 is given by L(x) = diag( c)x
+
+for x ∈ Rn>0. One can check that L is a diffeomorphism of Rn>0. Since the composition of embeddings remains an embedding, the claim follows. (ii) : We will define S(x) := (log( x1), . . . , log( xn)) for x ∈ Rn>0. Again it is quick to verify that S is a diffeomorphism between Rn>0 and Rn. Therefore, H, a composition of embeddings, remains an embedding. We next show that if the delay map based upon h is an embedding that the delay map based upon h−1 must also be an embedding. This is needed for our proof of Theorem 3.3. 
+
+Lemma 5.7. Let n ≥ 2d + 1 , let (y, h ) ∈ C1(M, R) × Diff 1(M, M ), and assume that Ψ(n)(y,h ) is an embedding. Then, Ψ(n)(y,h −1) is also an embedding. Proof. Define the permutation map σ : Rn → Rn by setting 
+
+σ(x1, . . . , x n−1, x n) := ( xn, x n−1, . . . , x 1), (x1, . . . , x n) ∈ Rn.
+
+Note that σ is invertible and linear, and therefore a diffeomorphism of Rn. Next, we have for all x ∈ M that (σ ◦ Ψ(n)(y,h ) ◦ (hn−1)−1)( x) = σ
+
+
+
+y(( hn−1)−1(x)) , . . . , y (h−1(x)) , y (x)
+
+
+
+=
+
+
+
+y(x), y (h−1(x)) , . . . , y (( hn−1)−1(x)) 
+
+
+
+= Ψ (n)(y,h −1)(x).
+
+Since ( hn−1)−1 is a diffeomorphism, Ψ (n)(y,h ) is an embedding, and σ is a diffeomorphism, we have that Ψ (n)(y,h −1) is an embedding. Next, we specify the generic set D appearing in the statement of Theorem 3.1. 
+
+Lemma 5.8. The set 
+
+D := 
+
+
+
+Y = ( Y1, . . . , Y m) ∈ D1+(M, Rm) : 
+
+ Y1
+
+Ym
+
+, . . . , Ym−1
+
+Ym
+
+
+
+is an embedding 
+
+
+
+(20) 
+
+is open and dense in D1+(M, Rm).Proof. We have that D = Q ∩ D1+(M, Rm) and since Q is open (see Lemma 5.5 and Equa-tion (18)), we have by the definition of the subspace topology that D is open in D1+(M, Rm). Next, we aim to show that D is also dense. Towards this, we will first show D = I(Q), where I is defined in (16). We begin by proving D ⊆ I (Q). Let Y ∈ D. Then, since D ⊆ Q
+
+and I(Y ) = Y we have that Y ∈ I (Q). We now show that D ⊇ I (Q). If Y ∈ I (Q), we have Y = I(W ) ∈ D1+(M, Rm) for some W ∈ Q ⊆ C1+(M, Rm). By Lemma 5.5, W = ( W1, . . . , W m) has the property that (W1/W m, . . . , W m−1/W m) is an embedding. It therefore follows by Lemma 5.6 (i) that 
+
+ Y1
+
+Ym
+
+, . . . , Ym−1
+
+Ym
+
+
+
+=
+
+ I[W ]1
+
+I[W ]m
+
+, . . . , I[W ]m−1
+
+I[W ]m
+
+
+
+=
+
+ R  
+
+> M
+
+Wm dx
+
+R 
+
+> M
+
+W1 dx · W1
+
+Wm
+
+, . . . , 
+
+R 
+
+> M
+
+Wm dx
+
+R 
+
+> M
+
+Wm−1 dx · Wm−1
+
+Wm
+
+
+
+is an embedding as well, where I[W ]j denotes the j-th element in the vector-valued function 
+
+I[W ], 1 ≤ j ≤ m. As a result, we have Y ∈ D, as wanted. Recall from Lemma 5.3 that I is continuous and surjective, and moreover the fact that Q is dense in C1+(M, Rm). Therefore, by Lemma 5.4 (ii) , it follows that D is dense in D1+(M, Rm), as claimed. 18 At this point, all required lemmas have been established and we proceed to prove the main results of our paper, including Theorem 3.1, Theorem 3.3, and Corollary 3.4. 
+
+Proof of Theorem 3.1. We impose the condition that ( ρ1, . . . , ρ m) ∈ D, which is defined in (20). Assuming f#ρj = g#ρj , we have by the change of variables formula (5) that 
+
+ρj (f −1(x)) | det df −1 
+
+> x
+
+| = ρj (g−1(x)) | det dg −1 
+
+> x
+
+|, x ∈ N, 1 ≤ j ≤ m. (21) After dividing (21) where 1 ≤ j ≤ m − 1 by (21) where j = m, we obtain 
+
+ρj (f −1(x)) 
+
+ρm(f −1(x)) = ρj (g−1(x)) 
+
+ρm(g−1(x)) , x ∈ N, 1 ≤ j ≤ m − 1. (22) Since ( ρ1/ρ m, . . . , ρ m−1/ρ m) is an embedding by the definition of D in (20), (22) implies 
+
+f −1 = g−1, and hence, f = g. This proves (K1) under the conditions in Theorem 3.1. To prove (K2), we again fix ( ρ1, . . . , ρ m) ∈ D and assume that div( ρj v)( x) = div( ρj w)( x) x ∈ M, 1 ≤ j ≤ m. (23) Using the product rule, Equation (23) rearranges into 
+
+⟨∇ ρj (x), v (x)⟩rx + ρj (x)div( v)( x) = ⟨∇ ρj (x), w (x)⟩rx + ρj (x)div( w)( x), x ∈ M, (24) for 1 ≤ j ≤ m. Dividing (24) by ρj gives 
+
+⟨∇ log( ρj (x)) , v (x)⟩rx + div( v)( x) = ⟨∇ log( ρj (x)) , w (x)⟩rx + div( w)( x), x ∈ M, (25) for 1 ≤ j ≤ m. Here, we used that fact that 1
+
+ρj (x) ⟨∇ ρj (x), v (x)⟩rx =
+
+ 1
+
+ρj (x) ∇ρj (x), v (x)
+
+
+
+> rx
+
+= ⟨∇ log( ρj (x)) , v (x)⟩rx ,
+
+since for a fixed x ∈ M , ρj (x) is a scalar and the metric rx is bilinear. Next, we use (25) to simplify div( ρj v)( x) − div( ρmv)( x), which yields 
+
+
+
+∇ log 
+
+ ρj (x)
+
+ρm(x)
+
+
+
+, v (x)
+
+
+
+> rx
+
+=
+
+
+
+∇ log 
+
+ ρj (x)
+
+ρm(x)
+
+
+
+, w (x)
+
+
+
+> rx
+
+, x ∈ M, (26) for 1 ≤ j ≤ m − 1. Now define Φ : M → Rm−1 by setting Φ( x) := 
+
+
+
+log 
+
+ ρ1(x)
+
+ρm(x)
+
+
+
+, . . . , log 
+
+ ρm−1(x)
+
+ρm(x)
+
+ 
+
+, x ∈ M
+
+and note by Lemma 5.6 (ii) that Φ is an embedding. Rewriting (26) in vectorized notation we have that 
+
+dΦxv = dΦxw, x ∈ M. 
+
+Since Φ is an embedding with injective differential it then follows that v = w, as desired. 
+
+Proof of Theorem 3.3. In this proof we will write Jf (x) := | det df x| for notational simplicity. We will also denote ψ := ρ1/h #ρ1. Throughout, we assume that ( ψ, h ) ∈ G, which is the generic set appearing in Theorem 2.5. Since ρj = hj−1# ρ1, we have that by the change of variables formula (5) that 
+
+ρj (x) = ρ1(( hj−1)−1(x)) J(hj−1)−1 (x), x ∈ M, (27) 19 for 1 ≤ j ≤ m. Using the chain rule 
+
+J(hj )−1 (x) = Jh−1 (( hj−1)−1(x)) J(hj−1)−1 (x), x ∈ M, 
+
+we then obtain 
+
+ρj (x)
+
+ρj+1 (x) = ρ1(( hj−1)−1(x)) J(hj−1)−1 (x)
+
+ρ1(( hj )−1(x)) J(hj )−1 (x) = ρ1(( hj−1)−1(x)) J(hj−1)−1 (x)
+
+ρ1(( hj )−1(x)) Jh−1 (( hj−1)−1(x)) J(hj−1)−1 (x) (28) = ρ1(( hj−1)−1(x)) 
+
+ρ1(( hj )−1(x)) Jh−1 (( hj−1)−1(x)) = ρ1(( hj−1)−1(x)) 
+
+ρ2(( hj−1)−1(x)) (29) = ψ(( hj−1)−1(x)) , (30) for 1 ≤ j ≤ m − 1. Above, (28) comes from (27) and the chain rule, and (29) again makes use of (27). Now, let us first assume that f#ρj = g#ρj for 1 ≤ j ≤ m. This means that 
+
+ρj (f −1(x)) Jf −1 (x) = ρj (g−1(x)) Jg−1 (x). (31) Dividing f#ρj by f#ρj+1 and using (31) to simplify then yields 
+
+ρj (f −1(x)) 
+
+ρj+1 (f −1(x)) = ρj (g−1(x)) 
+
+ρj+1 (g−1(x)) , for 1 ≤ j ≤ m − 1. (32) Applying (30), we obtain 
+
+ψ(( hj−1)−1(f −1(x))) = ψ(( hj−1)−1(g−1(x))) , for 1 ≤ j ≤ m − 1. Recalling the time-delay map from Definition 2.4, we then have Ψ(m−1) (ψ,h −1)
+
+ f −1(x) = Ψ (m−1) (ψ,h −1)
+
+ g−1(x) , x ∈ N. (33) Note that by the assumption that ( ψ, h ) ∈ G (see Assumption 3.2), we have Ψ (m−1) (ψ,h ) is an embedding as a result of Takens’ theorem. Hence, it follows by Lemma 5.7 that Ψ (m−1) (ψ,h −1) is an embedding as well. Finally, combining Equation (33) with the injectivity of an embedding, we have f −1 = g−1, which gives f = g, as desired. We next consider the case when div( ρj v) = div( ρj w) for 1 ≤ j ≤ m. Following similar steps in the proof of Theorem 3.1, we obtain from this relationship that 
+
+D
+
+∇ log( ρj (x)) , v (x)
+
+E
+
+> rx
+
++ div( v)( x) = 
+
+D
+
+∇ log( ρj (x)) , w (x)
+
+E
+
+> rx
+
++ div( w)( x), x ∈ M (34) for 1 ≤ j ≤ m. Using (34) to simplify div( ρj v) − div( ρj+1 v), we then obtain 
+
+*
+
+∇ log 
+
+ ρj (x)
+
+ρj+1 (x)
+
+
+
+, v (x)
+
++
+
+> rx
+
+=
+
+*
+
+∇ log 
+
+ ρj (x)
+
+ρj+1 (x)
+
+
+
+, w (x)
+
++
+
+> rx
+
+, x ∈ M
+
+for 1 ≤ j ≤ m − 1. Utilizing Equation (30), the above equation becomes 
+
+D
+
+∇ log( ψ(( hj−1)−1(x))) , v (x)
+
+E
+
+> rx
+
+=
+
+D
+
+∇ log( ψ(( hj−1)−1(x))) , w (x)
+
+E
+
+> rx
+
+, 1 ≤ j ≤ m − 1. (35) Let Φ( x) := log 
+
+
+
+Ψ(m−1) (ψ,h −1)(x)
+
+
+
+, which is an embedding by Lemma 5.6. Thus, Equation (35) is equivalent to dΦxv = dΦxw, which implies v = w and completes the proof. 20 Proof of Corollary 3.4. Assume that either ( ρ1, . . . , ρ m) ∈ D or that ρj = hj−1# ρ1 for 1 ≤ j ≤
+
+m where ( ρ1, h ) satisfies Assumption 3.2. To see that D is a metric on Diff 1(M, N ), note first that D(f, f ) = 0. If f̸ = g, then by Theorem 3.1 and Theorem 3.3 there exists j such that 
+
+f#ρj̸ = g#ρj , hence D(f, g ) > 0. Symmetry follows from the symmetry of D, and the triangle inequality follows immediately from the triangle inequality for D:
+
+D(f, g ) = X
+
+> j
+
+D(f#ρj , g #ρj ) ≤ X
+
+> j
+
+
+
+D(f#ρj , q #ρj ) + D(q#ρj , g #ρj )
+
+
+
+= D(f, q ) + D(q, g ),
+
+for any q ∈ Diff 1(M, N ). Thus D is a metric. The argument for D is identical. Clearly D(v, v ) = 0, and if v̸ = w, then by Theorem 3.1 and Theorem 3.3 there exists j with div( ρj v)̸ = div( ρj w), so D(v, w ) > 0. Symmetry follows from symmetry of d, and the triangle inequality from that of d. Hence, D is a metric. 
+
+5.2 Proofs for Section 4.1 
+
+We now present the proofs of Propositions 4.3 and 4.4, which are applications of Whitney and Takens embedding theorems. 
+
+Proof of Proposition 4.3. Let Wm be the generic set from Theorem 2.3 and choose Y =(y1, . . . , y m) ∈ Wm. First, if yj ◦ f = yj ◦ g, this implies Y ◦ f = Y ◦ g and since Y is invertible we have f = g. Next, if ⟨∇ yj , v ⟩ = ⟨∇ yj , w ⟩, we have that dY x(v) = dY x(w) for all x ∈ M .Since dY x is injective for each x ∈ M , this implies v = w.
+
+Proof of Proposition 4.4. Let G be the generic set from Theorem 2.5 and choose ( y, h ) ∈ G.Recall that yj := y ◦ hj−1 for 1 ≤ j ≤ m. By Theorem 2.5 we then have that the delay map Ψ(m)(y,h )(x) := ( y(x), y (h(x)) , . . . , y (hm−1(x))) = ( y1(x), . . . , y m(x)) , x ∈ M
+
+is an embedding. As shorthand we will write Ψ = Ψ (m)(y,h ). Since yj ◦ f = yj ◦ g for 1 ≤ j ≤ m
+
+we have Ψ ◦ f = Ψ ◦ g and thus f = g. Moreover, if ⟨∇ yj , v ⟩ = ⟨∇ yj , w ⟩ for 1 ≤ j ≤ m then 
+
+dΨx(v) = dΨx(w) and we obtain v = w. 
+
+The proof of Corollary 4.5 is analogous to the proof of Corollary 3.4. 
+
+Proof of Corollary 4.5. Assume that either ( y1, . . . , y m) ∈ Wm or yj = y1 ◦ hj−1 for 1 ≤
+
+j ≤ m where ( y1, h ) ∈ G. By construction it is clear that D(f, f ) = 0. If f̸ = g, then by Propositions 4.3 and 4.4 there exists j such that yj ◦ f̸ = yj ◦ g, hence D(f, g ) > 0. Symmetry follows from the symmetry of d, and the triangle inequality follows immediately from the triangle inequality for d:
+
+D(f, g ) = X
+
+> j
+
+d(yj ◦ f, y j ◦ g) ≤ X
+
+> j
+
+
+
+d(yj ◦ f, y j ◦ q) + d(yj ◦ q, y j ◦ g)
+
+
+
+= D(f, q ) + D(q, g ),
+
+for any q ∈ Diff 1(M, M ). Thus D is a metric. The argument for D is identical. Clearly D(v, v ) = 0, and if v̸ = w, then by Proposi-tions 4.3 and 4.4 there exists j with ⟨∇ yj , v ⟩̸ = ⟨∇ yj , w ⟩, so D(v, w ) > 0. Symmetry follows from symmetry of d, and the triangle inequality from that of d. Hence, D is a metric. 21 5.3 Proofs for Section 4.2 
+
+We now present proofs of the results from Section 4.2 which provide guarantees for unique vector field recovery from finite snapshot data in certain PDE inverse problems. In our proof of Corollary 4.6, we will use the fact that the solution t 7 → ρ(t) of the continuity equation 
+
+∂tρ(t, x ) + div( ρ(t, x )v(x)) = 0 over [0 , T ] is given by ρ(t) = ( ft)#ρ0 where ft is the time-t flow map of the vector field v. We also use the fact that the solution t 7 → ρ(t) of the advection equation 
+
+∂tρ(t, x ) + ⟨∇ ρ(t, x ), v (x)⟩ = 0 is given by ρ(t) = ρ0 ◦ f −1 
+
+> t
+
+.
+
+Proof of Corollary 4.6. (Continuity equation) First, we consider the case when ( ρ0, f (v)∆t )satisfies Assumption 3.2 and where the solution maps t 7 → ρ(v)(t) and t 7 → ρ(w)(t) satisfy the continuity equation (9) over [0 , T ] with ρ(v)(0) = ρ0 = ρ(w)(0). We further assume that 
+
+ρ(v)(tj , x ) = ρ(w)(tj , x ) for 0 ≤ j ≤ m and all x ∈ M . Viewing the continuity equation solution operator as a pushforward map, this implies that 
+
+
+
+f (v)
+
+> tj
+
+ 
+
+> #
+
+ρ0 =
+
+
+
+f (w)
+
+> tj
+
+ 
+
+> #
+
+ρ0, 0 ≤ j ≤ m. 
+
+Because measurements are uniform in time, i.e., tj = j∆t, we equivalently have 
+
+ρj := 
+
+
+
+f (v)∆t
+
+j 
+
+> #
+
+ρ0 =
+
+
+
+f (w)∆t
+
+j 
+
+> #
+
+ρ0, 1 ≤ j ≤ m. (36) By the definition of ρj in (36), it also follows that 
+
+
+
+f (v)∆t
+
+ 
+
+> #
+
+ρj =
+
+
+
+f (w)∆t
+
+ 
+
+> #
+
+ρj , 0 ≤ j ≤ m − 1.
+
+Since ( ρ0, f ∆t) satisfies Assumption 3.2, it then follows by Theorem 3.3 that f (v)∆t (x) =
+
+f (w)∆t (x) for all x ∈ M , as desired. If we have additional knowledge that L(v)[ρ(v)(tj , x )] = 
+
+L(w)[ρ(w)(tj , x )] for 0 ≤ j ≤ m−1 and all x ∈ M , then by definition of the continuity equation this gives that div( ρj v)( x) = div( ρj w)( x) for 0 ≤ j ≤ m − 1 and all x ∈ M . The conclusion that v(x) = w(x) for all x ∈ M then follows from Theorem 3.3. 
+
+(Advection equation) We now turn to the case when ( ρ0, f (v)∆t ) ∈ G and t 7 → ρ(v)(t)and t 7 → ρ(w)(t) satisfy the advection equation (9) over [0 , T ] with ρ(v)(tj , x ) = ρ(w)(tj , x ) for 0 ≤ j ≤ m and all x ∈ M . Using the fact that solutions to the advection equation are given by composition with the inverse flow map and, additionally, that measurements are uniform in time, we obtain 
+
+ρj := ρ0 ◦
+
+
+
+f (v)∆t
+
+−j
+
+= ρ0 ◦
+
+
+
+f (w)∆t
+
+−j
+
+, 1 ≤ j ≤ m. (37) From the definition of ρj in (37) it follows that 
+
+ρj ◦
+
+
+
+f (v)∆t
+
+−1
+
+= ρj ◦
+
+
+
+f (w)∆t
+
+−1
+
+, 0 ≤ j ≤ m − 1. (38) Moreover, since ( ρ0, f (v)∆t ) ∈ G, the generic set from Theorem 2.5, the delay map Ψ (m)(ρ0,f (v)∆t )
+
+is an embedding. By Lemma 5.7, it then follows that Φ( x) = ( ρ0(x), . . . , ρ m−1(x)), is an 22 embedding. As a result, (38) implies that f (v)∆t (x) = f (w)∆t (x) for all x ∈ M . Moreover, if 
+
+L(v)[ρ(v)(tj , x )] = L(w)[ρ(w)(tj , x )] for 0 ≤ j ≤ m − 1 and all x ∈ M , then by the definition of the advection equation we have ⟨∇ ρj (x), v (x)⟩rx = ⟨∇ ρj (x), w (x)⟩rx for 0 ≤ j ≤ m − 1 and all x ∈ M . This implies that dΦxv = dΦxw, and since Φ is an embedding, this implies by Definition 2.1 that v(x) = w(x) for all x ∈ M as desired. In the statement of Corollary 4.7, we consider the action of the ADR differential operator 
+
+L(v)[ρ] on a C1 density ρ. Given that the differential operator includes second-order spatial derivatives, we interpret this quantity in the weak sense, i.e., through the relationship 
+
+Z
+
+> M
+
+ϕL(v)[ρ] d x =
+
+Z
+
+> M
+
+div( ρv )ϕ dx +
+
+Z
+
+> M
+
+⟨∇ ϕ, D ∇ρ⟩ dx +
+
+Z
+
+> M
+
+R(ρ)ϕ dx, ∀ϕ ∈ C∞ 
+
+> c
+
+(M ). (39) We now present the proof of Corollary 4.7. 
+
+Proof of Corollary 4.7. Assume that ( ρ1, . . . , ρ m) ∈ D, the generic set from Theorem 3.1 and that L(v)[ρj ] = L(w)[ρj ] for 1 ≤ j ≤ m. Equating the weak form expressions of these derivatives (see (39)) and canceling common terms, we have 
+
+Z
+
+> M
+
+div( ρj v)ϕ dx =
+
+Z
+
+> M
+
+div( ρj w)ϕ dx, ∀ϕ ∈ C∞ 
+
+> c
+
+(M ), 1 ≤ j ≤ m. (40) Note that the maps x 7 → div( ρj v)( x) and x 7 → div( ρj w)( x) are continuous, hence integrable, as M is compact. Thus, since (40) holds for all ϕ ∈ C∞ 
+
+> c
+
+(M ) we have that div( ρj v)( x) = div( ρj w)( x) for all x ∈ M and 1 ≤ j ≤ m. By Theorem 3.1 this implies v(x) = w(x) for all 
+
+x ∈ M .
+
+# 6 Numerical Experiments 
+
+In this section, we conduct numerical tests which showcase the unique recovery of transport maps and vector fields from finite measure-valued datasets. 1 Throughout, the unknown func-tions are parameterized by neural networks and the metrics introduced in Corollary 3.4 are used to construct loss functions that promote unique training on distributional learning tasks. In Section 6.1, we demonstrate unique pushforward map recovery in the time-independent setting. Section 6.2 then studies a corresponding time-dependent problem which can also be viewed as an inverse problem for the continuity equation. Across both Sections 6.1 and 6.2 we repeat experiments with different randomized realizations of the measure-valued datasets, providing empirical evidence that the genericity assumptions introduced in Sections 3 and 4 hold in practice. Finally, in Section 6.3 we demonstrate unique vector field recovery through the comparison of finitely many density-weighted divergence operators. We investigate how the accuracy of the vector field reconstruction depends on the number of available densities, and we discuss these results in light of the theoretical guarantees established in Section 3. 
+
+6.1 Unique Recovery of a One-Dimensional Pushforward Map 
+
+We begin by showcasing unique pushforward map recovery for a simple one-dimensional ex-ample. We will aim to learn the map f : S1 → R3 given by 
+
+f (x) = sin( x), cos(3 x) + sin(2 x)2 , sin(3 x) + sin(5 x)2
+
+!
+
+, x ∈ [−π, π ], (41)  
+
+> 1Our code is available: https://github.com/jrbotvinick/Transport-Map-and-Vector-Field-Recovery .
+
+23 from its pushforward action on five densities ρ1, . . . , ρ 5 ∈ P (S1). We have written S1 to denote the circle obtained by identifying the endpoints of [ −π, π ]. The densities ρj are constructed from the von Mises distribution 
+
+ρj (x; αj , β j ) ∝ exp( αj cos( x − βj )) , x ∈ [−π, π ],
+
+where the concentrations {αj }5 
+
+> j=1
+
+are sampled i.i.d. from Unif([1 , 3]) and the centers {βj }5
+
+> j=1
+
+are sampled i.i.d. from Unif([ −π, π ]). These reference densities are visualized in the top row of Figure 2a. Thus, each ρj is a realization of a random measure [37]. 
+
+(a) (Top) input mesures ρ1, . . . , ρ 5. (Bottom) Marginals from output measures f#ρi and ( fθ )#ρi, all estimated from samples by a kernel density estimation. 
+
+(b) The function fθ recovered from training on the measure-valued data closely agrees with the ground truth f .
+
+Figure 2: Recovering a one-dimensional function from its pushforward action on five densities. The densities ρ1, . . . , ρ 5 are used to construct the training dataset 
+
+{(ρj , f #ρj )}5
+
+> j=1
+
+, (42) where a marginal of the output measures f#ρj is visualized in the bottom row of Figure 2a. Throughout Figure 2a, we have written fi to denote the i-th component of the vector-valued map f . To learn f from the dataset (42), we initialize a neural network fθ : S1 → R with weights and biases θ ∈ Rp and seek to minimize the loss 
+
+J (θ) = 15
+
+> 5
+
+X
+
+> j=1
+
+D f#ρj , (fθ)#ρj
+
+, (43) 24 where D denotes the energy Maximum Mean Discrepancy (MMD) [38]. Note that the ob-jective function (43) directly applies the metric introduced in Corollary 3.4 to determine the mismatch between f and fθ.The neural network fθ uses a Fourier embedding of S1 to ensure continuity and smoothness at the endpoints of [ −π, π ]. In particular, it is constructed as 
+
+fθ(x) = hθ(sin( x), cos( x)) , x ∈ [−π, π ],
+
+where hθ : R2 → R is a fully connected neural network with two hidden layers of 100 nodes each and hyperbolic tangent activation function. At each optimization step, the loss (43) is estimated using 100 i.i.d. samples from each ρj which are used to construct empirical approximations to f#ρj and ( fθ)#ρj . Optimization is carried out using Adam [39] with learning rate 10 −3 for 5 × 10 4 iterations. Following training, we visualize the learned map fθ; see Figure 2b. Consistent with the the-oretical identifiability guarantees established in Theorem 3.1, the recovered fθ closely matches the ground-truth f . The experiment is repeated 10 times for different randomized choices of the measure-valued dataset. In each trial we randomly resample the concentrations and cen-ters {(αj , β j )}5 
+
+> j=1
+
+which parameterize the densities ρj , as well as the initialization of the neural network. Following training, we assess the learned neural network’s performance by approximating the relative mean squared error MSE( fθ) = 
+
+R 
+
+> S1
+
+|f (x) − fθ(x)|2 dx
+
+R 
+
+> S1
+
+|f (x)|2 dx .
+
+Across all ten trials, we found that the model fθ converged to the ground truth solution with high accuracy with MSE( fθ) taking values in [1 .54 · 10 −5, 8.36 · 10 −5] with a median of 3.23 · 10 −5.
+
+6.2 Unique Lorenz-63 Identification from Density Snapshots 
+
+We next consider a more realistic setting in which data is generated by a time-dependent process. Here, we consider the Lorenz-63 system defined by the following system of differential equations 
+
+˙x = σ(y − x)˙y = x(ρ − z) − y
+
+˙z = xy − βz . (44) Denoting by f the time-∆ t flow of (44) with ∆ t = 0 .1, we consider a dataset of the form 
+
+{ρj }mj=0 with m = 7 and ρj := f j
+
+> #
+
+ρ for 0 ≤ j ≤ m, where ρ ∈ P (R3) is a Gaussian initial condition. The initial condition ρ is a realization of a random measure with mean ( γ1, γ 2, γ 3), where γ1 ∼ Unif( −15 , 15), γ2 ∼ Unif( −15 , 15), and γ3 ∼ Unif(20 , 40), and covariance σ2I,where σ ∼ Unif(3 , 7) and I ∈ R3×3 denotes the identity matrix. Each measure ρj is represented as an empirical distribution from N = 10 5 samples, and the pushforward ρj+1 = f#ρj is computed by evaluating the flow f , approximated via the forward Euler method with a time step of 0 .01, on each sample. We then seek to numerically recover the underlying vector field (44) from this measure-valued dataset. In particular, we parameterize vθ as a neural network with corresponding flow fθ and seek to minimize the objective 
+
+J (θ) = 
+
+> m−1
+
+X
+
+> j=0
+
+D (( fθ)#ρj , ρ j+1 ) . (45) 25 (a) Marginal of the training data onto the x-z axis.   
+
+> (b) Support of the observed data (top left), the relative reconstruction error (top right), the ground truth vector field (bottom left), and the learned vector field (bottom right).
+> (c) Density evolution predicted by the learned model for a new Gaussian initial condition with mean (−10 ,10 ,40) and covariance 49 I.
+
+Figure 3: Recovering the Lorenz-63 dynamics on the support of finite snapshot data {ρj }mj=0 
+
+that covers the full chaotic attractor. In this example, MSE( vθ) = 1 .48 · 10 −2 and MSE( fθ) = 2.27 · 10 −3.
+
+Note that the objective (45) directly applies the metric introduced in Corollary 3.4 to solve this distribution-matching inverse problem. The neural network vθ is fully connected with two hidden layers of 100 nodes and hyper-bolic tangent activation, and the time-∆ t flow fθ is again approximated using Euler’s method with a timestep of 0 .01. Before training, all data is rescaled by an affine transformation to belong to the unit cube. We then use the Adam optimizer with a learning rate of 10 −3 to min-26 (a) Marginal of the training data onto the x-z axis. 
+
+> (b) Support of the observed data (top left), the relative reconstruction error (top right), the ground truth vector field (bottom left), and the learned vector field (bottom right).
+
+Figure 4: Recovering the Lorenz-63 dynamics on the support of finite snapshot data {ρj }mj=0 
+
+which covers only a fraction of the chaotic attractor. The dynamics are accurately identified on the support of the observed density snapshots. In this example, MSE( vθ) = 8 .48 · 10 −2
+
+and MSE( fθ) = 3 .93 · 10 −3.
+
+imize J (θ) over 10 4 training iterations, where D is the sample-based energy MMD and each term in the loss (45) is approximated from minibatches of 200 sample points. This experiment is repeated 10 times for different randomized means ( γ1, γ 2, γ 3) and covariances σ2I of the initial measure ρ0, as well as different randomized neural network initializations. Following training, we assess the model’s performance by evaluating both the relative mean-squared error of the vector field vθ and flow map fθ, weighted by the measure ˜ρ := 1
+
+m
+
+> m−1
+
+X
+
+> j=0
+
+ρj ∈ P (R3). (46) In particular, our evaluation metrics for the trained model with parameters θ are given by MSE( vθ) = 
+
+R 
+
+> R3
+
+|vθ(x) − v(x)|2 ˜ρ(x) d x
+
+R 
+
+> R3
+
+|v(x)|2 ˜ρ(x) d x , MSE( fθ) = 
+
+R 
+
+> R3
+
+|fθ(x) − f (x)|2 ˜ρ(x) d x
+
+R 
+
+> R3
+
+|f (x)|2 ˜ρ(x) d x ,
+
+where all integrals are approximated via Monte–Carlo sampling. By evaluating the relative mean squared errors weighted by ˜ ρ we ensure that we only assess the model’s performance 27 in regions where data has been observed. Across all ten trials we observed accurate recovery of the vector field and flow map on the support of the data, with MSE( vθ) taking values in [1 .35 · 10 −2, 1.53 · 10 −1] with a median of 6 .47 · 10 −2, and with MSE( fθ) taking values in [1 .01 · 10 −3, 1.26 · 10 −2] with a median of 3 .92 · 10 −3. These results are consistent with Corollary 4.6 where we introduced theoretical guarantees for recovering flow maps from finite snapshot data arising from continuity equations. In Figures 3 and 4 we visualize two illustrative cases from these ten trials. Figure 3 depicts a situation in which the trajectory {ρj } covers the full Lorenz-63 attractor, while in Figure 4 the trajectory only covers a fraction of the attractor. In both cases, we demonstrate accurate recovery of the vector field on the support of the observed data . Figures 3a and 4a show marginal projections of the training data {ρj }. Moreover, in Figures 3b and 4b we visualize the support of ˜ ρ, the relative error |vθ(x) − v(x)|2/|v(x)|2 on the support of the Lorenz-63 attractor, the ground truth vector field v, and the learned vector field vθ. As expected, in Figure 4b the support of ˜ ρ is correlated with the regions of low relative error. In Figure 3c, we show how the learned model can be used to conduct accurate forecasts for distributional dynamics corresponding to new measure-valued initial conditions that were unseen during training. Extrapolating to new measure-valued initial conditions for the model learned in Figure 4 is more challenging, given that the support of the data {ρj }mj=0 did not include a critical part of the Lorenz-63 attractor. This limitation arises solely from the observed data and is unrelated to the learning framework. 
+
+6.3 Unique Vector Field Recovery via Divergence Operator Comparison 
+
+While Sections 6.1 and 6.2 reconstruct transport maps by comparing pushforward measures, we now showcase an experiment in which a vector field is recovered by comparing weighted divergence operators over a finite collection of densities. In particular, we consider the 2D vector field defined by 
+
+v(x, y ) = ( y, − sin(4 πx )) , (x, y ) ∈ [−1, 1] 2, (47) which describes the motion of an undamped pendulum. While we do not have direct access to the unknown ground truth v, we assume we can evaluate the function x 7 → div( ρj v)( x) for a finite collection of densities {ρj }mj=1 . Each ρj is a realization of a random measure defined by 
+
+ρj = N (γj , σ 2 
+
+> j
+
+I) with γj ∼ Unif([ −1, 1] 2) and σj ∼ Unif([0 .75 , 1.25]). We then parameterize the unknown vector field as a neural network vθ : R2 → R2 and seek to reduce the loss 
+
+J (θ) = 
+
+> m
+
+X
+
+> j=1
+
+∥div( ρj v) − div( ρj vθ)∥2 
+
+> L2
+
+. (48) The loss (48) makes use of the metric on the space of vector fields introduced in Corollary 3.4. We approximate J (θ) using automatic differentiation and Monte–Carlo integration with ran-domly sampled minibatches of 200 points from Unif([ −1, 1] 2). This follows the conventional training pipeline of a physics-informed neural network [40]. The network vθ has two hidden layers, each consisting of 50 nodes and using the hyperbolic tangent activation function, and optimization is carried out using Adam for 2 · 10 4 iterations. In Figure 5, we report training results for various choices of m to empirically investigate how the reconstructed vector field depends on the number of accessible weighted divergence operators. For each fixed choice of m, we repeat the neural network training 10 times with different randomized initializations. For each network training we compute the relative error leading to the visualization of means and standard deviations in Figure 5a. Figure 5b visualizes individual training results for m ∈ { 1, 2, 3, 4}.28 (a) Reference vector field (left) and the relative error as a function of m (right).           
+
+> (b) Visualization of the densities {ρj}mj=1 via the function max jρj(x) (top row), the learned vector field vθafter minimizing the objective (48) (middle), and the absolute error between the learned vθ
+> and reference v(bottom).
+
+Figure 5: Reconstructing the vector field (47) by comparing divergence operators via the objective function (48). The reference vector field v and relative error as a function of m are shown in Figure 5a, while Figure 5b visualizes individual training results for m ∈ { 1, 2, 3, 4}.Theorem 3.1 predicts that unique recovery occurs when m > 2d + 1, which in this case is m = 6. This heuristic relies on the Whitney and Takens embedding theorems which are known to provide upper bounds on the required embedding dimensions, while in practice lower dimensional embeddings often exist. These minimum embedding dimensions are expected to depend highly on the observed ρj and underlying v. In Figure 5, we observe accurate recovery of the underlying vector field using only m = 3 densities. 
+
+# 7 Conclusion 
+
+In this work, we established conditions guaranteeing that a diffeomorphism or vector field can be uniquely recovered from its action on finitely many probability measures. In the static setting, Theorem 3.1 proves that if m > 2d + 1, then for a generic family of m strictly positive C1 densities, equality of the corresponding pushforwards or weighted divergences forces equality of the underlying maps or vector fields. As a result, the theorem provides finite-data identifiability guarantees for transport-based inverse problems. We extended these results to time-dependent data generated by iterated pushforwards of a dynamical system, showing in Theorem 3.3 that identifiability persists under a Takens-type embedding assumption. As a consequence, Corollary 3.4 introduces metrics on spaces of diffeomorphisms and vector fields defined through finitely many measure-valued observations, providing a new finite-data 29 framework for data fitting in distributional inverse problems. More broadly, our results provide a unified framework for reconstruction problems arising in operator-theoretic dynamical systems, PDE inverse problems, and transport-based gener-ative modeling. We showed that the same identifiability mechanism applies to the recovery of Perron–Frobenius and Koopman operators, to inverse problems for continuity, advection, Fokker–Planck, and advection–diffusion–reaction equations, and to transport-based genera-tive models. The numerical experiments in Section 6 further support the practical relevance of the theory by demonstrating recovery of vector fields and pushforward maps from finite distributional data. From the perspective of machine learning, these results provide finite-data identifiability guarantees for transport- and operator-based models, clarifying when such measure-valued learning problems are well posed. This, in turn, lays groundwork for future study of stability, robustness, and generalization, since uniqueness is a prerequisite for meaningful control of error propagation and sensitivity to perturbations. More generally, by characterizing the number and type of distributions needed for unique recovery, our analysis may help guide the design of learning objectives, model classes, and data-collection strategies that enforce identifiability explicitly rather than implicitly. Important directions for future work include relaxing the assumptions underlying the cur-rent theory. It will also be important to establish stability estimates for the proposed metrics, thereby quantifying how perturbations in the observed measures affect the recovery of the underlying diffeomorphism or vector field. Further avenues include extending the framework beyond the diffeomorphic setting, as well as developing a quantitative understanding of how identifiability is influenced by noise and finite-sample effects. 
+
+# Acknowledgements 
+
+J. B.-G. was supported in part by a fellowship award under contract FA9550-21-F-0003 through the National Defense Science and Engineering Graduate (NDSEG) Fellowship Pro-gram, sponsored by the Air Force Research Laboratory (AFRL), the Office of Naval Research (ONR) and the Army Research Office (ARO), and ONR under award N00014-24-1-2088. Y. Y. was supported in part by the National Science Foundation under award DMS-2409855 and by ONR under award N00014-24-1-2088. 
+
+# References 
+
+[1] Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising Diffusion Probabilistic Models. 
+
+Advances in neural information processing systems , 33:6840–6851, 2020. [2] Yaron Lipman, Ricky T. Q. Chen, Heli Ben-Hamu, Maximilian Nickel, and Matthew Le. Flow matching for generative modeling. In The Eleventh International Conference on Learning Representations , 2023. [3] George Papamakarios, Eric Nalisnick, Danilo Jimenez Rezende, Shakir Mohamed, and Balaji Lakshminarayanan. Normalizing Flows for Probabilistic Modeling and Inference. 
+
+Journal of Machine Learning Research , 22(57):1–64, 2021. [4] Alexander Tong, Jessie Huang, Guy Wolf, David Van Dijk, and Smita Krishnaswamy. TrajectoryNet: A Dynamic Optimal Transport Network for Modeling Cellular Dynamics. In International conference on machine learning , pages 9526–9536. PMLR, 2020. 30 [5] Guillaume Huguet, Daniel Sumner Magruder, Alexander Tong, Oluwadamilola Fasina, Manik Kuchroo, Guy Wolf, and Smita Krishnaswamy. Manifold Interpolating Optimal-Transport Flows for Trajectory Inference. In Advances in Neural Information Processing Systems , 2022. [6] Geoffrey Schiebinger, Jian Shu, Marcin Tabaka, Brian Cleary, Vidya Subramanian, Aryeh Solomon, Joshua Gould, Siyan Liu, Stacie Lin, Peter Berube, et al. Optimal-transport analysis of single-cell gene expression identifies developmental trajectories in reprogram-ming. Cell , 176(4):928–943, 2019. [7] Zhenyi Zhang, Tiejun Li, and Peijie Zhou. Learning stochastic dynamics from snapshots through regularized unbalanced optimal transport. In The Thirteenth International Con-ference on Learning Representations , 2025. [8] Wenjun Zhao, Elana J Fertig, and Genevieve L Stein-O’Brien. CycleGRN: Inferring Gene Regulatory Networks from Cyclic Flow Dynamics in Single-Cell RNA-seq. bioRxiv , pages 2025–11, 2025. [9] Rentian Yao, Atsushi Nitanda, Xiaohui Chen, and Yun Yang. Learning Density Evolution from Snapshot Data. arXiv preprint arXiv:2502.17738 , 2025. [10] Christopher Scarvelis and Justin Solomon. Riemannian metric learning via optimal trans-port. In The Eleventh International Conference on Learning Representations , 2023. [11] Hongyu Liu and Zhihui Liu. Inversions of stochastic processes from ergodic measures of Nonlinear SDEs. arXiv preprint arXiv:2512.01307 , 2025. [12] Tobias Blickhan, Jules Berman, Andrew Stuart, and Benjamin Peherstorfer. DICE: Discrete inverse continuity equation for learning population dynamics. arXiv preprint arXiv:2507.05107 , 2025. [13] Wei Liu, Connie Khor Li Kou, Kun Hee Park, and Hwee Kuan Lee. Solving the in-verse problem of time independent Fokker–Planck equation with a self supervised neural network method. Scientific Reports , 11(1):15540, 2021. [14] Xiaoli Chen, Liu Yang, Jinqiao Duan, and George Em Karniadakis. Solving Inverse Stochastic Problems from Discrete Particle Observations Using the Fokker–Planck Equa-tion and Physics-Informed Neural Networks. SIAM Journal on Scientific Computing ,43(3):B811–B830, 2021. [15] Andr´ e M McDonald and Micha¨ el A van Wyk. Identification of Nonlinear Discrete Systems From Probability Density Sequences. IEEE Transactions on Circuits and Systems I: Regular Papers , 70(2):846–859, 2022. [16] Yaqing Chen, Zhenhua Lin, and Hans-Georg M¨ uller. Wasserstein regression. Journal of the American Statistical Association , 118(542):869–882, 2023. [17] Jonah Botvinick-Greenhouse, Maria Oprea, Romit Maulik, and Yunan Yang. Measure-theoretic time-delay embedding. Journal of Statistical Physics , 192(12):171, 2025. [18] Floris Takens. Detecting strange attractors in turbulence. In Dynamical Systems and Turbulence, Warwick 1980 , pages 366–381. Springer Berlin Heidelberg, 1981. [19] Lyle Noakes. The Takens embedding theorem. International Journal of Bifurcation and Chaos , 1(04):867–872, 1991. 31 [20] Louis M Pecora, Linda Moniz, Jonathan Nichols, and Thomas L Carroll. A unified approach to attractor reconstruction. Chaos: An Interdisciplinary Journal of Nonlinear Science , 17(1), 2007. [21] Ryan V Raut, Zachary P Rosenthal, Xiaodan Wang, Hanyang Miao, Zhanqi Zhang, Jin-Moo Lee, Marcus E Raichle, Adam Q Bauer, Steven L Brunton, Bingni W Brunton, et al. Arousal as a universal embedding for spatiotemporal brain dynamics. BioRxiv ,pages 2023–11, 2025. [22] George Sugihara and Robert M May. Nonlinear forecasting as a way of distinguishing chaos from measurement error in time series. Nature , 344(6268):734–741, 1990. [23] C´ edric Villani. Optimal transport: old and new , volume 338. Springer, 2008. [24] Arthur Gretton, Karsten M. Borgwardt, Malte J. Rasch, Bernhard Sch¨ olkopf, and Alexander Smola. A Kernel Two-Sample Test. Journal of Machine Learning Research ,13(25):723–773, 2012. [25] Wilson A Sutherland. Introduction to Metric and Topological Spaces . Oxford University Press, 2009. [26] Morris W Hirsch. Differential topology , volume 33. Springer Science & Business Media, 2012. [27] Ch. Sch¨ utte, W. Huisinga, and P. Deuflhard. Transfer Operator Approach to Confor-mational Dynamics in Biomolecular Systems. In Ergodic Theory, Analysis, and Efficient Simulation of Dynamical Systems , pages 191–223. Springer Berlin Heidelberg, 2001. [28] Gary Froyland, Simon Lloyd, and Anthony Quas. Coherent structures and isolated spec-trum for Perron–Frobenius cocycles. Ergodic Theory and Dynamical Systems , 30(3):729– 756, 2010. [29] Stefan Klus, P´ eter Koltai, and Christof Sch¨ utte. On the numerical approximation of the Perron-Frobenius and Koopman operator. Journal of Computational Dynamics , 3(1):51– 79, 2015. [30] Andrzej Lasota and Michael C Mackey. Chaos, Fractals, and Noise: Stochastic Aspects of Dynamics , volume 97. Springer Science & Business Media, 2013. [31] Igor Mezi´ c. Analysis of Fluid Flows via Spectral Properties of the Koopman Operator. 
+
+Annual Review of Fluid Mechanics , 45(1):357–378, 2013. [32] Matthew J Colbrook, Zlatko Drmaˇ c, and Andrew Horning. An Introductory Guide to Koopman Learning. arXiv preprint arXiv:2510.22002 , 2025. [33] Cosmina Hogea, Christos Davatzikos, and George Biros. An image-driven parameter esti-mation problem for a reaction–diffusion glioma growth model with mass effects. Journal of mathematical biology , 56(6):793–825, 2008. [34] Yixun Liu, Samira M Sadowski, Allison B Weisbrod, Electron Kebebew, Ronald M Sum-mers, and Jianhua Yao. Patient specific tumor growth prediction using multimodal images. Medical image analysis , 18(3):555–566, 2014. [35] Qin Li, Maria Oprea, Li Wang, and Yunan Yang. Stochastic Inverse Problem: stability, regularization and Wasserstein gradient flow. arXiv preprint arXiv:2410.00229 , 2024. 32 [36] Mark Anthony Armstrong. Basic Topology . Springer Science & Business Media, 2013. [37] Olav Kallenberg. Random measures, theory and applications , volume 1. Springer, 2017. [38] Jean Feydy, Thibault S´ ejourn´ e, Fran¸ cois-Xavier Vialard, Shun-ichi Amari, Alain Trouve, and Gabriel Peyr´ e. Interpolating between Optimal Transport and MMD using Sinkhorn Divergences. In The 22nd International Conference on Artificial Intelligence and Statis-tics , pages 2681–2690, 2019. [39] Diederik P. Kingma and Jimmy Ba. Adam: A Method for Stochastic Optimization. In 
+
+3rd International Conference on Learning Representations , 2015. [40] Maziar Raissi, Paris Perdikaris, and George E Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Computational physics , 378:686–707, 2019. 33

@@ -1,0 +1,641 @@
+Title: Variational Quantum Physics-Informed Neural Networks for Hydrological PDE-Constrained Learning with Inherent Uncertainty Quantification
+
+URL Source: https://arxiv.org/pdf/2604.09374v1
+
+Published Time: Mon, 13 Apr 2026 01:02:32 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+# Variational Quantum Physics-Informed Neural Networks for Hydrological PDE-Constrained Learning with Inherent Uncertainty Quantification 
+
+Prasad Nimantha Madusanka Ukwatta Hewage, 1, ∗ Midhun Chakkravarthy, 1 and Ruvan Kumara Abeysekara 2, 1 1Faculty of Computer Science and Multimedia, Lincoln University College, Petaling Jaya, Selangor, Malaysia 
+
+> 2
+
+BCAS Campus, Colombo, Sri Lanka 
+
+(Dated: April 13, 2026) 
+
+1
+
+> arXiv:2604.09374v1 [quant-ph] 10 Apr 2026
+
+# Abstract 
+
+Physics-informed neural networks (PINNs) have emerged as powerful tools for solving partial differential equations (PDEs) governing physical systems, yet they face persistent challenges in training convergence, parameter efficiency, and uncertainty quantification—all critical for safety-critical applications such as flood early warning. We propose a Hybrid Quantum-Classical Physics-Informed Neural Network (HQC-PINN) architecture that integrates parameterized variational quantum circuits into the PINN framework for hydrological PDE-constrained learning. Our ar-chitecture encodes multi-source remote sensing features into quantum states via trainable angle encoding, processes them through a hardware-efficient variational ansatz with entangling layers, and constrains the output using the Saint-Venant shallow water equations and Manning’s flow equation as differentiable physics loss terms. We demonstrate that the inherent stochasticity of quantum measurement provides a natural mechanism for uncertainty quantification without re-quiring explicit Bayesian inference machinery. We further introduce a quantum transfer learning protocol that pre-trains on multi-hazard disaster data before fine-tuning on flood-specific events, following the classical-to-quantum paradigm. Numerical simulations on multi-modal satellite and meteorological data from the Kalu River basin, Sri Lanka, show that the HQC-PINN achieves convergence in ∼3× fewer training epochs and uses ∼44% fewer trainable parameters compared to an equivalent classical PINN, while maintaining competitive classification accuracy. Theoretical analysis indicates that hydrological physics constraints narrow the effective optimization landscape, providing a natural mitigation mechanism against barren plateaus in the variational quantum cir-cuit. This work establishes the first application of quantum-enhanced physics-informed learning to hydrological prediction and demonstrates a viable path toward quantum advantage in environ-mental science.  
+
+> ∗pnmadusanka@lincoln.edu.my
+
+2I. INTRODUCTION 
+
+Natural disasters, particularly floods, represent an escalating global threat exacerbated by climate change, with over 1.65 billion people affected between 2000 and 2019 [1]. Accu-rate flood prediction systems with reliable uncertainty estimates are essential for emergency management, yet current approaches face fundamental computational and methodological limitations. Physics-based hydrological models, such as those solving the Saint-Venant shal-low water equations [2], provide physically consistent predictions but are computationally expensive and require extensive calibration. Data-driven machine learning approaches offer computational efficiency but lack physical consistency and reliable uncertainty quantifica-tion [3]. Physics-informed neural networks (PINNs) [4] bridge this gap by embedding governing PDEs directly into the neural network loss function. However, PINNs face well-documented challenges in training convergence, particularly for complex nonlinear PDEs [5], and provide only point estimates without principled uncertainty quantification—a critical limitation for risk-based decision making in disaster management. Simultaneously, the field of quantum computing has reached a stage where noisy intermediate-scale quantum (NISQ) devices and parameterized variational quantum circuits (PQCs) offer new computational paradigms for machine learning [6, 7]. Recent theoretical and numeri-cal results have demonstrated that hybrid quantum-classical PINNs (qPINNs) can achieve faster convergence and improved parameter efficiency compared to purely classical coun-terparts [10, 11]. The quantum state space provides an exponentially large feature space through superposition and entanglement [8], while the inherent probabilistic nature of quan-tum measurement offers a natural framework for uncertainty quantification that does not require the computational overhead of classical Bayesian inference [9]. Despite these advances, the application of quantum-enhanced PINNs to environmental and hydrological science remains unexplored. Existing quantum machine learning (QML) applications to flood prediction have been limited to basic quantum classifiers without physics constraints [12], while quantum PINN research has focused on canonical bench-mark PDEs (Burgers’, Poisson, Navier-Stokes) rather than domain-specific governing equa-tions [10, 13, 14]. In this work, we address this gap by introducing a Hybrid Quantum-Classical Physics-3Informed Neural Network (HQC-PINN) specifically designed for hydrological PDE-constrained learning. Our contributions are: 1. Architecture: A hybrid quantum-classical PINN that integrates variational quan-tum circuits with hydrological physics constraints (Saint-Venant equations, Manning’s equation) in a differentiable end-to-end framework (Sec. III). 2. Quantum uncertainty quantification: A measurement-based uncertainty estima-tion protocol that exploits the inherent stochasticity of quantum Born-rule sampling to provide calibrated predictive distributions without explicit Bayesian posterior com-putation (Sec. IV). 3. Physics-informed trainability: Theoretical analysis demonstrating that hydrolog-ical PDE constraints restrict the effective Hilbert space explored during optimization, providing a natural mitigation mechanism against the barren plateau phenomenon in variational quantum circuits (Sec. V). 4. Quantum transfer learning for environmental data: A protocol adapting the classical-to-quantum transfer learning paradigm [15] to multi-hazard disaster predic-tion, enabling knowledge transfer from data-rich multi-hazard settings to data-scarce flood-specific prediction (Sec. VI). 5. First hydrological application: Numerical validation on multi-modal satellite and meteorological data from the Kalu River basin (Ratnapura, Sri Lanka), establishing the first quantum PINN application to tropical monsoon flood prediction (Sec. VIII).   
+
+> II. PRELIMINARIES A. Physics-Informed Neural Networks
+
+Consider a system governed by a PDE of the general form: 
+
+F[u(x, t ); λ] = 0 , x ∈ Ω, t ∈ [0 , T ], (1) where u is the solution field, x denotes spatial coordinates, t is time, λ are physical pa-rameters, and F is a differential operator. A PINN approximates u with a neural network 4uθ(x, t ) parameterized by weights θ, trained by minimizing: 
+
+LPINN = 1
+
+NdNdX
+
+> i=1
+
+∥uθ(xi, t i) − uobs  
+
+> i
+
+∥2
+
+| {z }
+
+> Ldata
+
++λphys 
+
+1
+
+NcNcX
+
+> j=1
+
+∥F [uθ(xj , t j )] ∥2
+
+| {z }
+
+> Lphysics
+
+, (2) where Nd and Nc are the numbers of data and collocation points, respectively, and λphys 
+
+balances data fidelity against physical consistency [4]. For hydrological applications, the relevant physics is encoded by the one-dimensional Saint-Venant shallow water equations: 
+
+∂A ∂t + ∂Q ∂x = ql, (3) 
+
+∂Q ∂t + ∂∂x 
+
+Q2
+
+A
+
+
+
++ gA ∂h ∂x = gA (S0 − Sf ), (4) where A is the cross-sectional flow area, Q is discharge, ql is lateral inflow, g is gravitational acceleration, h is water depth, S0 is bed slope, and Sf is the friction slope given by Manning’s equation: 
+
+Sf = n2Q|Q|
+
+A2R4/3
+
+> h
+
+, with Q = 1
+
+nAR 2/3 
+
+> h
+
+S1/2 
+
+> f
+
+, (5) where n is Manning’s roughness coefficient and Rh = A/P is the hydraulic radius ( P =wetted perimeter) [2]. 
+
+B. Variational Quantum Circuits 
+
+A parameterized (variational) quantum circuit acts on an n-qubit register initialized in state |0⟩⊗n and produces a quantum state: 
+
+|ψ(x, ϕ)⟩ = U (ϕ) S(x) |0⟩⊗n , (6) where S(x) is a data-encoding unitary that maps classical input x ∈ Rd into quantum states, and U (ϕ) is a trainable unitary parameterized by angles ϕ ∈ Rp [7]. 
+
+Angle encoding. Each feature xk is encoded as a single-qubit rotation: 
+
+S(x) = 
+
+> n
+
+O
+
+> k=1
+
+RY (xk), RY (α) = exp 
+
+
+
+−iα
+
+2 σY
+
+
+
+, (7) where σY is the Pauli-Y operator. This provides an injective encoding for xk ∈ [0 , 2π). 5Hardware-efficient ansatz. The trainable unitary comprises L repeated layers: 
+
+U (ϕ) = 
+
+> L
+
+Y
+
+> ℓ=1
+
+"
+
+Went ·
+
+> n
+
+O
+
+> k=1
+
+RY (ϕ(ℓ) 
+
+> k
+
+)RZ (ϕ(ℓ)
+
+> k+n
+
+)
+
+#
+
+, (8) where Went is an entangling layer of nearest-neighbor CNOT gates: 
+
+Went =
+
+> n−1
+
+Y
+
+> k=1
+
+CNOT k,k +1 , (9) and RZ (α) = exp( −iασ Z /2). The total number of variational parameters is p = 2 nL [6]. The circuit output is obtained by measuring a Hermitian observable ˆO:
+
+f (x; ϕ) = ⟨ψ(x, ϕ)| ˆO|ψ(x, ϕ)⟩ . (10) Gradients with respect to ϕ are computed analytically via the parameter-shift rule [17, 18]: 
+
+∂f ∂ϕ j
+
+= 12
+
+h
+
+f
+
+
+
+ϕ + π
+
+2 ej
+
+
+
+− f
+
+
+
+ϕ − π
+
+2 ej
+
+i 
+
+, (11) where ej is the j-th unit vector.  
+
+> C. Quantum-Enhanced Physics-Informed Learning
+
+Recent work has demonstrated that replacing classical hidden layers in PINNs with vari-ational quantum circuits can yield convergence advantages. Klement et al. [10] showed that qPINNs achieve accurate PDE solutions in 3–5 × fewer training epochs than equivalent classi-cal PINNs, attributing this to the VQC’s ability to navigate the complex loss landscape more efficiently. Dutta et al. [11] introduced attention-enhanced quantum PINNs (AQ-PINNs) us-ing quantum tensor networks, demonstrating 51–63% parameter reduction while maintaining accuracy on the Navier-Stokes equations. Kyriienko et al. [13] proposed QCPINN architec-tures using both discrete- and continuous-variable quantum circuits, achieving improved parameter efficiency across several benchmark PDEs. In parallel, quantum transfer learning [15] has established a practical framework for hybrid classical-quantum architectures where pre-trained classical networks provide feature extrac-tion and variational quantum circuits serve as efficient, trainable classifiers. Quantum kernel methods [8] have been applied to satellite image classification [16], demonstrating compet-itive performance with classical methods. However, no prior work has combined quantum-enhanced PINNs with domain-specific hydrological physics constraints, multi-modal envi-ronmental data fusion, or quantum-native uncertainty quantification for disaster prediction. 6III. HQC-PINN ARCHITECTURE A. Architecture Overview 
+
+The Hybrid Quantum-Classical Physics-Informed Neural Network consists of three se-quential stages (Fig. 1): 1. Classical pre-processing: A classical neural network gω : Rd → Rn reduces the 
+
+d-dimensional input feature vector to n dimensions matching the qubit count. 2. Quantum processing: A variational quantum circuit Qϕ : Rn → Rm encodes the reduced features, processes them through parameterized gates, and produces m ex-pectation values via measurement. 3. Classical post-processing: A classical network hψ : Rm → RK maps the quantum outputs to the final prediction space ( K classes for classification or continuous values for regression). The complete model computes: ˆy(x) = hψ(Qϕ(gω(x))) , (12) with trainable parameters Θ = {ω, ϕ, ψ } optimized jointly.  
+
+> B. Quantum Feature Encoding for Hydrological Data
+
+The multi-modal input features x ∈ R25 comprise satellite-derived spectral indices (NDVI, NDWI, MNDWI from Landsat), radar backscatter (Sentinel-1 SAR), meteorological vari-ables (temperature, humidity, precipitation from ERA5-Land), terrain attributes (elevation, slope from SRTM DEM), and physics-derived hydrological indices (Antecedent Precipitation Index, Standardized Precipitation Index). The classical pre-processing network maps these features to nq values in [ −π, π ]: 
+
+z = π · tanh( W2 ReLU( W1x + b1) + b2) , (13) ensuring the encoded values span the full Bloch sphere representation. This dimensionality reduction from d = 25 to nq ∈ { 4, 8} is a learnable compression that adapts during training to preserve features most relevant to both the data loss and the physics loss. 7HQC-PINN Architecture 
+
+Input: x ∈ R25 (multi-modal features) 
+
+↓
+
+Classical Pre-Net: FC(25 →64) →ReLU →FC(64 →nq)→Tanh ·π
+
+↓
+
+Angle Encoding: Nnq 
+
+> k=1
+
+RY (zk)
+
+↓
+
+Variational Layers (×L): 
+
+RY (ϕ(ℓ) 
+
+> k
+
+)RZ (ϕ(ℓ) 
+
+> k+nq
+
+) on each qubit CNOT cascade: CNOT k,k +1 for k = 1 , . . . , n q−1
+
+↓
+
+Measurement: ⟨σ(k) 
+
+> Z
+
+⟩ for k = 1 , . . . , n q
+
+↓
+
+Classical Post-Net: FC( nq→32) →ReLU →FC(32 →K)
+
+↓
+
+Output: ˆy ∈ RK (flood prediction + physics residuals) FIG. 1. Schematic of the HQC-PINN architecture. Classical pre-processing reduces input dimen-sionality to match the qubit register size nq. The variational quantum circuit processes encoded features through L parameterized layers with entanglement. Pauli-Z measurements yield expecta-tion values fed to a classical post-processing network. Physics loss is computed on the output via automatic differentiation. 
+
+The encoded features are loaded into the quantum register via angle encoding [Eq. (7)]: 
+
+|ψenc ⟩ =
+
+> nq
+
+O
+
+> k=1
+
+RY (zk) |0⟩⊗nq . (14) We note that more expressive encoding strategies (amplitude encoding, IQP encoding [8]) could increase the effective feature space dimension. However, angle encoding provides a favorable trade-off between circuit depth and expressibility for NISQ-era applications, as each feature requires only a single gate [9]. 8C. Variational Processing with Physics-Aware Design 
+
+The variational ansatz [Eq. (8)] is motivated by three considerations specific to hydro-logical learning: 
+
+(i) Expressibility: The alternating rotation and entanglement layers provide sufficient expressibility to approximate the nonlinear mapping from input features to flood states. For 
+
+L layers on nq qubits, the ansatz has p = 2 nqL parameters, which we show is sufficient for the effective dimensionality of the physics-constrained output space. 
+
+(ii) Entanglement structure: The nearest-neighbor CNOT topology [Eq. (9)] mirrors the spatial locality of hydrological processes: neighboring geographic regions exhibit correlated flood behavior through upstream-downstream river connectivity. This physically motivated entanglement structure reduces unnecessary long-range correlations that contribute to bar-ren plateaus [6]. 
+
+(iii) Gate count: Each layer uses 2 nq rotation gates and ( nq − 1) CNOT gates, yielding a total gate count of G = L(3 nq − 1). For nq = 8 and L = 3, this gives G = 69, well within the coherence budget of current NISQ devices.  
+
+> D. Physics-Informed Quantum Loss Function
+
+The total loss function combines data-driven and physics-based terms computed on the classical output of the hybrid model: 
+
+LHQC = Ldata + λSV LSV + λMLManning , (15) where: 
+
+Data loss. For multi-class flood severity classification with K classes (No Flood, Low, Moderate, Severe), we use focal loss [20] to address class imbalance: 
+
+Ldata = − 1
+
+NdNdX
+
+> i=1
+
+αi(1 − pi,y i )γ log pi,y i , (16) with γ = 2 and class-dependent weights αi.
+
+Saint-Venant physics loss. The continuity equation residual [Eq. (3)] is computed at 
+
+Nc collocation points: 
+
+LSV = 1
+
+NcNcX
+
+> j=1
+
+∂ ˆAj
+
+∂t + ∂ ˆQj
+
+∂x − ˆql,j 
+
+> 2
+
+, (17) 9where ˆA, ˆQ, and ˆ ql are derived from the model output via auxiliary heads. The partial derivatives ∂ ˆA/∂t and ∂ ˆQ/∂x are computed using automatic differentiation through both the classical and quantum components of the network [19]. 
+
+Manning consistency loss. Enforces that predicted discharge satisfies Manning’s equa-tion: 
+
+LManning = 1
+
+NcNcX
+
+> j=1
+
+ˆQj − 1
+
+nj
+
+ˆAj ˆR2/3 
+
+> h,j
+
+ˆS1/2
+
+> f,j
+> 2
+
+, (18) where Manning’s roughness nj is estimated from land-cover classification of the study area [21]. Gradients of the physics loss with respect to quantum parameters ϕ are obtained by composing the parameter-shift rule [Eq. (11)] with classical automatic differentiation: 
+
+∂LSV 
+
+∂ϕ j
+
+= ∂LSV 
+
+∂ ˆy · ∂ ˆy∂f · ∂f ∂ϕ j
+
+, (19) where ∂f /∂ϕ j is evaluated via Eq. (11) and the remaining terms use standard backpropa-gation [19].  
+
+> IV. QUANTUM UNCERTAINTY QUANTIFICATION
+
+A distinctive advantage of the quantum framework is that uncertainty quantification arises naturally from the measurement process, without requiring the computational over-head of Bayesian posterior sampling.  
+
+> A. Measurement-Based Predictive Distributions
+
+For a given input x and fixed parameters Θ, the quantum circuit output is inherently stochastic. Each measurement of qubit k yields ±1 according to the Born rule: 
+
+P (mk = ±1) = 1 ± ⟨ σ(k) 
+
+> Z
+
+⟩
+
+2 . (20) By performing Ns independent measurement shots, we obtain an empirical distribution over the nq-dimensional measurement outcome space. The classical post-processing network maps each shot’s measurement vector to a prediction, yielding an ensemble {ˆy(s)}Ns
+
+> s=1
+
+.10 B. Uncertainty Decomposition 
+
+The total predictive uncertainty is decomposed following the classical aleatoric-epistemic framework [22]: 
+
+Aleatoric uncertainty (irreducible, data noise) is captured by the variance of predic-tions across measurement shots for fixed circuit parameters: 
+
+σ2aleatoric (x) = 1
+
+NsNsX
+
+> s=1
+
+∥ˆy(s) − ¯y∥2, ¯y = 1
+
+NsNsX
+
+> s=1
+
+ˆy(s). (21) 
+
+Epistemic uncertainty (model uncertainty) is estimated by evaluating the circuit at 
+
+M perturbations of the parameters sampled from a Gaussian centered at the optimum: 
+
+σ2epistemic (x) = 1
+
+M
+
+> M
+
+X
+
+> m=1
+
+∥¯y(m) − ¯y∥2, (22) where ¯ y(m) is the mean prediction under parameter perturbation Θ(m) = Θ∗ + ϵ, with 
+
+ϵ ∼ N (0, σ 2 
+
+> ϵ
+
+I). 
+
+Predictive entropy provides a scalar summary: 
+
+H(ˆ y|x) = −
+
+> K
+
+X
+
+> k=1
+
+¯pk log ¯ pk, (23) where ¯ pk is the mean predicted probability for class k across all shots. 
+
+C. Connection to Bayesian Inference 
+
+The quantum measurement uncertainty framework has a formal connection to Bayesian neural networks (BNNs). In a BNN with variational inference, the predictive distribution is obtained by marginalizing over a variational posterior q(θ): 
+
+p(y|x, D) ≈
+
+Z
+
+p(y|x, θ)q(θ) dθ. (24) In the HQC-PINN, the stochastic quantum measurement naturally implements a form of approximate Bayesian marginalization. The Born-rule probabilities [Eq. (20)] induce a distribution over predictions that is analogous to sampling from a posterior predictive distribution. Crucially, this “Bayesian-like” behavior requires no additional computational cost—it is an inherent property of quantum mechanics [9]. 11 We formalize this connection: let ρ = |ψ⟩ ⟨ ψ| be the output quantum state. The mea-surement statistics under observable ˆO satisfy: Var[ ˆO] = ⟨ ˆO2⟩ − ⟨ ˆO⟩2
+
+= Tr[ ρ ˆO2] − (Tr[ ρ ˆO]) 2. (25) This intrinsic variance provides a lower bound on the predictive uncertainty without any additional forward passes, in contrast to classical BNNs that require T ≫ 1 stochastic forward passes through the network [22].  
+
+> V. TRAINABILITY ANALYSIS: PHYSICS CONSTRAINTS AND BARREN PLATEAUS
+
+A fundamental concern for variational quantum algorithms is the barren plateau phe-nomenon, where the variance of the cost function gradient vanishes exponentially with the number of qubits [23]: Var ϕ
+
+ ∂L
+
+∂ϕ j
+
+
+
+≤ F (nq), (26) where F (nq) ∈ O(b−nq ) for some b > 1 when using global cost functions with deep, unstruc-tured circuits. We argue that hydrological physics constraints provide a natural mitigation mechanism through two channels: 
+
+(i) Local cost function structure. The physics loss LSV [Eq. (17)] is evaluated at localized collocation points, making it effectively a sum of local cost functions—each de-pending on a subset of output qubits corresponding to specific spatial regions. Cerezo et al. [24] proved that local cost functions exhibit gradients that vanish at most polynomially: Var ϕ
+
+∂LSV 
+
+∂ϕ j
+
+
+
+≥ cnaq
+
+, (27) for constants c > 0 and a ≥ 1, a substantial improvement over exponential vanishing. 
+
+(ii) Constraint-induced landscape narrowing. The physics loss constrains the net-work output to a manifold of physically realizable solutions. This effectively reduces the volume of the parameter space explored during optimization. Denoting the unconstrained parameter space as P = [0 , 2π)p and the physics-consistent subspace as Pphys ⊂ P , we have: Vol( Pphys ) ≪ Vol( P), (28) meaning the optimizer operates in a reduced-dimensional effective landscape where gradient information is more concentrated. 12 (iii) Structured ansatz. The nearest-neighbor entanglement structure [Eq. (9)] avoids the fully random circuit regime that generates 2-designs over the unitary group—the primary driver of barren plateaus. Combined with the shallow depth ( L = 3), this ensures the circuit remains in a trainable regime [6]. We quantify trainability by computing the effective gradient variance across the physics-constrained landscape. For a circuit with nq = 8 qubits, L = 3 layers, and physics constraint weight λSV = 0 .1, numerical computation of the gradient variance (averaged over 1000 random initializations) yields: Var 
+
+∂LHQC 
+
+∂ϕ j
+
+
+
+≈ 2.3 × 10 −3, (29) compared to ∼ 1.7 × 10 −4 for the physics-free counterpart—an order of magnitude improve-ment in gradient signal.  
+
+> VI. QUANTUM TRANSFER LEARNING FOR MULTI-HAZARD DATA
+
+Data scarcity is a critical challenge in flood prediction for developing countries. Following the Classical-to-Quantum (CQ) transfer learning paradigm [15], we propose a two-phase protocol: 
+
+Phase 1: Classical pre-training on multi-hazard data. A classical neural net-work is trained on 82 multi-hazard disaster events spanning 11 disaster types (floods, droughts, earthquakes, cyclones, landslides, wildfires, storms, tsunamis, volcanic eruptions, extreme temperature events, and coastal erosion) from the Ambee Global Natural Disaster Dataset [25]. The learned feature representations capture shared physics across disaster types (conservation laws, atmospheric dynamics, terrain-hazard interactions). 
+
+Phase 2: Quantum fine-tuning on flood data. The pre-trained classical layers are frozen, and the VQC parameters ϕ are initialized randomly and trained on 8,271 flood-specific events from NOAA STORM Events and the Dartmouth Flood Observatory. The quantum circuit acts as a “dressed quantum classifier” [15], adapting the multi-hazard rep-resentations to the flood domain. This protocol provides three advantages for NISQ-era applications: 1. The classical network handles the heavy lifting of dimensionality reduction from high-dimensional satellite data to the qubit-compatible representation. 13 2. Only the quantum parameters require optimization during fine-tuning, reducing the training cost proportional to p = 2 nqL rather than the full classical network size. 3. Knowledge from the multi-hazard pre-training provides a better initialization land-scape for the quantum optimizer, further mitigating trainability issues.   
+
+> VII. NUMERICAL EXPERIMENTS A. Dataset and Study Area
+
+The study area is the Kalu River basin in Ratnapura District, southwestern Sri Lanka (6.68 ◦N, 80.39 ◦E), encompassing 2,658 km 2 of terrain subject to biannual southwest and northeast monsoons. This region experiences recurrent catastrophic flooding, making it an ideal testbed for physics-informed prediction systems. Multi-modal input features ( d = 25) are derived from five sources: 
+
+• Satellite optical: NDVI, NDWI, MNDWI, surface reflectance bands from Land-sat 5/7/8 (1987–2024). 
+
+• Satellite radar: Sentinel-1 C-band SAR backscatter and temporal Z-scores (2014– 2024). 
+
+• Meteorological: Temperature, humidity, soil moisture (4 layers), surface runoff, sub-surface runoff from ERA5-Land reanalysis; precipitation from CHIRPS. 
+
+• Terrain: Elevation, slope, aspect from SRTM 30m DEM. 
+
+• Physics-derived: Antecedent Precipitation Index (API, k = 0 .85), Standardized Pre-cipitation Index (SPI-30, SPI-90), runoff coefficient via SCS-CN method. The target variable is flood severity classified into four levels: No Flood, Low, Moderate, and Severe. The dataset exhibits substantial class imbalance (No Flood: 91%, Low: 4%, Moderate: 4%, Severe: 1%), necessitating the focal loss formulation [Eq. (16)]. Data are split temporally: 60% training (earliest years), 20% validation, 20% test (most recent years), preserving temporal ordering. 14 B. Implementation 
+
+All quantum simulations are performed using PennyLane v0.39 [19] with the default.qubit 
+
+statevector simulator, interfaced with PyTorch via the qml.qnode decorator for end-to-end differentiability. Classical components use PyTorch 2.1. We evaluate configurations with nq ∈ { 4, 8} qubits and L ∈ { 2, 3, 4} variational layers. Physics loss weights are set to λSV = 0 .1 and λM = 0 .05, validated via ablation. Training uses the Adam optimizer [26] with learning rate 10 −3 and batch size 32, for a maximum of 100 epochs with early stopping (patience 10). Uncertainty quantification uses Ns = 200 measurement shots per prediction.  
+
+> C. Baseline Models
+
+We compare the HQC-PINN against: 1. Classical PINN (cPINN): 4-layer MLP (25 →256 →128 →64 →K) with tanh activa-tions and identical physics loss. 33,793 trainable parameters. 2. Classical BNN: Pyro-based variational inference with 3-layer MLP and N (0 , 1) weight priors. 28,672 parameters. 3. Random Forest: Scikit-learn implementation with 200 estimators (non-parametric classical baseline). 4. VQC-only: Variational quantum classifier without physics constraints (ablation).   
+
+> VIII. RESULTS A. Convergence Analysis
+
+Table I shows that HQC-PINN configurations converge in 26–42 epochs versus 94 epochs for the classical PINN, representing a 2.2–3.6 × speedup. The 8-qubit, 3-layer configuration achieves the fastest convergence (26 epochs). Notably, the VQC-only model (no physics constraints) converges in 51 epochs, confirming that the physics loss provides an additional 15 TABLE I. Convergence comparison: epochs to reach target validation loss Lval ≤ 0.40. HQC-PINN configurations converge 2.6–3.6 × faster than the classical PINN, consistent with prior qPINN convergence results [10].                         
+
+> Model Qubits Layers Epochs to target
+> cPINN —494 HQC-PINN 4242 HQC-PINN 4336 HQC-PINN 8233 HQC-PINN 8326 HQC-PINN 8428 VQC-only (no physics) 8351
+
+convergence benefit beyond the quantum circuit alone—consistent with our trainability anal-ysis (Sec. V). The marginal degradation at L = 4 layers for 8 qubits (28 vs. 26 epochs) suggests the onset of over-parameterization in the quantum circuit, where the additional parameters do not meaningfully improve the expressibility for this problem size.  
+
+> B. Classification Performance
+
+Table II presents the classification results. Several observations are noteworthy: 
+
+(i) The HQC-PINN (8q, 3L) achieves 71.8% accuracy compared to 69.4% for the classical PINN, a relative improvement of 3.5%. While modest in absolute terms, this improvement is achieved with 44% fewer parameters (18,944 vs. 33,793). 
+
+(ii) The Quantum Transfer Learning (QTL) configuration achieves the highest accuracy among physics-constrained models (73.6%), demonstrating the value of multi-hazard pre-training for data-scarce flood prediction. 
+
+(iii) The VQC-only model (no physics constraints) performs worst (67.8%), confirming that physics constraints are essential for this task—the quantum circuit alone does not compensate for the absence of domain knowledge. 
+
+(iv) The Random Forest (90.3%) and classical BNN (91.96%) outperform all physics-16 TABLE II. Test set classification performance. Accuracy, macro-averaged F1 score, parameter count, and parameter efficiency ratio (accuracy per 1000 parameters). Best quantum result in bold. 
+
+Model Acc. (%) F1-macro Params Acc./kP 
+
+Random Forest 90.3 0.899 N/A —cPINN 69.4 0.705 33,793 2.05 Classical BNN 91.96 — 28,672 3.21 VQC-only (8q, 3L) 67.8 0.682 12,480 5.43 HQC-PINN (4q, 3L) 70.2 0.714 14,468 4.85 
+
+HQC-PINN (8q, 3L) 71.8 0.731 18,944 3.79 QTL (8q, 3L) 73.6 0.742 16,896 4.36 TABLE III. Parameter breakdown for HQC-PINN (8q, 3L) versus classical PINN. The VQC re-places two classical hidden layers while the pre-processing network performs learned dimensionality reduction to the qubit register. 
+
+Component cPINN HQC-PINN 
+
+Classical layers 33,793 18,896 Quantum parameters (VQC) 0 48 
+
+Total 33,793 18,944 
+
+Reduction — 43.9% 
+
+constrained models in raw accuracy. This is expected: the PINN formulation optimizes a harder objective (data fidelity and physics consistency simultaneously), and the severe class imbalance (91% majority class) favors discriminative classifiers. The physics-constrained models provide complementary value through physical consistency and uncertainty quantifi-cation. 
+
+C. Parameter Efficiency 
+
+Table III decomposes the parameter count. The variational quantum circuit contributes only 48 parameters ( p = 2 × 8 × 3 = 48), yet the overall hybrid architecture requires 43.9% 17 TABLE IV. Uncertainty quantification comparison. Coverage at the 90% nominal level, average predictive entropy, and mean aleatoric uncertainty.             
+
+> Model Coverage (%) Entropy σ2
+> aleatoric
+> Classical BNN 92.3 0.320 0.028 HQC-PINN (8q, 3L) 88.7 0.341 0.033 QTL (8q, 3L) 90.1 0.312 0.026
+
+fewer total parameters than the equivalent classical PINN. This reduction arises because the VQC’s exponentially large Hilbert space (2 8 = 256 dimensional) provides representational capacity that would require substantially more classical parameters to match, consistent with the 51–63% reductions reported by Dutta et al. [11] for the Navier-Stokes equations.  
+
+> D. Uncertainty Calibration
+
+Table IV shows that the HQC-PINN’s measurement-based uncertainty achieves 88.7% coverage at the 90% nominal level, compared to 92.3% for the classical BNN. While the classical BNN provides slightly better calibration (owing to its explicit variational posterior), the HQC-PINN’s uncertainty estimates are obtained at zero additional computational cost— they are inherent to the quantum measurement process. The QTL model achieves 90.1% coverage, closest to the nominal level, suggesting that transfer learning improves uncertainty calibration by providing a better-initialized parameter landscape.  
+
+> E. Ablation Studies
+
+The ablation results (Table V) reveal: 
+
+• Physics constraints are essential: Removing both physics losses reduces accuracy by 4.0% (71.8 →67.8%) and doubles the convergence time (26 →51 epochs). 
+
+• Saint-Venant contributes more than Manning: The Saint-Venant continuity equation provides the dominant physics signal (3.5% vs. 1.4% accuracy contribution). 
+
+• Entanglement is critical: Removing CNOT gates (product-state circuit) reduces 18 TABLE V. Ablation study on the HQC-PINN (8q, 3L) configuration. Removing physics constraints or the quantum layer degrades performance.                         
+
+> Configuration Acc. (%) Epochs
+> Full HQC-PINN 71.8 26
+> −Saint-Venant loss ( λSV = 0) 68.3 41
+> −Manning loss ( λM= 0) 70.4 30
+> −Both physics losses 67.8 51
+> −Quantum layer (classical only) 69.4 94
+> −Entanglement (product state only) 69.1 38
+> −Pre-processing network 64.2 55
+
+accuracy by 2.7%, confirming that quantum correlations are necessary for capturing the nonlinear feature interactions. 
+
+• Classical pre-processing is vital: Direct quantum encoding without dimensionality reduction yields the worst performance (64.2%), underscoring the importance of the hybrid architecture for high-dimensional environmental data.   
+
+> IX. DISCUSSION A. Nature of Quantum Advantage
+
+Our results establish a nuanced picture of quantum advantage in physics-informed envi-ronmental learning: 
+
+Convergence advantage: The 2.2–3.6 × convergence speedup is the most robust advantage, consistent across all tested configurations and aligning with theoretical predictions from Klement et al. [10]. The advantage is amplified when physics constraints are present (3.6 ×
+
+with physics vs. 1.8 × without), suggesting a synergy between quantum expressibility and physics-constrained optimization. 
+
+Parameter efficiency: The 43.9% parameter reduction is practically significant: it implies that the HQC-PINN could be deployed on edge devices with constrained memory—relevant for real-time flood early warning systems in resource-limited settings. 19 Accuracy: The accuracy advantage over classical PINNs is modest (2.4 percentage points). We emphasize that the primary bottleneck is data quality (severe class imbalance, limited ground-truth flood observations in tropical regions), not model capacity. Both classical and quantum PINNs face the same data-side limitations. 
+
+Uncertainty quantification: The measurement-based UQ provides a compelling practical advantage: it adds zero computational overhead and achieves 88.7% coverage at the 90% level. For comparison, the classical BNN requires T = 50 stochastic forward passes to achieve its 92.3% coverage [22].  
+
+> B. NISQ Considerations
+
+All results reported here are obtained on noiseless quantum simulators. On real NISQ hardware, decoherence and gate errors would degrade performance. However, several factors suggest resilience: 1. The circuit depth is shallow ( L = 3, total depth ∼15 for 8 qubits), well within the coherence times of current superconducting processors [27]. 2. The parameter-shift rule is robust to readout errors (they manifest as a multiplica-tive damping factor on the gradient, which can be mitigated by zero-noise extrapola-tion) [28]. 3. The physics constraints act as a regularizer that may partially compensate for noise-induced degradation by penalizing unphysical outputs. Hardware validation on IBM Quantum processors is left to future work.  
+
+> C. Comparison with Prior Work
+
+Table VI summarizes the landscape. Our work is differentiated by the combination of (i) domain-specific hydrological PDE constraints, (ii) multi-modal environmental data from operational satellite missions, (iii) inherent quantum uncertainty quantification, and (iv) transfer learning from multi-hazard disaster data. 20 TABLE VI. Comparison with prior quantum approaches to flood/environmental prediction. Our work is the first to combine quantum circuits with hydrological PDE constraints and multi-modal remote sensing data. 
+
+Work Physics UQ Multi-modal Transfer 
+
+Grzesiak et al. [12] 
+
+× × × ×
+
+Dutta et al. [11] 
+
+✓a × × ×
+
+Klement et al. [10] 
+
+✓b × × ×
+
+Rodriguez-Grasa et al. [16] 
+
+× × × ×
+
+This work ✓c ✓ ✓ ✓  
+
+> aNavier-Stokes. bBenchmark PDEs. cSaint-Venant + Manning’s (hydrological).
+
+D. Implications for Quantum Environmental Science 
+
+This work establishes a template for applying quantum-enhanced physics-informed learn-ing to environmental science. The key insight is that environmental PDEs (shallow water equations, advection-diffusion, Richards’ equation for soil moisture) possess the same math-ematical structure that makes quantum PINNs advantageous: they are nonlinear, spatially distributed, and computationally expensive to solve classically. As quantum hardware scales, we anticipate these advantages will grow, particularly for spatiotemporal PDE systems re-quiring mesh-free solutions over large domains. 
+
+X. CONCLUSION 
+
+We have introduced the Hybrid Quantum-Classical Physics-Informed Neural Network (HQC-PINN), the first quantum-enhanced PINN architecture for hydrological prediction. By integrating variational quantum circuits with Saint-Venant shallow water equations and Manning’s flow equation as physics constraints, the architecture achieves faster convergence, 21 improved parameter efficiency, and natural uncertainty quantification compared to classical PINNs. Our theoretical analysis demonstrates that hydrological physics constraints provide a nat-ural mitigation mechanism against barren plateaus by restricting the effective optimization landscape and promoting local cost function structures. Numerical experiments on multi-modal satellite and meteorological data from the Kalu River basin, Sri Lanka, validate these findings, showing 3.6 × convergence speedup and 43.9% parameter reduction. We have further demonstrated that quantum transfer learning enables effective knowledge transfer from multi-hazard disaster data to flood-specific prediction, addressing the critical challenge of data scarcity in developing countries. These results establish a viable path toward quantum advantage in environmental science and disaster prediction. Future work will focus on hardware validation on superconducting quantum processors, extension to spatiotemporal graph quantum networks for river network modeling, and integration with operational early warning systems. 
+
+> ACKNOWLEDGMENTS
+
+The authors acknowledge the use of publicly available satellite data from the European Space Agency (Sentinel-1, Copernicus), NASA/USGS (Landsat, SRTM), ECMWF (ERA5-Land), UCSB (CHIRPS), and NOAA (STORM Events Database). Quantum circuit simula-tions were performed using PennyLane [19]. P.N.M.U.H. acknowledges support from Lincoln University College, Malaysia. This research received no external funding.       
+
+> [1] B. Tellman, J. A. Sullivan, C. Kuhn, A. J. Kettner, C. S. Doyle, G. R. Brakenridge, T. A. Er-ickson, and D. A. Slayback, “Satellite imaging reveals increased proportion of population exposed to floods,” Nature 596 , 80–86 (2021). [2] E. F. Toro, Shock-Capturing Methods for Free-Surface Shallow Flows (John Wiley & Sons, Chichester, 2001). [3] A. Mosavi, P. Ozturk, and K. W. Chau, “Flood prediction using machine learning models: Literature review,” Water 10 , 1536 (2018). [4] M. Raissi, P. Perdikaris, and G. E. Karniadakis, “Physics-informed neural networks: A deep
+
+22 learning framework for solving forward and inverse problems involving nonlinear partial dif-ferential equations,” J. Comput. Phys. 378 , 686–707 (2019). [5] A. S. Krishnapriyan, A. Gholami, S. Zhe, R. M. Kirby, and M. W. Mahoney, “Characterizing possible failure modes in physics-informed neural networks,” in Advances in Neural Informa-tion Processing Systems (NeurIPS) (2021), Vol. 34. [6] M. Cerezo, A. Arrasmith, R. Babbush, S. C. Benjamin, S. Endo, K. Fujii, J. R. McClean, K. Mitarai, X. Yuan, L. Cincio, and P. J. Coles, “Variational quantum algorithms,” Nat. Rev. Phys. 3, 625–644 (2021). [7] M. Benedetti, E. Lloyd, S. Sack, and M. Fiorentini, “Parameterized quantum circuits as machine learning models,” Quantum Sci. Technol. 4, 043001 (2019). [8] V. Havl´ ıˇ cek, A. D. C´ orcoles, K. Temme, A. W. Harrow, A. Kandala, J. M. Chow, and J. M. Gambetta, “Supervised learning with quantum-enhanced feature spaces,” Nature 567 ,209–212 (2019). [9] M. Schuld and F. Petruccione, Machine Learning with Quantum Computers , 2nd ed. (Springer, Cham, 2021). [10] N. Klement, V. Eyring, and M. Schwabe, “Explaining the advantage of quantum-enhanced physics-informed neural networks,” arXiv:2601.15046 (2026). [11] S. Dutta, N. Innan, S. Ben Yahia, and M. Shafique, “AQ-PINNs: Attention-enhanced quantum physics-informed neural networks for carbon-efficient climate modeling,” arXiv:2409.01626 (2024). [12] M. Grzesiak and P. Thakkar, “Flood prediction using classical and quantum machine learning models,” arXiv:2407.01001 (2024). [13] O. Kyriienko et al. , “QCPINN: Quantum-classical physics-informed neural networks for solv-ing PDEs,” arXiv:2503.16678 (2025). [14] S. A. Stein et al. , “Hybrid quantum physics-informed neural network: Towards efficient learn-ing of high-speed flows,” arXiv:2503.02202 (2025). [15] A. Mari, T. R. Bromley, J. Izaac, M. Schuld, and N. Killoran, “Transfer learning in hybrid classical-quantum neural networks,” Quantum 4, 340 (2020). [16] P. Rodriguez-Grasa, R. Farzan-Rodriguez, G. Novelli, Y. Ban, and M. Sanz, “Satellite image classification with neural quantum kernels,” Mach. Learn.: Sci. Technol. 6, 015043 (2025). [17] K. Mitarai, M. Negoro, M. Kitagawa, and K. Fujii, “Quantum circuit learning,” Phys. Rev. 
+
+23 A 98 , 032309 (2018). [18] M. Schuld, V. Bergholm, C. Gogolin, J. Izaac, and N. Killoran, “Evaluating analytic gradients on quantum hardware,” Phys. Rev. A 99 , 032331 (2019). [19] V. Bergholm et al. , “PennyLane: Automatic differentiation of hybrid quantum-classical com-putations,” arXiv:1811.04968 (2018). [20] T. Y. Lin, P. Goyal, R. Girshick, K. He, and P. Doll´ ar, “Focal loss for dense object detection,” in Proceedings of the IEEE International Conference on Computer Vision (ICCV) (2017), pp. 2980–2988. [21] V. T. Chow, Open-Channel Hydraulics (McGraw-Hill, New York, 1959). [22] Y. Gal and Z. Ghahramani, “Dropout as a Bayesian approximation: Representing model uncertainty in deep learning,” in Proceedings of the 33rd International Conference on Machine Learning (ICML) (2016), pp. 1050–1059. [23] J. R. McClean, S. Boixo, V. N. Smelyanskiy, R. Babbush, and H. Neven, “Barren plateaus in quantum neural network training landscapes,” Nat. Commun. 9, 4812 (2018). [24] M. Cerezo, A. Sone, T. Volkoff, L. Cincio, and P. J. Coles, “Cost function dependent barren plateaus in shallow parametrized quantum circuits,” Nat. Commun. 12 , 1791 (2021). [25] P. N. M. Ukwatta Hewage, M. Chakkravarthy, and R. K. Abeysekara, “A hybrid AI frame-work for multi-modal flood prediction: Integrating Bayesian neural networks, physics-informed constraints, and multi-task learning,” Nat. Hazards (2026, submitted). [26] D. P. Kingma and J. Ba, “Adam: A method for stochastic optimization,” in Proceedings of the 3rd International Conference on Learning Representations (ICLR) (2015). [27] Y. Kim et al. , “Evidence for the utility of quantum computing before fault tolerance,” Nature 
+
+618 , 500–505 (2023). [28] K. Temme, S. Bravyi, and J. M. Gambetta, “Error mitigation for short-depth quantum cir-cuits,” Phys. Rev. Lett. 119 , 180509 (2017). [29] E. Farhi and H. Neven, “Classification with quantum neural networks on near term proces-sors,” arXiv:1802.06002 (2018). [30] A. Peruzzo, J. McClean, P. Shadbolt, M.-H. Yung, X.-Q. Zhou, P. J. Love, A. Aspuru-Guzik, and J. L. O’Brien, “A variational eigenvalue solver on a photonic quantum processor,” Nat. Commun. 5, 4213 (2014). [31] Y. Liu et al. , “Physics-informed graph neural networks for flood forecasting,” J. Hydrol. 620 ,
+
+24 129376 (2023). [32] S. Senanayake, B. Pradhan, A. Alamri, and H. J. Park, “A new application of deep neural network (LSTM) and RUSLE for soil erosion prediction,” Geocarto Int. 37 , 1–23 (2022). [33] A. Twele, W. Cao, S. Plank, and S. Martinis, “Sentinel-1-based flood mapping: A fully automated processing chain,” Int. J. Remote Sens. 37 , 2990–3004 (2016). [34] S. Otgonbaatar and M. Datcu, “Classification of remote sensing images with parameterized quantum gates,” IEEE Geosci. Remote Sens. Lett. 19 , 1–5 (2022). [35] A. Delilbasic, G. Cavallaro, M. Willsch, F. Melgani, M. Riedel, and K. Michielsen, “Quantum support vector machine algorithms for remote sensing data classification,” in 2021 IEEE International Geoscience and Remote Sensing Symposium (IGARSS) (2021), pp. 2608–2611. [36] A. Abbas, D. Sutter, C. Zoufal, A. Lucchi, A. Figalli, and S. Woerner, “The power of quantum neural networks,” Nat. Comput. Sci. 1, 403–409 (2021). [37] I. Garc´ ıa-Barrenechea, S. Borr` as, and J. Latorre, “Quantum physics-informed neural net-works,” Entropy 26 , 649 (2024). [38] H. Tezuka et al. , “Trainable embedding quantum physics informed neural networks,” Sci. Rep. 
+
+15 , 3894 (2025). 
+
+25

@@ -1,0 +1,761 @@
+Title: A Multi-Scale ResNet-augmented Fourier Neural Operator Framework for High-Frequency Sequence-to-Sequence Prediction of Magnetic Hysteresis
+
+URL Source: https://arxiv.org/pdf/2604.04150v1
+
+Published Time: Tue, 07 Apr 2026 01:06:21 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+> JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 1
+
+# A Multi-Scale ResNet-augmented Fourier Neural Operator Framework for High-Frequency Sequence-to-Sequence Prediction of Magnetic Hysteresis 
+
+Ziqing Guo, Xiaobing Shen, and Ruth V. Sabariego, Member, IEEE 
+
+Abstract —Accurate modeling of magnetic hysteresis is essen-tial for high-fidelity power electronics device simulations. The transient hysteresis phenomena such as the ringing effect and the minor loops are the bottleneck for the accurate hysteresis model-ing and the core losses estimation. To capture the hysteresis loops with both the macro structure and the micro transient details, in this paper, we propose the multi-scale ResNet augmented Fourier Neural Operator (Res-FNO). The framework employs a hybrid input structure that combines sequential time-series data with scalar material labels through specialized feature engineering. Specifically, the time derivative of magnetic flux density ( dB dt ) is incorporated as a critical physical feature to enhance the model sensitivity to high-frequency oscillations and minor loop triggers. The proposed architecture synergizes global spectral modeling with localized refinement by integrating a multi-scale ResNet path in parallel with the FNO blocks. This design allows the global operator path to capture the underlying physical evolution while the local refinement path, compensates for spectral bias and re-constructs fine-grained temporal details. Extensive experimental validation across diverse magnetic materials from 79 to Material 3C90 demonstrates the strong generalization capability of the proposed Res-FNO, proving its robust ability to model complex ringing effects and minor loops in realistic power electronic applications. 
+
+Index Terms —Hysteresis modeling, Neural operator, ResNet, Ringing effect, Minor loops, Transient hysteresis. 
+
+I. I NTRODUCTION 
+
+# MAGNETIC components, such as inductors and transformers, are indispensable in nearly all power electronic system, yet they often dominate volume, weight, and losses, limiting overall system performance and efficiency [1]–[4]. Accurate modeling of the magnetic hysteresis loops of power magnetic materials is therefore essential for reliable design, optimization and simulation of high-efficiency, high-power-density converters [5]. However, the underlying physics is extremely complex: the material response depends nonlinearly in coupled manner on a multitude of factors, including excitation frequency, peak flux density, DC bias, temperature, core geometry, transient history and waveform shapes such as sinusoidal, trapezoidal and pulse                
+
+> Manuscript received Month Day, 2026; revised Month Day, 202X. (Corre-sponding author: Ziqing Guo.) Ziqing Guo and Ruth V. Sabariego are with the Department of Elec-trical Engineering (ESAT), KU Leuven, 3001, Leuven, Belgium, and also with EnergyVille, 3600, Genk, Belgium (e-mail: ziqing.guo@kuleuven.be; ruth.sabariego@kuleuven.be). Xiaobing Shen is with the Department of Electrical Engineering, Xiamen University of Technology, 361024, Xiamen, China (e-mail: xbing.shen@xmut.edu.cn).
+
+width modulation (PWM) ect. [6]. Traditional empirical models such as the Steinmetz equation (SE) [7] and its generalizations, including the improved generalized Steinmetz equation (iGSE) [8] and the improved-improved generalized Steinmetz equation (i 2GSE) [9], are limited to narrow operating regimes and cannot simultaneous capture all these intertwined effects, while physics-based models, such as Jiles-Atherton (J-A) model [10], Preisach model [11] and the energy-based model [12] are computationally expensive or inaccurate under realistic, nonsinusoidal, high-frequency excitations typical of modern power electronics. With recent advances in computational intelligence, data-driven models have demonstrated superior flexibility and accuracy [13] in the magnetic characteristics modeling. Research in this field primarily branches into two categories. The first is scalar-to-scalar modeling, which extracts excitation features such as peak values, frequency, DC bias, waveform hot vector, etc. and environmental factors like temperature to directly predict core loss [14], [15]. While effective for specific cases, these “black-box” models cannot reconstruct the underlying hysteretic trajectories, which limits their predictive accuracy and physical consistency [16]. To bridge this gap, sequence-to-sequence (seq-to-seq) models [17], [18] have been developed to map flux density ( B) waveforms directly to magnetic field strength ( H) waveforms. Hybrid Preisach-recurrent networks and standalone deep neural networks (NNs) model arbitrary hysteresis processes with high fidelity [19], [20] and physics-aware recurrent neural networks incorporate history dependence and generalize to first-order reversal curves and minor loops [21]. Neural operators, which include DeepONet, Fourier neural operator (FNO), have been applied to learn operator mappings between magnetic fields, enabling rate-independent prediction of novel hysteresis curves not seen in training [22]; and rate-independent FNO variants have shown strong extrapolation capability for complex minor-loop trajectories [23]. Recently, Significant progress has been made in high-frequency seq-to-seq B − H prediction, largely enabled by the open-source MagNet database, which provides more than 
+
+500000 experimentally measured B − H loops across a wide range of frequency, flux densities, waveforms, DC biases, and temperatures for multiple materials [24]. Li et al. in-troduced the MagNet framework and demonstrated seq-to-seq LSTM encoder–decoder architectures for full B–H loop  
+
+> arXiv:2604.04150v1 [eess.SY] 5 Apr 2026 JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 2
+
+prediction, mapping B(t) to H(t), showing that NNs can serve as “active datasheets” with superior accuracy and generality compared with analytical models [25]. Serrano et al. further extended this data-driven paradigm by developing advanced NN models that can capture the complex nonlinearities of magnetic materials across diverse operating conditions, effec-tively bridging the gap between massive experimental data and practical power electronics design [3]. Subsequent works have extended these ideas: [26] proposed a Transformer-based encoder-projector-decoder architecture that leverages attention mechanisms [27] to capture temporal dependencies and scalar operating conditions. Similarly, the top-performing models in the MagNet Challenge 2023, particularly the HARDCORE framework [16], established comprehensive benchmarks incor-porating extensive data preprocessing and convulutional neural network (CNN)-based architectures to evaluate performance across diverse magnetic materials. Despite their success, these models typically rely on substantial training datasets to ensure high accuracy, and their performance tends to degrade in data-constrained scenarios. Furthermore, since these approaches primarily focus on core loss estimation, the predicted hystere-sis loops often lack sufficient precision and fail to accurately capture transient phenomena. [28] introduced a hysteresis model based on hysteresis separation theory, which reduces the training data requirement, yet still necessitates a considerable amount of samples. [22] investigated various neural operators for hysteresis modeling and identified the Fourier Neural Operator (FNO) as exhibiting strong generalization capability for dynamic hysteresis, which can achieve great accuracy with a small amount of training data. However, their study was limited to sinusoidal excitations with frequencies below 1000 Hz, leaving the model’s performance under complex non-sinusoidal waveforms and higher frequency regimes un-explored. To overcome these limitations, a multi-scale ResNet-augmented Fourier Neural Operator (Res-FNO) specifically designed to mitigate spectral bias in high-frequency sequence-to-sequence B-H hysteresis modeling is proposed. The core innovation lies in the synergistic integration of a Fourier neural operator [29], which efficiently captures global frequency-domain interactions across the entire B–H trajectory, with multi-scale ResNet [30]branches that explicitly emphasize high-frequency residuals and local sharp transitions. The proposed architecture overcomes the low-frequency bias of vanilla neural operators, long-short term memory, Transformer models, and standard recurrent networks, achieving superior accuracy in predicting full B–H sequences under wide range of excitations and arbitrary waveforms. This framework is highly generalizable across materials and operating conditions while maintaining a compact parameter count, making it practical for real-time circuit simulation and hardware-in-the-loop applications. The main contributions of this article are as follows:  
+
+> •
+
+To improve sensitivity to transient phenomena such as ringing and minor loops, a hybrid input strategy with the multi-input processing is introduced, incorporating the time derivative dB/dt and scalar operating conditions.  
+
+> •
+
+A multi-scale Res-FNO framework is proposed for high-frequency sequence-to-sequence magnetic hysteresis modeling with the transient details.  
+
+> •
+
+Results demonstrate strong generalization capability across diverse magnetic materials from the MagNet Challenges. Particularly on transient and complex minor-loop trajectories, the proposed model achieves superior accuracy in both global loop shape and local transient details compared to baseline FNO models. The remainder of this paper is structured as follows. Section II describes the datasets and materials used in this study. Section III presents the proposed multi-scale Res-FNO archi-tecture and its data feature engineering. Section IV details the experimental validation, ablation studies, and generalization results across diverse materials and minor-loop scenarios. The conclusion is summarized in Section V. II. P ROBLEM FORMULATION AND DATA REPRESENTATION 
+
+While existing literature primarily focuses on the direct approximation of scalar core loss density, This work purses to modeling the dynamic hysteresis operator P : B(t) 7 → H(t)
+
+by NNs. By formulating the problem as a seq-to-seq map-ping, the dynamic hysteresis trajectory can be reconstructed, and then the core loss density can subsequently derived via the periodic integration of the predicted B − H loop. This trajectory-based approach offers two significant advantages. First, it enables the high-fidelity capture of intricate hysteresis characteristics, such as frequency-dependent widening and nonlinear saturation effects. Second, beyond its utility as a high-precision loss post-processing tool, the proposed model can be integrated into the Finite element method framework as a differential surrogate hysteresis model [16]. The experimental data utilized in this study are primarily sourced from the MagNet Challenge 2023. The dataset was systematically structured into two tiers with increasing com-plexity to facilitate a robust assessment of model performance under progressively challenging extrapolation scenarios. The first tier encompasses ten material types characterized by relatively stable magnetic behaviors and balanced data dis-tributions. In contrast, the second tier, comprising materials 3C92, T37, 3C95, 79, and ML95S, presents significant mod-eling hurdles, including concurrent high-frequency, high-peak excitations, sparse training samples, and missing data under specific operational conditions in training data. In addition, these selected materials span a diverse range of physical characteristics:  
+
+> •
+
+The power ferrites, including 3C92, 3C95 and ML95S, which are engineered for minimized core loss in high frequency power converters.  
+
+> •
+
+High permeability material, represented by T37, primarily utilized in EMI filters for noise suppression.  
+
+> •
+
+High Nickel alloys, represented by 79, which exhibits distinct magnetic properties and energy dissipation JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 3Sequential      
+
+> inputs
+> (B(t), dB/dt(t), t)
+> Scalar
+> inputs
+> (
+> 𝒯 ,
+> ∆B,f)
+> Conv 1D
+> MLP Broadcast
+> Multi -input processing
+> TFNO FNO
+> blocks
+> Res -FNO
+> ResNet
+> blocks
+> Output
+> (Ĥ(t))
+> xfused
+
+Fig. 1: Structure of multi-scale Res-FNO: (Left) Multi-input Processing to fuse the scalar and sequential inputs; (Right) Res-FNO with parallel FNO blocks and ResNet blocks. Weight  layer       
+
+> Weight layer
+> x
+> ℱ𝑥 +𝑥
+> ℱ𝑥 x
+> identity
+> ReLU
+> ReLU
+
+Fig. 2: Residual learning: a building block [30] mechanisms compared to standard ferrites. A wide range of operation points were measured for each ma-terial, covering sinusoidal, trapezoidal and square waveforms, as well as ringing effect due to a high switching speed of the used semiconductors. The frequency varies from 50 to 800 kHz, the temperature from 25 °C to 90 °C. An in-depth description of the dataset, the occurring waveforms, the data acquisition process, the lab setup, and the data quality control can be found in [16], [24]. While models proposed for the MagNet Challenge 2023 have demonstrated competitive performance on the first tier, they often struggle with the intricate nonlinearities and rigorous extrapolation requirements of the second tier. Consequently, this work focuses on the second-tier materials to test the accuracy and the generalizability of the proposed architecture. Furthermore, to specifically evaluate the capability of proposed model in capturing the minor loop behavior, we incorporate additional data for material 3C90 sourced from the MagNet Challenge 2. This inclusion provides a diverse set of complex minor loop trajectories, further ensuring the generalizability of the model across both global evolution and local hysteretic details. III. M ODEL DESCRIPTION 
+
+In this paper, the hybrid multi-scale ResNet augmented Fourier Neural Operator (Res-FNO) is proposed for high frequency magnetic hysteresis modeling. As shown in Fig. 1, there are two parts in this model, the multi-input processing stage for fusing the multiple inputs, and the Res-FNO back-bone with the parallel FNO and ResNet blocks. 
+
+A. Multi-input processing 
+
+To effectively capture the disparate features of temporal sequences and scalar features, a dual stream processing ar-chitecture is employed as shown in Fig. 1. For the sequential data stream, including magnetic flux density B(t), its temporal derivative dB/dt , and the time vector t, are fed into aone-dimensional convolutional layer (Conv1D). This Conv1D serves as a local feature extractor, identifying transient patterns and gradient transitions within the input sequence while map-ping the raw data into a latent feature space. Simultaneously, the scalar parameter stream, consisting of environmental and operational constraints such as temperature ( T ), frequency ( f )and the peak-to-peak magnetic flux density ( ∆B), is processed through a dedicated Multi-layer perception (MLP). The use of 
+
+∆B instead of a simple peak value ensures a more precise rep-resentation of the magnetic flux excursion, especially in cases of asymmetric excitation where the flux is not centered around zero. This MLP encodes the global physical conditions into a high-dimensional feature vector that matches the embedding dimension of the sequential stream. To unify these multi-model features, after the MLP, the encoded scalar feature vector is spatially broadcast across the entire temporal dimension of the sequential stream, ensuring that global physical constraints are consistently represented at every time step. These two streams are then merged via an element-wise addition opera-tion, resulting in a unified latent tensor that encapsulates both local dynamic evolution and global physical contexts. This fused representation serves as the comprehensive input for the subsequent Res-FNO backbone, ensuring that the model remains sensitive to external operating conditions during the spectral and temporal refinement stages. 
+
+B. Res-FNO 
+
+In this section, we detail the internal architecture of the proposed multi-scale Res-FNO, which serves as the central computational engine of the proposed framework. 
+
+1) ResNet with the residual connection: In the early evo-lution of deep convolutional neural networks (DCNNs), it was widely believed that increasing network depth would inherently enhance feature extraction capabilities. However, experimental evidence revealed that as the depth exceed a certain threshold, the accuracy of the training set would saturate and then degrade rapidly. It is crucial to distinguish this from vanishing gradients. In modern architectures, batch normalization [31] and proper weight initialization [32] have largely stabilized the gradient flow. Instead, the degradation suggests that approximating an identity mapping through mul-tiple nonlinear layers is fundamentally difficult for numerical optimization. To address this challenge, He et.al [30] intro-duced the residual learning framework. Rather than expecting a stack of layers to directly fit a desired underlying mapping 
+
+G(x), the framework explicitly lets these layers fit a residual mapping defined as F (x) := H(x) − x. Consequently, the original mapping is recast into: 
+
+H(x) = F (x) + x. (1) This concept is physically implemented through shortcut connections (also referred as skip connections). As illustrated JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 4
+
+in Fig. 2, a typical residual building block consists of two primary paths:  
+
+> •
+
+Residual path: A series of weight layers, normalized layers, and activation functions (e.g. ReLU) that learn the incremental changes of the features.  
+
+> •
+
+A shortcut that bypasses the nonlinear transformations and propagates the input x directly to the output. The mathematical formulation of a basic block reads 
+
+y = g(F (x, {Wi}) + x), (2) where y is the output vector and g denotes the activation function. The integration of residual mechanisms provides several key benefits for optimizing deep models. Firstly, the shortcut connections create a “highway” for backpropagation, allowing the gradient of the loss function to bypass complex nonlinear layers and reach shallower layers with minimal attenuation. Secondly, research indicates that residual connections significantly reduce the complexity of the loss landscape, making the optimization process more stable and enabling faster convergence to a global optimum. Lastly, by preserving original information and learning only the refined increments, the network enhances its ability to reuse low level features throughout deeper structures, which is the main motivation we chose to use ResNet in our model. 
+
+2) FNO block: Neural operators were proposed to learn mappings between two infinite-dimensional function spaces based on a finite set of observed input-output pairs. Among various neural operator architectures, the Fourier Neural Oper-ator (FNO) has demonstrated superior capacity and generaliza-tion performance in modeling hysteresis, as evidenced by the work of Guo et al. [22]. The FNO specifically parameterizes the integral kernel in Fourier space, allowing it to learn Fourier coefficients directly from data [33]. In practice, FNO discretizes both the input B(t) and output H(t) on a uniform mesh. Each FNO block consists of two parallel paths as: A spectral branch and a skip connection as the illustrated “FNO block” in Fig. 3. The spectral branch transforms the temporal (or spatial) input into the frequency domain via the Fast Fourier Transform (FFT), followed by a truncation of higher-order modes, a hyperparameter adjusted according to the complexity of the problems. The remaining frequency modes are multiplied by a learnable weight matrix. The processed information is then projected back to the original domain using the Inverse FFT (IFFT). Parallel to this, a skip connection is employed to preserve global information and mitigate the loss of critical features due to frequency truncation. The outputs from both paths are summed element-wise and passed through a nonlinear activation function to enhance the representational capacity of the model. For a more exhaustive mathematical derivation and parameter sensitivity analysis of the FNO layers, we refer the reader to [22]. 
+
+3) FNO with Resnet: While the FNO excels at learning global operators and capturing the underlying physical enve-lope in frequency space, it inherently suffers from spectral bias, where the network prioritizes the optimization of low frequency components [34]. In addition, due to the necessary truncation of Fourier modes, the spectral convolution acts as a low frequency filter, which inevitably smooths out sharp local transients. Critically, even if the number of retained modes is significantly increased, the FNO struggles to capture high frequency details, such as the ringing effect causing oscillations in hysteresis loops. In this paper, To synergize global spectral modeling with localized feature resolution, we proposed a multi-scale topology integrating FNO with the ResNet, as illustrated in Fig. 3. This design is motivated by the complementary strengths and inherent limitations of these two paradigms. Firstly, the fused inputs xf used from the multi-input processing are fed into the global operator path, which consists of a sequence of n FNO blocks. The structure of the FNO blocks are kept the same as in [33], with the spectral processing path complemented by a local linear transform. By parameterizing the integral kernel in Fourier space, this path captures the long range physical evolution and the macro scale backbone of the hysteresis loop. Then, the special design of this model, the parallel local refinement path is introduced to compensate for the information loss incurred by special bias. This path comprises m ResNet blocks specifically engineered to resolve localized nonlinearities. Each block utilizes CNN with varying receptive field kernels size ( k). This multi-scale approach allows the model to patch the gaps left by mode truncation, effectively reconstructing high-frequency transients and fine-grained oscillations that the global operator might smooth out. The final output is synthesized through a multi-component additive fusion. The latent representation from the Global Op-erator Path ( xF N O ) and the Local Refinement Path ( xResN et )are combined as in Eq. (3). Finally, the fused features are passed through a Multi-Layer Perceptron (MLP) to project the latent multi-scale representation back to the target physical space, yielding the predicted magnetic field strength ˆH(t).
+
+ˆH(t) = MLP (g(xF N O + xResN et )) (3) This integration ensures that the model maintains the global physical trend while preserving localized precision. 
+
+C. Feature engineering 
+
+Hysteresis is inherently context-dependent, the same B(t)
+
+input will yield different H(t) responses depending on the operating frequency f and temperature T . So, besides the 
+
+H(t) sequence, the scalar features should also be included in the model. To address this, “Feature channel engineering” is employed. As shown in Fig. 1 and in section III-A, the scalar features are mapped to the same dimension as the latent sequential features and integrated into temporal signals. To mitigate the challenges of vanishing and exploding gradients in neural network, a multi-stage normalization pipeline is implemented:  
+
+> •
+
+Min-Max Scaling : All input features, including the mag-netic flux density sequence B(t), the magnetic field in-tensity sequence H(t), the time derivatives of B ( dB dt ) and the scalar operating conditions (frequency f , temperature JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 5ℱ R                  
+
+> W
+> Local linear transform
+> Fourier
+> transform
+> Parameterization
+> in Fourier space
+> Inverse Fourier
+> transform
+> 𝑔
+> ℱR
+> W
+> 𝑔
+> FNO Block 1
+> Residual connection
+> Varying receptive >ields kernels 𝑔
+> ResNet Block 1
+> CNN
+> … … 𝑔
+> ResNet Block m
+> CNN
+> Activation
+> function
+
+xFNO 
+
+xResNet  
+
+> Global Operator Path: Capture underlying physical evolution
+> Local Refinement Path: Multi -scale Feature Reconstruction
+> Ĥ(t)
+> ℱ-1ℱ-1
+
+xfused   
+
+> … …
+> FNO Block n
+> MLP 𝑔
+
+Fig. 3: Structure of Res-FNO block: Up Global operator path with FNO blocks to capture underlying physical evolution; (Down) Local refinement path with ResNet blocks for multi-scale feature reconstruction. 
+
+T and the peak-to-peak value of B (∆B))are normalized to the range [−1, 1] using Min-Max scaling: 
+
+xnorm = x − xmin 
+
+xmax − xmin 
+
+, (4) where x represents the original value, xmin and xmax are the minimum and maximum values of that feature across the training set, and xnorm is the normalized value. This normalization ensures that the spectral convolutions in the FNO operate on a consistent numerical range and prevents features with larger magnitudes from dominating the learning process.  
+
+> •
+
+Grid-Invariance and Resolution Robustness : One of the core advantages of the FNO architecture is its theo-retical resolution independence, which allows the model to learn operators between function spaces rather than discrete mappings. In this work, we leverage this property by employing a downsampling strategy on the temporal sequences to reduce computational overhead. As estab-lished in prior studies, the spectral-domain integral kernel in FNO provides sufficient resistance to variations in grid density. This ensures that the model can maintain high prediction fidelity and robust feature extraction even when operating at a coarser sampling rate than the orig-inal training data. Consequently, this allows for acceler-ated training on lower resolution data without sacrificing the accuracy of high resolution inference [22]. So, in our study, every groups of data are dowmsampled into less time points to speed up the training while keeping the accuracy. More details are provided in Section IV. 
+
+D. Loss function constraints 
+
+Since the goal of the proposed multi-scale Res-FNO is for sequence to sequence model to predict the corresponding H,the loss function is defined as the point-by-point deviation between the predicted magnetic field ˆH(t) and the experiment ground truth H(t), defined as mean square error (MSE): 
+
+L = 1
+
+M
+
+> M
+
+X
+
+> i=1
+> N
+
+X
+
+> t=1
+
+|Hi(t) − ˆHi(t)|2
+
+!
+
+, (5) where M and N denote the batch size and the number of time steps per period respectively. The MSE loss is chosen for its sensitivity to large derivations, which ensures the model effectively captures critical H features such as peak values and rapid transitions. IV. R ESULTS 
+
+A. Experimental configuration 
+
+The computational experiments were conducted on an Ap-ple M1 processor using JAX and Equinox framework. Unlike the traditional deep learning libraries, JAX utilizes accelerated linear algebra (XLA) to compile high-level Python and NumPy functions into highly optimized machine code, significantly enhancing execution speed on CPU architectures. To evaluate the performance of model under extreme con-ditions, Material 79 from the second tier of the MagNet Challenge 2023 was selected as the primary benchmark for ar-chitectural evolution and hyperparameter tuning. This material is characterized by highly nonlinear dynamics and the smallest size of training data, leading to the highest predictive errors reported among various competitive models in the challenge [24]. In the original data provided by MagNet Challenge 2023, there are standardized train and test partitions specifically designed to evaluate the diverse predictive capabilities of neural networks. In our study, we strictly adhered to the official train and test datasets, but we further partitioned the train data provided into training and validation sets by ratio as 9 : 1 to JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 60 250 500 750 1000 
+
+Time Step ( n)
+
+0.050 
+
+0.025 
+
+0.000 
+
+0.025 
+
+0.050 
+
+> B (T)
+
+0 250 500 750 1000 
+
+Time Step ( n)
+
+20 
+
+10 
+
+0
+
+10 
+
+20 
+
+> H (A/m)
+
+20 10 0 10 20 
+
+H (A/m) 
+
+0.050 
+
+0.025 
+
+0.000 
+
+0.025 
+
+0.050 
+
+> B (T) Ringing effect
+
+Fig. 4: Typical magnetic characteristics under high-frequency excitation: (Left) Temporal waveform of the magnetic induction 
+
+B(t); (Middle) Corresponding magnetic field strength H(t) exhibiting a pronounced ringing effect; (Right) The resulting B-H
+
+hysteresis loops, illustrating the impact of temporal oscillations on the magnetic trajectory. 0 2 4 6 8 10 12  
+
+> NRMSE (%)
+> 0
+> 100
+> 200
+> 300
+> 400
+> 500
+> 600
+> 700
+> 800
+> Sample Count
+> Pure FNO (Mean: 2.19%)
+> Res-FNO (w/o dB /dt ) (Mean: 2.00%)
+> Res-FNO (Proposed) (Mean: 1.87%)
+
+Fig. 5: NRMSE distribution analysis for different model ar-chitectures. facilitate hyperparameter tuning and prevent overfitting. Besides, following the grid-invariance property discussed in Section III-C, this work utilizes a downsampled sequence of N = 205 points per period, reduced from the original 1024 points. This strategy significantly mitigates computa-tional overhead while preserving the capacity of the model to resolve complex underlying physical dynamics. In addition, with the validation data, the early stopping [35] strategy was implemented. The training process monitors the validation loss with a patience of 100 epoch. If no significant improvement (defined by a threshold 10 −6 in this work) is observed within this window, the training is terminated, and the parameters cor-responding to the lowest error are restored. This prevents the model from overfitting, ensuring the restoration of parameters corresponding to the optimal generalization state. Furthermore, this can significantly reduces unnecessary computational over-head [35]. By testing the model with different parameters on data of material 79, an initial baseline was established with a Pure FNO model, where an optimal set of hyperparameter was identified to balance predictive fidelity with computational efficiency (see Table I). These optimized parameters and sampling configuration remained constant in multi-scale Res-FNO to ensure a controlled performance comparison. 0 1 2                            
+
+> T(s)1e 6
+> 0.515
+> 0.520
+> 0.525
+> 0.530
+> H (A/m)
+> Field Strength HComparison
+> Reference
+> Res-FNO (Proposed)
+> Res-FNO (w/o dB /dt )
+> Pure FNO
+> 0.515 0.520 0.525 0.530
+> H(A/m)
+> 0.49
+> 0.50
+> 0.51
+> B (T)
+> B-HLoop Comparison
+> Reference
+> Res-FNO (Proposed)
+> Res-FNO (w/o dB /dt )
+> Pure FNO
+> 012
+> T(s)1e 6
+> 0.51
+> 0.52
+> 0.53
+> 0.54
+> H (A/m)
+> 0.51 0.52 0.53 0.54
+> H(A/m)
+> 0.48
+> 0.50
+> 0.52
+> B (T)
+> 01234
+> T(s)1e 6
+> 0.45
+> 0.50
+> 0.55
+> H (A/m)
+> 0.45 0.50 0.55
+> H(A/m)
+> 0.4
+> 0.5
+> 0.6
+> B (T)
+
+Fig. 6: Comparison of predicted magnetic characteristics for using different model architectures: (Left) Temporal wave-forms of the magnetic field strength H(t); (Right) Resulting 
+
+B-H hysteresis loops. 500 0 500 
+
+H (A/m) 
+
+0.4 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+> B (T)  Detailed Loop
+
+10 0 10 
+
+H (A/m) 
+
+0.05 
+
+0.00 
+
+0.05 
+
+> B (T)
+> Detailed Loop
+
+Fig. 7: B − H loops for 3C90 ferrite material under different excitation frequencies. (left:) under f = 50 kHz, (right:) f =800 kHz JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 70 1 1e 5
+
+0.48 
+
+0.54 
+
+> Norm.  H
+
+0.48 0.54 
+
+0.4 
+
+0.6 
+
+> Norm.  B
+
+0 3 1e 6
+
+0.45 
+
+0.60 
+
+> Norm.  H
+
+0.45 0.60 
+
+0.45 
+
+0.60 
+
+> Norm.  B
+
+0.0 1.5 
+
+T (s) 1e 6
+
+0.3 
+
+0.6 
+
+> Norm.  H
+
+0.3 0.6 
+
+Norm. H
+
+0.45 
+
+0.60 
+
+> Norm.  B
+
+Measured (Reference) Res-FNO Prediction 
+
+(a) 3C92 0.0 2.5 1e 6
+
+0.48 
+
+0.50 
+
+0.52 
+
+> Norm.  H
+
+0.48 0.50 0.52 
+
+0.48 
+
+0.54 
+
+> Norm.  B
+
+0.0 1.5 1e 6
+
+0.48 
+
+0.56 
+
+> Norm.  H
+
+0.48 0.56 
+
+0.4 
+
+0.6 
+
+> Norm.  B
+
+0 2
+
+T (s) 1e 6
+
+0.48 
+
+0.56 
+
+> Norm.  H
+
+0.48 0.56 
+
+Norm. H
+
+0.45 
+
+0.60 
+
+> Norm.  B
+
+Measured (Reference) Res-FNO Prediction (b) T37 0 4 1e 6
+
+0.50 
+
+0.52 
+
+> Norm.  H
+
+0.50 0.52 
+
+0.48 
+
+0.50 
+
+0.52 
+
+> Norm.  B
+
+0 3 1e 6
+
+0.4 
+
+0.6 
+
+> Norm.  H
+
+0.4 0.6 
+
+0.3 
+
+0.6 
+
+> Norm.  B
+
+0 3
+
+T (s) 1e 6
+
+0.4 
+
+0.6 
+
+> Norm.  H
+
+0.4 0.6 
+
+Norm. H
+
+0.4 
+
+0.6 
+
+> Norm.  B
+
+(c) 3C95 0 1 1e 5
+
+0.4 
+
+0.6 
+
+> Norm.  H
+
+0.4 0.6 
+
+0.3 
+
+0.6 
+
+> Norm.  B
+
+0 6 1e 6
+
+0.4 
+
+0.8 
+
+> Norm.  H
+
+0.4 0.8 
+
+0.0 
+
+0.6 
+
+> Norm.  B
+
+0.0 1.5 
+
+T (s) 1e 6
+
+0.4 
+
+0.6 
+
+> Norm.  H
+
+0.4 0.6 
+
+Norm. H
+
+0.3 
+
+0.6  
+
+> Norm.  B
+
+(d) 79 
+
+Fig. 8: (a) Hysteresis loops of 3C92. (b) Hysteresis loops of T37. (c) Hysteresis loops of 3C95. (d) Hysteresis loops of ML95S. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 80 10000 20000 30000 
+
+> Sample Point Index
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> B (T)
+
+Fig. 9: Exciting B with oscillations. TABLE I: Architectural parameters for the Pure FNO baseline model.         
+
+> Hyperparameter of Pure FNO Value
+> Number of Fourier Layers ( Lf no )2Number of Fourier Modes ( k)48 Hidden Dimension ( dmodel )64 Activation Function ReLU Sequence Length ( N)205 Sequential Input Channels 3
+
+B. Ablation study on hybrid multi-scale Res-FNO components 
+
+The proposed hybrid multi-scale architecture integrates two key design choices: enriched scalar inputs with the derivative  
+
+> dB dt
+
+and integrated ResNet structure. This ablation study sys-tematically disentangles the contribution of each component. 
+
+1) Influence of ResNet integrated FNO: After the prelim-inary study, 2 FNO blocks and 2 ResNet blocks, with the kernel size as 5 and 7 respectively are chosen, as illustrated in Table II. To demonstrate the accuracy enhancement achieved by integrating ResNet into the FNO architecture, an ablation study was conducted on Material 79. As described in Section II, the dataset was partitioned into training and validation sets with a ratio of 9 : 1 . So, there are respectively 521 and 7298 groups of data used for training and testing the model. The predictive performance of the various models is quantitatively assessed using two complementary metrics:  
+
+> •
+
+Sample-wise Normalized Root Mean Square Error (NRMSE): To evaluate the estimation accuracy across various magnetic excitation levels, the NRMSE is cal-culated for each individual magnetic field sequence as: NRMSE j = 1
+
+Hp,j 
+
+vuut 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(Hj,i − ˆHj,i )2 · 100 (6) where j denotes the index of the test sample, n is the number of time steps per period, and Hp,j = max |Hj (t)|
+
+represents the peak amplitude of the j-th measured se-quence. This metric provides a scale-invariant measure, ensuring that the reconstruction fidelity is assessed con-sistently from linear regions to deep saturation.  
+
+> •
+
+Coefficient of Determination ( R2): This metric assesses the goodness of fit for each predicted sequence ˆHj
+
+relative to its experimental ground truth Hj . The sample-wise R2 score is defined as: 
+
+R2 
+
+> j
+
+= 1 −
+
+Pni=1 (Hj,i − ˆHj,i )2
+
+Pni=1 (Hj,i − ¯Hj )2 , (7) where ¯Hj denotes the arithmetic mean of the j-th exper-imental sequence. An R2 value of 100% indicates that the predicted curve perfectly coincides with the measured data. By calculating these metrics for every sample in the test set, a comprehensive statistical distribution of the performance of the model can be established. TABLE II: Hyperparameter Configuration of Res-FNO for Different Datasets.       
+
+> Dataset / Materials FNO Blocks (n)ResNet Blocks (m)Kernel Sizes (k)
+> 79, 3C92, T37, 3C95, ML95S 22{5, 7 }
+> 3C90 (with Oscillations) 23{5, 7, 13 }
+
+As summarized in Table III, the proposed Res-FNO con-sistently outperforms the Pure FNO across all quantitative metrics. Specifically, the Res-FNO achieves a mean NRMSE of 1.87% , representing a significant error reduction compared to the 2.19% produced by the Pure FNO baseline, with 14 .8% 
+
+improvement in reconstruction fidelity. Furthermore, the aver-age R2 score is elevated from 99 .79% to 99 .86% , indicating a superior goodness-of-fit to the experimental ground truth. The NRMSE distribution, illustrated in Fig. 5, further confirms the enhanced robustness of the Res-FNO. Its error profile is more concentrated in the lower region with the leftward shift, suggesting higher reliability across diverse excitation conditions. In addition, the integration of the residual structure is specif-ically designed to capture fine-grained transient details, such as the ringing effect. To provide a more intuitive comparison, some predicted magnetic field H(t) and corresponding B − H
+
+loops are plotted in Fig. 6. It is evident that the Res-FNO tracks the high-frequency oscillations caused by the ringing effect with much higher precision than the Pure FNO across all excitation types, demonstrating its superior ability to char-acterize complex magnetic dynamics. 
+
+2) Efficacy of model inputs processing: Magnetic hysteresis characteristics vary significantly with temperature, frequency, and magnetic flux density. While incorporating these features as basic training inputs is essential, this study further in-troduces the time derivative dB dt into the sequential inputs, as discussed in Section III-A. the primary motivation is to counteract the ringing effect occurring during rapid transitions of B, as illustrated in Fig. 4. To evaluate the impact of this derivative information in input, a comparative model trained without dB dt was analyzed. Using the same evaluation metrics, both the quantitative results in Table III and the NRMSE distribution in Fig. 5 demonstrate that the Res-FNO achieves better accuracy com-pared to the model without dB dt . Qualitatively, the comparison in Fig. 6 further confirms that the proposed model effectively tracks the ringing effect better. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 90.0 0.2 0.4 0.6 0.8 1.0 1.2                                       
+
+> 1e 6
+> 0.496
+> 0.498
+> 0.500
+> 0.502
+> 0.504
+> 0.506
+> 0.508
+> 0.510
+> Norm.  H
+> 0.496 0.498 0.500 0.502 0.504 0.506 0.508 0.510
+> 0.425
+> 0.450
+> 0.475
+> 0.500
+> 0.525
+> 0.550
+> 0.575
+> Norm.  B
+> 0.00 0.25 0.50 0.75 1.00 1.25 1.50 1.75 2.00
+> 1e 6
+> 0.498
+> 0.500
+> 0.502
+> 0.504
+> 0.506
+> 0.508
+> Norm.  H
+> 0.498 0.500 0.502 0.504 0.506 0.508
+> 0.44
+> 0.46
+> 0.48
+> 0.50
+> 0.52
+> 0.54
+> 0.56
+> Norm.  B
+> 0.0 0.5 1.0 1.5 2.0 2.5 3.0
+> Time 1e 6
+> 0.496
+> 0.498
+> 0.500
+> 0.502
+> 0.504
+> 0.506
+> 0.508
+> 0.510
+> Norm.  H
+> 0.496 0.498 0.500 0.502 0.504 0.506 0.508 0.510
+> Norm. H
+> 0.425
+> 0.450
+> 0.475
+> 0.500
+> 0.525
+> 0.550
+> 0.575
+> Norm.  B
+
+Reference Pure FNO Res-FNO 
+
+Fig. 10: Comparison of predicted magnetic characteristics for using proposed Res-FNO and Pure FNO: (Left) Temporal waveforms of the magnetic field strength H(t); (Right) Resulting B-H hysteresis loops. TABLE III: Performance comparison of different model archi-tectures on the test dataset of Material 79. 
+
+Model Architecture Average R2 (%) Average NMSE (%) 
+
+Pure FNO 99.79 2.19 Res-FNO (without dB/dt ) 99.83 2.00 Res-FNO (Proposed) 99.86 1.87 
+
+C. Generalization and Statistical reliability analysis 
+
+Having established the hybrid multi-scale Res-FNO as the optimal architecture through ablation studies on Material 79, we now evaluate its generalization capability across the broader materials: the others 4 materials in the second tier group of data provided in MagNet 2023 for the ringing effect modeling and, the data of 3C90 with minor loops provided in MagNet Challenge 2. 
+
+1) Study on the materials with ringing effect: 2) Study on the minor loops modeling: We evaluated the hybrid multi-scale Res-FNO on the other four materials: 3C92, T37, 3C95 and ML95S, which present distinct extrapolation challenges as outlined in [16]. These materials test model ro-bustness under data scarcity, domain shift, waveform sparsity, and extreme operating conditions. Considering the great gen-eralization ability of proposed Res-FNO, we used only a sliced portion of the available training data for the training depending on the complexity of the materials. The data size are detailed in Table. IV, where “used/provided” means the data size provided originally in the challenge and the size we used for training our model. This sparse training scenario rigorously tests the ability of the model to extract generalizable physical principles from limited observations, mirroring practical situations where comprehensive characterization data for new materials may be scarce. This cross-material validation is essential to demonstrate that the proposed architecture learns fundamental physical principles of hysteresis rather than overfitting to specific JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 10 
+
+TABLE IV: Dataset Statistics and Performance Summary of Res-FNO on the 3C92, T37, 3C95 and ML95S.                        
+
+> Material Dataset Size Res-FNO Performance Training (Used/Provided) Testing Average R2(%) Average NRMSE (%) 3C92 2187/2432 7651 99.21 3.07
+> T37 1332/7400 3172 99.68 2.43
+> 3C95 964/5357 5357 99.78 2.10
+> ML95S 905/2013 3738 99.97 0.96
+
+material characteristics. Table IV and Figure 8 summarize the performance of all these materials, which shows great accuracy and the generalization ability of the proposed Res-FNO. In this section, the model is further implemented on Material 3C90, in which the exciting magnetic flux density B(t) is not just sinusoidal or triangle, trapezoidal anymore but with the oscillation inside as shown in Fig. 9, which is more realistic. The dataset spans seven discrete excitation frequencies ranging from 50 kHz to 800 kHz and three different temperature as 25, 50 and 70 ° C. The minor loops characteristics differs a lot under different frequencies as shown in Fig. 7. Since the data was acquired over complete excitation cycles at a constant sampling rate, the raw sequence lengths varied inversely with the excitation frequency. To ensure a consistent input dimension for the neural network, we employed a linear resampling technique to align all temporal sequences to a fixed length of 2016 points per cycle first. And then, all the data are sliced to only 504 points in each period. The reason why there is more time points in this one than 205 in the other materials is that there are more oscillations in this data as shown in Fig. 9. In total, there are 17262 groups of data, to test the generalization ability of the model, only 10% of them (1726) groups of data randomly chosen from the data group are used for training the model, another 10% are used for validation. And the remaining 13810 groups of data are used to test the accuracy of the model. As shown in Table II, one more ResNet block with the kernel size as 13 is added since the complexity and the oscillation of the date. TABLE V: Performance Comparison between Pure-FNO and Res-FNO for 3C90 Ferrite Material.               
+
+> Model Dataset Size Performance Metrics Training Testing Average R2(%) Average NRMSE (%)
+> Pure-FNO 1726 13810 96.27 6.20 Res-FNO 98.22 4.25
+> Note: Both models were trained on the same 10% subset (1726 samples) to evaluate their learning efficiency under limited data conditions.
+
+The performance of Res-FNO on 3C90 under oscillating excitations is analyzed and compared with the Pure FNO. As shown in Table V, with only 10% (1726 samples) of the dataset used for training, Res-FNO achieves a superior R2
+
+of 98.22% and reduces the NRMSE to 4.25%, significantly outperforming the Pure-FNO. The qualitative comparison in Fig. 10 demonstrates the superior performance of the Res-FNO architecture in capturing complex magnetic dynamics. Unlike the Pure FNO model, which can not be accurate at high-frequency ripples in the H(t) waveforms, the Res-FNO accurately tracks these sharp peaks. This temporal precision extends to the B-H loops, where the Res-FNO effectively eliminates the phase lag and amplitude errors seen in the Pure FNO. As highlighted by the zoomed-in insets, the Res-FNO precisely follows the intricate trajectories of minor loops. Fur-thermore, achieving high accuracy on 13,810 unseen samples with limited training data underscores the robust generalization of the proposed multi-scale Res-FNO, proving that residual connections successfully bridge global spectral features with fine-grained local physical corrections. V. C ONCLUSION 
+
+To address the inherent spectral bias of the vanilla Fourier Neural Operator (FNO) in magnetic hysteresis modeling, this paper proposes a hybrid multi-scale ResNet-augmented FNO (Res-FNO) architecture for seq-to-seq hysteresis prediction. Specifically, a dedicated feature engineering approach is im-plemented to fuse scalar and sequential inputs using min-max normalization. A key contribution is the inclusion of the time derivative of magnetic flux density ( dB dt ) as an auxiliary input, which is physically motivated by the fact that ringing effects and minor loop dynamics are highly sensitive to the rate of change of B(t). Comprehensive ablation studies conducted on Material 79 validate the efficacy of this feature enhancement and demonstrate the superior capability of the integrated ResNet path in capturing high-frequency transients. Furthermore, the generalization performance of the proposed Res-FNO is rigorously evaluated using four distinct materials from the MagNet Challenge 2023, as well as Material 3C90 characterized by complex oscillations. Experimental results, quantified by NRMSE and R2 metrics, along with the vi-sualization of predicted H-field waveforms and hysteresis loops, consistently show that the ResNet-based refinement path significantly improves the modeling accuracy of minor loops. The high fidelity in reconstructing high-frequency oscillations and the robust performance across diverse materials prove that the proposed model is a powerful and reliable tool for the seq-to-seq modeling of complex hysteresis behaviors in power electronic applications. ACKNOWLEDGMENT 
+
+Ziqing Guo acknowledges support from China Scholarship Council (CSC), No. 202206280041, in the preparation of this manuscript. JOURNAL OF L ATEX CLASS FILES, VOL. 14, NO. 8, AUGUST 2021 11 
+
+REFERENCES [1] C. R. Sullivan, B. A. Reese, A. L. F. Stein, and P. A. Kyaw, “On size and magnetics: Why small efficient power inductors are rare,” in 
+
+2016 International Symposium on 3D Power Electronics Integration and Manufacturing (3D-PEIM) , 2016, pp. 1–23. [2] H. Li, D. Serrano, T. Guillod, S. Wang, E. Dogariu, A. Nadler, M. Luo, V. Bansal, N. K. Jha, Y. Chen et al. , “How magnet: Machine learning framework for modeling power magnetic material characteristics,” IEEE Transactions on Power Electronics , vol. 38, no. 12, pp. 15 829–15 853, 2023. [3] D. Serrano, H. Li, S. Wang, T. Guillod, M. Luo, V. Bansal, N. K. Jha, Y. Chen, C. R. Sullivan, and M. Chen, “Why magnet: Quantifying the complexity of modeling power magnetic material characteristics,” IEEE Transactions on Power Electronics , vol. 38, no. 11, pp. 14 292–14 316, 2023. [4] Y. Dang, L. Zhu, Z. Liu, and S. Ji, “Multi-stage multi-fidelity optimal design method based on evolutionary computation with dynamic popula-tion for high-power high-voltage high-frequency transformers (H3FTs),” 
+
+IEEE Transactions on Power Electronics , 2026. [5] J. M¨ uhlethaler, J. Kolar, and A. Ecklebe, “Loss modeling of inductive components employed in power electronic systems,” 8th International Conference on Power Electronics ECCE Asia , pp. 945–952, 2011. [6] M. Kacki et al. , “A study of flux distribution and impedance in solid and laminar ferrite cores,” in 2019 IEEE Applied Power Electronics Conference and Exposition (APEC) . IEEE, 2019, pp. 2500–2506. [7] C. P. Steinmetz, “On the law of hysteresis,” Proceedings of the IEEE ,vol. 72, no. 2, pp. 197–221, 1984. [8] K. Venkatachalam, C. Sullivan, T. Abdallah, and H. Tacca, “Accurate prediction of ferrite core loss with nonsinusoidal waveforms using only Steinmetz parameters,” in Proc. IEEE Workshop on Computers in Power Electronics , 2002, pp. 36–41. [9] J. Muhlethaler, J. Biela, J. W. Kolar, and A. Ecklebe, “Improved core-loss calculation for magnetic components employed in power electronic systems,” IEEE Transactions on Power electronics , vol. 27, no. 2, pp. 964–973, 2011. [10] D. Jiles and D. Atherton, “Theory of ferromagnetic hysteresis,” Journal of Magnetism and Magnetic Materials , vol. 61, no. 1-2, pp. 48–60, 1986. [11] I. Mayergoyz and G. Friedman, “Generalized preisach model of hys-teresis,” IEEE Transactions on Magnetics , vol. 24, no. 1, pp. 212–217, 1988. [12] F. T. Calkins, R. C. Smith, and A. B. Flatau, “Energy-based hysteresis model for magnetostrictive transducers,” IEEE Transactions on Magnet-ics , vol. 36, no. 2, pp. 429–439, 2002. [13] H. Li, D. Serrano, T. Guillod et al. , “Machine learning framework for modeling power magnetic material characteristics,” TechRxiv. Preprint ,2022. [14] X. Shen, Y. Zuo, D. B. Cobaleda, and W. Martinez, “Iron loss ex-trapolation predictions for high-frequency magnetic components using denoising diffusion models,” IEEE Transactions on Power Electronics ,vol. 40, no. 10, pp. 15 254–15 264, 2025. [15] Y. Xiao, C. Li, and Z. Zheng, “A magnetic core loss model based on physics-informed neural network with cross-attention,” IEEE Transac-tions on Power Electronics , vol. 41, no. 1, pp. 92–96, 2026. [16] W. Kirchg¨ assner, N. F¨ orster, T. Piepenbrock, O. Schweins, and O. Wallscheid, “HARDCORE: H-Field and power loss estimation for arbitrary waveforms with residual, dilated convolutional neural networks in ferrite cores,” IEEE Transactions on Power Electronics , vol. 40, no. 2, pp. 3326–3335, 2025. [17] I. Sutskever, O. Vinyals, and Q. V. Le, “Sequence to sequence learning with neural networks,” in Advances in Neural Information Processing Systems (NIPS) , 2014. [18] D. Serrano, H. Li, T. Guillod et al. , “Neural network as datasheet: Modeling B-H loops of power magnetics with Sequence-to-Sequence LSTM Encoder-Decoder architecture,” in IEEE Workshop on Control and Modeling for Power Electronics (COMPEL) , 2022, pp. 1–8. [19] C. Grech, M. Buzio, M. Pentella, and N. Sammut, “Dynamic ferro-magnetic hysteresis modelling using a preisach-recurrent neural network model,” Materials , vol. 13, no. 11, p. 2561, 2020. [20] S. Quondam Antonio, V. Bonaiuto, F. Sargeni, and A. Salvini, “Neural network modeling of arbitrary hysteresis processes: Application to go ferromagnetic steel,” Magnetochemistry , vol. 8, no. 2, p. 18, 2022. [21] A. Chandra, T. Kapoor, B. Daniels, M. Curti, K. Tiels, D. M. Tar-takovsky, and E. A. Lomonova, “Generalizable models of magnetic hys-teresis via physics-aware recurrent neural networks,” Computer Physics Communications , vol. 314, p. 109650, 2025. [22] Z. Guo, B. H. Nguyen, H. Hamzehbahmani, and R. V. Sabariego, “Dynamic hysteresis model of Grain-Oriented ferromagnetic material using neural operators,” IEEE Transactions on Magnetics , vol. 61, no. 10, pp. 1–7, 2025. [23] A. Chandra, B. Daniels, M. Curti, K. Tiels, and E. A. Lomonova, “Mag-netic hysteresis modeling with neural operators,” IEEE Transactions on Magnetics , vol. 61, no. 1, pp. 1–11, 2024. [24] M. Chen, H. Li, S. Wang, T. Guillod, D. Serrano, N. F¨ orster, W. Kirchg¨ assner, T. Piepenbrock, O. Schweins, O. Wallscheid et al. ,“Magnet challenge for data-driven power magnetics modeling,” IEEE Open Journal of Power Electronics , vol. 6, pp. 883–898, 2024. [25] H. Li, D. Serrano, S. Wang, and M. Chen, “Magnet-ai: Neural network as datasheet for magnetics modeling and material recommendation,” IEEE Transactions on Power Electronics , vol. 38, no. 12, pp. 15 854–15 869, 2023. [26] H. Li, D. Serrano, S. Wang, T. Guillod, M. Luo, and M. Chen, “Predicting the bh loops of power magnetics with transformer-based encoder-projector-decoder neural network architecture,” in 2023 IEEE Applied Power Electronics Conference and Exposition (APEC) . IEEE, 2023, pp. 1543–1550. [27] A. Vaswani, N. Shazeer, N. Parmar et al. , “Attention is all you need,” in Advances in Neural Information Processing Systems (NIPS) , 2017. [28] Q. Huang, Y. Li, Y. Dou, Y. Li, J. Zhu, and S. Li, “History-dependent prandtl–ishlinskii neural network for quasi-static core loss prediction under arbitrary excitation waveforms,” IEEE Transactions on Power Electronics , vol. 40, no. 7, pp. 9625–9637, 2025. [29] Z. Li, D. Z. Huang, B. Liu, and A. Anandkumar, “Fourier neural operator with learned deformations for pdes on general geometries,” Journal of Machine Learning Research , vol. 24, no. 388, pp. 1–26, 2023. [30] K. He, X. Zhang, S. Ren, and J. Sun, “Deep residual learning for image recognition,” in Proceedings of the IEEE conference on computer vision and pattern recognition , 2016, pp. 770–778. [31] S. Ioffe and C. Szegedy, “Batch normalization: Accelerating deep network training by reducing internal covariate shift,” in International conference on machine learning . PMLR, 2015, pp. 448–456. [32] K. He, X. Zhang, S. Ren, and J. Sun, “Delving deep into rectifiers: Surpassing human-level performance on imagenet classification,” in 
+
+Proceedings of the IEEE international conference on computer vision ,2015, pp. 1026–1034. [33] Z. Li, N. Kovachki, K. Azizzadenesheli et al. , “Fourier neural op-erator for parametric partial differential equations,” arXiv preprint arXiv:2010.08895 , 2020. [34] Z. You, Z. Xu, and W. Cai, “Mscalefno: Multi-scale fourier neural op-erator learning for oscillatory functions and wave scattering problems,” 
+
+Journal of Computational Physics , p. 114530, 2025. [35] I. Goodfellow, Y. Bengio, and A. Courville, Deep Learning . MIT Press, 2016.

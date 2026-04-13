@@ -1,0 +1,615 @@
+Title: Physics-guided surrogate learning enables zero-shot control of turbulent wings
+
+URL Source: https://arxiv.org/pdf/2604.09434v1
+
+Published Time: Mon, 13 Apr 2026 01:19:43 GMT
+
+Number of Pages: 42
+
+Markdown Content:
+# Physics-guided surrogate learning enables zero-shot control of turbulent wings 
+
+## Yuning Wang 1∗, Pol Su´ arez 2, Mathis Bode 3, Ricardo Vinuesa 1,2∗
+
+> 1
+
+Department of Aerospace Engineering, University of Michigan, Ann Arbor, MI 48109, USA. 
+
+> 2
+
+FLOW, Engineering Mechanics, KTH Royal Institute of Technology, SE-100 44 Stockholm, Sweden. 
+
+> 3
+
+J¨ ulich Supercomputing Centre, Forschungszentrum J¨ ulich GmbH, 52425 J¨ ulich, Germany 
+
+> ∗
+
+Corresponding author. Email: yuninw@umich.edu, rvinuesa@umich.edu 
+
+Turbulent boundary layers over aerodynamic surfaces are a major source of aircraft drag, yet their control remains challenging due to multiscale dynamics and spatial variability, particularly under adverse pressure gradients. Reinforce-ment learning has outperformed state-of-the-art strategies in canonical flows, but its application to realistic geometries is limited by computational cost and transferability. Here we show that these limitations can be overcome by exploit-ing local structures of wall-bounded turbulence. Policies are trained in turbulent channel flows matched to wing boundary-layer statistics and deployed directly onto a NACA4412 wing at 𝑹𝒆 𝒄 = 2 × 10 5 without further training, being the so-called zero-shot control. This achieves a 28.7% reduction in skin-friction drag and a 10.7% reduction in total drag, outperforming the state-of-the-art opposi-tion control by 40% in friction drag reduction and 5% in total drag. Training cost is reduced by four orders of magnitude relative to on-wing training, enabling scalable flow control. 
+
+1
+
+> arXiv:2604.09434v1 [physics.flu-dyn] 10 Apr 2026
+
+# Introduction 
+
+## Flow control: from passive to closed-loop 
+
+The serrated wingtip feathers of a peregrine falcon reduce drag passively, through a geometry refined over millions of years of evolution. A similar philosophy underlies the wings of light aircraft that have long trained pilots and enabled recreational flight, exemplified by designs such as the Cessna 172 Skyhawk, which rely on cambered airfoils such as the NACA4412. Turbulence is a primary source of skin-friction drag on aircraft wings ( 1–3 ). Despite its practical importance, its control remains a fundamental challenge, driven by the high dimensionality, chaotic dynamics, and multiscale nature of turbulent flows ( 4), and further complicated by the geometric complexity of realistic configurations. Any practical flow-control strategy must balance four interdependent requirements: 
+
+control performance , the magnitude of drag reduction achieved; computational cost , the resources required to train and deploy the controller; generalizability , the ability to transfer across flow conditions and geometries; and turbulent-scale target , linked to the level of complexity or richness of flow that the application demands. No existing framework achieves a satisfactory balance across all four. Active flow-control dynamically adjust actuation in response to changing flow conditions or prescribed objectives. When actuation is imposed a priori and remains independent of the instantaneous flow state, the strategy is classified as open-loop control ( 5, 6 ); while effective under fixed conditions, such strategies are sensitive to variations in angle of attack, Reynolds number, and freestream turbulence, limiting their practical utility ( 7). Strategies that rely on system feedback are instead classified as closed-loop, and have emerged as a particularly promising direction in recent years ( 8, 9 ), driven by advances in machine learning, most notably deep reinforcement learning, which enables the autonomous discovery of nonlinear feedback laws directly from flow data ( 10,11 ). 
+
+## Opposition control as a closed-loop baseline 
+
+Turbulent-flow control strategies have historically been based on physical insight into the mecha-nisms sustaining wall-bounded turbulence ( 12,13 ). The near-wall dynamics governing these mecha-nisms are remarkably structured: Ref. ( 14 ) demonstrated that inner-layer turbulence can be predicted from large-scale outer-layer information alone, establishing the universality of near-wall dynamics 2that underpins surrogate-based approaches. A canonical example is opposition control (OC) ( 12 ), in which wall-normal blowing and suction are imposed to oppose off-wall velocity fluctuations detected at a sensing plane, thereby weakening the near-wall vortical structures responsible for momentum transfer and reducing skin-friction drag. Despite its simplicity, OC achieves mean-ingful drag reduction across different flow types ( 15 ) and geometries ( 16, 17 ), a transferability attributed to the universality of the near-wall self-sustaining cycle of streaks and quasi-streamwise vortices ( 18,19 ). From the perspective of the four pillars, OC scores favorably on cost, requiring no training. However, its performance is inherently limited by the simplicity of the control law con-necting the action and observation, essentially a simple linear proportional control. It cannot adapt its actuation to exploit flow-state-dependent drag-reduction opportunities, motivating the transition toward richer closed-loop strategies. 
+
+## Machine learning for flow control 
+
+Machine learning has already demonstrated a remarkable capacity to uncover hidden structure in fluid flows: Ref. ( 20 ) showed that physics-informed neural networks can extract velocity and pressure fields inaccessible to direct measurement, establishing a powerful precedent for data-driven approaches to fluid mechanics. This capacity for extracting and exploiting complex flow information naturally extends to the problem of flow control, where the high dimensionality and nonlinearity of turbulent dynamics render purely model-based strategies insufficient. Data-driven closed-loop control has therefore emerged as a compelling paradigm, and deep reinforcement learning (DRL) represents its most powerful instantiation. Closed-loop flow control can be formulated within DRL by modeling the system as a Markov decision process (MDP), in which a controller learns a policy mapping high-dimensional flow observations to control actions through data-driven optimization. Recent studies have reported that DRL-based policies can surpass conventional strategies in drag reduction across a range of configurations, from bluff-body wakes ( 10, 21 ) to wall-bounded turbulent flows ( 22, 23 ), exploiting flow structures across a wide range of turbulent scales in ways not accessible to model-based or open-loop approaches. DRL thus would scored high on performance and on the capability for exploitation on turbulent-scale information, but at the expense of the remaining two pillars: its applicability to 3realistic aerodynamic configurations is currently limited by the prohibitive computational cost of training directly on high-fidelity environments and by the difficulty of generalizing learned policies across geometries or actuator configurations. 
+
+## Challenges: cost and generalization 
+
+First, training DRL controllers is computationally demanding due to the limited sample efficiency of most algorithms, which require repeated environment interactions over many episodes. The episodic trial-and-error nature of DRL typically demands high-fidelity simulations or sophisticated exper-imental setups as the training environment, and the associated cost grows rapidly with Reynolds number as progressively finer scales must be resolved. As a representative example, DRL-based control of three-dimensional cylinder flows becomes prohibitively expensive when transitioning from low-Reynolds-number regimes based on the cylinder diameter 𝐷 (i.e. 𝑅𝑒 𝐷 = 300–400) to subcritical conditions ( 𝑅𝑒 𝐷 = 3, 900), despite the geometric simplicity of the problem ( 21,24 ), with training costs increasing by over an order of magnitude between regimes. Second, DRL controllers are typically optimized for a single task and may not transfer reliably to flows with different charac-teristics. Although transfer learning can extend applicability in some cases ( 25, 26 ), policies often fail to generalize across geometries because observation and action representations, input and output dimensions, and relevant time scales may no longer be appropriate. A common strategy for allevi-ating the curse of dimensionality is multi-agent reinforcement learning (MARL), first introduced in the context of flow control by ( 27 ), in which multiple agents operate on local domain partitions under a shared policy, enabling efficient experience reuse and accelerated exploration ( 28 ). MARL is particularly effective when local flow invariance holds, as in turbulent channel flows (TCF) with two homogeneous directions, where it has enabled drag reduction at increasingly high Reynolds numbers ( 22,23 ). In contrast, it becomes less efficient in spatially developing flows such as turbulent boundary layers, where streamwise inhomogeneity reduces pseudo-environment availability and a single shared policy may be insufficient. These limitations collectively motivate the search for training environments that are both computationally tractable and physically representative of the target flow. 4Mitigating strategies and surrogate motivation 
+
+Several strategies have been proposed to partially address the cost and generalizability pillars, including physics-informed observation design via explainable-learning tools ( 29, 30 ), coupling DRL with existing control schemes ( 31 ), and enriching sparse observations through diffusion-based reconstruction ( 32 ). A more fundamental avenue is the replacement of high-fidelity simulations with a surrogate environment: a computationally inexpensive model that approximates the flow response to control inputs with sufficient fidelity to support policy learning. Surrogate-assisted DRL has shown promise in flow control, yet existing studies have been limited to low-Reynolds-number laminar configurations ( 33, 34 ), and no study has demonstrated surrogate-trained policy transfer to a turbulent wall-bounded flow of engineering relevance. Crucially, none of the existing approaches simultaneously achieves a satisfactory balance across all four pillars: OC sacrifices performance and scale resolution; vanilla DRL framework sacrifices cost and generalizability; and surrogate-based methods have not yet been shown to preserve the turbulent-scale richness, physics fidelity and transferability needed for realistic configurations. 
+
+## A physics-guided zero-shot proposal 
+
+We demonstrate that a MARL control policy, trained exclusively in inexpensive turbulent channel-flow (TCF) surrogates, transfers zero-shot to a turbulent wing, where it reduces skin-friction drag without any on-wing training. By suppressing the near-wall regeneration cycle, the controller effectively pushes the local flow state toward relaminarization, connecting to the transition dynamics characterized by Ref. ( 35 ). The wing surface is partitioned into chordwise blocks Ω𝑖 , each matched to a TCF surrogate via boundary-layer characteristics (e.g. shape factor, momentum thickness ( 36 )), exploiting the homogeneous directions of TCF to maximise MARL efficiency. By connecting the surrogate design with the local physics of the wing boundary layer, the proposed framework achieves a favourable balance across all four pillars: surrogate training reduces cost by four orders of magnitude; block-wise physical matching provides a principled generalization mechanism; the full turbulent-scale information accessible to DRL is preserved within each surrogate; and zero-shot transfer yields drag-reduction performance that consistently outperforms OC. We validate the framework on the suction side of a NACA4412 wing at 𝑅𝑒 𝑐 = 2×10 5 and 𝐴𝑜 𝐴 = 5◦ (𝑅𝑒 𝑐 = 𝑈 ∞𝑐 /𝜈 
+
+5where 𝑐 is the chord length and 𝜈 is the kinematic viscosity), where a strong adverse pressure gradient (APG) downstream of chordwise coordinate 𝑥 ss /𝑐 ≈ 0.5 ( ss denotes the suction side) provides a challenging and practically relevant test case, illustrated in Fig. 1. 
+
+# Results 
+
+This section presents results for active flow control on the suction side of a NACA4412 wing at 
+
+𝑅𝑒 𝑐 = 2×10 5 and 𝐴𝑜 𝐴 = 5◦, validating the physics-guided zero-shot transfer framework introduced above. The presentation follows the three stages of the proposed methodology: characterization of the uncontrolled wing flow and definition of the chordwise control blocks Ω𝑖 (Fig. 1(A,B)); MARL training within each TCF surrogate (Fig. 1(C)); and zero-shot deployment of the surrogate-trained controllers on the wing, benchmarked against opposition control (OC) as a classical closed-loop baseline (Fig. 1(D)). The main results consider a control configuration in which a mild wall-normal suction of 0.2% 𝑈 ∞ is applied to the base flow to reduce pressure drag by attenuating the adverse pressure gradient along the suction side of the airfoil. This suction modifies the local boundary layer state, altering both the momentum-thickness Reynolds number 𝑅𝑒 𝜃 = 𝑈 0𝜃 /𝜈 and the shape factor 
+
+𝐻 12 = 𝛿 ∗/𝜃 (where 𝛿 ∗ and 𝜃 are the displacement and momentum thickness, respectively). The momentum and displacement thicknesses are defined as: 
+
+𝜃 =
+
+∫ 𝜙 
+
+> 0
+
+𝑈 𝑈 0
+
+
+
+1 − 𝑈 𝑈 0
+
+
+
+d𝑦, 𝛿 ∗ =
+
+∫ 𝜙 
+
+> 0
+
+
+
+1 − 𝑈 𝑈 0
+
+
+
+d𝑦, (1) with 𝑈 0 corresponding to the boundary-layer edge velocity 𝑈 𝑒 for the wing TBL and to the centerline velocity 𝑈 𝑐𝑙 for the TCF. In the same way, the upper integration limit, 𝜙 , corresponds to the boundary-layer height 𝛿 99 for the wing and to the channel height ℎ for the TCF. Note that the 
+
+𝑈 𝑒 and 𝛿 99 are attained following the approach in Ref ( 37 ). The channel surrogates are therefore configured to match both quantities simultaneously, ensur-ing that the near-wall flow environment presented to the DRL controller approximately reproduces the local conditions on the wing under active suction. A secondary configuration, in which the surrogate matches only 𝑅𝑒 𝜃 , is reported in the Supplementary Materials. 6𝛀 𝟐 𝛀 𝟑 
+
+𝛀 𝟏 
+
+𝛀 𝟏 𝛀 𝟐 𝛀 𝟑 
+
+(A) Divide control region into volume blocks 
+
+(D) Zero-shot exploitation on the wing 
+
+> <<<<
+> Agent
+
+𝑠 (௜ିଵ ,௝)
+
+𝑠 (௜ାଵ ,௝)
+
+𝑟 (௜ିଵ ,௝)
+
+𝑟 (௜ାଵ ,௝) 𝑎 (௜ିଵ ,௝)
+
+𝑎 (௜ାଵ ,௝)         
+
+> Shared NN
+> MARL
+> environment 𝐿 ௫
+> 𝐿 ௭
+> 𝐿 ௬
+> 𝑙 ௫𝑙 ௓
+> Reward
+> 𝑟 (௜,௝)= 𝑓 𝜏 ௪
+> 𝑠 ௜,௝= {𝑢 ௧, 𝑣 ௡}
+> State
+> 𝑦 ௦
+> 𝑎 ௜,௝= 𝑣 (௜,௝)ቚ௪௔௟௟
+> Action
+
+𝑈 ௕
+
+(B) Channel Flow match 𝑹𝒆 𝜽 and 𝐇 𝟏𝟐 
+
+Ω௜
+
+𝑅𝑒 ఏ = 𝑈 ଴𝜃 
+
+𝜈 
+
+> Channel Flow Adjusted
+
+𝐻 ଵଶ = δ∗
+
+𝜃 
+
+𝜃 
+
+> Strong
+> APG?
+> Add Uniform suction as base flow
+
+Ω௜
+
+> 𝜶𝑼 ஶ
+
+(C) Training DRL controller in the channel 𝛀 𝐢  
+
+> Tractable 𝛽
+> Pressure drag
+
+δ∗Figure 1 : Physics-guided zero-shot MARL framework for turbulent wing control. (A) The suction side of a NACA4412 wing is decomposed into chordwise control blocks Ω𝑖 . (B) Each 
+
+Ω𝑖 is matched to a turbulent channel-flow surrogate by reproducing the local shape factor ( 𝐻 12 )and momentum-thickness Reynolds number ( 𝑅𝑒 𝜃 ), capturing both flow conditions and pressure-gradient history of the local state. (C) MARL agents are trained exclusively within these surrogates using a shared neural network, with wall-parallel and wall-normal velocity fluctuations {𝑢 𝑡 , 𝑣 𝑛 } at sensing height 𝑦 𝑠 as state, wall-shear stress 𝜏 𝑤 as reward, and local blowing/suction wall-normal velocity 𝑣 (𝑖, 𝑗 ) 𝑤𝑎𝑙𝑙 as action. (D) The trained policy is deployed directly to the corresponding wing blocks without additional on-wing training. 7Exploration in local TCF surrogates 
+
+Fig. 2(A) illustrates the proposed surrogate approach: instantaneous turbulent structures on the suction side of the wing and in a matched TCF surrogate reveal the degree of similarity in near-wall dynamics that underpins the transfer strategy. The suction-side control region is partitioned into four chordwise blocks Ω1–Ω4, based on the chordwise evolution of the Clauser pressure-gradient parameter 
+
+𝛽 = 𝛿 ∗
+
+𝜏 𝑤 
+
+d𝑃 
+
+d𝑥 , (2) where 𝜏 𝑤 = 𝜌𝜈 (dU t/d𝑦 𝑛 )𝑦 𝑛 =0 is the wall-shear stress, 𝛿 ∗ the displacement thickness, and 𝑃 the mean pressure. Defined here based on established knowledge of wing boundary-layer behavior, the partition keeps the APG variation within each block as smooth as possible, promoting the statistical homogeneity required to support periodic TCF surrogates. Values of 𝛽 ≤ 1 correspond to a mild APG regime, whereas 𝛽 ≥ 5 indicates a strong APG ( 38 ); the four blocks span this range progressively from the leading edge of the control region toward the trailing edge. The block-averaged statistics of 𝑅𝑒 𝜃 , 𝐻 12 , and 𝛽 are reported in Fig. 2(B), alongside Fig. 2(C), which presents the matching tree of TCF parameters, including 𝐻 12 (within a 5% discrepancy), 𝑅𝑒 𝑏 , and 𝑅𝑒 𝜏 .Here 𝑅𝑒 𝑏 = 𝑈 𝑏 ℎ/𝜈 and 𝑅𝑒 𝜏 = 𝑢 𝜏 ℎ/𝜈 , where 𝑈 𝑏 is the bulk velocity and 𝑢 𝜏 =√︁ 𝜏 𝑤 /𝜌 the friction velocity. We refer to Supplementary Materials for the details. An initial reference case without base-flow modification (BASE-noUS, OC-noUS, DRL-noUS), presented in the Supplementary Materials, matches surrogates to the wing via 𝑅𝑒 𝜃 alone. In this case, the strong APG exhibited in Ω4 (i.e. ⟨𝛽 ⟩𝑥 = 5.27) drives the boundary layer close to separation, yielding local 𝑅𝑒 𝜏 values that cannot be faithfully reproduced in TCF, where the flow is attached. Consequently, MARL training in Ω4 becomes unfeasible, and only three surrogates were trained for 
+
+Ω1–Ω3, while Ω4 is assigned uniform blowing at 0 .2% 𝑈 ∞ (39, 40 ). This reference case highlights a limitation with respect to the four pillars introduced above, in particular generalization: without base-flow modification, the workflow cannot accommodate strong APG conditions, as the resulting boundary-layer states fall outside the range that can be reliably reproduced by TCF surrogates. The main configuration showcased here (BASE-US, OC-US, DRL-US) introduces a uniform suction of 0 .2% 𝑈 ∞ over the suction side within the control region. The suction attenuates the APG intensity, improves boundary-layer attachment, and reduces pressure drag by narrowing the 8wake. It further brings the statistics of all four blocks into a regime that can be reliably matched by TCF surrogates, enabling independent MARL training in all blocks Ω1–Ω4. All results discussed hereafter refer to this configuration unless stated otherwise. Policies are trained over 100 episodes. In all cases, the DRL policies surpass the drag-reduction level of opposition control early in training and converge rapidly, consistent with previous findings for MARL applied to TCF ( 22 ). The optimal policy is selected as the one achieving the highest reward over the full training history, with convergence typically reached within 70 episodes across all surrogates (see Supplementary Materials). 
+
+## Zero-shot deployment on the wing 
+
+The DRL controllers, trained exclusively in TCF surrogates, are deployed directly to the suction-side turbulent boundary layer of the NACA4412 wing at the aforementioned configuration without additional training (refer to numerical setup in Supplementary Materials and Ref. ( 41 )). Performance is evaluated using a single fully developed turbulent state, motivated by the high computational cost of wing simulations and the long integration times required to achieve statistical convergence ( 39 ). Fig. 3(A) shows the chordwise skin-friction drag reduction 𝑅 wing for DRL-US and OC-US, alongside the deterministic performance 𝑅 TCF in the surrogate channels. The friction-drag reduction 𝑅 is defined as 
+
+𝑅 = 1 − 𝑐 ctrl  
+
+> 𝑓
+
+/𝑐 ref  
+
+> 𝑓
+
+, (3) where the superscripts “ctrl” and “ref” denote the controlled and its uncontrolled states, re-spectively. Here 𝑐 𝑓 is the skin-friction coefficient, expressed as 𝑐 𝑓 , wing = 2𝜏 𝑤 /( 𝜌𝑈 2 
+
+> 𝑒
+
+) and as 
+
+𝑐 𝑓 , TCF = 2𝜏 𝑤 /( 𝜌𝑈 2 
+
+> 𝑏
+
+) for wing and TCF, respectively. DRL-US outperforms OC-US across all four blocks, maintaining consistently higher skin-friction drag reduction throughout the control region from 𝑥 ss /𝑐 = 0.25 to 0 .86, where 𝑅 wing is measured relative to the BASE-US. Crucially, the relative ranking between DRL-US and OC-US established during TCF training is preserved upon zero-shot deployment, and 𝑅 wing closely tracks 
+
+𝑅 TCF in each block, thereby validating the central hypothesis of the proposed framework. Averaged over the entire control area, DRL-US attains a skin-friction drag reduction of 27 .9%, compared with 19 .9% for OC-US, representing a 40% relative improvement. Regarding the local block-level 9/c = /c = /c = /c = NACA4412 AoA=5º Wing characteristics per region Match Target at TCF (<5% discrepancy) Training surrogates + US 0.2%    
+
+> 0.25 0.50 0.75
+> xss /c
+> 500 1000
+> Re  θ
+
+Ω1 Ω2 Ω3 Ω4   
+
+> 0.25 0.50 0.75
+> xss /c
+> 1.65 1.70 1.75
+> H12
+
+Ω1 Ω2 Ω3 Ω4   
+
+> 0.25 0.50 0.75
+> xss /c
+> 010 0
+> 10 1
+> β
+
+Ω1 Ω2 Ω3 Ω4
+
+(A) (B) (C) Figure 2 : Computational setup and surrogate-matching strategy. (A) NACA4412 wing at 
+
+𝑅𝑒 𝑐 = 2 × 10 5 and 𝛼 = 5◦ with the suction-side control region partitioned into four chordwise blocks Ω1–Ω4, together with representative turbulent structures from the wing and a matched turbulent channel-flow (TCF) surrogate. (B) Chordwise evolution of 𝑅𝑒 𝜃 , 𝐻 12 , and 𝛽 on the suction side of the base flow; shaded regions indicate the blocks where statistics are averaged. (C) Wing-to-TCF matching tree for DRL-US. Controllers trained on each surrogate are deployed directly to the corresponding wing blocks with uniform suction of 0 .2% 𝑈 ∞.10 drag reduction, the improvement reaches up to 48% in Ω4 with respect to OC-US. Note that the kinks in the profiles are connected to intensive pressure fluctuations influenced by the change of boundary condition ( 15 ). Assessing the fourth pillar, the performance, Fig. 3(B) presents the total drag budget for all configurations. The drag coefficient is defined as 𝐶 𝑑 = 𝑓 𝑑 /( 𝑏𝑞 ), where 𝑓 𝑑 /𝑏 is the drag force per unit span, 𝑏 is the spanwise width, and 𝑞 = 1/2𝜌𝑈 2 
+
+> ∞
+
+is the freestream dynamic pressure. It is decomposed into friction ( 𝐶 𝑑, friction ) and pressure ( 𝐶 𝑑, pressure ) contributions obtained by integrating the corresponding wall stresses around the airfoil and projecting onto the streamwise direction. Uniform suction alone ( BASE-US ) draws the boundary layer closer to the wall, bringing near-wall turbulent structures closer to the surface and thereby increasing friction drag by 9 .4%. At the same time, the improved attachment reduces the wake width, yielding a 24 .1% reduction in pressure drag and a net total drag reduction of 4 .2%. OC-US partially offsets the friction penalty, raising the total drag reduction to 10 .2%. DRL-US achieves the largest overall reduction of 10 .7% by exploiting precisely the flow state created by the base suction: the near-wall structures drawn closer to the wall are more accessible to the DRL controller, which reduces friction drag so effectively that it not only compensates the suction-induced friction penalty but also preserves the pressure-drag benefit of the more attached wake. Opposition control (OC) without suction (see Supplementary Materials) has previously achieved the highest drag reduction among reactive control schemes ( 40 ), as well as the best-performing open-loop configuration reported in Ref. ( 42 ). Against this benchmark, the 10.7% reduction achieved by DRL represents the largest drag reduction obtained in this NACA4412 setup using high-resolution simulations (see Supplementary Materials). Under the present strongly APG conditions, further gains are inherently limited, such that even an incremental improvement of 0.5 percentage points constitutes a meaningful advance in an aerodynamic context. At the aircraft level, such gains are not negligible: a 0.5% cruise-drag reduction corresponds to approximately a 0.4% reduction in fuel burn, which for long-haul operations translates into several hundred kilograms of fuel and on the order of one tonne of CO 2 saved per flight ( 43 ). The significance of this result becomes clearer when contrasted with a milder flow configuration. In our prior work ( 36 ), we demonstrated zero-shot deployment of a policy trained in a surrogate TCF analogous to Ω1. The policy was applied to a NACA0012 geometry at the same 𝑅𝑒 𝑐 and 𝐴𝑜 𝐴 = 0◦,11 (A) 
+
+(B) 
+
+𝐶 ௗ, ௙௥௜௖௧௜௢௡ 𝐶 ௗ, ௣௥௘௦௦௨௥௘ ∆𝐶 ௗ, ௧௢௧௔௟ 
+
+−𝟏𝟎, 𝟕%    
+
+> 𝟎. 𝟐%𝑼 ஶ
+> BASE FLOW
+> BASE FLOW + UNIFORM SUCTION 0.2%𝑈 ஶ
+> OPPOSITION CONTROL + UNIFORM SUCTION 0.2%𝑈 ஶ
+> DRL + UNIFORM SUCTION 0.2%𝑈 ஶ
+> −24,1%
+> −32,2%
+> −28,7%
+> +9.4%
+> +4.7%
+> +1.6%
+> −4,2%
+> −10,2%
+
+Figure 3 : Zero-shot control performance on the NACA4412 wing. (A) Chordwise distribution of skin-friction drag reduction 𝑅 wing for DRL-US and OC-US deployed on the wing along with the block-averaged drag reduction as bar charts (top), and block-averaged drag reduction 𝑅 TCF obtained during MARL training in each TCF surrogate Ω1–Ω4 (bottom), showing consistent performance between surrogate and wing environments. (B) Total drag coefficient budget decomposed into friction ( 𝐶 𝑑, friction ) and pressure ( 𝐶 𝑑, pressure ) contributions relative to the uncontrolled base flow, for the reference configuration (left) and with uniform suction of 0 .2% 𝑈 ∞ (right). Labels indicate the net change in total drag Δ𝐶 𝑑, total .12 corresponding to a mild adverse pressure gradient. In that setting, the DRL policy surpassed OC by 38% in total drag reduction, demonstrating the proposed framework across the pillars of generalizability and control performance, while reflecting the increased difficulty associated with the stronger APG conditions in the present configuration. Fig. 4 shows the instantaneous wall-normal actuation velocity 𝑣 𝑛 |wall in the TCF surrogates Fig. 4(A), the corresponding zero-shot deployment on the wing for DRL-US Fig. 4(B), and the OC-US response Fig. 4(C). All fields are expressed in viscous units, ensuring a consistent basis for comparison between surrogate and wing environments. The actuation patterns learned in the surrogates are clearly identifiable after transfer to the wing. In Fig. 4(A), DRL-US develops large-scale, spatially organized blowing and suction regions extending over several boundary-layer units in both streamwise and spanwise directions. These structures persist in Fig. 4(B), where similar patterns can be recognized within each block Ω𝑖 in the same instantaneous snapshot, despite modulation by streamwise development, surface curvature, and the increasing influence of the APG. The progressive distortion toward the trailing edge reflects the departure from local equilibrium, as near-wall structures are lifted away from the sensing plane. In contrast, OC-US (Fig. 4(C)) produces fine-grained actuation closely tied to local wall-normal velocity fluctuations, with no evidence of large-scale organization. The coexistence of these distinct actuation strategies on the same flow highlights the ability of DRL to exploit global coherence, while OC remains inherently local and reactive. Although the present results are based on instantaneous snapshots and lack temporal evolution, inspection of multiple flow realizations confirms that the large-scale DRL actuation structures are not random but recurrent, appearing consistently and propagating in the streamwise direction. This behavior bears qualitative resemblance to streamwise traveling waves of wall-normal forcing, a well-established class of predetermined drag-reduction strategies ( 2, 44, 45 ), suggesting that the DRL agent may have autonomously discovered a control mechanism with similarities to these known effective approaches. To the best of the authors’ knowledge, this is the first observation of such traveling-wave-like structures emerging spontaneously from a DRL-based closed-loop controller trained without any prior knowledge of this strategy. 13 Figure 4 : Instantaneous wall-normal actuation fields in surrogate and wing environments. 
+
+(A) Instantaneous wall-normal actuation velocity 𝑣 𝑛 |wall in the turbulent channel-flow (TCF) sur-rogate environments Ω1–Ω4. (B) Corresponding zero-shot deployment on the suction side of the NACA4412 wing for DRL with uniform suction (DRL-US). Note that the viscous length scale for the wing are taking the block-averaged value ⟨𝑙 ∗⟩Ω𝑖 . (C) Corresponding deployment for opposition control with uniform suction (OC-US). 14 Computational savings 
+
+Beyond drag-reduction performance, we quantify the computational savings enabled by the pro-posed approach. We define the exploration efficiency Γ for both the TCF and wing environments as 
+
+Γ = 𝑁 grid 
+
+𝑁 penv · Δ𝑡 + , (4) where 𝑁 grid is the total number of grid points, Δ𝑡 + = Δ 𝑡 /𝑡 ∗ is the time-step size in viscous units, and 𝑁 penv is the number of pseudo-environments available for MARL training. The numerator represents the raw simulation cost, whereas the denominator captures the acceleration afforded by parallelized experience collection in MARL. The ratios of each factor in Eq. 4 between the Ω2
+
+of NACA4412 wing and the corresponding TCF surrogate are summarized in Fig. 5(A). Overall, the TCF surrogates provide an efficiency gain of approximately 10 ,500 × per controller relative to training directly on the wing. A primary contributor to this gain is the avoidance of the very fine turbulent scales near the wing leading edge, which would otherwise impose a viscous time step approximately three times smaller than that required in the TCF surrogates. Resolving turbulence over the full wing also requires approximately 175 times more grid points than the corresponding TCF surrogate, despite the latter’s narrower spanwise extent. Furthermore, because wing turbulent boundary layers are streamwise inhomogeneous, the number of pseudo-environments available for MARL scales primarily with the spanwise resolution, limiting exploration efficiency and requiring approximately 9 times more independent policies to cover the full control region compared with the surrogate-based approach. A lower bound on the cost of direct on-wing exploration can be inferred from the zero-shot deployment cost. Fig. 5(B) reports the core-hour and memory requirements for one episode of wing deployment, TCF exploitation, and TCF training, using the same CPU architecture and near-optimal computing configurations ( 40 ) throughout. Even zero-shot wing deployment is substantially more expensive than TCF training, confirming that on-wing exploration would be prohibitively costly given the low exploration efficiency. Although absolute values depend on solver implementation and hardware, the dominant cost difference is rooted in the disparity of turbulent scales between the wing and TCF configurations, a physical constraint that the proposed surrogate framework is specifically designed to address. 15 10 0 10 2 10 4
+
+Wing / channel cost ratio 
+
+> 1/∆t+
+> 1/N penv
+> Ngrid
+> Npolicy
+> ×3
+> ×20
+> ×175
+> ×9
+
+Total exploration saving 
+
+∼ O (10 4) per policy 
+
+(A) Exploration-cost decomposition         
+
+> 10 610 510 410 3010 310 410 510 6
+
+Actual resource usage 
+
+> NACA4412 TCF: Deployment TCF: Training
+
+Core-hours Average memory (GB)    
+
+> 4e+05 (100.0%) 26.1 (100.0%) 9e+02 (0.2%) 8.9 (34.0%) 1e+03 (0.3%) 12.6 (48.4%)
+
+(B) 
+
+Operational cost per episode Figure 5 : Computational and operational cost of zero-shot DRL training and deployment. (A) Computational savings for training DRL controllers, expressed as ratios between the NACA4412 wing and TCF configurations for the factors in equation 4. Single-controller cost ratios are shown below the dashed line, and the policy-count ratio 𝑁 policy required to cover the full control region is shown above; data correspond to control block Ω2 and its surrogate channel flow. (B) Operational cost in terms of core-hours and average memory (GB) for one episode of zero-shot wing deploy-ment, TCF exploitation, and TCF training using Intel Xeon Platinum 8168 CPUs. Percentages in parentheses denote the proportion relative to the cost of wing deployment. 16 Discussion and outlook 
+
+We propose a physics-guided zero-shot DRL framework for drag-reduction control of turbulent boundary layers over wing sections. DRL controllers are trained in turbulent channel-flow surrogates matched to the local statistics of the target wing, then deployed without additional training. The suction side of a NACA4412 wing at 𝑅𝑒 𝑐 = 2 × 10 5 and 𝐴𝑜 𝐴 = 5◦ is partitioned into chordwise blocks according to the local pressure-gradient intensity, and each block is paired with a TCF surrogate by minimizing discrepancies in 𝐻 12 and 𝑅𝑒 𝜃 . A mild uniform suction of 0 .2% 𝑈 ∞ alters the flow topology, resulting in a narrower wake, a weaker APG, and near-wall structures being shifted closer to the surface. Collectively, these changes make all four blocks more amenable to surrogate-based training. The MARL policies trained in these surrogates consistently outperform opposition control in the TCF environments, and this ranking is preserved upon zero-shot deployment on the wing. DRL-US achieves an area-averaged skin-friction drag reduction of 27 .9 % across the control region, compared with 19 .9 % for OC-US, corresponding to a 40 % relative improvement in area-averaged performance. Moreover, local improvements are up to 48 % over OC-US in Ω4, all measured relative to the BASE-US case. At the level of total drag, DRL-US achieves a reduction of 10 .7 %, with the learned actuation compensating the friction penalty introduced by the base suction while fully preserving the pressure-drag benefit of the more attached wake. Notably, opposition control remains highly competitive under these conditions, which provides a strong validation baseline for the proposed framework; the observed improvement therefore reflects a genuine gain over an already effective strategy. The actuation structures discovered by DRL, large-scale coherent patterns with no analogue in model-based approaches, bear qualitative resemblance to streamwise traveling waves, suggesting that the agent autonomously recovers mechanisms known to be effective for drag reduction. The surrogate strategy yields an efficiency gain of order 10 4 relative to direct on-wing exploration, enabling a Reynolds number that would otherwise be computationally prohibitive. At the same time, both vanilla DRL frameworks and opposition control exhibit limited margin for further improvement under the present strong APG conditions, suggesting that the performance ceiling is governed by the underlying flow physics rather than the choice of control strategy. The present results should therefore be interpreted as an initial successful realization of a physics-17 guided surrogate framework, with future advances expected along the four so-called pillars: control performance, computational cost, generalization, and turbulent-scale resolution, through enhanced surrogate matching, refined partitioning, or more expressive sensing and actuation strategies. Future work should address the degradation of control authority under strong adverse pressure gradients, where the fixed sensing plane becomes poorly correlated with wall-shear-stress produc-tion. Incorporating additional boundary-layer information into the surrogate matching, refining the block partitioning, or adopting sequential training strategies that account for upstream–downstream coupling are all promising directions. More broadly, the surrogate-to-target principle introduced here is not limited to wing flows and could be extended to other complex configurations in which direct DRL training is computationally intractable. 18 References and Notes 
+
+1. A. Abbas, et al. , Drag reduction via turbulent boundary layer flow control. Sci. China Technol. Sci. 60 , 1281–1290 (2017). 2. K. Fukagata, K. Iwamoto, Y. Hasegawa, Turbulent drag reduction by streamwise traveling waves of wall-normal forcing. Annu. Rev. Fluid Mech. 56 , 69–90 (2024). 3. F. Z. Wang, I. L. Animasaun, T. Muhammad, S. S. Okoya, Recent advancements in fluid dynamics: drag reduction, lift generation, computational fluid dynamics, turbulence modelling, and multiphase flow. Arab. J. Sci. Eng. 49 , 1–13 (2024). 4. J. I. Cardesa, A. Vela-Mart´ ın, J. Jim´ enez, The turbulent cascade in five dimensions. Science 
+
+357 (6353), 782–784 (2017), doi:10.1126/science.aan7933. 5. A. Seifert, A. Darabi, I. Wygnanski, Delay of airfoil stall by periodic excitation. J. Aircr. 33 (4), 691–698 (1996). 6. L. N. Cattafesta, M. Sheplak, Actuators for active flow control. Annu. Rev. Fluid Mech. 43 ,247–272 (2011). 7. S. S. Collis, R. D. Joslin, A. Seifert, V. Theofilis, Issues in active flow control: theory, control, simulation, and experiment. Prog. Aerosp. Sci. 40 (4–5), 237–289 (2004). 8. S. L. Brunton, B. R. Noack, Closed-loop turbulence control: progress and challenges. Appl. Mech. Rev. 67 (5), 050801 (2015). 9. S. L. Brunton, Applying machine learning to study fluid mechanics. Acta Mech. Sin. 37 (12), 1718–1726 (2021). 10. J. Rabault, M. Kuchta, A. Jensen, U. R´ eglade, N. Cerardi, Artificial neural networks trained through deep reinforcement learning discover control strategies for active flow control. J. Fluid Mech. 865 , 281–302 (2019). 11. C. Vignon, J. Rabault, R. Vinuesa, Recent advances in applying deep reinforcement learning for flow control: perspectives and future directions. Phys. Fluids 35 (3), 031301 (2023). 19 12. H. Choi, P. Moin, J. Kim, Active turbulence control for drag reduction in wall-bounded flows. 
+
+J. Fluid Mech. 262 , 75–110 (1994). 13. A. J. Smits, B. J. McKeon, I. Marusic, High-Reynolds number wall turbulence. Annu. Rev. Fluid Mech. 43 , 353–375 (2011). 14. I. Marusic, R. Mathis, N. Hutchins, Predictive model for wall-bounded turbulent flow. Science 
+
+329 (5988), 193–196 (2010), doi:10.1126/science.1188765. 15. A. Stroh, B. Frohnapfel, P. Schlatter, Y. Hasegawa, A comparison of opposition control in turbulent boundary layer and turbulent channel flow. Phys. Fluids 27 (7), 075101 (2015). 16. G. Dacome, R. M¨ orsch, M. Kotsonis, W. J. Baars, Opposition flow control for reducing skin-friction drag of a turbulent boundary layer. Phys. Rev. Fluids 9 (6), 064602 (2024). 17. J. Yao, E. Garc´ ıa, F. Hussain, Drag reduction via opposition control in turbulent channel flows at high Reynolds numbers. Phys. Rev. Fluids 10 (9), 094604 (2025). 18. J. M. Hamilton, J. Kim, F. Waleffe, Regeneration mechanisms of near-wall turbulence struc-tures. J. Fluid Mech. 287 , 317–348 (1995). 19. J. Jim´ enez, S. Hoyas, M. P. Simens, Y. Mizuno, Turbulent boundary layers and channels at moderate Reynolds numbers. J. Fluid Mech. 657 , 335–360 (2010). 20. M. Raissi, A. Yazdani, G. E. Karniadakis, Hidden fluid mechanics: Learning velocity and pressure fields from flow visualizations. Science 367 (6481), 1026–1030 (2020), doi:10.1126/ science.aaw4741. 21. P. Su´ arez, et al. , Flow control of three-dimensional cylinders transitioning to turbulence via multi-agent reinforcement learning. Commun. Eng. 4 (1), 113 (2025). 22. L. Guastoni, J. Rabault, P. Schlatter, H. Azizpour, R. Vinuesa, Deep reinforcement learning for turbulent drag reduction in channel flows. Eur. Phys. J. E 46 (4), 27 (2023). 23. T. Sonoda, Z. Liu, T. Itoh, Y. Hasegawa, Reinforcement learning of control strategies for reducing skin friction drag in a fully developed turbulent channel flow. J. Fluid Mech. 960 ,A30 (2023). 20 24. P. Su´ arez, et al. , Active flow control for drag reduction through multi-agent reinforcement learning on a turbulent cylinder at 𝑅𝑒 𝐷 = 3900. Flow Turbul. Combust. 115 , 3–27 (2025). 25. P. Varela, et al. , Deep reinforcement learning for flow control exploits different physics for increasing Reynolds number regimes. Actuators 11 (12), 359 (2022). 26. Q. Liu, L. J. Trujillo Corona, D. Espinoza, F. Shu, A. Gross, Design and dimensional transfer of reinforcement learning-based closed-loop airfoil flow control. Theor. Comput. Fluid Dyn. 
+
+39 (6), 49 (2025). 27. V. Belus, et al. , Exploiting locality and translational invariance to design effective deep rein-forcement learning control of the 1-dimensional unstable falling liquid film. AIP Adv. 9 (12), 125141 (2019). 28. J. Rabault, A. Kuhnle, Accelerating deep reinforcement learning strategies of flow control through a multi-environment approach. Phys. Fluids 31 (9), 094105 (2019). 29. A. Cremades, et al. , Identifying regions of importance in wall-bounded turbulence through explainable deep learning. Nat. Commun. 15 (1), 3864 (2024). 30. M. Sanchis-Agudo, A. Cremades, A. Martinez-Sanchez, A. Lozano-Duran, R. Vinuesa, X-CAL: explaining latent causality in physical space for fluid mechanics. arXiv:2601.03311 
+
+(2026). 31. B. Font, F. Alc´ antara- ´ Avila, J. Rabault, R. Vinuesa, O. Lehmkuhl, Deep reinforcement learning for active flow control in a turbulent separation bubble. Nat. Commun. 16 (1), 1422 (2025). 32. A. Vishwasrao, et al. , Diff-SPORT: diffusion-based sensor placement optimization and recon-struction of turbulent flows in urban environments. arXiv:2506.00214 (2025). 33. A. Weiner, J. Reyes, Model-based deep reinforcement learning for accelerated learning from flow simulations. arXiv:2402.16543 (2024). 34. Z. Zhang, et al. , Efficient active flow control strategy for confined square cylinder wake using deep learning-based surrogate model and reinforcement learning. arXiv:2408.14232 (2024). 21 35. K. Avila, et al. , The onset of turbulence in pipe flow. Science 333 (6039), 192–196 (2011), doi:10.1126/science.1203223. 36. C. Lagemann, et al. , HydroGym: a reinforcement learning platform for fluid dynamics, arXiv:2512.17534 (2025). 37. R. Vinuesa, A. Bobke, R. ¨ Orl¨ u, P. Schlatter, On determining characteristic length scales in pressure-gradient turbulent boundary layers. Phys. Fluids 28 (5), 055101 (2016). 38. Z. Harun, J. P. Monty, R. Mathis, I. Marusic, Pressure gradient effects on the large-scale structure of turbulent boundary layers. J. Fluid Mech. 715 , 477–498 (2013). 39. M. Atzori, et al. , Uniform blowing and suction applied to nonuniform adverse-pressure-gradient wing boundary layers. Phys. Rev. Fluids 6 (11), 113904 (2021). 40. Y. Wang, M. Atzori, R. Vinuesa, Opposition control applied to turbulent wing sections. J. Fluid Mech. 1010 , A29 (2025). 41. R. Vinuesa, et al. , Turbulent boundary layers around wing sections up to 𝑅𝑒 𝑐 = 1,000 ,000. Int. J. Heat Fluid Flow 72 , 86–99 (2018). 42. M. Atzori, et al. , Aerodynamic effects of uniform blowing and suction on a NACA4412 airfoil. 
+
+Flow Turbul. Combust. 105 (3), 735–759 (2020), doi:10.1007/s10494-020-00135-z. 43. M. Quadrio, P. Ricco, Critical assessment of turbulent drag reduction through spanwise wall oscillations. J. Fluid Mech. 667 , 135–157 (2011), doi:10.1017/S002211201000367X. 44. M. Quadrio, P. Ricco, C. Viotti, Streamwise-travelling waves of spanwise wall velocity for turbulent drag reduction. J. Fluid Mech. 627 , 161–178 (2009). 45. I. Marusic, et al. , An energy-efficient pathway to turbulent drag reduction. Nat. Commun. 12 ,5805 (2021). 46. P. F. Fischer, J. W. Lottes, S. G. Kerkemeier, Nek5000 web page (2008), http://nek5000.mcs.anl.gov. 22 47. B. B. De Moura, M. R. Machado, S. Dey, T. Mukhopadhyay, Manipulating flexural waves to enhance broadband vibration mitigation through programmed disorder on smart rainbow metamaterials. Appl. Math. Modelling 125 , 650–671 (2024). 48. Y. Maday, A. T. Patera, Spectral element methods for the incompressible Navier-Stokes equa-tions. State-of-the-Art Surveys on Computational Mechanics pp. 71–143 (1989). 49. ´A. Tanarro, R. Vinuesa, P. Schlatter, Effect of adverse pressure gradients on turbulent wing boundary layers. J. Fluid Mech. 883 , A8 (2020). 50. P. S. Negi, R. Vinuesa, A. Hanifi, P. Schlatter, D. S. Henningson, Unsteady aerodynamic effects in small-amplitude pitch oscillations of an airfoil. Int. J. Heat Fluid Flow 71 , 378–391 (2018). 51. F. R. Menter, Two-equation eddy-viscosity turbulence models for engineering applications. 
+
+AIAA J. 32 (8), 1598–1605 (1994). 52. S. Dong, G. E. Karniadakis, C. Chryssostomidis, A robust and accurate outflow boundary condition for incompressible flow simulations on severely-truncated unbounded domains. J. Comput. Phys. 261 , 83–105 (2014). 53. P. Schlatter, R. ¨ Orl¨ u, Turbulent boundary layers at moderate Reynolds numbers: inflow length and tripping effects. J. Fluid Mech. 710 , 5–34 (2012). 54. R. Vinuesa, S. M. Hosseini, A. Hanifi, D. S. Henningson, P. Schlatter, Pressure-gradient turbulent boundary layers developing around a wing section. Flow Turbul. Combust. 99 , 613– 641 (2017). 55. E. P. Hammond, T. R. Bewley, P. Moin, Observed mechanisms for turbulence attenuation and enhancement in opposition-controlled wall-bounded flows. Phys. Fluids 10 (9), 2421–2423 (1998). 56. T. P. Lillicrap, et al. , Continuous control with deep reinforcement learning. arXiv:1509.02971 
+
+(2015). 23 57. S. Fujimoto, H. Hoof, D. Meger, Addressing function approximation error in actor-critic methods, in Proceedings of the 35th International Conference on Machine Learning (PMLR) (2018), pp. 1587–1596. 58. T. Lee, J. Kim, C. Lee, Turbulence control for drag reduction through deep reinforcement learning. Phys. Rev. Fluids 8 (2), 024604 (2023). 59. T. Sonoda, Z. Liu, T. Itoh, Y. Hasegawa, Reinforcement learning of control strategies for reducing skin friction drag in a fully developed turbulent channel flow. J. Fluid Mech. 960 ,A30 (2023). 60. D. W¨ alchli, L. Guastoni, R. Vinuesa, P. Koumoutsakos, Drag reduction in a minimal channel flow with scientific multi-agent reinforcement learning. J. Phys.: Conf. Ser. 2753 (1), 012024 (2024). 61. G. M. Cavallazzi, L. Guastoni, R. Vinuesa, A. Pinelli, Deep reinforcement learning for the management of the wall regeneration cycle in wall-bounded turbulent flows. Flow Turbul. Combust. 115 (3), 1291–1317 (2025). 62. M. Beneitez, A. Cremades, L. Guastoni, R. Vinuesa, Improving turbulence control through explainable deep learning. arXiv:2504.02354 (2025). 63. Z. Zhou, M. Zhang, X. Zhu, Reinforcement-learning-based control of turbulent channel flows at high Reynolds numbers. J. Fluid Mech. 1006 , A12 (2025). 64. A. Raffin, et al. , Stable-Baselines3: reliable reinforcement learning implementations. J. Mach. Learn. Res. 22 (268), 1–8 (2021). 65. J. K. Terry, et al. , PettingZoo: gym for multi-agent reinforcement learning. arXiv:2009.14471 
+
+(2020). 
+
+# Acknowledgments 
+
+Funding: R.V. acknowledges financial support from ERC grant no. ‘2021-CoG-101043998, DEEPCONTROL’. Views and opinions expressed are those of the authors only and do not neces-24 sarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them. The authors gratefully acknowl-edge the Gauss Centre for Supercomputing e.V. ( www.gauss-centre.eu ) for funding this project by providing computing time through the John von Neumann Institute for Computing (NIC) on the GCS Supercomputer JUWELS at J¨ ulich Supercomputing Centre (JSC). 
+
+Author contributions: Y.W.: Methodology, Software, Validation, Investigation, Data Curation, Writing—Original Draft, Writing—Review & Editing, Visualization. P.S.: Methodology, Valida-tion, Investigation, Writing—Original Draft, Writing—Review & Editing, Visualization. M.B.: Methodology, Software, Validation, Writing—Review & Editing. R.V.: Ideation, Methodology, Writing—Review & Editing, Resources, Funding Acquisition. 
+
+Competing interests: There are no competing interests to declare. 
+
+Data and materials availability: Data and code to support the current study will be made available at https://github.com/KTH-FlowAI/MARL-ZeroShot-Nek5000.git .
+
+## Supplementary materials 
+
+Materials and Methods Supplementary Materials Figs. S1 to S3 Tables S1 to S5 References (7-65) 
+
+25 Supplementary Materials for Physics-guided surrogate learning enables zero-shot control of turbulent wings 
+
+Yuning Wang 1∗, Pol Su´ arez 2, Mathis Bode 3, Ricardo Vinuesa 1
+
+> ∗
+
+Corresponding author. Email: yuninw@umich.edu, rvinuesa@umich.edu 
+
+This PDF file includes: 
+
+Materials and Methods Supplementary Text Figures S1 to S3 Tables S1 to S5 S1 Materials and Methods 
+
+Numerical simulation Nek5000 implementation The incompressible Navier–Stokes equations govern the fluid motion in the present study. In non-dimensional form, the continuity and momentum equations are expressed as: 
+
+𝜕𝑢 𝑖 
+
+𝜕𝑥 𝑖 
+
+= 0, (S1) 
+
+𝜕𝑢 𝑖 
+
+𝜕𝑡 + 𝑢 𝑗 
+
+𝜕𝑢 𝑖 
+
+𝜕𝑥 𝑗 
+
+= − 𝜕 𝑝 𝜕𝑥 𝑖 
+
++ 1
+
+𝑅𝑒 𝜕 2𝑢 𝑖 
+
+𝜕𝑥 𝑗 𝑥 𝑗 
+
+, (S2) where the Einstein summation convention is adopted, 𝑢 𝑖 denotes the velocity components in Carte-sian coordinates, and 𝑝 denotes the kinematic pressure. All simulations are performed using the open-source, CPU-based solver Nek5000 ( 46 ), which employs the spectral-element method (SEM) to achieve high numerical accuracy while maintaining computational efficiency ( 47 ). The computational domain is partitioned into hexahedral elements, within which the velocity and pressure fields are approximated by high-order Lagrange interpolants following the P𝑁 P𝑁 −2 formulation ( 48 ). For polynomial order 𝑁 − 1, the velocity field is repre-sented on 𝑁 3 grid points per element distributed according to the Gauss–Lobatto–Legendre (GLL) quadrature rule, while the pressure is defined on a staggered grid comprising (𝑁 − 2)3 points per element based on the Gauss–Legendre (GL) quadrature. Temporal integration employs a third-order explicit extrapolation scheme (EXT3) for the nonlinear convective terms and a third-order implicit backward differentiation scheme (BDF3) for the viscous contributions. To mitigate aliasing errors, overintegration is applied by oversampling the nonlinear terms with a factor of 3 /2 relative to the adopted polynomial order 𝑁 in each spatial direction. The present simulation framework has been extensively employed in high-fidelity investigations of wing configurations with equivalent numerical setups at Reynolds numbers up to 𝑅𝑒 𝑐 = 1 ×
+
+10 ( 41 ), and a broad range of flow-control strategies has been successfully applied within this framework ( 39, 40 ). This comprehensive prior validation motivates the adoption of the present solver. All simulations are executed on CPU architectures, with parallelization achieved through a hybrid distributed-memory and shared-memory strategy based on OpenMPI. By exploiting the S2 structured meshes and the tensor-product formulation inherent to the SEM, the solver exhibits strong scalability and robust parallel performance. Coupling with reinforcement learning agents is implemented through dynamic MPI-based communication, enabling stable and efficient interaction between the flow solver and the learning framework across all configurations considered. 
+
+High-resolution large-eddy simulation of the NACA4412 wing Large-eddy simulation (LES) is employed to resolve the turbulent boundary layers (TBLs) developing over the NACA4412 wing section at a chord-length-based Reynolds number of 𝑅𝑒 𝑐 = 2 × 10 5 and an angle of attack of 5 ◦.The present simulations adopt a high-resolution LES strategy with a grid density approaching that typically associated with direct numerical simulation (DNS). The computational domain is constructed using a C-type mesh with streamwise and vertical extents of 𝐿 𝑥 = 6𝑐 and 𝐿 𝑦 = 4𝑐 , respectively. The spanwise width is set to 𝐿 𝑧 = 0.2𝑐 , and the domain is discretized into 1 .27 × 10 5 spectral elements. The leading and trailing edges of the airfoil are positioned at distances of 2 𝑐 and 3 𝑐 from the inflow boundary, respectively. This configuration has been validated in previous investigations ( 39, 41, 49 ), demonstrating that the selected spanwise extent is sufficient to capture both the energetically relevant turbulent scales and the largest coherent structures characterizing the wing boundary layer. The near-wall spatial resolution, expressed in viscous units, satisfies Δ𝑥 + 
+
+> 𝑡
+
+< 18 .0, Δ𝑦 + 
+
+> 𝑛
+
+<
+
+(0.64 , 11 .0), and Δ𝑧 + < 9.0 in the wall-tangential, wall-normal, and spanwise directions, respec-tively. The viscous length scale is defined as 𝑙 ∗ = 𝜈 /𝑢 𝜏 , where the friction velocity is given by 
+
+𝑢 𝜏 =√︁ 𝜏 𝑤 /𝜌 and the mean wall-shear stress is 𝜏 𝑤 = 𝜌𝜈 (d𝑈 𝑡 /d𝑦 𝑛 )𝑦 𝑛 =0. To achieve this resolu-tion, a polynomial order of 𝑁 = 11 is adopted, yielding a total grid-point count of approximately 
+
+𝑁 grid ≈ 2.2 × 10 8. In the wake region, the mesh resolution satisfies Δ𝑥 /𝜂 < 9, where 𝜂 = (𝜈 3/𝜖 )1/4
+
+is the Kolmogorov length scale and 𝜖 the local isotropic dissipation rate. The suitability of the present mesh for the adopted subgrid-scale (SGS) modelling approach has been demonstrated by ( 50 ), who reported excellent agreement between DNS and LES results for the NACA4412 airfoil at 𝑅𝑒 𝑐 = 4 × 10 5.The unresolved turbulent scales are represented through an SGS model based on a time-independent relaxation-term filter ( 50 ). This filtering operation is implemented implicitly via a volume-force formulation that dissipates energy at unresolved scales while preserving mass con-S3 servation. With the inclusion of the LES filter, the momentum equation (S2) is augmented as 
+
+𝜕𝑢 𝑖 
+
+𝜕𝑡 + 𝑢 𝑗 
+
+𝜕𝑢 𝑖 
+
+𝜕𝑥 𝑗 
+
+= − 𝜕 𝑝 𝜕𝑥 𝑖 
+
++ 1
+
+𝑅𝑒 𝑐 
+
+𝜕 2𝑢 𝑖 
+
+𝜕𝑥 𝑗 𝑥 𝑗 
+
+− H ( 𝑢 𝑖 ), (S3) where H denotes the high-pass spectral filter that restricts the LES dynamics to a resolved subset of modes within each element. The implementation of this approach in Nek5000 has been extensively validated in prior studies ( 41 ). Dirichlet boundary conditions are prescribed at the inflow, upper, and lower boundaries using a far-field velocity distribution obtained from a supporting Reynolds-averaged Navier–Stokes (RANS) computation. The RANS solution is obtained using the 𝑘 –𝜔 shear-stress transport (SST) model ( 51 )within a circular domain of radius 200 𝑐 . At the outflow boundary, the formulation proposed by ( 52 )is employed to prevent the unphysical influx of kinetic energy. Boundary-layer transition is triggered at 𝑥 /𝑐 = 0.1 on both the suction and pressure sides through a localized wall-normal body force ( 53 ), which generates intense, time-dependent streaks that subsequently break down to promote transition to turbulence ( 54 ). One flow-over time ( 𝑇 FO ) is defined as the duration required for a fluid particle convecting at the free-stream velocity 𝑈 ∞ to traverse one chord length 𝑐 . The procedure adopted to generate the uncontrolled reference simulations is described in ( 40 ). Controlled simulations are initialized from fully developed turbulent fields obtained from the corresponding base-flow cases, and statistical convergence is achieved after ≃ 10 𝑇 FO (39, 40 ). The computational cost of simulating 10 𝑇 FO of uncontrolled flow amounts to approximately 1 × 10 6 core-hours on a BullSequana X1000 system equipped with Intel Xeon Platinum 8168 CPUs operating at 2.70 GHz with a thermal design power of 205 W. 
+
+Direct numerical simulation of turbulent channel flow Direct numerical simulation (DNS) is employed for the turbulent channel flow (TCF) configurations that serve as surrogate training environments. An open-channel configuration is adopted, in which a symmetry boundary condition is imposed at the upper boundary to avoid complications associated with wall actuation ( 22 ), in contrast to a full-channel setup where both walls are solid. The characteristic length and velocity scales are the channel height ℎ and the bulk velocity 𝑈 𝑏 , respectively, so that the governing equations (S2) are formulated using the bulk Reynolds number 𝑅𝑒 𝑏 = 𝑈 𝑏 ℎ/𝜈 , where 𝜈 is the kinematic viscosity. S4 The surrogate channel-flow configurations are designed to replicate the streamwise-averaged mean characteristics ⟨·⟩ 𝑥 of the wing base flow over each targeted control block Ω𝑖 . This approach assumes that the flow within each block is locally fully developed and free of streamwise growth, thereby justifying the use of TCF, which is by definition fully developed. Two matching targets are considered: the momentum-thickness Reynolds number 𝑅𝑒 𝜃 = 𝑈 0𝜃 /𝜈 and the shape factor 
+
+𝐻 12 = 𝛿 ∗/𝜃 defined in Eq. 1. Matching 𝑅𝑒 𝜃 is achieved by adjusting 𝑅𝑒 𝑏 alone, whereas matching 𝐻 12 additionally requires a body-force damping term defined as 𝑔 (𝑣 ) = −𝛾𝑣 within the near-wall region 𝑦 < 𝑦 + 
+
+> 𝑏
+
+, where 𝛾 
+
+is the forcing intensity and 𝑦 + 
+
+> 𝑏
+
+is the upper limit of the damped region. This volume force acts as an additional term in the wall-normal momentum equation, attenuating the near-wall momentum to modify 𝐻 12 . In practice, 𝑅𝑒 𝑏 is first adjusted to reproduce the target 𝑅𝑒 𝜃 , after which the body-force damping is introduced to achieve the desired shape factor. The resulting configurations are summarized in table S1, where all cases exhibit deviations within 5% of the respective target metrics, confirming excellent agreement with the wing base flow. The computational domain is a rectangular box with dimensions (𝐿 𝑥 , 𝐿 𝑦 , 𝐿 𝑧 ) = (2𝜋ℎ, ℎ, 𝜋ℎ )
+
+in the streamwise, wall-normal, and spanwise directions, respectively. The spatial resolution of each configuration is reported in Tab. S2. The near-wall resolution of the TCF simulations is designed to closely match that of the wing simulations expressed in viscous units, ensuring that the effective actuator size is nearly identical across configurations and enabling meaningful zero-shot deployment. Note that the TCF resolution does not strictly satisfy classical DNS criteria, as turbulent scales smaller than those resolved in the wing simulations are intentionally not captured. No-slip and symmetry boundary conditions are imposed at the lower and upper boundaries, respectively, while periodicity is enforced in both the streamwise and spanwise directions. The flow is driven by a prescribed constant bulk velocity to maintain statistically stationary turbulence. All simulations are advanced for up to 400 bulk time units ( 𝑇 𝑏 = ℎ/𝑈 𝑏 ) to ensure the turbulent flow attains a statistically stationary state, where 𝑇 𝑏 < 200 were excluded from calculating the turbulence statistics to avoid the initial transient. Configurations employing body-force damping are initialized from fully developed TCF fields previously advanced for 𝑇 𝑏 = 400, after which an additional 150 𝑇 𝑏 are computed to ensure statistical convergence. Here, the last 100 𝑇 𝑏 is used for statistics calculation, whereas the prior fully-developed TCF has to match the 𝑅𝑒 𝜃 . To promote S5 DRL exploration, random perturbations are applied to the initial velocity fields to yield distinct fully developed turbulent states. For each configuration, six independent simulations are conducted with fixed random seeds to control the amplitude of the initial perturbations. 
+
+Baseline control schemes Opposition control (OC) ( 12 ) is employed as the closed-loop reference strategy for benchmarking the drag-reduction performance of the learned controllers. OC imposes a wall-normal blowing or suction velocity at the wall that is opposite in sign to the off-wall fluctuation of the wall-normal velocity component, thereby attenuating near-wall momentum. This is expressed as: 
+
+𝑣 (𝑥, 0, 𝑧, 𝑡 ) = −𝛼 [𝑣 (𝑥, 𝑦 𝑠 , 𝑧, 𝑡 ) − ⟨ 𝑣 (𝑥, 𝑦 𝑠 , 𝑧, 𝑡 )⟩] , (S4) where 𝛼 ∈ ( 0, 1] denotes the control amplitude and 𝑦 𝑠 is the sensing plane location. An off-wall sensing plane at 𝑦 + 
+
+> 𝑠
+
+= 15 and an amplitude of 𝛼 = 1 are prescribed, consistent with the generally optimal configuration identified in both channel and wing flows ( 40,55 ). The local friction velocity 
+
+𝑢 𝜏 is used to evaluate wall units when OC is applied to the wing; further implementation details are provided in Ref. ( 40 ). In addition, uniform blowing (UB) and uniform suction (US) are implemented as Dirichlet boundary conditions at the wall, with the Cartesian velocity components imposed such that the magnitude of the wall-normal velocity equals the prescribed control intensity. 
+
+Multi-agent reinforcement learning (MARL) framework MARL framework implementation Closed-loop flow-control strategies are formulated within a multi-agent reinforcement learning (MARL) framework, in which multiple agents interact indepen-dently and cooperatively with the environment to maximize a shared global reward 𝑟 . Each agent operates under locally invariant conditions and shares a common control policy 𝜋 (𝑎 |𝑠 ) mapping partial flow observations 𝑠 to control actions 𝑎 , thereby substantially reducing the effective dimen-sionality of the control space while enabling efficient reuse of flow information across agents ( 27 ). An overview of the MARL setup is illustrated in Fig. 1. Each agent perceives a local partition of the computational domain, referred to as a pseudo-environment, and reacts independently to partial flow observations. The number and spatial distribution of pseudo-environments are governed by the actuator size, which is critical for ensuring transferability to the target wing flow. To this end, S6 the grid spacing of the TCF configurations is designed to match that of the wing simulations in viscous units, and the number of pseudo-environments is chosen to match the number of active wall grid points, thereby ensuring geometric and dynamic consistency across flow configurations. Under this formulation, the action space is reduced to 𝑎 ∈ R1×1, while the observation space is determined solely by the number of input features, 𝑠 ∈ R𝑁 feat ×1.To avoid duplication of pseudo-environments, only unique wall grid points are retained. This precaution is necessary because Lagrange interpolants produce 𝑁 velocity nodes per element edge, with the first and last nodes shared between adjacent elements. Including duplicated pseudo-environments would introduce redundant samples into the replay buffer, thereby biasing the training data distribution. Overlapping nodes are therefore excluded from the pseudo-environment definition, while identical actuation is imposed at duplicated nodes to preserve control consistency and maintain equivalent actuator sizes across flow configurations. The total number of pseudo-environments on the wall is given by 
+
+𝑁 penv = 𝑁 CTRL ,𝑥 × 𝑁 CTRL ,𝑧 = 𝑁 ′ 
+
+> elem ,x
+
+× 𝑁 ′ 
+
+> elem ,z
+
+× ( 𝑁 − 1)2, (S5) where 𝑁 ′ 
+
+> elem ,x
+
+and 𝑁 ′ 
+
+> elem ,z
+
+denote the number of spectral elements in the streamwise and spanwise directions within the control region. The reward function is defined as the relative reduction in wall-shear stress, 
+
+𝑟 = 1 − 𝜏 ctrl  
+
+> 𝑤
+
+/𝜏 ref  
+
+> 𝑤
+
+,
+
+where the superscripts ctrl and ref denote the controlled and uncontrolled flow states, respectively. In channel flow, the wall-shear stress is spatially uniform along both the streamwise and spanwise directions. This property offers the global invariance that ensures the controller learns to exploit local flow invariance, which is the core principle underlying the MARL approach. The observable state available to each agent consists of the inner-scaled fluctuation components of the streamwise ( 𝑢 ′+ ) and wall-normal ( 𝑣 ′+ ) velocity at an off-wall sensing plane located at 
+
+𝑦 + 
+
+> 𝑠
+
+= 15, yielding 𝑁 feat = 2 input features. The spatial mean is subtracted from each feature prior to its use: in channel flow, averaging is performed over both the streamwise and spanwise directions, whereas on the wing, averaging is performed exclusively in the spanwise direction at each chordwise location 𝑥 ss /𝑐 , owing to the absence of streamwise homogeneity. S7 The control action 𝑎 corresponds to the time-varying wall-normal velocity imposed at the wall as a Dirichlet boundary condition, with the action space bounded by the local friction velocity magnitude, |𝑎 | ≤ 𝑢 𝜏 . This boundary treatment models localized jet actuation inducing blowing or suction at the solid surface. To prevent unrealistically large instantaneous actuation arising from the incompressibility constraint, a zero-net-mass-flux (ZNMF) condition is enforced across the control region by subtracting the spatial mean of the wall actuation prior to its application. Model-free, off-policy algorithms such as deep deterministic policy gradient (DDPG) ( 56 ) and its extension, twin delayed DDPG (TD3) ( 57 ), have been widely adopted in turbulent flow-control studies ( 22, 58–63 ). TD3 mitigates the overestimation bias inherent in DDPG by employing two independent critic networks, and is adopted here as the learning algorithm owing to its robustness and demonstrated effectiveness in recent flow-control studies ( 62, 63 ). The TD3 architecture com-prises an actor network and two critic networks: the actor approximates the policy mapping from states to actions, while the critics estimate the action–value function 𝑄 (𝑠, 𝑎 ), with the minimum of the two estimates used for policy updates ( 57 ). Both networks are implemented as fully connected multi-layer perceptrons (MLPs). The actor comprises a single hidden layer with 8 neurons, whereas each critic consists of three hidden layers with 16, 64, and 64 neurons, respectively. The DRL framework is implemented in Python using Stable-Baselines3 ( 64 ) as the reinforcement-learning library, coupled to a custom vectorized PettingZoo/Gym environment ( 65 ). Communica-tion between the Python-based DRL framework and the Fortran 77 CFD solver is achieved through a dedicated message-passing interface (MPI) coupling layer, which offers superior efficiency and scalability compared with file-based input/output approaches ( 24 ). The coupling strategy follows that established in Ref. ( 22 ): MPI communication is initialized between both programs at launch, with the solver placed in a waiting state pending requests from the DRL framework to exchange state, action, and reward data. Crucially, both programs are launched concurrently to establish MPI communication, rather than spawning the solver as a child process of the DRL framework ( 22 ). The current design choice facilitates coupling with computationally intensive wing simulations. Note that the adoption of Fortran 77 precludes the use of more advanced coupling interfaces such as those proposed in Ref. ( 31 ), making MPI an optimal compromise in terms of robustness, efficiency, and scalability. S8 Exploration in the channel-flow surrogates Training is conducted using six distinct initial conditions over 100 episodes. At the beginning of each episode, an initial condition is selected via a random number generator with a prescribed seed to ensure reproducibility. Each episode spans a simulation time of 𝑡 + = 1,500, scaled by the viscous time unit 𝑡 ∗ = 𝜈 /𝑢 2
+
+> 𝜏
+
+, and the policy is updated every Δ𝑡 + = 180 using 64 mini-batch gradient steps. The control policy is evaluated at intervals of 
+
+Δ𝑡 + = 0.6, resulting in 2,500 actuation updates per episode. Mini-batches of size B are sampled from a replay buffer of capacity D containing state–action–reward tuples; both B and D scale with the grid resolution consistently with the methodology outlined in Ref. ( 22 ), and the adopted values are summarized in Tab. S4. Exploration is promoted by adding zero-mean Gaussian noise with standard deviation 0 .1 𝑢 𝜏 to the actor output prior to critic evaluation. A summary of all DRL hyperparameters is provided in Tab. S3; all remaining parameters are set to the default values of the Stable-Baselines3 implementation ( 64 ). 
+
+Zero-shot exploitation on the wing Following exclusive training in the TCF surrogate envi-ronments, the optimized policies are deployed directly to their corresponding control blocks on the NACA4412 wing without any additional learning, constituting zero-shot exploitation. The controlled region on the suction side is defined as 𝑥 ss /𝑐 = 0.25–0 .86, consistent with prior investi-gations ( 39, 40 ). Several critical modifications to the channel-flow implementation are required to accommodate the spatial development inherent to TBLs. Chief among these is the fact that, unlike in fully developed channel flow, the friction velocity varies continuously along the chordwise direction, i.e. 𝑢 𝜏 = 𝑢 𝜏 (𝑥 ss /𝑐 ). This spatial variation is reconstructed using a ninth-order polynomial fit of the 
+
+𝑢 𝜏 distribution from the database of Ref. ( 41 ), yielding an accurate representation of the reference friction-velocity profile along the suction side. As a direct consequence, four key control parameters: (1) the bounds of the actuation amplitude, (2) the scaling of the observable state, (3) the wall-normal position of the sensing plane at 𝑦 + = 15, and (4) the control update interval Δ𝑡 + = 0.6 all become explicit functions of 𝑥 ss /𝑐 . The formulations of (1), (2), and (3) become straightforward once 𝑢 𝜏 = 𝑢 𝜏 (𝑥 ss /𝑐 ) is established. Enforcing a consistent update interval at each streamwise location, however, presents a considerably greater challenge. To address this, the update interval is prescribed to be spatially uniform within each control block Ω𝑖 ,S9 with the viscous time scale computed from the block-averaged friction velocity as 𝑡 ∗ 
+
+> Ω𝑖
+
+= 𝜈 /⟨ 𝑢 𝜏 ⟩2 
+
+> Ω𝑖
+
+.This block-wise treatment results in distinct actuation update frequencies across control blocks, so that the information exchange frequency between the DRL framework and the CFD solver is set to the greatest common divisor (GCD) of the individual block update frequencies, thereby preserving local viscous scaling throughout the deployment phase. This spatially resolved treatment of viscous scales substantially increases the computational cost relative to a uniform-scaling approach, underscoring the importance of the surrogate-based training strategy for making DRL-based control of wing TBLs tractable. According to Eq. (S5), 𝑁 CTRL ,𝑥 = 1 when exploration is conducted directly on the wing within the MARL formulation. However, under the assumption of locally parallel flow within each control block and deterministic policies, the effective number of pseudo-environments during deployment is instead determined by the local mesh resolution. For the NACA4412 configuration, the control region comprises 𝑁 elem ,𝑥 = 34 and 𝑁 elem ,𝑧 = 27 spectral elements, yielding 𝑁 penv = 111 ,078 pseudo-environments during zero-shot exploitation. The state vector for the wing TBLs consists of the inner-scaled wall-tangential ( 𝑢 ′+  
+
+> 𝑡
+
+) and wall-normal ( 𝑣 ′+  
+
+> 𝑛
+
+) velocity fluctuations sampled at an off-wall sensing plane at 𝑦 + 
+
+> 𝑠
+
+= 15, determined locally from 𝑢 𝜏 (𝑥 ss /𝑐 ). The spatial mean of each feature is removed by averaging in the spanwise direction at each chordwise location 𝑥 ss /𝑐 , owing to the absence of streamwise homogeneity in spatially developing TBLs. The control action is bounded using the local friction velocity 𝑢 𝜏 (𝑥 ss /𝑐 ),and the ZNMF constraint is enforced by subtracting the spanwise-averaged wall actuation within each control block. As the numerical solver operates in Cartesian coordinates whereas the actuation is defined in the wall-normal direction, the horizontal and vertical velocity components are modified such that their projection along the wall-normal direction recovers the prescribed control intensity. Conversely, the observable states are defined in the wall-normal reference frame, so that both Cartesian velocity components contribute to the wall-tangential and wall-normal velocities according to the local surface curvature. S10 Supplementary Text 
+
+Control impact on aerodynamic efficiency 
+
+In the main text, the control impact on the total drag coefficient budget was reported. Tab. S5 presents the lift and drag coefficients for all cases together with their relative changes with respect to the uncontrolled base flow. The lift coefficient is defined as the lift force per unit span, 𝐶 𝑙 = 𝑓 𝑙 /( 𝑏𝑞 ),and the lift-to-drag ratio is accordingly given by 𝐿 /𝐷 = 𝐶 𝑙 /𝐶 𝑑 .The reported aerodynamic coefficients reported are evaluated using a backward-cumulative averaging procedure following ( 42 ). Specifically, for each case the time-averaged statistics are computed over a window starting at 𝑇 FO , which is selected as the time that minimises the run-to-run variation of the backward-cumulative aerodynamic efficiency 𝐿 /𝐷 . This criterion ensures that the initial transient response to control activation is excluded from the average, while retaining as long a statistically stationary record as possible. A uniform value of 𝑇 FO = 6 flow-over times is adopted across all cases, which falls within the low-variation window identified by the convergence analysis for each individual simulation. We note that the strict per-case optimum of 𝑇 FO varies slightly (between 𝑡 = 2 and 𝑡 = 5 depending on the case and the quantity considered); the choice of a common 𝑇 FO = 6 is therefore conservative in the sense that it excludes slightly more of the early development than strictly necessary, and the resulting averages are not sensitive to this choice within the stationary window. Both the DRL and OC configurations yield increases in the lift coefficient in addition to drag reduction. However, enhanced lift is not unconditionally beneficial from an aerodynamic performance perspective: for a finite wing operating at a fixed angle of attack, increased lift is accompanied by a corresponding rise in induced drag. Drag reduction, by contrast, constitutes an unambiguous aerodynamic benefit regardless of the underlying assumptions, which motivates the emphasis placed on drag modification throughout the main text. 
+
+Zero-shot deployment on the uncontrolled base flow 
+
+The method was initially applied to the base-flow configuration, in which the block-averaged 
+
+⟨𝑅𝑒 𝜃 ⟩𝑥 was matched by surrogate channel flows. The profiles of 𝑅𝑒 𝜃 , 𝐻 12 and 𝛽 of the base flow are shown in Fig. S1(A). The rationale for choosing 𝑅𝑒 𝜃 as the matching target is that it characterizes S11 TBL development under mild adverse pressure gradients; this approach also achieved promising performance on the suction side of a NACA0012 at the same 𝑅𝑒 𝑐 and 𝛼 = 0◦, as reported in ( 36 ). It is also worth noting that matching 𝐻 12 alone is insufficient for Ω4, where the very strong APG and attendant flow history limit the improvement that any surrogate-based strategy can achieve. Fig. S1(B) shows the achieved drag reduction 𝑅 defined in equation 3. Consistent with the main results, DRL consistently outperforms OC in both the channel and wing environments. The motivation for imposing uniform blowing at 0 .2% 𝑈 ∞ in the no-suction configuration is to achieve drag reduction comparable to that obtained with uniform blowing at 0 .1% 𝑈 ∞ applied throughout the control area, as clearly supported by the wing results. On the other hand, applying uniform blowing alone increases the 𝐶 𝑑 by drastically increasing 𝐶 𝑑,𝑝 (see Tab. S5). Note that resorting to a non-DRL policy in Ω4 does not diminish the novelty of the framework; rather, following the block-partitioning strategy, the approach can be extended as a collection of optimal control methods applied independently to each block. Combining OC with 0 .2% 𝑈 ∞
+
+uniform blowing does not outperform the current hybrid configuration because the drag reduction is lower in the upstream blocks. The instantaneous wall actuation is shown in Fig. S1(C); transferable patterns in Ω1–Ω3 are identifiable, consistent with the results in Fig. S2(C). 
+
+Exploration and exploitation in channel-flow environments 
+
+Independent MARL policies are trained for each TCF surrogate corresponding to the wing con-figuration. Fig. S2(A) shows the reward evolution during training for all surrogates. The reward does not evolve monotonically across episodes, reflecting a known characteristic of TD3 in which policy updates can temporarily degrade performance before recovering. This makes early stopping a non-trivial decision, as it is generally unclear whether the best policy has already been encountered or whether further exploration would yield improvements. The optimal policy is therefore selected as the one achieving the highest reward over the full training history, with convergence typically reached within 70 episodes across all surrogates. Fig. S2(B) reports the instantaneous drag-reduction rate, evaluated using equation 3, as a function of 𝑡 + during exploitation with the control policy fixed, averaged across six independent TCF realizations and excluding an initial transient of 𝑡 + < 500 ( 22, 62 ). The DRL policies achieve higher drag reductions, consistently outperforming OC for the same blocks. OC results are in good S12 (B) 
+
+0.25 0.50 0.75 
+
+x ss /c 
+
+500 1000 
+
+> Re  θ
+
+Ω1 Ω2 Ω3 Ω4
+
+0.25 0.50 0.75 
+
+x ss /c 
+
+1.82.0
+
+> H12
+
+Ω1 Ω2 Ω3 Ω4
+
+0.25 0.50 0.75 
+
+x ss /c 
+
+010 0
+
+10 1
+
+> β
+
+Ω1 Ω2 Ω3 Ω4
+
+(A) 
+
+(C)                      
+
+> 0.25 0.40 0.50 0.70 0.86
+> xss /c
+> 020 40 60
+> Rwing  [%] Ω1Ω2Ω3Ω4
+> 23.8 26.6 20.2 13.5 36.5 42.3 25.7 27.3
+> OC-noUS DRL-noUS Blowing 0 .1% U∞
+> 020 40
+> RTCF  [%] Ω1Ω2Ω3Ω4
+> 25.3 22.8 22.1
+> 34.1 30.0 27.0 No TCF surrogate
+> OC-noUS DRL-noUS
+
+Figure S1 : Zero-shot control performance on the BASE flow configuration. (A) Spatial profiles of 𝑅𝑒 𝜃 , 𝐻 12 and 𝛽 as a function of chordwise coordinate 𝑥 ss /𝑐 for the BASE case. (B) Relative changes in drag coefficients. (C) Instantaneous wall-normal actuation 𝑣 𝑛 |wall for OC and DRL at a representative time, with the controlled region indicated by dashed lines. Red and blue denote blowing and suction, respectively. agreement with prior studies at comparable 𝑅𝑒 𝜏 (15, 17 ), providing confidence in the fidelity of the surrogates and implementation of our framework. Examining the spatial distribution of wall actuation provides additional insight into how indi-vidual agents cooperate to achieve a global drag-reduction objective, information not accessible from conventional turbulence statistics owing to flow homogeneity. The DRL policies learn actu-ation patterns that differ markedly from OC, which prescribes wall blowing and suction strictly proportional to the wall-normal velocity fluctuations at the sensing plane. S13 (A) 
+
+> (B) (C)
+
+Figure S2 : Results of exploration and exploitation in TCF surrogates. (A) Reward evolution during training. Curves are smoothed using sliding-window averaging with a window size equal to one episode. (B) Drag-reduction rate during exploitation. The solid line and shaded band denote the mean and standard deviation across six initial conditions. The gray region indicates the initial transient ( 𝑡 + ≤ 500); reported values are computed as temporal averages after removing this transient. (C) Instantaneous wall actuation for OC and DRL at a representative time. S14 Table S1 : Flow characteristics of the surrogate channel flows. Block-averaged statistics of the wing base flows and matching parameters of the surrogate channel flows that reproduce the target metrics within 5% discrepancy. Case Block 𝑥 ss /𝑐 ⟨𝑅𝑒 𝜃 ⟩𝑥 ⟨𝐻 12 ⟩𝑥 ⟨𝛽 ⟩𝑥 Target Value Deviation ( ≤ 5%) Name Base Flow Ω1 0.25–0 .40 365 1.70 0.39 𝑅𝑒 𝜃 359 1.6% TCF-1 – Ω2 0.40–0 .50 522 1.69 0.73 – 518 0.6% TCF-2 – Ω3 0.50–0 .70 739 1.72 1.42 – 732 0.9% TCF-3 – Ω4 0.70–0 .86 1074 1.87 5.27 – – – –BASE-US 0 .2% 𝑈 ∞ Ω1 0.25–0 .40 352 1.65 0.30 𝐻 12 1.65 0.0% TCF-BDF-1 – Ω2 0.40–0 .50 461 1.63 0.51 – 1.65 1.0% TCF-BDF-2 – Ω3 0.50–0 .70 613 1.63 0.82 – 1.58 2.4% TCF-BDF-3 – Ω4 0.70–0 .86 867 1.70 2.38 – 1.64 3.0% TCF-BDF-4 
+
+Table S2 : Channel flow configurations. The domain size is (𝐿 𝑥 , 𝐿 𝑦 , 𝐿 𝑧 ) = (2𝜋ℎ, ℎ, 𝜋ℎ ) for all configurations. Δ𝑦 + 
+
+> 𝑤
+
+denotes the wall-normal distance of the first grid point from the wall. Name 𝑅𝑒 𝑏 𝑅𝑒 𝜏 𝑁 𝑥 𝑁 𝑦 𝑁 𝑧 Δ𝑥 + Δ𝑦 + 
+
+> 𝑤
+
+Δ𝑧 + 𝛾 𝑦 +
+
+> 𝑏
+
+TCF-1 3,300 206 80 64 72 18.8 0.5 10.1 – –TCF-2 4,600 280 80 64 72 25.6 0.7 15.4 – –TCF-3 7,000 406 120 96 108 20.6 0.5 14.4 – –TCF-BDF-1 3,300 185 80 64 72 16.8 0.4 9.0 5.0 20.0 TCF-BDF-2 4,300 204 80 64 72 18.7 0.5 11.2 15.0 30.0 TCF-BDF-3 6,000 286 120 96 108 14.5 0.4 10.1 15.0 60.0 TCF-BDF-4 8,600 338 144 108 132 16.4 0.3 11.7 25.0 100.0 S15 Table S3 : Summary of the main DRL hyperparameters used in the present MARL framework. 
+
+See table S4 for the batch size and replay-buffer size employed in each configuration. Parameter Value Learning algorithm TD3 Actor network architecture Fully connected (8 neurons) Critic network architecture Fully connected (16–64–64 neurons) Number of input features ( 𝑁 feat ) 2 (i.e. 𝑢 ′+ , 𝑣 ′+ )Replay buffer size ( D) Scaled with grid resolution Mini-batch size ( B) Scaled with grid resolution Gradient steps per update 64 Policy update interval Δ𝑡 + = 180 Actuation update interval Δ𝑡 + = 0.6Episode length 𝑡 + = 1,500 Number of episodes 100 Number of initial conditions 6Exploration noise Gaussian ( 𝜇 = 0, 𝜎 = 0.1 𝑢 𝜏 )Action bound (−𝑢 𝜏 , 𝑢 𝜏 )
+
+Table S4 : Training configurations in the channel flows. B and D denote the mini-batch size and replay-buffer capacity, respectively. Name 𝑁 penv B D
+
+TCF-1 4,410 2,048 2 × 10 7
+
+TCF-2 4,410 2,048 2 × 10 7
+
+TCF-3 10,890 4,096 1 × 10 8
+
+TCF-BDF-1 4,410 2,048 2 × 10 7
+
+TCF-BDF-2 4,410 2,048 2 × 10 7
+
+TCF-BDF-3 10,890 4,096 1 × 10 8
+
+TCF-BDF-4 15,972 6,144 4 × 10 8
+
+S16 Table S5 : Control impact on aerodynamic efficiency. Integrated lift ( 𝐶 𝑙 ), pressure-drag contri-bution ( 𝐶 𝑑,𝑝 ), skin-friction-drag contribution ( 𝐶 𝑑, 𝑓 ), total drag ( 𝐶 𝑑 ), and aerodynamic efficiency (𝐿 /𝐷 ) for all cases considered. Values in parentheses denote the relative change with respect to the uncontrolled reference case. Case 𝐶 𝑙 𝐶 𝑑, 𝑓 𝐶 𝑑,𝑝 𝐶 𝑑 = 𝐶 𝑑, 𝑓 + 𝐶 𝑑,𝑝 𝐿 /𝐷 
+
+Base Flow 0.867 0.0128 0.0087 0.0215 41.0 OC-noUS 0.873 (+1.0%) 0.0121 (-4.7%) 0.0083 (-4.6%) 0.0204 (-5.1%) 42.8 (+4.4%) DRL-noUS 0.858 (-1.0%) 0.0118 (-7.8%) 0.0085 (-2.3%) 0.0203 (-5.6%) 42.3 (+3.1%) BASE-UB 0 .1% 𝑈 ∞ 0.833 (-3.9%) 0.0122 (-4.7%) 0.0099 (+13.8%) 0.0221 (+2.8%) 37.7 (-8.1%) BASE-US 0 .2% 𝑈 ∞ 0.925 (+6.7%) 0.0140 (+9.4%) 0.0066 (-24.1%) 0.0206 (-4.2%) 44.9 (+9.5%) OC-US 0 .2% 𝑈 ∞ 0.944 (+8.8%) 0.0134 (+4.7%) 0.0059 (-32.2%) 0.0193 (-10.2%) 48.9 (+19.3%) DRL-US 0 .2% 𝑈 ∞ 0.942 (+8.6%) 0.0130 (+1.6%) 0.0062 (-28.7%) 0.0192 (-10.7%) 49.1 (+19.6%) S17

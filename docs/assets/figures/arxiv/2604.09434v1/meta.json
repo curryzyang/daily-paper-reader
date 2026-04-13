@@ -1,0 +1,46 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.09434v1/fig-001.webp",
+      "caption": "Figure 1: Physics-guided zero-shot MARL framework for turbulent wing control. (A) The suction side of a NACA4412 wing is decomposed into chordwise control blocks Ω𝑖. (B) Each Ω𝑖 is matched to a turbulent channel-flow surrogate by reproducing the local shape factor (𝐻12) and momentum-thickness Reynolds number (𝑅𝑒𝜃), capturing both flow conditions and pressuregradient history of the local state. (C) MARL agents are trained exclusively within these surrogates using a shared neural network, with wall-parallel and wall-normal velocity fluctuations {𝑢𝑡 , 𝑣𝑛} at sensing height 𝑦𝑠 as state, wall-shear stress 𝜏𝑤 as reward, and local blowing/suction wall-normal velocity 𝑣 (𝑖, 𝑗) 𝑤𝑎𝑙𝑙 as action. (D) The trained policy is deployed directly to the corresponding wing blocks without additional on-wing training. 7",
+      "page": 7,
+      "index": 1,
+      "width": 789,
+      "height": 960
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09434v1/fig-002.webp",
+      "caption": "Figure 2: Computational setup and surrogate-matching strategy. (A) NACA4412 wing at 𝑅𝑒𝑐 = 2 × 105 and 𝛼 = 5◦ with the suction-side control region partitioned into four chordwise blocks Ω1–Ω4, together with representative turbulent structures from the wing and a matched turbulent channel-flow (TCF) surrogate. (B) Chordwise evolution of 𝑅𝑒𝜃 , 𝐻12, and 𝛽 on the suction side of the base flow; shaded regions indicate the blocks where statistics are averaged. (C) Wingto-TCF matching tree for DRL-US. Controllers trained on each surrogate are deployed directly to the corresponding wing blocks with uniform suction of 0.2%𝑈∞.10",
+      "page": 10,
+      "index": 2,
+      "width": 714,
+      "height": 1056
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09434v1/fig-003.webp",
+      "caption": "Figure 4: Instantaneous wall-normal actuation fields in surrogate and wing environments. (A) Instantaneous wall-normal actuation velocity 𝑣𝑛 |wall in the turbulent channel-flow (TCF) surrogate environments Ω1–Ω4. (B) Corresponding zero-shot deployment on the suction side of the NACA4412 wing for DRL with uniform suction (DRL-US). Note that the viscous length scale for the wing are taking the block-averaged value ⟨𝑙∗⟩Ω𝑖 . (C) Corresponding deployment for opposition control with uniform suction (OC-US).",
+      "page": 14,
+      "index": 3,
+      "width": 976,
+      "height": 897
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09434v1/fig-004.webp",
+      "caption": "Figure 3: Zero-shot control performance on the NACA4412 wing. (A) Chordwise distribution of skin-friction drag reduction 𝑅wing for DRL-US and OC-US deployed on the wing along with the block-averaged drag reduction as bar charts (top), and block-averaged drag reduction 𝑅TCF obtained during MARL training in each TCF surrogate Ω1–Ω4 (bottom), showing consistent performance between surrogate and wing environments. (B) Total drag coefficient budget decomposed into friction (𝐶𝑑,friction) and pressure (𝐶𝑑,pressure) contributions relative to the uncontrolled base flow, for the reference configuration (left) and with uniform suction of 0.2%𝑈∞ (right). Labels indicate the net change in total drag Δ𝐶𝑑,total.",
+      "page": 12,
+      "index": 4,
+      "width": 708,
+      "height": 770
+    },
+    {
+      "url": "assets/figures/arxiv/2604.09434v1/fig-005.webp",
+      "caption": "Figure 5: Computational and operational cost of zero-shot DRL training and deployment. (A) Computational savings for training DRL controllers, expressed as ratios between the NACA4412 wing and TCF configurations for the factors in equation 4. Single-controller cost ratios are shown below the dashed line, and the policy-count ratio 𝑁policy required to cover the full control region is shown above; data correspond to control block Ω2 and its surrogate channel flow. (B) Operational cost in terms of core-hours and average memory (GB) for one episode of zero-shot wing deployment, TCF exploitation, and TCF training using Intel Xeon Platinum 8168 CPUs. Percentages in parentheses denote the proportion relative to the cost of wing deployment.",
+      "page": 16,
+      "index": 5,
+      "width": 968,
+      "height": 729
+    }
+  ]
+}

@@ -1,0 +1,5097 @@
+Title: Partial regularity for $\mathscr{A}$-quasiconvex variational problems of linear growth
+
+URL Source: https://arxiv.org/pdf/2604.07538v1
+
+Published Time: Fri, 10 Apr 2026 00:15:13 GMT
+
+Number of Pages: 45
+
+Markdown Content:
+PARTIAL REGULARITY FOR A -QUASICONVEX VARIATIONAL PROBLEMS OF LINEAR GROWTH 
+
+CHRISTOPHER IRVING, ZHUOLIN LI, AND BOGDAN RAIT , Ă
+
+Abstract. We prove that minimizers of variational integrals 
+
+E(v) = 
+
+ˆ
+
+> Ω
+
+f (v) for v ∈ M (Ω) such that A v = 0 ,
+
+are partially continuous provided that the integrands f are strongly A -quasiconvex in a suitable sense. We consider linear growth problems, linear pde operators A of constant rank, and variations of the form v + φ with A -free φ ∈ C∞ 
+
+> c
+
+(Ω) . Our analysis also covers the “potentials case” 
+
+F(u) = 
+
+ˆ
+
+> Ω
+
+f (Bu) for u ∈ D′(Ω) such that Bu ∈ M (Ω) ,
+
+where B is a different linear pde operator of constant rank. Both our main results extend to x-dependent integrands. 
+
+1. Introduction 
+
+We consider integral functionals of linear growth on bounded open sets Ω ⊂ Rn
+
+E(v, Ω) = 
+
+ˆ
+
+> Ω
+
+f (x, v ) for v ∈ M (Ω , V ) such that A v = 0 (1.1) and their local minimizers with respect to A -free perturbations, 
+
+E(v, Ω) ⩽ E(v + φ, Ω) for φ ∈ C∞ 
+
+> c
+
+(Ω , V ) with A φ = 0 .(1.2) Here A is a homogeneous vectorial differential operator with constant coefficients defined on Rn from V to W , which are all finite dimensional linear spaces. Our main result is the following: 
+
+Theorem A. Let A satisfy the constant rank (CR) condition below, f : Ω × V → R satisfy the growth, smoothness, and strong A -quasiconvexity assumptions (H1 )–( H4 ) below. Then for any local minimizer v of (1.1) , there exists an open set Ω′ ⊂ Ω such that L n(Ω \Ω′) = 0 
+
+and v ∈ C0,α  
+
+> loc
+
+(Ω ′) for any α ∈ (0 , 12 ).
+
+We next clarify our assumptions. The differential operator A has characteristic poly-nomial A (ξ) ∈ Lin( V, W ) for ξ ∈ Rn and will be assumed to have constant rank 
+
+rank A (ξ) = const. for ξ ∈ Rn \ { 0}.(CR) The map f : Ω × V → R will be assumed continuous of linear growth, so that we can define 
+
+ˆ
+
+> Ω
+
+f (x, v ) = 
+
+ˆ
+
+> Ω
+
+f
+
+
+
+x, dv
+
+dL n (x)
+
+
+
+dx +
+
+ˆ
+
+> Ω
+
+f ∞
+
+
+
+x, dv
+
+d|v| (x)
+
+
+
+dvs(x),
+
+where v = dv
+
+dL n L n Ω + vs is the Radon–Nikodým decomposition of v with respect to 
+
+L n, so vs ⊥ L n, and |v| denotes the total variation measure of v. Here, we define the 
+
+2020 Mathematics Subject Classification. Primary: 49N60, Secondary: 35B65, 49J45, 28B05, 35E20. 
+
+Key words and phrases. Regularity theory, A -Quasiconvexity, Strong quasiconvexity, Constant rank operators, Partial continuity, Partial regularity, Systems of linear pde, Degenerate variational problems, Variational problems of linear growth, Minimization of multiple integrals in the Calculus of Variations.   
+
+> 1
+> arXiv:2604.07538v1 [math.AP] 8 Apr 2026 2C. IRVING, Z. LI, AND B. RAIT ,Ă
+
+recession function f ∞ : Ω × V → R as 
+
+f ∞(x, z ) = lim sup 
+
+> x′→x, t →∞ , z ′→z
+
+t−1f (x′, tz ′).
+
+Particularly relevant to minimization are quasiconvex integrands [Mor52], and more generally A -quasiconvex [FM99], i.e., f : V → R such that for a cube Q ⊂ Rn,
+
+f
+
+
+
+> Q
+
+v(x) d x
+
+
+
+⩽ Q
+
+f (v(x)) d x for v ∈ C∞
+
+> per
+
+(Q, V ), with A v = 0 .
+
+We now list our assumptions on integrands f : Ω × V → R, which lead to regularity: (H1 ) |f (x, z )| ⩽ L(1 + |z|) for any (x, z ) ∈ Ω × V , where L > 0;(H2 ) For any x ∈ Ω the function f (x, ·) is C2, and the functions f (·, ·), ∂z f (·, ·) and 
+
+∂2 
+
+> z
+
+f (·, ·) are all jointly continuous on Ω × V with 
+
+|∂z f (x, z ) − ∂z f (y, z )| ⩽ L|x − y|
+
+for any z ∈ V and any x, y ∈ Ω;(H3 ) The function f is strongly A -quasiconvex in the sense that f (x, · ) − ℓE is A -quasiconvex with some ℓ > 0 for L n-a.e x ∈ Ω.(H4 ) The recession function f ∞(x, z ) is continuous in x for each z ∈ V .Here E : V → R is the reference integrand E(z) = p1 + |z|2 − 1.As in [LR24], we reduce this study to functionals defined on potential operator level 
+
+F(u, Ω) = 
+
+ˆ
+
+> Ω
+
+f (x, Bu) for u ∈ D′(Ω , U ) such that Bu ∈ M (Ω , V ),(1.3) where B is a homogeneous differential operator with constant coefficients defined on Rn
+
+from U to V . The notion of local minimality is given by 
+
+F(u, Ω) ⩽ F(u + ϕ, Ω) for ϕ ∈ C∞ 
+
+> c
+
+(Ω , U ).(1.4) We will use the notion of f : V → R being quasiconvex with respect to B-gradients , i.e., for a cube Q ⊂ Rn and any z ∈ V ,
+
+f (z) ⩽ Q
+
+f (z + Bu(x)) d x for any u ∈ C∞ 
+
+> c
+
+(Q, U ).
+
+See [Rai19a; HNR24] for the connection between this notion and A -quasiconvexity. In this case, we replace assumption ( H3 ) with (H3 ′) The function f is strongly quasiconvex with respect to B-gradients , i.e., f (x, · )−ℓE 
+
+is quasiconvex with respect to B-gradients for L n-a.e x ∈ Ω.Our main result in this direction is as follows: 
+
+Theorem B. Let B be a k-th order differential operator satisfying (CR) . Suppose that 
+
+f : Ω × V → R satisfies the growth, smoothness, and strong quasiconvexity assumptions 
+
+(H1 ), (H2 ), (H3 ′), and (H4 ). Then for any local minimizer Bu of (1.3) , there is an open subset Ω′ ⊂ Ω such that L n(Ω \ Ω′) = 0 and Bu ∈ C0,α  
+
+> loc
+
+(Ω ′) for any α ∈ (0 , 1) . Moreover, for each ω ⋐ Ω, there exists ˜u ∈ Wk−1,1(Ω) such that Bu = B ˜u in ω and ˜u ∈ Ck,α  
+
+> loc
+
+(ω ∩ Ω′).
+
+There are three major sources of difficulty in establishing Theorems A and B: (a) the continuity of minimizers v or Bu is inferred from a non-unique representative 
+
+u, in sharp contrast to the classic case B = D;(b) no reduction to the more familiar case when B = Dk is possible due to Ornstein’s non-inequality [Orn62; CFM05; KK16; KSW17]. (c) no basic implementation of known methods of linearization and approximation with solutions of linear elliptic systems can be performed. REGULARITY FOR A -QUASICONVEX INTEGRALS 3
+
+Difficulty (a) reflects the complete failure of coercivity of F in (1.3) in any variation of the space BV B (Ω) := {u ∈ Wk−1,1(Ω , V ) : Bu ∈ M (Ω , W )} [GR19; Rai19b; RS20; BDG20; GRV21; GRV24]. Coercivity holds for elliptic B, i.e., ker B(ξ) = {0} for ξ ∈ Rn \ { 0}, in which case the estimate 
+
+∥ϕ∥Wk−1,1(Ω) ⩽ c∥Bϕ∥L1(Ω) for ϕ ∈ C∞ 
+
+> c
+
+(Ω , U )(1.5) holds for the variations ϕ in (1.4). Thus this difficulty is not present in the classic gradient case B = D in neither the superlinear growth case [Eva86; AF87; AF89; GM86; Mar89; CFM98; Die+12] or the linear growth one [GMS79; GK19b]. In the set-up of general ellip-tic operators, strengthened versions of (1.5) were crucial for contributions for superlinear [CG22; Sch25] and linear growth integrands [Fra23; GK19a; Gme20; Gme21; BK22]. Estimate (1.5) fails brutally for constant rank operators that are not elliptic: there exist nonzero ϕ ∈ C∞ 
+
+> c
+
+(Ω , U ) such that Bϕ = 0 . Examples are ϕ = C ψ for nonzero ψ in 
+
+C∞ 
+
+> c
+
+(Ω , U ), where C̸ = 0 is a potential operator for B [Rai24]. In [LR24] this difficulty was overcome for integral functionals (1.3) of superlinear growth by showing that for each subdomain ω ⋐ Ω, one can find a representative u of a local minimizer Bu such that 
+
+C ∗u = 0 in ω, making local estimates in the spirit of (1.5) available. In fact, in [LR24] it was possible to derive Korn-type inequalities for 1 < p < ∞ such as 
+
+∥Dkϕ∥Lp(Ω) ⩽ c∥Bϕ∥Lp(Ω) for ϕ ∈ C∞ 
+
+> c
+
+(Ω , U ) such that C ∗ϕ = 0 
+
+and stronger modular formulations [LR24, Proposition 5.1]. Such estimates are known to fail in the limiting case p = 1 by Ornstein’s non-inequality [KK16]. In particular, not only do we lack the higher integrability available in the superlinear growth case [LR24] and for certain convex problems of linear growth [Gme20; BEG24], but it is also not possible to reduce to a more familiar situation of functionals defined on BV k (Difficulty (b)). Difficulty (c) refers to the fact that common strategies to establish partial regularity results such as Theorem B involve local approximation of the minimizers with solutions to linear elliptic systems. These were implemented indirectly by blow-up arguments [Eva86; AF87; CFM98] or using the A-harmonic approximation method [DGG00; DGK05]. The 
+
+A-harmonic approximation lemma can also be proved directly [Die+12; CD19] by using explicit solvability of linearized elliptic systems. In our case, if B is not elliptic, it is unclear if an auxiliary elliptic system as in [GK19a; Fra23] can even be formulated. Indirect arguments require passing to the limit in the nonlinearity E(·), a difficulty al-ready seen in the subquadratic setting, in which both strategies [CFM98; DGK05] crucially use a Poincaré-Sobolev inequality adapted for similar nonlinear quantities. Such estimates are well understood for B = Dk; in the superlinear growth case, which can be reduced to 
+
+B = Dk using Korn-type inequalities [LR24, Proposition 5.1]. Establishing a linear growth analogue is challenging and thus our main new tool: 
+
+Theorem C. Suppose that B, C are constant rank operators such that im C (ξ) = ker B(ξ)
+
+for all ξ ∈ Rn \ { 0}. Let u ∈ D′(BR, U ) such that Bu ∈ M (BR, V ) and C ∗u = 0 in BR,and fix θ ∈ (0 , 1) . Then there exists π ∈ C∞(BθR , U ) such that Bπ = 0 , C ∗π = 0 in BθR 
+
+and for all 1 ⩽ p < nn−1 we have the modular estimate 
+
+> k−1
+
+X
+
+> j=0
+
+ˆ
+
+> BθR
+
+E
+
+ Dj (u − π)
+
+Rk−j
+
+p
+
+dx
+
+ 1
+
+> p
+
+⩽ c
+
+ˆ
+
+> BR
+
+E(Bu),(1.6) 
+
+where c = c(n, q, θ, B, C ) > 0 and the association u 7 → π is linear. 
+
+Here the balls are concentric and recall that E(z) = p1 + |z|2 − 1. Theorem C is new for elliptic operators B (i.e., when C = 0 ), in which case the kernel of B may be infinite dimensional in general, so it is unclear how to construct π such that (1.6) holds (cf. [BDG20; GR19]). This result is to be contrasted with [Fra23], where the open mapping theorem is 4 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+employed via a qualitative solvability result, which gives an analogous norm estimate (i.e., replacing E by | · | ). In our setting, such linear techniques do not apply due to the nonlinear nature of the modular estimate. Instead we employ a version of the qualitative solvability theory due to Hörmander [Hör00], adapted to the Hs-scale. Estimates implied by such general theory however are highly suboptimal, so we combine them with the ellipticity of the pair (B, C ∗). The approach thus differs completely from [LR24, Proposition 5.1], as we must allow for lower order terms in arbitrarily negative scales. Our results also apply in the superlinear growth case, substantially refining [LR24, Proposition 5.1]: if we assume Bu ∈ Lp(BR, V ) for some 1 < p < ∞ in the setting of Theorem C, then we obtain u − π ∈ Wk,p (BθR , V ) and the modular estimate (1.7) 
+
+> k
+
+X
+
+> j=0
+
+ˆ
+
+> BθR
+
+Vp
+
+ Dj (u − π)
+
+Rk−j
+
+ 2
+
+dx ⩽ c
+
+ˆ
+
+> BR
+
+|Vp(Bu)|2 dx, 
+
+where Vp(z) = (1 + |z|2) p−24 z. A precise statement is given in Theorem 3.2. One would expect by analogy with Poincaré’s inequality, that Inequality (1.6) also holds for θ = 1 . This turns out to be an outstanding open problem even for linear Lp-estimates: 
+
+Open Problem 1.1. Let B be a k-th order constant rank operator, 1 ⩽ p ⩽ ∞, and 
+
+j = 1 , . . . , k − 1. Does the following estimate hold? 
+
+inf ∥Dj (u − π)∥Lp(B) : π ∈ D′(B, U ) with Bπ = 0 ⩽ c∥Bu∥Lp(B) for u ∈ C∞( ¯B, U ).
+
+One might expect that this result is classical. In fact, all reasonable variants of this question (such as with j = k in the left-hand-side or with Lq-norms on the left-hand-side for q below the Sobolev exponent of p) are open in general–even in the class of elliptic operators. Partial results or examples can be found in [GR19; Arr21; ISS99]. Interestingly, the rank condition is necessary in some instances [GR20]. 
+
+Further technical remarks. Theorem A will follow from Theorem B by using local representations of A -free fields taking the form v = Bu + S, where B is a potential operator of A (see [Rai19a; Rai24]) and S is a smooth vector field satisfying the elliptic system A S = 0 , B∗S = 0 . This idea has origins in [Mur81; FM99] and was used recently in [Rai19a; GR22; KR22; GRS22; LR24] to prove various properties related to variational integrals defined on A -free vector fields, such as (1.1). We remark that if B arises as a potential operator of A , then ( H3 ) and ( H3 ′) are equivalent by [Rai19a, Section 3]. While Theorems A and B are already new in the autonomous case when f = f (z), our treatment of the non-autonomous case is necessitated by the nature of this reduction from 
+
+A -free fields to B-gradients. Indeed writing v = Bu + S we obtain (1.8) 
+
+ˆ
+
+> Ω
+
+f (v) = 
+
+ˆ
+
+> Ω
+
+f (S(x) + Bu),
+
+which reduces the minimization of (1.1) to that of (1.3), at the expense of introducing an additional x-dependence. While not our original aim, our treatment of the x-dependence is new in the gradient setting–i.e., Theorem B is new for B = D.Also, while it is a routine exercise to relax ( H2 ) to allow for integrands which are β-Hölder continuous in x for any β ∈ (0 , 1) , we have refrained from treating this generality to simplify the exposition. We also emphasize that the condition ( H4 ) arises only due the 
+
+x-dependence, and is vacuous for autonomous integrands; related conditions can be found in [KR10; ADR20]. In contrast to [LR24] where the superlinear growth case is treated, we establish partial regularity using the method of A-harmonic approximation. This technique was first used in the context of geometric problems [Sim83; Sim96], which was later adapted to the non-parametric setting in [DG00; DGG00; DS02; DGK05; Die+12]. We remark however, that REGULARITY FOR A -QUASICONVEX INTEGRALS 5
+
+equipped with Theorem C, one could equally employ a blow-up argument as in [LR24] to establish Theorems A and B. Under constant rank constraints however, the method of A-harmonic approximation requires substantial modifications. The main difficulty here is twofold, one being the solvability of elliptic systems as (4.9) under suitable boundary conditions, and the other being the lack of a suitable Poincaré inequality in the modular form. These are overcome by an L2-based solvability result (Lemma 4.4) and Theorem C, respectively. It appears that one cannot directly reduce from Theorem A to Theorem B using (1.8), unless one additionally imposes that ∂2 
+
+> z
+
+f is bounded. For this reason in [LR24] a controlled 
+
+p-growth is assumed, however we will show this additional condition is unnecessary for partial regularity. We found however, that this leads to α-Hölder continuity of v in the restricted range α < 12 .While there has been work in the setting of exact or closed differential forms [BDS15; Sil19], the regularity theory has until now been confined to the superlinear growth setting and convex integrands; see for instance [Uhl77; Ham92; BS13b]. We therefore believe that Theorems A and B are new in this setting, even for A = div and B = curl .Finally, there are many natural extensions which arise in the context of variational prob-lems with constant rank PDE constraints. Further investigations may include considering the setting of (p, q )-growth [Sch08; Sch09; GK24], degenerate problems [DM04], nonlinear potentials [KM16; De 22; DS23], singular set considerations [KM07], Sobolev regularity [Bil03; BS13a], general growth [Mar96], etc. Related works in the ( C-)elliptic setting in-clude [GK19a; Gme20; BEG24; EL25] for Sobolev regularity, and [CG22; Fra23; BK22; Ste24] for partial regularity. 
+
+Organization of the paper. In Section 2 we collect preliminaries regarding differential operators, and function spaces relevant for our problems. Section 3 consists of the elaborate proof of Theorem C. In Section 4 we prove the main partial regularity result, and in Section 5 we will show how Theorems A and B follow by means of a reduction argument. 2. Preliminaries 
+
+2.1. Notation. Throughout this paper, we denote by Ωa bounded open subset of Rn
+
+unless otherwise specified. The Lebesgue measure on Rn is denoted by L n = | · | , and 1E
+
+for any E ⊂ Rn is the indicator function of E. For a measure μ ∈ M (Ω) , we will denote its Lebesgue–Radon–Nikodým decomposition as μ = μaL n + μs. If μ = Bu is a vectorial measure arising from a potential (i.e., B is a differential operator), we will write μa = Bau
+
+and μs = Bsu. For any E ⊂ Rn measurable with L n(E) ∈ (0 , ∞) and any f ∈ L1(E),the average notation is defined as follows 
+
+(f )E = E
+
+f dx := 1
+
+L n(E)
+
+ˆ
+
+> E
+
+f dx. 
+
+In particular, when E = BR(x) is a ball, we may abbreviate it as (f )x,R . This notation also extends to vector-valued functions and measures. We will assume familiarity with standard function spaces such as the Lebesgue and Sobolev spaces, along with the space of smooth and compactly supported functions C∞ 
+
+> c
+
+(Ω) 
+
+and the space of distributions D′(Ω) . We will often omit the target of vector valued function spaces if it is clear from context, and write for instance Lp(Ω) = L p(Ω , V ). We will also use Lp
+
+> loc
+
+(Ω) for functions locally in Lp and similarly for other scales. Throughout the text, c will denote constants which change from line to line, whose dependencies may be specified by c = c(· · · ). Sometimes we will write c1, c 2, etc. to denote specific constants. We will also write A ≲ B to mean there exists a constant c > 0 such that A ⩽ cB , and A ∼ B if A ≲ B and B ≲ A.6 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Unless otherwise stated, U, V, W will denote finite dimensional inner-product spaces over 
+
+R. Suppose that X is such a space. For any x, y ∈ X, denote by x · y or ⟨x, y ⟩ the inner product of x and y, and the induced norm by |·| .Given any two finite dimensional inner-product spaces U, V as above, denote by Lin k(U, V )
+
+the space of k-linear maps from U k to V (abbreviated as Lin( U, V ) if k = 1 ). The space of symmetric k-linear maps from U to V is denoted by SLin k(U, V ). In particular, for any u ∈ C∞(U, V ), we have that Dku ∈ Slin k(U, V ). Moreover, y ⊗ x⊗k ∈ SLin k(U, V ) is defined such that 
+
+(y ⊗ x⊗k)( u1, . . . , u k) = 
+
+> k
+
+Y
+
+> i=1
+
+⟨x, u i⟩
+
+!
+
+y, for any u1, . . . , u k ∈ U. 
+
+The higher order gradients and exterior products above are connected by Fourier trans-form, which for f ∈ L1(Rn, V ) is defined as (2.1) F f (ξ) = ˆf (ξ) := 
+
+ˆ
+
+> Rn
+
+f (x)e −i2 πx ·ξ dx, ξ ∈ Rn.
+
+If u ∈ S (Rn, V ), we have that dDku(ξ) = ck ˆu(ξ) ⊗ ξ⊗k for ξ ∈ Rn for a complex constant 
+
+ck which we will often omit. 2.2. Differential operators. We will work with homogeneous and constant coefficient differential operators 
+
+A = X
+
+> |α|=h
+
+Aα∂α, B = X
+
+> |β|=k
+
+Bβ ∂β ,
+
+where the multi-indicies α, β lie in Nn, and Aα ∈ Lin( V, W ), Bβ ∈ Lin( U, V ) are linear maps. The associated characteristic polynomials of A and B are respectively defined as 
+
+A (ξ) = X
+
+> |α|=h
+
+Aαξα, B(ξ) = X
+
+> |β|=k
+
+Bβ ξβ for ξ ∈ Rn,
+
+which naturally arise under the Fourier transform. Our primary assumption is that A and B are of constant rank (CR). An impor-tant subclass is that of (injectively-)elliptic operators [Van22], i.e., operators B satisfying 
+
+ker B(ξ) = {0} for ξ ∈ Rn \{ 0}. Of particular importance to our work will be the following: 
+
+Definition 2.1. Let A be a homogeneous partial differential with constant coefficients. We say that a homogeneous partial differential operator B is a potential operator for 
+
+A if ker A (ξ) = im B(ξ) for all ξ ∈ Rn \ { 0}.
+
+By [Rai19a, Theorem 1.1], we have that A admits a potential operator B if and only if 
+
+A has constant rank, in which case B also has constant rank. We will also use work with a potential operator of B, which we denote by C . By the construction in [Rai19a], we can assume that C is defined on Rn from U to U and is homogeneous of degree l > k . The inequality is justified by the fact that if C is a potential operator for B, then so is ∆mC .Therefore if B is itself a potential operator of A , we obtain the exact sequence 
+
+U C (ξ)
+
+−−−→ U B(ξ)
+
+−−−→ V A (ξ)
+
+−−−→ W for each ξ ∈ Rn \ { 0}.
+
+We define the wave cone of A [Tar83; Mur81] as 
+
+ΛA = [
+
+> ξ∈Rn\{ 0}
+
+ker A (ξ),REGULARITY FOR A -QUASICONVEX INTEGRALS 7
+
+which gives the directions of non-ellipticity of A . Therefore, if B arises as a potential operator of A , we also have that 
+
+ΛA = [
+
+> ξ∈Rn\{ 0}
+
+im B(ξ).
+
+We will also make use of the spanning cone condition [FM99; GR22; KR22], i.e., 
+
+V = span Λ A .(SC) For a matrix B ∈ Lin( U, V ), we define the Moore–Penrose generalized inverse B† by 
+
+B† := 
+
+((B|(ker B)⊥ )−1, on im B, 
+
+0, on (im B)⊥,
+
+which is the unique element in Lin( V, U ) satisfying 
+
+BB † = Proj im B , B†B = Proj im B∗ ,
+
+where Proj M denotes the orthogonal projection onto a given subspace M , and B∗ denotes the adjoint of B. We will apply this to B(ξ) in the Fourier space. The following is a consequence of Decell’s formula [Dec65], which was used in [Mur81; FM99; Rai19a]. 
+
+Lemma 2.2. Let B be an operator as above of order k with constant rank. Then the mapping ξ 7 → B†(ξ) is smooth on Rn \ { 0} and is homogeneous of degree −k.
+
+Any differential operator A as above can be written as A v = div h Lv , where L ∈
+
+Lin( V, SLin h(Rn, W )) . Indeed if v ∈ D′(Rn, V ) we have (2.2) A v = X
+
+> |α|=h
+
+Aα∂αv = X
+
+> |α|=h
+
+∂α(Aαv) = div h Lv, where Lz = ( Aαz)|α|=h for z ∈ V. 
+
+Here div h is the formal adjoint operator of Dh, and in general the adjoint of A will be denoted by A ∗.We will also need the following result concerning averages of B-gradients. 
+
+Lemma 2.3. Let u ∈ Wk−1,1(BR(x0)) such that Bu ∈ M (BR(x0)) . Then there exists a homogeneous polynomial a : Rn → U of degree k such that Ba = ( Bu)x0,R .Proof. Write Bu = T (Dku) with T ∈ Lin(SLin( Rn, U ), V ). By [LR24, Lemma 2.4] and by means of a density argument, we have z0 := ( Bu)x0,R ∈ im T . Therefore we can find 
+
+ϕ ∈ SLin k(Rn, U ) such that T (ϕ) = z0. We then define 
+
+a(x) = X
+
+> |α|=k
+
+ϕα
+
+xα
+
+α!
+
+which gives the desired k-polynomial, since Ba = T (Dka) = T (ϕ) = z0. □
+
+2.3. Integrands of linear growth. Define the following reference integrand 
+
+E(z) := p1 + |z|2 − 1
+
+for any z in any finite dimensional Banach space (X, |·| ). We will record several elementary properties of this integrand, which can be found in [GK19b]. 
+
+Proposition 2.4. Then the function E(·) satisfies the following properties for any z, w ∈
+
+X and t > 0:
+
+(a) E(z) ∼ min {| z|, |z|2};
+
+(b) E(·) is convex; 
+
+(c) E(tz ) ≲ max {t, t 2}E(z);
+
+(d) E(z + w) ≲ E(z) + E(w).8 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Lemma 2.5 (Lemma 2.9 in [GK19b]) . For any f ∈ L1(Ω) with Ω ⊂ Rn bounded, define 
+
+e := ffl  
+
+> Ω
+
+E(|f |) d x, then we have 
+
+> Ω
+
+|f | dx ⩽ pe2 + 2 e. 
+
+In particular, if e ⩽ 1, there holds 
+
+> Ω
+
+|f | dx ⩽ √3e. 
+
+By mollification, the above lemma also holds if we replace f with a measure μ ∈ M (Ω) ,where we write (2.3) 
+
+ˆ
+
+> Ω
+
+E(μ) := 
+
+ˆ
+
+> Ω
+
+E(μa) d x + |μs|(Ω) .
+
+We will also record estimates and results concerning the integrand f . Here we only consider the A -free framework (Theorem A). The analogous auxiliary statements for the 
+
+B-framework (Theorem B) follow analogously, but are easier to establish. This is so because in the B-setting there is no spanning cone condition [LR24, Lemma 2.4]. So let f : Ω × V → R be the integrand in (1.1). From ( H1 ) and ( H3 ) it follows that (2.4) |∂z f (x, z )v| ⩽ cL |v| for all x ∈ Ω, z ∈ V, v ∈ span Λ A
+
+where the constant c depends on n and dim V only. Indeed for each (x, z ) ∈ Ω × V , we can apply [KK16, Lemma 2.3] to the mapping v 7 → f (x, z + v) restricted to (span Λ A ) ∩ BR(0) 
+
+with R ⩾ 1 + |z|. Note that if (SC) holds, then we simply have |∂z f (x, z )| ⩽ cL .Since ∂2 
+
+> z
+
+f (x, z ) is jointly continuous by ( H2 ), given any BR(x0) ⋐ Ω and M > 0 there exists Lx0,R,M > 0 and a modulus of continuity ωx0,R,M : R+ → R+ for which 
+
+|∂2 
+
+> z
+
+f (x, z )| ⩽ Lx0,R,M ,(2.5) 
+
+|∂2 
+
+> z
+
+f (x, z ) − ∂2 
+
+> z
+
+f (y, w )| ⩽ Lx0,R,M ωx0,R,M (|x − y| + |z − w|)(2.6) hold for all x, y ∈ BR(x0) and z, w ∈ V such that |z|, |w| ⩽ M . Moreover, we can choose 
+
+ωx0,R,M to be non-decreasing and concave such that 0 ⩽ ωx0,R,M ⩽ 1, ωx0,R,M (0) = 0 and 
+
+ωx0,R,M (t) = 1 for all t > 1.Given an integrand f : Ω × V → R and w ∈ V , will also introduce the shifted integrand 
+
+which is defined for x ∈ Ω and z ∈ V as (2.7) fw(x, z ) := f (x, z + w) − f (x, w ) − ∂z f (x, w ) · z. 
+
+We record various properties of fw in the below two lemmas. 
+
+Lemma 2.6. Suppose that the integrand f : Ω × V → R satisfies (H1 ), (H2 ), and (H3 ),and fix M > 0. Then given any ball BR(x0) ⋐ Ω and w ∈ V with |w| ⩽ M , consider the shifted integrand fw defined via (2.7) . Then there exists c1 = c1(n, V, L, L x0,R,M +1 ) such that for all x ∈ BR(x0) and z ∈ V ,
+
+(2.8) |fw(x, z ) · v| ⩽ c1E(z)|v| for all v ∈ span Λ A ,
+
+and there is c2 = c2(ℓ, M ) such that for all x ∈ BR(x0) we have 
+
+∂2 
+
+> z
+
+f (x, w )[ v, v ] ⩾ 1
+
+c2
+
+|v|2 for all v ∈ ΛA ,(2.9) 
+
+ˆ
+
+> B
+
+fw(x, φ (y)) d y ⩾ 1
+
+c2
+
+ˆ
+
+> B
+
+E(φ) d y(2.10) 
+
+for any ball B ⊂ Rn and any φ ∈ C∞ 
+
+> c
+
+(B) satisfying A φ = 0 . Moreover, by mollification, 
+
+(2.10) holds for all A -free φ ∈ M c(B).REGULARITY FOR A -QUASICONVEX INTEGRALS 9
+
+The estimate (2.8) can be proved by considering the two cases |z| > 1 and |z| ⩽ 1
+
+separately with (2.5). The other two follow from the strong quasiconvexity assumption (H3 ) and the same proof in [GK19b, Lemma 4.1]. 
+
+Lemma 2.7. Let f : Ω × V → R satisfy (H1 ) and (H2 ), fix M > 0, and let x0 ∈ Ω, R > 0
+
+such that BR(x0) ⋐ Ω. Then for all x ∈ BR(x0) and w ∈ V such that |w| ⩽ M , the shifted integrand fw(x, z ) defined as in (2.7) satisfies 
+
+|(∂2 
+
+> z
+
+fw(x, z )( z − w) − ∂z fw(x, z )) · v| ⩽ c ω x0,R,M +1 (|z − w|)|z − w|| v|
+
+for all z ∈ V and v ∈ span Λ A , where c = c(n, V, L, L x0,R,M +1 ) > 0, using the notation from (2.5) , (2.6) .Proof. Since v ∈ span Λ A , we can assume that (SC) holds to simplify notation. The argument is analogous to [GK19b, Lemma 4.2]. If |z − w| ⩽ 1, then by the fundamental theorem of calculus and (2.6) we have 
+
+|∂2 
+
+> z
+
+fw(x, z )( z − w) − ∂z fw(x, z )| =
+
+ˆ 10
+
+(∂2 
+
+> z
+
+f (x, z ) − ∂2 
+
+> z
+
+f (x, w + t(z − w)))( z − w) d t
+
+⩽ Lx0,R,M +1 ωx0,R,M +1 (|z − w|)|z − w|,
+
+If |z − w| > 1, then using (2.4) and (2.5) we can estimate 
+
+|∂2 
+
+> z
+
+fw(x, z )( z − w) − ∂z fw(x, z )| ⩽ Lx0,R,M +1 |z − w| + cL |z − w|
+
+⩽ (Lx0,R,M +1 + cL )ωx0,R,M +1 (|z − w|)|z − w|,
+
+where we used that ωx0,R,M +1 (|z − w|) = 1 . By combining the two cases, the result follows. □
+
+The condition ( H4 ) will be used in the following variant of [KR10, Theorem 4], adapated to the setting of B-gradients. We note the proof is identical, except we use the ΛA -convexity of f and the generalization [DR16] of Alberti’s rank-one theorem [Alb93]. Related results can be found in [ADR20]. 
+
+Lemma 2.8. Let f : Ω ×V → R be jointly continuous satisfying (H1 ), (H4 ), and such that 
+
+f (x, ·) is ΛA -convex for each x ∈ Ω. Suppose that (uk)k, u are in D′(Ω) and Buk → Bu
+
+area-strictly in Ω, then we have 
+
+lim 
+
+> k→∞
+
+ˆ
+
+> Ω
+
+f (x, Buk) = 
+
+ˆ
+
+> Ω
+
+f (x, Bu).
+
+Notice that the condition ( H3 ) implies that f (x, ·) is ΛA -convex for each x ∈ Ω by (2.9). Thus, the above lemma applies when f satisfies ( H1 )–( H4 ). 
+
+Sketch of proof. The first half of the proof in [KR10, Theorem 4], which only assumes the linear growth bound and continuity of f , applies in this setting to give 
+
+ˆ
+
+> Ω
+
+f (x, Bau) d x +
+
+ˆ
+
+> Ω
+
+hf
+
+
+
+x, Bsu
+
+|Bsu|
+
+
+
+d|Bsu|
+
+⩽ lim inf 
+
+> k→∞
+
+ˆ
+
+> Ω
+
+f (x, Buk) ⩽ lim sup 
+
+> k→∞
+
+ˆ
+
+> Ω
+
+f (x, Buk)
+
+⩽
+
+ˆ
+
+> Ω
+
+f (x, Bau) d x −
+
+ˆ
+
+> Ω
+
+h−f
+
+
+
+x, Bsu
+
+|Bsu|
+
+
+
+d|Bsu|,
+
+(2.11) where 
+
+hf (x, z ) := lim inf 
+
+> x′→x, t →∞ , z ′→z
+
+f (x′, tz ′)
+
+t .10 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+For any z ∈ ΛA , since t 7 → f (x, tz ) is convex and since ∂z f (x, z ) is uniformly bounded by (2.4), by a similar reasoning as in [KR10, (11)] we have 
+
+f ∞(x, z ) = hf (x, z ) = −h−f (x, z ) for all (x, z ) ∈ Ω × ΛA .
+
+Since by [DR16, Theorem 1.1] we have Bsu 
+
+> |Bsu|
+
+(x) ∈ ΛA for |Bsu|-a.e. x ∈ Ω, the upper and lower limits in (2.11) coincide. □
+
+We also show that in our setting, ( H4 ) is implied by the existence of a strong recession function. 
+
+Lemma 2.9. Let f satisfy (H1 ), (H2 ) and assume the strong recession function exists in that 
+
+(2.12) f ∞(x, z ) = lim 
+
+> t→∞ ,x′→x,z ′→z
+
+f (x′, tz ′)
+
+t
+
+exists for all (x, z ) ∈ Ω×V . Then the recession function f ∞ satisfies the Lipschitz estimate 
+
+|f ∞(x, z ) − f ∞(y, z )| ⩽ L|x − y|| z| for all x, y ∈ Ω, z ∈ V. 
+
+In particular, f satisfies (H4 ).Proof. Given z ∈ V and x ∈ Ω, by the 1-homogeneity of f ∞(x, ·) we can write (2.13) f ∞(x, z ) = f ∞(x, 2z) − f ∞(x, z ) = lim 
+
+> t→∞
+
+1
+
+t (f (x, 2tz ) − f (x, tz )) ,
+
+where the term in the limit can be written as 
+
+1
+
+t (f (x, 2tz ) − f (x, tz )) = 
+
+ˆ 10
+
+∂z f (x, tz + stz ) · z ds. 
+
+For any x, y ∈ Ω, the Lipschitz continuity of ∂z f (·, ·) in the first argument as assumed in (H2 ) implies 
+
+1
+
+t (f (x, 2tz ) − f (x, tz )) − 1
+
+t (f (y, 2tz ) − f (y, tz )) 
+
+=
+
+ˆ 10
+
+(∂z f (x, tz + stz ) − ∂z f (y, tz + stz )) · z ds
+
+⩽
+
+ˆ 10
+
+L|x − y|| z| ds = L|x − y|| z|.
+
+Now sending t → 0 and using (2.13), we obtain 
+
+|f ∞(x, z ) − f ∞(y, z )| ⩽ L|x − y|| z|
+
+as required. □
+
+Remark 2.10 . The existence of local minimisers can be established in the setting of A
+
+satisfying (CR) and (SC), and f satisfying ( H1 )–( H3 ), provided we moreover assume the existence of a strong recession function as in (2.12) and the coercivity estimate (2.14) 
+
+ˆ
+
+> Ω
+
+f (x, v 0 + φ) d x ≳
+
+ˆ
+
+> Ω
+
+|φ| dx −
+
+ˆ
+
+> Ω
+
+1 + |v0| dx, 
+
+valid for all v0 ∈ L1(Ω , V ) and φ ∈ C∞ 
+
+> c
+
+(Ω , V ) satisfying A φ = 0 . This follows by a similar argument as in [LR24, Section 4] by employing the Direct Method, using the lower semicontinuity results in [KR22, Proposition 1.1] (see also [FM99; ADR20]). In the case of autonomous integrands, coercivity estimates (2.14) follow from ( H3 ) [CK17; LR24]. REGULARITY FOR A -QUASICONVEX INTEGRALS 11 
+
+2.4. Function spaces. When working with the reference integrand E(t), we will need several estimates in the modular scales associated to E(t) and E(t)q with q > 1. For this reason it will be convenient in Section 3 to work in the Orlicz scales, so we will recall the relevant notions here. Briefly, an N -function φ : [0 , ∞) → [0 , ∞) is an increasing, continuous, convex function for which 
+
+lim 
+
+> t→0
+
+φ(t)
+
+t = lim 
+
+> t→∞
+
+tφ(t) = 0 .
+
+We say φ ∈ ∆2 if there is c > 0 such that φ(2 t) ⩽ cφ (t), and the least such c is denoted by ∆2(φ). We say φ ∈ ∇ 2 if the conjugate of φ,
+
+φ∗(s) = sup 
+
+> t⩾0
+
+(st − φ(t)) ,
+
+lies in ∆2, and write ∇2(φ) = ∆ 2(φ∗). Given an N -function φ ∈ ∆2 ∩ ∇ 2 and an open set 
+
+Ω ⊂ Rn, the Orlicz space Lφ(Ω) denotes the space of locally integrable functions u such that φ(|u|) is integrable on Ω, which we equip Luxemburg norm 
+
+∥u∥Lφ(Ω) = inf 
+
+
+
+λ > 0 : 
+
+ˆ
+
+> Ω
+
+φ
+
+ |u|
+
+λ
+
+
+
+dx ⩽ 1
+
+
+
+.
+
+We also have Lφ(Ω) ∗ ∼= L φ∗
+
+(Ω) .Given a Fourier multiplier m ∈ L∞(Rn), we will also need estimates for mappings of the form u 7 → F −1(m(ξ)ˆ u(ξ)) . Here the Fourier transform is viewed as an isomorphism on the space of tempered distributions S ′(Rn), which is extended from S (Rn) as defined using (2.1) by duality. In these scales the Hörmander–Mikhlin multiplier theorem holds; namely if 
+
+m ∈ L∞(Rn) satisfies the hypotheses of [Hör03, Theorem 7.9.5] (for our purposes it suffices that m is smooth in Rn \ { 0} and |∂αm(ξ)| ⩽ c|ξ|−| α| for all |α| < n/ 2 + 1 ), we know that u 7 → F −1(m(ξ)ˆ u(ξ)) is bounded on Lp(Rn) for all 1 < p < ∞. By a Marcinkiewicz-type interpolation result, namely by combining [Mal89, Theorems 11.7, 11.8] and [Zyg56, Theorem 2], we infer that (2.15) ∥F −1(mˆu)∥Lφ(Rn) ⩽ c(n, m, ∆2(φ), ∇2(φ)) ∥u∥Lφ(Rn) for all u ∈ Lφ(Rn).
+
+The Orlicz-Sobolev spaces Wk,φ (Ω) , ˙Wk,φ (Rn) are defined analogously to the Lp versions for all k ∈ Z and φ ∈ ∆2 ∩∇ 2; if k < 0, elements of Wk,φ (Ω) are understood as distributions 
+
+v = P 
+
+> |α|⩽−k
+
+∂αvα in D′(Ω) with vα ∈ Lφ(Ω) , which we equip with the associated norm 
+
+∥v∥Wk,φ (Ω) = inf X
+
+> |α|⩽−k
+
+∥vα∥Lφ(Ω) ,
+
+where we take the infimum over all such representations. The definition of ˙Wk,φ (Rn) is similar, except that we sum over |α| = −k. With respect to the distributional pairing 
+
+⟨· , ·⟩ , these spaces satisfy the duality relations Wm,φ  
+
+> 0
+
+(Ω) ∗ ∼= W −m,φ ∗
+
+(Ω) and ˙Wm,φ (Rn)∗ ∼=˙W−m,φ ∗
+
+(Rn) for each m ∈ N. We also have the following Poincaré inequalities: 
+
+∥u∥Lφ(B1) ⩽ c(n, ∆2(φ)) ∥Du ∥Lφ(B1) for all u ∈ W1,φ  
+
+> 0
+
+(B1),(2.16) 
+
+∥u − (u)B1 ∥Lφ(B1) ⩽ c(n, ∆2(φ)) ∥Du ∥Lφ(B1) for all u ∈ W1,φ (B1),(2.17) see for instance [BL91]. These can be iterated to infer higher order versions. For s ∈ R, we denote by Is the s-Riesz potential, which acts on u ∈ S ′(Rn) via 
+
+u 7 → Isu = F −1(|ξ|−s ˆu(ξ)) . A consequence of Fourier multipliers (see e.g. [BL76, Theorem 6.3.1] using (2.15)) is that (2.18) I−m : ˙Wm,φ (Rn) ∼
+
+−−→ Lφ(Rn)12 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+is an isomorphism for all m ∈ Z and φ ∈ ∆2 ∩ ∇ 2, where the associated constants depend on n, m, ∆2(φ), ∇2(φ) only. 3. A Poincaré-Sobolev type estimate 
+
+In this section we will prove Theorem C, which as discussed in the introduction will be a crucial ingredient in establishing partial regularity of minimizers. Throughout this section, B and C will be constant rank operators of order k and 
+
+l respectively, satisfying l > k and ker B(ξ) = im C (ξ) for all ξ ∈ Rn, following the conventions outlined in Section 2.2. 
+
+Theorem 3.1. Let u ∈ D′(BR) such that Bu ∈ M (BR) and C ∗u = 0 in BR, and let 
+
+θ ∈ (0 , 1) . Then there exists π ∈ C∞(BθR ) such that Bπ = 0 , C ∗π = 0 in BθR and we have u − π ∈ Wk−s,p (BθR ) for all s ∈ (0 , 1) and 1 ⩽ p < nn−s with the estimate 
+
+1
+
+Rs [Dk−1(u − π)] W1−s,p (BθR ) +
+
+> k−1
+
+X
+
+> j=0
+
+1
+
+Rk−j ∥Dj (u − π)∥Lp(BθR ) ⩽ c
+
+ˆ
+
+> BR
+
+|Bu|.
+
+where c = c(n, p, s, θ, B, C ) > 0. Furthermore for all 1 ⩽ q < nn−1 we have the modular estimate 
+
+> k−1
+
+X
+
+> j=0
+
+ˆ
+
+> BθR
+
+E
+
+ Dj (u − π)
+
+Rk−j
+
+q
+
+dx
+
+ 1
+
+> q
+
+⩽ c
+
+ˆ
+
+> BR
+
+E(Bu),(3.1) 
+
+where c = c(n, q, θ, B, C ) > 0 and the association u 7 → π is linear. 
+
+In the regime 1 < p < ∞ we can establish a similar Korn-type inequality, cf. (1.7). While it is not needed in our regularity proof, we include it as it may be of independent interest. 
+
+Theorem 3.2. Let u ∈ D′(BR) such that Bu ∈ L1(BR) and C ∗u = 0 . For each θ ∈ (0 , 1) ,there exists π ∈ C∞(BθR ) satisfying Bπ = 0 , C ∗π = 0 in BθR and such that the following holds: if for any 1 < p < ∞ we have Bu ∈ Lp(BR), then u − π ∈ Wk,p (BθR ) with the associated estimates 
+
+∥u − π∥Wk,p (BθR ) ⩽ c∥Bu∥Lp(BR)
+
+and 
+
+(3.2) 
+
+> k
+
+X
+
+> j=0
+
+ˆ
+
+> BθR
+
+|Vp(Dj (u − π)) |2 dx ⩽ c
+
+ˆ
+
+> BR
+
+|Vp(Bu)|2 dx, 
+
+where Vp(z) = (1 + |z|2) p−24 z and c = c(n, B, C , p, θ, R ) > 0.Remark 3.3 . A similar result has been established by Franceschini in [Fra23, Proposition 2.12], where a norm inequality of the form 
+
+inf  
+
+> π∈ker B
+
+∥u − π∥L1(B1/2) ⩽ c∥Bu∥L1(B1)
+
+is established when B is R-elliptic (i.e., C ∗ = 0 ). The proof consists of a qualitative argument involving the open mapping theorem and the Ehrenpreis fundamental principle. We found such arguments were insufficient to establish a modular estimate of the form (3.1) that is crucial in our regularity proofs. While one can work with the Luxemburg norm associated to LE to establish an estimate of the form 
+
+inf  
+
+> π∈ker( B,C∗)
+
+∥u − π∥LE (B1/2) ⩽ c∥Bu∥LE (B1)
+
+provided B is constant rank and C ∗u = 0 , this is strictly weaker than the modular variant we seek. We contrast the case to the variable exponent Lp(·) spaces, where Poincaré-type REGULARITY FOR A -QUASICONVEX INTEGRALS 13 
+
+inequalities can be established with respect to the Luxemburg norm ∥·∥ Lp(·)(Ω) , however the modular version is known to fail in general (see e.g. [Die+11, Theorem 8.2.4, Example 8.2.7] and the references therein). 3.1. Negative norm estimates. The first result we will need is a Korn-type inequality for the pair (B, C ∗), with a remainder term in arbitrarily negative scales. 
+
+Lemma 3.4. Let ν ∈ Z and φ ∈ ∆2 ∩ ∇ 2, and suppose u ∈ Wν,φ (B1) such that Bu ∈
+
+W−1,φ (B1) and C ∗u ∈ W−m−1,φ (B1) with m = l − k > 0. Then we have u ∈ Wk−1,φ  
+
+> loc
+
+(B1)
+
+and for all 0 < t < s < 1 we have the estimate 
+
+(3.3) ∥u∥Wk−1,φ (Bt) ⩽ c
+
+
+
+∥Bu∥W−1,φ (Bs) + ∥C ∗u∥W−m−1,φ (Bs) + ∥u∥Wν,φ (Bs)
+
+
+
+,
+
+where c = c(n, ν, ∆2(φ), ∇2(φ), B, C , s − t).
+
+This result will be applied with φ(t) = tp and φ(t) = 1 
+
+> λ
+
+E(t)p for suitable p ∈ (1 , ∞) and 
+
+λ > 0. We will establish two preliminary results that will be used in the proof. 
+
+Lemma 3.5. Let m, k ∈ N and φ ∈ ∆2 ∩ ∇ 2, and suppose K is a kernel such that ˆK is smooth on Rn \ { 0} and is homogeneous of degree −k. Then if v ∈ Wm,φ  
+
+> 0
+
+(B2), we have 
+
+K ∗ v ∈ Wm+k,φ (B2) and there is c = c(n, m, k, K, ∆2(φ), ∇2(φ) > 0 such that 
+
+∥K ∗ v∥Wm+k,φ (B2) ⩽ c∥v∥Wm,φ (B2)
+
+Here the convolution in K is in general understood as K ∗ v = F −1( ˆK(ξ)ˆ v(ξ)) .
+
+Proof. Let ˆK(ξ) = ˆK(ξ/ |ξ|), which is smooth away from zero and homogeneous of degree 
+
+−k, so that K = Ik ∗ K. Extending by zero, we can also view v ∈ Wm,φ (Rn). Using (2.18) and (2.15), for each 0 ⩽ j ⩽ m we can estimate 
+
+∥Dk+j (K ∗ v)∥Lφ(B2) ⩽ ∥Dk(Ik(K ∗ Dj v)) ∥Lφ(Rn)
+
+⩽ c∥K ∗ Dj v∥Lφ(Rn) ⩽ c∥Dj v∥Lφ(Rn) ⩽ c∥v∥Wm,φ (B2).
+
+(3.4) Now consider 0 ⩽ j ⩽ k − 1. Since K is smooth in Rn \ { 0} and homogeneous of degree 
+
+(k−n) (by [Hör03, Theorems 7.1.16, 18]), there exists c > 0 such that |Dj (K∗ v)| ⩽ cI k−j |v|
+
+holds pointwise on Rn \ { 0}. For such j we can estimate 
+
+ˆ
+
+> B2
+
+φ(|Dj (K ∗ v)|) d x ⩽ c
+
+ˆ
+
+> B2
+
+φ(|Ik−j |v|) d x ⩽ c
+
+ˆ
+
+> B2
+
+φ
+
+ ˆ
+
+> B2
+
+|x − y|k−j−n|v(y)| dy
+
+
+
+dx. 
+
+Setting γk−j (x) := ´ 
+
+> B2
+
+|x − y|k−j−n dy, since k − j ⩾ 1 there is ck−j ⩾ 1 such that 
+
+c−1 
+
+> k−j
+
+⩽ γk−j (x) ⩽ ck−j for all x ∈ B2. Then applying Jensen’s inequality with respect to the measure νx := γ−1 
+
+> k−j
+
+(x)|x − ·| k−j−nL n B2 and using that φ ∈ ∆2, we can estimate 
+
+ˆ
+
+> B2
+
+φ(|Dj (K ∗ v)|) d x ⩽ c
+
+ˆ
+
+> B2
+
+ˆ
+
+> B2
+
+|x − y|k−j−nφ(|v|) d y dx ⩽ c
+
+ˆ
+
+> B2
+
+φ(|v|) d y. 
+
+As the modular estimate implies the norm estimate (3.5) ∥Dj (K ∗ v)∥Lφ(B2) ⩽ c∥v∥Lφ(B2) for each 0 ⩽ j ⩽ k − 1,
+
+the result follows by combining (3.4) and (3.5). □
+
+Lemma 3.6. Let m ∈ N and φ ∈ ∆2 ∩ ∇ 2.
+
+(a) If u ∈ W−m,φ (B2) takes the form u = div m U for some U ∈ D′(Rn, SLin m(Rn; Rn)) 
+
+which is supported in B1, then u ∈ ˙W−m,φ (Rn) and we have 
+
+(3.6) ∥u∥ ˙W−m,φ (Rn) ⩽ c(n, m, ∆2(φ), ∇2(φ)) ∥u∥W−m,φ (B2).14 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+(b) If u ∈ ˙W−m,φ (Rn), then u ∈ W−m,φ (B1) and we have 
+
+∥u∥W−m,φ (B1) ⩽ c(n, m, ∆2(φ), ∇2(φ)) ∥u∥ ˙W−m,φ (Rn).
+
+Proof. For (a), we can write 
+
+∥u∥ ˙W−m,φ (Rn) = inf 
+
+n
+
+⟨u, v ⟩ : v ∈ Wm,φ ∗ 
+
+> loc
+
+(Rn), ∥∇ mv∥Lφ∗ (Rn) ⩽ 1
+
+o
+
+.
+
+Let ρ ∈ C∞ 
+
+> c
+
+(B2) such that 1B1 ⩽ ρ ⩽ 1B2 , and P a polynomial of degree (m − 1) on Rn
+
+to be determined. Using the form u = div m U , for v ∈ C∞ 
+
+> c
+
+(Rn) we have 
+
+⟨u, v ⟩ = ( −1) m
+
+ˆ
+
+> Rn
+
+⟨U, ∇m(v − P )⟩ dx
+
+= ( −1) m
+
+ˆ
+
+> Rn
+
+⟨U, ∇m(ρ(v − P )⟩ dx = ⟨u, ρ (v − P )⟩,
+
+noting that u is supported in B1, where ρ ≡ 1. Then since ρ(v − P ) ∈ Wm,φ ∗
+
+(B2) we have 
+
+|⟨ u, v ⟩| ⩽ ∥u∥W−m,φ (B2)∥ρ(v − P )∥Wm,φ ∗ (B2).
+
+We choose P to satisfy ˆ
+
+> B2
+
+Dα(v − P ) d x = 0 for all |α| ⩽ m − 1,
+
+so then by the Poincaré inequality (2.17), we can estimate 
+
+∥ρ(v − P )∥Wm,φ ∗ (B2) ≲ ∥v − P ∥Wm,φ ∗ (B2) ≲ ∥Dmv∥Lφ∗ (B2) ⩽ ∥Dmv∥Lφ∗ (Rn),
+
+where the implicit constant depends on n, m, ∆2(φ), ∇2(φ). Since C∞ 
+
+> c
+
+(Rn) is dense in 
+
+˙Wm,φ ∗
+
+(Rn), we can extend the above estimates by density to infer that 
+
+|⟨ u, v ⟩| ≲ ∥u∥W−m,φ (B2)∥∇ mv∥Lφ∗ (Rn)
+
+holds for all v ∈ ˙Wm,φ ∗
+
+(Rn), which implies (3.6). For (b), let v ∈ Wm,φ ∗ 
+
+> 0
+
+(B1), which extending by zero lies in ˙Wm,φ ∗
+
+(Rn). Using the duality relation ˙W−m,φ (Rn)∗ ∼= ˙Wm,φ ∗
+
+(Rn) and Poincaré inequality (2.16), we have 
+
+|⟨ u, v ⟩| ⩽ ∥u∥ ˙W−m,φ (Rn)∥Dmv∥Lφ∗ (Rn) ⩽ ∥u∥ ˙W−m,φ (Rn)∥v∥Wm,φ ∗ (B1),
+
+from which the result follows. □
+
+Proof of Lemma 3.4. We will show for all ν < k −1 and 0 < t < s < 1 that if u ∈ Wν,φ (Bs)
+
+such that Bu ∈ W−1,φ (B1) and C ∗u ∈ W−m−1,φ (B1), then u ∈ Wν+1 ,φ (Bs) with the estimate 
+
+∥u∥Wν+1 ,φ (Bt) ⩽ c
+
+
+
+∥Bu∥W−1,φ (Bs) + ∥C ∗u∥W−m−1,φ (Bs) + ∥u∥Wν,φ (Bs)
+
+
+
+.
+
+If this holds, (3.3) follows by iteratively applying the above for suitable t, s .Let ρ ∈ C∞ 
+
+> c
+
+(B1) such that 1Bt ⩽ ρ ⩽ 1Bs and |Dj ρ| ⩽ cj (s − t)−j for all j ∈ N. We will decompose 
+
+cρu (ξ) = B†(ξ) \B(ρu )( ξ) + C ∗† (ξ) \C ∗(ρu )( ξ) =: ˆψ1(ξ) + ˆψ2(ξ).
+
+Since u ∈ Wν,φ (Bs), we have 
+
+∥B(ρu )∥Wν−k+1 ,φ (B2) ⩽ c(n, ν, B, s − t)
+
+
+
+∥Bu∥Wν−k+1 ,φ (Bs) + ∥u∥Wν,φ (Bs)
+
+
+
+,(3.7) 
+
+∥C ∗(ρu )∥Wν−l+1 ,φ (B2) ⩽ c(n, ν, C , s − t)
+
+
+
+∥C ∗u∥Wν−l+1 ,φ (Bs) + ∥u∥Wν,φ (Bs)
+
+
+
+,(3.8) by a similar duality argument as in [LR24, Proposition 5.1]. REGULARITY FOR A -QUASICONVEX INTEGRALS 15 
+
+Next we claim that (3.9) ∥ρu ∥Wν+1 ,φ (B2) ⩽ (∥B(ρu )∥Wν−k+1 ,φ (B2) + ∥C ∗(ρu )∥Wν−l+1 ,φ (B2)),
+
+holds for all ν, by considering the two cases which arise depending on the sign of ν + 1 .
+
+Case 1: ν + 1 > 0. Since B†(ξ) is smooth away from the origin and homogeneous of order −k by Lemma 2.2, we can write B† = |·| −k ∗ B, where ˆB(ξ) := B†(ξ/ |ξ|) is smooth and homogeneous of degree 0. Then the isomorphism (2.18) and the Hörmander–Mikhlin multiplier theorem (2.15) imply 
+
+∥ψ1∥ ˙Wν+1 ,φ (Rn) = ∥Ik(B ∗ B(ρu )) ∥ ˙Wν+1 ,φ (Rn)
+
+⩽ c∥B ∗ B(ρu )∥ ˙Wν−k+1 ,φ (Rn)
+
+⩽ c∥B(ρu )∥ ˙Wν−k+1 ,φ (Rn) ⩽ c∥B(ρu )∥Wν−k+1 ,φ (B2),
+
+where the last inequality follows from Lemma 3.6(a) with m = k − (ν + 1) > 0, since by (2.2) we can write B(ρu ) in the form div k(L(ρu )) . Similarly, using that C ∗† is smooth on 
+
+Rn \ { 0} and homogeneous of order −l, we can estimate 
+
+∥ψ2∥ ˙Wν+1 ,φ (Rn) ⩽ c∥C ∗(ρu )∥Wν−l+1 ,φ (B2).
+
+Therefore since ρu = ψ1 + ψ2 is supported in B1, by the Poincaré inequality (2.16) we have 
+
+∥ρu ∥Wν+1 ,φ (B2) ⩽ c∥ρu ∥ ˙Wν+1 ,φ (Rn),
+
+so (3.9) follows by combining the above estimates. 
+
+Case 2: ν + 1 ⩽ 0. Let v ∈ C∞ 
+
+> c
+
+(B2) and define K by setting ˆK(ξ) = B∗† (ξ). Since ˆK
+
+is smooth for ξ̸ = 0 and (−k)-homogeneous by Lemma 2.2, we can apply Lemma 3.5 with 
+
+m = −(ν + 1) ⩾ 0, which gives 
+
+∥K ∗ v∥Wk−(ν+1) ,φ ∗ (B2) ⩽ c∥v∥W−(ν+1) ,φ ∗ (B2).
+
+Combining this with Plancherel’s theorem we can estimate 
+
+⟨ψ1, v ⟩ = ⟨ \B(ρu ), B∗† (ξ)ˆ v⟩ = ⟨B(ρu ), K ∗ v⟩
+
+⩽ c∥B(ρu )∥Wν−k+1 ,φ (B2)∥K ∗ v∥Wk−(ν+1) ,φ ∗ (B2)
+
+⩽ c∥B(ρu )∥Wν−k+1 ,φ (B2)∥v∥W−(ν+1) ,φ ∗ (B2).
+
+Similarly by applying Lemma 3.5 with ˆK = C † we obtain the estimate 
+
+∥ψ2∥Wν+1 ,φ (B2) ⩽ c∥C ∗(ρu )∥Wν−l+1 ,φ (B2),
+
+so using that ρu = ψ1 + ψ2, the claimed estimate (3.9) follows. Finally we note that ρu = u on Bt and combine the estimates (3.7), (3.8) and (3.9) to deduce that 
+
+∥u∥Wν+1 ,φ (Bt) ⩽ c∥ρu ∥Wν+1 ,φ (B2)
+
+⩽ c
+
+
+
+∥Bu∥W−1,φ (Bs) + ∥C ∗u∥W−m−1,φ (Bs) + ∥u∥Wν,φ (Bs)
+
+
+
+with c = c(n, ν, B, C , ∆2(φ), ∇2(φ), s − t) > 0, as required. □
+
+3.2. Endpoint estimates. We will combine Lemma 3.4 with suitable endpoint estimates in the fractional and modular scales. The modular estimate we will need is the following: 
+
+Lemma 3.7. Let λ > 0 and set Φ( t) = 1 
+
+> λ
+
+E(t). Then if μ ∈ M (B1), we have μ ∈
+
+W−1,Φq
+
+(B1) for all 1 < q < nn−1 with the associated estimate 
+
+∥μ∥W−1,Φq (B1) ⩽ c(n, q )∥μ∥LΦ(B1).16 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Here the Luxemburg norm of μ is understood to be 
+
+∥μ∥LΦ(B1) = inf 
+
+
+
+s > 0 : 1
+
+λ
+
+ˆ
+
+> B1
+
+E
+
+ μs
+
+
+
+⩽ 1
+
+
+
+,
+
+where we used (2.3). 
+
+Proof. Extending μ by zero, we view μ ∈ M (Rn) such that spt( μ) ⊂ B1. We first claim for 1 < q < nn−1 that (3.10) ∥I1μ∥LΦq (B1) ⩽ c(n, q )∥μ∥LΦ(B1).
+
+This will follow from the modular estimate (3.11) 
+
+ˆ
+
+> B1
+
+E(I1μ)q dx
+
+ 1
+
+> q
+
+⩽ c(n, q )
+
+ˆ
+
+> B1
+
+E(μ),
+
+applied to μ/s in place of μ for suitable s > 0.To see this, consider first the case when μ = f L n with f ∈ L1(B1). Observe there is c1 > 1 such that for each x ∈ B1, we have c−11 ⩽ γ1(x) := ´ 
+
+> B1
+
+|x − y|−(n−1) dy ⩽ c1.
+
+Hence by Jensen’s inequality applied with νx := γ1(x)−1|x − ·| −(n−1) L n B1, we obtain the pointwise estimate 
+
+E(I1f (x)) ⩽ E
+
+
+
+γ1(x)−1
+
+ˆ
+
+> B1
+
+|f (y)|| x − y|−(n−1) dy
+
+
+
+⩽ c1
+
+ˆ
+
+> B1
+
+E(f (y)) |x − y|−(n−1) dy = I1(E(f ))( x)
+
+for all x ∈ B1. Now applying [GT01, Lemma 7.12] gives 
+
+∥E(I1(f )) ∥Lq (B1) ⩽ c1∥I1(E(f )) ∥Lq (B1) ⩽ c(n, p )c1∥E(f )∥Lq (B1),
+
+as required. For general μ, by mollification we find με = fεL n such that με → μ area-strictly (on a slightly larger ball), which also implies I1με ∗
+
+⇀ I 1μ in the sense of measures. Then we can obtain (3.11) with the area-strict convergence and the lower semicontinuity of ´ Eq(·).Now put φq(t) = Φ q(t), which lies in ∆2 ∩ ∇ 2, and let ψ ∈ W1,φ ∗ 
+
+> q
+> 0
+
+(B1). Since |ψ(x)| ⩽
+
+I1(|Dψ |)( x) for all x ∈ B1, we have 
+
+ˆ
+
+> B1
+
+ψ(x) d μ(x) ⩽
+
+ˆ
+
+> B1
+
+I1(|Dψ |) d |μ|(x)
+
+⩽
+
+ˆ
+
+> B1
+
+I1(|μ|)( y)|Dψ (y)| dy
+
+⩽ ∥I1|μ|∥ Lφq (B1)∥Dψ ∥Lφ∗ 
+
+> q(B1)
+
+⩽ c(n, q )∥μ∥LΦ(B1)∥ψ∥W1,φ ∗ 
+
+> q(B1)
+
+,
+
+where we used (3.10), noting that ∆2(φ∗ 
+
+> q
+
+) and ∇2(φ∗ 
+
+> q
+
+) depend on q only. Hence we deduce that μ ∈ W1,φ ∗ 
+
+> q
+> 0
+
+(B1)∗ ∼= W −1,φ q (B1) with the associated estimate 
+
+∥μ∥W−1,Φq (B1) ⩽ c(n, q )∥μ∥LΦ(B1),
+
+as required. □
+
+In the fractional scales we will need the following: REGULARITY FOR A -QUASICONVEX INTEGRALS 17 
+
+Proposition 3.8. Let 1 < p < nn−1 and let u ∈ Wk−1,p (B1) be such that Bu ∈ M (B1) and 
+
+C ∗u ∈ W−m,p (B1). Then for all σ ∈ (0 , 1) such that σn > 1 − 1 
+
+> p
+
+, we have u ∈ Wk−σ,p  
+
+> loc
+
+(B1)
+
+and for all 0 < t < s < 1 the estimate 
+
+(3.12) ∥u∥Wk−σ,p (Bt) ⩽ c
+
+ˆ
+
+> Bs
+
+|Bu| + ∥C ∗u∥W−m,p (Bs) + ∥u∥Wk−1,p (Bs)
+
+
+
+holds, where c = c(n, σ, p, B, C , s − t) > 0.
+
+We will need some preparatory estimates. Recall that we have the isomorphism 
+
+Im : ˙W−m,p (Rn) ∼
+
+−−→ Lp(Rn)
+
+as in (2.18) with φ(t) = tp, valid for all m ∈ N and 1 < p < ∞. In the endpoint p = 1 
+
+case, for all μ ∈ M (Rn) we have the replacement estimate (3.13) ∥I1μ∥ ˙B1−σ, nn−σ  
+
+> ∞(Rn)
+
+≲ |μ|(Rn)
+
+valid for all σ ∈ (0 , 1) ; see [Van13, Proposition 8.22] for an elementary proof. 
+
+Lemma 3.9. Let 1 < p < ∞, and suppose u ∈ Wk−1,p (B2) satisfies C ∗u ∈ W−m,p (B1),where m = l − k > 0. Then given any s ∈ (0 , 1) and ρ ∈ C∞ 
+
+> c
+
+(Bs), if we define ψ as 
+
+ˆψ(ξ) = C ∗† (ξ) \C ∗(ρu ),
+
+then ψ ∈ Wk,p (Rn) and satisfies the estimate 
+
+∥ψ∥Wk,p (Rn) ⩽ c∥ρ∥Wl, ∞(Bs)
+
+
+
+∥C ∗u∥W−m,p (B1) + ∥u∥Wk−1,p (Bs)
+
+
+
+,
+
+where c = c(n, m, p, B, C ) > 0.Proof. Since by Lemma 2.2 we have C ∗† (ξ) is homogeneous of degree −l = −k − m, we can write 
+
+dDj ψ(ξ) = ˆKj (ξ)|ξ|j−l \C ∗(ρu ), where ˆKj (ξ) = C ∗† 
+
+ ξ
+
+|ξ|
+
+
+
+⊗
+
+ ξ
+
+|ξ|
+
+⊗j
+
+for each 0 ⩽ j ⩽ k and all ξ̸ = 0 . Using the Hörmander–Mikhlin multiplier theorem and (2.18), we can estimate 
+
+∥Dj ψ∥Lp(Rn) ≲ ∥Im+( k−j)C ∗(ρu )∥Lp(Rn) ≲ ∥C ∗(ρu )∥ ˙W−m−(k−j),p (Rn).
+
+Furthermore, since 0 < m + k − j ⩽ l and since we can write C ∗ in the form div l L by (2.2), by Lemma 3.6(a) we have 
+
+∥C ∗(ρu )∥ ˙W−m−(k−j),p (Rn) ≲ ∥C ∗(ρu )∥W−m−(k−j),p (B2).
+
+We will first consider the case j = k. Given any ϕ ∈ Wm,p ′ 
+
+> 0
+
+(B2) we have 
+
+⟨C ∗(ρu ), ϕ ⟩ = ⟨C ∗u, ρ ϕ ⟩ + X
+
+> |α|=l
+
+X
+
+> 0̸=β⩽α
+
+⟨C ∗ 
+
+> α
+
+∂βρ ∂ α−β u, ϕ ⟩
+
+⩽ ∥C ∗u∥W−m,p (B1)∥ρ ϕ ∥Wm,p ′ (Bs)
+
++ c∥u∥Wk−1,p (Bs)∥ρ∥Wl, ∞(Bs)∥ϕ∥Wm,p (Bs),
+
+where for the commutator terms we integrate by parts to move (at most) m derivatives on 
+
+u to the test function ϕ. Thus, we infer that 
+
+∥C ∗(ρu )∥W−m,p (B2) ⩽ c(n, m, C )∥ρ∥Wl, ∞(Bs)
+
+
+
+∥C ∗u∥W−m,p (B1) + ∥u∥Wk−1,p (Bs)
+
+
+
+,
+
+so by combining the above estimates we obtain (3.14) ∥Dkψ∥Lp(Rn) ≲ ∥ρ∥Wl, ∞(Bs)
+
+
+
+∥C ∗u∥W−m,p (B2) + ∥u∥Wk−1,p (Bs)
+
+
+
+.18 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+For 0 ⩽ j < k , given ϕ ∈ Wm+( k−j),p ′
+
+(B2) we can more simply estimate 
+
+⟨C ∗(ρu ), ϕ ⟩ ⩽ ∥ρu ∥Wk−1,p (Bs)∥ϕ∥Wm+1 ,p ′ (B2),
+
+thereby establishing that 
+
+∥Dj ψ∥Lp(Rn) ≲ ∥C ∗(ρu )∥W−m−(k−j),p (B2) ≲ ∥ρ∥Wl, ∞(Bs)∥u∥Wk−1,p (Bs),
+
+which with (3.14) gives the desired estimate. □
+
+Proof of Proposition 3.8. Given 0 < t < s < 1, we choose ρ ∈ C∞ 
+
+> c
+
+(B1) satisfying 1Bt ⩽
+
+ρ ⩽ 1Bs and |∇ j ρ| ⩽ cj (s − t)−j for all j = 1 , · · · , l . Then we can write 
+
+cρu = B†(ξ)B(ξ)cρu + C ∗† (ξ)C ∗(ξ)cρu =: bψ1 + bψ2,
+
+and in particular 
+
+\Dk−1(ρu ) = ( B†(ξ) ⊗ ξ⊗(k−1) ) \B(ρu ) + ( C ∗† (ξ) ⊗ ξ⊗(k−1) ) \C ∗(ρu ).
+
+By Lemma 3.9, we can estimate the second term as 
+
+∥ψ2∥Wk−σ,p (Bs) ⩽ ∥ψ2∥Wk,p (Bs) ⩽ c
+
+(s − t)l
+
+
+
+∥C ∗u∥W−m,p (B1) + ∥u∥Wk−1,p (Bs)
+
+
+
+.
+
+For the first term, since Lemma 2.2 implies that B† is homogeneous of degree −k, we can write 
+
+Dk−1ψ1 = B ∗ I1(B(ρu )) , where bB(ξ) = B†
+
+ ξ
+
+|ξ|
+
+
+
+⊗
+
+ ξ
+
+|ξ|
+
+⊗(k−1) 
+
+.
+
+Since ˆB is homogeneous of degree zero and smooth in Rn \ { 0}, by multiplier estimates (see [Tri73, §2.3.7]) combined with the endpoint estimate (3.13) we have 
+
+∥Dk−1ψ1∥ ˙B1−σ0,p   
+
+> ∞(Rn)
+
+≲ ∥I1(B(ρu )) ∥ ˙B1−σ0,p   
+
+> ∞(Rn)
+
+≲
+
+ˆ
+
+> B1
+
+|B(ρu )|,
+
+where σ0 = np (p − 1) . Hence for σ < σ 0 (which is equivalent to p < nn−σ ), using the local embedding ˙B1−σ0,p  
+
+> ∞,loc
+
+,→ ˙W1−σ,p  
+
+> loc
+
+from [Tri73, §3.3.1] we have 
+
+[Dk−1ψ1]W1−σ,p (B1) ⩽ c
+
+ˆ
+
+> B1
+
+|B(ρu )|.
+
+Therefore combining the above estimates and noting that ρu = u on Bt, we have 
+
+[Dk−1u]W1−σ,p (Bt) ⩽ [Dk−1(ρu )] W1−σ,p (Bs)
+
+≲ [Dk−1ψ1]W1−σ,p (Bs) + ∥ψ2∥Wk,p (Bs)
+
+≲
+
+ˆ
+
+> B1
+
+|B(ρu )| + c
+
+(s − t)l
+
+
+
+∥C ∗u∥W−m,p (B1) + ∥u∥Wk−1,p (Bs)
+
+
+
+.
+
+Since ρu vanishes on the boundary of Bt, we can estimate the lower order terms as 
+
+∥u∥Wk−1,p (Bt) ⩽ ∥ρu ∥Wk−1,p (Bs) ≲ [Dk−1(ρu )] W1−σ,p (Bs),
+
+from which (3.12) follows. □REGULARITY FOR A -QUASICONVEX INTEGRALS 19 
+
+3.3. A general solvability result. Theorem 3.10. Given any real constant coefficient differential operator P on Rn from 
+
+RA to RB , there exists N ∈ N such that the following holds: for any s ∈ R, r ∈ (0 , 1) and 
+
+u ∈ D′(B1, RA) such that Pu ∈ Ws, 2(B1, RB ), there exists v ∈ Ws−N, 2(Br, RA) such that 
+
+Pv = Pu in B1 and the estimate 
+
+∥v∥Ws−N, 2(Br ) ⩽ c∥Pu∥Ws, 2(B1)
+
+holds, where c = c(n, P, s, r ) > 0.
+
+This largely follows from the results in [Hör00, §7.6] and [Hör05, §15.2], where the key ingredient is a quantitative version of a solvability result due to Ehrenpreis [Ehr60], Malgrange [Mal63], and Palamadov [Pal70]. In what follows, the space of entire (analytic) functions u : Cn → CB will be denoted by A( Cn, CB ).
+
+Lemma 3.11 ([Hör00, Theorem 7.6.11]) . Let P ∈ C[ζ]B×A be a matrix of polynomials in Cn, then there exists N ∈ N such that the following holds: Let ϕ : Cn → R be globally Lipschitz and plurisubharmonic in that 
+
+|Dϕ (ζ)| ⩽ L for all ζ ∈ Cn,
+
+> n
+
+X
+
+> i,j =1
+
+wiwj ∂ζi ∂ζj ϕ(ζ) ⩾ 0 for all ζ, w ∈ Cn,
+
+Then given any U ∈ A( Cn, CA), there exists V ∈ A( Cn, CA) such that 
+
+P (ζ)V (ζ) = P (ζ)U (ζ) for all ζ ∈ Cn,
+
+and we have the estimate 
+
+ˆ
+
+> Cn
+
+|V (ζ)|2e−2ϕ(ζ)(1 + |ζ|2)−N dζ ⩽ c(P, L )
+
+ˆ
+
+> Cn
+
+|P (ζ)U (ζ)|2e−2ϕ(ζ) dζ
+
+holds, provided the right-hand side is finite. 
+
+We will apply the above result in conjunction with a quantitative version of the Paley– Wiener–Schwarz theorem, which is essentially contained in [Hör05, §15.2]. In what follows, given a compactly supported distribution u in Rn, we will identify its Fourier transform ˆu
+
+with its unique analytic continuation to Cn.
+
+Lemma 3.12. Let s ∈ R and w ∈ Ws, 2(Rn, RA) with spt( w) ⊂ Br. Then ˆw is entire and satisfies the estimate 
+
+ˆ
+
+> Cn
+
+| ˆw(ζ)|2e−2r|Im ζ|(1 + |Re ζ|2)s(1 + |Im ζ|2)−| s|− 2n dζ ⩽ c∥w∥Ws, 2(Rn),
+
+where c = c(n, s ).Proof. This follows from [Hör05, Lemma 15.2.2] with the choice k(ξ) = (1 + |ξ|2) s 
+
+> 2
+
+and 
+
+K = Br, noting that HK (η) = sup x∈Br ⟨x, η ⟩ = r|η|. □
+
+Lemma 3.13. Let W ∈ A( Cn, CB ) be an entire function. 
+
+(a) If there exists s ∈ R such that 
+
+ˆ   
+
+> {ζ∈Cn:|Im ζ|⩽1}
+
+|W (ζ)|2(1 + |Re ζ|2)s dζ < ∞,
+
+then there exists w ∈ Ws, 2(Rn, CB ) such that ˆw = W , and the estimate 
+
+ˆ   
+
+> {ζ∈Cn:|Im ζ|⩽1}
+
+| ˆw(ζ)|2(1 + |Re ζ|2)s dζ ⩾ c−1∥w∥Ws, 2(Rn)(3.15) 
+
+holds, where c = c(n, s ).20 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+(b) If there exists r > 0 and N ∈ Z such that 
+
+ˆ
+
+> Cn
+
+|W (ζ)|2e−2r|Im ζ|(1 + |ζ|)−N < ∞
+
+then there exists a distribution w ∈ D′(Rn, CB ) such that ˆw = W and spt( w) ⊂ Br.Proof. Let Dr(ζ) = {z ∈ Cn : |zi − ζi| < r for all 1 ⩽ i ⩽ n}, then from the analyticity of 
+
+W we have the mean value inequality (3.16) sup  
+
+> z∈D12
+> (ζ)
+
+|W (z)| ⩽ c
+
+ ˆ
+
+> D1(ζ)
+
+|W (z)|2 dz
+
+ 12
+
+for all ζ ∈ Cn,
+
+using for instance [Hör00, Theorem 2.2.3], noting the estimate is translation invariant. For (a), using (3.16) we have 
+
+ˆ 
+
+> B12
+> (ξ)
+
+|W (x)|2 dx ⩽ c
+
+ˆ
+
+> D1(ξ)
+
+|W (z)|2 dz for all ξ ∈ Rn,
+
+where B 12
+
+(ξ) denotes a ball in Rn. Also there is c1 = c1(n, s ) > 0 such that for each ξ ∈ Rn
+
+we have 
+
+c−11 (1 + |ξ|2)s ⩽ (1 + |Re ζ|2)s ⩽ c1(1 + |ξ|2)s for each ζ ∈ D1(ξ),
+
+from which we infer that 
+
+ˆ 
+
+> B12
+> (ξ)
+
+|W (x)|2(1 + |x|2)s dx ⩽ c c 21
+
+ˆ
+
+> D1(ξ)
+
+|W (z)|2(1 + |Re z|2)s dz for all ξ ∈ Rn,
+
+Applying this to a locally finite covering of R taking the form {B1/2(ξi)}i, we obtain the estimate (3.17) 
+
+ˆ
+
+> Rn
+
+|W (ξ)|2(1 + |ξ|2)s dξ ≲
+
+ˆ   
+
+> {ζ∈Cn:|Im ζ|⩽1}
+
+|W (ζ)|2(1 + |Re ζ|2)s dζ. 
+
+Taking the inverse Fourier transform we obtain w ∈ S ′(Rn, CB ) such that ˆw = W , and (3.17) implies that w ∈ Ws, 2(Rn, CB ) with the claimed estimate (3.15). For (b), we only show the claim for N ∈ N. If N ⩽ 0, then we can simply use that 
+
+1 ⩽ (1 + |ζ|)−N to estimate 
+
+ˆ
+
+> Cn
+
+|W (ζ)|2e−2r|Im ζ| dζ ⩽
+
+ˆ
+
+> Cn
+
+|W (ζ)|2e−2r|Im ζ|(1 + |ζ|)−N dζ < ∞.
+
+If N > 0 the argument is similar to that that of (a); there exists c2 = c2(n, N, r ) > 1
+
+such that for each ζ ∈ Cn we have 
+
+c−12 er|Im ζ|(1 + |ζ|) N 
+
+> 2
+
+⩽ er|Im z|(1 + |z|) N 
+
+> 2
+
+⩽ c2er|Im ζ|(1 + |ζ|) N 
+
+> 2
+
+for each z ∈ D1(ζ),so combining with (3.16) gives 
+
+sup  
+
+> z∈D12
+> (ζ)
+
+
+
+|W (z)|e−r|Im z|(1 + |z|)− N
+
+> 2
+
+
+
+⩽ c c 22
+
+ ˆ
+
+> D1(ζ)
+
+|W |2e−2r|Im z|(1 + |z|)−N dz
+
+ 12
+
+.
+
+By taking a suitable covering of Cn of the form {D 12
+
+(ζi)}i∈N and using the assumption in (b), we infer that 
+
+|W (ζ)| ≲ er|Im ζ|(1 + |ζ|) N 
+
+> 2
+
+< ∞.
+
+By the Paley–Wiener–Schwarz theorem (see e.g. [Hör03, Theorem 7.3.1]), we have W is the Fourier transform of a distribution supported in Br. □REGULARITY FOR A -QUASICONVEX INTEGRALS 21 
+
+Lemma 3.14. Given s ∈ R and any 0 < r < R ⩽ 1, consider 
+
+˜ϕ(ζ) = r|Im ζ| − s log(1 + |Re ζ|2) 12 + ( |s| + 2 n) log(1 + |Im ζ|2) 12 .
+
+Then there exists c = c(n, s, R − r) > 0 and a globally Lipschitz and plurisubharmonic function ϕ satisfying the estimates 
+
+˜ϕ(ζ) ⩽ ϕ(ζ) + c(3.18) 
+
+ϕ(ζ) ⩽ R|Im ζ| − s log(1 + |Re ζ|2) 12 + c. (3.19) 
+
+for all ζ ∈ Cn.Remark 3.15 . The function ˜ϕ arises from Lemma 3.12, where if w ∈ Ws, 2(Rn, RB ) satisfies 
+
+spt( w) ⊂ Br, then ´ 
+
+> Cn
+
+| ˆw(ζ)|2e−2| ˜ϕ(ζ)| dζ < ∞. Moreover, Lemma 3.13 gives a suitable converse. The construction of Lemma 3.14 allows us to modify ˜ϕ to be plurisubharmonic, at the cost of increasing the support, and this way we can apply Lemma 3.11. 
+
+Proof. To simplify notation, for ζ ∈ Cn we will write ξ = Re ζ and η = Im ζ. Let ρ be a standard mollifier on Rn, and given t ⩾ 0 to be determined we will define (3.20) ψt(ζ) = −s
+
+ˆ
+
+> Rn
+
+ρ(y) log(1 + |ξ + ( t2 + |η|2) 12 y|) d y + t− 12 (t2 + |η|2) 12 − (t2 + |η|2) 14 .
+
+By [Hör05, Lemma 15.2.3], there is t0 = t0(n, s ) ⩾ 1 such that ψt is plurisubharmonic for all t ⩾ t0. To estimate ψt, we use [Hör05, (15.2.7), (15.2.8)] for the first term in (3.20) along with the bound 
+
+t− 12 (t2 + |η|2) 12 + ( t2 + |η|2) 14 ⩽ 2t− 14 (t2 + |η|2) 12 ,
+
+for the latter two terms noting that t0 ⩾ 1 to estimate 
+
+|− s log(1 + |ξ|2) 12 − ψt(ζ)| ⩽ c1 log( t2 + |η|2) 12 + 2 t− 14 (t2 + |η|2) 12 ,(3.21) 
+
+|Dψ t(ζ)| ⩽ c2(t2 + |η|2)− 12 log( t2 + |η|2) 12 + 2 t− 14 (t2 + |η|2)− 12 |η|,(3.22) where c1, c 2 > 0 depend on n and s only. Now we define 
+
+ϕ(ζ) = r + R
+
+2 |η| + ψt(ζ),
+
+which is globally Lipschitz by (3.22) and plurisubharmonic since ψt is. Moreover, the cor-responding Lipschitz constant L depends on n and s only. To verify the claimed estimates, using (3.21) we can bound 
+
+˜ϕ(ζ) − ϕ(ζ)
+
+⩽ − R − r
+
+2 |η| + ( c1 + |s| + 2 n) log( t2 + |η|2) 12 + 2 t− 14 (t2 + |η|2) 12 ⩽ c2,
+
+(3.23) where we choose t ⩾ t0 large enough such that R−r 
+
+> 4
+
+⩾ 2t− 14 , which allows us to find 
+
+c2 = c2(n, s, R − r), establishing (3.18). For (3.19), we use (3.21) to obtain an analogous estimate as (3.23), namely 
+
+ϕ(ζ) −
+
+
+
+R|η| − s log(1 + |ξ|2) 12
+
+
+
+⩽ − R − r
+
+2 |η| + c1 log( t2 + |η|2) 12 + 2 t− 14 (t2 + |η|2) 12 ⩽ c3,
+
+where c3 = c3(n, s, R − r) can be found since we chose t so that R−r 
+
+> 4
+
+⩾ 2t− 14 . □
+
+Proof of Theorem 3.10. We argue as in [Hör00, Theorem 7.6.13]. Set f := Pu and X =
+
+{P∗w : w ∈ C∞ 
+
+> c
+
+(Br, RB )}, and define a linear functional T : X → R by sending 
+
+T (P∗w) = ⟨f, w ⟩,22 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+where ⟨· , ·⟩ is the usual distributional pairing. Observe that this is well-defined, since if 
+
+P∗w = 0 , then since f = Pu and w is compactly supported in B1, we have (3.24) T (P∗w) = ⟨Pu, w ⟩ = ⟨u, P∗w⟩ = 0 .
+
+We will now show that T is bounded with respect to the norm on W−s+N, 2(Br, RA),where N is as in Lemma 3.11 applied with P∗(ζ). To do this, let w ∈ C∞ 
+
+> c
+
+(B1, RB ) such that spt( w) ⊂ Br, and put R = 1+ r 
+
+> 2
+
+. We will show there exists w1 ∈ Ws−N, 2(Rn, RB )
+
+satisfying P∗w1 = P∗w in BR, spt( w1) ⊂ BR and 
+
+∥w1∥Ws−N, 2(Rn) ⩽ c∥P∗w∥Ws, 2(Rn).
+
+To establish the existence of w1, we follow the strategy outlined in Remark 3.15. Let 
+
+ϕ be the plurisubharmonic function obtained from Lemma 3.14 with the same r, with 
+
+R = 1+ r 
+
+> 2
+
+and with −s + N in place of s, and fix w ∈ C∞ 
+
+> c
+
+(Br, RB ). Then by applying Lemma 3.12 and (3.18) we can estimate 
+
+ˆ
+
+> Cn
+
+|P∗(ζ) ˆ w(ζ)|2e−2ϕ(ζ) dζ ⩽ c∥P∗w∥W−s+N, 2(Rn).
+
+Now applying Lemma 3.11 with P∗(ζ) we can find an entire function W1 : Cn → CB such that P∗(ζ) ˆ w(ζ) = P∗(ζ)W1(ζ) and the estimate 
+
+ˆ
+
+> Cn
+
+|W1(ζ)|2e−2ϕ(ζ)(1 + |ζ|2)−N dζ ⩽ c
+
+ˆ
+
+> Cn
+
+|P∗(ζ) ˆ w(ζ)|2e−2ϕ(ζ) dζ
+
+holds. Then using that ϕ satisfies (3.19) (with −s + N in place of s) we obtain 
+
+ˆ
+
+> Cn
+
+|W1(ζ)|2e−2R|Im ζ|(1 + |Re ζ|2)−s(1 + |Im ζ|2)−N dζ
+
+⩽ c
+
+ˆ
+
+> Cn
+
+|W1(ζ)|2e−2ϕ(ζ)(1 + |ζ|2)−N dζ ⩽ c∥P∗w∥W−s+N, 2(Rn),
+
+(3.25) where we used the rudimentary estimate (1 + |ζ|)−N ⩾ (1 + |Re ζ|)−N (1 + |Im ζ|)−N . Now by restricting the integral in (3.25) to |Im ζ| ⩽ 1 and by applying Lemma 3.13(a), there exists w1 ∈ W−s, 2(Rn, CB ) such that ˆw1 = W1 and we have the bound 
+
+∥w1∥W−s, 2(Rn) ⩽ c
+
+ˆ   
+
+> {ζ∈Cn:|Im ζ|⩽1}
+
+|W1(ζ)|2(1 + |Re ζ|2)−s dζ ⩽ c∥P∗w∥W−s+N, 2(Rn).
+
+Moreover using (3.25) with Lemma 3.13(b) and noting that R = 1+ r 
+
+> 2
+
+< 1, we obtain that 
+
+spt( w1) ⊂ BR ⊂ B1. Since P has real coefficients, we have P∗(Re w1) = Re P∗w1 =
+
+P∗w, so by replacing w1 by Re w1, we can assume that w1 is real valued. Since w and w1 are compactly supported in BR, the mollification (w − w1) ∗ ρε lies in 
+
+C∞ 
+
+> c
+
+(B1, CB ) for all ε < 1 − R. Thus by (3.24) we have 
+
+⟨f, w − w1⟩ = lim 
+
+> ε→0
+
+⟨f, (w − w1) ∗ ρε⟩ = 0 ,
+
+so we can estimate 
+
+|⟨ f, w ⟩| = |⟨ f, w 1⟩| ⩽ ∥f ∥Ws, 2(B1)∥w1∥W−s, 2(B1).
+
+Note that since w1 is compactly supported in B1, we have ∥w1∥W−s, 2(B1) ⩽ ∥w1∥W−s, 2(Rn).Hence by chaining the above estimates, we obtain 
+
+|⟨ f, w ⟩| ⩽ ∥f ∥Ws, 2(B1)∥w1∥W−s, 2(Rn) ⩽ c∥f ∥Ws, 2(B1)∥P∗w∥W−s+N, 2(Rn),
+
+that is, (3.26) ∥T (P∗w)∥ ⩽ c∥f ∥Ws, 2(B1)∥P∗w∥W−s+N, 2(Rn) for all P∗w ∈ X. REGULARITY FOR A -QUASICONVEX INTEGRALS 23 
+
+We will view X ⊂ W−s+N, 2(Rn, RA) equipped with the norm ∥·∥ W−s+N, 2(Rn). Then by (3.26), we can extend T to a linear functional ˜T on W−s+N, 2(Rn, RA) by extend-ing by density to X and setting ˜T = 0 on the orthogonal complement X⊥. Using that 
+
+W−s+N, 2(Rn, RA)∗ ∼= W s−N, 2(Rn, RA) holds with respect to the distributional pairing, there exists v ∈ Ws−N, 2(Rn, RA) such that ˜T = ⟨v, ·⟩ .Therefore 
+
+⟨f, w ⟩ = ˜T (P∗w) = ⟨v, P∗w⟩ = ⟨Pv, w ⟩ for all w ∈ C∞ 
+
+> c
+
+(Br, RB ),
+
+which precisely asserts that Pv = f = Pu in Br, and v moreover satisfies the estimate 
+
+∥v∥Ws−N, 2(Rn) = ∥T ∥ ⩽ c∥Pu∥Ws, 2(Rn).
+
+Thus the result follows by restricting v to Br. Finally, since v is obtained through the mapping 
+
+Ws, 2(Rn, RA) Pu 7 → T
+
+−−−−−→ X∗ T 7 → ˜T
+
+−−−−→ (X ⊕ X⊥)∗ = W −s+N, 2(Rn, RA)∗ ≃
+
+−→ Ws−N, 2(Rn, RA),
+
+the association u 7 → v is linear. □
+
+3.4. Proof of Theorem 3.1. We can now combine the ingredients from the previous sections to conclude. We will need the following lemma, which will be a consequence of Jensen’s inequality. 
+
+Lemma 3.16. Suppose λ > 0, and define Φ = 1 
+
+> λ
+
+E. Then for any f ∈ L1(B1) it holds that 
+
+(3.27) c−1
+
+> J
+
+E−1(λ) ∥f ∥L1(B1) ⩽ ∥f ∥LΦ(B1) ⩽ cJ
+
+E−1(λ) ∥f ∥L2(B1),
+
+where cJ ⩾ 1 only depends on n. Moreover the first inequality holds if f is a measure. Proof. By Jensen’s inequality applied with E(·), for s > 0 we have 
+
+1
+
+λ E
+
+
+
+> B1
+
+|f |/s dx
+
+
+
+⩽ 1
+
+λ B1
+
+E(f /s ) d x, 
+
+and choosing s = ∥f ∥LΦ(B1) ensures the right-hand side is bounded by a constant, which implies that E(∥f ∥L1(B1)/∥f ∥LΦ(B1)) ≲ λ. Rearranging this gives the first inequality, which extends to measures by a density argument. For the second inequality we apply Jensen to 
+
+E(√t) = √t + 1 − 1, which is concave, to estimate 
+
+> B1
+
+E(f /s ) d x ≲ E
+
+s
+
+> B1
+
+|f |2/s 2 dx
+
+
+
+= E(∥f ∥L2(B1)/s ).
+
+Choosing s so that E(∥f ∥L2(B1)/s ) = λ, we infer that ∥f ∥LΦ(B1) ≲ s = ∥f ∥L2(B1)/E −1(λ),establishing the result. □
+
+Proof of Theorem 3.1. By rescaling, we can assume that R = 1 . Set Φ = 1 
+
+> λ
+
+E with λ > 0
+
+to be determined. Since Bu ∈ M (B1), we have Bu ∈ W−n, 2(B1) by Sobolev embedding with the estimate (3.28) ∥Bu∥W−n, 2(B1) ⩽ c∥Bu∥M(B1) ⩽ cE −1(λ)∥Bu∥LΦ(B1),
+
+where we used (3.27) to obtain the last inequality. By applying Theorem 3.10 with P =(B, C ∗), θ1 = 1+ θ 
+
+> 2
+
+∈ (0 , 1) in place of θ and s = −n, there is N ∈ N and v ∈ W−n−N, 2(Bθ1 )
+
+satisfying Bv = Bu and C ∗v = 0 in Bθ1 , and the estimate (3.29) ∥v∥W−n−N, 2(Bθ1 ) ⩽ c∥Bu∥W−n, 2(B1)24 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+holds. We will set ν := −(n + N + 1) ∈ Z, then since ν + 1 < 0 and v ∈ Wν+1 ,2(Bθ1 ), for each |α| ⩽ −ν − 1 we can find vα ∈ L2(Bθ1 ) such that 
+
+v = X
+
+> |α|⩽−ν−1
+
+Dαvα, with ∥v∥Wν+1 ,2(Bθ1 ) ⩽ c X
+
+> |α|⩽−ν−1
+
+∥vα∥L2(Bθ1 ).
+
+Now using the second estimate in (3.27) and applying Lemma 3.7 to each vα, we have 
+
+∥vα∥W−1,Φq (Bθ1 ) ⩽ c∥vα∥LΦ(Bθ1 ) ⩽ cE−1(λ) ∥vα∥L2(Bθ1 )
+
+for each 1 < q < nn−1 . Hence it follows that (3.30) ∥v∥Wν, Φq (Bθ1 ) ⩽ c X
+
+> |α|⩽−ν−1
+
+∥vα∥W−1,Φq (Bθ1 ) ⩽ cE−1(λ) ∥v∥Wν+1 ,2(Bθ1 ).
+
+Combining the above estimates we infer that 
+
+∥v∥Wν, Φq (Bθ1 ) ⩽ c∥Bu∥LΦ(B1),
+
+where the constant c is independent of λ. By applying Lemma 3.7 with μ = Bu, we also have that 
+
+∥Bu∥W−1,Φq (B1) ⩽ c∥Bu∥LΦ(B1).
+
+Thus by applying Lemma 3.4 with φ(t) = Φ q(t), we have v ∈ Wk−1,Φq
+
+(Bθ) with the associated estimate 
+
+∥v∥Wk−1,Φq (Bθ ) ⩽ c ∥Bv∥LΦ(B1) + ∥v∥Wν, Φq (Bθ1 )
+
+ ⩽ c∥Bu∥LΦ(B1).
+
+Now choose λ = ´ 
+
+> B1
+
+E(Bu), then we have ∥Bu∥LΦ(B1) = 1 and thus ∥v∥Wk−1,Φq (Bθ ) ⩽ c.By the definitions of Φ and the Orlicz norm, and Proposition 2.4(c), we arrive at the desired the modular estimate 
+
+> k−1
+
+X
+
+> j=0
+
+ˆ
+
+> Bθ
+
+E(Dj v)q dx
+
+ 1
+
+> q
+
+⩽ c
+
+ˆ
+
+> B1
+
+E(Bu).
+
+For the fractional estimate, let s ∈ (0 , 1) and 1 < p < nn−s . Then by (3.28), (3.29) we have 
+
+∥v∥Wν,p (Bθ1 ) ⩽ c∥Bu∥W−n, 2(B1) ⩽ c∥Bu∥M(B1),
+
+noting that p ⩽ 2. Let θ2 = θ+θ1 
+
+> 2
+
+, so we have θ < θ 2 < θ 1. Then by applying Lemma 3.4 with φ(t) = tp along with the embedding M(B1) ,→ W−1,p (B1), we have v ∈ Wk−1,p (Bθ2 )
+
+with the associated estimate 
+
+∥v∥Wk−1,p (Bθ2 ) ⩽ c(∥Bv∥W−1,p (B1) + ∥v∥Wν,p (Bθ1 )) ⩽ c∥Bu∥M(B1).
+
+Then by applying Proposition 3.8 we have v ∈ Wk−s,p (B1/2) and the estimate 
+
+∥v∥Wk−1,p (Bθ ) ⩽ c(∥Bu∥M(B1) + ∥v∥Wk−1,p (Bθ2 )) ⩽ c∥Bu∥M(B1),
+
+from which the result follows by taking π = u − v. □
+
+Proof of Theorem 3.2 (sketch). As in the proof of Theorem 3.1, we can assume R = 1 . For the modular estimate, we will write Ep(t) = |Vp(t)|2 and put Φ( t) = 1 
+
+> λ
+
+Ep(t) for λ > 0
+
+to be determined. We will also set p0 = min {2, p } and p1 = max {2, p }. Then since 
+
+Φ( t1/p 0 ) is equivalent to a convex function and Φ( t1/p 1 ) to a concave function, arguing as in Lemma 3.16 we have (3.31) c−1
+
+E−1 
+
+> p
+
+(λ) ∥f ∥Lp0 (B1) ⩽ ∥f ∥LΦ(B1) ⩽ cE−1 
+
+> p
+
+(λ) ∥f ∥Lp1 (B1)REGULARITY FOR A -QUASICONVEX INTEGRALS 25 
+
+for all f ∈ Lp1 (B1). Since Bu ∈ Lp(B1), by Sobolev embedding (3.31) 1 we estimate 
+
+∥Bu∥W−n, 2(B1) ⩽ c∥Bu∥Lp0 (B1) ⩽ cE −1 
+
+> p
+
+(λ)∥Bu∥LΦ(B1).
+
+Setting θ1 = 1+ θ 
+
+> 2
+
+, we can use Theorem 3.10 there is N ∈ N and v ∈ W−n−N, 2(Bθ1 ) with 
+
+Bv = Bu and C ∗v = 0 in Bθ1 such that 
+
+∥v∥W−n−N, 2(Bθ1 ) ⩽ c∥Bu∥W−n, 2(B1).
+
+We will also choose m1 ∈ N such that 2n > p 0(n−2m1), which ensures that Wm1,2(Bθ1 ) ,→
+
+Lp1 (Bθ1 ), and set ν = −(n + N + m1). Arguing as in the proof of (3.30), and using (3.31) and the above estimates give 
+
+E−1 
+
+> p
+
+(λ)∥v∥W−n−N −m1,Φ(Bθ1 ) ⩽ c∥v∥W−n−N, 2(Bθ1 ) ⩽ cE −1 
+
+> p
+
+(λ)∥Bu∥LΦ(B1).
+
+Setting θ2 = θ+θ1 
+
+> 2
+
+we can then apply Lemma 3.4 with this Φ to infer that 
+
+∥v∥Wk−1,Φ(Bθ2 ) ⩽ c(∥v∥W−n−N −1,Φ(Bθ1 ) + ∥Bu∥LΦ(Bθ1 )) ⩽ c∥Bu∥LΦ(B1),
+
+where the constant c is independent of λ. Taking λ = ´ 
+
+> B1
+
+Ep(Bu) d x we obtain the modular estimate 
+
+> k−1
+
+X
+
+> j=0
+
+ˆ
+
+> Bθ2
+
+|Vp(Dj v)|2 dx ⩽ c
+
+ˆ
+
+> B1
+
+|Vp(Bu)|2 dx
+
+and the final derivative can be estimated by applying [LR24, Proposition 5.1]. Therefore (3.2) following by taking π = u − v. The norm estimate follows by taking Φ( t) = tp
+
+instead. □
+
+4. Partial regularity 
+
+In this section we will establish the main partial regularity theorem. Throughout this section, B will be a constant rank operator of order k with potential operator C of order 
+
+l > k . By replacing C with ∆qC for sufficiently large q if necessary, we will moreover assume that l > k . The local minimisers we consider will additionally satisfy C ∗u = 0 
+
+in Ω; in Section 5.1 we will show how to locally reduce to this case, where the proof of Theorem B will be presented. We will establish the following ε-regularity theorem: 
+
+Theorem 4.1. Let f satisfy (H1 ), (H2 ), (H3 ′) and (H4 ), and let u ∈ Wk−1,1(Ω) with 
+
+Bu ∈ M (Ω) and C ∗u = 0 be a local minimiser of (1.3) . Then if Ω′ ⋐ Ω, M > 0 and 
+
+α ∈ (0 , 1) , there is ε > 0 and R1 > 0 such that if x ∈ Ω′ and 0 < R < R 1 such that 
+
+|(Bu)BR(x0)| ⩽ M, BR(x)
+
+E(Bu − (Bu)BR(x)) < ε, 
+
+we have u ∈ Ck,α (BR/ 2(x)) .
+
+The proof of Theorem 4.1 will involve establishing decay estimates for the excess energy ,which for fixed α ∈ (0 , 1) is defined as 
+
+E (u, x 0, R ) := R2α + BR(x0)
+
+E(Bau − (Bu)x0,R ) d x + BR(x0)
+
+|Bsu|.(4.1) 26 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+4.1. Caccioppoli-type inequality. The following Caccioppoli-type inequality is an ana-logue of [Eva86]. We remark that we do not use the constant rank property in the below proof, so the result holds for any homogeneous and constant-coefficient B under the cor-responding quasiconvexity assumption ( H3 ′). 
+
+Proposition 4.2. Suppose that the integrand f satisfies the assumptions (H1 ), (H2 ),
+
+(H3 ′) and (H4 ), u ∈ Wk−1,1(Ω , U ) such that Bu ∈ M (Ω , V ) is a local minimizer of (1.3) ,and the map a : Ω → V is a polynomial of order k with |Ba| ⩽ M for some M > 0. Then for any τ ∈ (0 , 1) and BR(x0) ⋐ Ω, we have the estimate 
+
+(4.2) 
+
+ˆ 
+
+> BR
+> 2
+> (x0)
+
+E(B(u − a)) ⩽ c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> BR(x0)
+
+E
+
+ Di(u − a)
+
+Rk−i
+
+
+
+dx
+
++ CR 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> BR(x0)
+
+|Di(u − a)|
+
+Rk−i dx + CR 
+
+ˆ
+
+> BR(x0)
+
+|B(u − a)|,
+
+where c = c(n, V, B, M, L, ℓ, L x0,R,M +1 ) > 0.Proof. Fix a ball BR := BR(x0) ⋐ Ω and s, t > 0 such that R 
+
+> 2
+
+< s < t < R . Take a cut-off function ρ ∈ C∞ 
+
+> c
+
+(Bt) with 
+
+1Bs ⩽ ρ ⩽ 1Bt , |Diρ| ⩽ ci(t − s)−i for all i = 1 , . . . , k. 
+
+Given a as in the assumption, let ˜f = fBa be the shifted integrand as in (2.7). We will also put ˜u := u − a, φ := ρ˜u and ψ := (1 − ρ)˜ u = ˜ u − φ. By the strong quasiconvexity estimate (2.10) from Lemma 2.6 applied with φ and noting that φ ≡ ˜u on Bs, we have 
+
+ˆ
+
+> Bs
+
+E(B ˜u) ⩽
+
+ˆ
+
+> Bt
+
+E(Bφ) ≲M,ℓ 
+
+ˆ
+
+> Bt
+
+˜f (Bφ)=
+
+ˆ
+
+> Bt
+
+˜f (B ˜u) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u − Bψ) − ˜f (B ˜u)) ,
+
+where we used that φ = ˜ u − ψ in the last line. By minimality of u, we can estimate the first term as 
+
+ˆ
+
+> Bt
+
+˜f (B ˜u) = 
+
+ˆ
+
+> Bt
+
+f (x, Bu) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, Bu)) 
+
+⩽
+
+ˆ
+
+> Bt
+
+f (x, Bu − Bφ) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, Bu)) =
+
+ˆ
+
+> Bt
+
+˜f (Bψ) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, Bu)) + 
+
+ˆ
+
+> Bt
+
+(f (x, Bψ + Ba) − ˜f (Bψ)) ,
+
+since ψ + a = u − φ.Using the definition of ˜f , and noting that ˜u − ψ = φ is compactly supported in Bt, we can write 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − ˜f (Bψ)) = 
+
+ˆ
+
+> Bt
+
+(f (x0, Bu) − f (x0, Bψ + Ba)) + ∂z f (x0, Ba) ·
+
+ˆ
+
+> Bt
+
+B(˜ u − ψ)
+
+| {z }
+
+> =0
+
+.
+
+Combining the above estimates, we obtain 
+
+ˆ
+
+> Bs
+
+E(B ˜u) ≲
+
+ˆ
+
+> Bt
+
+˜f (Bψ) + 
+
+ˆ
+
+> Bt
+
+(f (x0, Bu) − f (x0, Bψ + Ba)) +
+
+ˆ
+
+> Bt
+
+(f (x, Bψ + Ba) − f (x, Bu)) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u − Bψ) − ˜f (B ˜u)
+
+
+
+(4.3) 
+
+=: c(I + II + III + IV ).REGULARITY FOR A -QUASICONVEX INTEGRALS 27 
+
+For the first term, we will use (2.8) from Lemma 2.6 and that ψ ≡ 0 on Bs to estimate (4.4) I ⩽ c
+
+ˆ
+
+> Bt\Bs
+
+E(Bψ) ⩽ c
+
+ˆ
+
+> Bt\Bs
+
+E(B ˜u) + c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+E
+
+ Di ˜u)(t − s)k−i
+
+
+
+dx. 
+
+For the next two terms, we claim that (4.5) II + III ⩽ ct 
+
+ˆ
+
+> Bt
+
+|B ˜u| dx + ct 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+|Di ˜u|
+
+(t − s)k−i dx. 
+
+We will first prove this assuming Bu has no singular part, and extend the result by density. By mollification, we can find a sequence {um} ⊂ C∞(Bt) such that Bum → Bu
+
+area-strictly in Bt and um → u strongly in Wk−1,1(Bt). Then using ( H2 ) we estimate 
+
+ˆ
+
+> Bt
+
+(f (x0, Bum) − f (x0, Bψm + Ba)) d x +
+
+ˆ
+
+> Bt
+
+(f (x, Bψm + Ba) − f (x, Bum)) d x
+
+=
+
+ˆ
+
+> Bt
+
+ˆ 10
+
+(∂z f (x0, Bum − τ Bφm) − ∂z f (x, Bum − τ Bφm)) · Bφm dτ dx
+
+⩽ c
+
+ˆ
+
+> Bt
+
+ˆ 10
+
+|x − x0|| Bφm| dx ⩽ ct 
+
+ˆ
+
+> Bt
+
+|Bφm| dx
+
+⩽ ct 
+
+ˆ
+
+> Bt
+
+|B(um − a)| dx + ct 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+|Di(um − a)|
+
+(t − s)k−i dx, 
+
+where φm = ρ(um − a) and ψm = (1 − ρ)( um − a). The passage to the limit follows by applying Lemma 2.8, which relies on ( H4 ). For IV , notice that the integrand vanishes on Bs. We consider the absolutely continuous and singular parts separately, and use (2.8) to obtain 
+
+IV ⩽ c
+
+ˆ
+
+> Bt\Bs
+
+E(Ba ˜u) + E(Bψ) d x + c
+
+ˆ
+
+> Bt\Bs
+
+|Bs ˜u|
+
+⩽ c
+
+ˆ
+
+> Bt\Bs
+
+E(B ˜u) + c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+E
+
+ Di ˜u
+
+(t − s)k−i
+
+
+
+dx. 
+
+(4.6) Then (4.3)-(4.6) together imply 
+
+ˆ
+
+> Bs
+
+E(B ˜u) ⩽ c1
+
+ˆ
+
+> Bt\Bs
+
+E(B ˜u) + c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+E
+
+ Di ˜u
+
+(t − s)k−i
+
+
+
+dx
+
++ ct 
+
+ˆ
+
+> Bt
+
+|B ˜u| +
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+|Di ˜u|
+
+(t − s)k−i dx
+
+!
+
+,
+
+and we add c1
+
+´ 
+
+> Bs
+
+E(B ˜u) to both sides to get 
+
+ˆ
+
+> Bs
+
+E(B ˜u) ⩽ c1
+
+c1 + 1 
+
+ˆ
+
+> Bt
+
+E(B ˜u)+ c1
+
+c1 + 1 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+E
+
+ Di ˜u
+
+(t − s)k−i
+
+
+
+dx + c1
+
+c1 + 1 t
+
+ˆ
+
+> Bt
+
+|B ˜u| +
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+|Di ˜u|
+
+(t − s)k−i dx
+
+!
+
+.
+
+Now the desired inequality (4.2) follows by iteration; more precisely we can use [LR24, Lemma 2.11] with 
+
+Φ( r) = 
+
+ˆ
+
+> Bs
+
+E(B ˜u), B = cR 
+
+ˆ
+
+> BR
+
+|B ˜u|,28 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Ψk−i(t) = 
+
+ˆ
+
+> BR
+
+E
+
+ Di ˜utk−i
+
+
+
+dx + R
+
+ˆ
+
+> Bt
+
+|Di ˜u|
+
+tk−i dx, 
+
+which concludes the proof. □
+
+4.2. A-harmonic approximation. We will adapt the A-harmonic approximation lemma, which first appeared in the context of geometric problems in [Sim83; Sim96], and was adapted to the variational setting in [DG00; DGG00; DS02; DGK05]. In the constant rank setting this result is new, and relies on Theorem C along with an L2-based solvability result. 
+
+Lemma 4.3. Let ε > 0 and 0 < λ ⩽ Λ, then there exists K = K(n, B, C , λ, Λ) > 0 and 
+
+δ = δ(n, B, C , λ, Λ, ε ) > 0 for which the following holds: Suppose that A : V × V → R is a symmetric bilinear operator with constant coefficients and is uniformly elliptic in the wave cone ΛA , in that 
+
+(4.7) λ|v|2 ⩽ A[v, v ] ⩽ Λ|v|2 for all v ∈ ΛA ,
+
+for some Λ ⩾ λ > 0. Let x0 ∈ Rn and r > 0. If w ∈ Wk−1,1(Br(x0)) satisfies 
+
+Bw ∈ M (Br(x0)) , C ∗w = 0 , 
+
+> Br(x0)
+
+E(Bw) ⩽ γ2 ⩽ 1, 
+
+> Br(x0)
+
+A[Bw, Bφ] ⩽ γδ sup  
+
+> Br(x0)
+
+|Bφ|, for any φ ∈ C∞ 
+
+> c
+
+(Br(x0)) ,(4.8) 
+
+then there exists a function h : Br/ 2(x0) → U which is A-harmonic in that 
+
+ˆ
+
+> Br/ 2(x0)
+
+A[Bh, Bφ] d x = 0 , for any φ ∈ C∞ 
+
+> c
+
+(Br/ 2(x0)) , C ∗h = 0 ,(4.9) 
+
+and satisfies the estimates 
+
+> Br/ 2(x0)
+
+E(Bh) ⩽ K and 
+
+> k−1
+
+X 
+
+> i=0 Br/ 2(x0)
+
+E
+
+ Di(w − γh )
+
+rk−i
+
+
+
+dx ⩽ γ2ε. 
+
+We will isolate one result on solvability of elliptic systems, which will be used in the proof. 
+
+Lemma 4.4. Suppose r > 0 and 0 < λ ⩽ Λ, and let A, ˜A be uniformly ΛA -elliptic coefficient fields in the sense that (4.7) holds. If h ∈ Wk−1,2(Br) with Bh ∈ L2(Br) is 
+
+A-harmonic in that 
+
+ˆ
+
+> Br
+
+A[Bh, Bφ] d x = 0 for all φ ∈ C∞ 
+
+> c
+
+(Br), C ∗h = 0 ,
+
+then there exists ˜h ∈ Wk−1,2(Br) which is ˜A-harmonic in that 
+
+ˆ
+
+> Br
+
+˜A[B˜h, Bφ] d x = 0 for all φ ∈ C∞ 
+
+> c
+
+(Br), C ∗˜h = 0 ,
+
+and we have the estimate 
+
+∥˜h − h∥Wk, 2(Br ) ⩽ c| ˜A − A|∥ Bh∥L2(Br ),
+
+where c = c(n, B, C , λ, Λ) > 0.Proof. Consider the space 
+
+X = {Bφ : φ ∈ C∞ 
+
+> c
+
+(Br)} L2(Br ) ⊂ L2(Br).REGULARITY FOR A -QUASICONVEX INTEGRALS 29 
+
+We equip X with the inner product ⟨V, W ⟩ ˜A = ´
+
+> Br
+
+˜A[V, W ], which by Parseval’s theorem and the ΛA -ellipticity condition (4.7) is equivalent to the L2 inner product. Then by the Riesz representation theorem, we can find V ∈ X such that (4.10) 
+
+ˆ
+
+> Br
+
+˜A[V, Φ] d x = −
+
+ˆ
+
+> Br
+
+˜A[Bh, Φ] d x for all Φ ∈ X. 
+
+Extending V by zero to Rn, we define v ∈ S ′(Rn) to satisfy 
+
+ˆv(ξ) = B†(ξ) ˆV (ξ) for all ξ ∈ Rn,
+
+so in particular Bv = V . Since V ∈ L2(Rn), by Fourier multiplier estimates we have (4.11) ∥v∥Wk, 2(Br ) = ∥ ˇB† ∗ Bv∥Wk, 2(Rn) ⩽ c∥Bv∥L2(Rn) = c∥Bv∥L2(Br ).
+
+Now using the A-harmonicity of h, (4.10) and that Bv = V ∈ X, we have 
+
+ˆ
+
+> Br
+
+|Bv|2 dx ≲
+
+ˆ
+
+> Br
+
+˜A[V, V ] d x
+
+= −
+
+ˆ
+
+> Br
+
+˜A[Bh, V ] d x +
+
+ˆ
+
+> Br
+
+A[Bh, V ] d x
+
+=
+
+ˆ
+
+> Br
+
+(A − ˜A)[ Bh, Bv] d x
+
+≲ |A − ˜A|
+
+ˆ
+
+> Br
+
+|Bh|2
+
+ 12 ˆ
+
+> Br
+
+|Bv|2 dx
+
+ 12
+
+,
+
+so combining with (4.11) we infer that 
+
+∥v∥Wk, 2(Br ) ⩽ c|A − ˜A|∥ Bh∥L2(Br ).
+
+Therefore the result follows by taking ˜h = h + v. □
+
+Proof of Lemma 4.3. By means of the following reduction, it suffices to consider the case of the unit ball Br(x0) = B1(0) : we will rescale w by considering wr(y) = w(x0 + ry )/r k.To verify the scaling for Bw, choose s ∈ (0 , r ) such that |Bw|(∂B s(x0)) = 0 . Then the mollification wη = w ∗ ρη satisfies (wη)ρ = ( wρ)η/ρ , and we have B(wη(x0 + r ·)) →
+
+B(w(x0 + r ·) area-strictly in Bs/r , verifying that 
+
+B(w(x0 + r ·)/r k) = ( Bw)( x0 + r ·) in Bs/r .
+
+Since this holds for almost all s ∈ (0 , r ), we infer the correct scaling. We proceed by contradiction, so let K > 0 to be determined and suppose the result fails. Then there exists ε > 0 and for each m ∈ N there exists wm ∈ Wk−1,1(B1), coefficient fields Am satisfying (4.7) and γm ∈ (0 , 1] satisfying 
+
+Bwm ∈ M (B1), C ∗wm = 0 ,(4.12) ˆ
+
+> B1
+
+E(Bwm) ⩽ γ2 
+
+> m
+
+⩽ 1,
+
+ˆ
+
+> B1
+
+Am[Bwm, Bφ] ⩽ γm
+
+m sup 
+
+> B1
+
+|Bφ| for any φ ∈ C∞ 
+
+> c
+
+(B1),
+
+and for any h that is Am-harmonic on B1/2 in that (4.9) holds and satisfies the bound ffl  
+
+> B1/2
+
+E(Bh) ⩽ K, we have (4.13) 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(Di(wm − γmh)) d x > ε. 30 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+By Lemma 2.5 we can estimate 
+
+ˆ
+
+> B1
+
+|Bwm| ⩽ |B1|
+
+
+
+3 B1
+
+E(Bwm)
+
+ 12
+
+⩽ c(n)γm.
+
+We will apply Theorem 3.1, which gives πm ∈ Wk−1,1(B3/4) such that (B, C ∗)πm = 0 and the estimates 
+
+∥wm − πm∥Wk−s,p (B3/4) ⩽ c
+
+ˆ
+
+> B1
+
+|Bwm| ⩽ c γ m,(4.14) 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> B3/4
+
+E(Di(wm − πm)) p dx
+
+! 1
+
+> p
+
+⩽ c
+
+ˆ
+
+> B1
+
+E(Bwm),(4.15) hold for s ∈ (0 , 1) and 1 < p < nn−s and all m ∈ N. We then set 
+
+vm = wm − πm
+
+γm
+
+,
+
+which by (4.14) satisfies ∥vm∥Wk−s,p (B3/4). Then by passing to a subsequence, we can find a limit map h in B3/4 satisfying (4.16) 
+
+
+
+vm → h in Wk−1,p (B3/4)
+
+Divm → Dih a.e. in B3/4 for all i = 0 , . . . , k − 1
+
+Bvm ∗
+
+⇀ Bh in M(B3/4).
+
+Moreover, by passing to a further subsequence if necessary, we can assume that Am → A,where the limit field also satisfies (4.7). Passing to the distributional limit in (4.12) 2 and (4.8), we have C ∗h = 0 in B3/4 and 
+
+ˆ
+
+> B3/4
+
+A[Bh, Bφ] = 0 , for any φ ∈ C∞ 
+
+> c
+
+(B3/4).
+
+By the weak ∗ convergence of Bwm and convexity of E(·), we have 
+
+ˆ
+
+> B3/4
+
+|Bh| ⩽ lim inf 
+
+> m→∞
+
+ˆ
+
+> B3/4
+
+|Bvm| ⩽ c, 
+
+ˆ
+
+> B3/4
+
+E(Bh) ⩽ lim inf 
+
+> m→∞
+
+ˆ
+
+> B3/4
+
+E(Bvm) ⩽ lim inf 
+
+> m→∞
+
+ˆ
+
+> B1
+
+γ−2 
+
+> m
+
+E(Bvm) ⩽ 1.
+
+Also using the A-harmonicity of h, [LR24, Theorem 5.2], (4.14) and (4.16), we have h ∈
+
+C∞(B7/8) and the following estimate 
+
+∥Bh∥L2(B1/2) ⩽ c
+
+ˆ
+
+> B3/4
+
+|Dk−1h| dx = lim  
+
+> m→∞
+
+c
+
+ˆ
+
+> B3/4
+
+|Dk−1vm| dx ⩽ c(n, B, C , λ, Λ) .(4.17) We wish to modify h to be Am-harmonic, for which we apply Lemma 4.4 on B1/2 to each 
+
+h = hm and ˜A = Am which gives maps ˜hm ∈ Wk−1,2(B1/2) that are Am-harmonic and satisfies the estimates (4.18) ∥˜hm − h∥Wk, 2(B1/2) ≲ c|Am − A| → 0
+
+as m → ∞ , where we used (4.17) and that Am → A.Using (4.17) and (4.18) with Proposition 2.4(a) and (d), we can estimate 
+
+> B1/2
+
+E(B˜hm) d x ⩽ c B1/2
+
+|B(˜hm − h)|2 + |Bh| dx ⩽ c1,REGULARITY FOR A -QUASICONVEX INTEGRALS 31 
+
+and we choose K = c1. Therefore we can apply (4.13) with the Am-harmonic function 
+
+˜hm + πm/γ m to obtain (4.19) 
+
+> k−1
+
+X
+
+> i=0
+
+Ii,m := 
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(Di(wm − γm˜hm − πm)) d x ⩾ ε. 
+
+We will show that Ii,m → 0 as m → ∞ for each 0 ⩽ i ⩽ k − 1, which will give the desired contradiction. For each such i, using Proposition 2.4(d) we can estimate 
+
+Ii,m ≲
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(Di(wm − γmh − πm)) d x +
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(γmDi(h − ˜hm)) d x. 
+
+Since ˜hm → h strongly in Wk, 2(B1/2) by (4.18), combined with Proposition 2.4(a) we have 
+
+lim sup 
+
+> m→∞
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(γmDi(h − ˜hm)) d x ⩽ c
+
+ˆ
+
+> B1/2
+
+|Di(h − ˜hm)|2 dx = 0 .
+
+For the first term, using (4.15) we have (4.20) 
+
+> k−1
+
+X
+
+> i=0
+
+ ˆ
+
+> B3/4
+
+1
+
+γ2pm
+
+E(Di(wm − πm)) p dx
+
+ 1
+
+> p
+
+⩽ cγ2
+
+> m
+
+ˆ
+
+> B1
+
+E(Bwm) ⩽ c
+
+for 1 < p < nn−1 . Also since each Dih is bounded on B1/2 for i = 0 , . . . , k − 1, using Proposition 2.4(a) we have (4.21) 1
+
+γ2pm
+
+ˆ
+
+> B1/2
+
+E(γmDih)p dx ⩽
+
+ˆ
+
+> B1/2
+
+|Dih|p dx ⩽ c. 
+
+Therefore setting 
+
+em := 1
+
+γ2
+
+> m
+
+E(Di(wm − γmh − πm)) ≲ 1
+
+γ2
+
+> m
+
+E(Di(wm − πm)) + 1
+
+γ2
+
+> m
+
+E(γmDih),
+
+which we have estimated using Proposition 2.4(d), by (4.20) and (4.21) we have em is uniformly bounded in Lp(B1/2), and hence is uniformly integrable on B1/2. Moreover by (4.16) 2, we have Di(wm − γmh − πm) = γmDi(vm − h) → 0 a.e. in B1/2, and so by Proposition 2.4(a) we have 
+
+lim sup 
+
+> m→∞
+
+em ⩽ c lim 
+
+> m→∞
+
+|Di(wm − γh − πm)|2
+
+γ2
+
+> m
+
+= 0 a.e. in B1/2.
+
+Therefore, by Vitali’s convergence theorem we have 
+
+lim 
+
+> m→∞
+
+ˆ
+
+> B1/2
+
+1
+
+γ2
+
+> m
+
+E(Di(wm − γmh − πm)) d x = 0 ,
+
+so we that infer each Ii,m → 0 as m → ∞ . This contradicts (4.19), thereby completing the proof. □
+
+4.3. Almost A-harmonicity. The following lemma asserts that minimizers u of (1.3) are locally almost A-harmonic in the sense that (4.8) holds for a suitable A, allowing us to apply Lemma 4.3. It turns out that we will only use the extremality of u, namely that u
+
+satisfies the Euler-Lagrange system (4.22) 
+
+ˆ
+
+> Ω
+
+∂z f (x, Bau) · Bφ dx = 0 for all φ ∈ C∞ 
+
+> c
+
+(Ω) .
+
+This follows from local minimality, which implies the criticality of the mapping 
+
+t 7 →
+
+ˆ
+
+> Ω
+
+f (x, Bu + tBφ) = 
+
+ˆ
+
+> Ω
+
+f (x, Bau + tBφ) d x +
+
+ˆ
+
+> Ω
+
+f ∞(x, Bsu) at t = 0 .32 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Indeed differentiating at t = 0 we infer (4.22), noting that, since Bsφ = 0 , the singular part is constant along such variations. 
+
+Lemma 4.5. Let f satisfy (H1 ), (H2 ) and (H3 ′), let u ∈ Wk−1,1(Ω) be a local minimiser of (1.3) , and fix M > 0 and α ∈ (0 , 1) . Then for any ball BR(x0) ⋐ Ω with |(Bu)x0,R | < M ,setting A := ∂2 
+
+> z
+
+f (x0, (Bu)x0,R ), we have u satisfies 
+
+> BR(x0)
+
+A[Bu, Bφ] ⩽ c1(E 12α (R) + E (R) + ω 12 (cE 12 (R)) E 12 (R)) sup 
+
+> BR(x0)
+
+|Bφ|
+
+for any φ ∈ C∞ 
+
+> c
+
+(BR(x0)) , where E (R) := E (u, x 0, R ) is the excess from (4.1) , ω := 
+
+ωx0,R,M +1 is as in (2.6) and c1 = c1(n, V, L, L x0,R,M +1 ) > 0.Proof. Writing BR := BR(x0), let φ ∈ C∞ 
+
+> c
+
+(BR(x0)) . Then we can write Euler-Lagrange system (4.22) as 
+
+0 = BR
+
+∂z f (x, Bau) · Bφ dx = BR
+
+(∂z f (x, Bau) − ∂z f (x0, Bau)) · Bφ dx
+
++ BR
+
+(∂z f (x0, Bau) − ∂z f (x0, (Bu)R)) · Bφ dx =: BR
+
+(A1 + A2) d x, 
+
+noting that ffl  
+
+> BR
+
+Bφ dx = 0 . By definition of the excess we have E (R) ⩾ R2α, and combined with the Lipschitz continuity of ∂z f (·, z ) as in ( H2 ) we can estimate 
+
+> BR
+
+A1 dx ⩽ LR sup 
+
+> BR
+
+|Bφ| ⩽ LE 12α (R) sup 
+
+> BR
+
+|Bφ|.
+
+Now consider 
+
+> BR
+
+A[Bu, Bφ] = BR
+
+A[Bau − (Bu)R, Bφ] d x + BR
+
+A[Bsu, Bφ],
+
+recalling that A = ∂2 
+
+> z
+
+f (x0, (Bu)R). Define the sets 
+
+E+ := {x ∈ BR : |Bau − (Bu)R| ⩾ 1}, E− := {x ∈ BR : |Bau − (Bu)R| < 1},
+
+then we have 
+
+> BR
+
+A[Bu, Bφ] − BR
+
+A2 dx = 1
+
+|BR|
+
+ˆ
+
+> E+
+
++
+
+ˆ
+
+> E−
+
+
+
+(A[Bau − (Bu)R, Bφ] − A2) d x
+
++ BR
+
+A[Bsu, Bφ] =: J1 + J2 + J3.
+
+We will abbreviate ˜L := Lx0,R,M +1 and ω := ωx0,R,M +1 from (2.5) and (2.6) in what follows. Since |A| ⩽ ˜L we can estimate the third term as 
+
+|J3| ⩽ ˜L sup 
+
+> BR
+
+|Bφ| BR
+
+|Bsu| ⩽ ˜L sup 
+
+> BR
+
+|Bφ|E (R).
+
+To estimate J1, we need to control the size of E+ using Proposition 2.4(a) as 
+
+|E+| ⩽
+
+ˆ
+
+> E+
+
+|Bau − (Bu)R| dx ⩽ c
+
+ˆ
+
+> BR
+
+E(Bau − (Bu)R) d x, 
+
+which together with the boundedness of ∂z f (x, z ) from (2.4) implies 
+
+|J1| ⩽ 1
+
+|BR| sup 
+
+> BR
+
+|Bφ|
+
+
+
+˜L
+
+ˆ
+
+> E+
+
+|Bau − (Bu)R| dx + c(n, V, L )|E+|
+
+
+
+⩽ c(n, V, L, ˜L) sup 
+
+> BR
+
+|Bφ| BR
+
+E(Bau − (Bu)R) d x ⩽ c sup 
+
+> BR
+
+|Bφ| E (R).REGULARITY FOR A -QUASICONVEX INTEGRALS 33 
+
+For J2, we will use the fundamental theorem of calculus, (2.6) and Proposition 2.4(a) to estimate 
+
+|J2| ⩽ ˜L
+
+|BR|
+
+ˆ
+
+> E−
+
+ω(|Bau − (Bu)R|)|Bau − (Bu)R|| Bφ| dx
+
+⩽ ˜Lpω(1) 
+
+|BR| sup 
+
+> BR
+
+|Bφ|
+
+ˆ
+
+> E−
+
+ω(cpE(Bau − (Bu)R)) d x
+
+ 12 ˆ
+
+> E−
+
+|Bau − (Bu)R|2 dx
+
+ 12
+
+⩽ c sup 
+
+> BR
+
+|Bφ| ω 12 c
+
+
+
+> BR
+
+E(Bau − (Bu)R) d x
+
+1/2! 
+
+> BR
+
+E(Bau − (Bu)R) d x
+
+1/2
+
+⩽ c sup 
+
+> BR
+
+|Bφ| ω 12 (cE 12 (R)) E 12 (R),
+
+where the penultimate line follows from Jensen’s inequality, and c = c(n, V, ˜L) > 0.Combining the above, we arrive at the desired estimate 
+
+> BR
+
+A[Bu, Bφ] = − BR
+
+A1 dx + BR
+
+(A[Bu, Bφ] − A2)
+
+⩽ c(E 12α (R) + E (R) + ω 12 (cE 12 (R)) E 12 (R)) sup 
+
+> BR
+
+|Bφ|. □
+
+4.4. Excess decay estimate. Combining the previous results, we obtain the following decay estimate for the excess energy. 
+
+Proposition 4.6. Let f satisfy (H1 ), (H2 ), (H3 ′) and (H4 ), let u ∈ Wk−1,1(Ω) be a local minimiser of (1.3) satisfying C ∗u = 0 , and fix B2R0 (x0) ⋐ Ω and M > 0. Then for each τ ∈ (0 , 116 ), there exists εexc ∈ (0 , 1) such that the following holds: Suppose that 
+
+x ∈ BR0 (x0) and 0 < R < R 0 such that 
+
+(4.23) |(Bu)BR(x)| ⩽ M, E (u, x, R ) < ε exc ,
+
+then it holds that 
+
+(4.24) E (u, x, τ R ) ⩽ 2τ 2αE (u, x, R ).
+
+In what follows, we will abbreviate E (u, x, R ) = E (R) when u and x are clear from context. 
+
+Proof. Fix εexc , ε har ∈ (0 , 1) to be determined. By (2.5), (2.9) we know there exists 0 <λM < Λx0,R,M such that for all x ∈ BR0 (x0) and z ∈ V with |z| ⩽ M ,
+
+λM |v|2 ⩽ ∂2 
+
+> z
+
+f (x, z )[ v, v ] ⩽ Λx0,R 0,M |v|2 for all v ∈ ΛA .
+
+Then corresponding to ε = εhar , there is δhar > 0 such that Lemma 4.3 holds with λ = λM
+
+and Λ = Λ x0,R,M .Fix x ∈ BR0 (x0) and 0 < R < R 0 for which (4.23) holds. Suppressing the x-dependence, by applying Lemma 4.5 we have 
+
+> BR
+
+Ax,R [Bu, Bφ] ⩽ c1(E 12α (R) + E (R) + ω 12 (cE 12 (R)) E 12 (R)) sup 
+
+> BR
+
+|Bφ|
+
+for any φ ∈ C∞ 
+
+> c
+
+(BR), where Ax,R = ∂2 
+
+> z
+
+f (x, (Bu)R), c1 = c1(n, V, L, L x0,2R0,M +1 ), and 
+
+ω = ωx0,2R0,M +1 is as in (2.6). We then choose εexc so that 
+
+c1(ε 1−α 
+
+> 2α
+> exc
+
++ ε 12 
+
+> exc
+
++ ω 12 (c ε 12
+
+> exc
+
+)) < δ har .
+
+Using Lemma 2.3, let a be a homogeneous polynomial of order k such that Ba = ( Bu)R,and note that C ∗a = 0 since the order of C ∗ is strictly greater than k.34 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Then by applying Lemma 4.3 with the choice ε = εhar and γ2 := E (R), we obtain 
+
+h ∈ C∞(BR/ 2) which is Ax,R -harmonic and satisfies (4.25) BR/ 2
+
+E(Bh) ⩽ K, 
+
+> k−1
+
+X 
+
+> i=1 BR/ 2
+
+E
+
+ Di(u − a − γh )
+
+Rk−i
+
+
+
+dx ⩽ γ2εhar ,
+
+where K = K(n, B, C , λ, Λ) > 0 is as in the statement. We will collect several estimates for h. Applying Theorem 3.1 to h, we can find π ∈
+
+ker( B, C ∗) on BR/ 2 such that 
+
+1
+
+R BR/ 4
+
+|Dk−1(h − π)| dx ⩽ c BR/ 2
+
+|Bh| dx, (4.26) which combined with Lemma 2.5 and (4.25) gives (4.27) 1
+
+R BR/ 4
+
+|Dk−1(h − π)| dx ⩽ cpK(K + 1) .
+
+It is clear that h − π is Ax,R -harmonic, so applying the elliptic estimates from [LR24, Theorem 5.2] we have (4.28) R sup 
+
+> B2τ R
+
+|Dk(h − π)| + R2 sup 
+
+> B2τ R
+
+|Dk+1 (h − π)| ⩽ c BR/ 4
+
+|Dk−1(h − π)| dx, 
+
+noting that 2τ R < R/ 8. Now fix a polynomial b of order k such that 
+
+(Dib)2τ R = γ(Di(h − π)) 2τ R , for all i = 0 , . . . , k, 
+
+then using (4.28) and (4.27) we can estimate 
+
+|B(a + b)| ⩽ |(Bu)BR(x)| + γ|(B(h − π)) B2τ R (x)|
+
+⩽ |(Bu)BR(x)| + c γ sup 
+
+> B2τ R
+
+|Dk(h − π)|
+
+⩽ M + c γ 1
+
+R BR/ 4
+
+|Dk−1(h − π)| dx
+
+⩽ M + c ε exc 
+
+pK(K + 1) .
+
+By shrinking εexc as necessary, we can ensure that |B(a + b)| ⩽ M + 1 . Now observe that, since B(u + γπ ) = Bu in BR/ 4, we have u + γπ is also a local minimiser of F in BR/ 4. We will now apply the Caccioppoli-type inequality (Proposition 4.2) to u + γπ on Bτ R using the polynomial a + b to obtain 
+
+> Bτ R
+
+E(Bu − (Bu)τ R ) ⩽ 4 Bτ R 
+
+E(B(u + γπ − a − b)) 
+
+⩽ c
+
+> k−1
+
+X 
+
+> i=0 B2τ R
+
+E
+
+ Di(˜ u + γπ − b)(2 τ R )k−i
+
+
+
+dx + cτ R 
+
+> k−1
+
+X 
+
+> i=0 B2τ R
+
+|Di(˜ u + γπ − b)|
+
+(2 τ R )k−i dx
+
++ cτ R B2τ R 
+
+|B ˜u − Bb| =: I + II + III, 
+
+(4.29) where we abbreviate ˜u = u − a, and used the almost minimality of (Bu)τ R in the first line (see [GK19b, Lemma 2.8]). To estimate I, we split the integrand using Proposition 2.4(d) REGULARITY FOR A -QUASICONVEX INTEGRALS 35 
+
+as 
+
+I ⩽ c
+
+> k−1
+
+X 
+
+> i=0 B2τ R
+
+E
+
+ Di(˜ u − γh )(2 τ R )k−i
+
+
+
+dx + c
+
+> k−1
+
+X 
+
+> i=0 B2τ R
+
+E
+
+ Di(γ(h − π) − a)(2 τ R )k−i
+
+
+
+dx
+
+:= I1 +
+
+> k−1
+
+X
+
+> i=0
+
+Ji.
+
+Using Proposition 2.4(c) and (4.25) 2, we can estimate the first term as 
+
+I1 ⩽ c
+
+> k−1
+
+X
+
+> i=0
+
+1
+
+τ 2( k−i)+ n BR/ 2
+
+E
+
+ Di(˜ u − γh )
+
+Rk−i
+
+
+
+dx ⩽ c ε har 
+
+τ 2k+n E (R).
+
+For the second term, combining (4.28), the fact that E(z) ≲ |z|2 and the Poincaré inequality, for each i = 0 , . . . , k − 1 we can estimate 
+
+Ji ⩽ c B2τ R 
+
+|Di(γ(h − π) − b)|2
+
+(τ R )2( k−i) dx ⩽ c B2τ R 
+
+|Dk(γ(h − π) − b)|2 dx
+
+⩽ c τ 2γ2 sup 
+
+> B2τ R
+
+|Dk+1 (h − π)|2 ⩽ c τ 2γ2
+
+
+
+> BR/ 4
+
+|Dk−1(h − π)|
+
+R dx
+
+2
+
+.
+
+Now using (4.26), (4.25) 1 and Lemma 2.5, we deduce that 
+
+Ji ⩽ c τ 2γ2
+
+
+
+> BR/ 2
+
+|Bh| dx
+
+2
+
+⩽ c τ 2γ2
+
+> BR/ 2
+
+E(Bh) d x ⩽ cτ 2E (R).
+
+Hence combining the above estimates gives 
+
+I ⩽ I1 +
+
+> k−1
+
+X
+
+> i=0
+
+Ji ⩽ c2
+
+ εhar 
+
+τ 2k+n + τ 2
+
+E (R).
+
+Since εhar < 1, by choosing εexc > E (R) small enough so that c2(τ −2k−n + τ 2)εexc ⩽ 1, we can use Lemma 2.5 to bound 
+
+> B2τ R
+
+|Di(˜ u + γπ − b)|
+
+(2 τ R )k−i dx ⩽ c
+
+
+
+> B2τ R
+
+E
+
+ Di(˜ u + γπ − b)(2 τ R )k−i
+
+
+
+dx
+
+1/2
+
+for each i = 0 , . . . , k − 1. This implies that 
+
+II ⩽ cτ RI 1/2 ⩽ cτ R   √εhar 
+
+τ k+n/ 2 + cτ p E (R) ⩽ c
+
+ √εhar 
+
+τ k+n/ 2 + τ 2
+
+
+
+E (R),
+
+recalling that R ⩽ E (R) 12α ⩽ pE (R). For III , noting that E (R) < ε exc ⩽ 1 and using again Lemma 2.5 and that R ⩽ E (R) 12α , we have 
+
+III ⩽ cτ R B2τ R 
+
+|B ˜u| + cτ R B2τ R 
+
+γ|Bh| dx
+
+⩽ cτ Rτ −n
+
+E (R) 12 + γ BR/ 2
+
+E(Bh) d x
+
+!1/2
+
+⩽ cτ 1−nRγ ⩽ cτ 1−nE 12α + 12 ,
+
+where the penultimate inequality follows from (4.25) 1. Therefore combining our estimates from (4.29) onwards, we obtain that 
+
+E (τ R ) − (τ R )2α ⩽ c3
+
+ εhar 
+
+τ 2k+n +
+
+√εhar 
+
+τ k+n/ 2 + τ 2 + τ 1−nε 12α − 12
+
+> exc
+
+
+
+E (R).
+
+By choosing εhar and εexc to be sufficiently small, the claimed estimate (4.24) follows. □36 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+4.5. Iteration and Hölder regularity. Once the decay estimate (4.24) is established, a routine iteration argument establishes the Hölder continuity of Bu. We will briefly record the details. 
+
+Proof of Theorem 4.1. Let B2R0 (x0) ⋐ Ω, M > 0, α ∈ (0 , 1) and τ ∈ (0 , 1) to be deter-mined. Then letting β ∈ (α, 1) by applying Proposition 4.6 using M + 1 and β in place of 
+
+M and α, there is ε0 ∈ (0 , 1) such that if x ∈ BR0 (x0)) and 0 < R < R 0 such that 
+
+|(Bu)BR(x)| ⩽ M + 1 , E (u, x, R ) = BR(x)
+
+E(Bu − (Bu)BR(x)) + R2β < ε 0,
+
+implies that 
+
+E (u, x, τ R ) ⩽ 2τ 2β E (u, x, R ).
+
+We now choose τ ∈ (0 , 1) such that 2τ 2( β−α) < 1. Now letting 0 < ε 1 < min {2−n−3ε0, 2−n/3}
+
+to be determined and putting R1 = ( ε0/2) 12β , suppose that x ∈ BR0 (x0) and 0 < R < R 1
+
+such that 
+
+|(Bu)BR(x)| ⩽ M, BR(x)
+
+E(Bu − (Bu)BR(x)) < ε 1.
+
+Then for all y ∈ BR/ 2(x), we have |(Bu)BR/ 2(y)| ⩽ M +2 n√3ε1 ⩽ M +1 and E (u, y, R/ 2) <
+
+2n+2 ε1 + R2β ⩽ ε0 by our choice of ε1 and R1, so E (u, y, τ R/ 2) ⩽ τ 2αE (u, y, R/ 2) by our choice of τ . Arguing similarly as in [GK19b, Proposition 4.8] can apply this inductively to infer that 
+
+E (u, y, τ kR/ 2) ⩽ τ 2kα E (u, y, R/ 2) ,
+
+|(Bu)Bτ k R/ 2(y)| ⩽ |(Bu)BR(y)| +
+
+√3ε1
+
+τ n(1 − τ α) ⩽ M + 1 ,
+
+by choosing ε1 to be sufficiently small. Therefore if 0 < r < R/ 2, we can find j ∈ N such that τ j−1 ⩽ r/R ⩽ τ j , so it follows that 
+
+E (u, y, r ) ⩽ 4
+
+τ n E (u, y, τ j R/ 2) ⩽ 4
+
+τ n τ 2αj E (u, y, R/ 2) ⩽ 2n+4 
+
+τ n+2 α
+
+ rR
+
+2α
+
+E (u, x, R ).
+
+Since this holds for all y ∈ BR/ 2(x) and r ∈ (0 , R/ 2) , it follows that Bu is α-Hölder continuous on BR/ 2(x). Since C ∗u = 0 in addition, using Fourier multiplier estimates (see [Hör03, Theorem 7.9.6] it follows that u is Ck,α in BR/ 2(x). □
+
+5. Reduction and proof of Theorems A and B 
+
+In this section, we show how to conclude the proof of the main partial regularity the-orems. For Theorem A, this will involve a reduction from the A -free formulation to the potential formulation with B; more precisely, we will show that any local minimizer v
+
+of (1.1) can be locally represented by S(x) + Bu, where S is smooth and Bu is a local minimizer of the functional (5.1) eF(u) = 
+
+ˆ
+
+f (x, S (x) + Bu).
+
+This will be carried out in Section 5.1, where we will also establish Theorem B by a similar reduction argument. More precisely, we will locally modify minimizers u of (1.3) to be 
+
+C ∗-free in addition, where C is a potential operator for B, to which Theorem 4.1 applies. Unless we impose additional growth conditions on the integrand f however, we cannot directly apply the results from Section 4 to the modified functional (5.1). Instead, we can adapt the proof of said theorem by keeping track of the additional term S, which is carried out in Section 5.2. REGULARITY FOR A -QUASICONVEX INTEGRALS 37 
+
+5.1. Reduction to the potential formulation. We will assume we are in the setting of Theorem A; that is, A is a homogeneous differential operator satisfying (CR), B is a potential operator for A in that ker A (ξ) = im B(ξ) for all ξ ∈ Rn \ { 0}, and C is a potential operator for B.
+
+Proposition 5.1. Suppose that f : Ω × V → R satisfies (H1 ). Let v ∈ M (Ω , V ) such that A v = 0 is a local minimizer of (1.1) , meaning that (1.2) holds. Then if ω ⋐ Ω is an open set, there exists u ∈ Wk−1,1(Ω , U ) such that Bu ∈ M (ω, V ), C ∗u = 0 in ω, and 
+
+S ∈ C∞(¯ ω, V ) such that 
+
+v = Bu + S in ω. 
+
+Moreover u satisfies 
+
+ˆ
+
+> ω
+
+f (x, S (x) + Bu(x)) ⩽
+
+ˆ
+
+> ω
+
+˜f (x, S (x) + B(u + ϕ)( x)) for ϕ ∈ C∞ 
+
+> c
+
+(ω, U )(5.2) 
+
+Proof. Consider a cut-off function ρ ∈ C∞ 
+
+> c
+
+(Ω) such that 0 ⩽ ρ ⩽ 1 in Ω and ρ = 1 in an open neighborhood of ω. We write 
+
+cρv (ξ) = B(ξ)B†(ξ)cρv (ξ) + A ∗(ξ)A ∗† (ξ)cρv (ξ),
+
+which follows by the definition of the Moore–Penrose inverse and the relation between A
+
+and B. Define 
+
+ˆu(ξ) := B†(ξ)cρv (ξ) and ˆw(ξ) := A ∗† (ξ)cρv (ξ),
+
+so that ρv = Bu + A ∗w. Write S := A ∗w, so B∗S = 0 in Rn. Since A B u = 0 on Rn
+
+and v = Bu + S in {x ∈ Ω : ρ(x) = 1 }, we also have A S = 0 , so that S solves the elliptic system (A , B∗)S = 0 in an open neighborhood of ω. In particular, S ∈ C∞(¯ ω, V ) and hence Bu ∈ M (ω, V ). Notice that im B†(ξ) = im B∗(ξ) for any ξ̸ = 0 , and thus C ∗u = 0 .Using Lemma 2.2 we can also write 
+
+Dk−1u = K ∗ (ρv ), where ˆK(ξ) = B†
+
+ ξ
+
+|ξ|
+
+ cρv (ξ)
+
+|ξ| ⊗
+
+ ξ
+
+|ξ|
+
+⊗(k−1) 
+
+,
+
+which satisfies |K (x)| ⩽ c|x|1−n on Rn \ { 0}, and hence is locally integrable. Thus since Ω
+
+is bounded, we can estimate 
+
+∥Dk−1u∥L1(Ω) = ∥K ∗ (ρv )∥L1(Ω) ≲ ∥ρv ∥M(Ω) ⩽ ∥v∥M(Ω) ,
+
+which also implies that u ∈ Wk−1,1(Ω , U ). Finally, the minimality property (5.2) follows from the decomposition. □
+
+A similar argument allows us to reduce to the C ∗-free setting in the context of B-gradients, which allows us to establish Theorem B. 
+
+Lemma 5.2. Let u ∈ D′(Ω , U ) such that Bu ∈ M (Ω , V ). Then if ω ⋐ Ω is an open set, there exists ˜u ∈ Wk−1,1(ω, U ) such that B ˜u = Bu and C ∗ ˜u = 0 .Proof. The argument is similar to that of Proposition 5.1; take a cutoff ρ ∈ C∞ 
+
+> c
+
+(Ω) such that 0 ⩽ ρ ⩽ 1 in Ω and ρ = 1 in a neighborhood of ω, and define ˜u by 
+
+ˆ˜u(ξ) = B†(ξ)B(ξ)cρu (ξ).
+
+Then it follows that B ˜u = B(ρu ) = Bu in a neighborhood of ω, and that C ∗ ˜u = 0 . Then the Wk−1,1-regularity follows from ellipticity of the pair (B, C ∗); we can for instance apply Lemmas 3.4 and 3.7. □
+
+Proof of Theorem B. Given ω ⋐ Ω, by applying Lemma 5.2 we can find ˜u ∈ Wk−1,1(ω, U )
+
+such that B ˜u = Bu and C ∗ ˜u = 0 . Then since ˜u is a local minimiser to the problem (1.3) in 
+
+ω, from the ε-regularity result Theorem 4.1, we can find ω0 ⊂ ω such that L n(ω \ ω0) = 0 
+
+and ˜u ∈ Ck,α  
+
+> loc
+
+(ω0, U ) for each α ∈ (0 , 1) . Since Bu = B ˜u, we have Bu is also partially C0,α 
+
+in ω. Finally since ω ⋐ Ω was arbitrary, the claimed partial regularity result follows. □38 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+Proposition 5.3. Suppose f : ω × V → R satisfies (H1 )–(H4 ), and let S ∈ W1,∞(ω, V ).Then if we define the modified integrand 
+
+˜f (x, z ) = f (x, S (x) + z) for all x ∈ ω, z ∈ V, 
+
+we have ˜f satisfies (H1 ), (H3 ) and (H4 ). Furtheremore, ˜f satisfies (H2 ) if we additionally assume that 
+
+(5.3) |∂2 
+
+> z
+
+f (x, z )| ⩽ L0 for all (x, z ) ∈ ω × V. 
+
+Proof. We check the required assumptions: 
+
+| ˜f (x, z )| = |f (x, S (x) + z)| ⩽ L(1 + |S(x) + z|) ⩽ L(1 + ∥S∥L∞(ω))(1 + |z|)
+
+for all (x, z ) ∈ ω × V , establishing the linear growth of ˜f . The smoothness assumptions are all obvious, and for the Lipschitz bound we estimate 
+
+|∂z ˜f (x, z ) − ∂z ˜f (y, z )| = |∂z f (x, S (x) + z) − ∂z f (y, S (y) + z)|
+
+⩽ |∂z f (x, S (x) + z) − ∂z f (y, S (x) + z)|
+
++ |∂z f (y, S (x) + z) − ∂z f (y, S (y) + z)|
+
+⩽ (L + L0∥S∥W1,∞(ω))|x − y|,
+
+where we used ( H1 ) and (5.3). The quasiconvexity is easy to transport: write F = f − ℓE 
+
+and ˜F = ˜f − ℓE , so that F is A -quasiconvex. Consider a cube Q ⊃ ω. Then any vector field v = z + Bϕ for ϕ ∈ C∞ 
+
+> c
+
+(ω, U ) has a Q-periodic extension which is A -free. Therefore for fixed x0 ∈ ω
+
+˜F (x0, z ) = F (x0, S (x0) + z) = F
+
+
+
+x0, Q
+
+S(x0) + v dx
+
+
+
+⩽ Q
+
+F (x0, S (x0) + v) d x = Q
+
+˜F (x0, v ) d x = Q
+
+˜F (x0, z + Bϕ) d x, 
+
+which establishes the appropriate quasiconvexity of ˜f . Finally, for ( H4 ), we simply observe that f ∞(x, z ) = ˜f ∞(x, z ). □
+
+Therefore if we additionally assume that ∂2 
+
+> z
+
+f is bounded, by Proposition 5.1 we obtain a decomposition v = Bu + S in ω, so setting ˜f (x, z ) = f (x, S (x) + z) we have u locally minimizes the integrand w 7 → ´ 
+
+> ω
+
+˜f (x, Bw). Applying Theorem B, noting that ˜f satisfies the necessary assumptions by Proposition 5.3, we infer that u and hence v is partially regular in ω, establishing Theorem A under this added assumption (5.3). In the absence of the second derivative bound, we cannot directly apply Theorem B. Nevertheless, we will show in the next section that partial regularity still holds. 5.2. Partial regularity: proof of Theorem A. We will sketch how to establish partial regularity if our functional takes the form (5.4) eF(u) = 
+
+ˆ
+
+> Ω
+
+f (x, S (x) + Bu),
+
+arising from Proposition 5.1. 
+
+Theorem 5.4. Let B be a differential operator satisfying (CR) , suppose f : Ω × V → R
+
+satisfies (H1 )–(H4 ), and let S ∈ W1,∞(Ω , V ). Then for all M > 0 and α ∈ (0 , 12 ), there exists ε > 0 such that the following holds; if u ∈ Wk−1,1(Ω , U ) is a local minimizer of (5.4) 
+
+satisfying C ∗u = 0 , then for any BR(x0) ⋐ Ω for which 
+
+|(Bu)BR(x0)| ⩽ M, BR(x0)
+
+E(Bu − (Bu)BR(x0)) < ε, 
+
+we have u ∈ Ck,α (BR/ 2(x0), U ).REGULARITY FOR A -QUASICONVEX INTEGRALS 39 
+
+The proof is similar to that of Theorem 4.1, except that we keep track of the additional 
+
+S(x) term in the integrand, whose presence also prevents us from reducing to a setting where (SC) holds. This will follow by establishing analogues of the Caccioppoli inequality (Proposition 4.2) and the almost A-harmonicity estimate (Lemma 4.5); from here the argument is entirely analogous to obtain an excess decay estimate, where the A-harmonic approximation lemma requires no modification, except that we apply it with a different choice of A.
+
+Proposition 5.5. Suppose that the integrand f satisfies the assumptions (H1 ), (H2 ),
+
+(H3 ′) and (H4 ), S ∈ W1,∞(Ω , V ), u ∈ Wk−1,1(Ω , U ) such that Bu ∈ M (Ω , V ) is a local minimizer of (5.4) , and the map a : Ω → V is a polynomial of order k. Then for any 
+
+M > 0, τ ∈ (0 , 1) and BR(x0) ⋐ Ω such that |S(x0)| + |Ba| ⩽ M , we have the estimate 
+
+ˆ
+
+> BR/ 2(x0)
+
+E(B(u − a)) ⩽ c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> BR(x0)
+
+E
+
+ Di(u − a)
+
+Rk−i
+
+
+
+dx
+
++ cR 
+
+ˆ
+
+> BR(x0)
+
+"
+
+|B(u − a)| +
+
+> k−1
+
+X
+
+> i=0
+
+|Di(u − a)|
+
+Rk−i
+
+#
+
+dx
+
++ cR n+1 ∥S∥L∞(BR(x0)) .
+
+where c = c(n, V, B, M, L, ℓ, L x0,R,M +1 ) > 0.Proof. We will proceed as in the proof of Proposition 4.2 and only point out the necessary modifications. Let ρ be a cutoff such that 1Bs ⩽ ρ ⩽ 1Bt and put ˜u = u − a, φ = ρ˜u
+
+and ψ = (1 − ρ)˜ u. Also by letting z0 := S(x0) + Ba, we consider the shifted functional 
+
+˜f = fx0,z 0 from (2.7). By the strong quasiconvexity estimate applied with φ and local minimiality of u as in (4.3), we can estimate 
+
+ˆ
+
+> Bs
+
+E(Bφ) ≲
+
+ˆ
+
+> Bt
+
+˜f (Bψ) + 
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, S + Bu)) +
+
+ˆ
+
+> Bt
+
+(f (x, S + Bψ + Ba) − ˜f (Bψ)) + 
+
+ˆ
+
+> Bt
+
+( ˜f (Bu − Bψ) − ˜f (B ˜u)) =: I + eII + fIII + IV, 
+
+noting we have grouped the terms differently compared to (4.3). The main difference lies in estimating eII + fIII ; using (2.4) we can estimate 
+
+eII =
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, S (x0) + Bu)) + 
+
+ˆ
+
+> Bt
+
+(f (x, S (x) + Bu) − f (x, S (x0) + Bu)) 
+
+⩽
+
+ˆ
+
+> Bt
+
+( ˜f (B ˜u) − f (x, S (x0) + Bu)) + cL ∥DS ∥L∞(Bt) tn+1 ,
+
+and similarly 
+
+fIII ⩽
+
+ˆ
+
+> Bt
+
+(f (x, S (x0) + Bψ + Ba) − ˜f (Bψ)) + cL ∥DS ∥L∞(Bt) tn+1 .
+
+Hence arguing exactly as in (4.5) we have 
+
+eII + fIII ⩽ ct 
+
+"ˆ
+
+> Bt
+
+|B ˜u| +
+
+> k
+
+X
+
+> i=1
+
+ˆ
+
+> Bt
+
+|Dk−i ˜u|
+
+(t − s)i dx + tn∥DS ∥L∞(Bt)
+
+#
+
+.40 C. IRVING, Z. LI, AND B. RAIT , Ă
+
+The terms I and IV are then estimated as in (4.4) and (4.6) respectively, which combines to give 
+
+ˆ
+
+> Bs
+
+E(B ˜u) ⩽ c1
+
+ˆ
+
+> Bt\Bs
+
+E(B ˜u) + c
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+E
+
+ Di ˜u
+
+(t − s)k−i
+
+
+
+dx
+
++ ct 
+
+"ˆ
+
+> Bt
+
+|B ˜u| +
+
+> k−1
+
+X
+
+> i=0
+
+ˆ
+
+> Bt
+
+|Di ˜u|
+
+(t − s)k−i dx + tn∥DS ∥L∞(Bt)
+
+#
+
+,
+
+from which the desired inequality follows by the hole filling trick and iteration. □
+
+Lemma 5.6. Let f satisfy (H1 ), (H2 ) and (H3 ′), S ∈ Wk, ∞(Ω) , u ∈ Wk−1,1(Ω) be a local minimiser of (5.4) , and fix M > 0 and α ∈ (0 , 1) . Then for any ball BR(x0) ⋐ Ω with 
+
+|S(x0)| + |(Bu)x0,R | < M , setting A := ∂2 
+
+> z
+
+f (x0, S (x0) + ( Bu)x0,R ), we have u satisfies 
+
+> BR(x0)
+
+A[Bu, Bφ] ⩽ c1(E 12α (R) + E (R) + ω 12 (c1E 12 (R)) E 12 (R)) sup 
+
+> BR(x0)
+
+|Bφ|,
+
+for any φ ∈ C∞ 
+
+> c
+
+(BR(x0)) , where E (R) := E (u, x 0, R ) is the excess from (4.1) , ω := 
+
+ωx0,R,M +1 and c1 = c1(n, V, L, L x0,R,M +1 , ∥S∥W1,∞(BR)) > 0.
+
+We note the estimate is identical to that in Lemma 4.5, except the associated constants now depend on ∥S∥W1,∞(BR).
+
+Proof. Writing BR = BR(x0), let z0 := S(x0) + ( Bu)R and A = ∂2 
+
+> z
+
+f (x0, z 0). The Euler-Lagrange system reads as 
+
+> BR
+
+∂z f (x, S (x) + Bau) · Bφ dx = 0 for all φ ∈ C∞ 
+
+> c
+
+(BR).
+
+Set Z(x) = S(x) + Bau(x). We will perform an analogous argument as in the proof of Lemma 4.5. We consider the sets 
+
+E+ := {x ∈ BR : |Bau − (Bu)R| ⩾ 1}, E− := {x ∈ BR : |Bau − (Bu)R| < 1},
+
+and given any φ ∈ C∞ 
+
+> c
+
+(BR) we will consider the splitting 
+
+> BR
+
+A[Bu, Bφ] d x = BR
+
+(∂z f (x, Z ) − ∂z f (x0, Z )) · Bφ dx
+
++ 1
+
+|BR|
+
+ˆ
+
+> E+
+
+(A[Bau − (Bu)R, Bφ] + ( ∂z f (x0, Z ) − ∂z f (x0, S (x0) + ( Bu)R)) · Bφ)+ 1
+
+|BR|
+
+ˆ
+
+> E−
+
+(A[Bau − (Bu)R, Bφ] + ( ∂z f (x0, Z ) − ∂z f (x0, S (x0) + ( Bu)R)) · Bφ)+ BR
+
+A[Bsu, Bφ] =: J0 + J1 + J2 + J3.
+
+We will estimate the terms separately; for this let M > |z0| and abbreviate ˜L = Lx0,R,M =1 ,
+
+ω = ωx0,R,M +1 , using the notation from (2.5), (2.6). Then using ( H2 ) we have 
+
+|J0| ⩽ LE 12α (R) sup 
+
+> BR
+
+|Bφ|.
+
+By (2.4) we have 
+
+|J1| ⩽ c(
+
+ˆ
+
+> E+
+
+|Bau − (Bau)R| dx + |E+|) ⩽ cE (R) sup 
+
+> BR
+
+|Bφ|,
+
+which is obtained in a similar way to Lemma 4.5. Since |A| ⩽ ˜L we have 
+
+|J3| ⩽ ˜LE (R) sup 
+
+> BR
+
+|Bφ|REFERENCES 41 
+
+For the remaining term, using Lemma 2.7, the concavity of ω and the fact |Z − z0| ⩽
+
+∥DS ∥L∞(BR)R + |Bau − (Bu)R|, we obtain 
+
+|J2| ⩽ c
+
+ˆ
+
+> E−
+
+ω(|Z − z0|)|Z − z0|| Bφ| dx
+
+⩽ c sup 
+
+> BR
+
+|Bφ| ω 12 (c(R + E 12 (R)))( R + E 12 (R)) .
+
+If R ⩽ 1, then we have R ⩽ Rα ⩽ E 12 (R). Hence by combining the above estimates we obtain 
+
+> BR
+
+A[Bu, Bφ] ⩽ c(E 12α (R) + E (R) + ω 12 (cE 12 (R)) E 12 (R)) sup 
+
+> BR
+
+|Bφ|,
+
+as required. □
+
+Proof of Theorem 5.4. By arguing as in Proposition 4.6, for each M > 0, α ∈ (0 , 12 ) and 
+
+τ ∈ (0 , 1) we can find εexc ∈ (0 , 1) such that if B2R0 (x0) ⋐ Ω we have 
+
+∥S∥W1,∞(B2R0 (x0)) + |(Bu)BR(x)| ⩽ M, E (u, x, R ) < ε exc 
+
+for each x ∈ BR0 (x0) and 0 < R < R 0, then we obtain the estimate (5.5) E (u, x, τ R ) − (τ R )2α ⩽ τ 2αE (u, x, R ) + c∥S∥W1,∞(B2R(x0)τ R. 
+
+Indeed we apply Lemma 4.3 with Ax,R = ∂2 
+
+> z
+
+f (x, S (x) + ( Bu)x,R ), using Lemma 5.6 to verify the hypothesis (4.8). We then chain this with the Caccioppoli inequality from Proposition 5.5, however we obtain an extra term of the form c∥S∥W1,∞(B2R(x0)) τ R in the estimate (4.29). Keeping this extra term we arrive at (5.5). Now since α < 12 , for R ⩽ R0 we have R ⩽ R1−2α 
+
+> 0
+
+R2α, so shrinking R0 as necessary we obtain the estimate 
+
+E (u, x, τ R ) − (τ R )2α ⩽ 2τ 2αE (u, x, R ).
+
+Then by iteration as in Section 4.5 we infer that u ∈ Ck,α (BR/ 2(x)) for any α ∈ (0 , 1/2) . □
+
+Finally we conclude with: 
+
+Proof of Theorem A. Let ω ⋐ Ω and apply Proposition 5.1 to decompose v = Bu +S in ω,where u ∈ Wk−1,1(ω, U ), Bu ∈ M (ω, V ), C ∗u = 0 in ω and S ∈ C∞(ω, V ). Furthermore 
+
+u locally minimizes the functional 
+
+˜F(u) = 
+
+ˆ
+
+> ω
+
+f (x, S (x) + Bu),
+
+in that (5.2) holds. Therefore by the ε-regularity theorem of Theorem 5.4, there exists 
+
+ω0 ⊂ ω such that L n(ω \ ω0) = 0 and that u ∈ Ck,α (ω0) for all α ∈ (0 , 1/2) . Since ω ⋐ Ω
+
+was arbitrary, the claimed partial regularity statement follows. □
+
+Remark 5.7 . In the case of p-growth with p > 1, by a similar argument one can also remove the second derivative bound |∂2 
+
+> z
+
+f (x, z )| ≲ 1 + |z|p−2 imposed in [LR24, Theorem A]. 
+
+References               
+
+> [ADR20] A. Arroyo-Rabasa, G. De Philippis, and F. Rindler. “Lower semicontinuity and relaxation of linear-growth integral functionals under PDE constraints”. In: Advances in calculus of variations
+> 13.3 (2020), pp. 219–255. [AF87] E. Acerbi and N. Fusco. “A regularity theorem for minimizers of quasiconvex integrals”. In:
+> Arch. Rational Mech. Anal. 99.3 (1987), pp. 261–281. doi :10.1007/BF00284509 .[AF89] E. Acerbi and N. Fusco. “Regularity for minimizers of nonquadratic functionals: the case 1< p <
+> 2”. In: J. Math. Anal. Appl. 140.1 (1989), pp. 115–135. doi :10.1016/0022-247X(89)90098-X .42 REFERENCES
+
+[Alb93] G. Alberti. “Rank One Property for Derivatives of Functions with Bounded Variation”. In: Pro-ceedings of the Royal Society of Edinburgh Section A: Mathematics 123.2 (Jan. 1993), pp. 239– 274. issn : 1473-7124, 0308-2105. doi : 10.1017/S030821050002566X .[Arr21] A. Arroyo-Rabasa. “New projection and Korn estimates for a class of constant-rank operators on domains”. In: arXiv preprint arXiv:2109.14602 (2021). [BDG20] D. Breit, L. Diening, and F. Gmeineder. “On the trace operator for functions of bounded A-variation”. In: Analysis & PDE 13.2 (2020), pp. 559–594. [BDS15] S. Bandyopadhyay, B. Dacorogna, and S. Sil. “Calculus of variations with differential forms.” In: Journal of the European Mathematical Society (EMS Publishing) 17.4 (2015). [BEG24] L. Beck, F. Eitler, and F. Gmeineder. “Gradient integrability for bounded BD -minimizers”. In: 
+
+arXiv preprint arXiv:2412.16131 (2024). [Bil03] M. Bildhauer. Convex variational problems. Linear, nearly linear and anisotropic growth con-ditions . Vol. 1818. Lecture notes in Mathematics. Berlin: Springer-Verlag, 2003. doi : 10.1007/ b12308 .[BK22] M. Bärlin and K. Keßler. “Partial Regularity for A-quasiconvex Functionals”. In: arXiv preprint arXiv:2203.00153 (2022). [BL76] J. Bergh and J. Löfström. Interpolation Spaces . Vol. 223. Grundlehren Der Mathematischen Wissenschaften. Berlin, Heidelberg: Springer Berlin Heidelberg, 1976. isbn : 978-3-642-66453-3. 
+
+doi : 10.1007/978-3-642-66451-9 .[BL91] T. Bhattacharya and F. Leonetti. “A New Poincaré Inequality and Its Application to the Regularity of Minimizers of Integral Functionals with Nonstandard Growth”. In: Nonlinear Analysis: Theory, Methods & Applications 17.9 (1991), pp. 833–839. issn : 0362546X. doi : 10. 1016/0362-546X(91)90157-V .[BS13a] L. Beck and T. Schmidt. “On the Dirichlet problem for variational integrals in BV ”. In: J. Reine Angew. Math. 674 (2013), pp. 113–194. doi : 10.1515/CRELLE.2011.188 .[BS13b] L. Beck and B. Stroffolini. “Regularity results for differential forms solving degenerate elliptic systems”. In: Calculus of Variations and Partial Differential Equations 46.3 (2013), pp. 769– 808. [CD19] D. Cruz-Uribe and L. Diening. “Sharp A–Harmonic Approximation”. In: Applicable Analysis 
+
+98.1–2 (Jan. 25, 2019), pp. 374–380. issn : 0003-6811. doi : 10.1080/00036811.2017.1422729 .[CFM05] S. Conti, D. Faraco, and F. Maggi. “A new approach to counterexamples to L 1 estimates: Korn’s inequality, geometric rigidity, and regularity for gradients of separately convex functions”. In: 
+
+Archive for rational mechanics and analysis 175.2 (2005), pp. 287–300. [CFM98] M. Carozza, N. Fusco, and G. Mingione. “Partial regularity of minimizers of quasiconvex inte-grals with subquadratic growth”. In: Ann. Mat. Pura Appl. (4) 175 (1998), pp. 141–164. doi :
+
+10.1007/BF01783679 .[CG22] S. Conti and F. Gmeineder. “A-quasiconvexity and partial regularity”. In: Calculus of Variations and Partial Differential Equations 61.6 (2022), p. 215. [CK17] C.-Y. Chen and J. Kristensen. “On coercive variational integrals”. In: Nonlinear analysis 153 (2017), pp. 213–229. doi : 10.1016/j.na.2016.09.011 .[De 22] C. De Filippis. “Quasiconvexity and partial regularity via nonlinear potentials”. In: Journal de Mathématiques Pures et Appliquées 163 (2022), pp. 11–82. [Dec65] H. P. Decell. “An Application of the Cayley-Hamilton Theorem to Generalized Matrix Inver-sion”. In: SIAM Review 7.4 (1965), pp. 526–528. issn : 0036-1445. JSTOR: 2027771 .[DG00] F. Duzaar and J. F. Grotowski. “Optimal Interior Partial Regularity for Nonlinear Elliptic Sys-tems: The Method of A-harmonic Approximation”. In: manuscripta mathematica 103.3 (Nov. 1, 2000), pp. 267–298. issn : 1432-1785. doi : 10.1007/s002290070007 .[DGG00] F. Duzaar, A. Gastel, and J. F. Grotowski. “Partial regularity for almost minimizers of quasi-convex integrals”. In: SIAM J. Math. Anal. 32.3 (2000), pp. 665–687. doi : 10.1137/S0036141099374536 .[DGK05] F. Duzaar, J. F. Grotowski, and M. Kronz. “Regularity of almost minimizers of quasi-convex variational integrals with subquadratic growth”. In: Ann. Mat. Pura Appl. (4) 184.4 (2005), pp. 421–448. doi : 10.1007/s10231-004-0117-5 .[Die+11] L. Diening, P. Harjulehto, P. Hästö, and M. Ruzicka. Lebesgue and Sobolev Spaces with Variable Exponents . Vol. 2017. Lecture Notes in Mathematics. Berlin, Heidelberg: Springer, 2011. isbn :978-3-642-18362-1. doi : 10.1007/978-3-642-18363-8 .[Die+12] L. Diening, D. Lengeler, B. Stroffolini, and A. Verde. “Partial regularity for minimizers of quasi-convex functionals with general growth”. In: SIAM Journal on Mathematical Analysis 
+
+44.5 (2012), pp. 3594–3616. [DM04] F. Duzaar and G. Mingione. “Regularity for degenerate elliptic problems”. In: Ann. Inst. H. Poincaré Anal. Non Linéaire 21.5 (2004), pp. 735–766. doi : 10.1016/J.ANIHPC.2003.09.003 .REFERENCES 43 
+
+[DR16] G. De Philippis and F. Rindler. “On the structure of A -free measures and applications”. In: 
+
+Annals of Mathematics (2016), pp. 1017–1039. [DS02] F. Duzaar and K. Steffen. “Optimal interior and boundary regularity for almost minimizers to elliptic variational integrals”. In: J. Reine Angew. Math. 546 (2002), pp. 73–138. doi : 10.1515/ crll.2002.046 .[DS23] C. De Filippis and B. Stroffolini. “Singular multiple integrals and nonlinear potentials”. In: 
+
+Journal of Functional Analysis 285.2 (2023), p. 109952. [Ehr60] L. Ehrenpreis. “A Fundamental Principle for Systems of Linear Partial Differential Equations with Constant Coefficients and Some of Its Applications”. In: Proceedings Intern. Symp. on Linear Spaces (1960), pp. 161–174. [EL25] F. Eitler and P. Lewintan. On BV A-Minimisers in Two Dimensions . Aug. 14, 2025. arXiv: 
+
+2508.10508 [math] .[Eva86] L. C. Evans. “Quasiconvexity and partial regularity in the calculus of variations”. In: Arch. Rational Mech. Anal. 95.3 (1986), pp. 227–252. doi : 10.1007/BF00251360 .[FM99] I. Fonseca and S. Müller. “ A-quasiconvexity, lower semicontinuity, and Young measures”. In: 
+
+SIAM J. Math. Anal. 30.6 (1999), pp. 1355–1390. doi : 10.1137/S0036141098339885 .[Fra23] F. Franceschini. Partial regularity for BV B minimizers . 2023. arXiv: 2310.20002 [math.AP] .[GK19a] F. Gmeineder and J. Kristensen. “Sobolev regularity for convex functionals on BD ”. In: Calc. Var. Partial Differential Equations 58.56 (2019). doi : 10.1007/s00526-019-1491-6 .[GK19b] F. Gmeineder and J. Kristensen. “Partial regularity for BV minimizers”. In: Archive for Rational Mechanics and Analysis 232.3 (2019), pp. 1429–1473. [GK24] F. Gmeineder and J. Kristensen. “Quasiconvex Functionals of (p, q)-Growth and the Partial Regularity of Relaxed Minimizers”. In: Archive for Rational Mechanics and Analysis 248.5 (Oct. 2024), p. 80. issn : 0003-9527, 1432-0673. doi : 10.1007/s00205-024-02013-8 .[GM86] M. Giaquinta and G. Modica. “Partial regularity of minimizers of quasiconvex integrals”. In: 
+
+Ann. Inst. H. Poincaré Anal. Non Linéaire 3.3 (1986), pp. 185–208. [Gme20] F. Gmeineder. “The regularity of minima for the Dirichlet problem on BD”. In: Arch. Rational Mech. Anal. 237 (2020), pp. 1099–1171. doi : 10.1007/s00205-020-01507-5 .[Gme21] F. Gmeineder. “Partial regularity for symmetric quasiconvex functionals on BD”. In: J. Math. Pures Appl. 145 (2021), pp. 83–129. doi : 10.1016/j.matpur.2020.09.005 .[GMS79] M. Giaquinta, G. Modica, and J. Sou ˇcek. “Functionals with linear growth in the calculus of variations. I, II”. In: Comment. Math. Univ. Carolin. 20.1 (1979), pp. 143–156, 157–172. [GR19] F. Gmeineder and B. Raiţă. “Embeddings for A-weakly differentiable functions on domains”. In: Journal of Functional Analysis 277.12 (2019), p. 108278. [GR20] A. Guerra and B. Raiţă. “On the necessity of the constant rank condition for Lp estimates”. In: Comptes Rendus. Mathématique 358.9-10 (2020), pp. 1091–1095. [GR22] A. Guerra and B. Rait , ă. “Quasiconvexity, null Lagrangians, and Hardy space integrability under constant rank constraints”. In: Arch. Ration. Mech. Anal. 245.1 (2022), pp. 279–320. 
+
+doi : 10.1007/s00205-022-01775-3 .[GRS22] A. Guerra, B. Rait , ă, and M. R. Schrecker. “Compensated compactness: continuity in optimal weak topologies”. In: Journal of Functional Analysis 283.7 (2022), p. 109596. [GRV21] F. Gmeineder, B. Raiţă, and J. Van Schaftingen. “On limiting trace inequalities for vectorial differential operators”. In: Indiana University Mathematics Journal 70.5 (2021), pp. 2133–2176. [GRV24] F. Gmeineder, B. Raiţă, and J. Van Schaftingen. “Boundary ellipticity and limiting L1-estimates on halfspaces”. In: Advances in Mathematics 439 (2024), p. 109490. [GT01] D. Gilbarg and N. S. Trudinger. Elliptic partial differential equations of second order . Classics in Mathematics. Reprint of the 1998 edition. Springer-Verlag, Berlin, 2001. [Ham92] C. Hamburger. “Regularity of differential forms minimizing degenerate elliptic functionals*”. In: J. Reine Angew. Math. 431 (1992), pp. 7–64. [HNR24] M. Härkönen, L. Nicklasson, and B. Rait , ă. “Syzygies, constant rank, and beyond”. In: Journal of Symbolic Computation 123 (2024), p. 102274. [Hör00] L. Hörmander. An introduction to complex analysis in several variables . 3rd ed. North-Holland mathematical library 7. Amsterdam: North-Holland, 2000. 254 pp. isbn : 978-0-444-88446-6. [Hör03] L. Hörmander. The Analysis of Linear Partial Differential Operators I . Classics in Mathematics. Berlin, Heidelberg: Springer Berlin Heidelberg, 2003. isbn : 978-3-540-00662-6. doi : 10.1007/ 978-3-642-61497-2 .[Hör05] L. Hörmander. The Analysis of Linear Partial Differential Operators II . Classics in Math-ematics. Berlin, Heidelberg: Springer Berlin Heidelberg, 2005. isbn : 978-3-540-22516-4. doi :
+
+10.1007/b138375 .[ISS99] T. Iwaniec, C. Scott, and B. Stroffolini. “Nonlinear Hodge theory on manifolds with boundary”. In: Annali di Matematica pura ed applicata 177.1 (1999), pp. 37–115. 44 REFERENCES 
+
+[KK16] B. Kirchheim and J. Kristensen. “On rank one convex functions that are homogeneous of degree one”. In: Archive for rational mechanics and analysis 221 (2016), pp. 527–558. [KM07] J. Kristensen and G. Mingione. “The singular set of Lipschitzian minima of multiple integrals”. In: Arch. Ration. Mech. Anal. 184.2 (2007), pp. 341–369. doi : 10.1007/s00205-006-0036-2 .[KM16] T. Kuusi and G. Mingione. “Partial regularity and potentials”. In: Journal de l’École polytech-nique—Mathématiques 3 (2016), pp. 309–363. [KR10] J. Kristensen and F. Rindler. “Relaxation of signed integral functionals in BV ”. In: Calc. Var. Partial Differential Equations 37.1-2 (2010), pp. 29–62. doi : 10.1007/s00526-009-0250-5 .[KR22] J. Kristensen and B. Rait , ă. “Oscillation and concentration in sequences of PDE constrained measures”. In: Archive for Rational Mechanics and Analysis 246.2 (2022), pp. 823–875. [KSW17] K. Kazaniecki, D. M. Stolyarov, and M. Wojciechowski. “Anisotropic ornstein noninequalities”. In: Analysis & PDE 10.2 (2017), pp. 351–366. [LR24] Z. Li and B. Rait , ă. Partial regularity and higher integrability for A -quasiconvex variational problems . 2024. arXiv: 2412.10363v2 [math.AP] .[Mal63] B. Malgrange. “Sur Les Systèmes Différentiels à Coefficients Constants”. In: Les Équations Aux Dérivées Partielles (Paris, 1962) . Colloq. Internat. CNRS, No. 117. CNRS, Paris, 1963, pp. 113–122. [Mal89] L. Maligranda. Orlicz Spaces and Interpolation . Seminars in Mathematics 5. Departamento de Matemática, Universidade Estadual de Campinas, 1989. 206 pp. [Mar89] P. Marcellini. “Regularity of minimizers of integrals of the calculus of variations with non standard growth conditions”. In: Archive for Rational Mechanics and Analysis 105 (1989), pp. 267–284. [Mar96] P. Marcellini. “Everywhere Regularity for a Class of Elliptic Systems without Growth Con-ditions”. In: Annali della Scuola Normale Superiore di Pisa - Classe di Scienze 23.1 (1996), pp. 1–25. issn : 0391-173X. [Mor52] J. Morrey C. B. “Quasi-convexity and the lower semicontinuity of multiple integrals”. In: Pacific J. Math 2 (1952), pp. 25–53. doi : 10.2140/pjm.1952.2.25 .[Mur81] F. Murat. “Compacité par compensation: condition nécessaire et suffisante de continuité faible sous une hypothèse de rang constant”. French. In: Ann. Scuola Norm. Sup. Pisa CI. Sci. (4) 
+
+8.1 (1981), pp. 69–102. [Orn62] D. Ornstein. “A non-inequality for differential operators in the L1 norm”. In: Archive for Ra-tional Mechanics and Analysis 11.1 (1962), pp. 40–49. [Pal70] V. P. Palamodov. Linear Differential Operators with Constant Coefficients . Grundlehren Der Mathematischen Wissenschaften 168. Berlin, Heidelberg: Springer Berlin Heidelberg, 1970. 
+
+isbn : 978-3-642-46221-4. doi : 10.1007/978-3-642-46219-1 .[Rai19a] B. Rait , ă. “Potentials for A -quasiconvexity”. In: Calc. Var. PDE 58.105 (2019). doi : 10.1007/ s00526-019-1544-x .[Rai19b] B. Rait , ă. “Critical Lp-differentiability of BV A-maps and canceling operators”. In: Transactions of the American Mathematical Society 372.10 (2019), pp. 7297–7326. [Rai24] B. Rait , ă. “A simple construction of potential operators for compensated compactness”. In: The Quarterly Journal of Mathematics (2024). [RS20] B. Rait , ă and A. Skorobogatova. “Continuity and canceling operators of order n on R n”. In: 
+
+Calculus of Variations and Partial Differential Equations 59.2 (2020), p. 85. [Sch08] T. Schmidt. “Regularity of Minimizers of W 1,p -Quasiconvex Variational Integrals with $(p,q)$-Growth”. In: Calculus of Variations and Partial Differential Equations 32.1 (May 1, 2008), pp. 1–24. issn : 1432-0835. doi : 10.1007/s00526-007-0126-5 .[Sch09] T. Schmidt. “Regularity of relaxed minimizers of quasiconvex variational integrals with (p, q)-growth”. In: Archive for rational mechanics and analysis 193.2 (2009), pp. 311–337. [Sch25] S. Schiffer. “ A -free truncation and higher integrability of minimisers”. In: Calculus of Variations and Partial Differential Equations 64.1 (2025), pp. 1–17. [Sil19] S. Sil. “Calculus of variations: a differential form approach”. In: Advances in Calculus of Vari-ations 12.1 (2019), pp. 57–84. [Sim83] L. Simon. Lectures on Geometric Measure Theory . Centre for Mathematical Analysis, Aus-tralian National University, 1983, p. 272. isbn : 0-86784-429-9. [Sim96] L. Simon. Theorems on Regularity and Singularity of Energy Minimizing Maps . Basel: Birkhäuser Basel, 1996. isbn : 978-3-7643-5397-1. doi : 10.1007/978-3-0348-9193-6 .[Ste24] P. Stephan. Partial Regularity for A-Quasiconvex Functionals with Orlicz Growth . Dec. 12, 2024. arXiv: 2412.09478 [math] .[Tar83] L. Tartar. “The compensated compactness method applied to systems of conservation laws”. In: Systems of nonlinear partial differential equations . Dordrecht: Springer, 1983, pp. 263–285. REFERENCES 45 
+
+[Tri73] H. Triebel. “Spaces of distributions of Besov type on Euclidean n-space. Duality, interpolation”. In: Ark. Mat. 11 (1973), pp. 13–64. doi : 10.1007/BF02388506 .[Uhl77] K. Uhlenbeck. “Regularity for a class of non-linear elliptic systems”. In: Acta Mathematica 138 (1977), pp. 219–240. [Van13] J. Van Schaftingen. “Limiting Sobolev inequalities for vector fields and canceling linear differ-ential operators”. In: J. Eur. Math. Soc. 15.3 (2013), pp. 877–921. doi : 10.4171/JEMS/380 .[Van22] J. Van Schaftingen. “Injective Ellipticity, Cancelling Operators, and Endpoint”. In: Geometric and Analytic Aspects of Functional Variational Principles: Cetraro, Italy (2022), p. 259. [Zyg56] A. Zygmund. “On a Theorem of Marcinkiewicz Concerning Interpolation of Operators”. In: J. Math. Pures Appl. 35 (1956), pp. 223–248. 
+
+Max Planck Institute for Mathematics in the Sciences, Inselstrasse 22, Leipzig, 04103, Germany 
+
+E-mail address , Z. Li: zhuolin.li@mis.mpg.de 
+
+Department of Mathematics and Statistics, Georgetown University, 3700 Reservoir Road NW, Washington, D.C., 20057, USA 
+
+E-mail address , C. Irving: ci152@georgetown.edu ; B. Rait , ă: br607@georgetown.edu

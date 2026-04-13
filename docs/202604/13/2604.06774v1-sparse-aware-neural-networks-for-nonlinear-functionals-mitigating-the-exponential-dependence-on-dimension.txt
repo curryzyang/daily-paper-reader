@@ -1,0 +1,3478 @@
+Title: Sparse-Aware Neural Networks for Nonlinear Functionals: Mitigating the Exponential Dependence on Dimension
+
+URL Source: https://arxiv.org/pdf/2604.06774v1
+
+Published Time: Thu, 09 Apr 2026 00:39:05 GMT
+
+Number of Pages: 47
+
+Markdown Content:
+# Sparse-Aware Neural Networks for Nonlinear Functionals: Mitigating the Exponential Dependence on Dimension 
+
+Jianfei Li lijianfei@math.lmu.de 
+
+Department of Mathematics Ludwig-Maximilians-Universit¨ at M¨ unchen (LMU Munich) Akademiestr. 7, 80799 M¨ unchen 
+
+Shuo Huang ∗ shuo.huang@iit.it 
+
+IIT@MIT Istituto Italiano di Tecnologia Via Morego 30, 16163 Genova, Italy 
+
+Han Feng ∗ hanfeng@cityu.edu.hk 
+
+Department of Mathematics City University of Hong Kong Hong Kong, China 
+
+Ding-Xuan Zhou dingxuan.zhou@sydney.edu.au 
+
+School of Mathematics and Statistics The University of Sydney, Sydney New South Wales 2006, Australia 
+
+Gitta Kutyniok † kutyniok@math.lmu.de 
+
+Department of Mathematics Ludwig-Maximilians-Universit¨ at M¨ unchen (LMU Munich) Akademiestr. 7, 80799 M¨ unchen 
+
+Abstract 
+
+Deep neural networks have emerged as powerful tools for learning operators defined over infinite-dimensional function spaces. However, existing theories frequently encounter diffi-culties related to dimensionality and limited interpretability. This work investigates how sparsity can help address these challenges in functional learning, a central ingredient in operator learning. We propose a framework that employs convolutional architectures to extract sparse features from a finite number of samples, together with deep fully connected networks to effectively approximate nonlinear functionals. Using universal discretization methods, we show that sparse approximators enable stable recovery from discrete samples. In addition, both the deterministic and the random sampling schemes are sufficient for our analysis. These findings lead to improved approximation rates and reduced sample sizes in various function spaces, including those with fast frequency decay and mixed smooth-ness. They also provide new theoretical insights into how sparsity can alleviate the curse of dimensionality in functional learning. 
+
+∗. Corresponding author. 
+
+†. Munich Center for Machine Learning (MCML), Germany. University of Tromsø, Norway. German Aerospace Center (DLR), Germany. 
+
+1
+
+> arXiv:2604.06774v1 [cs.LG] 8 Apr 2026
+
+1 Introduction 
+
+Deep neural networks (DNNs) have demonstrated remarkable success in various domains, such as image processing (LeCun et al., 2015; Krizhevsky et al., 2012) and natural language processing (Vaswani et al., 2017; Devlin et al., 2019), despite the extremely high dimen-sionality of the input data. More recently, they have emerged as effective tools for learning operators between infinite-dimensional function spaces, in contrast to classical function re-gression. A prominent example is image denoising, where the input and output are both images or functions considered (Greven and Scheipl, 2017). Another important application is to solve partial differential equations (PDEs) (Raissi et al., 2019; Lu et al., 2021; Li et al., 2020), where they have shown remarkable empirical success in learning nonlinear operators. Despite their success in applications, theoretical guarantees in the context of operator learning remain limited. One of the earliest studies on operator learning is due to Chen and Chen (1995), which investigates the conditions under which shallow neural networks can universally approximate any continuous nonlinear functional. The research has subsequently been extended to deep neural networks, as demonstrated in works such as Li et al. (2020); Lu et al. (2021). An essential step in learning operators is understanding functionals, namely mapping the input function into a finite-dimensional representation. Common approaches include discretizing the input function via sampled function values (Chen and Chen, 1995; Lu et al., 2021) or linearly truncated basis expansions (Yang et al., 2026; Song et al., 2023a; Zhou et al., 2024) that leverage linear approximation results. However, these results either lack explicit convergence rates or yield rates that are prohibitively slow due to the high dimensionality of the input (Lanthaler et al., 2022; Liu et al., 2024a; Yang, 2025), which contrasts with the strong empirical performance observed in practice. This naturally leads to the question: What underlying principles and which forms of structured neural networks enable efficient operator learning? An explanation for the success of deep neural networks (DNNs) lies in their powerful feature extraction capabilities; see, e.g., (Riesenhuber and Poggio, 1999; Bengio et al., 2013), which motivate the use of sparse representations. Classical sparse representation methods, including wavelets and shearlets (Mallat, 1999; Labate et al., 2005) or other data-driven dictionary learning approaches (Rubinstein et al., 2010; Elad, 2010), leverage sparsity to represent objects using only a small number of nonzero coefficients. More recently, it has been shown that the forward pass of convolutional neural networks (CNNs) is closely related to the sparse approximation, with recovery errors that can be quantitatively characterized (Papyan et al., 2017; Li et al., 2024c), highlighting the ability of deep learning techniques to represent sparse features. These considerations motivate us to combine sparse approximation theory with CNN encoders in order to obtain improved learning rates that exhibit only mild dependence on the dimension for high-dimensional functional learning, i.e., mappings from infinite-dimensional function spaces to real numbers, under broad assumptions on the underlying dictionaries. Our contributions are summarized as follows: 
+
+• Comprehensive Functional Learning Framework : We introduce a unified theoretical framework to approximate nonlinear functionals over broad classes of function spaces (Theorem 4.2). Our results provide flexibility in constructing encoders based on dic-2tionaries that extend the commonly used orthogonal basis. The concrete results for various input domains are presented in Section 6. 
+
+• Sparse Approximation via CNN Encoder : Unlike many existing approaches that rely on linear encoders, we employ sparse-aware CNNs to perform nonlinear encoding. These CNN encoders derive sparse approximators from limited samples of input func-tions (Theorem 4.1). Denoting fs as a CNN-based sparse approximator for f , it is demonstrated that ∥f − fs∥Lp(Ω ,ν ) ≤ c1e−c2J + c3σs(F, DN )L∞(Ω ,ν ), where J controls the number of CNN parameters and σs(F, DN )L∞(Ω ,ν ) denotes the approximation er-ror incurred when representing a function f ∈ F using s elements from the dictionary 
+
+DN . Using a sufficient number of parameters, the CNN sparse approximator can po-tentially approximate f accurately, provided that f can be sparsely described by the dictionary DN .
+
+• Random Samples Suffice for Functional Learning : In practical applications, we typ-ically deal with finite samples from input functions. Yet, some current approaches require, for instance, grid points or cubature rules. Using cubature rules raises con-cerns about locating such samples in general manifolds or developing algorithms for general dictionaries. Lemma 5.3 and Lemma 5.1 illustrate that random sampling of the locations of input functions meets the conditions of our general theoretical frame-works. 
+
+• Mitigating the Curse of Dimensionality : Two function spaces are investigated with ex-plicit error rates: those with rapid frequency decay and Sobolev functions with mixed smoothness. Assuming that the input functions have smoothness of order α on a do-main of dimension d, we obtain an approximation error of O    
+
+> 
+> (log K)−β(α−32)(log log K)v(α,β,d )
+> 
+
+for H¨ older functionals with modulus of continuity ωP (r) ≤ rβ , when employing a neu-ral network constrained to at most K non-zero parameters. Notably, the dependence on the dimension d appears only through the log log K term, demonstrating that the curse of dimensionality can be alleviated in our setting. The remainder of the paper is organized as follows. Section 2 reviews related work, and Section 3 introduces the necessary preliminaries and notation. Section 4 presents ap-proximation results for general nonlinear continuous functionals, and Section 5 discusses sample size requirements for sparse approximation under different sampling schemes. Sec-tion 6 provides examples that yield explicit rates for several common input function spaces. Section 7 concludes the paper. 
+
+2 Related works 
+
+2.1 Input approaches for operator (functional) learning 
+
+One of the major challenges in operator (functional) learning arises from the infinite or high dimensionality of the data. A straightforward approach is to use discrete function values sampled at grid points as inputs of neural networks; see, e.g., Chen and Chen (1995); Lu et al. (2021). In particular, Chen and Chen (1995) showed that shallow neural networks can achieve universality, and this result was later extended to deep architectures by Lu et al. 3(2021). An alternative to this mesh-dependent strategy is to employ truncated basis expan-sions, where the expansion coefficients serve as network inputs. Bases may be predefined, such as polynomials or Fourier bases (Song et al., 2023a; Yang et al., 2026; Kovachki et al., 2021), or data-dependent bases, as in Liu et al. (2025); Yao et al. (2021). 
+
+2.2 Encoder-decoder structures in functional learning 
+
+The strategy for learning from infinite-dimensional spaces is to extract its most crucial features. Many existing works consider a domain-specific encoder ϕ : Lp(Ω) → RN , which first uses a linear operator LN to obtain the dominant part of the input function f and discretizes it into a vector using a pre-selected dictionary {ui}Ni=1 , that is, Encoder : ϕ(f ) := ( ⟨LN f, u 1⟩, ⟨LN f, u 2⟩, . . . , ⟨LN f, u N ⟩) .
+
+The decoder is then constructed by a neural network for learning nonlinearity Decoder : ψ : RN → R.
+
+If LN f ∈ Span {ui}Ni=1 and LN f converges to f as N → ∞ , then the encoder captures all the necessary information about f . The universal approximation theorem then ensures that the decoder is expressive enough to learn the associated nonlinear mapping. Consequently, we can anticipate that ψ ◦ ϕ(f ) ≈ P (f ) for any nonlinear functional P(·). In Yang et al. (2026), they consider P defined over Sobolev spaces W rp (Sd) with the spherical harmonic basis as the dictionary for linear approximation. Kernel embedding is considered to construct LN in Shi et al. (2025). Due to the property of the Mercer kernel, the corresponding linear integral operator has an orthonormal basis of L2(Ω). Zhou et al. (2024) considered nodal functions for linear approximation encoding while using tanh neural networks as decoder to approximate nonlinear functionals over reproducing Hilbert spaces. Song et al. (2023a,b) used Legendre polynomials for the encoder part. 
+
+2.3 Curse of dimensionality 
+
+The approximation theory of deep learning has to face the challenge of curse of dimension-ality. Briefly speaking, in the function approximation, when the input dimension becomes large, the required trainable parameters exponentially increase, and many research efforts focus on alleviating the impact of dimensionality (Montanelli and Du, 2019; Liu et al., 2024b; Li et al., 2024a; Zhou, 2020a). There are many works that focus on how to overcome this so-called curse of dimensionality problem. One approach in function approximation is to assume that the input data are obtained from some low-dimensional manifolds; see, e.g., (Liu et al., 2021; Chui and Mhaskar, 2018; Shaham et al., 2018; Schmidt-Hieber, 2019; Nakada and Imaizumi, 2020; Chen et al., 2019; Zhou, 2020a). Another strategy is to make stronger assumptions on the input function space, e.g., (Montanelli and Du, 2019; Liu et al., 2024b; Li et al., 2024a; Zhou, 2020a). In the area of functional learning, many results are clearly affected by the curse of dimensionality, e.g., Shi et al. (2025); Song et al. (2023a); Zhou et al. (2024), yet there is a lack of analysis of the conditions under which this issue can be alleviated. 43 Preliminaries and Background 
+
+In this section, we summarize the notation, describe the structure of our neural networks, and present preliminary concepts and results of the sparse approximation. 
+
+3.1 Notations 
+
+Let R and N denote the sets of real numbers and positive integers, respectively, and define 
+
+N0 := N ∪ { 0}. For any n ∈ N, write [ n] := {1, . . . , n } and [ n]0 := [ n] ∪ { 0}. The vector 
+
+1d represents a d-dimensional vector with all entries equal to 1. For a vector z ∈ Rd, we define its p-norm as ∥z∥p = ( P 
+
+> i
+
+|zi|p)1/p for 1 ≤ p < ∞, ∥z∥∞ = max i |zi| if p = ∞, and 
+
+∥z∥0 = # {i : zi̸ = 0 } as the number of nonzero entries. Let ν be a probability measure of a compact domain Ω ⊂ Rd. We denote by C(Ω) the space of continuous functions on Ω, equipped with the supremum norm ∥f ∥C(Ω) =sup x∈Ω |f (x)|. For 1 ≤ p < ∞, the space Lp(Ω , ν ) consists of functions with finite Lp norm, 
+
+∥f ∥Lp(Ω ,ν ) := 
+
+Z 
+
+> Ω
+
+|f |p dν 
+
+1/p 
+
+< ∞.
+
+When p = ∞, L∞(Ω , ν ) consists of functions with finite essential supremum norm, 
+
+∥f ∥L∞(Ω ,ν ) := ess sup x∈Ω |f (x)|.
+
+For r ∈ N0 and β ∈ (0 , 1], the H¨ older space Cr,β (Ω) is defined as the collection of functions that are r times continuously differentiable and the r-th derivatives are β-H¨ older continuous. The norm is given by 
+
+∥f ∥Cr,β (Ω) := X
+
+> ∥α∥1≤r
+
+∥∂αf ∥C(Ω) + X
+
+> ∥α∥1=r
+
+[ ∂αf ]C0,β (Ω) ,
+
+where [ f ]C0,β (Ω) := ∥f ∥C(Ω) + sup 
+
+> x̸=y
+
+|f (x) − f (y)|∥x − y∥β
+
+> 2
+
+.
+
+It is straightforward to verify that Cr,β (Ω) ⊂ C0,β (Ω). 
+
+3.2 Functional neural networks 
+
+Motivated by the encoder–decoder framework widely used in real practice, such as image processing tasks, we adopt a similar structure to address functional learning problems. In particular, our model consists of two components: a CNN that serves as the encoder to extract efficient finite-dimensional representations from high-dimensional inputs and a DNN that serves as the decoder to capture nonlinear relationships within the finite-dimensional domain. In the subsequent section, we first introduce DNNs and CNNs, and then interpret the resulting encoder–decoder architecture as a tool for approximating nonlinear functionals. 5Definition 3.1 (Deep neural networks) Given the input x ∈ Rd, a DNN ψ with L
+
+layers is defined iteratively by ψ(0) (x) = x and 
+
+ψ(ℓ)(x) = σ
+
+
+
+W (ℓ)ψ(ℓ−1) (x) + b(ℓ)
+
+, ℓ = 1 , . . . , L − 1,ψ(x) = W (L)ψ(L−1) (x) + b(L),
+
+for some weight matrices W (ℓ) ∈ Rdℓ×dℓ−1 and bias vectors b(ℓ) ∈ Rdℓ where d0 := d. Here 
+
+σ(u) := max {u, 0} is the rectified linear unit (ReLU) activation for u ∈ R, acting entry-wise on vectors. 
+
+We denote N N DNN (L, K ) as the collection of functions generated by DNNs with no more than L layers and at most K nonzero neurons, that is, K := # {W (ℓ)
+
+> ij
+
+̸ = 0 , b (ℓ)
+
+> i
+
+̸ = 0 , i ∈
+
+[dℓ], j ∈ [dℓ−1], ℓ ∈ [L]}.CNNs can be viewed as a special type of DNNs, in which the usual fully connected weight matrices are replaced by structured convolutional operators. Specifically, for a one-dimensional convolution with kernel size s and stride t, given a kernel w ∈ Rs and input 
+
+x ∈ Rd, the convolution operation is defined as (w ∗t x)i =
+
+> s
+
+X
+
+> k=1
+
+wk x(i−1) t+k, i = 1 , . . . , D(d, t ),
+
+where D(d, t ) := ⌈d/t ⌉ and we set xi := 0 for i > d . Equivalently, there exists a matrix 
+
+T w,t ∈ RD(d,t )×d determined by the kernel w such that T w,t x = w ∗t x, see, for example, Zhou (2020b); Fang et al. (2020); Li et al. (2024b). Multichannel CNNs are one of the most popular network architectures in practice and are defined as follows. 
+
+Definition 3.2 (Multi-channel CNNs) For an input x ∈ Rd, a J-layer multi-channel CNN block ϕ : Rd → RdJ ×nJ is equipped with a collection of filters {w(j) 
+
+> ℓ,i
+
+∈ Rsj }Jj=1 . In the j-th layer, the kernel w(j) 
+
+> ℓ,i
+
+, which has sj entries and uses stride tj , connects the i-th input channel to the ℓ-th output channel. The CNN block ϕ is defined layer by layer 
+
+{ϕ(j) : Rd → Rdj ×nj } via the recursive relation 
+
+ϕ(j)(x)ℓ = σ
+
+> nj−1
+
+X
+
+> i=1
+
+w(j) 
+
+> ℓ,i
+
+∗tj ϕ(j−1) (x)i + b(j) 
+
+> ℓ
+
+1dj
+
+!
+
+, ℓ ∈ [nj ], j = 1 , . . . , J − 1,ϕ(x)ℓ =
+
+> nJ−1
+
+X
+
+> i=1
+
+w(J) 
+
+> ℓ,i
+
+∗tJ ϕ(J−1) (x)i + b(J) 
+
+> ℓ
+
+1dJ , ℓ ∈ [nJ ],
+
+where ϕ(0) (x) = x, b(j) 
+
+> ℓ
+
+∈ R are bias terms, and dj = D(dj−1, t j ) denotes the output dimen-sion at layer j.A CNN is built from a series of these multi-channel convolutional blocks, whose outputs are then flattened into vectors and passed on as inputs to the following layers. 
+
+Similarly, let NCNN (J, M ) denote the class of functions realized by CNNs with depth at most J and at most M nonzero parameters. We are now ready to introduce functional neural networks for learning nonlinear functionals. 6Definition 3.3 (Functional neural networks) The collection of functional neural net-works N N P (J, M, L, N ) for learning nonlinear functional P is defined as 
+
+N N P (J, M, L, K ) := {ψ ◦ ϕ : ϕ ∈ N N CNN (c1J, c 2M ), ψ ∈ N N DNN (c3L, c 4K)} ,
+
+where {ci}4 
+
+> i=1
+
+are constants that may vary from place to place. 
+
+Remark 3.1 The input of N N P (J, M, L, K ) is the discretized function values of the func-tions in the domain of P. Similar structures can be found in other works, but with dif-ferent encoders and different inputs. For example, in Song et al. (2023a,b); Yang et al. (2026), the encoders are defined linearly without adaptivity, and the inputs are functions in infinite-dimensional spaces. In contrast, we emphasize the feature extraction capability of the encoder (CNNs) and discretized inputs, which is a more practical setting. For simplicity of notation, we omit the subscript P and denote the network as N N (J, M, L, K ).
+
+3.3 Sparse approximation from finite samples 
+
+Sparsity has emerged as one of the most fundamental structural properties of high dimen-sional data and has been empirically verified in a wide range of applications (Mallat, 1999; Donoho, 2006; Tibshirani, 1996). From the perspective of approximation theory, sparse properties are known to yield efficient approximation rates in function spaces and have been studied extensively in the context of nonlinear approximation, see, e.g. DeVore and Lorentz (1993); Dai and Temlyakov (2023). This section presents preliminary concepts and algorithm of sparse approximation for general function spaces. Let Ω ⊂ Rd be a compact set with probability measure ν and DN := {ui}Ni=1 ⊂ C (Ω) be a dictionary that consists of N continuous functions. The collection of all the s-sparse combination of elements in dictionary DN is denoted as Σs(DN ) := 
+
+( NX
+
+> i=1
+
+wiui w = ( w1, . . . , w N ), ∥w∥0 ≤ s
+
+)
+
+.
+
+For a Banach space ( X, ∥ · ∥ X ), the best s-term approximation error of a functional data 
+
+f ∈ X and the worst-case error for a function set F ⊂ X, with respect to DN , are defined respectively by 
+
+σs(f, DN )X := inf   
+
+> g∈Σs(DN)
+
+∥f − g∥X , σs(F, DN )X := sup  
+
+> f∈F
+
+σs(f, DN )X . (1) To approximate a target function f by ones in Σ s(DN ), one can equivalently search for a sparse coefficient vector w ∈ RN for the estimator associated with the dictionary DN . In practice, this task is typically formulated in a discretized setting. Given a set of samples 
+
+ξ := {ξi}mi=1 ⊂ Ω, we denote the discretized function values and the dictionary matrix by ˜f m := ( f | ξ)⊤ := ( f (ξ1), . . . , f (ξm)) ⊤, eDmN := (˜ um 
+
+> 1
+
+, . . . , ˜umN ) ∈ Rm×N .
+
+The averaged empirical norms are given by 
+
+∥ ˜f m∥p,m := 1
+
+m
+
+> m
+
+X
+
+> i=1
+
+|f (ξi)|p
+
+!1/p 
+
+, 1 ≤ p < ∞,
+
+7and ∥ ˜f m∥∞,m := max i∈[m] |f (ξi)|. With these notations, the s-term estimator is obtained by solving 
+
+wsp,m := arg min 
+
+> w∈RN
+> ∥w∥0≤s
+
+f −
+
+> N
+
+X
+
+> i=1
+
+wiui ξ
+
+> p,m
+
+:= arg min 
+
+> w∈RN
+> ∥w∥0≤s
+
+˜f m − eDmN w p,m . (2) Notice that, given s, DN , and ξ, the sparse coefficient vector wsp,m changes with respect to different f and can be viewed as an operator wsp,m := wsp,m (f ). For simplicity, we omit explicit dependencies and use wsp,m throughout this paper. The corresponding s-term estimator is then given by 
+
+f sp,m := 
+
+> N
+
+X
+
+> i=1
+
+ wsp,m 
+
+ 
+
+> i
+
+ui. (3) To ensure a good approximation result, we impose the following condition on the sam-pling set ξ, which was also introduced in the literature; see, e.g., Dai and Temlyakov (2023, 2024). 
+
+Assumption 1 We assume that the sampling set ξ := {ξj }mj=1 ⊂ Ω provides universal discretization for Σ2s(DN ), that is, there exist constants C1, C 2 > 0, such that the following inequalities hold 
+
+C1∥f ∥pLp(Ω ,ν ) ≤ 1
+
+m
+
+> m
+
+X
+
+> j=1
+
+|f (ξj )|p ≤ C2∥f ∥pLp(Ω ,ν ), ∀f ∈ Σ2s(DN ). (4) 
+
+In particular, the condition involving only the lower bound with constant C1 is called one-sided universal discretization. 
+
+This assumption imposes a regularity condition on the sampling set ξ, requiring that it provides a stable discretization of the Lp(Ω , ν )-norm. Such conditions arise in several areas, including norm discretization in approximation theory (Temlyakov, 2018), sampling for numerical integration (Dick et al., 2013), and stable embedding conditions in compressed sensing (Candes et al., 2006). In particular, it rules out poorly distributed sampling sets that could distort function norms when measured through discrete samples. We show that this assumption is mild and quantify the required sample size m for both deterministic and random sampling schemes in Section 5. The next lemma establishes an approximation bound for the sparse estimator of the function f ∈ C (Ω). In fact, it holds for σs(f, DN )Lp(Ω ,ν ξ ) with some probability measure νξ
+
+for any p ∈ [1 , ∞], as shown in the Appendix A. 
+
+Lemma 3.1 Let m, s, N ∈ N with s ≤ N/ 2 and 1 ≤ p ≤ ∞ . Then for any f ∈ C (Ω) , we have 
+
+∥f − f sp,m | ξ∥p,m ≤ 21/p σs(f, DN )L∞(Ω ,ν ),
+
+In addition, if ξ satisfies one-sided universal discretization (Assumption 1), then 
+
+∥f − f sp,m ∥Lp(Ω ,ν ) ≤ C3 σs(f, DN )L∞(Ω ,ν ),
+
+where C3 > 0 depends only on p as given in (9) .
+
+8The above lemma is inspired by Dai and Temlyakov (2023) and provides an approxi-mation bound with respect to σs(f, DN ) when we learn sparse approximation from finite samples. The key difference compared to Dai and Temlyakov (2023) lies in the algorithm: ours is purely based on a discretized representation of the function and dictionary. This modification makes our approach more practical for computation, and hence indicates that CNNs may serve as sparse approximators. 
+
+4 Rates of approximating nonlinear functionals 
+
+This section presents the approximation error of functional neural networks for functionals possessing certain smoothness properties on general continuous domains. We begin by an-alyzing the sparse approximation capability of the CNN part of functional neural networks. 
+
+4.1 Sparse approximation via CNN encoders 
+
+Algorithms to solve the sparse coding problem (2) are well studied in the literature. If 
+
+N ≫ m, the classical sparse coding problem aims to find the sparsest coefficient by solving the associated optimization problem min  
+
+> w
+
+∥w∥0 s.t. ef m = eDmN w. 
+
+In the presence of noise, the basis pursuit denoising (BPDN) (Chen et al., 2001) or the least absolute shrinkage and selection operator (LASSO) (Tibshirani, 1996) are typically adopted. A large body of work has investigated the convergence behavior of these sparse coding algorithms, where a central role is played by the notion of mutual coherence, defined for a matrix A ∈ Rm×N with columns ak as 
+
+μ(A) = max 
+
+> i̸=j
+
+a⊤ 
+
+> i
+
+aj
+
+∥ai∥2∥aj ∥2
+
+.
+
+It quantifies the maximum similarity between distinct columns: a smaller value indicates that the columns are nearly orthogonal (low redundancy). Moreover, mutual coherence provides fundamental guaranties for sparse recovery, since a smaller μ(A) allows one to recover signals of higher sparsity. In the following, we consider m < N so that the discretized dictionary ˜DmN is redundant. The book (Elad, 2010) offers an in-depth treatment of these ideas and the associated sparse coding problems. In recent years, algorithms for solving sparse coding problems (2) through deep learning have gained wide popularity under the paradigm of learning to optimize, see, e.g., Gregor and LeCun (2010); De Weerdt et al. (2024). Inspired by this approach, we employ CNNs for sparse coding. Let ¯s := 12 1 + 1
+
+μ( eDmN )
+
+!
+
+. (5) Then next theorem specifies the associated approximation rate that can be attained by CNNs. The proof is given in Appendix B.1. 
+
+Theorem 4.1 Let m, s, k, J, N ∈ N, 1 ≤ p < ∞, B > 0, and assume s < ¯s. Then there exists a CNN Φ ∈ N N CNN (O(J log k(m + N )) , J (m + N )2) with kernel size k, such that for any f ∈ F := {f ∈ C (Ω) : ∥f ∥C(Ω) ≤ B}
+
+91. ∥Φ( ˜f m)∥0 ≤ s;2. wsp,m − Φ( ˜f m) p ≤ C4e−C5J + C6σs(F, DN )L∞(Ω ,ν ).In addition, if the one-sided universal discretization (Assumption 1) holds, then 
+
+∥f − fs∥Lp(Ω ,ν ) ≤ C7e−C5J + C8σs(F, DN )L∞(Ω ,ν ). (6) 
+
+where fs := PNi=1 Φ( ˜f m)iui and the constants C4, . . . , C 8 depend on p, m, B, s, N , and 
+
+˜DmN , as given in (33) , (34) , (35) , (39) , and (40) in Appendix B.1. 
+
+The condition s < ¯s indicates that the admissible sparsity level depends on the coherence of the dictionary. Intuitively, when dictionary elements are highly correlated, only very sparse representations can be reliably distinguished from sampled data, which imposes an upper bound on s. For instance, consider two orthogonal matrices U, V ∈ Rm×m. Defining 
+
+A := [ U, V ], we obtain 1 /√m ≤ μ(A) ≤ 1. Consequently, s ≤ (√m + 1) /2, with equality achieved when U is the identity matrix and V is the Fourier matrix Elad (2010). Such coherence-based sparsity bounds are classical in sparse recovery and ensure the uniqueness and stability of sparse representations. The first error term in (26) decays exponentially as the number of CNN layers increases, while the second term reflects the sparse approximation of f with respect to the chosen dictionary DN . If f admits an s-term representation using elements of DN , then this second term becomes small. In Theorem 4.1, the sparsity condition on s is imposed because, once the problem is discretized, this assumption guaranties the convergence of the sparse coding algorithm. Lemma 5.3 characterizes this sparsity requirement in a specific setting. Here, we do not explicitly state the expression for the sample size m, as it is implicitly contained in Assumption 1. Section 5 provides the required sample sizes for deterministic and random sampling schemes for several specific dictionaries, and we shall show its advantages. Theorem 4.1 is rooted in both approximation theory and sparse coding. The first uni-versality result for CNNs was established in Zhou (2020b). In addition, approximation rates of CNNs have been systematically investigated across a range of function spaces; see, for instance, Zhou (2020b) for smooth functions in Hilbert spaces, Fang et al. (2020) for Sobolev spaces on the sphere, and Zhou (2020a); Mao et al. (2021, 2023); Li et al. (2024b) for compositional function spaces that highlight their feature-learning capabilities. From the perspective of sparse coding, Papyan et al. (2017) showed that convolutional neural networks can effectively solve sparse coding problems involving convolutional dictionaries, thereby revealing a fundamental link between CNNs and sparse coding algorithms. Subse-quently, Li et al. (2024c) generalized this result to broader classes of sparse coding problems with general activation functions, employing tools from approximation theory. To the best of our knowledge, this is the first study to examine the sparse approximation capability of CNNs with respect to general dictionaries, which can be applied to a wide range of theoretical and practical settings. 
+
+4.2 Error bound for learning H¨ older continuous functionals 
+
+Consider a nonlinear functional P : C(Ω) → R. Its modulus of continuity is defined by 
+
+ωP (r; F )p := ωP (r)p := sup |P (f ) − P (g)| : ∥f − g∥Lp(Ω) ≤ r, for f, g ∈ F ,
+
+10 Figure 1: Functional learning pipeline proposed in Theorem 4.2 through functional neural networks. where the dependence on F is omitted when clear from the context. The class of H¨ older continuous functionals C0,β (C(Ω)) p, β ∈ (0 , 1] is given by 
+
+C0,β (C(Ω)) p := 
+
+n
+
+P : C(Ω) → R : ωP (r; C(Ω)) p ≤ rβ o
+
+.
+
+The following theorem establishes the approximation ability of functional neural net-works for a nonlinear functional P defined on the function class F = {f ∈ C (Ω) : ∥f ∥C(Ω) ≤
+
+B, B > 0}. The proof is given in Appendix B.2. 
+
+Theorem 4.2 (H¨ older continuous functional approximation) Let m, s, K, M, N ∈ N,and let B > 0 and β ∈ (0 , 1] . Under Assumption 1, for any nonlinear functional P ∈ 
+
+C0,β (C(Ω)) p, there exists a functional neural network 
+
+Φ ∈ N N  M log( m + N ), M (m + N )2, ln K, K 
+
+such that 
+
+sup  
+
+> f∈F
+
+P(f ) − Φ( ef m) ≤ inf 
+
+> s< ¯s
+
+n
+
+Cβ 
+
+> 7
+
+e−C5βM + Cβ
+
+> 8
+
+ σs(F, DN )L∞(Ω ,ν )
+
+β + C9(K/ ln K)−β/s o
+
+,
+
+where ¯s is given in (5) and the constants C5, C 7, C 8, C 9 depend on p, m, B, s, N , and ˜DmN
+
+as given in (34) , (39) , (40) , and (52) in Appendix B.1. 
+
+Figure 1 provides a graphical depiction of how neural networks learn functionals as de-scribed in Theorem 4.2. The first and last terms of the upper bound in Theorem 4.2 capture the learning capacities of the CNN encoder and the DNN decoder in the functional network. As their respective numbers of parameters increase, the encoder achieves an exponential de-cay in error, whereas the decoder exhibits a polynomial decay. The second term depends on the choice of the dictionary, and we provide more explicit rates for several commonly used dictionaries and function spaces in Section 6 (Corollary 6.1 and 6.2). Moreover, in many practical applications, such as image processing, this term is typically very small. 11 Remark 4.1 (Curse of dimensionality) The error in the last term decays at the rate 
+
+(K/ ln K)−β/s , which depends on the sparsity level s rather than on N . This is advantageous because N typically grows exponentially with dimension d when Ω ⊂ Rd; for example, the space of polynomials of degree n over [−1, 1] d contains O(nd) basis functions, which leads to extremely slow decay rates when the dependence is on N .
+
+5 Sample size requirements for various sampling schemes 
+
+As mentioned in Section 4, the requirement of sample locations and dictionary is contained in the Assumption 1, which ensures that the Lp norm is equivalent to the discrete ℓp norm on the sample set {ξj }mj=1 for all f ∈ Σ2s(DN ). In this section, we demonstrate how many samples are needed for Assumption 1 to hold for several commonly used dictionaries (such as orthogonal bases), under both deterministic and random sampling schemes. As we show later, the sparsity pattern enables a substantial decrease in the necessary sample size. We begin by specifying the required properties of the dictionary. 
+
+Assumption 2 Assume that DN satisfies: (2a) sup x∈Ω |ui(x)| ≤ 1, i ∈ [N ].(2b) There exists R > 0 such that PNi=1 |wi|2 ≤ R PNi=1 wiui 22 for any w ∈ CN .
+
+As noted in Dai and Temlyakov (2024), Assumption 2b, also called Riesz basis, is rel-atively mild, as it can always be satisfied by choosing R as the reciprocal of the smallest eigenvalue of the matrix D, whose entries are defined by Dij = ⟨ui, u j ⟩L2(Ω) . In partic-ular, this condition rules out dictionaries containing highly correlated or nearly linearly dependent elements, which could allow large coefficient vectors to cancel each other and produce functions with very small norm and make the representation unstable. Many com-monly used dictionaries satisfy Assumption 2. Examples include orthonormal systems such as Fourier bases, spherical harmonics, and orthogonal polynomial systems (e.g., Legendre or Chebyshev polynomials), for which R = 1. It is also satisfied by compactly supported wavelet systems, B-splines, and finite element bases (such as piecewise linear or higher-order hat functions); see, e.g., Cohen et al. (1992), Brenner and Scott (2008). 
+
+5.1 Deterministic sampling 
+
+Deterministic sampling provides an explicit way to guarantee the universal discretization property required in Assumption 1. When the dictionary satisfies Assumption 2, the recent result of Dai and Temlyakov (2023) shows that one can choose a relatively small number of deterministic sample points to achieve this property. The following lemma summarizes this result. 
+
+Lemma 5.1 (Dai and Temlyakov (2023)) Let 1 ≤ p ≤ 2. If the dictionary DN satisfies Assumptions 2, then for any 1 ≤ s ≤ N/ 2, there exist ξ ∈ Ωm with 
+
+m ≤ Cs log N · log 2(4 s)(log(4 s) + log log N ),
+
+such that ξ provides universal discretization (Assumption 1) with C1 = 1 /2 and C2 = 3 /2.
+
+12 The above lemma shows that the required sample size is of order O(s log 3 s · log N ·
+
+log log N ), which is substantially smaller than those in related works whenever s ≪ N .For example, orthonormal bases with uniformly bounded L∞ norms and nodal bases used in interpolation satisfy Assumption 2, and therefore our results apply directly to these settings. In contrast, in previous work using spherical harmonics, the number of samples must scale linearly with N (Yang et al., 2026; Feng et al., 2023). Similarly, Zhou et al. (2024) employs a fixed uniform grid for interpolation in a reproducing kernel Hilbert space during the discretization step, where again the sample size is required to be equal to N .
+
+5.2 Random sampling 
+
+While deterministic constructions provide existence guaranties and valuable theoretical in-sight, they are often challenging to realize in practice. Therefore, we next show that random sampling achieves the same guaranties with high probability and with a comparable sample size. The following lemma also appears in Dai and Temlyakov (2024), and therefore we omit the proof here. 
+
+Lemma 5.2 (Dai and Temlyakov (2024)) Assume that DN satisfies Assumption 2. Let 
+
+ξ be a set of m independent and identically distributed random points on Ω with probabil-ity distribution ν. Then for any 1 ≤ p ≤ 2 and any integer 1 ≤ s ≤ N/ 2, the sample set ξ satisfies Assumption 1 with constants C1 = 12 and C2 = 32 , with probability at least 
+
+1 − 2 exp {− cm/ (Rs log 2(4 Rs )) } provided that 
+
+m ≥ CRs log N · (log(4 Rs )) 2 ·  log(4 Rs ) + log log N ,
+
+where c and C are positive constants depending only on p.
+
+5.3 Random sampling under orthogonal systems 
+
+The results provided above give reasonable estimates for the required sample size and for Assumption 1. However, they do not suffice to produce an explicit convergence rate when applied to Theorem 4.2, which requires the estimation of mutual coherence. In the following, we focus on orthogonal dictionaries and derive explicit formulas to estimate the sparsity levels that still ensure Assumption 1. 
+
+Assumption 3 Assume that DN is an orthogonal system, i.e., 
+
+⟨ui, u j ⟩L2(Ω ,ν ) := 
+
+Z
+
+> Ω
+
+ui(x) uj (x) dν (x) = γ δ ij , i, j ∈ [N ],
+
+where γ > 0 is a constant independent of N , and δij = 1 if i = j and 0 otherwise. 
+
+It is clear that Assumption 3 yields the Riesz-type condition (Assumption 2b). A simple example of a dictionary DN that satisfies both Assumption 2a and Assumption 3 is a truncation of the real trigonometric system 
+
+n
+
+1, √2 cos(2 πkt ), √2 sin(2 πkt )
+
+o∞ 
+
+> k=1
+
+,
+
+13 which is orthonormal on Ω = [0 , 1]. For the d-dimensional real trigonometric system, we can normalize the functions to satisfy Assumption 2a and Assumption 3. In this case, γ = 2 −d.Under this orthogonality condition, the next lemma establishes not only the necessary sample size but also an explicit upper bound on the admissible sparsity level s. A detailed proof is provided in Section C. 
+
+Lemma 5.3 Assume that Assumptions 2a and 3 hold. Let ξ be a set of independent and identically distributed random points on Ω with distribution ν. Then, with probability at least 1 − ε, the following statements hold whenever m > 64 3γ log  2N 2/ε :1. Assumption 1 holds with C1 = 14 and C2 = 94 .2. The mutual coherence is bounded by 
+
+μ( ˜D mN ) ≤ 8
+
+s
+
+log(2 N 2/ε )3γm .
+
+3. The sparsity can be chosen as 
+
+s =
+
+$
+
+12 1 + 116 
+
+s
+
+3γm 
+
+log(2 N 2/ε )
+
+!% 
+
+≤ ¯s, 
+
+where ¯s is defined in (5) .
+
+6 Explicit upper bounds for specific input function spaces 
+
+In this section, we present explicit learning rates for approximating nonlinear functionals, as formulated in Theorems 4.2, for several distinct choices of input function spaces. This is made possible by the estimate derived in Lemma 5.3. Within our framework, we will show that deep neural networks circumvent the curse of dimensionality, thereby providing an explanation for their strong empirical performance in high-dimensional settings. In what follows, alleviating the curse of dimensionality means that when the total num-ber of parameters in functional neural networks is K, the required sample size m and the error tolerance ε, expressed as functions of K, do not deteriorate at an exponential rate with respect to the dimension d of the input function domain. 
+
+6.1 Function spaces with fast coefficient decays under dictionaries 
+
+We first consider functions that have fast decay coefficients with α > 0 in the dictionary 
+
+DN :
+
+Aα 
+
+> 1
+
+(DN ) := 
+
+( NX
+
+> i=1
+
+ciui :
+
+> N
+
+X
+
+> i=1
+
+|ci|iα ≤ 1
+
+)
+
+.
+
+The function class Aα 
+
+> 1
+
+(DN ) naturally arises from several classical function spaces after an appropriate ordering of the dictionary elements. In the following, we illustrate this with Sobolev spaces and Besov spaces on the sphere. 14 Example (Sobolev spaces on the sphere). Let f ∈ W rp (Sd−1) be a Sobolev function on the unit sphere. With respect to the spherical harmonic basis {Yk,ℓ : k ∈ Z+, ℓ =1, . . . , C (k, d )}, its Sobolev norm admits the characterization 
+
+∥f ∥W rp (Sd−1) ≍
+
+> ∞
+
+X
+
+> k=0
+
+kr
+
+
+
+> C(k,d )
+
+X
+
+> ℓ=1
+
+| bfk,ℓ |p
+
+
+
+> 1/p
+
+,
+
+where bfk,ℓ = ⟨f, Y k,ℓ ⟩L2(Sd−1) and C(k, d ) ≍ kd−2.Fix an ordering of the spherical harmonics {Yk,ℓ }k≥0, 1≤ℓ≤C(k,d ) by non-decreasing degree 
+
+k, and label them as a single-indexed dictionary D := {ui}i≥1. With this ordering, the total number of basis functions up to degree k satisfies 
+
+i =
+
+> k
+
+X
+
+> j=0
+
+C(j, d ) ≍ kd−1.
+
+Hence, for coefficients corresponding to the spherical harmonics of degree k, the index i
+
+satisfies 
+
+kd−2 ≲ i ≲ kd−1, or equivalently k(d−2) /(d−1) ≲ i 1/(d−1) ≲ k. 
+
+Under this identification, the Sobolev norm ( p = 1) can be rewritten as 
+
+∥f ∥W r  
+
+> 1(Sd−1)
+
+≲
+
+> ∞
+
+X
+
+> i=1
+
+i rd−1 |ci|, ci := ⟨f, u i⟩L2(Sd−1),
+
+which shows that the unit ball of W r 
+
+> 1
+
+(Sd−1) is continuously embedded in Aα 
+
+> 1
+
+(D) with α = 
+
+> rd−1
+
+.
+
+Example (Besov spaces on the sphere). Let Ω = Sd−1 and {ψη} be a needlet system that can be a tight frame for L2(Sd−1), i.e., f = P
+
+> η∈χ
+
+⟨f, ψ η⟩ψη with χ = ∪∞
+
+> j=0
+
+χj . Here χj
+
+is a set of points almost uniformly distributed on Sd−1 and # χj ≈ 2j(d−1) . Suppose that f
+
+belongs to a Besov space Bα,q p (Sd−1) with α > 0. Then its expansion coefficients satisfy 
+
+∥f ∥Bα,q p ≈
+
+
+
+> ∞
+
+X
+
+> j=0
+
+2j(α+( d−1) /2−(d−1) /p )
+
+ X
+
+> η∈χj
+
+|⟨ f, ψ η⟩| p
+
+
+
+> 1/p
+
+
+
+> q
+
+
+
+> 1/q
+
+, ∀f ∈ Bα,q p (Sd−1).
+
+The number of elements up to scale j satisfies Pjℓ=0 2ℓ(d−1) = O(2 jd ). That is, for the nonincreasing rearrangement { ¯fi} of {⟨ f, ψ η⟩} with respect to j, the index i for the elements of scale j satisfies 2j(d−1) ≲ i ≲ 2jd , or equivalently 2j(d−1) /d ≲ i 1 
+
+> d
+
+≲ 2j .
+
+In particular, for p = q = 1, one has 
+
+∥f ∥Bα, 11
+
+≈
+
+> ∞
+
+X
+
+> j=0
+
+2j(α−(d−1) /2) X
+
+> η∈χj
+
+|⟨ f, ψ η⟩| ,
+
+15 which implies that X
+
+> i
+
+iα/d −(d−1) /2d| ¯fi| ≲ ∥f ∥Bs 
+
+> 1,1
+
+.
+
+Therefore, the unit ball of B1,α  
+
+> 1
+
+can be viewed as a special case of Aα/d −(d−1) /2d 
+
+> 1
+
+({ψη}) when 
+
+α/d − (d − 1) /2d > 0. For a more in-depth discussion, see Narcowich et al. (2006). In what follows, we examine broad classes of function spaces whose coefficients, relative to specific dictionaries, decay at a similarly fast rate. We demonstrate that the subsequent result avoids the curse of dimensionality when learning nonlinear functionals. 
+
+Corollary 6.1 Consider F ⊂ Aα 
+
+> 1
+
+(DN )) ∞ with α > 32 and DN which satisfies Assumptions 2a and 3. Let ξ be a set of m independent and identically distributed random points on Ω
+
+with a probability distribution ν. If m ≍ (log K)2 / log log K for an integer K, then with probability at least 
+
+1 − log log K · (log K)−2 ,
+
+for any nonlinear functional P ∈ C0,β (C(Ω)) 2, there exists a functional neural network 
+
+Φ ∈ N N 
+
+
+
+(log log K)2 , (log K)2 , log K, K 
+
+
+
+such that 
+
+sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| = O
+
+
+
+(log K)−β(α− 32 )(log log K)β(α−1) 
+
+.
+
+This result achieves an approximation rate that decays exponentially in log K and re-mains free of any dependence on the dimension of the input domain. In contrast, the earlier rate of order (log K)−α/d , see, e.g. Song et al. (2023a); Yang et al. (2026); Shi et al. (2025), is much slower and is affected by the curse of dimensionality. 
+
+6.2 Sobolev functions with mixed smoothness 
+
+The second example of the input function class consists of periodic functions with mixed derivatives, which play a central role in high-dimensional approximation theory, see, e.g., Temlyakov (2015); Dai and Temlyakov (2023). Let T be the torus represented by [0 , 2π]. In the following, we use ∥ · ∥ Lp := ∥ · ∥ Lp(Td) for simplicity. To analyze approximation properties, it is convenient to decompose a function into dyadic “mixed” frequency blocks. For f ∈ L1(Td), define 
+
+fj = X
+
+> ∥n∥1=j
+
+X
+
+> ⌊2ni−1⌋≤| ki|<2ni
+
+bf (k) eik ·x, bf (k) = (2 π)−d
+
+Z
+
+> Td
+
+f (x) e−ik ·xdx. 
+
+where j ∈ N0 and k = ( k1, . . . , k d) denotes a frequency vector and ∥n∥1 = n1 + · · · + nd
+
+controls the mixed dyadic level, rather than the isotropic scale max i ni.Using the decomposition f = P 
+
+> j≥0
+
+fj , we define the mixed-smoothness classes 
+
+W a,b A := 
+
+n
+
+f : ∥fj ∥A ≤ 2−aj ¯j(d−1) b, ¯j := max {j, 1}, j ∈ N
+
+o
+
+,
+
+16 where 
+
+∥f ∥A := X
+
+> k∈Zd
+
+| bf (k)|
+
+is the Wiener algebra norm (sum of absolute Fourier coefficients). This example is closely connected to Aα 
+
+> 1
+
+(DN ) because its Fourier coefficients decay rapidly. A similar result is given in the following corollary. 
+
+Corollary 6.2 Consider F ⊂ W a,b A with ∥f ∥C(Td) ≤ 1, a > 32 , and b ∈ R. Let ξ be a set of 
+
+m independent and identically distributed random points on Ω with probability distribution 
+
+ν. If m ≍ (log K)2 / log log K for an integer K, then with probability at least 
+
+1 − log log K · (log K)−2 ,
+
+for any nonlinear functional P ∈ C0,β (C(Ω)) 2, there exists a functional neural network 
+
+Φ ∈ N N 
+
+
+
+(log log K)2 , (log K)2 , log K, K 
+
+
+
+such that 
+
+sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| = O
+
+
+
+(log K)−β(a− 32 )(log log K)β(a+( d−1)( a+b)− 12 )
+
+.
+
+6.3 Discussion 
+
+In the literature, the convergence for approximating a functional is typically rather slow. In Song et al. (2023b,a); Yang et al. (2026), the authors consider orthogonal basis truncation or adaptive bases obtained through kernel embeddings (Shi et al., 2025), using the resulting coefficients as input to subsequent neural networks. For nonlinear functionals defined on Sobolev spaces W rp (Ω), Ω ⊂ Rd, they obtain rates of order (log K)−r/d in terms of the num-ber of free parameters K in neural networks. This coincides with the minimax lower bound for continuous functionals on Lp without further assumptions (Mhaskar and Hahm, 1997, Theorem 2.2). Beyond Sobolev spaces, faster rates are achieved in smaller input spaces. For analytic functions, Song et al. (2023a) establish rates of exp  −c(log K)1/(d+1) ; for some reproducing kernel Hilbert spaces (RKHS), Zhou et al. (2024) obtain (log K)−s(2 r−d)/d with 2r − d > 2; and for Barron spectral spaces of functionals, Yang and Xiang (2022) derive a rate of K−1/2. Similar bounds have also been established in the operator learning litera-ture. For instance, Lanthaler et al. (2022) derive rates for analytic function inputs, while Kovachki et al. (2021); Liu et al. (2025) consider inputs from Sobolev spaces. In contrast, our work explores the sparse approximation with respect to general dictio-naries. Since the output of the CNN encoder is sparse, the decoder can exploit this sparsity and, therefore, requires significantly fewer neurons. We demonstrate these benefits for input functions with rapidly decaying coefficients and for Sobolev spaces with mixed smoothness, where the curse of dimensionality can be alleviated. These findings suggest that deep neural networks have the capacity to handle high-dimensional functional data. 17 7 Conclusion and future work 
+
+In this paper, we develop a general functional learning framework based on sparsity-aware neural networks. Our framework has three main advantages: (i) it accommodates arbi-trary dictionaries; (ii) it shows that random sampling is sufficient to recover sparsity from input functions; and (iii) it establishes that CNN encoders can serve as effective sparse approximators. Within this general framework, we consider two classes of input functions: Sobolev spaces with mixed derivatives and function spaces with fast frequency decays. Exploiting the fact that functions in these classes can be well approximated using only a few elements from suitable dictionaries, we prove that our approximation bounds are independent of the ambient dimension d (the dimension of the domain of the input functions). These function classes are reasonably large, and our results demonstrate that CNN-based architectures can effectively mitigate the curse of dimensionality in functional learning problems. Since the approximation of nonlinear functionals is a fundamental ingredient in operator learning, as noted in the literature (see, e.g., Mhaskar (1993); Liu et al. (2025)), it is nat-ural to extend the present framework to the operator learning setting. Another important direction is to investigate the generalization properties of our encoder–decoder architecture, which involves not only approximation guaranties but also a detailed analysis of sample estimation error. 
+
+Acknowledgement 
+
+J. Li gratefully acknowledges support from the project CONFORM, funded by the German Federal Ministry of Education and Research (BMBF), as well as from the German Research Foundation under the Grant DFG-SPP-2298. Furthermore, J. Li acknowledges additional support from the project “Next Generation AI Computing (gAIn)”, funded by the Bavarian Ministry of Science and the Arts and the Saxon Ministry for Science, Culture, and Tourism. The work of H. Feng was partially supported by CityU 11315522; CityU 11300525. The work of D. X. Zhou described in this paper was partially supported by Discovery Project (DP240101919) of the Australian Research Council. The work of G. Kutyniok was sup-ported in part by the Konrad Zuse School of Excellence in Reliable AI (DAAD), the Munich Center for Machine Learning (MCML), as well as the German Research Foundation under Grants DFG-SPP-2298, KU 1446/31-1 and KU 1446/32-1. Furthermore, G. Kutyniok ac-knowledges additional support from the project “Next Generation AI Computing (gAIn)”, funded by the Bavarian Ministry of Science and the Arts and the Saxon Ministry for Science, Culture, and Tourism, as well as by the Hightech Agenda Bavaria. 
+
+References 
+
+Y. Bengio, A. Courville, and P. Vincent. Representation learning: A review and new per-spectives , volume 35. IEEE, 2013. S. C. Brenner and L. R. Scott. The mathematical theory of finite element methods . Springer, 2008. 18 E. J. Candes, J. K. Romberg, and T. Tao. Stable signal recovery from incomplete and inaccurate measurements. Communications on Pure and Applied Mathematics: A Journal Issued by the Courant Institute of Mathematical Sciences , 59(8):1207–1223, 2006. M. Chen, H. Jiang, W. Liao, and T. Zhao. Efficient approximation of deep ReLU networks for functions on low dimensional manifolds. Advances in Neural Information Processing Systems , 32, 2019. S. S. Chen, D. L. Donoho, and M. A. Saunders. Atomic decomposition by basis pursuit. 
+
+SIAM review , 43(1):129–159, 2001. T. Chen and H. Chen. Universal approximation to nonlinear operators by neural networks with arbitrary activation functions and its application to dynamical systems. IEEE Trans-actions on Neural Networks , 6(4):911–917, 1995. X. Chen, J. Liu, Z. Wang, and W. Yin. Theoretical linear convergence of unfolded ista and its practical weights and thresholds. Advances in Neural Information Processing Systems ,31, 2018. C. K. Chui and H. N. Mhaskar. Deep nets for local manifold learning. Frontiers in Applied Mathematics and Statistics , 4:12, 2018. A. Cohen, I. Daubechies, and J.-C. Feauveau. Biorthogonal bases of compactly supported wavelets. Communications on pure and applied mathematics , 45(5):485–560, 1992. F. Dai and V. Temlyakov. Universal discretization and sparse sampling recovery. arXiv preprint arXiv:2301.05962 , 2023. F. Dai and V. Temlyakov. Random points are good for universal discretization. Journal of Mathematical Analysis and Applications , 529(1):127570, 2024. B. De Weerdt, Y. C. Eldar, and N. Deligiannis. Deep unfolding transformers for sparse recovery of video. IEEE Transactions on Signal Processing , 72:1782–1796, 2024. J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova. Bert: Pre-training of deep bidirectional transformers for language understanding. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics (NAACL) ,pages 4171–4186, 2019. R. A. DeVore and G. G. Lorentz. Constructive Approximation , volume 303. Springer Science & Business Media, 1993. J. Dick, F. Y. Kuo, and I. H. Sloan. High-dimensional integration: the quasi-monte carlo way. Acta Numerica , 22:133–288, 2013. D. L. Donoho. Compressed sensing. IEEE Transactions on information theory , 52(4): 1289–1306, 2006. M. Elad. Sparse and redundant representations: from theory to applications in signal and image processing . Springer Science & Business Media, 2010. 19 Z. Fang, H. Feng, S. Huang, and D.-X. Zhou. Theory of deep convolutional neural networks ii: Spherical analysis. Neural Networks , 131:154–162, 2020. H. Feng, S. Huang, and D.-X. Zhou. Generalization analysis of cnns for classification on spheres. IEEE Transactions on Neural Networks and Learning Systems , 34(9):6200–6213, 2023. S. Foucart and H. Rauhut. A mathematical introduction to compressive sensing. In Applied and Numerical Harmonic Analysis , 2013. K. Gregor and Y. LeCun. Learning fast approximations of sparse coding. In Proceedings of the 27th international conference on international conference on machine learning , pages 399–406, 2010. S. Greven and F. Scheipl. A general framework for functional regression modelling. Statis-tical Modelling , 17(1-2):1–35, 2017. N. Kovachki, S. Lanthaler, and S. Mishra. On universal approximation and error bounds for fourier neural operators. Journal of Machine Learning Research , 22(290):1–76, 2021. A. Krizhevsky, I. Sutskever, and G. E. Hinton. Imagenet classification with deep convolu-tional neural networks. Advances in neural information processing systems , 25, 2012. D. Labate, W.-Q. Lim, G. Kutyniok, and G. Weiss. Sparse multidimensional representation using shearlets. In Wavelets XI , volume 5914, pages 254–262. SPIE, 2005. S. Lanthaler, S. Mishra, and G. E. Karniadakis. Error estimates for deeponets: A deep learning framework in infinite dimensions. Transactions of Mathematics and Its Applica-tions , 6(1):tnac001, 2022. Y. LeCun, Y. Bengio, and G. Hinton. Deep learning. Nature , 521(7553):436–444, 2015. J. Li, H. Feng, and D.-X. Zhou. SignReLU neural network and its approximation ability. 
+
+Journal of Computational and Applied Mathematics , 440:115551, 2024a. ISSN 0377-0427. J. Li, H. Feng, and D.-X. Zhou. Approximation analysis of CNNs from a feature extraction view. Analysis and Applications , 22(03):635–654, 2024b. J. Li, H. Feng, and D.-X. Zhou. Convergence analysis for deep sparse coding via convolu-tional neural networks. arXiv preprint arXiv:2408.05540 , 2024c. Z. Li, N. B. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. M. Stuart, and A. Anandkumar. Fourier neural operator for parametric partial differential equations. In 
+
+Advances in Neural Information Processing Systems , volume 33, pages 9540–9550, 2020. H. Liu, M. Chen, T. Zhao, and W. Liao. Besov function approximation and binary classifica-tion on low-dimensional manifolds using convolutional residual networks. In International Conference on Machine Learning , pages 6770–6780. PMLR, 2021. H. Liu, B. Dahal, R. Lai, and W. Liao. Generalization error guaranteed auto-encoder-based nonlinear model reduction for operator learning. arXiv:2401.10490 , 2024a. 20 H. Liu, B. Dahal, R. Lai, and W. Liao. Generalization error guaranteed auto-encoder-based nonlinear model reduction for operator learning. Applied and Computational Harmonic Analysis , 74:101717, 2025. Y. Liu, T. Mao, and D.-X. Zhou. Approximation of functions from Korobov spaces by shallow neural networks. Information Sciences , 670:120573, 2024b. L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3(3):218–229, 2021. S. Mallat. A wavelet tour of signal processing . Elsevier, 1999. T. Mao, Z. Shi, and D.-X. Zhou. Theory of deep convolutional neural networks iii: Approx-imating radial functions. Neural Networks , 144:778–790, 2021. T. Mao, Z. Shi, and D.-X. Zhou. Approximating functions with multi-features by deep convolutional neural networks. Analysis and Applications , 21(01):93–125, 2023. H. N. Mhaskar. Approximation properties of a multilayered feedforward artificial neural network. Advances in Computational Mathematics , 1(1):61–80, 1993. H. N. Mhaskar and N. Hahm. Neural networks for functional approximation and system identification. Neural Computation , 9(1):143–159, 1997. H. Montanelli and Q. Du. New error bounds for deep ReLU networks using sparse grids. 
+
+SIAM Journal on Mathematics of Data Science , 1(1):78–92, 2019. R. Nakada and M. Imaizumi. Adaptive approximation and generalization of deep neural network with intrinsic dimensionality. Journal of Machine Learning Research , 21(174): 1–38, 2020. F. Narcowich, P. Petrushev, and J. Ward. Decomposition of besov and triebel–lizorkin spaces on the sphere. Journal of Functional Analysis , 238(2):530–564, 2006. V. Papyan, Y. Romano, and M. Elad. Convolutional neural networks analyzed via convo-lutional sparse coding. Journal of Machine Learning Research , 18(83):1–52, 2017. P. Petersen and F. Voigtlaender. Optimal approximation of piecewise smooth functions using deep ReLU neural networks. Neural Networks , 108:296–330, 2018. M. Raissi, P. Perdikaris, and G. E. Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Computational physics , 378:686–707, 2019. M. Riesenhuber and T. Poggio. Hierarchical models of object recognition in cortex. Nature neuroscience , 2(11):1019–1025, 1999. R. Rubinstein, A. M. Bruckstein, and M. Elad. Dictionaries for sparse representation modeling. Proceedings of the IEEE , 98(6):1045–1057, 2010. doi: 10.1109/JPROC.2010. 2040551. 21 J. Schmidt-Hieber. Deep ReLU network approximation of functions on a manifold. arXiv preprint arXiv:1908.00695 , 2019. U. Shaham, A. Cloninger, and R. R. Coifman. Provable approximation properties for deep neural networks. Applied and Computational Harmonic Analysis , 44(3):537–557, 2018. Z. Shi, J. Fan, L. Song, D.-X. Zhou, and J. A. Suykens. Nonlinear functional regression by functional deep neural network with kernel embedding. Journal of Machine Learning Research , 26(284):1–49, 2025. L. Song, J. Fan, D.-R. Chen, and D.-X. Zhou. Approximation of nonlinear functionals using deep relu networks. Journal of Fourier Analysis and Applications , 29(4):50, 2023a. L. Song, Y. Liu, J. Fan, and D.-X. Zhou. Approximation of smooth functionals using deep relu networks. Neural Networks , 166:424–436, 2023b. V. N. Temlyakov. Constructive sparse trigonometric approximation and other problems for functions with mixed smoothness. Sbornik: Mathematics , 206(11):1628, 2015. V. N. Temlyakov. Universal discretization. Journal of Complexity , 47:97–109, 2018. R. Tibshirani. Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society Series B: Statistical Methodology , 58(1):267–288, 1996. A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, L. Kaiser, and I. Polosukhin. Attention is all you need. Advances in Neural Information Processing Systems , 30, 2017. Y. Yang. Deeponet for solving nonlinear partial differential equations with physics-informed training. Neural Networks , page 108490, 2025. Y. Yang and Y. Xiang. Approximation of functionals by neural network without curse of dimensionality. Journal of Machine Learning , 1(4):342–372, 2022. Z. Yang, S. Huang, H. Feng, and D.-X. Zhou. Spherical analysis of learning nonlinear functionals. Constructive Approximation , pages 1–29, 2026. J. Yao, J. Mueller, and J.-L. Wang. Deep learning for functional data analysis with adaptive basis layers. In International conference on machine learning , pages 11898–11908. PMLR, 2021. D. Yarotsky. Error bounds for approximations with deep relu networks. Neural Networks ,94:103–114, 2017. D.-X. Zhou. Theory of deep convolutional neural networks: Downsampling. Neural Net-works , 124:319–327, 2020a. D.-X. Zhou. Universality of deep convolutional neural networks. Applied and Computational Harmonic Analysis , 48(2):787–794, 2020b. T.-Y. Zhou, N. Suh, G. Cheng, and X. Huo. Approximation of rkhs functionals by neural networks. arXiv:2403.12187 , 2024. 22 Appendix A. Proof of Lemma 3.1 
+
+In this section, we first rewrite the problem (2) into a two-step formulation, which helps to clarify the differences from the work of Dai and Temlyakov (2023). For completeness, some of the relevant notation is recalled. Furthermore, we extend Lemma 3.1 to general probability measures, which yields an upper bound with the best s-term approximation in the Lp norm for all 1 ≤ p ≤ ∞ , rather than only for p = ∞.We denote the collection of s-dimensional linear spaces that are spanned by arbitrary s
+
+elements from DN as 
+
+Xs(DN ) := {V : dim( V ) = s, V ⊂ Span DN } .
+
+The p-norm of vectors is defined as 
+
+∥x∥p = X
+
+> i
+
+|xi|p
+
+!1/p 
+
+, 1 ≤ p < ∞,
+
+and ∥x∥∞ = max i |xi| for p = ∞. In regression, learning f from its samples and a linear space V can be formulated as LS p(ξ, V )( f ) := arg min v∈V ∥f − v|ξ∥pp,m . (7) Searching over all V ∈ X s(DN ), we choose a linear space on which we achieve the smallest error over ξ and it is easy to see that 
+
+f sp,m = arg min V ∈X s(DN ) ∥f − LS p(ξ, V )( f )|ξ∥p,m . (8) We denote the best approximation of f ∈ Lp(Ω , ν ), 1 ≤ p ≤ ∞ by elements in an N -dimension subspace XN of C(Ω) as follows 
+
+d(f, X N )Lp(Ω ,ν ) := inf 
+
+> u∈XN
+
+∥f − u∥Lp(Ω ,ν ).
+
+In the proof, we also use the probability measure νξ := 12 ν + 12m
+
+Pmj=1 δξm , where δ denotes the Dirac measure supported at the point. It is easy to see that L∞(Ω , ν ξ) = L∞(Ω , ν ). The following theorem includes Lemma 3.1. 
+
+Theorem A.1 Let m, s, N ∈ N and s ≤ N/ 2 and 1 ≤ p ≤ ∞ . Let DN ⊂ C (Ω) be a dictionary of N elements. Then for any function f ∈ C (Ω) , we have 
+
+∥f − f sp,m |ξ∥p,m ≤ 21/p σs(f, DN )Lp(Ω ,ν ξ ),
+
+∥f − f sp,m |ξ∥p,m ≤ 21/p σs(f, DN )L∞(Ω) .
+
+In addition, if ξ provides one sided universal discretization property for Σ2s(DN ) (Assump-tion 1), then we have 
+
+∥f − f sp,m ∥Lp(Ω ,ν ) ≤ Cpσs(f, DN )Lp(Ω ,ν ξ ),
+
+∥f − f sp,m ∥Lp(Ω ,ν ) ≤ Cpσs(f, DN )L∞(Ω) ,
+
+where 
+
+Cp := 2 1/p 
+
+1 + 2(1 + C−11 )1/p 
+
++ 2 1/p C−1/p 
+
+> 1
+
+
+
+2 + 2(1 + C−11 )1/p 
+
+. (9) 23 Proof [Proof of Lemma 3.1 and Theorem A.1] Fix a linear space V ∈ X s(DN ). We write 
+
+u := LS p (ξ, V ) ( f ) for simplicity. It is straightforward to show that 
+
+∥f |ξ∥pp,m ≤ 2∥f ∥pLp(Ω ,ν ξ ), ∀f ∈ C (Ω) . (10) Hence, for any g ∈ V , we have 
+
+∥f − g|ξ∥pp,m ≤ 2∥f − g∥pLp(Ω ,ν ξ ).
+
+Since u is the minimizer of the least square regression problem (7) w.r.t. V , we have for any g ∈ V
+
+∥f − u|ξ∥p,m ≤ ∥ f − g|ξ∥p,m ≤ 21/p ∥f − g∥Lp(Ω ,ν ξ ). (11) Taking the minimum over all g ∈ V gives 
+
+∥f − u|ξ∥p,m ≤ 21/p d(f, V )Lp(Ω ,ν ξ ).
+
+Since u depends on the linear space V , by minimizing both sides for any V ∈ Σs(DN ) and using (8), we can further get 
+
+∥f − f sp,m |ξ∥p,m ≤ 21/p σs(f, DN )Lp(Ω ,ν ξ ). (12) Combining (11) with the following inequality 
+
+∥f − g∥Lp(Ω ,ν ξ ) ≤ ∥ f − g∥L∞(Ω ,ν ), (13) we obtain an upper bound given in L∞ norm 
+
+∥f − f sp,m |ξ∥p,m ≤ 21/p σs(f, DN )L∞(Ω ,ν ), (14) with similar steps. For any f ∈ C (Ω), its Lp(Ω , ν ) norm can be bounded by its Lp(Ω , ν ξ) norm 
+
+∥f ∥Lp(Ω ,ν ) ≤ 21/p ∥f ∥Lp(Ω ,ν ξ ). (15) Given any g1, g 2 ∈ Σs(DN ), Assumption 1 implies that 
+
+∥g1 − g2∥pLp(Ω ,ν ξ ) = 12 ∥g1 − g2∥pLp(Ω ,ν ) + 12 ∥g1 − g2|ξ∥pp,m 
+
+≤ 12 (1 + C−11 )∥g1 − g2|ξ∥pp,m ,
+
+(16) since g1 − g2 ∈ Σ2s(DN ). Now we are able to conclude the following upper bound of 
+
+∥f − u∥Lp(Ω ,ν ξ ) by choosing an arbitrary g ∈ V
+
+∥f − u∥Lp(Ω ,ν ξ ) ≤ ∥ f − g∥Lp(Ω ,ν ξ ) + ∥g − u∥Lp(Ω ,ν ξ )
+
+≤ ∥ f − g∥Lp(Ω ,ν ξ ) + 2 −1/p (1 + C−11 )1/p ∥g − u|ξ∥p,m 
+
+≤ ∥ f − g∥Lp(Ω ,ν ξ ) + 2 −1/p (1 + C−11 )1/p (∥g − f |ξ∥p,m + ∥f − u|ξ∥p,m )
+
+≤ ∥ f − g∥Lp(Ω ,ν ξ ) + 2 1−1/p (1 + C−11 )1/p ∥f − g|ξ∥p,m 
+
+≤
+
+
+
+1 + 2(1 + C−11 )1/p 
+
+∥f − g∥Lp(Ω ,ν ξ ),
+
+(17) 24 where we use (16) in the second step, and the fact that u is the minimizer over V in the fourth step. In the last step, we use (10). By choosing g ∈ V as the minimizer of ∥f − g∥Lp(Ω ,ν ξ ), we obtain 
+
+∥f − u∥Lp(Ω ,ν ξ ) ≤
+
+
+
+1 + 2(1 + C−11 )1/p 
+
+d(f, V )Lp(Ω ,ν ξ ). (18) Let f ∗ be the best estimator of f among all u = LS p (ξ, V ) ( f ) w.r.t. V ∈ X s(DN ) under 
+
+Lp(Ω , ν ξ) norm: 
+
+f ∗ = arg min V ∈X s(DN ) ∥f − u∥Lp(Ω ,ν ξ ).
+
+Minimizing both sides of (18) for any V ∈ X s(DN ) leads to the error bound between f and 
+
+f ∗
+
+∥f − f ∗∥Lp(Ω ,ν ξ ) ≤
+
+
+
+1 + 2(1 + C−11 )1/p 
+
+σs(f, DN )Lp(Ω ,ν ξ ). (19) Since f ∗ − f sp,m ∈ Σ2s(DN ), we can characterize their distance using the one-sided universal discretization 
+
+∥f ∗ − f sp,m ∥Lp(Ω ,ν ) ≤ C−1/p  
+
+> 1
+
+∥f ∗ − f sp,m |ξ∥p,m 
+
+≤ C−1/p  
+
+> 1
+
+∥f − f ∗|ξ∥p,m + C−1/p  
+
+> 1
+
+∥f − f sp,m |ξ∥p,m 
+
+≤ 21/p C−1/p  
+
+> 1
+
+∥f − f ∗∥Lp(Ω ,ν ξ ) + C−1/p  
+
+> 1
+
+∥f − f sp,m |ξ∥p,m 
+
+≤ 21/p C−1/p 
+
+> 1
+
+
+
+2 + 2(1 + C−11 )1/p 
+
+σs(f, DN )Lp(Ω ,ν ξ ),
+
+(20) where in the third step we use (10), and the last step follows from (12) and (19). Finally, following (15), (19), and (20), we conclude the last statement 
+
+∥f − f sp,m ∥Lp(Ω ,ν ) ≤ ∥ f − f ∗∥Lp(Ω ,ν ) + ∥f ∗ − f sp,m ∥Lp(Ω ,ν )
+
+≤ 21/p ∥f − f ∗∥Lp(Ω ,ν ξ ) + ∥f ∗ − f sp,m ∥Lp(Ω ,ν )
+
+≤ Cpσs(f, DN )Lp(Ω ,ν ξ ).
+
+(21) Again, since (13) and (14) holds, the keys steps can be adapted to L∞ case for some constants C′
+
+> p
+
+, C ′′ 
+
+> p
+
+• The inequality (17) becomes ∥f − u∥Lp(Ω ,ν ξ ) ≤ C′
+
+> p
+
+∥f − g∥L∞(Ω ,ν ) .
+
+• The inequality (19) becomes ∥f − f ∗∥Lp(Ω ,ν ξ ) ≤ C′
+
+> p
+
+σs(f, DN )L∞(Ω ,ν ).
+
+• The inequality (20) becomes ∥f ∗ − f sp,m ∥Lp(Ω ,ν ) ≤ σs(f, DN )L∞(Ω ,ν ).
+
+• Similarly and consequently, the final step (21) becomes 
+
+∥f − f sp,m ∥Lp(Ω ,ν ) ≤ Cpσs(f, DN )L∞(Ω ,ν ).
+
+The proof is finished. Theorem A.1 differs from the result in Dai and Temlyakov (2023) in that their estimator is based on the Lp norm in (8), rather than on a discretized summation. This distinction approach makes our procedure more practical for computing the estimator and builds a close connection between sparse approximation and sparse coding problems. 25 Appendix B. Proofs of Section 4 
+
+B.1 Proof of Theorem 4.1 
+
+Building on Lemma 3.1 or Theorem A.1, we are now prepared to construct CNNs that act as sparse approximators. The next lemma was essentially demonstrated in Li et al. (2024c), relying on the methods developed in Chen et al. (2018). We are reconsidering the proof, as constants in error bounds are essential to subsequent analyzes. 
+
+Lemma B.1 Consider a linear inverse problem y = Ax ∗ + ε where columns of A ∈ Rm×N
+
+are normalized and ∥x∗∥0 ≤ s, ∥x∗∥∞ ≤ B, and ∥ε∥1 ≤ δ. We assume that the sparsity satisfies s < 
+
+
+
+1 + 1 /μ ( ˜DmN )
+
+
+
+/2. Then there exists a CNN ϕ ∈ N N CNN (O(J log k(m +
+
+N )) , J (m + N )2) with kernel size k such that for any ∥x∗∥0 ≤ s, ∥x∗∥∞ ≤ B, and ∥ε∥1 ≤ δ
+
+∥x∗ − ϕ(y)∥1 ≤ c1e−c2J + c3δ, 
+
+Supp ϕ(y) ⊂ Supp x∗,
+
+where c1 = sB , c2 = − ln(2 μs − μ) > 0, c3 = 2 s PJi=0 (2 μs − μ)i, and Supp z := {i : zi̸ = 0 }
+
+for any vector z.
+
+Proof In this proof, for the sake of self-containedness, we repeat and adjust the approach of Chen et al. (2018) to obtain the convergence rate for an iteration below and then adopt an argument similar to that in Li et al. (2024c) to convert this iterative scheme into a CNN. We denote μ := μ( ˜DmN ), CA := max ij |Aij |, and 
+
+X (s, B, δ ) := {(x∗, ε ) : ∥x∗∥0 ≤ s, ∥x∗∥∞ ≤ B, ∥ε∥1 ≤ δ} ,
+
+for simplicity. It is easy to see that CA ≤ 1 since the columns of A ∈ Rm×N are ℓ2-normalized. We first prove that the following iteration x(k) converges to x∗
+
+x(0) := 0 ,x(k+1) := Tθ(k) (x(k) + A⊤(y − Ax (k))) , k = 1 , 2, 3, . . . , (22) where the soft thresholding function Tα is defined component-wise as 
+
+Tα(x)i = sign( xi)( |xi| − α)+,
+
+and the threshold θ(k) is given by 
+
+θ(k) := μ sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+{∥ x(k)(x∗, ε ) − x∗∥1} + CAδ. (23) Denote S := Supp x∗ (|S| ≤ s) and Ai as the i-th column of A. We assume that x(k) 
+
+> i
+
+= 0, for any i / ∈ S. Then we can rewrite x(k+1)  
+
+> i
+
+as 
+
+x(k+1)  
+
+> i
+
+= Tθ(k) (x(k) 
+
+> i
+
++ A⊤ 
+
+> i
+
+A(x∗ − x(k)) + A⊤ 
+
+> i
+
+ε),
+
+= Tθ(k) (X
+
+> j∈S
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε).
+
+26 Since the definition of θ(k) implies that 
+
+X
+
+> j∈S
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε ≤ μ∥x(k) − x∗∥1 + CAδ ≤ θ(k),
+
+we obtain x(k+1)  
+
+> i
+
+= 0 for any i / ∈ S. As x(0) = 0, we can conclude that x(k) 
+
+> i
+
+= 0, ∀i / ∈ S is true for any k. This means that Supp x(k) ⊂ Supp x∗.Define 
+
+∂ℓ 1(z)i := 
+
+(sign( zi), zi̸ = 0 ,
+
+[−1, 1] , zi = 0 .
+
+Then for any i ∈ S,
+
+x(k+1)  
+
+> i
+
+= Tθ(k) (x(k) 
+
+> i
+
++ X
+
+> j∈S
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε)= Tθ(k) (x(k) 
+
+> i
+
++ X 
+
+> j∈S,j ̸=i
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+Ai(x∗ 
+
+> i
+
+− x(k) 
+
+> i
+
+) + A⊤ 
+
+> i
+
+ε)
+
+∈ x∗ 
+
+> i
+
++ X 
+
+> j∈S,j ̸=i
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε − θ(k)∂ℓ 1(x(k+1)  
+
+> i
+
+),
+
+where we use the fact that A is column-wise normalized. This further implies that 
+
+x(k+1)  
+
+> i
+
+− x∗ 
+
+> i
+
+∈ X 
+
+> j∈S,j ̸=i
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε − θ(k)∂ℓ 1(x(k+1)  
+
+> i
+
+). (24) Since ∂ℓ 1(x(k+1)  
+
+> i
+
+) is bounded by 1, from (24) we can get the upper bound of x(k+1)  
+
+> i
+
+− x∗ 
+
+> i
+
+for any i ∈ S
+
+|x(k+1)  
+
+> i
+
+− x∗ 
+
+> i
+
+| ≤ X 
+
+> j∈S,j ̸=i
+
+A⊤ 
+
+> i
+
+Aj (x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+) + A⊤ 
+
+> i
+
+ε + θ(k)
+
+≤ μ X 
+
+> j∈S,j ̸=i
+
+|x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+| + CAδ + θ(k).
+
+(25) Summing both sides of (25) for any i ∈ [N ] and noticing that Supp x(k) ⊂ Supp x∗, we obtain sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+∥x(k+1) − x∗∥1 = sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+X
+
+> i∈S
+
+|x(k+1)  
+
+> i
+
+− x∗ 
+
+> i
+
+|≤ sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+μ X
+
+> i∈S
+
+X 
+
+> j∈S,j ̸=i
+
+|x∗ 
+
+> j
+
+− x(k) 
+
+> j
+
+|
+
+ + sC Aδ + sθ (k)
+
+≤ μ(s − 1) sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+n
+
+∥x(k) − x∗∥1
+
+o
+
++ sC Aδ + sθ (k)
+
+≤ (2 μs − μ) sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+n
+
+∥x(k) − x∗∥1
+
+o
+
++ 2 sC Aδ, 
+
+27 where in the second and last steps we use the definition of θ(k). By induction, we obtain sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+∥x(k+1) − x∗∥1
+
+≤ (2 μs − μ)k+1 sup  
+
+> (x∗,ε )∈X (s,B,δ )
+
+n
+
+∥x(0) − x∗∥1
+
+o
+
++ 2 sC Aδ
+
+> k
+
+X
+
+> i=0
+
+(2 μs − μ)i
+
+= c1e−c2(k+1) + δ 2s
+
+> k
+
+X
+
+> i=0
+
+(2 μs − μ)i
+
+!
+
+.
+
+since x(0) = 0 and CA ≤ 1. Lemma 14 in Li et al. (2024c) implies that there exists a CNN ϕ ∈ N N CNN (O(J log k(m+
+
+N )) , J (m + N )2) with kernel size k such that ϕ(y) = x(J)(x∗, ε ) for any ( x∗, ε ) ∈ X (s, B, δ ). The proof is complete. To determine the conditions of the above lemma for sparse approximation, we also need to assess how a dictionary influences the ℓp norm of sparse vectors. The following estimation commonly utilized in sparse coding is taken from Elad (2010). For completeness, we provide the proof. 
+
+Lemma B.2 Given a matrix D ∈ Rn×d that is column-wise normalized, for any x ∈ Rd
+
+with sparsity ∥x∥0 ≤ s, we have 
+
+(1 − (s − 1) μ(D)) ∥x∥22 ≤ ∥ Dx ∥22 ≤ (1 + ( s − 1) μ(D)) ∥x∥22.
+
+Proof Let Q = 11 ⊤ where 1 = (1 , 1, . . . , 1) ⊤ ∈ Rd. Given a matrix D ∈ Rn×d that is column-normalized, it is easy to see that for any x ∈ Rd with sparsity ∥x∥0 ≤ s,
+
+∥Dx ∥22 = x⊤D⊤Dx ≥ x⊤x − μ(D)|x|⊤(Q − I)|x|≥ (1 + μ(D)) ∥x∥22 − μ(D)∥x∥21
+
+≥ (1 + μ(D)) ∥x∥22 − μ(D)s∥x∥22
+
+= (1 − (s − 1) μ(D)) ∥x∥22,
+
+where |x| := ( |xi|)di=1 , in the third step we use the inequality ∥c∥1 ≤ √s∥c∥2 for any c ∈ Rs,and in the first step we use the following fact 
+
+x⊤D⊤Dx = ∥x∥22 + X
+
+> i̸=j
+
+D⊤ 
+
+> i
+
+Dj xixj ≥ ∥ x∥22 − X
+
+> i̸=j
+
+μ(D)|xixj | = ∥x∥22 − μ(D)|x|⊤(Q − I)|x|.
+
+The claim for the upper bound follows similar steps 
+
+∥Dx ∥22 = x⊤D⊤Dx ≤ x⊤x − μ(D)|x|⊤(I − Q)|x|≤ (1 − μ(D)) ∥x∥22 + μ(D)∥x∥21
+
+≤ (1 − μ(D)) ∥x∥22 + μ(D)s∥x∥22
+
+= (1 + ( s − 1) μ(D)) ∥x∥22,
+
+28 where in the first step we use 
+
+x⊤D⊤Dx = ∥x∥22 + X
+
+> i̸=j
+
+D⊤ 
+
+> i
+
+Dj xixj ≤ ∥ x∥22 + X
+
+> i̸=j
+
+μ(D)|xixj | = ∥x∥22 + μ(D)|x|⊤(Q − I)|x|.
+
+Using Theorem A.1 together with Lemma B.1, we are now prepared to establish the proof of Theorem 4.1. In contrast to Theorem 4.1, Theorem B.1 also encompasses the case 
+
+σs(F, DN )Lp(Ω ,ν ξ ).
+
+Theorem B.1 Let m, s, k, J, N ∈ N, 1 ≤ p < ∞, B > 0, and assume s < ¯s. Then there exists a CNN Φ ∈ N N CNN (O(J log k(m + N )) , J (m + N )2) with kernel size k, such that for any f ∈ F := {f ∈ C (Ω) : ∥f ∥C(Ω) ≤ B}
+
+1. ∥Φ( ˜f m)∥0 ≤ s;2. wsp,m − Φ( ˜f m) p ≤ C4e−C5J + C6σs(F, DN )L∞(Ω ,ν ).In addition, if the one-sided universal discretization (Assumption 1) holds, then 
+
+∥f − fs∥Lp(Ω ,ν ) ≤ C7e−C5J + C8σs(F, DN )L∞(Ω ,ν ). (26) 
+
+where fs := PNi=1 Φ( ˜f m)iui and the constants C4, . . . , C 8 depend on p, m, B, s, N , and 
+
+˜DmN , as given in (33) , (34) , (35) , (39) , and (40) in Appendix B.1. The above error bounds hold also for the ∥ · ∥ Lp(Ω ,ν ξ ) case. 
+
+Proof [Proof of Theorem 4.1 and Theorem B.1] According to the definition (2), we can represent ˜f m as ˜f m = ˜DmN wsp,m + ˜ rmN for some residual term ˜ rmN ∈ Rm, which satisfies sup  
+
+> ∥f∥C(Ω) ≤B
+
+∥˜rmN ∥1 ≤ m1−1/p sup  
+
+> ∥f∥C(Ω) ≤B
+
+∥˜rmN ∥p
+
+= m sup  
+
+> ∥f∥C(Ω) ≤B
+
+∥˜rmN ∥p,m 
+
+≤ 21/p m · σs(F, DN )L∞(Ω ,ν ),
+
+(27) where the third step follows from the fact that ˜ rmN = ˜f m − ˜DmN wsp,m = ( f − f sp,m |ξ) and Lemma 3.1 (Theorem A.1). Let L ∈ RN ×N be a diagonal matrix with diagonal elements 1√Pmt=1 |ui(ξt)|2
+
+L := 
+
+
+
+> 1
+
+√Pmt=1 |u1(ξt)|2 0 . . . 00 1√Pmt=1 |u2(ξt)|2 . . . 0... ... . . . 00 . . . . . . 1√Pmt=1 |uN (ξt)|2
+
+
+
+. (28) 29 Then we can rewrite the inverse problem as ˜f m = ˜DmN LL −1wsp,m + ˜ rmN with ˜DmN L being column-wise normalized. For simplicity, we denote ¯DmN := ˜DmN L and ¯ wsp,m := L−1wsp,m . For this inverse problem, our next step is to derive the necessary conditions on ¯ wsp,m as required in Lemma B.1. We use Lemma B.2 to estimate the ℓ∞ norm of ¯ wsp,m 
+
+∥ ¯wsp,m ∥∞ ≤ ∥ ¯wsp,m ∥2 ≤
+
+˜DmN wsp,m 2q
+
+1 − (s − 1) μ( ˜DmN )
+
+≤
+
+˜f m 
+
+> 2
+
++ ∥˜rmN ∥2
+
+q
+
+1 − (s − 1) μ( ˜DmN )
+
+≤ B√m + 2 1/p Bm 
+
+q
+
+1 − (s − 1) μ( ˜DmN )
+
+,
+
+(29) where in the first step, it is straightforward from the definition that μ( ˜DmN ) = μ( ¯DmN ), and in the last step we use ∥c∥2 ≤ √m∥c∥∞ and ˜f m 
+
+> ∞
+
+≤ B to control ˜f m
+
+> 2
+
+, and ∥c∥2 ≤ ∥ c∥1,(27), and the fact that σs(f, DN )L∞(Ω ,ν ) ≤ ∥ f ∥L∞(Ω ,ν ) ≤ B to control ∥˜rmN ∥2.Since 1 − (s − 1) μ( ˜DmN ) > 1 − 12 1 + 1
+
+μ( ˜DmN )
+
+!
+
+− 1
+
+!
+
+μ( ˜DmN ) = 12 + 12 μ( ˜DmN ) ≥ 12 ,
+
+we can further simplify (29) as 
+
+∥ ¯wsp,m ∥∞ ≤ B√m + 2 1/p Bm 
+
+q
+
+1 − (s − 1) μ( ˜DmN )
+
+≤ B√2m + 2 1/2+1 /p Bm ≤ 6Bm. (30) Following (27), (29), the pair ( ¯ wsp,m , ˜rmN ) in ˜f m = ¯DmN ¯wsp,m + ˜ rmN satisfies 
+
+∥ ¯wsp,m ∥0 ≤ s, ∥ ¯wsp,m ∥∞ ≤ 6Bm, ∥˜rmN ∥1 ≤ 21/p m · σs(F, DN )L∞(Ω ,ν ).
+
+Lemma B.1 shows the following convergence rate of using CNNs to approximate the sparse coefficient vector ¯wsp,m . When s < 12
+
+
+
+1 + 1 /μ 
+
+ ˜DmN
+
+ 
+
+, we can learn the sparse coefficient vector ¯ wsp,m through a CNN ϕ with kernel size k, O(J log k(m + N )) layers and at most O(J(N + m)2) nonzero parameters such that for any ∥f ∥C(Ω) ≤ B, we have 
+
+ϕ( ˜f m) − ¯wsp,m 1 ≤ 6Bms · e−cJ + C21/p m · σs(F, DN )L∞(Ω ,ν ), (31) where c = − ln(2 μs − μ) > 0, C = 2 s PJi=0 (2 μs − μ)i with μ := μ( ˜DmN ). This implies 
+
+Lϕ ( ˜f m) − wsp,m 1 = Lϕ ( ˜f m) − L ¯wsp,m 1
+
+≤
+
+max  
+
+> i∈[N]
+
+1
+
+qPmt=1 |ui(ξt)|2
+
+ ϕ( ˜f m) − ¯wsp,m 1
+
+≤ 6c0Bms · e−cJ + c0C21/p m · σs(F, DN )L∞(Ω ,ν ),
+
+30 where we denote c0 := max i∈[N ] 1√Pmt=1 |ui(ξt)|2 . According to Li et al. (2024b), the linear map L can be performed by a CNN of depth O(log k N ) with at most O(N 2) parameters. Therefore, by denoting a CNN as ψ(·) := L·, the composition Φ := ψ ◦ ϕ has O(J log k(m +
+
+N )) layers and at most O(J(N + m)2) nonzero parameters. Accordingly, we obtain the following error bound when using a CNN to approximate the sparse coefficients 
+
+Φ( ˜f m) − wsp,m p ≤ N 1−1/p Lϕ ( ˜f m) − wsp,m 1
+
+≤ C4e−C5J + C6σs(F, DN )L∞(Ω ,ν ),
+
+(32) with 
+
+C4 := 6 c0BmsN 1−1/p , (33) 
+
+C5 := − ln(2 μ( ˜DmN )s − μ( ˜DmN )) , (34) 
+
+C6 := c0C21/p mN 1−1/p . (35) Moreover, the support of Φ( ˜f m) is included in the support of wsp,m , and we have ∥Φ( ˜f m)∥0 ≤
+
+s.If we denote the s-sparse estimator of f with coefficients learned by CNN Φ as fs := PNi=1 Φ( ˜f m)iui, then we also have 
+
+∥f − fs∥Lp(Ω ,ν )
+
+≤ ∥ f − f sp,m ∥Lp(Ω ,ν ) + ∥f sp,m − fs∥Lp(Ω ,ν ). (36) Let Cm,p := max {1, m 1/p −1/2}. Lemma B.2 and s < 12
+
+
+
+1 + 1
+
+> μ
+
+( ˜DmN )
+
+
+
+imply 
+
+˜DmN wsp,m − ˜DmN Φ( ˜f m) p = ¯DmN ¯wsp,m − ¯DmN ϕ( ˜f m) p
+
+≤ Cm,p ¯DmN ¯wsp,m − ¯DmN ϕ( ˜f m) 2
+
+≤ Cm,p 
+
+r
+
+1 + (2 s − 1) μ
+
+ ˜DmN
+
+
+
+¯wsp,m − ϕ( ˜f m) 2
+
+≤ 2Cm,p ¯wsp,m − ϕ( ˜f m) 2 .
+
+(37) Since f sp,m − fs ∈ Σ2s(DN ), we can use the one-sided universal discretization property and derive the inequality of the second term of the upper bound in (36) 
+
+∥f sp,m − fs∥Lp(Ω ,ν )
+
+≤ C−1/p  
+
+> 1
+
+f sp,m − fs|ξ p,m 
+
+= C−1/p  
+
+> 1
+
+˜DmN wsp,m − ˜DmN Φ( ˜f m) p,m 
+
+≤ 2C−1/p  
+
+> 1
+
+Cm,p m−1/p 
+
+6Bms · e−cJ + C21/p m · σs(F, DN )L∞(Ω ,ν )
+
+
+
+,
+
+(38) 31 where in the first step we use one sided universal discretization property Assumption 1 and in the last step we use (31), ∥ · ∥ 2 ≤ ∥ · ∥ 1, and (37). Substituting Theorem A.1 and (38) into (36), we finally conclude 
+
+∥f − fs∥Lp(Ω ,ν ) ≤ C7e−C5J + C8σs(F, DN )L∞(Ω) ,
+
+where 
+
+C7 := 12 C−1/p  
+
+> 1
+
+Cm,p m1−1/p Bs, (39) 
+
+C8 := 2 1+1 /p CC −1/p  
+
+> 1
+
+Cm,p m1−1/p + C3, (40) where C = 2 s PJi=0 (2 μ( ˜DmN )s − μ( ˜DmN )) i and C3 depends only on p.Applying Theorem A.1 and proceeding analogously, the error bounds can be straight-forwardly extended to the ∥ · ∥ Lp(Ω ,ν ξ ) setting. 
+
+B.2 Proof of Theorem 4.2 
+
+To establish our main results, we begin by introducing some notation. The modulus of continuity of a continuous function h is defined as 
+
+ωh(r; Ω) := sup {| h(x1) − h(x2)| : ∥x1 − x2∥2 ≤ r, x 1, x 2 ∈ Ω} .
+
+Furthermore, we abuse the notation DN for a dictionary as a linear transform DN :
+
+RN → C(Ω), defined as the linear combination of elements in the dictionary with respect to a coefficient vector w: DN (w) = PNi=1 wiui.Let ˆP := P ◦ D N : RN → R and As := {w ∈ RN : ∥w∥0 ≤ s}. Then we shall prove that 
+
+ωP is almost the same value as ω ˆP .
+
+Lemma B.3 If ξ ⊂ Rm provides the universal discretization property of Σ2s(DN ), then for any nonlinear functional P, it holds (1) ω ˆP (r; As) ≤ ωP (˜ c1r; Σ s(DN )) p, where ˜c1 is explicitly given in the proof. (2) ω ˆP (r; As) ≥ ωP (˜ c2r; Σ s(DN )) p, where ˜c2 is explicitly given in the proof. 
+
+Proof Let c1 := 
+
+q
+
+1 + (2 s − 1) μ( ˜DmN ) and c2 := max {1, m 1/p −1/2}. For any g1 = DN (w1)and g2 = DN (w2) with ∥w1∥0 ≤ s and ∥w2∥0 ≤ s, we can characterize the upper bound of 
+
+∥g1 − g2∥Lp(Ω ,ν ) by ∥w1 − w2∥2
+
+∥g1 − g2∥Lp(Ω ,ν ) ≤ C−1/p  
+
+> 1
+
+m−1/p ∥ ˜DmN (w1 − w2)∥p
+
+≤ c2C−1/p  
+
+> 1
+
+m−1/p ∥ ˜DmN LL −1(w1 − w2)∥2
+
+≤ c1c2C−1/p  
+
+> 1
+
+m−1/p ∥L−1(w1 − w2)∥2
+
+≤ c1c2C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2∥w1 − w2∥2,
+
+32 where L is given in (28) and used to normalize columns of ˜DmN , in the first step we use Assumption 1 and in the third step we use Lemma B.2 and μ( ˜DmN ) = μ( ˜DmN L). This implies that 
+
+ω ˆP (r; As) = sup {| ˆP(w1) − ˆP(w2)| : ∥w1 − w2∥2 ≤ r, w 1, w 2 ∈ As}≤ sup {|P (g1) − P (g2)| : ∥g1 − g2∥Lp(Ω ,ν ) ≤ c1c2C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2r, g 1, g 2 ∈ Σs(DN )}
+
+= ωP
+
+
+
+c1c2C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2r; Σ s(DN )
+
+ 
+
+> p
+
+.
+
+Hence, the desired bound in (1) holds with ˜ c1 defined as ˜c1 = C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2 max {1, m 1/p −1/2}
+
+q
+
+1 + (2 s − 1) μ( ˜DmN ). (41) Denote c3 = 1 /
+
+r
+
+1 − (2 s − 1) μ
+
+ ˜DmN
+
+
+
+and c4 := max {1, m 1/2−1/p }. Conversely and similarly, we can also use Assumption 1 and Lemma B.2 to show that 
+
+∥w1 − w2∥2 ≤ ∥ L∥2∥L−1(w1 − w2)∥2
+
+≤ c3∥L∥2∥ ˜DmN LL −1(w1 − w2)∥2
+
+≤ c4c3∥L∥2∥ ˜DmN (w1 − w2)∥p
+
+≤ m1/p C1/p  
+
+> 2
+
+c3c4∥L∥2∥g1 − g2∥Lp(Ω ,μ ).
+
+This implies 
+
+ω ˆP (r; As) = sup {| ˆP(w1) − ˆP(w2)| : ∥w1 − w2∥2 ≤ r, w 1, w 2 ∈ As}≥ sup {|P (g1) − P (g2)| : ∥g1 − g2∥Lp(Ω ,μ ) ≤ r/ (m1/p C1/p  
+
+> 2
+
+c3c4∥L∥2), g 1, g 2 ∈ Σs(DN )}
+
+= ωP
+
+
+
+r/ (m1/p C1/p  
+
+> 2
+
+c3c4∥L∥2); Σ s(DN )
+
+ 
+
+> p
+
+.
+
+Thus, the bound stated in (2) also holds with ˜ c2 given by ˜c2 := 
+
+r
+
+1 − (2 s − 1) μ
+
+ ˜DmN
+
+
+
+m1/p C1/p  
+
+> 2
+
+∥L∥2 max {1, m 1/2−1/p } . (42) We complete the proof. To prove Theorem 4.2 for functionals, we decompose the error into two parts: one aris-ing from a sparse approximation and the other from approximating a continuous nonlinear mapping. Observe that once the sparse representation has been learned via a CNN encoder, the input fed into the DNN component of the functional neural network becomes sparse. This means that by fully leveraging the sparsity of the input, we anticipate an enhancement in the neural network’s complexity. In what follows, we will discuss H¨ older continuous func-tions and demonstrate how the bound on the second component improves. The subsequent theorem was principally proved in Yarotsky (2017), and we modify the approach for sparse inputs to enhance our results. 33 Lemma B.4 Let d, r ∈ N and β ∈ (0 , 1] . Let f ∈ Cr,β ([ − 12 , 12 ]d) with ∥f ∥Cr,β ([ − 12 , 12 ]d) ≤ 1.For any M > 0, there exists a ReLU neural network ϕ with depth O(ln M ) and at most 
+
+O(M ) nonzero parameters such that ∥f − ϕ∥L∞(As∩[− 12 , 12 ]d) ≤ (M/ ln M )−(r+β)/s .
+
+Proof Define 
+
+h
+
+
+
+x; mN
+
+
+
+:= 
+
+
+
+1, x ∈ − 12 + mN − 13N , − 12 + mN + 13N
+
+ ,
+
+3N  x − (− 12 + mN − 23N ) , x ∈ − 12 + mN − 23N , − 12 + mN − 13N
+
+ ,
+
+3N  −x + ( − 12 + mN + 23N ) , x ∈ − 12 + mN + 13N , − 12 + mN + 23N
+
+ ,
+
+0, x / ∈ − 12 + mN − 23N , − 12 + mN + 23N
+
+ .
+
+Summing over all m ∈ [N ]0 where [ N ]0 := {0, 1, . . . , N }, we obtain the following partition of unity 
+
+> N
+
+X
+
+> m=0
+
+h
+
+
+
+x; mN
+
+
+
+= 1 , ∀x ∈
+
+
+
+− 12 , 12
+
+
+
+.
+
+Similarly, we have the following extended partition of unity on [ − 12 , 12 ]d
+
+X 
+
+> m∈[N]d
+> 0
+
+hm(x) = 1 , ∀x ∈
+
+
+
+− 12 , 12
+
+d
+
+,
+
+where each hm(x) has a support with a center point ( − 12 + mi 
+
+> N
+
+)di=1 ,
+
+hm(x) = 
+
+> d
+
+Y
+
+> i=1
+
+h
+
+
+
+xi; mi
+
+N
+
+
+
+.
+
+The above partition of unity has several properties, namely: (a) ∥hm∥L∞([0 ,1] d) = 1, (b) Supp hm ⊂ Qdi=1 
+
+− 12 + mi 
+
+> N
+
+− 1 
+
+> N
+
+, − 12 + mi 
+
+> N
+
++ 1
+
+> N
+
+.(c) there exists at most 2 d(N + 1) s ds
+
+ choice of m ∈ [N ]d 
+
+> 0
+
+such that hm(x)̸ ≡ 0 for any 
+
+x ∈ As.The claim (c) can easily be seen from the calculation that: ( i) there are  ds
+
+ elements in 
+
+{#Γ = s : Γ ⊂ [N ]}; ( ii ) fixing a Γ, the corresponding hyperplane {x : xi = 0 , i / ∈ Γ} has an intersection with the supports of at most ( N + 1) s functions hm(x) with center points (− 12 + mi 
+
+> N
+
+)di=1 ; ( iii ) since for each xi, there are only one mi such that at most h(xi, mi 
+
+> N
+
+) and 
+
+h(xi, mi+1  
+
+> N
+
+) are nonzero (i.e., xi belongs to their intersection), and hence there are at most 2d functions such that hm(x)̸ = 0 for each fixed x ∈ As.According to property (c), we derive 
+
+X
+
+> m∈Λ
+
+hm(x) = 1 , ∀x ∈ As,
+
+34 where we denote Λ ⊂ [N ]d 
+
+> 0
+
+as the collection of m, satisfying hm(x)̸ ≡ 0 for any x ∈ As.Using (Petersen and Voigtlaender, 2018, Lemma A.8), we can find a Taylor polynomial 
+
+Pm(x) = X
+
+> ∥n∥1≤r
+
+∂nf (xm)
+
+n! (x − xm)n,
+
+that approximates f at xm = ( −1/2 + m1/N, . . . , −1/2 + md/N ) within the error 
+
+|f (x) − Pm(x)| ≤ dr
+
+r! ∥x − xm∥r+β 
+
+> 2
+
+, (43) where n! = Qdi=1 ni! and ( x − xm)n = Qdi=1 (xi − (xm)i)ni .Then we can define a localized Taylor approximation fN of f :
+
+fN (x) = X
+
+> m∈Λ
+
+hm(x)Pm(x)= X
+
+> m∈Λ
+
+X
+
+> ∥n∥1≤r
+
+∂nf (xm)
+
+n! hm(x)( x − xm)n.
+
+(44) Applying the localization property of hm and the Taylor expansion of f , we obtain the approximation error at x ∈ As
+
+|f (x) − fN (x)| = X
+
+> m∈Λ
+
+hm(x) ( f (x) − Pm(x)) 
+
+≤ X
+
+> m∈Λ
+
+hm(x) |f (x) − Pm(x)|≤ 2d dr
+
+r!
+
+ dN
+
+r+β
+
+,
+
+where in the first step we use the definition of Λ and the partition of unity and in the last step we use (43) and again the fact that there are at most 2 d functions hm(x)̸ = 0. Next, we want to construct a neural network ϕ that is built to approximate fN by approximating products. Let 
+
+ϕ(x) = X
+
+> m∈Λ
+
+X
+
+> ∥n∥1≤r
+
+am,nϕm(x),
+
+where am,n := ∂nf (xm) 
+
+> n!
+
+, |am,n| ≤ 1, and ϕm(x) approximates the d + r − 1 products within 
+
+hm(x)( x − xm)n. In particular, we should have ϕm(x) = 0 if hm(x)( x − xm)n = 0. For a given error tolerance δ, in the proof of (Yarotsky, 2017, Theorem 1) it was shown that we can construct such a neural network ϕm to approximate Pm with depth and total number of parameters no more than c(r, d )| ln δ| for some constant c(r, d ). Hence, we obtain the error bound of using ϕ to approximate fN on As
+
+|fN (x) − ϕ(x)| ≤ X
+
+> m∈Λ
+
+X
+
+> ∥n∥1≤r
+
+|am,n| | hm(x)( x − xm)n − ϕm(x)|≤ 2ddrδ, 
+
+35 where in the last step, we use the property that x belongs to at most 2 d support of hm(x). Let us choose 
+
+N := 
+
+& r! · ε
+
+2d+1 d2r+β
+
+−1/(r+β)'
+
+, δ := ε
+
+2d+1 dr . (45) Then we can conclude that for any x ∈ As
+
+|f (x) − ϕ(x)| ≤ | f (x) − fN (x)| + |fN (x) − ϕ(x)| ≤ ε, 
+
+where ϕ has depth O(| ln ε|) and O
+
+
+
+2d(N + 1) s ds
+
+dr| ln ε|
+
+
+
+= O(ε−s/ (r+β)| ln ε|) nonzero parameters. Setting M := O(ε−s/ (r+β)| ln ε|), we derive 
+
+M −(r+β)/s (ln M )(r+β)/s ≍
+
+
+
+ε−s/ (r+β)| ln ε|
+
+−(r+β)/s 
+
+ln 
+
+
+
+ε−s/ (r+β)| ln ε|
+
+ (r+β)/s 
+
+≍ ε. 
+
+The proof is complete. Lemma B.4 demonstrates that when the inputs are sparse, the error bound depends on the sparsity rather than on the input dimension, indicating that sparsity can help mitigate the curse of dimensionality. The next lemma demonstrates that the above result can be straightforwardly generalized to arbitrary domains. 
+
+Lemma B.5 Let d ∈ N, B > 0, and β ∈ (0 , 1] . If f ∈ C0,β ([ −B, B ]d), then f (2 B·) ∈
+
+C0,β ([ − 12 , 12 ]d) and ∥f (2 B·)∥C0,β ([ − 12 , 12 ]d) ≤ (1 + (2 B)β )∥f (·)∥C0,β ([ −B,B ]d).
+
+Proof Denote ˜f (·) = f (2 B·). Obviously ∥f ∥C([ −B,B ]d) = ∥ ˜f ∥C([ − 12 , 12 ]d). Notice that for any 
+
+x, y ∈ [− 12 , 12 ]d,sup 
+
+> x̸=y
+
+| ˜f (x) − ˜f (y)|∥x − y∥β
+
+> 2
+
+= (2 B)β sup 
+
+> x̸=y
+
+|f (2 Bx ) − f (2 By )|∥2Bx − 2By ∥β
+
+> 2
+
+= (2 B)β sup 
+
+> u̸=v
+
+|f (u) − f (v)|∥u − v∥β
+
+> 2
+
+,
+
+where u = 2 Bx ∈ [−B, B ]d and v = 2 By ∈ [−B, B ]d. Hence, by the definition of ∥ · ∥ C0,β ,we derive ∥f (2 B·)∥C0,β ([ − 12 , 12 ]d) ≤ (1 + (2 B)β )∥f (·)∥C0,β ([ −B,B ]d).We are now prepared to prove Theorem 4.2. 
+
+Theorem B.2 Let m, s, K, M, N ∈ N, and let B > 0 and β ∈ (0 , 1] . Under Assumption 1, for any nonlinear functional P ∈ C0,β (C(Ω)) p, there exists a functional neural network 
+
+Φ ∈ N N  M log( m + N ), M (m + N )2, ln K, K 
+
+such that 
+
+sup  
+
+> f∈F
+
+P(f ) − Φ( ef m) ≤ inf 
+
+> s< ¯s
+
+n
+
+Cβ 
+
+> 7
+
+e−C5βM + Cβ
+
+> 8
+
+ σs(F, DN )L∞(Ω ,ν )
+
+β + C9(K/ ln K)−β/s o
+
+,
+
+36 where ¯s is given in (5) and the constants C5, C 7, C 8, C 9 depend on p, m, B, s, N , and ˜DmN
+
+as given in (34) , (39) , (40) , and (52) in Appendix B.1. Moreover, the above error bound is valid as well for the ∥ · ∥ Lp(Ω ,ν ξ ) norm. 
+
+Proof [Proof of Theorem B.2 and Theorem 4.2] Theorem 4.1 (Theorem B.1) implies that there exists an estimator fs := PNi=1 ϕ( ˜f m)iui where ϕ( ˜f m) is the output of a CNN ϕ such that for any f ∈ F
+
+|P (f ) − P (fs)| ≤ ωP
+
+ C7e−C5M + C8σs(F, DN )L∞(Ω ,ν )
+
+
+
+> p
+
+≤ Cβ 
+
+> 7
+
+e−C5βM + Cβ
+
+> 8
+
+ σs(F, DN )L∞(Ω ,ν )
+
+β ,
+
+(46) where we choose the kernel size of ϕ as k = 2 and hence ϕ ∈ N N CNN (M log( m+N ), M (m+
+
+N )2). In addition, ∥ϕ( ˜f m)∥0 ≤ s.Notice that σs(f, DN )L∞(Ω ,ν ) ≤ ∥ f ∥L∞(Ω ,ν ) ≤ B for any f ∈ F and according to (30), 
+
+∥L−1wsp,m ∥∞ ≤ 6Bm where L is given in (28). Using Theorem 4.1, we can derive an upper bound of ϕ( ˜f m)
+
+∥ϕ( ˜f m)∥∞ ≤ ∥ ϕ( ˜f m) − wsp,m ∥∞ + ∥wsp,m ∥∞
+
+≤ ∥ ϕ( ˜f m) − wsp,m ∥p + ∥L∥∞∥L−1wsp,m ∥∞
+
+≤ C4 + C6B + 6 Bm ∥L∥∞.
+
+(47) Denote ¯B := C4 + C6B + 6 Bm ∥L∥∞.
+
+Then ϕ( ˜f m) ∈ [− ¯B, ¯B]N . Since fs = DN
+
+
+
+ϕ( ˜f m)
+
+
+
+, P(fs) is equivalent to ˆP
+
+
+
+ϕ( ˜f m)
+
+
+
+:= P ◦ D N
+
+
+
+ϕ( ˜f m)
+
+
+
+(48) where ϕ( ˜f m) ∈ As. Notice that Lemma B.3 implies 
+
+ω ˆP (r; As) ≤ ωP (˜ c1r; Σ s(DN )) p ≤ ˜cβ 
+
+> 1
+
+rβ . (49) Let CP := sup w∈[− ¯B, ¯B]N | ˆP(w)|. Then ∥ ˆP∥ C0,β ([ − ¯B, ¯B]N ) ≤ ˜cβ 
+
+> 1
+
++ CP . Lemma B.5 implies that ∥ ˆP(2 ¯B·)∥C0,β ([ − 12 , 12 ]N ) ≤ (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ ). Then we can utilize Lemma B.4 to construct a neural network ψ with depth O(ln K) and at most O(K) nonzero parameters for approximating ˆP(2 ¯B·)
+
+∥ ˆP(2 ¯B·) − ψ(·)∥C0,β (As∩[− 12 , 12 ]N ) ≤ (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ )( K/ ln K)−β/s . (50) Combining (48) and (50), we derive the error bound for approximating P(fs)
+
+P(fs) − ψ
+
+ 12 ¯B ϕ( ˜f m)
+
+
+
+= ˆP
+
+
+
+2 ¯B
+
+ 12 ¯B ϕ( ˜f m)
+
+ 
+
+− ψ
+
+ 12 ¯B ϕ( ˜f m)
+
+
+
+≤ (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ )( K/ ln K)−β/s .
+
+(51) 37 Let Φ := ψ   12 ¯B ϕ(·). Combing (46) and (51), we derive 
+
+|P (f ) − Φ( ˜f m)| ≤ |P (f ) − P (fs)| + |P (fs) − Φ( ˜f m)|≤ Cβ 
+
+> 7
+
+e−C5βM + Cβ
+
+> 8
+
+ σs(F, DN )L∞(Ω ,ν )
+
+β + (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ )
+
+ K
+
+ln K
+
+− βs
+
+,
+
+and Φ ∈ N N (M log( m + N ), M (m + N )2, ln K, K ). We conclude the approximation error by introducing the notation 
+
+C9 := (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ ), (52) where ¯B = C4 + C6B + 6 Bm ∥L∥∞,
+
+˜c1 = C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2 max {1, m 1/p −1/2}
+
+q
+
+1 + (2 s − 1) μ( ˜DmN ),CP = sup   
+
+> w∈[−¯B, ¯B]N
+
+| ˆP(w)|.
+
+Applying Theorem A.1 and proceeding analogously, the error bounds can be straight-forwardly extended to the ∥ · ∥ Lp(Ω ,ν ξ ) setting. 
+
+Appendix C. Proofs of Section 5 and Section 6 
+
+C.1 Proof of Lemma 5.3 
+
+To obtain an explicit error bound, one needs to estimate ¯ s and verify Assumption 1. For a general dictionary, this is quite challenging. However, for orthonormal systems, the following lemma yields a detailed estimate. Beyond Lemma 5.3, we also derive estimates for several additional constants that will be useful. 
+
+Lemma C.1 Assume that Assumptions 2a and 3 hold. Let ξ be a set of independent and identically distributed random points on Ω with distribution ν. Then, with probability at least 1 − ε, the following statements hold whenever m > 64 3γ log  2N 2/ε :1. Assumption 1 holds with C1 = 14 and C2 = 94 .2. The mutual coherence is bounded by 
+
+μ( ˜D mN ) ≤ 8
+
+s
+
+log(2 N 2/ε )3γm .
+
+3. The sparsity can be chosen as 
+
+s =
+
+$
+
+12 1 + 116 
+
+s
+
+3γm 
+
+log(2 N 2/ε )
+
+!% 
+
+≤ 12 1 + 12μ( ˜DmN )
+
+!
+
+,
+
+where ¯s is defined in (5) .
+
+38 4. The term Pmt=1 |ui(ξt)|2 is bounded by 
+
+12 γm ≤
+
+> m
+
+X
+
+> t=1
+
+|ui(ξt)|2 ≤ 32 γm. 
+
+Proof [Proof of Lemma C.1 and Lemma 5.3] Let P(ξ ∈ A) := ν(A) for any A ⊂ Ω. We define gi(x) := ui(x)/√γ. Then it is easy to see that ⟨gi, g j ⟩L2(Ω) = δij and ∥g∥C(Ω) ≤ 1/√γ.Define ˜GΛ as the matrix that collects columns of ˜GmN := (˜ gm 
+
+> 1
+
+, . . . , ˜gmN ) with index set Λ ⊂ [N ]and |Λ| = λ. Then 1 
+
+> m
+
+˜G⊤ 
+
+> Λ
+
+˜GΛ is very close to an identity matrix (Foucart and Rauhut, 2013, Theorem 12.12) with high probability 
+
+P
+
+
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥2 ≥ δ
+
+
+
+≤ 2λ · exp 
+
+
+
+− 3mγδ 2
+
+8λ
+
+
+
+.
+
+Denote ∥A∥max := max ij |Aij | and let λ = 2. Obviously ∥A∥max ≤ ∥ A∥2 . Hence, 
+
+P
+
+
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥max ≥ δ
+
+
+
+≤ 4 exp 
+
+
+
+− 3mγδ 2
+
+16 
+
+
+
+.
+
+Taking the union over all these |Λ| = 2, we get 
+
+P
+
+
+
+∪|Λ|=2 ,Λ⊂[N ]
+
+
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥max ≥ δ
+
+ 
+
+≤ X 
+
+> |Λ|=2 ,Λ⊂[N]
+
+4 exp 
+
+
+
+− 3mγδ 2
+
+16 
+
+
+
+≤ 2N 2 exp 
+
+
+
+− 3mγδ 2
+
+16 
+
+
+
+.
+
+This implies 
+
+P
+
+
+
+∩|Λ|=2 ,Λ⊂[N ]
+
+
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥max ≤ δ
+
+ 
+
+≥ 1 − 2N 2 exp 
+
+
+
+− 3mγδ 2
+
+16 
+
+
+
+. (53) Notice that if for any |Λ| = 2, the following inequality holds 
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥max ≤ δ, 
+
+then we can obtain 
+
+> m
+
+X
+
+> t=1
+
+gi(ξt)gj (ξt) ≤ mδ, ∀i̸ = j
+
+1 − δ ≤ 1
+
+m
+
+> m
+
+X
+
+> t=1
+
+|gi(ξt)|2 ≤ 1 + δ, ∀i ∈ [N ].
+
+(54) Then following these bounds, we derive the upper bound 
+
+|Pmt=1 ui(ξt)uj (ξt)|
+
+qPmt=1 |ui(ξt)|2 Pmt=1 |uj (ξt)|2
+
+= |Pmt=1 gi(ξt)gj (ξt)|
+
+qPmt=1 |gi(ξt)|2 Pmt=1 |gj (ξt)|2
+
+≤ δ
+
+1 − δ ≤ 2δ, 
+
+39 where we take δ < 12 in order to obtain a nontrivial bound. This implies 
+
+μ( ˜DmN ) ≤ 2δ. (55) We choose c such that 
+
+s := 12
+
+
+
+1 + 1
+
+cδ 
+
+
+
+=
+
+ 12
+
+
+
+1 + 14δ
+
+ 
+
+.
+
+It is obvious that c ≥ 4. Hence, the following two inequalities hold 
+
+s ≤ 12 1 + 12μ( ˜DmN )
+
+!
+
+< 12 1 + 1
+
+μ( ˜DmN )
+
+!
+
+,
+
+(2 s − 1) μ( ˜DmN ) ≤ (2 s − 1)2 δ = 2
+
+c ≤ 12 .
+
+(56) Observe that with L defined in (28), the matrix ˜DmN L has columns that are normalized. Applying Lemma B.2 with (56) to ˜DmN L, we get 12 ∥w∥22 ≤ ∥ ˜DmN Lw ∥22 ≤ 32 ∥w∥22, ∀∥ w∥0 ≤ 2s. 
+
+This is equivalent to 12 ∥L−1w∥22 ≤ ∥ ˜DmN w∥22 ≤ 32 ∥L−1w∥22, ∀∥ w∥0 ≤ 2s. 
+
+Using (54), we can further remove L−1
+
+γm 
+
+4 ∥w∥22 ≤ 12 ∥L−1w∥22 ≤ ∥ ˜DmN w∥22 ≤ 32 ∥L−1w∥22 ≤ 9γm 
+
+4 ∥w∥22, ∀∥ w∥0 ≤ 2s. (57) since δ < 12 and gi(x) := ui(x)/√γ. Define f (x) = PNi=1 wiui(x). Notice that ˜f m = ˜DmN w
+
+and γ∥w∥22 = ∥f ∥2
+
+> L2(Ω ,ν )
+
+. The property (57) is equivalent to 14 ∥f ∥2 
+
+> L2(Ω ,ν )
+
+≤ 1
+
+m
+
+> m
+
+X
+
+> j=1
+
+|f (ξj )|2 ≤ 94 ∥f ∥2
+
+> L2(Ω ,ν )
+
+, ∀f ∈ Σ2s(DN ). (58) Since 
+
+∩|Λ|=2 ,Λ⊂[N ]
+
+
+
+∥ 1
+
+m ˜G⊤ 
+
+> Λ
+
+˜GΛ − I∥max ≤ δ
+
+
+
+implies the properties (54), (55), (58), and (56), by using (53), we have that the following properties hold 
+
+μ( ˜DmN ) ≤ 2δ, s = 12
+
+
+
+1 + 1
+
+cδ 
+
+
+
+≤ 12 1 + 12μ( ˜DmN )
+
+!
+
+,
+
+14 ∥f ∥2 
+
+> L2(Ω ,ν )
+
+≤ 1
+
+m
+
+> m
+
+X
+
+> j=1
+
+|f (ξj )|2 ≤ 94 ∥f ∥2
+
+> L2(Ω ,ν )
+
+, ∀f ∈ Σ2s(DN ),
+
+40 with probability at least 1 − 2N 2 exp 
+
+
+
+− 3mγδ 2
+
+16 
+
+
+
+.
+
+Or equivalently, by setting 
+
+δ := 
+
+s
+
+16 log(2 N 2/ε )3γm < 12 ,
+
+i.e., m > 64 3γ log 
+
+ 2N 2
+
+> ε
+
+
+
+, we find that the following properties hold with probability at least 1 − εμ( ˜DmN ) ≤ 2
+
+s
+
+16 log(2 N 2/ε )3γm ,s =
+
+$
+
+12 1 + 116 
+
+s
+
+3γm 
+
+log(2 N 2/ε )
+
+!% 
+
+= C
+
+r γm 
+
+log( N 2/ε ) ≤ 12 1 + 12μ( ˜DmN )
+
+!
+
+,
+
+14 ∥f ∥2 
+
+> L2(Ω ,ν )
+
+≤ 1
+
+m
+
+> m
+
+X
+
+> j=1
+
+|f (ξj )|2 ≤ 94 ∥f ∥2
+
+> L2(Ω ,ν )
+
+, ∀f ∈ Σ2s(DN ),
+
+12 γm ≤
+
+> m
+
+X
+
+> t=1
+
+|ui(ξt)|2 ≤ 32 γm, 
+
+(59) for some absolute constant C > 0. 
+
+C.2 Proof of Corollary 6.1 
+
+Define dist( F, A α 
+
+> 1
+
+(DN )) ∞ := sup  
+
+> f∈F
+
+inf    
+
+> g∈Aα
+> 1(DN)
+
+∥f − g∥C(Ω) .
+
+The next result describes the quality of sparse approximations of F under the condition that dist( F, A α 
+
+> 1
+
+(DN )) ∞ < ∞.
+
+Lemma C.2 (Dai and Temlyakov (2023)) Assume that DN satisfies (2a) of Assump-tion 2 and F ⊂ C (Ω) satisfies dist( F, A α 
+
+> 1
+
+(DN )) ∞ < ∞. Then for any ξ ∈ Ωm, there holds 
+
+σ2s(F, DN )L2(Ω ,μ ξ ) ≤ s−α−1/2 + dist( F, A α 
+
+> 1
+
+(DN )) ∞.
+
+Lemma C.2 describes the nonlinear approximation rate for functions whose coefficients decay rapidly, and this result holds for any choice of sample locations ξ. However, to obtain an explicit bound from Theorem 4.2, we still need to bound the mutual coherence, which makes it challenging to relax the requirement of randomly sampled function values. We are now ready to present the proof of Corollary 6.1. 41 Proof [Proof of Corollary 6.1] Let p = 2. Lemma C.2 together with Theorem B.2 and Lemma C.1 guarantee the existence of a functional neural network Φ ∈ N N (M log( m +
+
+N ), M (m + N )2, log K, K ) satisfying sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≤ inf    
+
+> s< 12
+> 
+> 1+ 1
+> μ( ˜DmN)
+> 
+
+n
+
+Cβ 
+
+> 7
+
+e−C5βM + Cβ 
+
+> 8
+
+2(α+1 /2) β s−(α+1 /2) β + C9(K/ log K)− βs
+
+o
+
+.
+
+The constants are given below 
+
+C5 = − ln(2 μ( ˜DmN )s − μ( ˜DmN )) ,C7 = 12 C−1/p  
+
+> 1
+
+Cm,p m1−1/p Bs, C8 = 2 1+1 /p CC −1/p  
+
+> 1
+
+Cm,p m1−1/p + C3,C9 = (˜ cβ 
+
+> 1
+
++ CP )(1 + 2 β ¯Bβ ),
+
+where C = 2 s PJi=0 (2 μ( ˜DmN )s − μ( ˜DmN )) i, Cm,p := max {1, m 1/p −1/2} ≤ 1, C3 depends only on p, and ¯B = C4 + C6B + 6 Bm ∥L∥∞,
+
+˜c1 = C−1/p  
+
+> 1
+
+m−1/p ∥L−1∥2 max {1, m 1/p −1/2}
+
+q
+
+1 + (2 s − 1) μ( ˜DmN ),CP = sup   
+
+> w∈[−¯B, ¯B]N
+
+| ˆP(w)|,C4 = 6 c0BmsN 1−1/p ,C6 = c0C21/p mN 1−1/p ,c0 = max  
+
+> i∈[N]
+
+1
+
+qPmt=1 |ui(ξt)|2
+
+.
+
+Next, we will determine these constants for use in subsequent calculations. For any f =P 
+
+> i
+
+ciui ∈ F , the definition of Aα 
+
+> 1
+
+(DN ) implies that 
+
+∥f ∥C(Ω) ≤ X
+
+> i
+
+|ci|∥ u∥C(Ω) ≤ X
+
+> i
+
+|ci| ≤ X
+
+> i
+
+|ci|iα ≤ 1.
+
+Hence the constant B in Theorem B.2 is given by 
+
+B := 1 . (60) From Assumptions 2a and 3, it follows directly that 
+
+γ ≤ 1. (61) From (59) and (61) we obtain 
+
+r γm 
+
+log( N 2/ε ) ≍ s ≤
+
+s
+
+3m
+
+log( N 2/ε ) ,s ≤ 12 1 + 12μ( ˜DmN )
+
+!
+
+(2 s − 1) μ( ˜DmN ) ≤ 12 .
+
+(62) 42 Since the inequality 12 γm ≤ Pmt=1 |ui(ξt)|2 ≤ 32 γm holds due to Lemma C.1, we further have 
+
+∥L∥∞ ≲ 1
+
+√γm ,
+
+∥L−1∥2 ≲ √γm, c0 ≲ 1
+
+√γm .
+
+(63) Notice that 
+
+CP ≤ | ˆP(0) | + sup   
+
+> w∈[−¯B, ¯B]N
+
+| ˆP(w) − ˆP(0) |
+
+= |P (0) | + sup   
+
+> w∈[−¯B, ¯B]N
+
+|P ◦ D N (w) − P (0) |≤ |P (0) | + sup   
+
+> w∈[−¯B, ¯B]N
+
+∥D N (w)∥βL2(Ω ,ν )
+
+≤ |P (0) | + sup   
+
+> w∈[−¯B, ¯B]N
+
+∥
+
+> N
+
+X
+
+> i=1
+
+wiui∥βL∞(Ω ,ν )
+
+≲ N β ¯Bβ .
+
+(64) From (63), (61), (60), (62), and (64), we obtain the following estimates for the constants 
+
+c0 ≲ (γm )−1/2
+
+C4 ≲ γ−1/2s√mN , C6 ≲ γ−1/2s√mN , 
+
+¯B ≲ γ−1/2s√mN , 
+
+˜c1 ≲ γ1/2,CP ≲
+
+
+
+γ−1/2sN 32
+
+√m
+
+β
+
+.
+
+By inserting the above estimates into C5, C 7, C 8, and C9, we arrive at the following result 
+
+C5 ≥ ln 2 ,C7 ≍ s√m, C8 ≍ s√m, C9 ≲ γ−β s2β mβ N 2β .
+
+We can now rewrite the upper bound of sup f ∈F |P (f ) − Φ( ˜f m)| in a simplified form as sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≲ (s√m)β e−(ln 2) βM + ( √m)β s−(α−1/2) β
+
++γ−β s2β mβ N 2β (K/ ln K)− βs .
+
+43 Choosing 
+
+M := 
+
+&
+
+1(ln 2) β ln 
+
+ K
+
+ln K
+
+β/s !' 
+
+,
+
+then we can combine the first and last terms to obtain a simpler upper bound sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≲ (√m)β s−(α−1/2) β + γ−β s2β mβ N 2β (K/ ln K)− βs . (65) Setting N := 2 m, ε := 1 /m , and observing from (62) that s < pm/ log m, we further derive sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)|
+
+≲ m− β 
+
+> 4(2 α−3)
+
+(log m) β 
+
+> 4(2 α−1)
+
+| {z }
+
+> (i)
+
++ m4β (log m)−β
+
+ K
+
+ln K
+
+− βs
+
+| {z }
+
+> (ii )
+
+. (66) We need to assume α > 32 so that term ( i) tends to zero as m goes to infinity. To derive the relationship between m and K, we take logarithms on both sides of the error bound (65) and then establish corresponding upper bounds to control them individu-ally (i) ⇒ − β
+
+4 (2 α − 3) log m + β
+
+4 (2 α − 1) log log m, 
+
+(ii ) ⇒ 4β log m − β log log m − β
+
+r log mm (log K − log log K).
+
+Choose m, K so that log K =
+
+ 14 (2 α − 3) + 4 
+
+ pm log m. 
+
+Consequently, 
+
+m ≍ (log K)2
+
+log log K ,
+
+log m ≍ log log K, 
+
+(67) and the above two terms ( i) and ( ii ) after taking logatithms can be controlled by 
+
+− β
+
+4 (2 α − 3) log m + β
+
+4 (2 α − 1) log log m ≍ − β
+
+4 (2 α − 3) log m, 
+
+4β log m − β log log m − β
+
+r log mm (log K − log log K) ≍ − β
+
+4 (2 α − 3) log m. 
+
+This implies that sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≲ m− β 
+
+> 4(2 α−3)
+
+(log m) β 
+
+> 4(2 α−1)
+
+≲ (log K)−β(α− 32 )(log log K)β(α−1) .
+
+44 In addition, we have 
+
+ε ≍ log log K
+
+(log K)2 ,M ≍ 1
+
+s log K ≲ log log K, M log( m + N ) ≲ (log log K)2 ,M (m + N )2 ≲ (log K)2,
+
+where we use (62) to estimate M . The proof is complete. 
+
+C.3 Proof of Corollary 6.2 
+
+This proof follows a similar approach to the computation presented in Corollary 6.1. To ensure completeness, we include the detailed calculation below. 
+
+Proof [Proof of Corollary 6.2] Let p = 2. Theorem B.2 and Lemma C.1 together with the approximation results for W a,b A in (Temlyakov, 2015, Lemma 2.1) guarantee the existence of a functional neural network Φ ∈ N N (M log( m + N ), M (m + N )2, log K, K ) satisfying sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)|≤ inf    
+
+> s< 12
+> 
+> 1+ 1
+> μ( ˜DmN)
+> 
+
+n
+
+Cβ 
+
+> 7
+
+e−C5βM + Cβ 
+
+> 8
+
+s−(a+1 /2) β (log s)β(d−1)( a+b)+ β/ 2 + C9(K/ log K)− βs
+
+o
+
+.
+
+Although the original result (Temlyakov, 2015, Lemma 2.1) is built with exponential form of trigonometric functions, which is complex, it can be equivalently reformulated as a series of real sin and cos functions, our results are still valid. To estimate the constants C5, C 7, C 8, C 9, we proceed in the same way as in the proof of Corollary 6.1. Since the argument relies only on Lemma C.1, the constants do not depend on the input functions. Therefore, we can directly adopt the estimates from the proof of Corollary 6.1 and obtain 
+
+C5 ≥ ln 2 ,C7 ≍ s√m, C8 ≍ s√m, C9 ≲ γ−β s2β mβ N 2β .
+
+We can now rewrite the upper bound of sup f ∈F |P (f ) − Φ( ˜f m)| in a simplified form as sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≲ (s√m)β e−(ln 2) βM + ( √m)β s−(a−1/2) β (log s)β(d−1)( a+b)+ β/ 2
+
++γ−β s2β mβ N 2β (K/ ln K)− βs .
+
+Choosing 
+
+M := 
+
+&
+
+1(ln 2) β ln 
+
+ K
+
+ln K
+
+β/s !' 
+
+,
+
+45 then we can combine the first and last terms to obtain a simpler upper bound sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)|
+
+≲ (√m)β s−(a−1/2) β (log s)β(d−1)( a+b)+ β/ 2 + γ−β s2β mβ N 2β (K/ ln K)− βs .
+
+(68) Setting N := 2 m, ε := 1 /m , and observing from (62) that s < pm/ log m, we further derive sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)|
+
+≲ m− β 
+
+> 4(2 a−3)
+
+(log m) β  
+
+> 4(2 a−1)+ β(d−1)( a+b)+ β
+> 2
+
+| {z }
+
+> (i)
+
++ m4β (log m)−β
+
+ K
+
+ln K
+
+− βs
+
+| {z }
+
+> (ii )
+
+. (69) We need to assume a > 32 so that term ( i) tends to zero as m goes to infinity. To derive the relationship between m and K, we take logarithms on both sides of the error bound (68) and then establish corresponding upper bounds to control them individu-ally (i) ⇒ − β
+
+4 (2 a − 3) log m +
+
+ β
+
+4 (2 a − 1) + β(d − 1)( a + b) + β
+
+2
+
+
+
+log log m, 
+
+(ii ) ⇒ 4β log m − β log log m − β
+
+r log mm (log K − log log K).
+
+Choose m, K so that log K =
+
+ 14 (2 a − 3) + 4 
+
+ pm log m. 
+
+Consequently, 
+
+m ≍ (log K)2
+
+log log K ,
+
+log m ≍ log log K, 
+
+(70) and the above two terms ( i) and ( ii ) after taking logatithms can be controlled by − β 
+
+> 4
+
+(2 a −
+
+3) log m. This implies that sup  
+
+> f∈F
+
+|P (f ) − Φ( ˜f m)| ≲ m− β 
+
+> 4(2 a−3)
+
+(log m) β  
+
+> 4(2 a−1)+ β(d−1)( a+b)+ β
+> 2
+
+≲ (log K)−β(a− 32 )(log log K)β(a+( d−1)( a+b)− 12 ).
+
+In addition, we have 
+
+ε ≍ log log K
+
+(log K)2 ,M ≍ 1
+
+s log K ≲ log log K, M log( m + N ) ≲ (log log K)2 ,M (m + N )2 ≲ (log K)2,
+
+46 where we use (62) for estimating M . The proof is complete. 47

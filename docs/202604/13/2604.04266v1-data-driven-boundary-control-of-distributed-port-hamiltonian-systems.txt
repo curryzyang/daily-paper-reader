@@ -1,0 +1,822 @@
+Title: Data-Driven Boundary Control of Distributed Port-Hamiltonian Systems
+
+URL Source: https://arxiv.org/pdf/2604.04266v1
+
+Published Time: Tue, 07 Apr 2026 01:14:34 GMT
+
+Number of Pages: 7
+
+Markdown Content:
+# Data-Driven Boundary Control of Distributed Port-Hamiltonian Systems 
+
+Thomas Beckers and Leonardo Colombo 
+
+Abstract — Distributed Port-Hamiltonian (dPHS) theory pro-vides a powerful framework for modeling physical systems governed by partial differential equations and has enabled a broad class of boundary control methodologies. Their effec-tiveness, however, relies heavily on the availability of accurate system models, which may be difficult to obtain in the presence of nonlinear and partially unknown dynamics. To address this challenge, we combine Gaussian Process distributed Port-Hamiltonian system (GP-dPHS) learning with boundary control by interconnection. The GP-dPHS model is used to infer the unknown Hamiltonian structure from data, while its posterior uncertainty is incorporated into an energy-based robustness analysis. This yields probabilistic conditions under which the closed-loop trajectories remain bounded despite model mis-match. The method is illustrated on a simulated shallow water system. 
+
+I. I NTRODUCTION 
+
+The modeling and control of physical systems governed by partial differential equations (PDEs) is a crucial task in a broad range of domains such as physics, engineering, and applied mathematics [1]. Applications range from the control of flexible structures to fluid dynamics and wave propagation phenomena. A large and powerful class of these physical systems can be described by distributed Port-Hamiltonian systems (dPHS), see [2], [3]. Distributed PHSs are a powerful mathematical framework for modeling and analyzing physical systems with a spatial domain. The dPHS approach describes physical systems abstracting from detailed equations to focus on energy interactions and conservation principles. The dynamics of the system is described by a Hamiltonian functional, while the boundary interactions are described by power-based port variables. This unique approach allows for systematic analysis of complex physical systems, providing a clear understanding of their behavior and enabling the design of efficient control strategies. Thus, in recent years, the boundary control of dPHS has gained significant attention in research, see [4]–[6]. A prominent control approach is the control by inter-connection via Casimir generation (energy-Casimir method)              
+
+> Thomas Beckers is with the Department of Computer Science, Vanderbilt University, Nashville, TN 37212, USA
+
+thomas.beckers@vanderbilt.edu 
+
+> L. Colombo is with Centre for Automation and Robotics (CSIC-UPM), Ctra. M300 Campo Real, Km 0,200, Arganda del Rey - 28500 Madrid, Spain.
+
+leonardo.colombo@csic.es        
+
+> L. Colombo acknowledge financial support from Grant PID2022-137909NB-C21 funded by MCIN/AEI/ 10.13039/501100011033. The re-search leading to these results was supported in part by iRoboCity2030-CM, Rob´ otica Inteligente para Ciudades Sostenibles (TEC-2024/TEC-62), funded by the Programas de Actividades I+D en Tecnolog´ ıas en la Comunidad de Madrid.
+
+Fig. 1: Overview of the control-by-interconnection approach. A GP-dPHS model is used to learn the partially unknown dynamics of the PDE systems. Then, the model enables the design of a boundary controller if the system dissipation dominates the model’s uncertainty. developed for stabilization [3], [7]. The result is an energy-balancing passivity-based controller that shapes the closed-loop energy function to introduce a minimum in a desired configuration. However, this method is fundamentally limited by the so-called “dissipation obstacle” when dealing with internal energy dissipation (such as internal friction in the shallow water equations). When this happens, it is impossible to shape the energy of the system along the directions in which dissipation is present. To solve this, recent con-trol research has developed generalized methodologies to define new passive outputs for the dPHS. Interconnecting the boundary controller to this new passive output removes the limitations, allowing the control by interconnection to overcome the dissipation obstacle and achieve stability [8]. Despite its effectiveness, these model-based control meth-ods require an accurate model of the system’s Hamiltonian functional, which can be challenging to obtain due to highly nonlinear dynamics or the complexity of the physical system. To address these limitations, recent research explores data-driven and machine learning techniques. Recently, Gaussian process distributed Port-Hamiltonian systems (GP-dPHS) were introduced as Bayesian data-driven techniques for the identification of physical systems, see [9]–[11]. Gaussian processes (GPs) provide a probabilistic framework for mod-eling complex and noisy data, enabling not only predictions but also uncertainty quantification. The goal of this paper is to combine the power of boundary control by interconnection approaches with data-driven Bayesian GP-dPHS models to 
+
+> arXiv:2604.04266v1 [eess.SY] 5 Apr 2026
+
+enable the control of nonlinear PDE systems with partially unknown dynamics. 
+
+Contribution: In this paper, we propose a data-driven Bayesian control approach for physical PDE systems with partially unknown dynamics. For this purpose, we employ Gaussian Process distributed Port-Hamiltonian system mod-els to learn the unknown dynamics of the system based on observations. We then introduce a boundary controller based on control by interconnection, which uses the mean prediction of the GP-dPHS model to render the closed-loop dynamics to shape the desired energy, overcoming any dis-sipation obstacles via new passive outputs. The uncertainty quantification of the GP-dPHS model allows us to consider model mismatch and derive conditions for boundedness of the closed-loop. Finally, we evaluate the closed-loop perfor-mance through the identification and control of the shallow water equations acting as a nonlinear PDE. The remainder of the paper is structured as follows. We introduce the core concepts and the problem setting in Section II, followed by the proposed GP-dPHS control methodology in Section III. Finally, a simulation evaluation on the shallow water equations presents the benefits of our approach in Section IV. II. P RELIMINARIES 
+
+In this section, we briefly introduce Gaussian Process regression, the class of distributed Port-Hamiltonian systems and the problem setting. 
+
+A. Gaussian Process Regression 
+
+Gaussian Processes (GPs) are a class of nonparametric models that are widely used for regression and prediction tasks [12]. In contrast to parametric approaches, GPs do not assume a fixed functional form, which allows them to flexibly capture complex relationships in the data. A key advantage of GP models is their ability to provide not only predictions but also a principled quantification of uncertainty. This feature is particularly valuable in practical scenarios where only limited data are available, as GPs can still achieve good performance by exploiting structural assumptions encoded in the kernel function. A Gaussian Process is fully specified by a mean function 
+
+m(·) and a covariance (kernel) function k(·, ·). For any pair of inputs x ∈ Rn and x′ ∈ Rn, the kernel k(x, x′) defines the covariance between the corresponding function values. Prior to observing data, a GP defines a distribution over functions, f ∼ GP (m(x), k (x, x′)) .Let X = {x(1) , x (2) , . . . , x (N )} denote the input data and 
+
+Y = {y(1) , y (2) , . . . , y (N )} the corresponding outputs, form-ing the dataset D. The observations are typically assumed to be corrupted by independent Gaussian noise with zero mean and variance σ2 
+
+> n
+
+∈ R+. Conditioning on the dataset 
+
+D, the posterior distribution at a test input x∗ ∈ Rn is again Gaussian, with mean and covariance given by 
+
+μ(x∗) = K(x∗, X )K(X, X ) + σ2
+
+> n
+
+I−1Y, (1) 
+
+var( x∗) = k(x∗, x ∗)−K(x∗, X )K(X, X )+ σ2
+
+> n
+
+I−1K(X, x ∗).
+
+(2) Here, K(X, X ) ∈ RN ×N denotes the covariance ma-trix of the training inputs, while K(x∗, X ) ∈ R1×N and 
+
+K(X, x ∗) ∈ RN ×1 denote the cross-covariances between the test input and the training inputs. Moreover, k(x∗, x ∗)
+
+represents the prior variance at x∗. The resulting predictive distribution p(y∗ | x∗, D) therefore provides both a point estimate and an associated uncertainty measure, which is a defining characteristic of GP regression. 
+
+B. Distributed Port-Hamiltonian systems 
+
+Composing Hamiltonian systems with input/output ports leads to a so-called Port-Hamiltonian system, which is a dynamical system with ports that specify the interactions of its components. In [3], the classical finite-dimensional Port-Hamiltonian formulation of a dynamical system is gen-eralized in order to include the distributed-parameter and multivariable case. In contrast to finite-dimensional PHS, the interconnection, damping, and input/output matrices are replaced by matrix differential operators that are assumed to be constant, i.e., no explicit dependence on the state (energy) variables is considered. As in finite dimensions, given the Stokes–Dirac structure, the model of the system easily follows once the Hamiltonian function is specified. The resulting class of infinite-dimensional systems in Port-Hamiltonian form is quite general, thus allowing the interpretation of many classical PDEs within this framework and the description of several physical phenomena, such as heat conduction, piezoelectricity, and elasticity. In this paper, we follow [8] and focus on the class of distributed port-Hamiltonian systems described by the following PDE 
+
+∂x ∂t (t, z ) = 
+
+
+
+P1
+
+∂∂z + ( P0 − G0)
+
+ δH δx (x(t, z )) . (3) Such a class generalizes what has been studied in [5], [13], and includes common PDE systems such as the shallow water equation. Here, the spatial domain is Z = [ a, b ] and 
+
+x(t, ·) ∈ L2(a, b ; Rn) denotes the state (energy) variable. Moreover, P1 = P ⊤ 
+
+> 1
+
+> 0, P0 = −P ⊤ 
+
+> 0
+
+, and G0 = G⊤ 
+
+> 0
+
+≥
+
+0, while H is the Hamiltonian functional (e.g., the total energy) of the system, which is not necessarily quadratic in the energy variables. Finally, δH/δx denotes the variational derivative of H.To define a distributed port-Hamiltonian system, the PDE (3) has to be completed with a boundary port. In this respect, the boundary port variables associated to (3) are the vectors f∂ , e ∂ ∈ Rn defined by 
+
+f∂
+
+e∂
+
+
+
+= 1
+
+√2
+
+P1 −P1
+
+I I
+
+ δH δx (b) 
+
+> δH δx
+
+(a)
+
+!
+
+. (4) These variables are linear combinations of the boundary traces of the co-energy variables. To obtain a boundary control system, inputs and outputs have to be defined. Let 
+
+W and fW be a pair of n × 2n full-rank real matrices such that (W ⊤ fW ⊤) is invertible, and 
+
+W ΣW ⊤ = 0 , W ΣfW ⊤ = I, fW ΣfW ⊤ = 0 , (5) where 
+
+Σ = 
+
+0 II 0
+
+
+
+.
+
+The boundary input u : R+ → Rn and output y : R+ →
+
+Rn can be defined as 
+
+u(t) = W
+
+f∂ (t)
+
+e∂ (t)
+
+
+
+, y(t) = fW
+
+f∂ (t)
+
+e∂ (t)
+
+
+
+. (6) Then, the following energy balance equation holds 
+
+ddt H(x(t, ·)) = −
+
+Z ba
+
+ δH δx 
+
+⊤
+
+G0
+
+δH δx dz + y⊤u ≤ y⊤u, 
+
+(7) where the integral term accounts for the dissipative effects along the spatial domain, while y⊤u represents the supplied power at the boundary port. 
+
+C. Problem Setting 
+
+We consider the challenge of designing a boundary control law for a partially unknown physical PDE system whose dynamics can be modeled as a distributed Port-Hamiltonian system (3). For this, we assume that the Hamiltonian func-tional H is sufficiently smooth and only partly or completely unknown due to unstructured nonlinearities in the system (such as nonlinear stress-strain material properties or changes in material properties over the spatial domain). To address the problem, we introduce the following assumptions. 
+
+Assumption 1: The system matrices P0, P 1, and G0 of the PDE system (3) are assumed to be known from basic physics principles. 
+
+Assumption 2: We can observe the state of the PDE system (3) at some temporal instants ti and spatial points zj to generate a set of observations 
+
+{x(t1, z 1), . . . , x (t1, z Nz ), . . . , x (tNt , z 1), . . . , x (tNt , z Nz )}.
+
+Assumption 3: There exists a unique and continuous so-lution x(t, z ) for the PDE system under the boundary input-output structure (6). Assumption 1 is only mildly restrictive since these ma-trices are often known from physical prior knowledge of the system, whereas the Hamiltonian typically contains the unstructured, hard-to-model nonlinearities. However, deter-mining the dissipation matrix G0 might be challenging, but the elements of G0 can be estimated following the procedure in [10]. Assumption 2 ensures that we can collect data from the PDE system, requiring observability of the state. If that is not the case, an observer needs to be implemented. Finally, Assumption 3 guarantees the existence of a solution so that the derivation of a surrogate model is meaningful. Since the controller is synthesized from a learned model and then applied to the physical PDE system, the effect of model mismatch must be explicitly taken into account. 
+
+Goal: Given a dataset as in Assumption 2, our aim is to design a controller that allows us to shape the Hamiltonian functional of the closed-loop system while overcoming the internal dissipation obstacle induced by the distributed dis-sipative structure. III. C ONTROL DESIGN BASED ON GP-DPHS The general idea of the proposed approach is depicted in Fig. 1. First, we collect (noisy) state measurements across the spatial and temporal domains from the physical system, which are then used to train a Gaussian Process distributed Port-Hamiltonian system model. Due to its Bayesian nature, this model provides both a prediction of the unknown phys-ical dynamics and an explicit uncertainty quantification. The mean prediction is used to design a boundary control law based on control by interconnection via Casimir generation. To handle the internal dissipation present in systems like the shallow water equations, we exploit a new passive output that overcomes the classical dissipation obstacle. The uncertainty prediction of the GP-dPHS model can be leveraged to ensure the robustness of the control law against model mismatch. We begin with data collection and training of the GP-dPHS model, as introduced in [10]. Afterward, we present the boundary control by interconnection method. 
+
+A. Data Collection 
+
+First, we leverage the collected data of the PDE system with unknown dynamics (3) to train our GP-dPHS model. Given Assumption 2, we can define a set of observations of the system as 
+
+D = {ti, z j , x (ti, zj ), u (ti)}i=Nt−1,j =Nz −1 
+
+> i=0 ,j =0
+
+, (8) where x(ti, z j ) denotes the observed state at time ti and spatial point zj , corresponding to Nt time steps and Nz
+
+spatial points. These observations are paired with a boundary input sequence {u(t1), u (t2), . . . , u (tNt )} used to excite the system and generate a rich dataset. 
+
+Remark 1: As in standard system identification, the accu-racy of the learned model generally improves with the avail-ability of informative data. However, no strict assumptions are imposed on the input sequence, as the model quality is subsequently reflected in the associated uncertainty of the GP-dPHS and, in this way, included in the design of the controller. In practice, the number of observations is usually lim-ited across the spatial domain, but we also require state derivatives for training of the GP-dPHS model. Hence, we deploy GP regression to upsample the data and to esti-mate the state derivatives. Using a smooth kernel func-tion trained on the input data {ti, z j , u (ti)}i=Nt−1,j =Nz −1
+
+> i=0 ,j =0
+
+and output data {x(ti, z j )}i=Nt−1,j =Nz −1 
+
+> i=0 ,j =0
+
+, we can take the derivative of the posterior mean as an estimate of the state derivative ∂∂t x, which allows the dataset to be augmented with Ne additional spatial points, where 
+
+Ne ≫ Nz . Consequently, we construct a new dataset E,which comprises the states X = [˜ x(t0), . . . , ˜x(tNt−1)] and the state derivatives ˙X =
+
+h ∂ ˜x(t0) 
+
+> ∂t
+
+, . . . , ∂ ˜x(tNt−1)
+
+> ∂t
+
+i
+
+, where 
+
+˜x(ti) = [ x(ti, z 0)⊤, . . . , x (ti, z Ne−1)⊤]⊤ represents the spa-tially stacked state at time ti. In this way, we define the augmented dataset E = [ X, ˙X]. For further details, see [10]. B. Training of the Gaussian Process distributed Port-Hamiltonian model 
+
+Next, since the exact underlying dynamics are unknown, we leverage the dataset E to learn a distributed Port-Hamiltonian model of the PDE system. This approach uses a Gaussian process to approximate the unknown Hamiltonian functional H in (3), which is equivalent to learning an energy representation of the PDE system. In practice, the GP-dPHS model is trained on the finite-dimensional surrogate representation induced by the spatially stacked state ˜x(ti).This construction is made possible because GPs are invariant under linear transformations, see [9], allowing us to incor-porate the Hamiltonian functional derivatives into the GP framework. This leads to the following GP representation of the dPHS dynamics: 
+
+∂x
+
+∂t ∼ GP (0 , k dphs (x, x′)) , (9) where the system dynamics are encapsulated within the probabilistic model. Consequently, we define a new physics-informed kernel function kdphs under the dPHS formalism, which takes the form 
+
+kdphs (x, x′) = σ2 
+
+> f
+
+cJRδ x exp 
+
+
+
+− ∥x − x′∥2
+
+2φ2
+
+> l
+
+
+
+δ⊤ 
+
+> x′
+
+cJR ⊤
+
+,
+
+(10) where cJR =  P1 ∂∂z + ( P0 − G0). At the implementation level, the operators involved in kdphs are evaluated on the finite-dimensional surrogate representation induced by the sampled spatial discretization. This kernel is based on the squared exponential function to represent the smooth Hamiltonian functional. The model is trained as a standard GP using the dataset E. The hyperparameters φl ∈ R>0 and 
+
+σf ∈ R>0 are optimized by minimizing the negative log marginal likelihood. This completes the training of the GP-dPHS model. Utilizing the invariance of GPs under linear transformations, we can write the dynamics of the GP-dPHS model as 
+
+∂ ˆx∂t (t, z ) = 
+
+
+
+P1
+
+∂∂z + ( P0 − G0)
+
+ δμ ( ˆH|E )
+
+δˆx (ˆ x(t, z )) ,
+
+(11) where ˆH denotes the learned Hamiltonian functional en-dowed with the GP posterior distribution, and μ( ˆH|E ) de-notes its posterior mean. As a consequence, we obtain the model (11) for the unknown PDE system based on the training dataset E. For further details, see [10]. 
+
+C. Boundary Control by Interconnection 
+
+In this section, we propose a data-driven boundary control approach for the (partially) unknown PDE system (3). In-spired by [8], we consider a control design using the concept of control-by-interconnection. For this purpose, the following finite-dimensional control system in PHS form is considered 
+
+˙xc(t) = Jc
+
+∂H c
+
+∂x c
+
+(xc(t)) + Gcuc(t), y c(t) = G⊤
+
+> c
+
+∂H c
+
+∂x c
+
+(12) where xc ∈ Rnc denotes the controller state, Jc = −J⊤ 
+
+> c
+
+∈
+
+Rnc×nc is the interconnection matrix, Gc ∈ Rnc×nc is the input matrix, and Hc is the controller Hamiltonian to be designed. Since we do not know the Hamiltonian of the PDE system (3), the controller is designed based on the model (11) and then applied to the actual system. Thus, the next steps describe the controller design, followed by the analysis of connecting the controller to the actual system (3). The controller is interconnected with the boundary port 
+
+(u, y ) of the model (11) through a power-preserving inter-connection given by 
+
+uy
+
+
+
+=
+
+0 −II 0
+
+  uc
+
+yc
+
+
+
++
+
+u′
+
+0
+
+
+
+, (13) where u′ represents a new external input, leading to a closed-loop system whose total Hamiltonian is 
+
+Hd(x, x c) = μ( ˆH(x)|E ) + Hc(xc). (14) By appropriately selecting Hc, the energy function Hd can be shaped so that it attains a minimum at a desired equilibrium. As in the finite-dimensional framework, the design process becomes more tractable by introducing invariant quantities, commonly referred to as Casimir functions. These invariants establish a relation between the plant and controller states that is independent of the particular choice of Hamiltonians. 
+
+Definition 1: Consider the autonomous ( u′ = 0 ) closed-loop system obtained from (13). A function C : X × Rnc →
+
+R is called a Casimir function if it remains constant along all trajectories of the system, i.e. ˙C(x(t, ·), x c(t)) = 0 for any admissible choice of μ( ˆH|E ) and Hc.The invariance of C implies the existence of an intrinsic relation between xc and x that does not depend on the specific Hamiltonian functions. Based on this definition, we note that any Casimir function of the learned model (11) is also a Casimir function of the PDE system (3). 
+
+Proposition 1: Let C : X × Rnc → R be a Casimir function of the autonomous closed-loop system obtained from the controller (12) and model (11), connected via (13). Then, C is also a Casimir function for the autonomous closed-loop system obtained from the controller (12) and 
+
+system (3), connected via (13). 
+
+Proof: The claim follows from the structural nature of the Casimir condition, which depends on the interconnection relations and not on the particular choice of Hamiltonian. Since the learned model (11) and the actual system (3) share the same interconnection structure, any Casimir function for the former is also a Casimir function for the latter. In the following, we focus on Casimir functions of the form 
+
+C(x(t, ·), x c(t)) = Γ ⊤xc(t) + Ψ( x(t, ·)) , (15) where Γ ∈ Rnc and Ψ : X → R is a functional of x. The knowledge of Casimir functions can then be exploited to shape the closed-loop energy. However, traditional energy-shaping passivity-based control approaches encounter the fundamental “dissipation obstacle”, not being able to deal with equilibria that require an infinite amount of supplied energy in steady state. However, as detailed by [8], this obstacle can be overcome functionallyvia a new passive output ¯y such that the learned model remains passive with respect to the new input/output pair, namely ddt μ( ˆH | E) ≤ ¯y⊤u. The closed-loop system obtained from the augmented interconnection matching 
+
+u
+
+¯y
+
+
+
+=
+
+0 −II 0
+
+  uc
+
+yc
+
+
+
++
+
+u′
+
+0
+
+
+
+, (16) which replaces y by the new output ¯y, for the model (11) and the controller (12), is characterized by a set of Casimir functions of the form (15), where each functional Ψ satisfies 
+
+P1
+
+∂∂z δΨ
+
+δx (x) + ( P0 − G0) δΨ
+
+δx (x) = 0 . (17) Next, we determine the new passive output ¯y such that the controller can act on the Hamiltonian ˆH without being restricted by the dissipation obstacle. 
+
+Proposition 2 (adapted from [8]): Consider the GP-dPHS model with dynamics given by (11), boundary input u
+
+defined in (6), the controller (12), and the power-conserving interconnection (16). Then, the function (15) is a Casimir invariant, with Ψ satisfying (17), if 
+
+¯y(t) = y(t) + Su (t) (18) 
+
++ 2 G⊤ 
+
+> c
+
+Γ
+
+∥G⊤ 
+
+> c
+
+Γ∥2
+
+Z ba
+
+δΨ
+
+δx 
+
+> ⊤
+
+(x(t, z )) G0
+
+δμ ( ˆH|E )
+
+δx (x(t, z )) dz, 
+
+where y is the original output defined in (6), and 
+
+S = G⊤ 
+
+> c
+
+Γ(b − a)∥G⊤ 
+
+> c
+
+Γ∥4
+
+Z ba
+
+δΨ
+
+δx 
+
+> ⊤
+
+G0
+
+δΨ
+
+δx dz 
+
+!
+
+Γ⊤Gc + S′,
+
+(19) with S′ = ( S′)⊤ ≥ 0 and the controller (12) satisfies 
+
+ Jc + GcSG ⊤
+
+> c
+
+ Γ + Gc ˜W R 
+
+" δΨ 
+
+> δx
+
+(b) 
+
+> δΨ
+> δx
+
+(a)
+
+#
+
+= 0 ,G⊤ 
+
+> c
+
+Γ + W R 
+
+" δΨ 
+
+> δx
+
+(b) 
+
+> δΨ
+> δx
+
+(a)
+
+#
+
+= 0 .
+
+(20) 
+
+Proof: The proof follows that of Proposition 7 in [8], replacing the system Hamiltonian H by the learned mean Hamiltonian μ( ˆH | E ).In this way, with the new virtual output ¯y (18) and a controller (12), satisfying (20), we can shape the closed-loop Hamiltonian Hd via Hc so that it attains a minimum at a desired equilibrium. Next, we analyze the consequences of connecting the designed controller (12) with the actual PDE system (3) instead of the model (11). For this, the dynamics of the closed-loop system is written as 
+
+∂x ∂t (t, z ) = 
+
+
+
+P1
+
+∂∂z + ( P0 − G0)
+
+ δμ ( ˆH | E )
+
+δx (x(t, z ))+ η(x),
+
+˙xc(t) = Jc
+
+∂H c
+
+∂x c
+
+(xc(t)) + Gc ¯y(t),u(t) = −G⊤
+
+> c
+
+∂H c
+
+∂x c
+
+(xc(t)) ,
+
+(21) where μ( ˆH | E) is the posterior mean of the learned Hamiltonian and η(x) is the unknown model error. Before stating the main result, we impose the following assumption. 
+
+Assumption 4: There exists a probability p ∈ (0 , 1) and a constant ¯η ∈ R+ such that the model error satisfies 
+
+∥η(x)∥L2(a,b ) ≤ ¯η with probability at least 1 − p for all admissible states x.Assumption 4 is a standard robustness-type assumption in learning-based control and expresses that, with high probabil-ity, the residual model mismatch remains uniformly bounded on the domain of interest. 
+
+Proposition 3: Consider the partially unknown PDE sys-tem (3), a GP-dPHS model (11) trained on observed data 
+
+D satisfying Assumption 4, and a controller (12) follow-ing Proposition 2, which is connected with (3) via (16). Let 
+
+Hd be coercive, and assume that there exists λ > 0 such that v⊤G0v ≥ λ∥v∥2 for all admissible v. Then, for any 
+
+ε ∈ (0 , 2λ), the closed-loop energy satisfies 
+
+dH d
+
+dt ≤ − 
+
+
+
+λ − ε
+
+2
+
+ δμ ( ˆH | E )
+
+δx 
+
+> 2
+> L2(a,b )
+
++ 12ε ¯η2
+
+with probability at least 1−p. Consequently, the state x(t, z )
+
+is ultimately bounded with probability at least 1 − p, and the trajectories evolve inside a sublevel set of Hd.
+
+Proof: Define e(x) := δμ ( ˆH | E )
+
+δx (x). Differentiating 
+
+Hd along the closed-loop dynamics yields 
+
+dH d
+
+dt = −
+
+Z ba
+
+e(x)⊤G0e(x) dz 
+
++
+
+Z ba
+
+e(x)⊤
+
+
+
+P1
+
+∂∂z + P0
+
+
+
+e(x) dz 
+
++
+
+Z ba
+
+e(x)⊤η(x) dz +
+
+ ∂H c
+
+∂x c
+
+⊤
+
+Jc
+
+∂H c
+
+∂x c
+
+. (22) Due to the skew-symmetry of Jc and P0, together with the power-preserving structure of the interconnection, the non-dissipative terms do not contribute to the decrease of Hd.Here, we use the standard dPHS power balance under the imposed boundary interconnection, so that the conservative interconnection terms cancel in the energy identity. Hence, 
+
+dH d
+
+dt ≤ − 
+
+Z ba
+
+e(x)⊤G0e(x) dz +
+
+Z ba
+
+e(x)⊤η(x) dz. 
+
+Using the coercivity of G0, we obtain 
+
+Z ba
+
+e(x)⊤G0e(x) dz ≥ λ∥e(x)∥2
+
+> L2(a,b )
+
+.
+
+Next, by Cauchy–Schwarz and Young’s inequality, for any 
+
+ε > 0,
+
+Z ba
+
+e(x)⊤η(x) dz ≤ ∥ e(x)∥L2(a,b )∥η(x)∥L2(a,b )
+
+≤ ε
+
+2 ∥e(x)∥2 
+
+> L2(a,b )
+
++ 12ε ∥η(x)∥2
+
+> L2(a,b )
+
+.Therefore, 
+
+dH d
+
+dt ≤ − 
+
+
+
+λ − ε
+
+2
+
+
+
+∥e(x)∥2 
+
+> L2(a,b )
+
++ 12ε ∥η(x)∥2
+
+> L2(a,b )
+
+.
+
+By Assumption 4, with probability at least 1 − p,
+
+∥η(x)∥2 
+
+> L2(a,b )
+
+≤ ¯η2, and hence 
+
+dH d
+
+dt ≤ − 
+
+
+
+λ − ε
+
+2
+
+
+
+∥e(x)∥2 
+
+> L2(a,b )
+
++ 12ε ¯η2.
+
+Choosing ε ∈ (0 , 2λ) makes the first coefficient strictly positive. Since Hd is radially unbounded, its sublevel sets are bounded, and the above estimate implies ultimate bound-edness of the trajectories with probability at least 1 − p.The proposition establishes a probabilistic ultimate bound-edness result for the closed-loop distributed port-Hamiltonian system under model uncertainty. In particular, the distributed dissipation represented by G0 dominates the residual model mismatch up to a bounded perturbation level, and the result-ing energy estimate guarantees that the trajectories remain confined to a bounded sublevel set of Hd with probability at least 1 − p. In the ideal case η(x) = 0 , the perturbation term vanishes and the closed-loop energy becomes non-increasing. IV. E VALUATION 
+
+For the evaluation, we consider the boundary control problem of the nonlinear shallow water equation, adapted from [8]. Specifically, we study a rectangular open channel of length L and unitary width, equipped with upstream and downstream gates. The fluid is assumed to have unit density and to be subject to linear friction. With the one-dimensional spatial coordinate z ∈ [0 , L ],the system can be written in dPHS form as 
+
+∂∂t 
+
+qp
+
+
+
+=
+
+ 0 −1
+
+−1 0
+
+ ∂∂z −
+
+0 00 D
+
+ δH δx (q, p ),
+
+(23) where x = ( q, p ) and D ≥ 0 models dissipation effects. The variable q(t, z ) > 0 denotes the infinitesimal volume, which corresponds to the water height for a rectangular channel, while p(t, z ) represents the kinetic momentum density. The Hamiltonian is given by 
+
+H(q, p ) = 12
+
+Z L
+
+> 0
+
+ qp 2 + ∆( p) + gq 2 dz, (24) where g is the gravitational constant and ∆( p) is a nonlinear term typically used to model turbulence, see [14]. For illustration, we choose ∆( p) = exp( −(p − 5) 2), but assume throughout the remainder of this section that this term is unknown. To account for this uncertainty, we can learn the Hamilto-nian using a GP-dPHS approach as described in Section III. For simplicity, we directly train a Gaussian process with a squared exponential kernel on (24), using the prior mean 
+
+m(x) = qp 2 + gq 2 and 100 training points (q, p ) sampled from the domain [0 , 10] × [−10 , 10] . The resulting posterior mean μ( ˆH | E ) is then used as a surrogate for (24). Due to the structure of the shallow water system (23) and the boundedness of the squared exponential kernel (and hence of the GP posterior mean), the dissipative term can dominate the model uncertainty. The corresponding co-energy variables are given by  
+
+> δμ ( ˆH|E )
+> δq
+
+=: P (q, p ) and δμ ( ˆH|E ) 
+
+> δp
+
+=: Q(q, p ), which represent pressure and flow, respectively. The boundary input/output pair is defined as 
+
+u(t) = 
+
+Q(0 , t )
+
+P (L, t )
+
+
+
+, y(t) = 
+
+ P (0 , t )
+
+−Q(L, t )
+
+
+
+. (25) The equilibrium (q⋆, p ⋆) satisfies 
+
+∂Q ⋆
+
+∂z = 0 , ∂P ⋆
+
+∂z + DQ ⋆ = 0 , (26) with Q⋆(z) = ¯Q, P ⋆(z) = ¯QD (L − z) + ¯P .For the controller design, we consider a system-to-connect (12) of dimension nc = 2 . This choice allows us to construct the following Casimir functions in closed-loop 
+
+C1(xc1, q, p ) = xc1 −
+
+Z L
+
+> 0
+
+[D(L − z)q + p] dz =: Ψ 1(q, p ),C2(xc2, q, p ) = xc2 −
+
+Z L
+
+> 0
+
+q dz =: Ψ 2(q, p ). (27) Importantly, the derivation of these Casimir functions does not require explicit knowledge of the Hamiltonian (24), see Proposition 1. Following Proposition 3, the modified passive output ¯y
+
+used to overcome the dissipation obstacle is given by (18) 
+
+¯y(t) = y(t) −
+
+2D
+
+Z L
+
+> 0
+
+δμ ( ˆH | E )
+
+δp (q(t, z ), p (t, z )) dz 
+
+0
+
+
+
++
+
+DL 00 0
+
+
+
+u(t) (39) where Gc = I, Γ = −I, S =
+
+DL 00 0
+
+
+
+in Proposition 2, and Jc =
+
+ 0 1
+
+−1 0
+
+
+
+in (18); see [8] for details. Finally, the closed-loop Hamiltonian can be shaped by selecting Hc in (12) as 
+
+Hc(xc1, x c2) = 12 Ξ1(xc1 − x⋆c1)2 + 12 Ξ2(xc2 − x⋆c2)2
+
+− ¯Q x c1 − ¯P x c2 (28) with positive constants Ξ1, Ξ2 ≥ 0. The reference values 
+
+x⋆c1, x ⋆c2 correspond to the values of the Casimir func-tions (27) at the equilibrium (26). Figure 2 illustrates the evolution of the water level for the closed-loop system. Starting from a constant initial condition 
+
+q(0 , ·) = 1 (gray dashed line), the controller regulates the inflow at the left boundary such that the water level closely converges to the desired profile (black dashed line). The effect of using the learned model μ( ˆH | E ) instead of the true, unknown Hamiltonian is shown in Fig. 3. The top plot indicates that the closed-loop Hamiltonian may temporarily increase due to model mismatch, since the con-troller is designed using the learned model but applied to the true system. Nevertheless, Proposition 3 guarantees that the Fig. 2: Controlled water level. At t = 0 , the water level is constant over the spatial domain (gray dashed). Then, the controller lets water flow into the system from the left boundary, reaching the desired equilibrium (black dashed) after 10 seconds. system trajectories remain bounded and that the Hamiltonian converges to a set. As comparision, if the model were perfect, i.e., μ( ˆH |E) = H, the closed-loop Hamiltonian Hd would be strictly non-increasing as depicted in the bottom plot of Fig. 3. 
+
+(a) Controller designed based on the learned Hamiltonian μ( ˆH).
+
+(b) Controller designed based on the actual (unknown) Hamiltonian. 
+
+Fig. 3: Comparison of the evolution of the Hamiltonian with a controller designed based on a model (a) and the actual system dynamics (b). As stated in Proposition 3, the model error leads to a Hamiltonian that converges to a set around the steady state. CONCLUSION 
+
+In this paper, we developed a Bayesian data-driven bound-ary control framework for distributed port-Hamiltonian sys-tems governed by PDEs with partially unknown dynamics. A GP-dPHS model enables the learning of the underlying Hamiltonian structure from localized measurements, while preserving a physically meaningful representation of the system. Based on the learned model, we designed a boundary controller by interconnection and used structurally induced Casimir relations to construct virtual passive outputs that overcome the classical dissipation obstacle. In addition, the uncertainty information provided by the GP model was incorporated into an energy-based robustness analysis, yield-ing probabilistic ultimate boundedness of the closed-loop dynamics under bounded model mismatch. Future work will address extensions to higher-dimensional spatial domains and more general classes of distributed port-Hamiltonian systems. REFERENCES [1] P. Derler, E. A. Lee, and A. S. Vincentelli, “Modeling cyber–physical systems,” Proceedings of the IEEE , vol. 100, no. 1, pp. 13–28, 2011. [2] A. J. Van der Schaft and B. M. Maschke, “Hamiltonian formulation of distributed-parameter systems with boundary energy flow,” Journal of Geometry and physics , vol. 42, no. 1-2, pp. 166–194, 2002. [3] A. Macchelli, A. J. Van Der Schaft, and C. Melchiorri, “Port Hamilto-nian formulation of infinite dimensional systems i. modeling,” in 2004 43rd IEEE Conference on Decision and Control (CDC) , vol. 4. IEEE, 2004, pp. 3762–3767. [4] A. Van der Schaft, L2-gain and passivity techniques in nonlinear control . Springer, 2000. [5] Y. Le Gorrec, H. Zwart, and B. Maschke, “Dirac structures and boundary control systems associated with skew-symmetric differential operators,” SIAM journal on control and optimization , vol. 44, no. 5, pp. 1864–1892, 2005. [6] M. Sch¨ oberl and A. Siuka, “On casimir functionals for infinite-dimensional port-hamiltonian control systems,” IEEE Transactions on Automatic Control , vol. 58, no. 7, pp. 1823–1828, 2012. [7] H. Rodr´ ıguez, A. J. van der Schaft, and R. Ortega, “On stabilization of nonlinear distributed parameter port-controlled hamiltonian systems via energy shaping,” in Proceedings of the 40th IEEE Conference on Decision and Control (Cat. No. 01CH37228) , vol. 1. IEEE, 2001, pp. 131–136. [8] A. Macchelli, L. P. Borja, and R. Ortega, “Control by interconnection of distributed port-hamiltonian systems beyond the dissipation obsta-cle,” IFAC-PapersOnLine , vol. 48, no. 13, pp. 99–104, 2015. [9] T. Beckers, J. Seidman, P. Perdikaris, and G. J. Pappas, “Gaussian process port-Hamiltonian systems: Bayesian learning with physics prior,” in IEEE Conference on Decision and Control (CDC) , 2022, pp. 1447–1453. [10] K. Tan, P. Li, and T. Beckers, “Physics-constrained learning of pde systems with uncertainty quantified port-hamiltonian models,” in 6th Annual Learning for Dynamics & Control Conference . PMLR, 2024, pp. 1753–1764. [11] T. Beckers and L. Colombo, “Physics-informed learning for passivity-based tracking control,” in 2025 IEEE 64th Conference on Decision and Control (CDC) . IEEE, 2025, pp. 2091–2096. [12] C. E. Rasmussen and C. K. Williams, Gaussian processes for machine learning . MIT press Cambridge, 2006, vol. 1. [13] B. Jacob and H. J. Zwart, Linear port-Hamiltonian systems on infinite-dimensional spaces . Springer Science & Business Media, 2012. [14] S. B. Pope, “Turbulent flows,” Measurement Science and Technology ,vol. 12, no. 11, pp. 2020–2021, 2001.
