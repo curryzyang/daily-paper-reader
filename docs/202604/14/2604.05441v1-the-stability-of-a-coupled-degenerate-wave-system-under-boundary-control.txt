@@ -1,0 +1,1571 @@
+Title: The Stability of a Coupled Degenerate Wave System Under Boundary Control
+
+URL Source: https://arxiv.org/pdf/2604.05441v1
+
+Published Time: Wed, 08 Apr 2026 00:33:21 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# The Stability of a Coupled Degenerate Wave System Un-der Boundary Control 
+
+SUN Ya-nan, ZHANG Qiong  
+
+> Abstract I
+
+n this paper, we investigate a system composed of two degenerate wave equations which are connected at one point. By introducing some inequalities on the weighted spaces and employing the frequency domain method, we prove that the system is polynomially stable, which depends on the degree of the degeneracy.   
+
+> Keywords C0-semigroup, degenerate wave equation, boundary control, polynomially stable
+> 2020 MR Subject Classification 35Q74, 35Q93, 93D20
+
+## 1 Introduction 
+
+In this paper, we investigate the stability of a system consisting of two coupled degenerate wave equations. Specifically, one string is defined on the interval (0 , 1) and degenerates at the point 
+
+x = 0, while the other string is defined on the interval ( −1, 0) and degenerates at the point 
+
+x = −1. These two strings are connected at the common point x = 0, and boundary control is only applied at the free endpoint of the right string (i.e., x = 1). The specific mathematical description is given as follows, 
+
+
+
+utt − (a(x)ux)x = 0 , (x, t ) ∈ (0 , 1) × (0 , ∞),wtt − (b(x)wx)x = 0 , (x, t ) ∈ (−1, 0) × (0 , ∞),u(0 , t ) = w(0 , t ), t ∈ (0 , ∞),
+
+lim x→0+ (au x)( x, t ) = ( bw x)(0 , t ), t ∈ (0 , ∞),γu (1 , t ) + ut(1 , t ) + ux(1 , t ) = 0 , t ∈ (0 , ∞),w(−1, t ) = 0 , t ∈ (0 , ∞), if μb < 1,
+
+lim x→− 1+ (bw x)( x, t ) = 0 , t ∈ (0 , ∞), if μb ≥ 1,u(x, 0) = u0(x), ut(x, 0) = u1(x), x ∈ (0 , 1) ,w(x, 0) = w0(x), wt(x, 0) = w1(x), x ∈ (−1, 0) ,
+
+(1.1) where γ > 0, a(x) = xμa (with 0 ≤ μa < 1) and b(x) = ( x + 1) μb (with 0 ≤ μb < 2). The energy of (1.1) is defined as 
+
+E(t) = 12
+
+
+
+∥ut∥2 
+
+> L2(0 ,1)
+
++ ∥√au x∥2 
+
+> L2(0 ,1)
+
++ ∥wt∥2 
+
+> L2(−1,0)
+
++ ∥√bw x∥2 
+
+> L2(−1,0)
+
++ γa (1) |u(1) |2
+
+,
+
+and 
+
+ddt E(t) = −a(1) |ut(1) |2.
+
+Recently, the degenerate wave equations have received much attention. A common feature of these systems is that they can be naturally linked to differential operators with variable diffusion coefficients. While these operators are not uniformly elliptic, even though they are in general uniformly elliptic in compact subsets of the space domain, provided that these subsets are at a positive distance from the so-called zone of degeneracy. This degeneracy zone may occur either on a part of the boundary or on a sub-manifold of the space domain. 
+
+> arXiv:2604.05441v1 [math.AP] 7 Apr 2026 2
+
+Alabau-Boussouira, Cannarsa and Leugering [4] studied controllability and observability issues for degenerate wave equations of the form 
+
+utt − (α(x)ux)x = 0 , (x, t ) ∈ (0 , 1) × (0 , ∞), (1.2) where α is positive on (0 , 1) but vanishes at zero. The degeneracy of (1.2) at x = 0 is measured by the parameter μ defined by 
+
+μ = sup 
+
+> 0<x ≤1
+
+x|α′(x)|
+
+α(x) .
+
+One says that (1.2) degenerates weakly if 0 ≤ μ < 1, strongly if 1 ≤ μ < 2. They established observability inequalities for weakly and strongly degenerate equations respectively, which fails when μ ≥ 2. Then, the exact controllability of the weakly and strongly degenerate equations was proved by Hilbert uniqueness method. They also obtained the exponential stability of the system with linear boundary control. Bai and Chai [9] proved the exact controllability of the same system in domains with moving boundary, on which control acts. Different from [4], Gueye [3] concentrated on the degenerate wave equation with control acting on the degenerate boundary, and obtained the boundary exact controllability for μ < 1. Kogut, Kupenko and Leugering [10] focused on the case where the degenerate point is internal. They discussed how the defect at this damaged point affects the transmission conditions at the site. Kogut et.al [5] discussed some issues related to a special class of weighted Sobolev spaces and derived some Poincare’s type inequalities for the weighted function α. Some results will be listed in Section 2, which are helpful in proving our main result. All the above works focus on a single system. For the coupled system, Kogut et al. [8, 12] investigated the boundary observability and exact null controllability for weakly and strongly degenerate linear wave equation on a star-shaped planar network. Salhi, Moumni and Tilioua [14, 15] considered a system composed of two degenerate wave equations, which are coupled via velocity terms, with only one equation controlled by a boundary feedback. They proved the controllability and the exponential stability of this system by the multiplier method. Fur-thermore, similar to the approach in this paper, Akil, Fragnelli and Issa [16] studied a coupled system of one degenerate and one non-degenerate string connected at endpoints: the left part is a wave equation degenerate at the left endpoint, and the right part is a non-degenerate wave equation. It is shown that exponential stability of the whole coupled system can be achieved by applying control only at the right endpoint. Liu and Zhang [17] showed the stability of an elas-tic string system with local Kelvin-Voigt damping. They assumed that the damping coefficient has a singularity at the interface of the damped and undamped regions and behaves like xμ
+
+near the interface. The polynomial or exponential stability, which depends on the parameter 
+
+μ ∈ (0 , 1], is obtained. Furthermore, the topic of degenerate parabolic equation has received a lot of attention of many authors. For the null controllability of one-dimensional parabolic system, Cannarsa, Ferretti and Martinez [6] proved that, with respect to the “damaged” point, “one-side” control can only guarantee the controllability of weakly degenerate systems. For strongly degenerate systems, the degeneracy is so strong that “two-sides” control is necessary to ensure the system’s controllability. Moreover, there are many studies on the stability of a wave equation coupled with a degenerate parabolic equation. In [7], Han, Wang and Wang proved that the semigroup corresponding to such a system has a decay rate of O(t− 3−μ 
+
+> 2(1 −μ)
+
+) as t → ∞ , where μ ∈ (0 , 1). However, it is not the optimal decay rate. Tebou [11] improved the decay rate and established a better decay rate over different intervals with respect to the degree of the degeneracy for 
+
+μ ∈ (0 , 34 ). Later, by analyzing the norm of the resolvent operator along the imaginary axis, Han, Song and Yu [13] enhanced the decay rate to t− 2−μ 
+
+> 1−μ
+
+, which is consistent with the optimal result obtained in [1] for the constant-diffusion coefficient equation ( μ = 0). 3
+
+The rest of the paper is organized as follows. In Section 2, we introduce the weighted Sobolev space associated with the degenerate function and some inequalities on such spaces. Section 3 is devoted to the well-posedness of the system (1.1). In Section 4, we employ the frequency domain method to prove the polynomial stability of the system. We use C to denote generic positive constants that may vary from line to line (unless otherwise stated). u′ denotes the derivatives with respect to space and ⟨· , ·⟩ denotes the L2-inner product. 
+
+## 2 Assumptions and Preliminaries 
+
+2.1 Assumptions 
+
+Let x0 and ℓ be given real numbers satisfying −∞ < x 0 < ℓ < +∞, and let α : [ x0, ℓ ] → R be a function satisfying the following assumptions: (I) α(x) > 0, ∀ x ∈ (x0, ℓ ], α (x0) = 0; (2.1a) (II ) μ = sup 
+
+> x0<x ≤ℓ
+
+(x − x0)|α′(x)|
+
+α(x) = lim 
+
+> x→x+0
+
+(x − x0)|α′(x)|
+
+α(x) < 2; (2.1b) (III ) α(x) ∈ C[x0, ℓ ] ∩ C1(x0, ℓ ]. (2.1c) 
+
+Lemma 2.1. Let α : [ x0, ℓ ] → R be a function satisfying (I)-(III). Then (i) 
+
+α(x) ≥ α(ℓ)
+
+ x − x0
+
+ℓ − x0
+
+μ
+
+, ∀ x ∈ [x0, ℓ ]; (2.2) 
+
+(ii) α−1(·) ∈ L1(x0, ℓ ) for 0 ≤ μ < 1.
+
+Remark 2.2. It is easy to check that a(x) and b(x) satisfy the assumptions (I)-(III). From (2.2), we have a−1 ∈ L1(−1, 0). 
+
+2.2 Functional spaces 
+
+We now introduce some weighted Sobolev spaces that are naturally associated with function 
+
+α(x). We denote by V 1 
+
+> α
+
+(x0, ℓ ) the space defined as follows 
+
+V 1 
+
+> α
+
+(x0, ℓ ) = 
+
+(
+
+u ∈ L2(x0, ℓ ) u is locally absolutely continuous in ( x0, ℓ ],
+
+√αu ′ ∈ L2(x0, ℓ )
+
+)
+
+.
+
+It is easy to see that V 1 
+
+> α
+
+(x0, ℓ ) is a Hilbert space with the scalar product 
+
+⟨u, v ⟩V 1  
+
+> α(x0,ℓ )
+
+=
+
+Z ℓx0
+
+u(x)v(x) + α(x)u′(x)v′(x)dx, ∀ u, v ∈ V 1 
+
+> α
+
+(x0, ℓ ),
+
+and associated norm 
+
+∥u∥V 1  
+
+> α(x0,ℓ )
+
+=
+
+Z ℓx0
+
+|u(x)|2 + α(x)|u′(x)|2dx 
+
+! 12
+
+, ∀ u ∈ V 1 
+
+> α
+
+(x0, ℓ ).
+
+We also introduce the subspaces V 1
+
+> α, 0
+
+(x0, ℓ ) and V 2 
+
+> α
+
+(x0, ℓ ) of V 1 
+
+> α
+
+(x0, ℓ ) defined as 
+
+V 1
+
+> α, 0
+
+(x0, ℓ ) = u ∈ V 1 
+
+> α
+
+(x0, ℓ ) | u(ℓ) = 0 .
+
+and 
+
+V 2 
+
+> α
+
+(x0, ℓ ) = u ∈ V 1 
+
+> α
+
+(x0, ℓ ) | αu ′ ∈ H1(x0, ℓ ) .
+
+We list some useful properties related to the above functional spaces without proof. The complete proof processes can be found in [4, 5, 10]. 4
+
+Lemma 2.3. Assume (I)-(III) hold. Then, (1) For every u ∈ V 1 
+
+> α
+
+(x0, ℓ ),
+
+∥u − u(ℓ)∥2 
+
+> L2(x0,ℓ )
+
+≤ (ℓ − x0)2
+
+(2 − μ)α(ℓ)
+
+√αu ′ 2 
+
+> L2(x0,ℓ )
+
+. (2.3) 
+
+(2) For every u ∈ V 1
+
+> α, 0
+
+(x0, ℓ ),
+
+∥u∥2 
+
+> L2(x0,ℓ )
+
+≤ Cα
+
+√αu ′ 2 
+
+> L2(x0,ℓ )
+
+, (2.4) 
+
+where 
+
+Cα = max 
+
+ (ℓ − x0)2
+
+(2 − μ)α(ℓ) , 4( ℓ − x0)μ
+
+α(ℓ)
+
+
+
+. (2.5) 
+
+(3) For every u ∈ V 1 
+
+> α
+
+(x0, ℓ ),
+
+lim 
+
+> x→x+0
+
+(x − x0)u2(x) = 0 . (2.6) 
+
+(4) For every u ∈ V 2 
+
+> α
+
+(x0, ℓ ),
+
+lim 
+
+> x→x+0
+
+(x − x0)α(x)|u′(x)|2 = 0 , (2.7) 
+
+and if α degenerates strongly, 
+
+lim 
+
+> x→x+0
+
+α(x)u′(x) = 0 (2.8) 
+
+(5) For every u ∈ V 2 
+
+> α
+
+(x0, ℓ ) and φ ∈ V 1 
+
+> α
+
+(x0, ℓ ), if α degenerates strongly, 
+
+lim 
+
+> x→x+0
+
+α(x)φ(x)u′(x) = 0 . (2.9) 
+
+If α degenerates weakly, (2.9) also holds when φ(x0) = 0 .
+
+## 3 Well-posedness 
+
+Let us denote by V 1 
+
+> a
+
+(0 , 1) the space V 1 
+
+> α
+
+(x0, ℓ ) with α = a(x), x0 = 0 and ℓ = 1, and by V 1 
+
+> b
+
+(−1, 0) the space V 1 
+
+> α
+
+(x0, ℓ ) with α = b(x), x0 = −1 and ℓ = 0. If μb ∈ [0 , 1), we denote by W 1 
+
+> b
+
+(−1, 0) the subspace of V 1 
+
+> b
+
+(−1, 0) defined as 
+
+W 1 
+
+> b
+
+(−1, 0) = u ∈ V 1 
+
+> b
+
+(−1, 0) | u(−1) = 0 .
+
+If μb ∈ [1 , 2), on the other hand, W 1 
+
+> b
+
+(−1, 0) coincides with V 1 
+
+> b
+
+(−1, 0) itself. Moreover, we set 
+
+W 2 
+
+> b
+
+(−1, 0) = V 2 
+
+> b
+
+(−1, 0) ∩ W 1 
+
+> b
+
+(−1, 0) .
+
+Notice that W 2 
+
+> b
+
+(−1, 0) = V 2 
+
+> b
+
+(−1, 0) when μb ∈ [1 , 2). Now, we consider the Hilbert space 
+
+H1 = V 1 
+
+> a
+
+(0 , 1) ×L2(0 , 1) ×W 1 
+
+> b
+
+(−1, 0) ×L2(−1, 0) , H2 = V 1 
+
+> a
+
+(0 , 1) ×L2(0 , 1) ×V 1 
+
+> b
+
+(−1, 0) ×L2(−1, 0) ,
+
+endowed with the norm, ∀ U = ( u, v, w, y ) ∈ H i, i = 1 , 2, 
+
+∥U ∥2 
+
+> H
+
+= ∥v∥2 
+
+> L2(0 ,1)
+
++ ∥y∥2 
+
+> L2(−1,0)
+
++ √au ′ 2 
+
+> L2(0 ,1)
+
++ √bw ′ 2
+
+> L2(−1,0)
+
++ γa (1) |u(1) |2 .5
+
+Define an operator Ai : D(Ai) ⊂ H i → H i, i = 1 , 2, by 
+
+AiU = ( v, (au ′)′, y, (bw ′)′), ∀ U = ( u, v, w, y ), (3.1) with domain 
+
+D(A1) = 
+
+(
+
+(u, v, w, y ) ∈ H 1
+
+u ∈ V 2 
+
+> a
+
+(0 , 1) , v ∈ V 1 
+
+> a
+
+(0 , 1) , w ∈ W 2 
+
+> b
+
+(−1, 0) , y ∈ W 1 
+
+> b
+
+(−1, 0) ,u(0) = w(0) , γu (1) + u′(1) + v(1) = 0 , lim x→0+ (au ′)( x) = ( bw ′)(0) 
+
+)
+
+,
+
+and 
+
+D(A2) = 
+
+(
+
+(u, v, w, y ) ∈ H 2
+
+u ∈ V 2 
+
+> a
+
+(0 , 1) , v ∈ V 1 
+
+> a
+
+(0 , 1) , w ∈ V 2 
+
+> b
+
+(−1, 0) , y ∈ V 1 
+
+> b
+
+(−1, 0) ,u(0) = w(0) , γu (1) + u′(1) + v(1) = 0 , lim x→0+ (au ′)( x) = ( bw ′)(0) 
+
+)
+
+.
+
+Let U (t) = ( u(t), v (t), w (t), y (t)) and U0 = ( u0, u 1, w 0, w 1), then the system (1.1) can be rewrit-ten as ddt U (t) = AiU (t), U (0) = U0 ∈ H i, i = 1 , 2.
+
+Lemma 3.1. The operator Ai generates a C0-semigroup of contractions Ti(t) on the energy space Hi, and 0 ∈ ρ(Ai), the resolvent of the operator Ai, i = 1 , 2.Proof. For every U = ( u, v, w, y ) ∈ D (Ai), i = 1 , 2 it follows from (3.1) that 
+
+ℜ⟨A iU, U ⟩ = −a(1) |v(1) |2 ≤ 0,
+
+which implies that Ai is dissipative. Next, we shall show that 0 ∈ ρ(Ai), i = 1 , 2. Let U ∈ D (A1) satisfy A1U = 0. Then, 
+
+
+
+v = 0 , x ∈ [0 , 1] ,
+
+(au ′)′ = 0 , x ∈ [0 , 1] ,y = 0 , x ∈ [−1, 0] ,
+
+(bw ′)′ = 0 , x ∈ [−1, 0] .
+
+(3.2) Then, it follows from the transmission condition that 
+
+u′ = ( bw ′)(0) x−μa , ∀ x ∈ (0 , 1) , (3.3) and 
+
+w′ = ( bw ′)(0)(1 + x)−μb , ∀ x ∈ (−1, 0) . (3.4) Since w ∈ W 1 
+
+> b
+
+(−1, 0), it holds that w(−1) = 0. Then, for any x ∈ (−1, 0), 
+
+w(x) = (bw ′)(0) 1 − μb
+
+(1 + x)1−μb .
+
+By the transmission condition, one has, for any x ∈ (0 , 1), 
+
+u(x) = ( bw ′)(0) 
+
+ x1−μa
+
+1 − μa
+
++ 11 − μb
+
+
+
+. (3.5) Substituting the above results into the boundary condition, one has 
+
+γu (1) + u′(1) + v(1) = ( bw ′)(0) 
+
+
+
+1 + γ
+
+1 − μa
+
++ γ
+
+1 − μb
+
+
+
+= 0 ,6
+
+which implies that ( bw ′)(0) = 0, i.e., U ≡ 0. Let U ∈ D (A2) satisfy A2U = 0, we have that (3.3) and (3.4) remain valid. Since 1 ≤ μb < 2, one has lim 
+
+> x→− 1+
+
+(bw ′)( x) = 0 ,
+
+combining with the transmission condition, which implies that 
+
+au ′ ≡ 0, ∀ x ∈ (0 , 1) ,
+
+and 
+
+bw ′ ≡ 0, ∀ x ∈ (−1, 0) .
+
+Then, it follows from a(x) > 0 ( x̸ = 0), b(x) > 0 ( x̸ = −1) and the transmission condition that 
+
+u(x) ≡ u(1) , ∀ x ∈ (0 , 1) ,
+
+and 
+
+w(x) ≡ u(1) , ∀ x ∈ (−1, 0) .
+
+Substituting the above results into the boundary condition yields γu (1) = 0, which implies that 
+
+U ≡ 0. Then, we prove that Ai (i = 1 , 2) is surjective. For any fixed F = ( f1, f 2, g 1, g 2) ∈ H 1 \ { 0}.Let A1U = F , i.e., 
+
+v = f1, x ∈ [0 , 1] , (3.6a) (au ′)′ = f2, x ∈ [0 , 1] , (3.6b) 
+
+y = g1, x ∈ [−1, 0] , (3.6c) (bw ′)′ = g2, x ∈ [−1, 0] . (3.6d) From (3.6b) and the transmission condition, one has 
+
+u′(x) = (bw ′)(0) 
+
+a(x) + 1
+
+a(x)
+
+Z x
+
+> 0
+
+f2(r)dr, ∀ x ∈ (0 , 1) , (3.7) and 
+
+u(x) = u(0) + 
+
+Z x
+
+> 0
+
+1
+
+a(s)
+
+
+
+(bw ′)(0) + 
+
+Z s
+
+> 0
+
+f2(r)dr 
+
+
+
+ds, ∀ x ∈ (0 , 1) . (3.8) Since w ∈ W 2 
+
+> b
+
+(−1, 0), it holds that w(−1) = 0. Then, 
+
+w′(x) = (bw ′)(0) 
+
+b(x) − 1
+
+b(x)
+
+Z 0
+
+> x
+
+g2(r)dr, ∀ x ∈ (−1, 0) , (3.9) and 
+
+w(x) = 
+
+Z x
+
+> −1
+
+1
+
+b(s)
+
+
+
+(bw ′)(0) −
+
+Z 0
+
+> s
+
+g2(r)dr 
+
+
+
+ds, ∀ x ∈ (−1, 0) . (3.10) By the transmission conditions, one has that 
+
+u(0) = w(0) = (bw ′)(0) 1 − μb
+
+−
+
+Z 0
+
+> −1
+
+1
+
+b(s)
+
+Z 0
+
+> s
+
+g2(r)drds. (3.11) Substituting (3.6a), (3.7) and (3.8) into the boundary conditions γu (1) + u′(1) + v(1) = 0 , one has that (bw ′)(0) = 
+
+
+
+1 + γ
+
+1 − μb
+
++ γ
+
+1 − μa
+
+−1 
+
+γ
+
+Z 0
+
+> −1
+
+1
+
+b(s)
+
+Z 0
+
+> s
+
+g2(r)drds − f1(1) 
+
+−
+
+Z 10
+
+f2(r)dr − γ
+
+Z 10
+
+1
+
+a(s)
+
+Z s
+
+> 0
+
+f2(r)drds 
+
+
+
+.
+
+(3.12) 7
+
+Thus, u(x) and w(x) can be uniquely determined by (3.8), (3.10), (3.11) and (3.12). Let A2U = F , then (3.6a)-(3.6d), (3.7) and (3.8) remain valid. It follows from lim x→− 1+ bw ′ =0 that (bw ′)( x) = 
+
+Z x
+
+> −1
+
+g2(r)dr, ∀ x ∈ (−1, 0) , (3.13) and 
+
+w(x) = w(0) −
+
+Z 0
+
+> x
+
+1
+
+b(s)
+
+Z s
+
+> −1
+
+g2(r)drds, ∀ x ∈ (−1, 0) . (3.14) By the transmission condition, one has that lim 
+
+> x→0+
+
+(au ′)( x) = ( bw ′)(0) = 
+
+Z 0
+
+> −1
+
+g2(r)dr. (3.15) Substituting (3.15) into (3.7), (3.8), respectively, and combining with the boundary condition, we have that 
+
+u(0) = − 1
+
+γ
+
+Z 10
+
+f2(r)dr −
+
+Z 10
+
+1
+
+a(s)
+
+Z s
+
+> 0
+
+f2(r)drds − 1
+
+γ f1(1) −
+
+ 1
+
+γ + 11 − μa
+
+ Z 0
+
+> −1
+
+g2(r)dr. 
+
+(3.16) In the end, u(x) and w(x) can be uniquely determined by (3.8), (3.14), (3.15) and (3.16). 
+
+Lemma 3.2. iR ⊂ ρ(Ai), i = 1 , 2.Proof. We first show that iR ⊂ ρ(A1). Suppose the statement of this lemma is not true. Then, there exist η > 0 satisfying that {iλ | | λ| < η } ⊂ ρ(A1). In this case, we can find a sequence 
+
+{λn, U n} satisfying |λn| → η, |λn| < η and ∥Un∥H1 = 1, such that (iλ n − A 1)Un = o(1) ,
+
+which is equivalent to 
+
+iλ nun − vn = o(1) , in V 1 
+
+> a
+
+(0 , 1) , (3.17a) 
+
+iλ nvn − (au ′
+
+> n
+
+)′ = o(1) , in L2(0 , 1) , (3.17b) 
+
+iλ nwn − yn = o(1) , in W 1 
+
+> b
+
+(−1, 0) , (3.17c) 
+
+iλ nyn − (bw ′
+
+> n
+
+)′ = o(1) , in L2(−1, 0) . (3.17d) By the dissipativeness of the operator A1,
+
+ℜ⟨A 1Un, U n⟩ = −a(1) |vn(1) |2 = o(1) . (3.18) From (3.17a) and the boundary condition, one has that 
+
+|un(1) | = λ−1 
+
+> n
+
+o(1) , |u′
+
+> n
+
+(1) | ≤ o(1) . (3.19) Multiplying (3.17b) by 2 xu ′ 
+
+> n
+
+and integrating over (0 , 1) and using lemma 2.3, we obtain 
+
+∥vn∥2 
+
+> L2(0 ,1)
+
++ (1 − μa)∥√au ′
+
+> n
+
+∥2 
+
+> L2(0 ,1)
+
+− a(1) |u′
+
+> n
+
+(1) |2 − | vn(1) |2 = o(1) . (3.20) Notice that 0 ≤ μa < 1, it follows from (3.18) and (3.19) that 
+
+∥vn∥L2(0 ,1) = o(1) , ∥√au ′
+
+> n
+
+∥L2(0 ,1) = o(1) . (3.21) 8
+
+Multiplying (3.17d) by 2(1 + x)w′ 
+
+> n
+
+and integrating over ( −1, 0) and using lemma 2.3 again, we obtain 
+
+∥yn∥2 
+
+> L2(−1,0)
+
++ (1 − μb)∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
+− b(0) |w′
+
+> n
+
+(0) |2 − | yn(0) |2 = o(1) . (3.22) It is clear that a−1 ∈ L1(0 , 1) since 0 ≤ μa < 1.Then, we deduce from (3.17a) that 
+
+|vn(0) | ≤| λn|
+
+Z 10
+
+u′
+
+> n
+
+dx + |vn(1) |≤| λn|
+
+Z 10
+
+1
+
+a dx 
+
+ 12 Z 10
+
+a|u′
+
+> n
+
+|2dx 
+
+ 12
+
++ |vn(1) |
+
+= λn
+
+√1 − μa
+
+∥√au ′
+
+> n
+
+∥L2(0 ,1) + |vn(1) |,
+
+(3.23) by the transmission condition, (3.18), (3.21) and |λn| < η , which implies that 
+
+|yn(0) | = |vn(0) | ≤ o(1) . (3.24) Furthermore, since b(0) = 1 and using the transmission condition, it holds that 
+
+b(0) |w′
+
+> n
+
+(0) |2 = |b(0) w′
+
+> n
+
+(0) |2 = lim 
+
+> x→0+
+
+(au ′
+
+> n
+
+)( x)
+
+> 2
+
+. (3.25) Then, it follows from |λn| < η , (3.17b), (3.19) and (3.21) that 
+
+lim 
+
+> x→0+
+
+(au ′
+
+> n
+
+)( x) ≤
+
+Z 10
+
+(au ′)′dx + |a(1) u′
+
+> n
+
+(1) |≤| λn|
+
+Z 10
+
+vndx + |a(1) u′
+
+> n
+
+(1) |≤o(1) .
+
+(3.26) From (3.22)–(3.26), we have 
+
+∥yn∥2 
+
+> L2(−1,0)
+
++ (1 − μb)∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
+= o(1) . (3.27) Due to 0 ≤ μb < 1, one can directly deduce from (3.27) that 
+
+∥yn∥2 
+
+> L2(−1,0)
+
+= o(1) , ∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
+= o(1) ,
+
+which is a contradiction to ∥Un∥H1 = 1. Next, we shall show that iR ⊂ ρ(A2) by the same method. In this case, (3.17c) holds in 
+
+V 1 
+
+> b
+
+(−1, 0). Repeating the above arguments yields that (3.27) remains true. Then, multiplying (3.17d) by wn and integrating over ( −1, 0), we obtain 
+
+∥√bw ′
+
+> n
+
+∥2 − ∥ yn∥2 + b(0) wn(0) w′
+
+> n
+
+(0) = o(1) . (3.28) By (3.17a), (3.23), (3.26) and the transmission conditions, it holds that 
+
+|b(0) wn(0) w′
+
+> n
+
+(0) | ≤ lim  
+
+> x→0+
+
+a(x)u′
+
+> n
+
+(x) |un(0) | ≤ λ−1 
+
+> n
+
+o(1) .
+
+Here |un(0) | is bounded. Indeed, 
+
+|un(0) | ≤ | un(1) | +
+
+Z 10
+
+|u′
+
+> n
+
+|dx ≤ | un(1) | + C∥√au ′
+
+> n
+
+∥L2(0 ,1) ≤ o(1) . (3.29) 9
+
+Combining with (3.27) and (3.29), it implies that (2 − μb)∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
+= o(1) .
+
+Then, ∥Un∥H2 = o(1), which leads to a contradiction. 
+
+Lemma 3.3. [2] Assume that A generates a C0-semigroup eAt of contraction on a Hilbert space 
+
+H and satisfies iR ⊂ ρ(A). Then, eAt is polynomially stable with order θ, if and only if 
+
+lim sup 
+
+> |ω|→∞
+
+ω− 1 
+
+> θ
+
+∥(iω − A )−1∥L(H) < ∞ (3.30) 
+
+## 4 The proof of main result 
+
+In this section, we shall use the frequency domain method to prove that the system (1.1) is polynomially stable, which depends only on μa.
+
+Theorem 4.1. There is a constant C > 0 such that 
+
+∥Ti(t)U0∥H ≤ t− 2−μa  
+
+> 2
+
+∥U0∥D(Ai), for each U0 ∈ D (Ai), i = 1 , 2. (4.1) 
+
+Proof. For clarity, we only provide the detailed argument for the case i = 1. The case i = 2 follows analogously. By lemma 3.3, it is sufficient to show that there exists a constant r > 0such that inf   
+
+> ∥U∥H=1 , λ ∈R
+
+∥λδn(iλ n − A 1)Un∥ ≥ r, ∀ U ∈ D (A1), (4.2) where δ = 22−μa . By contradiction, we suppose that (4.2) is not true. Then, there exists a sequence {λn, U n} ⊂ R × D (A1) with ∥Un∥H1 = 1 and λn → ∞ , such that 
+
+∥λδn(iλ n − A 1)Un∥ = o(1) , (4.3) which is equivalent to, as n → ∞ ,
+
+λδn(iλ nun − vn) = o(1) , in V 1 
+
+> a
+
+(0 , 1) , (4.4a) 
+
+λδn(iλ nvn − (au ′
+
+> n
+
+)′) = o(1) , in L2(0 , 1) , (4.4b) 
+
+λδn(iλ nwn − yn) = o(1) , in W 1 
+
+> b
+
+(−1, 0) , (4.4c) 
+
+λδn(iλ nyn − (bw ′
+
+> n
+
+)′) = o(1) , in L2(−1, 0) . (4.4d) By dissipativeness of the operator A1, one has 
+
+ℜ⟨ (iλ n − A 1)Un, U n⟩ = −a(1) |vn(1) |2 = λ−δn o(1) .
+
+Combining with (4.4a) and the boundary condition, it holds that 
+
+un(1) = λ−1− δ 
+
+> 2
+> n
+
+o(1) , |u′
+
+> n
+
+(1) | ≤ γ|un(1) | + |vn(1) | = λ− δ 
+
+> 2
+> n
+
+o(1) . (4.5) In what follows, we shall prove that 
+
+∥vn∥L2(0 ,1) , ∥√au ′
+
+> n
+
+∥L2(0 ,1) , ∥yn∥L2(−1,0) , ∥√bw ′
+
+> n
+
+∥L2(−1,0) = o(1) ,
+
+which contradicts ∥Un∥H1 = 1. 10 
+
+Taking L2(0 , 1) inner product of (4.4b) with 2 xu ′
+
+> n
+
+, then using lemma 2.3, one has 
+
+∥vn∥2 
+
+> L2(0 ,1)
+
++ (1 − μa)
+
+Z 10
+
+a|u′
+
+> n
+
+|2dx − | vn(1) |2 − a(1) |u′
+
+> n
+
+(1) |2 = λ−δn o(1) .
+
+From 0 ≤ μa < 1 and (4.5), it holds that 
+
+∥vn∥L2(0 ,1) = λ− δ 
+
+> 2
+> n
+
+o(1) , ∥√au ′
+
+> n
+
+∥L2(0 ,1) = λ− δ 
+
+> 2
+> n
+
+o(1) . (4.6) Multiplying (4.4b) and (4.4d) by un and wn separately, adding the results yields 
+
+∥√au ′
+
+> n
+
+∥2 
+
+> L2(0 ,1)
+
++ ∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
++ lim 
+
+> x→0+
+
+a(x)u′
+
+> n
+
+(x)un(x) + lim 
+
+> x→− 1+
+
+b(x)w′
+
+> n
+
+(x)wn(x)
+
+−∥ vn∥2 
+
+> L2(0 ,1)
+
+− ∥ yn∥2 
+
+> L2(−1,0)
+
+− a(1) u′
+
+> n
+
+(1) un(1) − b(0) w′
+
+> n
+
+(0) wn(0) = λ−δn o(1) .
+
+(4.7) Then, it follows from transmission condition, the boundary conditions and (4.5) that lim  
+
+> x→0+
+
+a(x)u′
+
+> n
+
+(x)un(x) + lim  
+
+> x→− 1+
+
+b(x)w′
+
+> n
+
+(x)wn(x) − a(1) u′
+
+> n
+
+(1) un(1) − b(0) w′
+
+> n
+
+(0) wn(0) = λ−δn o(1) .
+
+(4.8) Thus, substituting (4.6) and (4.8) into (4.7), one has 
+
+∥√bw ′
+
+> n
+
+∥2 
+
+> L2(−1,0)
+
+− ∥ yn∥2 
+
+> L2(−1,0)
+
+= λ−δn o(1) . (4.9) Taking L2(−1, 0) inner product of (4.4c) with 2( x + 1) w′
+
+> n
+
+, and using lemma 2.3 and (4.9), we obtain (2 − μb)∥yn∥2 
+
+> L2(−1,0)
+
+− | yn(0) |2 − b(0) |w′
+
+> n
+
+(0) |2 = λ−δn o(1) . (4.10) We claim that yn(0) = o(1) and b(0) |w′
+
+> n
+
+(0) |2 = o(1). Indeed, it holds that 
+
+yn(0) = vn(0) , b(0) |w′
+
+> n
+
+(0) |2 = lim 
+
+> x→0+
+
+a(0) u′
+
+> n
+
+(0) 
+
+> 2
+
+. (4.11) Thus, it is sufficient to prove that lim  
+
+> x→0+
+
+a(x)u′
+
+> n
+
+(x) = o(1) , vn(0) = o(1) .
+
+Let ξn = λ−βn , where β = 22−μa > 0 is a positive number. Then, there exists a sequence 
+
+{ζn} satisfying ξn ≤ ζn ≤ 2ξn such that 
+
+|(au ′)( ζn)| = min 
+
+> ξn≤x≤2ξn
+
+|(au ′
+
+> n
+
+)( x)| ≤ ξ−1
+
+> n
+
+Z 2ξn
+
+> ξn
+
+(au ′
+
+> n
+
+)( x)dx. (4.12) where, by Holder’s inequality, 
+
+Z 2ξn
+
+> ξn
+
+(au ′
+
+> n
+
+)( x)dx ≤
+
+Z 2ξn
+
+> ξn
+
+adx 
+
+! 12 Z 10
+
+a|u′
+
+> n
+
+|2dx 
+
+ 12
+
+≤ Cξ 1+ μa  
+
+> 2
+> n
+
+∥√au ′
+
+> n
+
+∥L2(0 ,1) . (4.13) Due to (4.6), it is easy to obtain that 
+
+|(au ′
+
+> n
+
+)( ζn)| ≤ λ β(1 −μa )2 − δ 
+
+> 2
+> n
+
+o(1) . (4.14) 11 
+
+Thus, it follows from (4.4b) that 
+
+lim  
+
+> x→0+
+
+a(x)u′
+
+> n
+
+(x) ≤| (au ′
+
+> n
+
+)( ζn)| + |λn|
+
+Z ζn
+
+> 0
+
+vndx 
+
+≤| (au ′
+
+> n
+
+)( ζn)| + ζ 12 
+
+> n
+
+λn∥vn∥L2(0 ,1) 
+
+≤λ β(1 −μa )2 − δ 
+
+> 2
+> n
+
+o(1) + λ1− β   
+
+> 2−δ
+> 2
+> n
+
+o(1) .
+
+(4.15) On the other hand, there exists a sequence {ηn} satisfying ξn ≤ ηn ≤ 2ξn such that 
+
+|vn(ηn)| = min 
+
+> ξn≤x≤2ξn
+
+|vn(x)| ≤ ξ− 12 
+
+> n
+
+∥vn∥L2(0 ,1) = λ β   
+
+> 2−δ
+> 2
+> n
+
+o(1) . (4.16) Notice that a−1 ∈ L1(0 , 1) since 0 ≤ μa < 1, one has 
+
+|vn(0) | ≤ 
+
+Z ηn
+
+> 0
+
+v′
+
+> n
+
+dx + |vn(ηn)|≤ | λn|
+
+Z ηn
+
+> 0
+
+1
+
+a(x) dx 
+
+ 12 Z ηn
+
+> 0
+
+a(x)|u′
+
+> n
+
+|2dx 
+
+ 12
+
++ |vn(ηn)|≤ λ1− β(1 −μa )2 − δ 
+
+> 2
+> n
+
+o(1) + λ β   
+
+> 2−δ
+> 2
+> n
+
+o(1) .
+
+(4.17) Substituting (4.15) and (4.17) into (4.10), it follows from β = δ = 22−μa that (2 − μb)∥yn∥2 
+
+> L2(−1,0)
+
+≤ o(1) . (4.18) Then, it is easy to check that ∥Un∥H1 = o(1) by (4.6) and (4.18). For the case i = 2, (4.4c) holds in the space V 1 
+
+> b
+
+(−1, 0). Repeating the above arguments, we can conclude the same result. The proof is completed. 
+
+Remark 4.2. It is obvious that the stability of the system depends only on the degeneracy of the right string and is independent of the degeneracy of the left string. On the other hand, we can only obtain the stability of the system in the case of 0 ≤ μa < 1. Mathematically, this is determined by the fact that a−1 ∈ L1 is valid only when 0 ≤ μa < 1. In practice, when the degeneracy is too strong, i.e., 1 ≤ μa < 2, the defect at the connection point prevents the boundary control from passing through this point to control the left string. 
+
+## Acknowledgments 
+
+The project is supported by the National Natural Science Foundation of China (grants No. 12271035, 12131008) and Beijing Municipal Natural Science Foundation (grant No. 1232018). 
+
+## References 
+
+[1] X. Zhang and E. Zuazua, Polynomial decay and control of a 1 − d hyperbolic-parabolic coupled system , J. Differential Equations 204 (2004), no. 2, 380–438. [2] A. Borichev, Y. Tomilov, Optimal polynomial decay of functions and operator semigroups, Math. Ann .
+
+347 (2010), no. 2, 455–478. [3] M. Gueye, Exact boundary controllability of 1-D parabolic and hyperbolic degenerate equations , SIAM J. Control Optim. 52 (2014), no. 4, 2037–2054. [4] F. Alabau-Boussouira, P. Cannarsa and G. R. Leugering, Control and stabilization of degenerate wave equations, SIAM J. Control Optim . 55 (2017), no. 3, 2052–2087. 12 [5] Kogut, Peter I.; Kupenko, Olha P.; Leugering, G.; Wang, Yue, A Note on Weighted Sobolev Spaces Related to Weakly and Strongly Degenerate Differential Operators , J. Optim. Differ. Equ. Appl. 27 (2019), no 2, 1–22. [6] P. Cannarsa, R. Ferretti and P. Martinez, Null controllability for parabolic operators with interior degen-eracy and one-sided control , SIAM J. Control Optim. 57 (2019), no. 2, 900–924. [7] Z.-J. Han, G. Wang and J. Wang, Explicit decay rate for a degenerate hyperbolic-parabolic coupled system, ESAIM Control Optim . Calc. Var. 26 (2020), Paper no. 116, 1–20. [8] P. I. Kogut, O. P. Kupenko and G. R. Leugering. On Boundary Null Controllability of Strongly Degenerate Hyperbolic Systems on Star-Shaped Planar Network . J. Optim. Differ. Equ. Appl. 29 (2021), no 2, 92–118. [9] J. Bai and S. Chai, Exact controllability for a one-dimensional degenerate wave equation in domains with moving boundary , Appl. Math. Lett. 119 (2021), no. 107235, 1–8. [10] P. I. Kogut, O. P. Kupenko and G. R. Leugering, On boundary exact controllability of one-dimensional wave equations with weak and strong interior degeneration , Math. Methods Appl. Sci. 45 (2022), no. 2, 770–792. [11] L. Tebou, Sharp decay estimates for semigroups associated with some one-dimensional fluid-structure interactions involving degeneracy , SIAM J. Control Optim. 60 (2022), no. 5, 2787–2810. [12] P. I. Kogut, O. P. Kupenko and G. R. Leugering, Well-posedness and boundary observability of strongly degenerate hyperbolic systems on star-shaped planar network, Pure Appl. Funct. Anal. 7 (2022), no. 5, 1767–1796. [13] Z.-J. Han, H.-Q. Song and K. Yu, Sharp decay rates of degenerate hyperbolic-parabolic coupled system: rectangular domain vs one-dimensional domain , J. Differential Equations 349 (2023), 53–82. [14] J. Salhi, A. Moumni and M. Tilioua, Indirect boundary stabilization of strongly coupled degenerate hyper-bolic systems , Rend. Circ. Mat. Palermo (2) 73 (2024), no. 4, 1567–1590. [15] A. Moumni, J. Salhi and M. Tilioua, Indirect boundary controllability of coupled degenerate wave equa-tions, Acta Appl. Math. 190 (2024), Paper No. 12, 1–20. [16] M. Akil, G. Fragnelli and I. Issa, Stability for degenerate wave equations with drift under simultaneous degenerate damping, J. Differential Equations 416 (2025), 1178–1221. [17] Z. Liu and Q. Zhang, Stability of a string with local Kelvin–Voigt damping and non-smooth coefficient at interface, SIAM J. Control Optim. 54 (2016), no. 4, 1859–1871 
+
+Y.N. Sun, School of Mathematics and Statistics, Beijing Institute of Technology, Beijing, 100081, P.R. China Email address: yanansun@bit.edu.cn Q. Zhang, School of Mathematics and Statistics, Beijing Institute of Technology, Beijing, 100081, P.R. China Email address: zhangqiong@bit.edu.cn

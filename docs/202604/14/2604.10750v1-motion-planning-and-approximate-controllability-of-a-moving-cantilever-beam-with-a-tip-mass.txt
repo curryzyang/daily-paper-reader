@@ -1,0 +1,1489 @@
+Title: Motion planning and approximate controllability of a moving cantilever beam with a tip-mass
+
+URL Source: https://arxiv.org/pdf/2604.10750v1
+
+Published Time: Tue, 14 Apr 2026 01:24:45 GMT
+
+Number of Pages: 14
+
+Markdown Content:
+# Motion planning and approximate controllability of a moving cantilever beam with a tip-mass ⋆
+
+# Soham Chatterjee a, Aman Batra a, Vivek Natarajan a
+
+> a
+
+Centre for Systems and Control, Indian Institute of Technology Bombay, Mumbai 400076, India 
+
+Abstract 
+
+Consider a non-uniform Euler-Bernoulli beam with a tip-mass at one end and a cantilever joint at the other end. The cantilever joint is not fixed and can itself be moved along an axis perpendicular to the beam. The position of the cantilever joint is the control input to the beam. The dynamics of the beam is governed by a coupled PDE-ODE model with boundary input. On a natural state-space, there exists a unique state trajectory for this beam model for every initial state and each twice continuously differentiable control input which is compatible with the initial state. In this paper, we study the motion planning problem of transferring the beam model from an initial state to a final state over a prescribed time-interval and then employ the results obtained to establish the approximate controllability of this model. We address these problems by extending and applying the generating functions approach to flatness-based control to the beam model. We prove that the transfer described above is feasible if the initial and final states belong to a certain set, which also contains the steady-states of the beam model. We then establish that this set contains all the eigenfunctions of the beam model, which form a Riesz basis for the state-space, and thereby conclude the approximate controllability of the beam model over all time intervals. We illustrate our theoretical results on motion planning using simulations and experiments. 
+
+Key words: Approximate controllability, coupled PDE-ODE model, flatness, motion planning, non-uniform beam. 
+
+1 Introduction 
+
+Consider the following model of a non-uniform moving cantilever Euler-Bernoulli beam with a tip-mass at one end and a cantilever joint at the other end: 
+
+ρ(x)wtt (x, t ) + ( EIw xx )xx (x, t ) = 0 , (1.1) 
+
+mw tt (0 , t ) + ( EIw xx )x(0 , t ) = 0 , (1.2) 
+
+Jw xtt (0 , t ) − EI (0) wxx (0 , t ) = 0 , (1.3) 
+
+w(L, t ) = f (t), wx(L, t ) = 0 . (1.4) Here L > 0 is the length of the beam, w(x, t ) is the dis-placement of the beam at the location x ∈ [0 , L ] and time t ∈ (0 , ∞), ρ(x) and EI (x) are the mass per unit length and flexural rigidity, respectively, of the beam at x ∈ [0 , L ], and m > 0 and J > 0 are the mass and moment of inertia, respectively, of the tip-mass lo-
+
+⋆ This work was supported by the Anusandhan National Research Foundation, India, via the Core Research Grant CRG/2023/004880 and A. Batra is supported by the Prime Minister’s Research Fellowship via the grant RSPMRF0262. This paper was not presented at any IFAC meeting. 
+
+Email addresses: soham.chatterjee@iitb.ac.in 
+
+(Soham Chatterjee), aman.batra@iitb.ac.in (Aman Batra), vivek.natarajan@iitb.ac.in (Vivek Natarajan). 
+
+cated at the x = 0 end of the beam. We suppose that 
+
+ρ ∈ C4[0 , L ], EI ∈ C4[0 , L ] and they are strictly pos-itive, i.e inf x∈[0 ,L ] ρ(x) > 0 and inf x∈[0 ,L ] EI (x) > 0. The displacement of the cantilever joint at the x = L
+
+end of the beam is determined by the scalar control in-put f . The coupled PDE-ODE model (1.1)-(1.4) governs the dynamics of engineering systems which have a mov-ing cantilever beam such as single-axis flexible cartesian robots. Figure 1 shows an experimental setup consist-ing of a non-uniform moving cantilever beam with a tip-mass. We remark that our model (1.1)-(1.4) resembles the SCOLE model that has been widely studied in the literature. Indeed, by fixing the cantilever joint at x = L
+
+(i.e. taking f = 0 in (1.4)) and adding a force input v1
+
+and a torque input v2 on the tip-mass at x = 0 (i.e. letting the right-sides of (1.2) and (1.3) be v1 and v2,respectively) we get the SCOLE model. There exists a natural state-space Z for the beam model (1.1)-(1.4) in which it has a unique state trajectory for every initial state z0 and each twice continuously differ-entiable control input f which is compatible with z0, see Section 2. In this paper, we study the motion planning problem of transferring (1.1)-(1.4) from an initial state 
+
+z0 to a final state zT over a prescribed time-interval [0 , T ]using an appropriate control input f . We prove that the 
+
+Preprint submitted to Automatica 14 April 2026 
+
+> arXiv:2604.10750v1 [eess.SY] 12 Apr 2026
+
+desired transfer is possible if the initial and final states belong to a certain set, which contains the steady-states of the beam model and is independent of T . We then es-tablish that this set is dense in the state-space which im-plies that the beam model (1.1)-(1.4) is approximately controllable over all time intervals. 
+
+> Figure 1. Experimental setup of a non-uniform moving cantilever Euler-Bernoulli beam with a tip-mass, see Sec-tion 6 for details.
+
+The controllability of the SCOLE model, which resem-bles our beam model (1.1)-(1.4) as discussed above, has been investigated comprehensively in the literature. It is well-known that the SCOLE model is not exactly controllable on the natural energy state-space over any time interval [0 , T ] using L2 control inputs, see for in-stance [6]. However, exact controllability can be recov-ered if one admits singular control inputs or considers smaller state-spaces, see [6], [7], [10], [19], [22]. In [19], it has been shown via the Hilbert Uniqueness Method that the SCOLE model is exactly controllable on the energy state-space provided the torque input is allowed to belong to the dual of H1(0 , T ). For certain smaller and more regular state-spaces, it has been established in [10] using the theory of semi-infinite beams, in [6] us-ing spectral analysis and the Russell’s exact controlla-bility via stabilzability principle, in [7] via the moment method and in [22] using an operator-theoretic frame-work for coupled linear systems that the SCOLE model is exactly controllable using force and/or torque inputs in L2(0 , T ). These smaller state-spaces are dense sub-spaces of the energy state-space, which implies the ap-proximate controllability of the SCOLE model on the energy state-space using L2 inputs, see also [6, Proposi-tion 4.1]. In contrast to the SCOLE model, to the best of our knowledge, the controllability of the moving can-tilever beam model (1.1)-(1.4) has not been studied in the literature. In this work, by employing the flatness technique, we prove that the beam model (1.1)-(1.4) is approximately controllable on its natural state-space Z
+
+using L2 displacement inputs. In the flatness technique for motion planning of infinite-dimensional control systems, the state and the input of the system are expressed as an infinite linear combi-nation of a flat output and its time derivatives. Then, based on the desired motion, an appropriate trajectory is selected for the flat output using which the input necessary to execute the motion is computed. The flat-ness technique has been used in the literature to address motion planning problems for Euler-Bernoulli beams. Using the transform approach (Laplace transform or Mikusi´ nski’s operational calculus) to flatness, motion planning problems have been solved for Euler-Bernoulli beams with fixed cantilever joints in [16], rotating can-tilever joints in [1], [3] and [11] and translating cantilever joints in [2]. In [20], it has been shown that the trans-form approach to flatness can be used to address mo-tion planning problems for a class of linear PDEs, which includes beam models. The power series approach and Riesz spectral approach to flatness have been used in [8] and [17], respectively, to solve motion planning problems for Euler-Bernoulli beams with fixed cantilever joints. Recently, we used the semi-discretization approach to flatness in [4] and [5] to solve motion planning prob-lems for Euler-Bernoulli beams with hinged and sliding cantilever joints, respectively. While the above works address motion planning problems for Euler-Bernoulli beams using the flatness technique, they do not examine the controllability properties of these beams. Another approach to flatness based motion planning of 1D PDEs is the generating functions approach. In this approach the input and solution of the PDE are ex-pressed in terms of certain generating functions which are obtained by solving a sequence of initial value ODEs recursively, see [9]. This approach has been used to es-tablish the null controllability of 1D parabolic PDEs in [12], [13], 1D Schr¨ odinger equations in [14] and the lin-earized Korteweg-de Vries equations [15]. In [12], the null controllability of nD heat equations on cylindrical domains has also been established. In the present work, we extend this generating functions approach to solve the problem of transferring the beam model (1.1)-(1.4) from an initial state z0 to a final state zT over a pre-scribed time-interval [0 , T ]. We prove that this transfer is possible provided z0 and zT belong to a certain time-independent set, which contains the steady-states of the beam model. We establish that the eigenfunctions of (1.1)-(1.4) can be expressed in terms of the generating functions and conclude that the above set also contains the eigenfunctions. Since the eigenfunctions form a Riesz basis for the state-space, the approximate controllability of the beam model over any time interval follows. The rest of the paper is organized as follows: In Section 2 we establish the well-posedness of the Euler-Bernoulli beam model (1.1)-(1.4). We define the generating func-tions for the beam model in Section 3 and derive some estimates for them. Section 4 contains our solution to the motion planning problem and Section 5 contains our proof of approximate controllability. We present our nu-merical and experimental results which illustrate our so-lution to the motion planning problem in Section 6. 2Notations .Let Hk(0 , L ) denote the usual kth -order Sobolev space of complex-valued functions on the interval (0 , L ). We denote the space of continuous and k-times continu-ously differentiable functions from an interval [ a, b ] to a Hilbert space X by C([ a, b ]; X) and Ck([ a, b ]; X), respec-tively, and they are both Banach spaces with the usual norm. Let C∞([ a, b ]; X) denote the set of all functions which belong to Ck([ a, b ]; X) for every k ≥ 0. We write 
+
+Ck[a, b ] instead of Ck([ a, b ]; C) and C∞[a, b ] instead of 
+
+C∞([ a, b ]; C). For a function y ∈ C∞([ a, b ]; X), let y(m)
+
+denote its mth -derivative. A function y ∈ C∞[0 , T ] is said to be a Gevrey function of order s > 0 if it satis-fies the estimate sup t∈[0 ,T ] |y(m)(t)| ≤ Dm+1 (m!) s for all 
+
+m ∈ N and some constant D > 0. The set of all functions which satisfy these estimates is denoted by Gs[0 , T ]. We will use a bar to denote complex conjugate. 
+
+2 Well-posedness 
+
+A natural state space for the coupled PDE-ODE beam model (1.1)-(1.4) is the complex Hilbert space 
+
+Z = {[u v α β ] ∈ H2(0 , L )×L2(0 , L )×C×C∣∣ux(L) = 0 }
+
+in which the inner product of any two vectors z1 =[u1 v1 α1 β1] and z2 = [ u2 v2 α2 β2] is given by 
+
+〈z1, z 2〉Z =
+
+∫ L
+
+> 0
+
+EI (x)u1,xx (x)u2,xx (x)d x
+
++
+
+∫ L
+
+> 0
+
+u1(x)u2(x)d x +
+
+∫ L
+
+> 0
+
+ρ(x)v1(x)v2(x)d x
+
++ mα 1α2 + Jβ 1β2.
+
+Note that each physically meaningful configuration of the Euler-Bernoulli beam considered in this work, see Figure 1, with a smooth beam shape and a translated cantilever position, can be represented by a vector in the state-space Z. In this section we will establish the existence and uniqueness of weak solutions to the beam model (1.1)-(1.4) on the state-space Z under a compat-ibility assumption on the control input f . We will show that these solutions depend continuously on the initial state and the control input, provided the compatibility assumption is not violated. 
+
+Definition 2.1 A function f ∈ C[0 , T ] is said to be com-patible for a vector [u v α β ] ∈ Z if f (0) = u(L).
+
+We now introduce a natural notion of weak solutions for the beam model (1.1)-(1.4) when its control input is compatible for its initial state. 
+
+Definition 2.2 Let T > 0, z0 = [ u0 v0 α0 β0] ∈ Z and 
+
+f ∈ C[0 , T ] satisfying f (0) = u0(L) be given. A function 
+
+z ∈ C([0 , T ]; Z) given as 
+
+z(t) = [ w(·, t ) wt(·, t ) wt(0 , t ) wxt (0 , t )] , (2.1) 
+
+where w ∈ C([0 , T ]; H2(0 , L )) ∩ C1([0 , T ]; L2(0 , L )) with 
+
+w(0 , ·), w x(0 , ·) ∈ C1[0 , T ], is a weak solution of (1.1) -
+
+(1.4) on the time interval [0 , T ] for the initial state z0
+
+and control input f if z(0) = z0 and w(L, t ) = f (t)
+
+for all t ∈ [0 , T ] and the following equation holds for all ϕ ∈ H2(0 , L ) satisfying ϕ(L) = ϕx(L) = 0 and all 
+
+t ∈ [0 , T ]:
+
+∫ L
+
+> 0
+
+ρ(x)[wt(x, t ) − v0(x)]ϕ(x)d x
+
++ m[wt(0 , t ) − α0
+
+]ϕ(0) + J[wxt (0 , t ) − β0
+
+]ϕx(0) = −
+
+∫ t
+
+> 0
+
+∫ L
+
+> 0
+
+EI (x)wxx (x, τ )ϕxx (x)d xdτ. (2.2) Note that the weak form of (1.1)-(1.4) shown in (2.2) is obtained by multiplying (1.1) with ϕ and then inte-grating it by parts formally by taking into account the boundary conditions (1.2)-(1.4) and the initial condition 
+
+wt(·, 0) = v0. We remark that our notion of weak so-lution includes a compatibility condition which couples the input to the initial state. This is to be expected since any solution z(t) = [ w(·, t ) wt(·, t ) wt(0 , t ) wxt (0 , t )] for the beam model (1.1)-(1.4) in Z, defined using any no-tion of solution, uniquely determines w(L, t ) (which is the control input). In the next proposition, we show that (1.1)-(1.4) is well-posed in Z subject to the compatibility assumption, i.e. we show that when the control input f ∈ C2[0 , T ] is compatible for the initial state, there exists a unique weak solution for (1.1)-(1.4) which depends continuously on f and the initial state. 
+
+Proposition 2.3 Let T > 0, an input f ∈ C2[0 , T ] and an initial state z0 = [ u0 v0 α0 β0] ∈ Z be given. Suppose that f is compatible for z0, i.e. f (0) = u0(L). Then there exists a unique weak solution z ∈ C([0 , T ]; Z) of (1.1) -
+
+(1.4) on the time interval [0 , T ] for the initial state z0
+
+and control input f . Furthermore, there exists a MT > 0
+
+independent of z0 and f such that 
+
+sup  
+
+> t∈[0 ,T ]
+
+‖z(t)‖Z ≤ MT
+
+(
+
+‖z0‖Z + ‖f ‖C2[0 ,T ]
+
+)
+
+. (2.3) 
+
+PROOF. Fix ν ∈ C∞[0 , L ] such that ν(0) = νx(0) = 
+
+νxx (0) = νxxx (0) = νx(L) = 0 and ν(L) = 1. Replacing 
+
+w(x, t ) with ˜w(x, t ) + ν(x)f (t) formally in (1.1)-(1.4) we obtain the following coupled PDE-ODE system: For 
+
+x ∈ (0 , L ) and t > 0, 
+
+ρ(x) ˜ wtt (x, t ) + ( EI (x) ˜ wxx )xx (x, t )+ ( EI (x)νxx )xx (x)f (t) + ρ(x)ν(x) ¨f (t) = 0 , (2.4) 
+
+m ˜wtt (0 , t ) + ( EI ˜wxx )x(0 , t ) = 0 , (2.5) 
+
+J ˜wxtt (0 , t ) − EI (0) ˜ wxx (0 , t ) = 0 , (2.6) ˜w(L, t ) = 0 , ˜wx(L, t ) = 0 . (2.7) 3Consider the Hilbert space ˜Z = {[u v α β ] ∈ Z ∣∣u(L) = 0} equipped with the following inner product: For z1 =[u1 v1 α1 β1] ∈ ˜Z and z2 = [ u2 v2 α2 β2] ∈ ˜Z,
+
+〈z1, z 2〉 ˜Z =
+
+∫ L
+
+> 0
+
+EI (x)u1,xx (x)u2,xx (x)d x
+
++
+
+∫ L
+
+> 0
+
+ρ(x)v1 (x)v2(x)d x + mα 1α2 + Jβ 1β2. (2.8) Recall z0 and f from the statement of this proposition. Define ˜ z0 = [˜ u0 ˜v0 ˜α0 ˜β0], where ˜ u0 = u0 − νf (0), ˜ v0 =
+
+v0 −ν ˙f(0), ˜ α0 = α0 and ˜β0 = β0. Then ˜ z0 ∈ ˜Z. We claim that there exists a unique function ˜ z ∈ C([0 , T ]; ˜Z), given as ˜z(t) = [ ˜ w(·, t ) ˜wt(·, t ) ˜wt(0 , t ) ˜wxt (0 , t )] (2.9) with ˜ w ∈ C([0 , T ]; H2(0 , L )) ∩ C1([0 , T ]; L2(0 , L )) and ˜w(0 , ·), ˜wx(0 , ·) ∈ C1[0 , T ], is such that ˜ z(0) = ˜ z0 and ˜w(L, t ) = ˜ wx(L, t ) = 0 for all t ∈ [0 , T ] and the following equation holds for all ϕ ∈ H2(0 , L ) satisfying ϕ(L) = 
+
+ϕx(L) = 0 and all t ∈ [0 , T ]: 
+
+∫ L
+
+> 0
+
+ρ(x)[ ˜wt(x, t ) − ˜v0(x) − ν(x)( ˙f (t) − ˙f (0)) ]ϕ(x)d x
+
++ m[ ˜wt(0 , t ) − ˜α0
+
+]ϕ(0) + J[ ˜wxt (0 , t ) − ˜β0
+
+]ϕx(0) = −
+
+∫ t
+
+> 0
+
+∫ L
+
+> 0
+
+EI (x)[ ˜wxx (x, τ ) − νxx (x)f (τ )]ϕxx (x)d xdτ. 
+
+(2.10) Furthermore, ˜ z satisfies sup  
+
+> t∈[0 ,T ]
+
+‖˜z(t)‖ ˜Z ≤ ˜MT
+
+(
+
+‖˜z0‖ ˜Z + ‖f ‖C2[0 ,T ]
+
+)
+
+. (2.11) Equation (2.10) is the weak form of the coupled PDE-ODE system (2.4)-(2.7). We have presented a proof of the above claim and the estimate (2.11) in Appendix A. Let ˜ w and ˜ z be the unique functions in the claim above. Define w = ˜ w + νf and then define z via (2.1) so that 
+
+z(t) = ˜ z(t) + [ νf (t) ν ˙f (t) 0 0] ∀ t ∈ [0 , T ]. (2.12) Since ˜ w and ˜ z satisfy all the properties mentioned below (2.9), it is easy to check that w and z satisfy all the prop-erties mentioned in Definition 2.2, i.e. z ∈ C([0 , T ]; Z)and it is a weak solution of (1.1)-(1.4) on the time in-terval [0 , T ] for the initial state z0 and control input f .The uniqueness of z follows from the uniqueness of ˜ z.Finally, the estimate in (2.3) can be established as fol-lows: Note that ˜Z ⊂ Z, ‖z0‖ ˜Z ≤ ‖ z0‖Z and ‖z0‖Z ≤
+
+c‖z0‖ ˜Z for all z0 ∈ ˜Z and some c > 0 and ‖[ν ν 0 0] ‖Z ≤
+
+cν for some cν > 0. Applying the triangle inequality to (2.12), which gives us ‖z(t)‖Z ≤ c‖˜z(t)‖ ˜Z +cν ‖f ‖C2[0 ,T ],and then using (2.11) we get 
+
+‖z(t)‖Z ≤ c ˜MT ‖˜z0‖Z + ( c ˜MT + cν )‖f ‖C2[0 ,T ].
+
+Since ˜z0 = z0 − [νf (0) ν ˙f (0) 0 0] (see the defi-nition of ˜z0 above (2.9)) it follows that ‖˜z0‖Z ≤‖z0‖Z + cν ‖f ‖C2[0 ,T ]. Using this in the above es-timate for ‖z(t)‖Z yields ‖z(t)‖Z ≤ c ˜MT ‖z0‖Z +(c ˜MT + cc ν ˜MT + cν )‖f ‖C2[0 ,T ], i.e. (2.3) holds with 
+
+MT = c ˜MT + cc ν ˜MT + cν . 
+
+Remark 2.4 Suppose that w ∈ C([0 , T ]; H4(0 , L )) ∩
+
+C2([0 , T ]; L2(0 , L )) with w(0 , t ) ∈ C2[0 , T ] and wx(0 , t ) ∈
+
+C2[0 , T ] satisfies (1.1) -(1.4) for some f ∈ C2[0 , T ] and each t ∈ [0 , T ]. Let v0 = wt(·, 0) , α0 = wt(0 , 0) and 
+
+β0 = wxt (0 , 0) . Multiplying (1.1) with ϕ ∈ H2(0 , L )
+
+and then using integration by parts it is easy to see that (2.2) holds for each t ∈ [0 , T ] and each 
+
+ϕ ∈ H2(0 , L ) satisfying ϕ(L) = ϕx(L) = 0 . Hence 
+
+z ∈ C([0 , T ]; Z) determined by w via (2.1) is a weak so-lution of the beam model (1.1) -(1.4) for the initial state 
+
+z0 = [ w(·, 0) wt(·, 0) wt(0 , 0) wxt (0 , 0)] and the control input f , see Definition 2.2. The uniqueness of this weak solution follows from Proposition 2.3. 
+
+3 Generating functions 
+
+In this paper we solve a motion planning problem for the beam model (1.1)-(1.4) by using the generating functions approach to flatness. Accordingly, we consider functions 
+
+w ∈ C∞([0 , T ]; C4[0 , L ]) which satisfy (1.1)-(1.4) for some f ∈ C∞[0 , T ] and can be expressed as 
+
+w(x, t ) = ∑
+
+> k≥0
+
+gk(x)y(2 k)1 (t) + ∑
+
+> k≥0
+
+hk(x)y(2 k)2 (t) (3.1) for all x ∈ [0 , L ] and t ∈ [0 , T ]. Here gk and hk be-longing to C4[0 , L ] are certain generating functions and 
+
+y1, y 2 ∈ Gs[0 , T ] with 1 < s < 2 are two outputs which satisfy a constraint, see (3.34). The expressions for the generating functions are presented later in this section. In Proposition 3.2 we show that, given y1, y 2 ∈ Gs[0 , T ]which satisfy (3.34), the function w determined by the series in (3.1) indeed belongs to C∞([0 , T ]; C4[0 , L ]) and satisfies (1.1)-(1.4) for some f ∈ C∞[0 , T ]. We require the outputs y1 and y2 to satisfy 
+
+y1(t) = w(0 , t ), y2(t) = wx(0 , t ). (3.2) In (1.1)-(1.3) and (3.2), we replace w with the series in (3.1) formally. Then, for each k ≥ 0, equating the coef-ficients of y(2 k)1 and y(2 k)2 on either sides of the resulting expressions yields a sequence of initial value ODEs for 
+
+gk and hk which can be solved recursively. These ODEs are given below. The sequence of fourth-order linear ODEs which must be solved recursively, on the interval x ∈ [0 , L ], for ob-taining the real-valued generating functions gk are as follows: g0 is obtained by solving the ODE 4(EIg 0,xx )xx (x) = 0 , (3.3) 
+
+g0(0) = 1 , g0,x (0) = 0 , (3.4) 
+
+g0,xx (0) = 0 , (EIg 0,xx )x(0) = 0 , (3.5) 
+
+g1 is obtained by solving the ODE (EIg 1,xx )xx (x) + ρ(x)g0(x) = 0 , (3.6) 
+
+g1(0) = 0 , g1,x (0) = 0 , (3.7) 
+
+g1,xx (0) = 0 , (EIg 1,xx )x(0) = −m, (3.8) and gk for k ≥ 2 is obtained by solving the ODE (EIg k,xx )xx (x) + ρ(x)gk−1(x) = 0 , (3.9) 
+
+gk(0) = 0 , gk,x (0) = 0 , (3.10) 
+
+gk,xx (0) = 0 , (EIg k,xx )x(0) = 0 . (3.11) The sequence of fourth-order linear ODEs which must be solved recursively, on the interval x ∈ [0 , L ], for ob-taining the real-valued generating functions hk are as follows: h0 is obtained by solving the ODE (EIh 0,xx )xx (x) = 0 , (3.12) 
+
+h0(0) = 0 , h0,x (0) = 1 , (3.13) 
+
+h0,xx (0) = 0 , (EIh 0,xx )x(0) = 0 , (3.14) 
+
+h1 is obtained by solving the ODE (EIh 1,xx )xx (x) + ρ(x)h0(x) = 0 , (3.15) 
+
+h1(0) = 0 , h1,x (0) = 0 , (3.16) 
+
+EI (0) h1,xx (0) = J, (EIh 1,xx )x(0) = 0 , (3.17) and hk for k ≥ 2 is obtained by solving the ODE (EIh k,xx )xx (x)+ ρ(x)hk−1(x) = 0 , (3.18) 
+
+hk(0) = 0 , hk,x (0) = 0 , (3.19) 
+
+hk,xx (0) = 0 , (EIh k,xx )x(0) = 0 . (3.20) In the following proposition we show that the generating functions gk and hk belong to C4[0 , L ] and derive some estimates for them. 
+
+Proposition 3.1 For each k ≥ 1 the generating func-tions gk and hk belong to C4[0 , L ] and there exist posi-tive constants R1 and R2 independent of k such that the following estimates hold for all x ∈ [0 , L ]:
+
+|gk(x)| ≤ Rk 
+
+> 1
+
+x4k−1
+
+(4 k − 1)! , |gk,x (x)| ≤ Rk 
+
+> 1
+
+x4k−2
+
+(4 k − 2)! , (3.21) 
+
+|hk(x)| ≤ Rk 
+
+> 2
+
+x4k−2
+
+(4 k − 2)! , |hk,x (x)| ≤ Rk 
+
+> 2
+
+x4k−3
+
+(4 k − 3)! . (3.22) 
+
+PROOF. Solving (3.3)-(3.5) for g0 we get 
+
+g0(x) = 1 ∀ x ∈ [0 , L ]. (3.23) Solving (3.6)-(3.8) for g1 we get 
+
+g1(x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+∫ s3
+
+> 0
+
+ρ(s4)
+
+EI (s2) ds4ds3ds2ds1
+
+− m
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+1
+
+EI (s2) ds3ds2ds1, (3.24) 
+
+g1,x (x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+ρ(s3)
+
+EI (s1) ds3ds2ds1
+
+− m
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+1
+
+EI (s1) ds2ds1 (3.25) for each x ∈ [0 , L ]. Since EI and ρ are strictly positive functions belonging to C4[0 , L ], it follows from the above equations via successive integrations that g1 ∈ C4[0 , L ]and the estimates in (3.21) hold for k = 1 with 
+
+R1 =
+
+( max x∈[0 ,L ] ρ(x) + m
+
+min x∈[0 ,L ] EI (x)
+
+)
+
+max {1, L }. (3.26) Solving (3.9)-(3.11) for gk we get that 
+
+gk(x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+∫ s3
+
+> 0
+
+ρ(s4)gk−1(s4)
+
+EI (s2) ds4ds3ds2ds1,
+
+(3.27) 
+
+gk,x (x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+ρ(s3)gk−1(s3)
+
+EI (s1) ds3ds2ds1
+
+(3.28) for each k ≥ 2 and x ∈ [0 , L ]. Since g1, 1/EI, ρ ∈
+
+C4[0 , L ] and gk is obtained by integrating gk−1, 1/EI 
+
+and ρ for each k ≥ 2, see (3.27), we get that gk ∈ C4[0 , L ]for all k ≥ 1. Suppose that the estimates in (3.21) hold for some k = n with n ≥ 1. Taking k = n + 1 in (3.27) and (3.28), and then bounding the integrand on the right using max x∈[0 ,L ] ρ(x), min x∈[0 ,L ] EI (x) and the estimate for |gn(x)| obtained from (3.21) with k = n, it follows via successive integrations that the estimates in (3.21) hold for k = n + 1. We have now shown that the estimates in (3.21) hold for k = 1 and that they hold for k = n + 1 if they hold for k = n for any n ≥ 1. So it follows via the principle of mathematical induction that the estimates in (3.21) hold for all k ≥ 1. This completes the proof of the claims regarding the generating functions gk.Next we will prove the estimates in (3.22). Solving (3.12)-(3.14) for h0 we get 
+
+h0(x) = x ∀ x ∈ [0 , L ]. (3.29) Solving (3.15)-(3.17) for h1 we get 
+
+h1(x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+∫ s3
+
+> 0
+
+s4ρ(s4)
+
+EI (s2) ds4ds3ds2ds1
+
++ J
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+1
+
+EI (s2) ds2ds1, (3.30) 
+
+h1,x (x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+s3ρ(s3)
+
+EI (s1) ds3ds2ds1
+
++ J
+
+∫ x
+
+> 0
+
+1
+
+EI (s1) ds1 (3.31) 5for each x ∈ [0 , L ]. Since EI and ρ are strictly positive functions belonging to C4[0 , L ], it follows from the above equations via successive integrations that h1 ∈ C4[0 , L ]and the estimates in (3.22) hold for k = 1 with 
+
+R2 =
+
+( max x∈[0 ,L ] ρ(x) + J
+
+min x∈[0 ,L ] EI (x)
+
+)
+
+max {1, L 3}. (3.32) Solving (3.18)-(3.20) for hk we get that for k ≥ 2, 
+
+hk(x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+∫ s3
+
+> 0
+
+ρ(s4)hk−1(s4)
+
+EI (s2) ds4ds3ds2ds1,
+
+(3.33) 
+
+hk,x (x) = −
+
+∫ x
+
+> 0
+
+∫ s1
+
+> 0
+
+∫ s2
+
+> 0
+
+ρ(s3)hk−1(s3)
+
+EI (s1) ds3ds2ds1.
+
+The claim that hk ∈ C4[0 , L ] and the estimates in (3.22) hold for all k ≥ 1 with R2 given in (3.32) can be estab-lished by mimicking the induction argument given below (3.27)-(3.28). 
+
+The next result shows that, if y1 and y2 belonging to 
+
+Gs[0 , T ] are chosen suitably, then z ∈ C([0 , T ]; Z) deter-mined by w in (3.1) via (2.1) is a solution of (1.1)-(1.4). 
+
+Proposition 3.2 Fix T > 0 and s ∈ (1 , 2) . Suppose that the functions y1, y 2 ∈ Gs[0 , T ] satisfy the following infinite order differential equation: for t ∈ [0 , T ],
+
+∑
+
+> k≥0
+
+gk,x (L)y(2 k)1 (t) + ∑
+
+> k≥0
+
+hk,x (L)y(2 k)2 (t) = 0 . (3.34) 
+
+Then w given in (3.1) belongs to C∞([0 , T ]; C4[0 , L ]) , so that w(0 , ·), w(L, ·) and wx(0 , ·) belong to C∞[0 , T ], and 
+
+w satisfies (1.1) -(1.4) with f (t) = w(L, t ). Furthermore, the function z ∈ C([0 , T ]; Z) determined by w via (2.1) 
+
+is the unique solution of (1.1) -(1.4) for the initial state 
+
+z0 = z(0) and control input f (t) = w(L, t ).
+
+PROOF. Recall that EI and ρ are strictly positive functions belonging to C4[0 , L ]. Differentiating the inte-gral expression for gk in (3.27) as many times as required, and then bounding the integrand using max x∈[0 ,L ] ρ(x), min x∈[0 ,L ] EI (x), ‖EI ‖C4[0 ,L ] and the estimate for gk−1
+
+from (3.21), it follows via successive integrations that the functions gk, gk,x , gk,xx , gk,xxx and gk,xxxx are uni-formly bounded on [0 , L ] by Ckg /(4 k −5)!. Here Cg > 0 is a constant independent of k. Similarly using the expres-sion for hk in (3.33) and the estimate for hk−1 in (3.22), we get that the functions hk, hk,x , hk,xx , hk,xxx and 
+
+hk,xxxx are uniformly bounded on [0 , L ] by Ckh /(4 k − 6)!, where Ch > 0 is a constant independent of k. Since 
+
+y1, y 2 ∈ Gs[0 , T ] for some s ∈ (1 , 2), it follows that y(k)1
+
+and y(k)2 are uniformly bounded on [0 , T ] by Ck+1  
+
+> y
+
+(k!) s,where Cy > 0 is a constant independent of k. Using the above uniform bounds, we can bound the terms 
+
+gk(x)y(2 k)1 (t) and hk(x)y(2 k)2 (t) in the series in (3.1) uni-formly on [0 , L ] × [0 , T ] by 
+
+Ck = max {Cg, C h}kC2k+1 
+
+> y
+
+(2 k!) s
+
+(4 k − 6)! .
+
+It can be verified using the ratio test that ∑ 
+
+> k≥0
+
+Ck < ∞.We can therefore appeal to the Weierstrass M-test to conclude that the series in (3.1) converges uniformly on [0 , L ] × [0 , T ] to a continuous function w. We can sim-ilarly conclude that every series obtained by termwise differentiation of the series for w in (3.1), with respect to x (up to four times) and t (any number of times), con-verges uniformly on [0 , L ] × [0 , T ] to a continuous func-tion. This implies that the derivatives of w with respect to x (up to four times) and t (any number of times) are given by the series obtained by termwise differentiation of the series for w in (3.1) and w has the regularity men-tioned in the statement of this proposition. Using (3.3), (3.6), (3.9) and (3.12), (3.15), (3.18) it is easy to check that the series corresponding to wtt and 
+
+−(EIw xx )xx are the same and hence w satisfies the PDE (1.1). Taking x = 0 in the series for wtt , ( EIw xx )x,
+
+wxtt and EIw xx and using the initial conditions for gk
+
+in (3.4), (3.5), (3.7), (3.8), (3.10), (3.11) and the initial conditions for hk in (3.13), (3.14), (3.16), (3.17), (3.19), (3.20) it follows that w satisfies the boundary condi-tions (1.2)-(1.3). Finally taking f (t) = w(L, t ) and using (3.34) (which means wx(L, t ) = 0) we get that w satis-fies the boundary condition (1.4). In summary, w satis-fies (1.1)-(1.4) and has the regularity required in Remark 2.4. Hence it follows from the remark that z determined by w via (2.1) is the unique solution of (1.1)-(1.4) for the initial state z0 = z(0) and control input f (t). 
+
+4 Motion planning 
+
+In this section, we present our results for the motion planning problem of transferring the beam model (1.1)-(1.4) from an initial state z0 to a final state zT over a prescribed time-interval [0 , T ] using an appropriate con-trol input f . We prove that the desired transfer is possi-ble if the initial and final states belong to a certain set, which contains the steady-states of the beam model and is independent of T , see Theorem 4.3 and Remark 4.4. In the following proposition, we first describe an ap-proach for constructing functions y1 and y2 that satisfy (3.34). Below we will need the estimate (p + q)! ≤ 2p+qp!q! ∀ p, q ∈ N. (4.1) This estimate follows from the fact that the ( p + 1) th -term (given by the expression ( p + q)! /(p!q!)) in the bi-nomial expansion of (1 + 1) p+q is less than (1 + 1) p+q.
+
+Proposition 4.1 Fix s ∈ (1 , 2) . Let the operators L1
+
+and L2 be defined on Gs[0 , T ] as follows: For y ∈ Gs[0 , T ],
+
+L1y = ∑
+
+> k≥0
+
+gk,x (L)y(2 k), L2y = ∑
+
+> k≥0
+
+hk,x (L)y(2 k).
+
+6Then y1 = L2y and y2 = −L 1y belong to Gs[0 , T ] for each y ∈ Gs[0 , T ] and satisfy (3.34) .
+
+PROOF. Let y ∈ Gs[0 , T ]. Then sup  
+
+> t∈[0 ,T ]
+
+|y(k)(t)| ≤ Dk+1 (k !) s ∀ k ≥ 0 (4.2) and some constant D > 0. For each n ≥ 0, consider the function series 
+
+∑
+
+> k≥0
+
+hk,x (L)y(2 k+n)(t) with t ∈ [0 , T ], (4.3) obtained by termwise n-times differentiation of the se-ries for L2y. Using the estimate for hk,x in (3.22) and the estimate in (4.2), we can bound the ( k + 1) th term 
+
+hk,x (L)y(2 k+n)(t) in the above series by 
+
+Dk,n = Rk 
+
+> 2
+
+L4k−3D2k+n+1 ((2 k + n)!) s
+
+(4 k − 3)! ,
+
+uniformly on [0 , T ]. Since s < 2, it follows via the ra-tio test that ∑ 
+
+> k≥0
+
+Dk,n < ∞ for each n ≥ 0. We can therefore conclude by applying the Weierstrass M-test that the series in (4.3) converges uniformly on [0 , T ] to a continuous function for each n ≥ 0. This implies that 
+
+y1 = L2y is in C∞[0 , T ] and y(n)1 (t) is given by the se-ries in (4.3), i.e. y(n)1 = L2y(n). From the above dis-cussion, we have sup t∈[0 ,T ] |y(n)1 (t)| ≤ ∑ 
+
+> k≥0
+
+Dk,n . Us-ing (4.1) with p = 2 k and q = n to bound (2 k + n)! in the expression for Dk,n we get after a simple calcula-tion that Dk,n ≤ 2ns (n!) sDnCk+1 0 ((2 k)!) s/(4 k − 3)! for some C0 > 0 independent of n and k. Combining the above estimates we get sup  
+
+> t∈[0 ,T ]
+
+|y(n)1 (t)| ≤ 2ns Dn(n!) s ∑
+
+> k≥0
+
+Ck+1 0
+
+((2 k)!) s
+
+(4 k − 3)! .
+
+Since s < 2, applying the ratio test it follows that the series in the above inequality is convergent and therefore sup t∈[0 ,T ] |y(n)1 (t)| ≤ Cn+1 (n!) s for some C > 0 and all 
+
+n ≥ 0, i.e. y1 ∈ Gs[0 , T ]. We can similarly show that 
+
+y(n)2 = −L 1y(n) and y2 ∈ Gs[0 , T ]. We will now show that y1 and y2 satisfy (3.34). Note that for each y ∈ Gs[0 , T ], we have 
+
+L1L2y = ∑
+
+> k≥0
+
+∑
+
+> j≥0
+
+gk,x (L)hj,x (L)y(2 k+2 j),
+
+L2L1y = ∑
+
+> j≥0
+
+∑
+
+> k≥0
+
+gk,x (L)hj,x (L)y(2 k+2 j).
+
+So L1L2y and L2L1y are both double sums which only differ in the order of summation. Consider the following double sum obtained by rearranging the terms in either 
+
+L1L2y or L2L1y:
+
+∑
+
+> l≥0
+
+∑
+
+> j+k=l
+
+gj,x (L)hk,x (L)y(2 l)(t). (4.4) We claim that this double sum is absolutely convergent for each t ∈ [0 , T ]. Indeed, using (3.21), (3.22) and (4.2) we get 
+
+∑
+
+> l≥0
+
+∑
+
+> j+k=l
+
+|gj,x (L)hk,x (L)y(2 l)(t)|≤ ∑
+
+> l≥0
+
+∑
+
+> j+k=l
+
+Rj
+
+> 1
+
+Rk 
+
+> 2
+
+L4j−2L4k−3D2l+1 ((2 l)!) s
+
+(4 j − 2)!(4 k − 3)! 
+
+≤ ∑
+
+> l≥0
+
+∑
+
+> j+k=l
+
+Rl+1 ((2 l)!) s
+
+(4 l − 5)! = ∑
+
+> l≥0
+
+Rl+1 ((2 l)!) s(l + 1) 
+
+(4 l − 5)! < ∞.
+
+Here R > 0 is some constant, the second inequality is derived by using the estimate in (4.1) with p = 4 j−2 and 
+
+q = 4 k−3 and the last inequality is obtained by applying the ratio test. Therefore from Fubini’s theorem it follows that the sum of the terms in (4.4) is independent of the order of summation, i.e. L1L2y = L2L1y. So y1 = L2y
+
+and y2 = −L 1y satisfy L1y1 + L2y2 = 0 or equivalently (3.34). This completes the proof of the proposition. 
+
+Remark 4.2 We can rewrite (3.1) concisely as 
+
+w(x, t ) = [ W1y1]( x, t ) + [ W2y2]( x, t ) (4.5) 
+
+for x ∈ [0 , L ] and t ∈ [0 , T ]. Here the operators W1 and 
+
+W2 are as follows: For y ∈ Gs[0 , T ] with s ∈ (1 , 2) ,
+
+[W1y]( x, t ) = ∑
+
+> k≥0
+
+gk(x)y(2 k) (t),
+
+[W2y]( x, t ) = ∑
+
+> k≥0
+
+hk(x)y(2 k)(t).
+
+For any y ∈ Gs[0 , T ] with s ∈ (1 , 2) , it follows from Proposition 4.1 that y1 = L2y and y2 = −L 1y are in Gs[0 , T ] and satisfy (3.34) . Letting y1 = L2y and 
+
+y2 = −L 1y in (4.5) and appealing to Proposition 3.2 we can conclude that w = W1L2y − W 2L1y is in 
+
+C∞([0 , T ]; C4[0 , L ]) . Moreover, we get that the function 
+
+z ∈ C([0 , T ]; Z) determined by w via the expression 
+
+z(t) = [ w(·, t ) wt(·, t ) wt(0 , t ) wxt (0 , t )] for all t ∈ [0 , T ]
+
+is the unique solution of (1.1) -(1.4) for the initial state 
+
+z0 = z(0) and input f (t) = w(L, t ). 
+
+Recall the operators L1, L2, W1, W2 from Proposition 4.1 and Remark 4.2. In the next theorem, building on the results in Propositions 3.1, 3.2 and 4.1, we prove by con-struction the existence of a control input f which trans-fers the beam model (1.1)-(1.4) between any two states belonging to a certain subspace of Z over a prescribed time-interval. 
+
+Theorem 4.3 Fix a time T > 0. Consider the set 
+
+Φ = 
+
+{
+
+[v(·, 0) vt(·, 0) vt(0 , 0) vxt (0 , 0)] ∈ Z
+
+∣∣∣
+
+v = W1L2y − W 2L1y for some y ∈ Gs[0 , T ], s ∈ (1 , 2) 
+
+}
+
+.
+
+7Let z0 ∈ Φ and zT ∈ Φ be given. Then there exists an 
+
+f ∈ C[0 , T ] compatible for z0 and a unique solution z ∈
+
+C([0 , T ]; Z) of (1.1) -(1.4) on the time interval [0 , T ] for the initial state z0 and input f such that z(T ) = zT .
+
+PROOF. From Remark 4.2 it is evident that Φ is a well-defined and non-empty set, and by definition Φ is independent of T . Since z0, z T ∈ Φ by assumption and 
+
+Gs1 [0 , T ] ⊂ Gs2 [0 , T ] for s1 ≤ s2, it follows from the definition of Φ that there exist y0, y T ∈ Gs[0 , T ] for some 
+
+s ∈ (1 , 2) such that by defining v0 = W1L2y0 − W 2L1y0
+
+and vT = W1L2yT − W 2L1yT , we can express z0 and zT
+
+as 
+
+z0 = [ v0(·, 0) v0,t (·, 0) v0,t (0 , 0) v0,tx (0 , 0)] , (4.6) 
+
+zT = [ vT (·, 0) vT,t (·, 0) vT,t (0 , 0) vT,tx (0 , 0)] . (4.7) For t ∈ [0 , T ] let 
+
+ψ(t) = 1 −
+
+( ∫ t
+
+> 0
+
+ψ0(τ )d τ
+
+/ ∫ T
+
+> 0
+
+ψ0(τ )d τ
+
+)
+
+, (4.8) where ψ0(t) = exp 
+
+(
+
+− [( 1 − t
+
+> T
+
+) t
+
+> T
+
+]− 1
+
+> s−1
+
+)
+
+for t ∈ (0 , T )and ψ0(0) = ψ0(T ) = 0. Then ψ ∈ Gs[0 , T ] and 
+
+ψ(0) = 1 , ψ(T ) = 0 , ψ(k)(0) = ψ(k)(T ) = 0 (4.9) for all k ≥ 1, see [17]. For all t ∈ [0 , T ] define 
+
+y(t) = y0(t)ψ(t) + yT (T − t)ψ(T − t). (4.10) Since y0, y T , ψ ∈ Gs[0 , T ] and Gs[0 , T ] is closed under addition and multiplication of functions [23, Proposi-tion 1.4.5] we get that y ∈ Gs[0 , T ]. Let w = W1L2y −W2L1y. Then z(t) = [ w(·, t ) wt(·, t ) wxt (·, t ) wxt (·, t )] ∈
+
+C([0 , T ]; Z) is the unique solution of (1.1)-(1.4) for the initial state z(0) and input f (t) = w(L, t ), see Remark 4.2. We will now complete the proof of this theorem by establishing that z(0) = z0 and z(T ) = zT .The expression w = W1L2y − W 2L1y is the same as (3.1) with y1 = L2y and y2 = −L 1y. The se-ries for w(·, t ), wt(·, t ), wt(0 , t ) and wxt (0 , t ) can be obtained by termwise differentiation of the series in (3.1) (see the proof of Proposition 3.2). Therefore 
+
+z(t) = [ w(·, t ) wt(·, t ) wt(0 , t ) wxt (0 , t )] for t ∈ [0 , T ] can be rewritten as 
+
+z(t) = ∑
+
+> k≥0
+
+Aky(k)1 (t) + ∑
+
+> k≥0
+
+Bky(k)2 (t) ∀t ∈ [0 , T ],
+
+where Ak, B k ∈ C4[0 , L ] × C4[0 , L ] × R × R. Note that 
+
+y(k)1 (t) = [ L2y(k)]( t) and y(k)2 (t) = −[L1y(k)]( t) (see the proof of Proposition 4.1). Using this and the definition of the operators L1 and L2 in the above equation it follows that for each t ∈ [0 , T ], 
+
+z(t) = ∑
+
+> k≥0
+
+∑
+
+> n≥0
+
+(Akhn,x (L)−Bkgn,x (L))y(n+k)(t). (4.11) Applying the above procedure used to derive (4.11) starting from w = W1L2y − W 2L1y, to both v0 =
+
+W1L2y0 − W 2L1y0 and vT = W1L2yT − W 2L1yT (in-stead of w) and then recalling (4.6)-(4.7) we get 
+
+z0 = ∑
+
+> k≥0
+
+∑
+
+> n≥0
+
+(Akhn,x (L) − Bkgn,x (L))y(n+k)0 (0) ,zT = ∑
+
+> k≥0
+
+∑
+
+> n≥0
+
+(Akhn,x (L) − Bkgn,x (L))y(n+k) 
+
+> T
+
+(0) .
+
+Differentiating (4.10) n-times and then using (4.9) we get 
+
+y(n)(0) = y(n)0 (0) and y(n)(T ) = y(n) 
+
+> T
+
+(0) for all n ≥ 0. It now follows from the expressions for z(0) and z(T ) from (4.11) and the expressions for z0 and zT given above that 
+
+z(0) = z0 and z(T ) = zT . This completes the proof. 
+
+When z0 and zT in Theorem 4.3 are real-valued, it is easy to see that the control input f proposed in the proof of the theorem and the corresponding state trajectory of the beam model (1.1)-(1.4) are both real-valued. Indeed, the results in Sections 2, 3 and 4 will remain the same if we take the state-space Z to be real-valued, which is physically more meaningful. However, we have taken Z
+
+to be a complex-valued Hilbert space since the eigen-functions of the beam model are complex-valued and we require them to belong to the state-space, see Section 5. The next remark is about the real-valued steady-states of the beam model. 
+
+Remark 4.4 Let c ∈ R. For the initial state [uss 0 0 0] ∈
+
+Z with uss (x) = c for all x ∈ [0 , L ] and the constant in-put fss ∈ C∞([0 , T ]; R) with fss (t) = c for all t ∈ [0 , T ],note that the constant function zss (t) = [ uss 0 0 0] for 
+
+t ∈ [0 , T ] is the solution of (1.1) -(1.4) . This follows from Remark 2.4, with w(·, t ) = uss for t ∈ [0 , T ] and f = fss .We call zss (0) the steady-state of (1.1) -(1.4) correspond-ing to the constant input fss . Each such steady-state is a rest configuration of the beam corresponding to some fixed position of the cantilever joint. Let v = W1L2y−W 2L1y, where y is the constant function given as y(t) = c for all t ∈ [0 , T ] and some c ∈ R. Using the definitions of the operators L1, L2, W1 and W2 and the function y, we get 
+
+v(x, t ) = g0(x)h0,x (L)y(t) − h0(x)g0,x (L)y(t) (4.12) 
+
+for all x ∈ [0 , L ] and t ∈ [0 , T ]. Since g0(x) = 1 and 
+
+h0(x) = x, see (3.23) and (3.29) , and y is a constant function, it follows from (4.12) that the initial state 
+
+[v(·, 0) vt(·, 0) vt(0 , 0) vxt (0 , 0)] = [ uss 0 0 0] ,
+
+where uss (x) = c for all x ∈ [0 , L ]. By definition, the above state is in Φ and is also a steady-state. In other words, steady-states of (1.1) -(1.4) belong to the set Φ. It now follows from Theorem 4.3 that we can find an input 
+
+f to transfer (1.1) -(1.4) between any two steady-states. 
+
+85 Approximate Controllability 
+
+Given initial and final states belonging to a certain sub-space Φ of the state-space Z and a T > 0, we have shown in Theorem 4.3 that there exists a control input f which transfers the beam model (1.1)-(1.4) between these two states over the time interval [0 , T ]. In this section we prove that the set Φ is dense in Z, see Proposition 5.2. Combining this result with the well-posedness result in Proposition 2.3, we then conclude in Theorem 5.3 that (1.1)-(1.4) is approximately controllable over all time in-tervals [0 , T ]. Recall the Hilbert space ˜Z introduced below (2.7). Con-sider the following state operator A : ˜Z → ˜Z associated with the beam model (1.1)-(1.4): The domain of A is 
+
+D(A) = {[u v α β ] ∈ H4(0 , L )×H2(0 , L )×R×R∣∣u(L) = 
+
+ux(L) = v(L) = vx(L) = 0 , v (0) = α, v x(0) = β} and 
+
+A[u v α β ] = [ v − (EIu xx )xx  
+
+> ρ
+
+− (EIu xx )x(0)  
+
+> mEI (0) uxx (0)
+> J
+
+]for all [ u v α β ] ∈ D (A). The spectral result given below for the state operator A
+
+follows from [6], which considers a beam model similar to (1.1)-(1.4). (In [6] the cantilever joint is at x = 0, the tip-mass is at x = 1 and the inputs are different.) 
+
+Proposition 5.1 The spectrum of A consists of count-ably many eigenvalues {λn}n∈N which lie on the imagi-nary axis. The corresponding eigenfunctions {φn}n∈N of 
+
+A, scaled appropriately, form a Riesz basis for the Hilbert space ˜Z and are of the form 
+
+φn = [ un λnun λnun(0) λnun,x (0) ] , (5.1) 
+
+where un ∈ C4[0 , L ] is a non-zero solution of the follow-ing boundary value ODE: 
+
+λ2
+
+> n
+
+ρ(x)u(x) + ( EIu xx )xx (x) = 0 , (5.2) 
+
+mλ 2
+
+> n
+
+u(0) + ( EIu xx )x (0) = 0 , (5.3) 
+
+Jλ 2
+
+> n
+
+ux(0) − EI (0) uxx (0) = 0 , (5.4) 
+
+u(L) = 0 , ux(L) = 0 . (5.5) Recall the generating functions gk and hk from Section 3. In the next proposition, we prove that the eigenfunctions of A can be expressed in terms of gk and hk and that they belong to the set Φ, and finally conclude that the set Φ is dense in the state-space Z.
+
+Proposition 5.2 Consider an eigenvalue λn of A, its corresponding eigenvector φn and the solution un to the boundary value ODE (5.2) -(5.5) which determines φn via 
+
+(5.1) . Then un can be expressed as 
+
+un(x) = un(0) ∑
+
+> k≥0
+
+gk(x)λ2kn + un,x (0) ∑
+
+> k≥0
+
+hk(x)λ2kn (5.6) 
+
+for all x ∈ [0 , L ]. Recall g0 from (3.23) and define the vector φ0 = [ g0 0 0 0] in Z. Then the sequence of functions 
+
+{φn}n∈{ 0,N} belongs to the set Φ and forms a Riesz basis for the state-space Z. In other words, Φ is dense in Z.
+
+PROOF. We denote the series on the right-side of (5.6) by ˆ un, i.e. ˆun(x) = un(0) ∑
+
+> k≥0
+
+gk(x)λ2kn + un,x (0) ∑
+
+> k≥0
+
+hk(x)λ2kn (5.7) for each x ∈ [0 , L ]. From the proof of Proposition 3.2, we have that there exists a constant C > 0 indepen-dent of k such that the functions gk, gk,x , gk,xx , gk,xxx ,
+
+gk,xxxx , hk, hk,x , hk,xx , hk,xxx and hk,xxxx are uniformly bounded on [0 , L ] by Ck/(4 k − 6)!. Using this we can bound the terms gk(x)λ2kn and hk(x)λ2kn in the series in (5.7) uniformly on [0 , L ] by Dk = Ck|λn|2k/(4 k − 6)!. Since ∑ 
+
+> k≥0
+
+Dk < ∞, we can appeal to the Weierstrass M-test to conclude that the series in (5.7) converges uni-formly on [0 , L ] to a continuous function ˆ un. We can sim-ilarly conclude that every series obtained by termwise differentiation (up to four times) of the series for ˆ un in (5.7), converges uniformly on [0 , L ] to a continuous func-tion. In summary, the function ˆ un in (5.7) belongs to 
+
+C4[0 , L ] and its derivatives can be obtained by termwise differentiation of the series in (5.7). We will now show that ˆ un = un. Using (3.3), (3.6), (3.9) and (3.12), (3.15), (3.18) it is easy to see that the se-ries corresponding to λ2
+
+> n
+
+ρ(x)ˆ un(x) and −(EI ˆun,xx )xx (x)are the same for each x ∈ [0 , L ], and hence ˆ un satisfies (5.2). Using the series for ˆ un(0), ˆ un,x (0), EI ˆun,xx (0) and (EI ˆun,xx )x(0) and the initial conditions for gk in (3.4), (3.5), (3.7), (3.8), (3.10), (3.11) and the initial conditions for hk in (3.13), (3.14), (3.16), (3.17), (3.19), (3.20), it is straightforward to verify ˆ un satisfies the boundary con-ditions (5.3)-(5.4). Finally, from the series for ˆ un(0) and ˆun,x (0), it follows using (3.4), (3.7), (3.10) and (3.13), (3.16), (3.19) that ˆun(0) = un(0) , ˆun,x (0) = un,x (0) . (5.8) Let ˜ un = un − ˆun. Since un and ˆ un satisfy (5.2)-(5.4) and (5.8) holds, it follows that ˜ un satisfies 
+
+λ2
+
+> n
+
+ρ(x)˜ un(x) + ( EI ˜un,xx )xx (x) = 0 ∀x ∈ (0 , L ),
+
+˜un(0) = 0 , ˜un,x (0) = 0 ,
+
+˜un,xx (0) = 0 , (EI ˜un,xx )x(0) = 0 .
+
+Clearly ˜ un = 0 is the only solution to the above ODE and so un = ˆ un, i.e. (5.6) holds. Next we will prove that the sequence of eigenfunctions 
+
+{φn}n∈N of the operator A is contained in the set Φ. Consider an eigenvalue λn and the corresponding eigen-function φn = [ un λnun λnun(0) λnun,x (0)]. Since un
+
+satisfies (5.5), we have un,x (L) = 0. Substituting the se-ries for un from (5.6) in this equation we get 
+
+un(0) ∑
+
+> j≥0
+
+gj,x (L)λ2jn +un,x (0) ∑
+
+> j≥0
+
+hj,x (L)λ2jn = 0 . (5.9) 9First we claim that ∑ 
+
+> j≥0
+
+gj,x (L)λ2jn > 0. Indeed, it fol-lows from (3.23), (3.25) and (3.28) that g0,x (L) = 0 and sgn gj,x (L) = ( −1) j for j ≥ 1. Since λn lies on the imagi-nary axis, see Proposition 5.1, sgn λ2jn = ( −1) j for j ≥ 1. So each term in ∑ 
+
+> j≥0
+
+gj,x (L)λ2j is positive (except the first term which is zero) and our claim follows. Next we claim that un,x (0) 6 = 0. Indeed, it follows from our first claim and (5.9) that if un,x (0) = 0, then un(0) = 0 which, via (5.6), leads to the contradiction that the func-tion un is zero. So un,x (0) 6 = 0. Solving (5.9) for un(0), we get the expression un(0) = α ∑ 
+
+> j≥0
+
+hj,x (L)λ2jn , where 
+
+α = −un,x (0) / ∑ 
+
+> j≥0
+
+gj,x (L)λ2jn . Our claims above im-ply that α is well-defined and non-zero. Substituting this expression for un(0) in (5.6) and then simplifying we get 
+
+un(x) = α
+
+( ∑ 
+
+> k≥0
+
+gk(x) ∑
+
+> j≥0
+
+hj,x (L)λ2j+2 kn
+
+− ∑
+
+> k≥0
+
+hk(x) ∑
+
+> j≥0
+
+gj,x (L)λ2j+2 kn
+
+)
+
+(5.10) for x ∈ [0 , L ]. Recall L1 and L2 from Proposition 4.1 and 
+
+W1 and W2 from Remark 4.4. Multiplying both sides of (5.10) by eλn t and then using the definitions of L1, L2,
+
+W1, W2 to rewrite the resulting equation we get 
+
+un(x)eλn t = α(W1L2eλnt − W 2L1eλn t) (5.11) for all x ∈ [0 , L ] and t ∈ [0 , T ]. Let v(x, t ) = un(x)eλn t
+
+and y(t) = αe λn t for x ∈ [0 , L ] and t ∈ [0 , T ]. Then 
+
+y ∈ Gs[0 , T ] for all s ∈ (1 , 2) and (5.11) can be rewritten as 
+
+v = W1L2y − W 2L1y. 
+
+It now follows from the definition of the set Φ that the vector [ v(·, 0) vt(·, 0) vt(0 , 0) vxt (0 , 0)], which is exactly the vector φn = [ un λnun λnun(0) λnun,x (0)] (use the definition of v), belongs to Φ. This completes the proof of our assertion that Φ contains {φn}n∈N.We will now complete the proof of this theorem by show-ing that Φ is dense in Z. Note that the vector φ0 =[g0 0 0 0] is a steady state for the beam model (1.1)-(1.4) and so it belongs to Φ, see Remark 4.4. From the definitions of φ0 and ˜Z, clearly φ0 /∈ ˜Z. Since {φn}n∈N
+
+forms a Riesz basis for ˜Z, see Proposition 5.1, and Z =˜Z + {βφ 0 |β ∈ C}, it follows from [21, Proposition 2.5.5] that the sequence of functions {φn}n∈{ 0∪N} forms a Riesz basis for the state-space Z. Finally, since Φ contains 
+
+{φn}n∈{ 0∪N}, the density of Φ in Z follows. 
+
+We now present our approximate controllability result for the beam model (1.1)-(1.4). 
+
+Theorem 5.3 The beam model (1.1) -(1.4) is approxi-mately controllable over all time intervals, i.e. given a time interval [0 , T ], a constant ǫ > 0 and states z0 and zT
+
+in Z, there exists an f ∈ C2[0 , T ] compatible for z0 such that the unique weak solution z ∈ C([0 , T ]; Z) of (1.1) -
+
+(1.4) for the initial state z0 and control input f satisfies 
+
+‖z(T ) − zT ‖Z ≤ ǫ. (5.12) 
+
+PROOF. Let T > 0, ǫ > 0 and z0, z T ∈ Z be given. Fix ǫ1, ǫ 2 > 0 such that 2 MT ǫ1 + ǫ2 ≤ ǫ. Here MT is the constant in (2.3). Appealing to the density of Φ in Z
+
+established in Proposition 5.2, choose states ˜ z0, ˜zT ∈ Φsuch that 
+
+‖z0 − ˜z0‖Z ≤ ǫ1, ‖zT − ˜zT ‖Z ≤ ǫ2. (5.13) Fix ˜f ∈ C2[0 , T ] compatible for ˜ z0 such that the solution ˜z ∈ C([0 , T ]; Z) of the beam model (1.1)-(1.4) for the ini-tial state ˜ z0 and control input ˜f satisfies ˜ z(T ) = ˜ zT (the existence of such an ˜f is guaranteed by Theorem 4.3). Suppose that z0 = [ u0 v0 α0 β0] and ˜ z0 = [˜ u0 ˜v0 ˜α0 ˜β0]. Clearly ˜f (0) = ˜ u0(L). Define f ∈ C2[0 , T ] as 
+
+f = ˜f + u0(L) − ˜u0(L). (5.14) Then f (0) = u0(L), i.e. f is compatible for z0. Let z ∈
+
+C([0 , T ]; Z) be the solution of (1.1)-(1.4) for the initial state z0 and control input f . Clearly f − ˜f is compatible for z0 − ˜z0. It now follows from the linearity of the beam model that z − ˜z is the solution of (1.1)-(1.4) for the initial state z0 − ˜z0 and the control input f − ˜f , and therefore 
+
+‖z(T ) − ˜z(T )‖Z ≤ MT
+
+(‖z0 − ˜z0‖Z + ‖f − ˜f‖C2[0 ,T ]
+
+),
+
+see (2.3). Using ˜ z(T ) = ˜ zT , (5.13), (5.14) and the above estimate, it follows via the triangle inequality that 
+
+‖z(T ) − zT ‖Z ≤ ‖ z(T ) − ˜zT ‖Z + ‖zT − ˜zT ‖Z
+
+≤ MT (ǫ1 + |u0(L) − ˜u0(L)|) + ǫ2
+
+≤ 2MT ǫ1 + ǫ2 ≤ ǫ, 
+
+i.e. (5.12) holds. So we have shown that given any T > 0, 
+
+ǫ > 0 and z0, z T ∈ Z, there exists a f ∈ C2[0 , T ] com-patible for z0 such that the solution z ∈ C([0 , T ]; Z)of (1.1)-(1.4) for the initial state z0 and input f satis-fies (5.12). Hence the beam model (1.1)-(1.4) is approx-imately controllable over all time intervals. 
+
+6 Numerical and experimental results 
+
+Figure 1 shows our experimental setup. It contains a non-uniform moving cantilever beam made of stainless steel. The width of the beam varies linearly along the length of the beam. One end of the beam supports a tip-mass, while the other end is attached via a cantilever joint to a cart mounted on a Hiwin single axis robot. The robot is driven by a Yasaka AC servo motor which fixes the cart 10 position as per the position control input it receives from a NI MyRIO controller. The dynamics of the beam in the setup is governed by the coupled PDE-ODE model (1.1)-(1.4) with the following parameters: L = 0 .5 m, 
+
+m = 0 .4 kg, J = 1 .86 × 10 −4 kg m 2 and ρ(x) = 0 .11(1 + 3x)kg/m and EI (x) = 0 .29(1+3 x)N/m for x ∈ [0 , L ]. In Section 6.1, using these parameters, we have numerically validated our solution to the motion planning problem by considering two examples. The initial state of the beam in the first example is a steady-state of the beam, while in the second example it is not a steady-state. The desired final state in both the examples is the zero state. In Section 6.2, using our setup, we have experimentally validated the control input obtained in the first example. 
+
+6.1 Numerical validation 
+
+We consider two examples to illustrate our solution in Theorem 4.3 to the motion planning problem. In both the examples, we consider the beam model (1.1)-(1.4) with parameters L, m, J, ρ and EI corresponding to the experimental setup in Figure 1. 
+
+Example 1 . Consider the vectors z0 = [0 .3 0 0 0] and 
+
+zT = [0 0 0 0] in Z. These vectors are determined by (4.6) and (4.7) using v0 = W1L2y0 − W 2L1y0 and vT =
+
+W1L2yT − W 2L1yT , where y0(t) = 0 .3 and yT (t) = 0 for all t ≥ 0. These vectors are steady-states of the beam model (1.1)-(1.4) and they belong to the set Φ introduced in Theorem 4.3, see Remark 4.4. In this example, we address the motion planning problem of finding a control input f which transfers the beam model from the initial state z0 to the final state zT in 3 seconds. We solve the above problem by following the procedure described in the proof of Theorem 4.3. Accordingly we choose ψ to be the function in (4.8) with s = 1 .5 and T =3 and, using y0 and yT given above, define y ∈ G1.5[0 , 3] via (4.10). The required control input is f (t) = w(L, t )for t ∈ [0 , 3], where w = [ W1L2 − W 2L1]y. Using the definitions of L1, L2, W1, W2 and changing the order of the double summations we obtain the following series representation for the control input f :
+
+f (t) = 
+
+> ∞
+
+∑
+
+> l=0
+
+∑
+
+> j+k=l
+
+[gk(L)hj,x (L) − hk(L)gj,x (L)]y(2 l)(t).
+
+(Note that gk and hk are computed using the expressions in the proof of Proposition 3.1.) Consider the truncation 
+
+f N (t) = 
+
+> N
+
+∑
+
+> l=0
+
+∑
+
+> j+k=l
+
+[gk(L)hj,x (L) − hk(L)gj,x (L)]y(2 l)(t)of the series for f . The truncated series f N (t) converges rapidly to f (t) as N tends to infinity. In this example, f 10 
+
+is a good approximation for the control input f which solves the motion planning problem, see Figure 2.    
+
+> 0123
+> 00.1 0.2 0.3
+
+Figure 2. Plot of f N for N ∈ { 1, 3, 5, 10 } in Example 1. Here ‖f 5 − f 3‖L2 (0 ,3) < 9 × 10 −7 and ‖f 10 − f 5‖L2 (0 ,3) <
+
+3×10 −13 , which indicate that f 10 is a good approximation of the control input f which solves the motion planning problem.   
+
+> 0
+> 0.5
+> 0.1
+> 0.2
+> 0.3
+> 0.25 32010
+
+Figure 3. Displacement profile w(x, t ) of the beam model (1.1)-(1.4) corresponding to the initial state z0 and control input f 10 in Example 1. The final displacement at t = 3 seconds is close to zero ( ‖w(·, 3) ‖H2 (0 ,0.5) < 4.1 × 10 −3 ).  
+
+> 0.5
+> -0.5
+> -0.25
+> 0.25
+> 0
+> 32100
+
+Figure 4. Velocity profile wt(x, t ) of the beam model (1.1)-(1.4) corresponding to the initial state z0 and control input 
+
+f 10 in Example 1. The final velocity at t = 3 seconds is close to zero ( ‖wt (·, 3) ‖L2 (0 ,0.5) < 8.1 × 10 −4). 
+
+We discretize the spatial derivatives in the beam model (1.1)-(1.4) using the finite-difference method (with step-size 1/600) to obtain a set of ODEs in time which serve as a numerical model for the beam model. We validate our solution to the motion planning problem presented above by simulating the numerical model with the ini-tial state z0 and the control input f 10 shown in Figure 2. Figure 3 and Figure 4 show the beam displacement profile w(x, t ) and the beam velocity profile wt(x, t ) ob-tained from our simulation. Recall that zT = [0 0 0 0]. As expected from Theorem 4.3, the displacement profile and the velocity profile converge to the zero function at 
+
+t = 3 seconds. 11 Example 2 . Let y0(t) = 1 + 10 t2e−2t and yT (t) = 0 for all t ∈ [0 , 3]. Note that y0 is a real analytic function and so y0 ∈ G1.5[0 , 3]. Let the vectors z0, z T ∈ Z be determined by (4.6) and (4.7) using v0 = W1L2y0 −W2L1y0 and vT = W1L2yT − W 2L1yT . Clearly zT =[0 0 0 0] and z0, z T belong to the set Φ introduced in Theorem 4.3. Furthermore, v0(·, 0) (red line in Figure 6) is not a constant function and v0,t (·, 0) (red line in Figure 7) is not the zero function. So z0 is not a steady-state of the beam equation (1.1)-(1.4), see Remark 4.4. In this example, we address the motion planning problem of finding a control input f which transfers the beam model from the initial state z0 to the final state zT in 3 seconds.                                                                     
+
+> 0123
+> 012
+> Figure 5. Plot of fNfor N∈ { 1,3,5,10 }in Example 2. Here ‖f5−f3‖L2(0 ,3) <7×10 −6and ‖f10 −f5‖L2(0 ,3) <
+> 3×10 −12 , which indicate that f10 is a good approximation of the control input fwhich solves the motion planning problem.
+> 0
+> 0.5 0.5
+> 1
+> 1.5
+> 2
+> 2.5
+> 0.25 32100
+> Figure 6. Displacement profile w(x, t ) of the beam model (1.1)-(1.4) corresponding to the initial state z0and control input f10 in Example 2. The final displacement at t= 3 seconds is close to zero ( ‖w(·,3) ‖H2(0 ,0.5) <2.3×10 −2).
+> -4
+> 0.5
+> -2
+> 0
+> 2
+> 0.25 32100
+> Figure 7. Velocity profile wt(x, t ) of the beam model (1.1)-(1.4) corresponding to the initial state z0and control input
+> f10 in Example 2. The final velocity at t= 3 seconds is close to zero ( ‖wt(·,3) ‖L2(0 ,0.5) <1.6×10 −2).
+
+Like in Example 1, we solve the above problem by fol-lowing the procedure described in the proof of Theo-rem 4.3. Accordingly we choose ψ to be the function in (4.8) with s = 1 .5 and T = 3 and, using y0 and yT
+
+given above, define y ∈ G1.5[0 , 3] via (4.10). The re-quired control input is f (t) = w(L, t ) for t ∈ [0 , 3], where 
+
+w = [ W1L2 − W 2L1]y. Truncating the series for f like in Example 1 we obtain the finite series f N , which con-verges rapidly to f as N tends to infinity. In this exam-ple, f 10 is a good approximation for the control input f
+
+which solves the motion planning problem, see Figure 5. We validate our above solution to the motion planning problem by simulating the finite-difference numerical model for the beam model, described in Example 1, with the non-steady initial state z0 and the control input f 10 
+
+shown in Figure 5. Figure 6 and Figure 7 show the beam displacement profile w(x, t ) and the beam velocity pro-file wt(x, t ) obtained from our simulation. As expected from Theorem 4.3, the displacement profile and the ve-locity profile converge to the zero function at t = 3 sec-onds. 
+
+6.2 Experimental validation 
+
+In Example 1, we have constructed a smooth control in-put f 10 (see Figure 2) for transferring the beam model from z0 = [0 .3 0 0 0] to zT = [0 0 0 0] in 3 seconds. Note that the control input f 10 (t) specifies the displacement of the cart (cantilever joint) at the time instant t. We implement this control input f 10 on our experimental setup as follows. We discretize the time interval [0 , 3] sec-onds into subintervals of 20 ms each. For each subinterval [a, b ], we compute f 10 (b) − f 10 (a), which is the required displacement of the cart over the time interval [ a, b ]. We then convert this displacement into the number of pulses, which when provided to the AC servo drive over the time interval [ a, b ], ensures that the single axis robot moves the cart by f 10 (b) − f 10 (a). We then run a 20 ms loop in the FPGA module in the NI MyRIO controller for 3 seconds, which provides the computed number of pulses over each 20 ms subinterval to the servo drive, thereby ensuring that the cart position tracks the control input 
+
+f 10 accurately. The position of the tip-mass during this experiment is measured using a Micro-Epsilon laser dis-placement sensor, which has an accuracy of 0.1 mm and a sampling rate of 2000 Hz. Figure 8 shows the posi-tion of the tip-mass obtained from our experiment and the numerical simulation in Example 1. As seen from the plots, they match closely. The video of our experi-ment showing that the beam is transferred from one rest position to another at a distance of 0.3 m as desired is available here: https://youtu.be/-iXZiz25g5Q. In other words, our solution f 10 to the motion planning problem in Example 1 performs as expected while implemented on the experimental setup. 12 0 1 2 3   
+
+> 00.15 0.3
+> 0123
+> -3 03
+> 10 -3
+
+Figure 8. The first plot shows the tip-mass position ob-tained from our experiment and the numerical simulation in Example 1, while the second plot shows the error be-tween these two positions. The maximum error is about 3 mm (i.e. 1% of the net dispacement of the tip-mass). 
+
+Appendix A Proof of the claim above (2.10) .
+
+The coupled PDE-ODE system (2.4)-(2.7) can be writ-ten as an abstract evolution equation on ˜Z as follows: ˙˜z(t) = A˜z(t) + B[f (t) ¨f (t)] ∀ t > 0. (A.1) Here the state operator A : ˜Z → ˜Z has domain D(A) = 
+
+{[u v α β ] ∈ H4(0 , L ) × H2(0 , L ) × R × R∣∣ u(L) = 
+
+ux(L) = v(L) = vx(L) = 0 , v (0) = α, v x(0) = β} and 
+
+A[u v α β ] = [ v −(EIu xx )xx  
+
+> ρ
+
+−(EIu xx )x(0)  
+
+> mEI (0) uxx (0)
+> J
+
+] for all [ u v α β ] ∈ D (A) and the control operator B : R2 →
+
+˜Z is a bounded linear operator such that B[g1 g2] = [0 (EIν xx )xx g1+νg 2 
+
+> ρ
+
+0 0] for all [ g1 g2] ∈ R2. The operator 
+
+A generates a C0-semigroup T on ˜Z, see [24, Section 5]. For the initial state ˜ z0 = [˜ u0 ˜v0 ˜α0 ˜β0] ∈ ˜Z and control input f ∈ C2[0 , T ], the mild solution of the abstract system (A.1) is the function ˜ z ∈ C([0 , T ]; ˜Z) given by ˜z(t) = Tt ˜z0 +
+
+∫ t
+
+> 0
+
+Tt−τ B[f (τ ) ¨f (τ )]dτ. (A.2) From [21, Remark 4.2.6] it follows that this mild solution is the unique function in C([0 , T ]; ˜Z) which satisfies 
+
+〈˜z(t) − ˜z0, p 〉 ˜Z =
+
+∫ t
+
+> 0
+
+[
+
+〈˜z(τ ), −A p〉 ˜Z
+
++ 〈B[f (τ ) ¨f (τ )], p 〉
+
+> ˜Z
+
+]
+
+dτ (A.3) for all p ∈ D (A) and each t ∈ [0 , T ]. Clearly ˜ z(t) = [ ˜ w(·, t ) ˜ v(·, t ) ˜ a(t) ˜b(t)], where ˜w ∈ C([0 , T ]; H2(0 , L )) with ˜ w(L, t ) = ˜ wx(L, t ) = 0, ˜ v ∈ C([0 , T ]; L2(0 , L )) and ˜a, ˜b ∈ C[0 , T ]. For each t ∈ [0 , T ], define η1(t) ∈ L2(0 , L ), 
+
+η2(t) ∈ R and η3(t) ∈ R as follows: 
+
+η1(t) = ˜ w(t) − ˜u0 −
+
+∫ t
+
+> 0
+
+˜v(τ )d τ, η2(t) = ˜ w(0 , t ) − ˜u0(0) −
+
+∫ t
+
+> 0
+
+˜a(τ )d τ, η3(t) = ˜ wx(0 , t ) − ˜u0,x (0) −
+
+∫ t
+
+> 0
+
+˜b(τ )d τ. 
+
+Fix s ∈ [0 , T ]. Since A is boundedly invertible, see [6, Lemma 2.1], there exists a ˜ p ∈ D (A) such that A˜p =[0 η1(s) η2(s) η3(s)]. From the definition of A it fol-lows that ˜ p is of the form ˜ p = [ ψ 0 0 0] for some ψ ∈
+
+H4(0 , L ) with ψ(L) = ψx(L) = 0. Taking p = ˜p in (A.3), it follows via a simple calculation using integra-tion by parts that η1(s) = 0, η2(s) = 0 and η3(s) = 0. This holds for all s ∈ [0 , T ]. So we can conclude that ˜ w ∈ C([0 , T ]; H2(0 , L )) ∩ C1([0 , T ]; L2(0 , L )) with ˜w(0 , ·), ˜wx(0 , ·) ∈ C1[0 , T ] and ˜ w(L, t ) = ˜ wx(L, t ) = 0, [ ˜ w(·, 0) ˜ wt(·, 0) ˜ wt(0 , 0) ˜ wxt (0 , 0)] = [˜ u0 ˜v0 ˜α0 ˜β0] and ˜z(t) = [ ˜ w(·, t ) ˜wt(·, t ) ˜wt(0 , t ) ˜wxt (0 , t )] (A.4) for each t ∈ [0 , T ]. Any p ∈ D (A) can be expressed as [ ψ ϕ ϕ (0) ϕx(0)], where ψ ∈ H4(0 , L ) with ψ(L) = ψx(L) = 0 and ϕ ∈
+
+H2(0 , L ) with ϕ(L) = ϕx(L) = 0. Substituting this ex-pression for p and the expression for ˜ z from (A.4) into (A.3) and then collecting the terms which contain only 
+
+ϕ and ψ separately, it follows that (A.3) is equivalent to the following pair of equations: (2.10) and 
+
+∫ L
+
+> 0
+
+EI (x)[ ˜wxx (x, t ) − ˜u0xx (x)]ψxx (x)d x
+
+=
+
+∫ t
+
+> 0
+
+∫ L
+
+> 0
+
+(EIψ xx )xx (x) ˜ wt (x, τ )d xdτ
+
+− (EIψ xx )x(0) 
+
+∫ t
+
+> 0
+
+˜wt(0 , τ )d τ
+
++ EI (0) ψxx (0) 
+
+∫ t
+
+> 0
+
+˜wxt (0 , τ )d τ, (A.5) From the properties of [ ˜ w(·, t ) ˜ wt(·, t ) ˜ wt(0 , t ) ˜ wxt (0 , t )] and ψ it is easy to verify via integration by parts that (A.5) holds trivially for all ψ. In other words, (A.3) is equivalent to (2.10). Since ˜ z in (A.4) is the unique func-tion in C([0 , T ]; ˜Z) which satisfies (A.3) for all p ∈ D (A)and t ∈ [0 , T ], it follows that it is also the unique function in C([0 , T ]; ˜Z) which satisfies (2.10) for all ϕ ∈ H2(0 , L )with ϕ(L) = ϕx(L) = 0 and t ∈ [0 , T ]. This completes the proof of our claim. Finally, since B is a bounded linear operator, it follows from (A.2) and the properties of C0-semigroups that there exists a constant ˜MT > 0 independent of ˜ z0 and f
+
+such that (2.11) holds. 13 References 
+
+[1] Y. Aoustin, M. Fliess, H. Mounier, P. Rouchon and J. Rudolph, “Theory and practice in the motion planning and control of a flexible robot arm using Mikusi´ nski operators,” 
+
+Proc. 5th IFAC Symp. Robot Control , pp. 267-273, Sep. 3-5, 1997, Nantes, France. [2] M. Bachmayer, H. Ulbrich and J. Rudolph, “Flatness-based control of a horizontally moving erected beam with a point mass,” Math. Comput. Model. Dyn. Syst., vol. 17, pp. 49-69, 2011. [3] M. Barczyk and A. F. Lynch, “Flatness-based estimated state feedback control for a rotating flexible beam: Experimental results,” IET Control Theory Appl., vol. 2, 288-302, 2008. [4] S. Chatterjee and V. Natarajan, “Steady-state to steady-state transfer of PDEs using semi-discretization and flatness,” 
+
+Proc. 59 th IEEE Conf. Decision & Control , pp. 4454-4459, Dec. 14-18, 2020, Jeju Island, Republic of Korea. [5] S. Chatterjee, A. Batra and V. Natarajan, “Semi-discretization of a Euler-Bernoulli beam and its application to motion planning”, IEEE Access , vol. 13, pp. 33665-33681, 2025. [6] B. Z. Guo, “On the boundary control of a hybrid system with variable coefficients,” J. Optim. Theory Appl. , vol. 114, pp. 373-395, 2002. [7] B. Z. Guo and S. A. Ivanov, “Boundary controllability and observability of a one-dimensional nonuniform SCOLE system,” J. Optim. Theory Appl. , vol. 127, pp. 89-108, 2005. [8] B. Kolar, N. Gehring and M. Sch¨ oberl, “On the calculation of differential parameterizations for the feedforward control of an Euler-Bernoulli beam,” In Dynamics and Control of Advanced Structures and Machines: Contributions from the 4th International Workshop, Linz, pp. 123-136, Springer, 2022. [9] B. Laroche and P. Martin, “Motion planning for a 1-D diffusion equation using a Brunovsky-like decomposition,” 
+
+Proc. 14 th Int. Symp. MTNS , pp. 1-6, June 19-23, 2000, Perpignan, France. [10] W. Littman and L. Markus, “Exact boundary controllability of a hybrid system of elasticity,” Arch. Rat. Mech., pp. 193-235, 1988. [11] A. F. Lynch and D. Wang, “Flatness-based control of a flexible beam in a gravitional field,” Proc. 2004 Amer. Control Conf. , pp. 5449-5454, Jun. 30 - Jul. 2, 2004, Boston, USA. [12] P. Martin, L. Rosier and P. Rouchon, “Null controllability of the heat equation using flatness,” Automatica , vol. 50, pp. 3067-3076, 2014. [13] P. Martin, L. Rosier and P. Rouchon, “Null controllability of one-dimensional parabolic equations by the flatness approach,” SIAM J. Control Optim. , vol. 54, pp. 198-220, 2016. [14] P. Martin, L. Rosier and P. Rouchon, “Controllability of the 1D Schr¨ odinger equation using flatness,” Automatica , vol. 91, pp. 208-216, 2018. [15] P. Martin, I. Rivas, L. Rosier and P. Rouchon, “Exact controllability of a linear Korteweg-deVries Equation by the flatness approach,” SIAM J. Control Optim. , vol. 57, pp. 2467-2486, 2019. [16] T. Meurer, D. Thull, and A. Kugi, “Flatness based tracking control of a piezoactuated Euler-Bernoulli beam with non-collocated feedback: theory and experiments,” Int. J. Control , vol. 81, pp. 475-493, 2008. [17] T. Meurer, J. Schr¨ ock, and A. Kugi, “Motion planning for a damped Euler-Bernoulli Beam,” Proc. 49th IEEE Conf. Decision & Control , pp. 2566-2571, Dec. 15-17, 2010, Atlanta, USA. [18] A. Pazy, Semigroups of Linear Operators and Applications to Partial Differential Equations , Springer-Verlag, New York, 1983. [19] B. Rao, “Exact boundary controllability of a hybrid system of elasticity by the HUM method,” ESAIM: Cont. Optim. Calc. Var., vol. 6, pp. 183-199, 2001. [20] J. Rudolph and F. Woittennek, “Motion planning and open loop control for linear distributed parameter systems with lumped controls,” Int. J. Control , vol. 81, pp. 457-474, 2008. [21] M. Tuscnak and G. Weiss, Observation and Control for Operator Semigroups, Birkh¨ auser, Basel, 2009. [22] X. Zhao and G. Weiss, “Well-posedness, regularity and exact controllability of the SCOLE model,” Math. Control Signals Syst., vol. 22, pp. 91-127, 2010. [23] L. Rodino, Linear partial differential operators in Gevrey spaces , World Scientific Publishing, Singpore, 1993. [24] X. Zhao and G. Weiss, “Controllability and observability of a well-posed system coupled with a finite-dimensional system,” 
+
+IEEE Trans. Autom. Control, vol. 56, pp. 88-99, 2011. 
+
+14

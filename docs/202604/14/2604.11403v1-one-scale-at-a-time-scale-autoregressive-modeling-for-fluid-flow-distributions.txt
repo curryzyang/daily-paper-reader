@@ -1,0 +1,509 @@
+Title: One Scale at a Time: Scale-Autoregressive Modeling for Fluid Flow Distributions
+
+URL Source: https://arxiv.org/pdf/2604.11403v1
+
+Published Time: Tue, 14 Apr 2026 02:14:04 GMT
+
+Number of Pages: 21
+
+Markdown Content:
+# ONE SCALE AT A TIME : SCALE -A UTOREGRESSIVE 
+
+# MODELING FOR FLUID FLOW DISTRIBUTIONS 
+
+Mario Lino Nils Thuerey 
+
+Technical University of Munich 
+
+## ABSTRACT 
+
+Analyzing unsteady fluid flows often requires access to the full distribution of possible temporal states, yet conventional PDE solvers are computationally prohibitive and learned time-stepping surrogates quickly accumulate error over long rollouts. Generative models avoid compounding error by sampling states independently, but diffusion and flow-matching methods, while accurate, are limited by the cost of many evaluations over the entire mesh. We introduce 
+
+scale–autoregressive modeling (SAR) for sampling flows on unstructured meshes hierarchically from coarse to fine: it first generates a low-resolution field, then refines it by progressively sampling higher resolutions conditioned on coarser predictions. This coarse-to-fine factorization improves efficiency by concentrat-ing computation at coarser scales, where uncertainty is greatest, while requiring fewer steps at finer scales. Across unsteady-flow benchmarks of varying com-plexity, SAR attains substantially lower distributional error and higher per-sample accuracy than state-of-the-art diffusion models based on multi-scale GNNs, while matching or surpassing a flow-matching Transolver (a linear-time transformer) yet running 2–7× faster than this depending on the task. Overall, SAR provides a practical tool for fast and accurate estimation of statistical flow quantities (e.g., turbulent kinetic energy and two-point correlations) in real-world settings. 1
+
+## 1 INTRODUCTION 
+
+Fluid dynamics plays a central role in a wide range of scientific and engineering fields, including aerospace design (Moxey et al., 2020; Jan´ e-Ippel et al., 2023), civil infrastructure (Zheng & Zhang, 2012), biomedical applications (Doost et al., 2016; Peiffer et al., 2013), and computer graphics (Bridson, 2015). Traditionally, fluid behavior is modeled by numerically solving partial differential equations (PDEs). While models like Reynolds-averaged Navier-Stokes (RANS) offer coarse esti-mates of mean flows (Alfonsi, 2009), many real-world flows exhibit complex unsteady dynamics that require access to full state distributions over time to be properly described, for instance, via statistical measures such as root-mean-square (RMS) fluctuations and two-point correlations (Pope, 2000; Wilcox, 1998). Capturing these distributions typically demands long and computationally expensive simulations, especially in 3D turbulent regimes (Caros et al., 2022). Advances in deep learning have enabled surrogate models that learn the temporal evolution of phys-ical systems from data (Kim et al., 2019; Stachenfeld et al., 2021; Pfaff et al., 2021). However, these models often degrade over long time horizons due to error accumulation during iterative roll-out (Kohl et al., 2024). In contrast, generative modeling provides an alternative for capturing fully developed flow distributions without relying on time-marching (Lienen et al., 2024; Lino et al., 2025). These models learn the underlying data distribution and can generate converged flow states directly, conditioned on domain geometry and boundary conditions—bypassing the need to simulate the transient warm-up phase. By drawing multiple samples, one can estimate statistical flow quan-tities, and because each sample is generated independently, error does not accumulate over time. Among generative methods, diffusion (including flow-matching) models have demonstrated supe-rior sample fidelity and distributional accuracy (Dhariwal & Nichol, 2021b; Liu & Thuerey, 2024; Lino et al., 2025). However, their practical deployment is limited by high computational cost: each 
+
+> 1
+
+Code is available at https://github.com/tum-pbs/SAR. 
+
+1
+
+> arXiv:2604.11403v1 [cs.CE] 13 Apr 2026
+
+sample requires dozens of denoising steps, and accurate transformer-based models further increase the burden due to the global receptive field brought by attention mechanisms (Peebles & Xie, 2023). To address these challenges, we introduce scale-autoregressive modeling (SAR), a generative frame-work designed for fluid domains with general geometries and unstructured discretizations. SAR generates physical fields hierarchically, proceeding autoregressively from coarse to fine spatial res-olutions (Figure 1a). At each step, SAR first computes a contextual representation of the previously generated coarser scales, which then conditions a small diffusion model to generate the solution at the next finer scale. This hierarchical formulation enables to assign denoising steps adaptively: coarser scales, which carry higher uncertainty, receive more steps, while finer scales require fewer due to stronger conditioning. Since only a small number of steps are needed at high-resolution scales, SAR can incorporate attention layers for global context without incurring the cost of conven-tional diffusion transformer models. We evaluate SAR on several unsteady fluid dynamics benchmarks, including pressure prediction on 3D wings in turbulent flow. Our results show that SAR outperforms state-of-the-art diffusion models based on multi-scale graph neural networks (GNNs) (Lino et al., 2025), and match the superior performance of a transformer-based diffusion model at a fraction of the computational cost. 
+
+## 2 RELATED WORK 
+
+Probabilistic Modeling of Fluid Flows Probabilistic models such as variational autoencoders (VAEs) (Kingma & Welling, 2014) and generative adversarial networks (GANs) (Goodfellow et al., 2014) have enabled modeling probability distributions over plausible physical states (Maulik et al., 2020; Drygala et al., 2022; Kim & Lee, 2020), but often struggle with complex multimodal distri-butions (Lino et al., 2025). Recently, denoising diffusion probabilistic models (DDPMs) and flow-matching models have emerged as powerful alternatives (Ho et al., 2020; Nichol & Dhariwal, 2021; Dhariwal & Nichol, 2021a; Lipman et al., 2023), with successful applications in flow-field super-resolution (Shu et al., 2023; Li et al., 2023b), uncertainty quantification (Liu & Thuerey, 2024), and improving stability of long-term simulations (Lippe et al., 2024; R¨ uhling Cachay et al., 2024; Kohl et al., 2024). Closer to our work, Lienen et al. (2024) and Baldan et al. (2025) modeled the distribu-tion of unsteady fully-developed flow solutions on structured grids, and Lino et al. (2025) extended this to unstructured meshes using multi-scale GNNs in latent spaces. While previous work applies all denoising steps to representations of fixed resolution, SAR departs from this approach by au-toregressively generating the solution scale-by-scale (from coarser to finer levels), thereby avoiding the computational burden of full-resolution evaluations at every step and allowing the use of fewer denoising steps at finer scales, as illustrated in Figure 7. 
+
+Learning Fluid Dynamics on General Geometries To handle fluid domains with irregular ge-ometries and enable adaptive spatial resolutions, GNNs (Pfaff et al., 2021; Lino et al., 2022) and transformers (Alkin et al., 2024; Wu et al., 2024) have emerged as prominent architectures. GNNs encode mesh information in graphs, while transformers process mesh nodes using spatial coordi-nates as inputs, though their time complexity scales non-linearly with node count. Recent variants mitigate this inefficiency by operating in fixed-size latent spaces (Alkin et al., 2024; 2025; Wen et al., 2025), using compact learned representations for each attention head (Wu et al., 2024; Luo et al., 2025), or adopting—often less accurate—linear attention (Hao et al., 2023; Li et al., 2022). Fluid flows involve highly non-local physics. While, multi-scale GNNs leverage hierarchical struc-tures to capture non-local interactions (Lino et al., 2022; Fortunato et al., 2022; Cao et al., 2023), each individual attention layer in transformers inherently has a global receptive field. This property is particularly beneficial for diffusion models (Peebles & Xie, 2023), but it introduces significant computational overhead, even when using linear attention variants (Katharopoulos et al., 2020; Cao, 2021). Our SAR model strategically employs the Transolver transformer (Wu et al., 2024; Luo et al., 2025) within a hierarchical framework, selectively processing subsets of nodes to maintain computational efficiency while harnessing global spatial context. 
+
+Autoregressive Image Generation Autoregressive modeling, popularized by large language models (LLMs) (Vaswani et al., 2017; Radford et al., 2019), has also been adapted to image gener-ation, with early work predicting tokens sequentially in raster-scan order (Razavi et al., 2019; Esser et al., 2021; Lee et al., 2022). Recent masked-prediction models have improved scalability by pre-dicting multiple tokens per autoregressive step (He et al., 2022; Chang et al., 2022; Li et al., 2023a). 2(a) Physical field generation by next-scale prediction                    
+
+> (b) SAR design
+> Condition Encoder (Transolver) Autoregressive Module (Transolver with AdaLN-Zero)
+> xi
+> vc, i
+> γi
+> γi
+> xj
+> yj
+> γj
+> ... ... ... ... ...
+> Scale #1 Scale #2 Scale #3 Scale #4 Scale #5
+> ... ... ... ... ... ... ... ...
+> Sampler (Flow-Matching Transolver with AdaLN-Zero) : Spatial coordinates : Conditioning attr./emb. : Input encoding : Scale one-hot vector Scale assignment
+> yi
+> Enc (si)
+> yi
+> ...
+> sj
+> uj=Enc (sj)mask
+> yj
+> Sampler condition: zj
+> Predicted values Gaussian noise Scale autoregressive loop
+> (via AdaLN-Zero)
+
+Masked nodes 
+
++
+
+> Scale-autoregressive (SAR) generation
+
+Figure 1: (a) SAR generates resolution scales autoregressively from coarser to finer. (b) A SAR model is consists of a condition encoder, an autoregressive module, and a flow-matching sampler. Despite these advances, autoregressive models typically underperform diffusion models due to inad-equate inductive biases. Notably, the arbitrary raster-scan order of token generation poorly reflects the spatial structure of images. Tian et al. (2024) addressed this by introducing coarse-to-fine au-toregressive modelling, using a multi-scale tokenizer that encodes images into hierarchical tokens at multiple resolutions, significantly enhancing image quality. Another limitation inherited from LLMs is the reliance on discrete embeddings. Li et al. (2024) showed that continuous embeddings can also be modeled autoregressively by using a small diffusion model to generate continuous val-ues conditioned on deterministic outputs from the autoregressive transformer backbone. Inspired by these developments, our SAR approach introduces a hierarchical autoregressive method tailored for physical modeling on unstructured meshes. Moreover, while previous models sample multiple token embeddings independently at each autoregressive step (Tian et al., 2024; Li et al., 2024), SAR em-ploys a transformer-based diffusion sampler that accounts for global spatial dependencies, leading to significantly improved sample quality. 
+
+## 3 METHOD 
+
+We introduce scale–autoregressive modeling (SAR) for efficiently sampling physical systems from their spatial discretization and governing parameters. SAR generates fields across a coarse-to-fine hierarchy (Figure 1a), focusing computation on coarser scales for faster and accurate sampling. 3.1 LEARNING DISTRIBUTIONS OF STATISTICALLY STATIONARY UNSTEADY FLOWS 
+
+We consider fluid domains of arbitrary geometry, each discretized using a mesh defined by a set of nodes VM and edges EM . Every node i ∈ V M is associated with a spatial position xi ∈ Rd. The system’s state at time t is described by F continuous fields (e.g., velocity components and pressure), sampled at the mesh nodes. Fluid systems typically exhibit transient behavior before reaching a statistically stationary regime. In this regime, individual realizations may still display chaotic or os-3cillatory dynamics, but statistical quantities—such as variances and spatial correlations— converge to stable values (Wilcox, 1998; Pope, 2000). Crucially, these stationary dynamics depend only on the domain geometry and governing physical parameters, and not on initial conditions. Our objective is to learn a generative model capable of directly sampling from the equilibrium dis-tribution, thus bypassing costly simulations of the transient phase. By generating multiple samples, we can approximate the stationary flow distribution and compute relevant statistical measures. 3.2 SCALE AUTOREGRESSIVE MODELING 
+
+3.2.1 NEXT SCALE PREDICTION 
+
+The system’s conditioning information is represented in a directed graph G := ( V, E), where V ≡ VM corresponds to the set of mesh nodes and E denotes a set of bi-directional edges derived from the mesh edges EM . Node attributes Vc := {vci | i ∈ V} encode problem-specific conditioning features, such as the Reynolds number ( Re ). Edge attributes Ec := {ecij | (i, j ) ∈ E} represent relative positions between nodes (i.e., xj − xi). While these are not used by the main SAR components, they are utilized by the VAE in the latent variant of our model, which we adopt. To model spatial hierarchy, SAR partitions the node set V into K disjoint subsets S1, S2, . . . , SK ,each corresponding to a resolution scale, with |S 1| < |S 2| < · · · < |S K |. Coarser scales yield compact representations of the domain, while finer scales include more nodes and capture greater physical detail. This hierarchy is constructed using a multigrid coarsening algorithm (Guillard, 1993), and assigning a unique scale to each node, as outlined in Algorithm 1. Given these scales, SAR formulates generative modeling as a next-scale prediction task. At autoregressive step k, it generates field values for all the nodes in Sk, conditioned on all coarser-scale predictions and the system’s geometric and physical characteristics. The joint likelihood is factorized as 
+
+p(S1: K ) = 
+
+> K
+
+Y
+
+> k=1
+
+p(Sk | X, Vc, Γ, S1: k−1), (1) where S1: k := {S1, S2, . . . , Sk}, Sk := {si ∈ RF | i ∈ S k} denotes the value of the physical fields at scale-k nodes, X = {xi ∈ Rd | i ∈ V} denotes the spatial coordinates of all nodes, and 
+
+Γ = {γi ∈ N | i ∈ V} indicates the nodes’ scale. The k-th autoregressive step in SAR samples Sk from a learned approximation of 
+
+p(Sk | X, Vc, Γ, S1: k−1). This is achieved through two sequential subprocesses: first, computing how the coarser scales condition the next one; and second, sampling the solution at the next scale conditioned on this information. The first subprocess integrates information from all coarser-scale predictions S1: k−1 to construct a latent representation, Zk := {zj | j ∈ S k}, for each node in the next finer scale. This representation is then passed to a diffusion-based sampler, which generates the physical fields at the next scale conditioned on it. This strategy enables the use of a different number of denoising steps per scale, depending on the level of uncertainty, without requiring scale-specific modules—since all model components are shared across scales. Specifically, to balance computa-tional cost and accuracy, SAR allocates more denoising steps to coarser scales, where uncertainty is typically higher, and fewer to finer scales, which benefit from stronger conditioning. 3.2.2 SPECIALIZED SAR C OMPONENTS 
+
+SAR is realized through three interdependent and specialized components: a condition encoder, an autoregressive module, and a sampler (Figure 1b). These components are described below. 
+
+Condition Encoder The condition encoder processes the entire node set V to embed its geometric and physical information into node-wise feature vectors. The input attributes for each node i ∈ V 
+
+include its spatial coordinates xi, conditioning attributes vci , and a one-hot vector for the scale index 
+
+γi. Its task is to aggregate these inputs into a latent representation yi for each node, each of which individually captures both local features and global context across the domain. Formally, we define: 
+
+Y = CONDITION ENCODER (X, Vc, Γ) , where Y := {yi | i ∈ V} . These global encoding vectors ensure that during the subsequent autoregressive generation—where finer-scale information is not yet available—each node still retains access to the full geometric and physical context. Although this encoder must operate over the full set of nodes V, it is evaluated only once per generated sample and can remain lightweight, as it is not responsible for probabilistic modeling. Moreover, 4when generating multiple samples for the same domain geometry and physical parameters—which is often the case when estimating statistics— Y can be cached, and the condition encoder needs to be evaluated only once. To efficiently process global interactions, we implement the condition encoder using the Transolver architecture proposed in Wu et al. (2024). 
+
+Autoregressive Module The autoregressive module is evaluated at the beginning of each autore-gressive step. At step k, it processes the nodes in the target scale Sk along with all nodes from the coarser scales S1, . . . , Sk−1. Its objective is to determine how the global condition encodings 
+
+Y1, Y2, . . . , Yk (where Yl := {yi | i ∈ S l}) and the autoregressively generated coarser-scale pre-dictions S1, S2, . . . , Sk−1 influence the solution at the next scale Sk. The output is a new latent representation, Zk = {zj | j ∈ S k}, for each node j ∈ S k. This is given by 
+
+Zk = AR (k, Y1: k, S1: k−1). (2) We implement this module using a Transolver backbone, augmented with AdaLN-Zero blocks (Pee-bles & Xie, 2023) to condition both the attention and MLP layers on the current autoregressive step 
+
+k. This is encoded as a learnable embedding, with a distinct vector assigned to each possible scale. The input feature for each node i in a coarser scale l < k is constructed by concatenating its con-dition encoding yi with a linear projection of its already predicted field values si. For nodes in the target scale Sk, the input consists of their condition encoding yi concatenated with a learnable mask 
+
+embedding vector, indicating that their field values are yet to be predicted. 
+
+Sampler The sampler is the probabilistic model responsible for generating the output field values at each scale, conditioned on the nodes’ spatial coordinates, scale γj , and the latent vectors yj and 
+
+zj . Formally, at autoregressive step k, the sampling process is defined as 
+
+Sk ∼ SAMPLER (Sk | Xk, Yk, Zk, Γk). (3) Within the SAR model, the sampler is evaluated at the end of each autoregressive step, directly following the autoregressive module. While the sampler can, in principle, adopt any probabilistic modeling framework, we employ a diffusion-based approach due to its demonstrated effectiveness. In particular, we adopt a flow-matching formulation, which reduces the number of required denois-ing steps during inference (Lipman et al., 2023). The architecture of the sampler is also based on a Transolver backbone, augmented with AdaLN-Zero blocks, which condition the network on a sinusoidal embedding of the denoising-time (Vaswani et al., 2017; Peebles & Xie, 2023). The number of denoising steps required by the sampler at each scale depends on the complexity of the conditional distribution in equation 3, influenced by factors such as multimodality and vari-ability. The condition encoder and the autoregressive module provide the sampler—via Yk and Zk,respectively—with both global context and coarser-scale predictions. As generation proceeds from coarser to finer scales, the conditioning becomes increasingly informative, as more of the hierarchy has already been predicted. This reduces output uncertainty at later steps. As a result, stochastic complexity is concentrated at earlier steps (i.e., coarser scales), which require more denoising steps, while finer scales can be processed with significantly fewer. Furthermore, since finer scales contain substantially more nodes, reducing the number of denoising steps at them significantly improves inference speed without sacrificing output quality. 
+
+Latent-Space SAR An additional strategy for reducing the required number of denoising steps at the final scale without compromising output quality is to apply SAR in the latent space of a sepa-rately trained VAE, rather than directly in physical space. This VAE is relatively compact, compris-ing only two message-passing layers in both the encoder and decoder, without node compression. To enhance robustness against latent-space noise, Gaussian noise (with a standard deviation of 10 −2) is introduced during VAE training. At inference time, after the SAR model has finished generating the finest scale, the predicted node features S1: k and the nodes’ relative positions Ec are passed through the VAE decoder. This step effectively removes residual noise and, to some extent, corrects minor misalignments between scales. 3.2.3 SAR T RAINING OBJECTIVE 
+
+The full SAR model—condition encoder, autoregressive module and sampler—is jointly trained by optimizing the flow-matching objective applied to the output of the sampler network. Let qk,r denote the probability path followed by the solution Sk,r through denoising-time r, where qk, 0 corresponds to a standard normal distribution, and qk, 1 approximates the distribution of the training data for 5Sk. The flow-matching objective aims to match this target probability path (Lipman et al., 2023). Specifically, for a given scale k, we optimize                        
+
+> Lk(X,Vc,Γ,S1: k−1) := Er, ∼qk,r (Sk,r )∥wk,r (Sk,r )−uk,r (Sk,r |Xk,Yk(X,Vc,Γ) ,Zk(Y1: k,S1: k−1),Γk)∥2,
+
+(4) where wk,r is the target flow vector field and uk,r is its neural network approximation. Note that Yk
+
+is modeled by the conditioning encoder, Zk by the autoregressive module, and uk,r by the sampler. The overall objective is to minimize the sum of losses over all scales, PKk Lk.During training, we randomly select a scale k and a sample from the dataset (providing inputs 
+
+X, Vc, Γ, and S1: k; and targets Sk), and compute the corresponding loss Lk. To improve stabil-ity, for each set of training inputs, we draw four independent values of r ∈ [0 , 1] from a uniform distribution and evaluate the loss at these four locations along the denoising trajectory. This adds negligible computational overhead because only the sampler must be re-evaluated for the differ-ent values of r, and these evaluations are performed in parallel. Besides, because autoregressive models are sensitive to error accumulation, we introduce Gaussian noise to the lower-resolution in-puts S1: k−1 during training. This enhances robustness against small prediction errors at inference time (Sanchez-Gonzalez et al., 2020). The VAE used to learn the latent representation is trained separately as described in Appendix A.2. 
+
+## 4 EXPERIMENTS 
+
+Benchmarks We evaluate SAR on the three benchmark domains introduced in Lino et al. (2025) for probabilistic modeling of unsteady fluid dynamics on meshes: (i) wall pressure on an elliptical body in 2D quasi-periodic laminar flow ( ELLIPSE ); (ii) full-field velocity and pressure around the same geometry ( ELLIPSE FLOW ); and (iii) surface pressure on a wing in 3D turbulent flow ( WING ).  
+
+> ELLIPSE FLOW
+
+represents a canonical fluid scenario, with varying Reynolds numbers and aspect ra-tios. The WING datasets comprise turbulent flow simulations over wings with varying geometric pa-rameters, including sweep, twist, taper ratio, and thickness. Modeling this flow regime is particularly challenging due to its chaotic, high-dimensional nature and multi-scale interactions. ELLIPSE FLOW 
+
+includes refined meshes near the object boundary to better resolve near-wall features, while ELLIPSE 
+
+and WING restrict supervision to the surface of the immersed object—showcasing the computational advantages of unstructured, surface-based representations. 
+
+Baselines We compare SAR against state-of-the-art diffusion graph networks (DGNs), flow-matching graph networks (FM-GNNs), and their latent space variants (LDGN and LFM-GNN, respectively) (Lino et al., 2025). These models use a multi-scale GNN backbone to enable effi-cient denoising on large domains. Among a series of other baselines evaluated in Lino et al. (2025), LDGN is the best-performing existing probabilistic baseline reported to date for these kind of tasks. We also compare SAR against a flow-matching Transolver (FMT) baseline that applies a Transolver network to the full set of nodes V for denoising. This setup can be considered equivalent to a single-scale, sampler-only SAR variant, and it is trained using the same strategy described in Section 3.2.3. For a fair comparison to SAR, the FMT models also reuse the same VAE employed by SAR models In our experiments, FMT emerges as a substantially stronger new baseline than LDGN, though it is significantly more computationally expensive. Following Lino et al. (2025), all models are trained on only 10 consecutive states per system for the  
+
+> ELLIPSE
+
+and ELLIPSE FLOW domains ( 26 –48% of the time points required to capture a full vortex-shedding cycle), and 250 consecutive states for the WING domain ( 10% of the time points needed to reach statistically stationary variance). This setup evaluates the ability to learn the full underlying distributions from short trajectories across different systems (i.e., different geometries and/or phys-ical parameters). At inference time, all models apply equispaced denoising steps. Diffusion models follow the fast sampling strategy proposed by Song & Ermon (2020), as also adopted in Lino et al. (2025), while flow-matching models (including the SAR sampler) use forward Euler integration. Unless otherwise specified, SAR models are implemented with three scales, and the reported results use the number of denoising steps yielding the best or converged accuracy. Further experimental details are provided in Appendix A.3. 
+
+Distributional Accuracy To evaluate how well the learned distributions replicate the ground-truth probability distribution derived from long simulations of fully developed flows, we measure their Wasserstein-2 ( W2) distance. The learned distributions are approximated by 200 samples in the 6Table 1: Wasserstein-2 distance ( W2) on the ELLIPSE FLOW datasets.                                           
+
+> Model ELLIPSE
+> FLOW -I NDIST -L OW RE-H IGH RE-T HIN -T HICK -A OA#steps DGN (Lino et al. 2025) 4.72 ± 2.10 4.04 ± 1.74 5.48 ± 2.01 3.20 ± 0.81 7.76 ± 2.39 5.96 ± 2.12 50 LDGN (Lino et al. 2025) 3.07 ± 0.93 2.53 ± 0.71 3.84 ± 1.24 2.81 ± 0.59 3.62 ± 0.91 3.71 ± 0.86 50 LFM-GNN (Lino et al. 2025) 3.32 ± 1.06 2.87 ± 0.71 4.03 ± 1.34 2.89 ± 0.55 4.64 ± 1.14 4.07 ± 0.97 25 FMT-8 1.67 ± 0.88 1.18 ± 0.40 2.71 ± 1.10 1.01 ± 0.27 2.29 ± 0.59 2.61 ± 0.83 20 SAR (Ours) 1.64 ± 0.70 1.51 ± 0.58 2.77 ± 1.11 1.37 ± 0.31 2.68 ± 0.81 2.23 ± 0.88 10+6+1
+
+ELLIPSE and ELLIPSE FLOW datasets and by 3,000 samples in the WING datasets. Table 1 reports 
+
+W2 distances for the ELLIPSE FLOW task under both in-distribution and out-of-distribution (OOD) variations in Reynolds number and geometric parameters. The first two subfigures in Figure 3 show the W2 distances for the WING task, respectively, in a dataset built from training simulations extended to the full distribution ( WING -T RAIN FULL DIST ) and in a dataset containing unseen geome-tries ( WING -I NDIST ). Across these two tasks, both the SAR and flow-matching Transolver models achieve substantially lower W2 distances than the GNN baselines, despite the latter using fewer pa-rameters (Table 3). We attribute this improvement primarily to the global receptive field of attention layers, which enables direct modeling of long-range spatial dependencies and full joint statistics of the flow field (Peebles & Xie, 2023). In contrast, multi-scale GNN architectures can only capture these dependencies after completing an entire sequence of message-passing operations across scales, making them less efficient at representing global interactions. For the smaller-scale ELLIPSE task, this advantage is less pronounced, as reflected in Table 4 for both in- and OOD settings. Beyond using attention, SAR boosts distributional accuracy by decomposing generation into easier subproblems across resolution scales. Low-resolution predictions capture coarse global structures, while higher resolutions refine smaller-scale features. This hierarchy spares the model from cap-turing all variability at once, which likely explains why the largest SAR model (5.3M parameters) outperforms its Transolver counterparts on the WING task (Figure 3). From a practical standpoint, improved distributional accuracy yields more reliable flow statistics. As shown in Figure 2b, SAR predicts turbulent kinetic energy (TKE)—involving the variance of velocity fluctuations—and Reynolds shear stress (RSS)—involving the covariance of these fluc-tuations—far better than the LDGN baseline on ELLIPSE FLOW -I NDIST . While the flow-matching Transolver achieves slightly higher RSS accuracy, SAR is over six times faster (Figure 2 and 10), making it a compelling choice for fast, high-fidelity estimation of statistical flow quantities. (b) R2 of statistic metrics (a) W 2 vs. inference time EllipseFlow-InDist EllipseFlow-HighRe EllipseFlow-AoA10 
+
+Figure 2: (a) Speed/distributional-accuracy trade-off on ELLIPSE FLOW -I NDIST , ELLIPSE FLOW -HIGH RE, and ELLIPSE FLOW -A OA10 . Curves for LDGN and LFM-GNN are obtained using 3, 5, 10, and 25 denoising steps. FMT curves use 3, 5, 10, 15, and 20 steps. The yellow SAR curve corre-sponds to using 2, 3, 5, and 10 denoising steps across all scales. The red SAR curve uses a different number of steps for each of the three scales: [2, 1, 1], [3, 2, 1], [5, 3, 1], and [10, 6, 1]. Inference times are measured on an NVIDIA RTX 3080. (b) Coefficient of determination ( R2) for Turbulent Kinetic Energy (TKE) and Reynolds Shear Stress (SST) on the ELLIPSE FLOW -I NDIST dataset. 
+
+Sample Accuracy The quality of individual samples is also critical for obtaining physical insight or for use in downstream tasks (e.g., as initial conditions for numerical solvers). We approximate sample accuracy by comparing each generated state to all states from a simulated trajectory, select-7Figure 3: Speed and distributional/sample-accuracy trade-off on the WING -T RAIN FULL DIST (train-ing simulations extended to represent the full flow statistics) and WING -I NDIST (design-space in-terpolation) datasets. Samples for DGN and LDGN are obtained using 5 denoising steps, and for LFM-GNN and FMT models using 3 steps. The yellow SAR values correspond to using 3 steps across all scales, while the red values correspond to 3, 2, and 1 steps in increasing resolution order. Inference times are measured on an NVIDIA RTX 3080. In this task, performance saturates quickly with the number of denoising steps. Because FMT models require very few steps, SAR’s computa-tional advantage is reduced; however, SAR still achieves superior accuracy. ing the one with the highest correlation, and reporting the corresponding coefficient of determination (R2). For the ELLIPSE and ELLIPSE FLOW tasks, the trajectories are smooth and quasi-periodic, mak-ing R2 a reliable indicator of sample accuracy. The WING dataset involves turbulent flows, which make difficult to align generated and ground-truth states. Nevertheless, we report the obtained R2
+
+values as a reference. Across all domains, SAR models consistently outperform GNN-based base-lines, as shown by the R2 values in Tables 5 ( ELLIPSE datasets) and 6 ( ELLIPSE FLOW datasets) and in the last to subfigures of Figure 3 ( WING datasets). Visual comparisons are provided in Figure 8b for in-distribution samples in the ELLIPSE task and Figure 9 for OOD cases in the ELLIPSE FLOW task. We attribute the improved sample quality to the same factors underlying SAR’s superior distributional accuracy: the global receptive field of attention layers and the scale decomposition. 
+
+Computational Efficiency We evaluate the accuracy–runtime trade-off on the ELLIPSE FLOW and  
+
+> WING
+
+tasks (Figures 2, 3, and 11). While SAR can be run with a fixed number of denoising steps per scale, exploiting its scale-wise decomposition—allocating fewer steps to coarse scales and more to finer ones—proves significantly more efficient. In ELLIPSE FLOW (Figure 2), this adaptive strategy is over twice as fast as using a fixed step count. Under these optimized settings, SAR achieves 
+
+3–7× faster inference than a flow-matching Transolver with 2.4M parameters and a number of denoising steps for which its accuracy is comparable or saturated. The challenging WING task, with its higher proportion of small-scale turbulent energy, causes the W2 distance to saturate quickly with the number of denoising steps across all methods, reducing SAR’s advantage. Even so, a 3.4M-parameter SAR is about 1.6× faster than a 3M Transolver of similar accuracy, and SAR scales more favorably with size: the 5.3M SAR model improves over the 3.4M variant, whereas Transolvers show little benefit beyond 3M parameters. Although on WING the W2 distance saturates beyond three denoising steps per scale, the accuracy of the predicted standard deviation continues to improve up to 20 denoising steps, likely because it is a simpler metric reflecting only node-wise distributions. For this quantity, a SAR model using 20 ,
+
+11 , and 2 denoising steps (from coarser to finer scales) is 3× faster than a flow-matching Transolver with 20 steps and similar accuracy (Figure 12b). Finally, diffusion and flow-matching models based on multi-scale GNNs are 2.5× faster on ELLIPSE -FLOW and 5× faster on WING due to their localized operations, but this speed comes at the cost of much poorer distributional and sample accuracy compared to SAR and Transolver models. 
+
+Design Choices and Ablations SAR does not require a compressed latent space for efficiency. This is effectively equivalent to using a single denoising step at the highest-resolution scale, which we typically adopt. However, training in the latent space of a lightweight VAE proves beneficial: its decoder removes residual noise and corrects cross-scale misalignments, reducing the total denoising steps needed. As shown in Figure 4a for the ELLIPSE task, a non-latent SAR variant attains lower accuracy for the same step count and requires more steps to converge. 8In image generation, some autoregressive models often predict multiple tokens per evaluation, but their probabilistic heads—e.g., linear layer followed by softmax (Tian et al., 2024) or diffusion-MLP (Li et al., 2024)—assign probabilities independently to each of them, which risks producing incompatible ouput features. We observed that replacing the Transolver-based sampler in SAR with a nodewise-MLP sampler causes severe degradation, as seen in the top-middle panel of Figure 4b for the ELLIPSE -I NDIST dataset. By contrast, SAR’s Transolver-based diffusion sampler explicitly models global spatial dependencies, yielding markedly higher sample quality. The condition encoder plays a crucial role by providing global geometric and physical information to each node, regardless of scale. Without it, low-resolution predictions lack sufficient context, severely limiting generalization. For example, in the ELLIPSE -A OA10 dataset (ellipses at 10 ◦ angle of attack), omitting the encoder results in a clear drop in accuracy compared to the full SAR model (Figure 5a, right column), with visual differences in predicted fields and variances shown in Figure 5b. Although SAR uses Transolver-based components in our experiments, these can be replaced with alternative backbones, and, as more accurate or efficient architectures emerge, SAR can readily leverage them. We also examine the effect of the number of scales. In ELLIPSE FLOW (Figure 5a, left), three scales give the best trade-off: multiple scales simplify the distribution, but more than three would demand larger models due to parameter sharing across scales. A similar trend appears for ELLIPSE (Fig-ure 8a). Finally, adding Gaussian noise with a standard deviation of 10 −2 to lower-resolution inputs during training improves robustness to errors propagated from coarser scales (Figure 5a, middle). (a) Latent vs. non-latent SAR (b) Ellipse probability density function 
+
+Figure 4: (a) Performance comparison between the latent SAR and non-latent SAR models across different numbers of denoising steps on the ELLIPSE -I NDIST dataset. (b) Probability density function comparison for a sample from the ELLIPSE -I NDIST dataset. 
+
+## 5 CONCLUSIONS 
+
+We introduced scale–autoregressive modeling (SAR) for fluid flows on general geometries, factoring the joint distribution across resolutions and conditioning each finer scale on coarser predictions. This coarse-to-fine design concentrates denoising where uncertainty is highest and enables global-attention samplers with markedly fewer steps at high resolution. SAR achieves consistently lower distributional error and stronger sample accuracy than multi-scale GNN baselines, while matching or surpassing Transolver models with a more favorable accuracy–runtime trade-off. However, SAR has limitations that suggest promising directions for future work. In particular, it currently uses a fixed number of scales; making the hierarchy scale adaptive would better align accuracy and runtime with application preferences. In addition, exploring energy-based transformers (Gladstone et al., 2025) for the sampler could yield per-scale uncertainty estimates, enabling a more principled allocation of steps across scales. Despite these current limitations, we believe SAR is a compelling tool for fast, high-fidelity estimation of statistical flow quantities in real-world engineering applications. 9(a) Effect of different ablations (b) Generalisation to non-zero AoA Figure 5: (a) Impact of ablation variants compared to our default configuration (striped bars), mea-sured using Wasserstein-2 distance (top) and coefficient of determination (bottom). Bars report mean performance across the full test distributions from datasets ELLIPSE FLOW -I NDIST , ELLIPSE FLOW -HIGH RE, and ELLIPSE FLOW -A OA10 . (b) Visual comparison of SAR with (default) and without the condition encoder, shown on a representative sample from dataset ELLIPSE FLOW -A OA10 .ACKNOWLEDGMENTS 
+
+M.L. and N.T. acknowledge the support of the European Research Council (ERC) Consolidator Grant SpaTe (No. CoG-2019-863850). The authors gratefully acknowledge the computational and data resources provided by the Leibniz Supercomputing Centre (www.lrz.de). 
+
+## REFERENCES 
+
+Giancarlo Alfonsi. Reynolds-averaged navier-stokes equations for turbulence modeling. Applied Mechanics Reviews , 62(4):040802, 2009. Benedikt Alkin, Andreas F¨ urst, Simon Schmid, Lukas Gruber, Markus Holzleitner, and Johannes Brandstetter. Universal physics transformers: A framework for efficiently scaling neural opera-tors. Advances in Neural Information Processing Systems , 37:25152–25194, 2024. Benedikt Alkin, Maurits Bleeker, Richard Kurle, Tobias Kronlachner, Reinhard Sonnleitner, Matthias Dorfer, and Johannes Brandstetter. Ab-upt: Scaling neural cfd surrogates for high-fidelity automotive aerodynamics simulations via anchored-branched universal physics transform-ers. arXiv preprint arXiv:2502.09692 , 2025. Jimmy Lei Ba, Jamie Ryan Kiros, and Geoffrey E Hinton. Layer normalization. arXiv preprint arXiv:1607.06450 , 2016. Giacomo Baldan, Qiang Liu, Alberto Guardone, and Nils Thuerey. Flow matching meets pdes: A unified framework for physics-constrained generation. arXiv preprint arXiv:2506.08604 , 2025. Peter W Battaglia, Razvan Pascanu, Matthew Lai, Danilo Rezende, and Koray Kavukcuoglu. Inter-action networks for learning about objects, relations and physics. Advances in Neural Information Processing Systems , 37, 2016. Peter W Battaglia, Jessica B Hamrick, Victor Bapst, Alvaro Sanchez-Gonzalez, Vinicius Zambaldi, Mateusz Malinowski, Andrea Tacchetti, David Raposo, Adam Santoro, Ryan Faulkner, et al. Relational inductive biases, deep learning, and graph networks. arXiv:1806.01261 , 2018. Robert Bridson. Fluid simulation for computer graphics . AK Peters/CRC Press, 2015. Shuhao Cao. Choose a transformer: Fourier or galerkin. Advances in neural information processing systems , 34:24924–24940, 2021. Yadi Cao, Menglei Chai, Minchen Li, and Chenfanfu Jiang. Efficient learning of mesh-based phys-ical simulation with bi-stride multi-scale graph neural network. In Proceedings of the 40th Inter-national Conference on Machine Learning , pp. 3541–3558. PMLR, 2023. 10 Lidia Caros, Oliver Buxton, Tsuyoshi Shigeta, Takayuki Nagata, Taku Nonomura, Keisuke Asai, and Peter Vincent. Direct numerical simulation of flow over a triangular airfoil under martian conditions. AIAA Journal , 60(7):3961–3972, 2022. doi: 10.2514/1.J061454. Huiwen Chang, Han Zhang, Lu Jiang, Ce Liu, and William T Freeman. Maskgit: Masked generative image transformer. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 11315–11325, 2022. Prafulla Dhariwal and Alexander Nichol. Diffusion models beat gans on image synthesis. Advances in neural information processing systems , 34:8780–8794, 2021a. Prafulla Dhariwal and Alexander Quinn Nichol. Diffusion models beat gans on image synthesis. In Advances in Neural Information Processing Systems 34 , pp. 8780–8794, 2021b. URL https: //proceedings.neurips.cc/paper/2021/hash/49ad23d1ec9fa4bd8d77d02681df5cfa-Abstract.html. Siamak N Doost, Dhanjoo Ghista, Boyang Su, Liang Zhong, and Yosry S Morsi. Heart blood flow simulation: A perspective review. Biomedical Engineering Online , 15(1):1–28, 2016. Claudia Drygala, Benjamin Winhart, Francesca di Mare, and Hanno Gottschalk. Generative model-ing of turbulence. Physics of Fluids , 34(3), 2022. Patrick Esser, Robin Rombach, and Bjorn Ommer. Taming transformers for high-resolution image synthesis. In Proceedings of the IEEE/CVF conference on computer vision and pattern recogni-tion , pp. 12873–12883, 2021. Meire Fortunato, Tobias Pfaff, Peter Wirnsberger, Alexander Pritzel, and Peter Battaglia. Multiscale MeshGraphNets. In ICML 2022 Workshop on AI for Science , 2022. Alexi Gladstone, Ganesh Nanduru, Md Mofijul Islam, Peixuan Han, Hyeonjeong Ha, Aman Chadha, Yilun Du, Heng Ji, Jundong Li, and Tariq Iqbal. Energy-Based Transformers are Scalable Learn-ers and Thinkers. arXiv preprint arXiv:2507.02092 , 2025. Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, and Yoshua Bengio. Generative adversarial networs. Advances in Neural Infor-mation Processing Systems , 27, 2014. Herv´ e Guillard. Node-nested multi-grid method with Delaunay coarsening. Technical report, IN-RIA, 1993. Zhongkai Hao, Zhengyi Wang, Hang Su, Chengyang Ying, Yinpeng Dong, Songming Liu, Ze Cheng, Jian Song, and Jun Zhu. GNOT: A general neural operator transformer for opera-tor learning. In International Conference on Machine Learning , pp. 12556–12569. PMLR, 2023. Kaiming He, Xinlei Chen, Saining Xie, Yanghao Li, Piotr Doll´ ar, and Ross Girshick. Masked au-toencoders are scalable vision learners. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 16000–16009, 2022. Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffusion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020. C Jan´ e-Ippel, N Bempedelis, R Palacios, and S Laizet. High-fidelity simulations of wake-to-wake interaction in an atmospheric boundary layer over a complex terrain. In Journal of Physics: Conference Series , volume 2505, pp. 012033. IOP Publishing, 2023. Angelos Katharopoulos, Apoorv Vyas, Nikolaos Pappas, and Franc ¸ois Fleuret. Transformers are RNNs: Fast autoregressive transformers with linear attention. In International conference on machine learning , pp. 5156–5165. PMLR, 2020. Byungsoo Kim, Vinicius C Azevedo, Nils Thuerey, Theodore Kim, Markus Gross, and Barbara Solenthaler. Deep fluids: A generative network for parameterized fluid simulations. In Computer Graphics Forum . Wiley Online Library, 2019. Junhyuk Kim and Changhoon Lee. Deep unsupervised learning of turbulence for inflow generation at various reynolds numbers. Journal of Computational Physics , 406:109216, 2020. 11 Diederik P. Kingma and Max Welling. Auto-Encoding Variational Bayes. In 2nd International Conference on Learning Representations, ICLR 2014, Banff, AB, Canada, April 14-16, 2014, Conference Track Proceedings , 2014. G¨ unter Klambauer, Thomas Unterthiner, Andreas Mayr, and Sepp Hochreiter. Self-normalizing neural networks. Advances in Neural Information Processing Systems , 30, 2017. Georg Kohl, Li-Wei Chen, and Nils Thuerey. Turbulent flow simulation using autoregressive condi-tional diffusion models. arXiv preprint arXiv:2309.01745 , 2024. Doyup Lee, Chiheon Kim, Saehoon Kim, Minsu Cho, and Wook-Shin Han. Autoregressive image generation using residual quantization. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 11523–11532, 2022. Tianhong Li, Huiwen Chang, Shlok Mishra, Han Zhang, Dina Katabi, and Dilip Krishnan. Mage: Masked generative encoder to unify representation learning and image synthesis. In Proceed-ings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition , pp. 2142–2152, 2023a. Tianhong Li, Yonglong Tian, He Li, Mingyang Deng, and Kaiming He. Autoregressive image generation without vector quantization. Advances in Neural Information Processing Systems , 37: 56424–56445, 2024. Tianyi Li, Alessandra S Lanotte, Michele Buzzicotti, Fabio Bonaccorso, and Luca Biferale. Multi-scale reconstruction of turbulent rotating flows with generative diffusion models. Atmosphere , 15 (1):60, 2023b. Zijie Li, Kazem Meidani, and Amir Barati Farimani. Transformer for partial differential equations’ operator learning. arXiv:2205.13671 , 2022. Marten Lienen, David L¨ udke, Jan Hansen-Palmus, and Stephan G¨ unnemann. From zero to tur-bulence: Generative modeling for 3d flow simulation. In Proceedings of the 12 th International Conference on Learning Representations , 2024. Mario Lino, Stathi Fotiadis, Anil A Bharath, and Chris D Cantwell. Multi-scale rotation-equivariant graph neural networks for unsteady eulerian fluid dynamics. Physics of Fluids , 34(8), 2022. Mario Lino, Tobias Pfaff, and Nils Thuerey. Learning Distributions of Complex Fluid Simulations with Diffusion Graph Networks. In 13th International Conference on Learning Representations (ICLR 2025) , 2025. Yaron Lipman, Ricky TQ Chen, Heli Ben-Hamu, Maximilian Nickel, and Matthew Le. Flow match-ing for generative modeling. In In Proceedings of the 11th International Conference on Learning Representations , 2023. Phillip Lippe, Bas Veeling, Paris Perdikaris, Richard Turner, and Johannes Brandstetter. Pde-refiner: Achieving accurate long rollouts with neural pde solvers. Advances in Neural Information Pro-cessing Systems , 36, 2024. Qiang Liu and Nils Thuerey. Uncertainty-aware surrogate models for airfoil flow simulations with denoising diffusion probabilistic models. AIAA Journal , pp. 1–22, 2024. Huakun Luo, Haixu Wu, Hang Zhou, Lanxiang Xing, Yichen Di, Jianmin Wang, and Mingsheng Long. Transolver++: An accurate neural solver for pdes on million-scale geometries. arXiv preprint arXiv:2502.02414 , 2025. Romit Maulik, Kai Fukami, Nesar Ramachandra, Koji Fukagata, and Kunihiko Taira. Probabilistic neural networks for fluid flow surrogate modeling and data recovery. Physical Review Fluids , 5 (10):104401, 2020. David Moxey, Chris D Cantwell, Yan Bao, Andrea Cassinelli, Giacomo Castiglioni, Sehun Chun, Emilia Juda, Ehsan Kazemi, Kilian Lackhove, Julian Marcon, et al. Nektar++: Enhancing the capability and application of high-fidelity spectral/hp element methods. Computer Physics Com-munications , 249:107110, 2020. 12 Alexander Quinn Nichol and Prafulla Dhariwal. Improved denoising diffusion probabilistic models. In International Conference on Machine Learning , pp. 8162–8171. PMLR, 2021. William Peebles and Saining Xie. Scalable diffusion models with transformers. In Proceedings of the IEEE/CVF international conference on computer vision , pp. 4195–4205, 2023. V´ eronique Peiffer, Spencer J Sherwin, and Peter D Weinberg. Computation in the rabbit aorta of a new metric–the transverse wall shear stress–to quantify the multidirectional character of disturbed blood flow. Journal of Biomechanics , 46(15):2651–2658, 2013. Tobias Pfaff, Meire Fortunato, Alvaro Sanchez-Gonzalez, and Peter W. Battaglia. Learning mesh-based simulation with graph networks. In 9th International Conference on Learning Representa-tions (ICLR 2021) , 2021. Stephen B Pope. Turbulent flows . Cambridge University Press, 2000. Alec Radford, Jeffrey Wu, Rewon Child, David Luan, Dario Amodei, Ilya Sutskever, et al. Language models are unsupervised multitask learners. OpenAI blog , 1(8):9, 2019. Ali Razavi, Aaron Van den Oord, and Oriol Vinyals. Generating diverse high-fidelity images with VQ-VAE-2. Advances in Neural Information Processing Systems , 32, 2019. Salva R¨ uhling Cachay, Bo Zhao, Hailey Joren, and Rose Yu. Dyffusion: A dynamics-informed diffusion model for spatiotemporal forecasting. Advances in Neural Information Processing Sys-tems , 36, 2024. Alvaro Sanchez-Gonzalez, Jonathan Godwin, Tobias Pfaff, Rex Ying, Jure Leskovec, and Peter W. Battaglia. Learning to simulate complex physics with graph networks. In Proceedings of the 37th International Conference on Machine Learning (ICML 2020) , volume 119, pp. 8459–8468, 2020. URL http://proceedings.mlr.press/v119/sanchez-gonzalez20a.html. Dule Shu, Zijie Li, and Amir Barati Farimani. A physics-informed diffusion model for high-fidelity flow field reconstruction. Journal of Computational Physics , 478:111972, 2023. Yang Song and Stefano Ermon. Improved techniques for training score-based generative models. 
+
+Advances in neural information processing systems , 33:12438–12448, 2020. Kimberly Stachenfeld, Drummond B Fielding, Dmitrii Kochkov, Miles Cranmer, Tobias Pfaff, Jonathan Godwin, Can Cui, Shirley Ho, Peter Battaglia, and Alvaro Sanchez-Gonzalez. Learned coarse models for efficient turbulence simulation. arXiv:2112.15275 , 2021. Keyu Tian, Yi Jiang, Zehuan Yuan, Bingyue Peng, and Liwei Wang. Visual autoregressive modeling: Scalable image generation via next-scale prediction. Advances in neural information processing systems , 37:84839–84865, 2024. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural informa-tion processing systems , 30, 2017. Shizheng Wen, Arsh Kumbhat, Levi Lingsch, Sepehr Mousavi, Yizhou Zhao, Praveen Chan-drashekar, and Siddhartha Mishra. Geometry aware operator transformer as an efficient and accurate neural surrogate for pdes on arbitrary domains. arXiv preprint arXiv:2505.18781 , 2025. DC Wilcox. Turbulence Modeling for CFD. DCW industries, La Canada , 1998. Haixu Wu, Huakun Luo, Haowen Wang, Jianmin Wang, and Mingsheng Long. Transolver: A Fast Transformer Solver for PDEs on General Geometries. In International Conference on Machine Learning , 2024. Chao-Rong Zheng and Yao-Chun Zhang. Computational Fluid Dynamics study on the performance and mechanism of suction control over a high-rise building. The Structural Design of Tall and Special Buildings , 21(7):475–491, 2012. 13 A ADDITIONAL MODEL DETAILS 
+
+The implementation of our models and baselines, including their weights, and demonstration scripts are available at on-acceptance. A.1 SCALE ASSIGNMENT 
+
+SAR requires assigning a unique resolution scale k (with 1 ≤ k ≤ K) to each node i ∈ V . To achieve this, we follow the procedure outlined in Algorithm 1, which ensures that nodes assigned to each scale are spatially distributed across the domain in a way that reflects the original mesh reso-lution—i.e., coarse regions remain coarse, and fine regions remain fine. This procedure iteratively applies Guillard coarsening (Guillard, 1993) to the original mesh-graph G. At each coarsening step, a subset of nodes is retained to form a sparser graph Vk+1 , while the removed nodes are assigned the current finest available scale. To enable further coarsening, new edges must be defined for each 
+
+Vk+1 . We reconstruct these edges by preserving the connectivity structure of the previous graph Gk.The resulting multi-scale node partition maintains the structural resolution hierarchy of the input mesh. Examples of the resulting node sets at different scales are shown in Figures 1a and 6. 
+
+Algorithm 1 Guillard’s coarsening algorithm (Guillard, 1993) and iterative scale assignment                                                                         
+
+> 1: Γ←ones (|V| )▷Initialize scale assignment to 1 2: for k←1to K−1do
+> 3: 4: mask ←ones (|V k|)▷Initialize the Guillard’s coarsening mask 5: for node i∈ V kdo ▷Iterate node-by-node 6: if mask [i] = 1 then ▷If first visit to node ithen this node is not dropped 7: for node j∈ N −
+> ido
+> 8: mask [j]←0▷The incoming neighbours are dropped 9: end for
+> 10: end if
+> 11: end for
+> 12: Vk+1 ← V k[mask ]▷Drop the nodes based on the Guillard’s coarsening mask 13: 14: for node i∈ V do ▷Update the scale assigned to the non-dropped nodes 15: if i∈ V k+1 then
+> 16: γj←k+ 1
+> 17: end if
+> 18: end for
+> 19: 20: ... Create connectivity preserving edges edges (details omitted) ... 21: 22: end for
+
+# S1 S2 S3
+
+Figure 6: Horizontal component of the velocity field at each of the three resolution scales ( K = 3 )for a sample from the ELLIPSE FLOW -I NDIST dataset. A.2 ARCHITECTURE DETAILS 
+
+The condition encoder, autoregressive module, and sampler components of our SAR model are all based on the Transolver architecture proposed in Wu et al. (2024), enhanced with adaptive temper-ature as introduced by Luo et al. (2025). This design provides a global receptive field efficiently by computing attention over a reduced set of slice tokens, each summarizing information from all 14 mesh nodes to some degree. We adopt Transolver due to its demonstrated effectiveness in modeling physical systems over general geometries (Wu et al., 2024; Luo et al., 2025). A Transolver begins by projecting each input node feature vector vi to the hidden dimensionality 
+
+Fmodel using a linear layer. Then, a series of Transolver blocks are applied, followed by a final projection to the desired output dimensionality. Each Transolver block contains a physics-attention 
+
+layer and a node-wise MLP (Wu et al., 2024). In the physics-attention layer, self-attention is applied independently across a set of learned latent representations, referred to as slices, for each attention head. This set of slices is denoted by P.The number of slices |P| is relatively small compared to the total number of nodes |V| and remains fixed regardless of the graph size. As slice features are computed using a node-wise linear layer, the overall attention computation becomes effectively linear in the number of nodes. In this layer, first, the node features are split into H attention heads via a linear transformation: 
+
+[v1 
+
+> i
+
+, v2 
+
+> i
+
+, . . . , vhi , . . . , vHi ] ← LINEAR (vi). (5) Then, for each head h and node i, slice weights whi ∈ R|P| are computed as 
+
+whi ← SOFTMAX 
+
+ LINEAR h(vhi )
+
+τ hi
+
+
+
+, ∀i ∈ V . (6) Here, τ hi := exp( LINEAR (vhi )) ∈ R+ is the adaptive temperature controlling the sharpness of the slice assignments (Luo et al., 2025). The weight whi [j] denotes the degree to which node i ∈ V 
+
+contributes to slice j ∈ P in head h.Slice feature vectors are computed by weighted aggregation: 
+
+phj ←
+
+P|V|  
+
+> i
+
+whi [j] vhi
+
+P|V | 
+
+> i
+
+whi [j] , ∀j ∈ P (7) These slice features are then updated via standard unmasked self-attention (Vaswani et al., 2017). Afterward, the updated slice features are mapped back to the node space: 
+
+vhi ←
+
+> |P|
+
+X
+
+> j
+
+whi [j] phj , ∀i ∈ V , (8) All heads are finally merged through a linear layer: 
+
+vi ← LINEAR 
+
+ [v1 
+
+> i
+
+, v2 
+
+> i
+
+, . . . , vhi , . . . , vHi ] . (9) In the SAR condition encoder, we use Transolver blocks in their original form (Wu et al., 2024): 
+
+V ← V + PHYSICS -A TTN (LAYER NORM (V )) , (10) 
+
+V ← V + MLP (LAYER NORM (V )) . (11) In the SAR autoregressive module and sampler, we further condition each Transolver block on the autoregressive step k and the denoising step r, respectively. This is implemented using AdaLN-Zero—the adaptive layer normalization technique introduced by Peebles & Xie (2023) for diffusion transformer models—by modifying each block as follows: 
+
+[α, β, γ] ← [αA 
+
+> 0
+
+, βA 
+
+> 0
+
+, γA 
+
+> 0
+
+] + MLP (EMB ) (12) 
+
+V ← V − LAYER MEAN (V )
+
+LAYER STD DEV (V ) γ + β, (13) 
+
+V ← V + α PHYSICS -A TTN (( V )) , (14) 
+
+[α, β, γ] ← [αMLP  
+
+> 0
+
+, βMLP  
+
+> 0
+
+, γMLP  
+
+> 0
+
+] + MLP (EMB ) (15) 
+
+V ← V − LAYER MEAN (V )
+
+LAYER STD DEV (V ) γ + β, (16) 
+
+V ← V + α MLP (( V )) , (17) (18) where E MB denotes the embedding of the scale or denoising time, and α□ 
+
+> 0
+
+, β□ 
+
+> 0
+
+, γ□ 
+
+> 0
+
+are learnable parameters—distinct for each block. The hidden size of each attention head in SAR is Fmodel /H ,and every MLP has a single hidden layer with Fmodel neurons. 15 Condition Encoder The input feature vector for each node i ∈ G is constructed by concatenating its spatial coordinates xi, its conditioning features vc,i , and a one-hot vector γi encoding its assigned scale: 
+
+vi ← [xi, vc,i , γi], ∀i ∈ V .
+
+These feature vectors are processed by the Transolver module (without AdaLN-Zero), producing latent representations yi ∈ RFmodel for each node. 
+
+Autoregressive Module At autoregressive step k, we process all nodes belonging to the coarsest 
+
+k scales. For nodes in scales 1 through k − 1, the input feature vector is constructed by concatenat-ing a Fmodel -dimensional projection of the known (during training) or previously predicted (during inference) solution si ∈ RF and the latent vector yi:
+
+vi ← [LINEAR (si), yi], ∀i ∈ S 1: k−1.
+
+For nodes in the current scale Sk, the input is a concatenation of a learnable mask embedding  
+
+> MASK EMB
+
+∈ RF model (shared across iterations) and the latent vector yi:
+
+vj ← [MASK EMB , yj ], ∀j ∈ S k.
+
+These inputs are processed by the Transolver variant with AdaLN-Zero. The AdaLN-Zero layers take as input a Fmodel -dimensional iteration embedding . Outputs corresponding to S1: k−1 nodes are ignored. The output features for nodes in Sk are denoted as zj .
+
+Sampler The sampler is a flow-matching model (Lipman et al., 2023) applied, at autoregressive step k, to nodes j ∈ S k. It is conditioned on each node’s spatial location xj , scale one-hot vector 
+
+γj , and latent representations yj and zj . The input feature vectors to the Transolver are defined as 
+
+vj ← [MLP ([ sj,r , zj , MLP ([ xj , γj ]) + MLP (yj )]) , r] , ∀j ∈ S k, (19) where sj,r is the intermediate solution at denoising time r, and r ∈ RF model is the embedding of r.Given a scalar denoising time r ∈ [0 , 1] , its embedding vector is computed as 
+
+r = sin( ω0 r), sin( ω1 r), . . . , sin( ωFmodel /2−1 r), cos( ω0 r), cos( ω1 r), . . . , cos( ωFmodel /2−1 r) ,
+
+with 
+
+ωn = exp 
+
+
+
+− log(10000) 
+
+Fmodel /2 − 1 · n
+
+
+
+, n = 0 , 1, . . . , F model /2 − 1.
+
+The embedding vector r is also provided as input to the AdaLN-Zero layers. 
+
+Variational Autoencoder (VAE) SAR operates in the latent space of a separately trained VAE, rather than directly in the physical space. This VAE is applied to the physical target fields defined on all nodes V, and mesh-graph edges E, where edge attributes Ec encode the relative positions between nodes. The architecture is compact, consisting of only two message-passing layers in both the encoder and the decoder. These message-passing layers follow the framework described by Battaglia et al. (2016) and Battaglia et al. (2018). The edge- and node-update functions are modeled as single-hidden-layer MLPs with Fmodel neurons and SELU activation functions using standard parameters (Klambauer et al., 2017). All MLPs are preceded by layer normalization (Ba et al., 2016). The steps are as follows: 
+
+eij ← Weeij + MLP e (LN ([ eij |vi|vj ])) , ∀(i, j ) ∈ E , (20) 
+
+¯ej ← X 
+
+> i∈N −
+> j
+
+eij , ∀j ∈ V , (21) 
+
+vj ← Wv vj + MLP v (LN ([¯ ej |vj ])) , ∀j ∈ V . (22) The VAE is trained to reconstruct the input node features with a low-weighted KL term between the latent distribution of each node, and a standard normal distribution: 
+
+LVAE = 1
+
+|V| 
+
+X
+
+> i∈V
+
+|| zi − z′
+
+> i
+
+|| 2 + 10 −6 × − 12|V| 
+
+X
+
+> i∈V
+
+ 1 + log  σ2
+
+> i
+
+ − μ2 
+
+> i
+
+− σ2
+
+> i
+
+!
+
+. (23) 16 To enhance robustness against latent-space noise, Gaussian noise (with standard deviation 0.01) is introduced during VAE training. The initial learning rate is set to 10 −4 and reduced by a factor of 10 when the training loss plateaus for a number of consecutive epochs: 50 for the ELLIPSE and 
+
+ELLIPSE FLOW tasks, and 250 for the WING task (which uses shorter epochs). Training continues until the learning rate drops below 10 −6.The SAR backbone (condition encoder, autoregressive module, and sampler) is trained using the flow-matching loss described in Equation 4, and as detailed in Section 3.2.3. The initial learning rate is set to 10 −3 and similarly reduced by a factor of 10 when the training loss plateaus for a number of consecutive epochs: 20 for the ELLIPSE and ELLIPSE FLOW tasks, and 100 for the WING 
+
+task. This training strategy is also applied to the flow-matching Transolver baselines, which can be con-sidered equivalent to a single-scale, sampler-only SAR model. A.3 EXPERIMENTAL DETAILS 
+
+The diffusion graph network (DGN), latent DGN (LDGN), flow-matching GNN (FM-GNN), and latent FM-GNN (LFM-GNN) models used for each experimental domain are directly adopted from Lino et al. (2025). Our SAR and the flow-matching Transolver (FMT) baselines use only node-level conditioning features and do not incorporate edge conditioning, although this could be processed by the VAE as in Lino et al. (2025). We did not observe any reduction in accuracy due to this absence. The node conditioning features for each benchmark are summarized in Table 2. Scale #1 Scale #2 Scale #3  
+
+> Diffusion GNN SAR
+
+R denoising steps 
+
+... ... 
+
+> Graph unpooling
+
+R3 denoising steps 
+
+R2
+
+R1... 
+
+> AR module
+
+Figure 7: Diffusion GNN (Lino et al., 2025) and our SAR model both partition the node set V into resolution scales but differ in their processing approach. Diffusion GNNs apply the same number of denoising steps across all scales using local message passing and local unpooling. In contrast, SAR allows fewer denoising steps at finer scales, making it feasible to use otherwise expensive attention. Upsampling is performed once per scale via the transformer based autoregressive module .Table 3 presents the total number of learnable parameters (combining VAE and backbone model) along with the hyperparameters for each model. Here, Fmodel denotes the hidden size of node fea-ture vectors (and edge feature vectors if available) in the backbone model, Femb is the size of the denoising-step or denoising-time embedding, FVAE represents the hidden size of the node and edge features in the VAE, FL is the dimensionality of the VAE latent space, Lcond indicates the number of Transolver blocks in the condition encoder, LAR in the autoregressive module, and Lsampler in the sampler. Note that the VAE used in GNN-based models is a multi-scale GNN (Lino et al., 2022), while the VAE employed in the Transolver and SAR models is a flat GNN comprising two message-passing layers for the ELLIPSE and ELLIPSE FLOW tasks, and four layers for the WING task. 
+
+## B SUPPLEMENTARY RESULTS 
+
+Table 4 presents our measures of distributional accuracy, the graph-level Wasserstein-2 distance, on the ELLIPSE test datasets. Tables 5 and 6 report our measures of sample accuracy, the coefficient of determination, on the ELLIPSE and ELLIPSE FLOW test datasets, respectively. Figures 8b and 9 provide additional examples of results generated by SAR and baseline models for the ELLIPSE and 
+
+ELLIPSE FLOW tasks. 17 Table 2: Conditioning node features and predicted outputs for each benchmark system. 
+
+System Node Condition Features (vc,i ) Outputs (si)ELLIPSE Reynolds number ( Re ); distances to top and bottom walls Surface pressure ( pi)ELLIPSE FLOW Reynolds number ( Re ); one-hot encoding of node type (inlet, ellipse boundary, interior) Velocity components (ui, vi); pressure ( pi)WING Outward unit normal vector of the wing surface Surface pressure ( pi)
+
+Table 3: Model size and hyperparameters. 
+
+Task Mode #Params Fmodel Femb FVAE FL Lcond LAR Lsampler #Scales 
+
+ELLIPSE 
+
+DGN 3.51 M 128 512 – – – – – 4LDGN 3.52 M 128 512 126 1 – – – 2 + 2 FM-GNN 3.51 M 128 512 – – – – – 4LFM-GNN 3.52 M 128 512 126 1 – – – 2 + 2 FMT-4 1.55 M 128 128 128 1 – – 4 1SAR 1.83 M 128 128 128 1 2 2 2 3ELLIPSE FLOW 
+
+DGN 4.50 M 128 512 – – – – – 5LDGN 4.51 M 128 512 126 1 – – – 2 + 3 LFM-GNN 4.51 M 128 512 126 1 – – – 2 + 3 FMT-4 1.55 M 128 128 128 3 – – 4 1FMT-8 2.36 M 128 128 128 3 – – 8 1SAR 2.78 M 128 128 128 3 4 4 4 3WING 
+
+DGN 5.48 M 128 512 – – – – – 6LDGN 5.49 M 128 512 126 1 – – – 2 + 4 LFM-GNN 5.49 M 128 512 126 1 – – – 2 + 4 FMT-8 2.95 M 128 128 128 1 – – 8 1FMT-12 3.75 M 128 128 128 1 – – 12 1SAR-3x4 3.38 M 128 128 128 1 4 4 4 3SAR-3x8 5.25 M 128 128 128 1 8 8 8 3
+
+From a practical standpoint, improved distributional accuracy yields more reliable flow statistics. As shown in Figure 10, SAR predicts turbulent kinetic energy (TKE)—involving the variance of velocity fluctuations—and Reynolds shear stress (RSS)—involving the covariance of these fluctu-ations—far more accurately than the LDGN baseline on a simulation from ELLIPSE FLOW -I NDIST .While the flow-matching Transolver achieves comparable accuracy, SAR is over six times faster. Table 4: Wasserstein-2 distance ( W2) on the ELLIPSE datasets.                                                  
+
+> Model ELLIPSE -I NDIST -L OW RE-H IGH RE-T HIN -T HICK -A OA#steps DGN (Lino et al. 2025) 0.29 ± 0.15 0.21 ± 0.09 0.42 ± 0.18 0.16 ± 0.02 0.56 ± 0.14 0.58 ± 0.10 50 LDGN (Lino et al. 2025) 0.23 ± 0.12 0.17 ± 0.08 0.42 ± 0.18 0.10 ± 0.02 0.57 ± 0.15 0.59 ± 0.11 50 FM-GNN (Lino et al. 2025) 0.31 ± 0.18 0.24 ± 0.18 0.46 ± 0.22 0.14 ± 0.03 0.68 ± 0.17 0.64 ± 0.09 10 LFM-GNN (Lino et al. 2025) 0.26 ± 0.14 0.19 ± 0.09 0.44 ± 0.18 0.12 ± 0.02 0.63 ± 0.17 0.61 ± 0.11 10 FMT-4 0.29 ± 0.23 0.19 ± 0.15 0.44 ± 0.23 0.11 ± 0.03 0.67 ± 0.21 0.79 ± 0.14 20 SAR (Ours) 0.22 ± 0.12 0.15 ± 0.07 0.39 ± 0.17 0.11 ± 0.02 0.57 ± 0.18 0.57 ± 0.10 20 + 11 + 2
+
+18 Table 5: Coefficient of determination ( R2) on the ELLIPSE datasets.                                                  
+
+> Model ELLIPSE -I NDIST -L OW RE-H IGH RE-T HIN -T HICK -A OA#steps DGN (Lino et al. 2025) 0.994 ± 0.006 0.997 ± 0.001 0.988 ± 0.015 0.994 ± 0.002 0.992 ± 0.007 0.968 ± 0.026 50 LDGN (Lino et al. 2025) 0.995 ± 0.007 0.998 ± 0.002 0.986 ± 0.019 0.997 ± 0.001 0.991 ± 0.009 0.966 ± 0.028 50 FM-GNN (Lino et al. 2025) 0.995 ± 0.007 0.997 ± 0.002 0.987 ± 0.015 0.996 ± 0.003 0.991 ± 0.009 0.966 ± 0.029 10 LFM-GNN (Lino et al. 2025) 0.995 ± 0.008 0.998 ± 0.002 0.985 ± 0.020 0.997 ± 0.002 0.990 ± 0.011 0.965 ± 0.028 10 FMT-4 0.998 ± 0.004 0.999 ± 0.001 0.991 ± 0.013 0.998 ± 0.002 0.995 ± 0.005 0.940 ± 0.049 20 SAR (Ours) 0.997 ± 0.004 0.999 ± 0.002 0.991 ± 0.013 0.998 ± 0.002 0.992 ± 0.008 0.966 ± 0.027 20+11+2
+
+Table 6: Coefficient of determination ( R2) on the ELLIPSE FLOW datasets.                                           
+
+> Model ELLIPSE
+> FLOW -I NDIST -L OW RE-H IGH RE-T HIN -T HICK -A OA#steps DGN (Lino et al. 2025) 0.990 ± 0.010 0.993 ± 0.007 0.982 ± 0.016 0.989 ± 0.009 0.991 ± 0.005 0.987 ± 0.014 50 LDGN (Lino et al. 2025) 0.987 ± 0.013 0.992 ± 0.009 0.979 ± 0.017 0.986 ± 0.011 0.988 ± 0.007 0.981 ± 0.016 50 LFM-GN (Lino et al. 2025) 0.987 ± 0.012 0.992 ± 0.008 0.979 ± 0.015 0.985 ± 0.010 0.987 ± 0.006 0.983 ± 0.014 25 FMT-8 (Lino et al. 2025) 0.998 ± 0.003 0.999 ± 0.000 0.991 ± 0.010 0.999 ± 0.001 0.996 ± 0.003 0.991 ± 0.011 20 SAR (Ours) 0.998 ± 0.003 0.999 ± 0.001 0.992 ± 0.008 0.998 ± 0.002 0.996 ± 0.003 0.994 ± 0.009 10+6+1
+
+We also evaluated the sample accuracy–runtime trade-off on the ELLIPSE FLOW task (Figure 11). As with distributional accuracy (Figure 2), SAR achieves 3–7× faster inference than a flow-matching Transolver with 2.4M parameters and a number of denoising steps for which its accuracy is compa-rable or already saturated. Finally, although in the WING task the W2 distance saturates beyond three denoising steps per scale (Figure 3), the accuracy of the predicted standard deviation continues to improve up to 20 denoising steps, likely because it is a simpler metric reflecting only node-wise distributions. For this quantity, a SAR model using 20 , 11 , and 2 denoising steps (from coarser to finer scales) is 3× faster than a flow-matching Transolver with 20 steps and similar accuracy, as illustrated in Figure 12b. 
+
+## C LLM U SAGE 
+
+Parts of the final manuscript text were proofread and refined with assistance from OpenAI’s Chat-GPT. The model was used exclusively for language polishing at the paragraph level and was not employed for research ideation, experimental design, or retrieval and discovery tasks. The authors are solely responsible for all scientific content, claims, and conclusions presented in this paper. (a) Effect of #scales (b) Pressure profile samples SAR  LDGN 
+
+Figure 8: (a) Impact of the number of scales, measured using the Wasserstein-2 distance. Bars indicate mean performance across the full test distributions from the ELLIPSE -I NDIST dataset. (b) Visual comparison of pressure profile samples predicted by SAR and LDGN (Lino et al., 2025) for an ellipse from ELLIPSE -I NDIST with a relative thickness of 0.56 and Re = 736 .19 (a) OOD test case with Re = 1083 (b) OOD test case with AoA = 10 deg FMT-8 LDGN SAR FMT-8 LDGN SAR Figure 9: Samples from LDGN (Lino et al., 2025), FMT-8, and SAR for (a) a simulation from the 
+
+ELLIPSE FLOW -H IGH RE dataset, and (b) a simulation from the ELLIPSE FLOW -A OA10 dataset. SAR produces the most accurate samples across both settings. Reynols shear stress  TKE    
+
+> Inference time: 1.7s 25s 4.2s
+
+Figure 10: Turbulent kinetic energy (top row), Reynolds shear stress (middle row), and inference time (bottom row) for the distributions predicted by LDGN, FMT-8, and SAR for a test case from the ELLIPSE FLOW -I NDIST dataset. EllipseFlow-InDist EllipseFlow-HighRe EllipseFlow-AoA10 
+
+Figure 11: Speed/sample-accuracy trade-off on the ELLIPSE FLOW -I NDIST , ELLIPSE FLOW -H IGH RE,and ELLIPSE FLOW -A OA10 datasets. Curves for LDGN and LFM-GNN are obtained using 3, 5, 10, and 25 denoising steps. FMT curves use 3, 5, 10, 15, and 20 steps. The yellow SAR curve corresponds to using 2, 3, 5, and 10 denoising steps across all scales. The red SAR curve uses a different number of steps for each of the three scales: [2, 1, 1], [3, 2, 1], [5, 3, 1], and [10, 6, 1]. Inference times are measured on an NVIDIA RTX 3080. 20 (b) Std. dev. vs Compute time (a) Standard deviation on a test geometry   
+
+> Ground truth Training dist. FMT-12 SAR
+
+Figure 12: (a) Standard deviation of pressure on a wing geometry unseen during training ( WING -INDIST dataset) from four sources: the ground-truth temporal distribution, the truncated training dis-tribution, a flow-matching Transolver (FMT) model, and SAR. (b) For the same geometry, standard-deviation accuracy versus compute trade-off for the FMT and SAR models. FMT curves correspond to 3, 5, 10, 15, and 20 denoising steps. SAR curves use adaptive step configurations: [3, 2, 1], [5, 3, 1], [10, 3, 1], [15, 8, 2], and [20, 11, 2]. Inference times were measured on an NVIDIA RTX 3080. 21

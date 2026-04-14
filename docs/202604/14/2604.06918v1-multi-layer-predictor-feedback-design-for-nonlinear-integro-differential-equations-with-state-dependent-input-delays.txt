@@ -1,0 +1,2431 @@
+Title: Multi-layer Predictor Feedback Design for Nonlinear Integro-Differential Equations with State-dependent Input Delays
+
+URL Source: https://arxiv.org/pdf/2604.06918v1
+
+Published Time: Thu, 09 Apr 2026 00:50:13 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# Multi-layer Predictor Feedback Design for Nonlinear Integro-Differential Equations with State-dependent Input Delays 
+
+# Tong Li a, Peipei Shang a, Mamadou Diagne* b
+
+> a
+
+School of Mathematical Sciences, Tongji University, Shanghai 200092, China 
+
+> b
+
+Department of Mechanical and Aerospace Engineering, University of California San Diego, La Jolla, CA, USA, 92093 
+
+Abstract 
+
+We develop a novel multi-layer predictor-feedback to achieve exact compensation of state-dependent input delay of general nonlinear integro-differential equations. The system of interest is an unconventional mixed Partial Differential Equation (PDE)-Ordinary Differential Equation (ODE) system, in which a nonlinear ODE is actuated through an inhomogeneous advection PDE. Moreover, the propagation speed of the PDE depends on a moving window integral of the ODE state. The two above features are not addressed yet in standard PDE backstepping-based predictor-feedback designs. We first address a source term corresponding to a linear recirculation loop. The framework is subsequently generalized to the nonlinear case with the addition of a friction term. In addition in the latter case, we use inflow boundary control with outflow anti-collocated boundary measurements. In both cases, we show that the inhomogeneous and doubly nonlinear mixed PDE-ODE system results in a correspondingly “inhomogeneous” control law. The stabilizing controller comprises a nominal delay-free control law based on the predictor-feedback state, enhanced by a multi-layer prediction mechanism that compensates for the PDE’s nonlinear additive source terms. Our modular designs are based on two novel nonlinear backstepping transformations: the first enables boundary control of the PDE state, while the second addresses flux control, a nonlinear boundary condition defined as the product of the ODE and PDE states at the controlled boundary. Unlike the conventional Lyapunov-based approaches used in the field, our stability and well-posedness analysis rely on the characteristic method and a fixed-point argument. Both of our designs achieve global asymptotic stability (GAS) in the supremum norm of the PDE and ODE states under the mild assumption that the nonlinearity in the PDE governing equation is uniformly Lipschitz continuous. The transport speed, governed by the integral of the ODE state, models systems such as production or queuing processes in which the state of a finite buffer–namely, the inventory level–determines the production or service rate. Numerical simulations demonstrate the effectiveness of the proposed control design for buffer-regulated production lines and queuing systems, ensuring asymptotic stability under a locally safe softened “bang–bang” feedback law that preserves the positivity of both the system state and the actuation signal. 
+
+Key words: Nonlinear predictor feedback; state-dependent delay; hyperbolic PDE-ODE systems; PDE backstepping. 
+
+1 Introduction 
+
+1.1 State of the art of predictor feedback design 
+
+The Smith Predictor, introduced in the late 1950s for sta-ble Linear Time-Invariant (LTI) systems, represents a foun-dational development in compensator design for systems with dead time. In [47, 48], the concept of prediction is in-troduced through the use of a delay-free model: the state of the system in the absence of delay is used to estimate its future values and thereby effectively compensate for con-stant time-delays. An extension of this approach to unstable plants via Finite Spectrum Assignment (FSA) was proposed in [41]. Later, Artstein [3] generalized Smith’s predictor by 
+
+⋆ Corresponding author: Mamadou Diagne. 
+
+Email addresses: 2011289@tongji.com (Tong Li), 
+
+shang@tongji.edu.cn (Peipei Shang), mdiagne@ucsd.edu 
+
+(Mamadou Diagne*). 
+
+introducing a predictor-based transformation that reformu-lates linear or nonlinear systems with constant input delays into equivalent delay-free systems. This transformation fa-cilitates the use of standard state-feedback design methods, even when the open-loop time-delay system is unstable. Since around 2000, building on the foundational work of Smith and Artstein, PDE backstepping predictor-based con-trol [31, 33, 34], which comes with a stability proof funda-mentally rooted in Lyapunov’s arguments, has seen quite interesting progress. The method has driven advances in predictor feedback design for finite-dimensional systems with input delays–ranging from time-varying [5, 36], state-dependent [6, 17, 57], and input-history-dependent delays [14], to stochastic [30], uncertain [4], and distributed [4]. Safety-critical predictor feedback design has been reported in [1, 2], while prescribed-time stabilization is addressed in [19]. Stability-preserving numerical implementations of 
+
+Preprint submitted to Automatica 9 April 2026 
+
+> arXiv:2604.06918v1 [math.OC] 8 Apr 2026
+
+nonlinear predictor-based schemes can be found in [27], and their extension to extremum seeking control is developed in [44], with prescribed-time convergence in [56] and expo-nential and unbiased convergence recently proposed in [55]. Outside the purview of PDE backstepping design, predic-tor feedback has been widely employed for the stabilization of strict-feedback nonlinear systems with input delay [10], as well as for stochastic systems subject to input and output delays [11]. A prediction-based stabilization method for a general class of nonlinear time-varying systems with point-wise input delay is presented in [42], while sequential pre-dictor feedback strategies are developed in [43,54], with fur-ther extensions to multivariable extremum seeking in [40]. Observer-based predictor designs for linear systems with in-put and state delays are proposed in [58]. Interval predictor design is applied in [45] to achieve output feedback stabiliza-tion for linear systems with unknown, bounded, time-varying input delays. In addition to predictor feedback approaches, delay-dependent stability conditions have been formulated based on the existence of positive definite solutions to Ric-cati matrix equations [28]. The Lyapunov–Krasovskii func-tional method has been employed for the stability analysis of linear delay systems [29] (see [20, 21]). The present work tackles a nonlinear plant with a time-varying delay that depends on both the system’s and actu-ator’s states. Our nonlinear composite PDE-ODE system is equivalent to a nonlinear integro-differential equation with an implicitly defined state dependent input delay. 
+
+1.2 Contributions 
+
+A key aspect of the backstepping-based predictor feed-back design to compensate input delays is the reinterpreta-tion of time-delays as advective transport PDEs, achieved through an infinite-dimensional representation of the actu-ator state. This approach transforms a delayed ODE into a nonlinear PDE coupled with a nonlinear ODE. This reformulation–fundamental to the control design strategies developed in [4–6, 14, 17, 27, 36, 44], where the convective equation has the form of a conservation law . In this work, we investigate a less-explored yet important class of advec-tion PDE systems in which the transport speed is given by the integral of the ODE state that is a history of the state. These systems include both linear and nonlinear additive source terms and are coupled with nonlinear ODEs, where the advection term serves as the input pathway to the ODE dynamics. The stabilization problem concerns a class of nonlinear integro-differential systems with an input delay that is dependent on the integral of the state. The core contributions of this work can be summarized as follows. 
+
+(1) Multi-layer predictor feedback design. We design a multi-layer predictor feedback that achieves asymptotic sta-bilization and exact compensation of the actuator dynam-ics for a coupled doubly nonlinear coupled PDE–ODE sys-tem, where the transport speed depends on the integral of the ODE state indicating that it is the inventory level–rather than the accumulation of workload at production stages–that drives the production speed. This assumption is especially relevant in production or queuing systems where raw mate-rials, semi-finished, or finished products have limited shelf lives [49]. Moreover, the PDE no longer represents a conser-vation law but includes additive source terms, which may be nonlinear functions of its state–for instance, a “recirculation loop” inhomogeneity that depend on the uncontrolled bound-ary. As in prior work, our design necessitates the existence of a nominal controller for the delay-free plant. The multi-layer predictor feedback design is constructed by solving the transport PDE using the method of characteristics (see e.g. [8, 14]). Our controller incorporates a compensator that effectively cancels the influence of inhomogeneous terms in the PDE actuator state, without imposing any restrictions on the severity of the nonlinearity or the feasibility condi-tion [5,6], while guaranteeing the latter through an assump-tion on the positivity of the transport speed to avoid an ill-posed problem (see [14, 17]). 
+
+(2) Novel nonlinear backstepping transformations. 
+
+Following the spirit of [32] and [7], we use backstepping transformations combined with predictor feedback con-trols to compensate the delay and make the system stable. But due to the state-dependent delay and source term that appears in the PDE, new transformations rooted in a multi-layer nonlinear predictor whose state accurately forecasts the future trajectories of the nonlinear plant and actuator are introduced. The predictor state is used as the argument of the nominal delay-free control law, thus preserving the structure of predictor-feedback design while compensating for nonlinear, inhomogeneous actuator dynamics. More precisely, the novelty of our work relies on a carefully constructed stable target system. Furthermore, our design follows the “separation principle,” combining two distinct compensators: one for the underlying homogeneous dynam-ics, which is described as a conservation law, and another to counteract the inhomogeneous source terms. This frame-work is first developed for the case of a linear source term, where the second compensator directly neutralizes the “vir-tual” disturbance induced by the source terms. For a more general scenario involving a nonlinear source term that is a function of the uncontrolled boundary value, nonlinear boundary conditions (flux control) and an additional linear friction that depends on the PDE state, our control design approach is augmented by an explicit and time-dependent kernel function that systematically scale the aforementioned compensator components to counteract the effect of the linear friction term. 
+
+(3) Well-posedness and Stability. The stability and well-posedness of the closed-loop system present signifi-cant technical challenges. The backstepping transformation maps the original system with the predictor-feedback con-troller into a target system, and is equivalent to its inverse under the supremum norm. Departing from classical Lya-punov methods, we characterize the transformation along characteristic curves to prove global asymptotic stability of the target system, which, by norm equivalence, ensures the stability of the original closed-loop system. Though both the well-posedness analysis and stability proof fol-low the steps in [37, 38], the technical challenges in the present contribution are substantially greater. First, an addi-tional weighting function is introduced in order to predict the moving window integral, which complicates the well-2posedness analysis. Second, the doubly nonlinear structure of the system in its PDE and its ODE states under the pres-ence of source terms introduces significant challenges not present in the simpler cases [37, 38]. The well-posedness is performed on intricately coupled nonlinear predictor and nonlinear backstepping transformation whereas the sta-bility requires to first prove that the additional predictor layer, designed specifically to compensate for the source term, is itself bounded by the system states. when there is no source term in the PDE, [37] has proposed a bilayer predictor-feedback strategy, with one layer predicting the future ODE state and the other addressing the actuator dy-namics. However, the presence of source terms requires a tri-layer predictor-feedback design. The additional layer, induced by the source term predicts both the distributed PDE state and the evolution of its uncontrolled boundary. Our contribution differs from [13, 22, 24], which consider a heterodirectional coupled linear PDE in cascade with a nonlinear or linear ODE, and predominantly assume con-stant coefficients—thereby leading to a constant input delay. Additional control results for PDE–ODE cascade systems can be found in [25, 26, 51–53]. In contrast, our system is not a simple cascade : the propagation speed depends on the integral of the nonlinear ODE state, and source terms are present in the actuator dynamics. This yields a mixed 
+
+PDE–ODE structure with a delay that varies with the ODE state history. It is also a setting commonly encountered in service queues, supply chains, highly re-entrant manufac-turing lines, and other factory production systems [12, 46]. In our case, flux control leads to a controlled boundary that is nonlinearly influenced by the history of the nonlinear ODE to be stabilized, marking a key distinction from the problem settings in [17, 37]. The organization of this paper is as follows. In Section 2, we present our multi-layer predictor feedback design proce-dure considering an inhomogeneous PDE with a linear addi-tive recycling term and state-dependent propagation speed. In Section 3, we extend the design principle to a class of non-linear actuator dynamics with recycling and friction source terms. In Section 4, we apply our predictor design to a buffer-driven production line that includes both recycling and fric-tion terms and provide numerical simulations in Section 5. Finally, Section 6 concludes the paper and outlines future research directions. 
+
+2 Mixed PDE-ODE under state-dependent transport speed and recycle 
+
+2.1 Problem statement and main result 
+
+We consider a coupled PDE-ODE system, where the ODE is given by ˙X(t) = f (X(t), u(0,t)) , (1) where X : [0, ∞) → Rn denotes the ODE state, and f : Rn ×
+
+R → Rn is a continuously differentiable function satisfying 
+
+f (0, 0) = 0. The ODE subsystem is located at the uncon-trolled boundary x = 0 of the transport domain. The transport dynamics are governed by the balance law 
+
+∂t u(x,t) = λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xu(x,t) + g(x) u(0,t), (2) 
+
+u(D,t) = U(t), (3) for (x,t) ∈ [0, D]×[0, ∞), where τ > 0 is a fixed time window, 
+
+g : [0, D] → R is a continuously differentiable function, and 
+
+u : [0, D] × [0, ∞) → R represents the actuator state. The transport speed is described by a continuously differ-entiable mapping λ : Rn → [0, ∞).The control input is given by the boundary actuation U(t),which will be designed to stabilize the coupled system. The initial condition along the actuation path is specified by 
+
+u(x, 0) = u0(x), (4) and the initial history of the ODE state is given by 
+
+X(s) = h(s) (5) for all −τ ≤ s ≤ 0. For the dynamics (1), we make the following basic as-sumptions: 
+
+Assumption 1 The system ˙X = f (X, ω) is strongly forward complete with respect to ω.The system ˙X = f (X, ω) is strongly forward complete means that, for every initial condition X (0) and every mea-surable locally essentially bounded function ω, the corre-sponding solution is defined for all t ≥ 0 (see [35]). Specifically, there exists a smooth positive definite func-tion Θ and class K∞ functions G1, G2 and G3 such that for the plant ˙X = f (X, w), the following holds (see [35]): 
+
+G1(|X|) ≤Θ(X) ≤ G2(|X|), (6) 
+
+∂ Θ(X)
+
+∂ X f (X, w) ≤Θ(X) + G3(|w|) (7) 
+
+for all (X, w)T ∈ Rn+1 .
+
+Assumption 2 The system ˙X = f (X, κ(X) + ω) is input-to-state stable (ISS) with respect to ω, i.e., there exists a class 
+
+K L function η and a class K function ψ such that 
+
+|X(t)| ≤ η(|X(0)|,t) + ψ(∥ω∥), (8) 
+
+where ∥ω∥ := sup {| ω(t)|, t ≥ 0}.
+
+Moreover, the feedback law κ : Rn → R is continuously differentiable with κ(0) = 0.
+
+We adopt the definitions of K , K∞ and K L functions, as well as the ISS stability, from [50]. 
+
+Assumption 3 To guarantee that the control signal reaches the boundary and ensure the well-posedness of the control law, particularly when the actuation is defined as a flux in 
+
+3Section 3, we assume the existence of two positive constants 
+
+λ and ¯λ such that 
+
+λ ≤ λ (Z) ≤ ¯λ , for all Z ∈ Rn. (9) To stabilize the coupled PDE-ODE system described by (1)–(3), we propose a multi-layer predictor-feedback control law defined by 
+
+U(t) = κ(p1(D,t)) 
+
+| {z }
+
+> Nominal Control law
+
+− 
+
+> ZD
+> 0
+
+g(D − y)p2(y,t)
+
+λ (p3(y,t)) dy ,
+
+| {z }
+
+> Compensation of the inhomogeneous term in (2)
+
+(10) where pi, i = 1, 2, 3 satisfy the following coupled integral equations 
+
+p1(x,t) = X(t) +  
+
+> Zx
+> 0
+
+f (p1(y,t), p2(y,t)) 
+
+λ (p3(y,t)) dy , (11) 
+
+p2(x,t) = u(x,t) +  
+
+> Zx
+> 0
+
+g(x − y)p2(y,t)
+
+λ (p3(y,t)) dy , (12) 
+
+p3(x,t) =  
+
+> Ztt−τ
+
+γ(s, σ (x,t)) X(s)ds 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) p1(y,t)
+
+λ (p3(y,t)) dy , (13) 
+
+σ (x,t) = t + 
+
+> Zx
+> 0
+
+1
+
+λ (p3(y,t)) dy (14) for all x ∈ [0, D], where the weight function 
+
+γ(s,t) = 
+
+1, if t − τ ≤ s ≤ t,
+
+0, else. (15) 
+
+Remark 1 The predictor feedback law in (10) differs sig-nificantly from the one proposed in [32, Chapter 14], which addresses actuator dynamics governed by a first-order hy-perbolic partial integro-differential equation (PIDE) with spatially varying coefficients and an additive integral source term, cascaded with a linear ODE. In that work, the control strategy extends the classical predictor feedback by incorpo-rating a gain kernel under the integral to compensate for the source term’s effect. In contrast, the derivation of (10) –(15) 
+
+leads to a more intricate structure due to the state-dependent advection speed of the PDE as well as the nonlinearity of the ODE plant under consideration and the inhomogeneity of the infinite-dimensional actuator state. These challenges necessitate the construction of a nonlinear and invertible backstepping transformation, as established in Lemma 3 
+
+and Lemma 4. 
+
+With the predictor-feedback controller, we state our first theorem that guarantees the stability of the resulting closed-loop system, following the PDE backstepping approach, which helps to provide key point of predictor feedback de-sign for the composite PDE-ODE system with source terms. 
+
+Theorem 2 Under Assumptions 1–2, for all initial condi-tions h ∈ C0([ −τ, 0]) and Lipschitz continuous u 0 on [0, D]
+
+that satisfies the compatibility condition u0(D) = κ(p1(D, 0)) − 
+
+> ZD
+> 0
+
+g(D − y)p2(y, 0)
+
+λ (p3(y, 0)) dy , (16) 
+
+there exists a unique strong solution (X, u) , where X ∈
+
+C1([ 0, ∞)) and u is locally Lipschitz on [0, D] × [0, ∞), to the closed-loop system (1) –(3) with the control law (10)–(14). Moreover, there exists a class K L function L1 such that the following holds: 
+
+sup 
+
+> s∈[t−τ,t]
+
+X(s) + sup 
+
+> x∈[0,D]
+
+u(x,t)
+
+≤ L1 sup 
+
+> s∈[−τ,0]
+
+h(s) + sup 
+
+> x∈[0,D]
+
+u0(x) , t
+
+!
+
+(17) 
+
+for all t ≥ 0.
+
+The following lemmas state the backstepping transforma-tion and its inverse. 
+
+Lemma 3 The control law defined by (10)–(14), together with the following infinite-dimensional backstepping trans-formation w(x,t) = u(x,t) − κ(p1(x,t)) 
+
+| {z }
+
+> Backstepping transformation for homogeneous PDEs
+
++ 
+
+> Zx
+> 0
+
+g(x − y)p2(y,t)
+
+λ (p3(y,t)) dy 
+
+| {z }
+
+> Term induced by a recycle source term
+
+,
+
+(18) 
+
+where the three-layer nonlinear state predictor, p i, i = 1, 2, 3,
+
+is defined in (11) –(13) , maps the system (1) –(3) into the following target system 
+
+˙X = f (X(t), κ(X(t)) + w(0,t)) , (19) 
+
+∂t w(x,t) = λ
+
+Z tt−τ
+
+X(s)ds 
+
+
+
+∂xw(x,t), (20) 
+
+w(D,t) = 0. (21) The compatibility condition for w at (D, 0) can be easily checked from the transformation (18) and the compatibility condition (16). 
+
+Lemma 4 The inverse of the infinite-dimensional backstep-ping transformation (18) is given by u(x,t) = w(x,t)+ κ(π1(x,t)) − 
+
+> Zx
+> 0
+
+g(x − y)π2(y,t)
+
+λ (π3(y,t)) dy , (22) 
+
+where πi, i = 1, 2, 3 are defined as the solutions to the fol-
+
+4lowing coupled integral equations 
+
+π1(x,t) = X(t) +  
+
+> Zx
+> 0
+
+f (π1(y,t), π2(y,t)) 
+
+λ (π3(y,t)) dy , (23) 
+
+π2(x,t) = w(x,t) + κ(π1(x,t)) , (24) 
+
+π3(x,t) =  
+
+> Ztt−τ
+
+γ(s, σ (x,t)) X(s)ds 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) π1(y,t)
+
+λ (π3(y,t)) dy , (25) 
+
+σ (x,t) = t + 
+
+> Zx
+> 0
+
+1
+
+λ (π3(y,t)) dy , (26) where the weight function γ is still defined by (15). Since (20) does not contain a source term, certain components of the backward predictor associated with the target system differ from those of the forward predictor . The following lemmas establish the norm equivalence between the original system (1)–(3) and the transformed system (19)–(21). 
+
+Lemma 5 There exists a class K∞ function K1 such that 
+
+sup 
+
+> x∈[0,D]
+
+w(x,t) ≤ K1 X(t) + sup 
+
+> x∈[0,D]
+
+u(x,t)
+
+!
+
+(27) 
+
+for all t ≥ 0.
+
+Lemma 6 There exists a class K∞ function K2 such that 
+
+sup 
+
+> x∈[0,D]
+
+u(x,t) ≤ K2 |X(t)| + sup 
+
+> x∈[0,D]
+
+w(x,t)
+
+!
+
+(28) 
+
+for all t ≥ 0.
+
+The proofs of Theorem 2 and the associated Lemmas 3–6 can be regarded as special cases of Theorem 9 and Lemmas 10–11 and Lemmas 13–14 presented in the next section. 
+
+2.2 Predictor feedback design methodology 
+
+Recalling the method of characteristics, we next present the rationale behind our multi-layer predictor design and explain how it conceptually extends classical delay-compensation schemes to systems with source terms and state-dependent transport speed. Let us denote by ζ (s; x,t) the characteristic curve passing through (x,t), i.e., 
+
+ζ (s; x,t) = x − 
+
+> Zst
+
+λ
+
+Z θθ −τ
+
+X(η) dη
+
+
+
+dθ , (29) where X is a continuous function. The input-delay mapping φ is then defined implicitly by 
+
+ζ  φ (x,t); x,t = D, (30) which means that the characteristic curve passing through 
+
+(x,t) starts from the boundary x = D at time φ (x,t).
+
+Interpretation of the delay induced by the inhomoge-neous PDE. When the PDE no longer satisfies a conserva-tion law, its output consists not only of the delayed input but also includes contributions from re-entering source terms. Considering the PDE with a recycling-type source term (2), (3) and using the method of characteristics, the following holds 
+
+u(0,t) = U(φ (0,t)) +   
+
+> Zt
+> φ(0,t)
+
+g(ζ (s; 0 ,t)) u(0, s) ds , (31) where φ (0,t) is defined by (30), i.e., the delay induced by the advection PDE satisfying ζ  φ (0,t); 0 ,t = D. Equation (31) indicates that system (1)–(3) is no longer equivalent to the following classical time-delay system in [5, 6, 14–17] ˙X(t) = f (X(t), U(Φ(t))) . (32) An equivalence can be recovered by modifying the input of the ODE to compensate for the effect of the source term. More precisely, we can find an implicitly defined function 
+
+U as the ODE input, i.e., ˙X(t) = f  X(t), U(Φ(t))  . (33) In (32) and (33), Φ(t) refers to the delay which is φ (0,t) us-ing our notation. Moreover, the function U represents the ef-fective input acting on the ODE, which encapsulates both the delayed boundary control U and the accumulated contribu-tion of the re-entering source terms along the characteristic. Crucially, the delay argument Φ(t) = φ (0,t) is determined exclusively by the transport speed, which in turn depends on the history of the ODE state but is independent of the actuator state. This clarifies that the system (1)–(3) retains the fundamental structure of a system with state-dependent (rather than input-dependent) delay, despite the presence of distributed source terms. 
+
+Interpretation of the compensator design. To compen-sate the state-dependent delay induced by the hyperbolic transport PDE, we construct the predictor along the char-acteristic curves. To that end, for any fixed (x,t) ∈ [0, D] ×
+
+[0, ∞), we define the prediction instant σ (x,t) by 
+
+ζ  σ (x,t); x,t = 0,
+
+i.e., the time that the characteristic curve passing through 
+
+(x,t) arrives at the boundary x = 0. A schematic of these characteristic curves is shown in Fig. 2. Along each charac-teristic curve we introduce a triad of predictor variables: 
+
+p1(x,t) = X(σ (x,t)) , (34) 
+
+p2(x,t) = u(0, σ (x,t)) , (35) 
+
+p3(x,t) =    
+
+> Zσ(x,t)
+> σ(x,t)−τ
+
+X(η) dη. (36) 50 0.5 1 1.5 2 2.5 3 3.5 stage 012345time  (x, t) (0, (x, t)) U( entry ) 
+
+> x = D Prediction (s > t) Backtracking (s < t)
+> entry =(x, t)
+
+Fig. 1. Characteristic curve diagram; the color gradient indicates the variation in control magnitude during transport, and the arrow-heads denote the direction of propagation along each characteris-tic. 
+
+These are obtained by inverting the nonlinear coupled PDE–ODE system (1)–(3) along the characteristics, and each plays a distinct role in the feedback law: 
+
+• the state p1 predicts the ODE state to compensate for the input delay; 
+
+• the state p2 reconstructs the effective control signal arriv-ing at the boundary to cancel the influence of the source term, g(x)u(0,t);
+
+• the state p3 captures the actuator dynamics and enables the transformation of time-domain predictions into spatial integrals computed along the characteristic curves of the transport PDE. 
+
+Remark 7 The resulting boundary control law (10) com-bines the nominal delay-free feedback κ evaluated at p1(D,t), with an integral correction term that accounts for the re-entrant source effect, based on p 2. In the special case where g ≡ 0 and λ = v is a constant, the prediction instant simplifies to σ (x,t) = t + x/v, and the predictor-feedback structure reduces to a classical finite-dimensional delay compensator such as the Smith predictor or the Artstein transformation. In a broad sense, our designs remain valid for PDEs like (2) , (3) with time-dependent or spatially-varying transport speed. In such cases, the variation in 
+
+λ alters the mapping σ (x,t) and the resulting effective delay φ (0,t), but the structure of the control law remains unchanged. 
+
+3 Generalization to nonlinear source terms and bound-ary flux control 
+
+In this section, we pursue a broader generalization by ex-tending our design to systems with inflow boundary control and outflow anti-collocated boundary measurements. This configuration is not only practically relevant but also intro-duces significant challenges, as both the input and output are nonlinear functions defined by the product of the state integral and the PDE’s boundary value. Instability in the ODE dynamics inevitably manifests through the nonlinearly defined boundary conditions. Furthermore, we incorporate friction-type terms and nonlinear, spatially dependent recy-cling functions as additive source terms. Consider the fol-lowing system ˙X(t) = f (X(t), q(t)) , (37) 
+
+q(t) = λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+u(0,t), (38) 
+
+∂t u(x,t) = λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xu(x,t)+ g(x, u(0,t)) + c(x)u(x,t), (39) 
+
+U(t) = λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+u(D,t), (40) where c : [0, D] → R is a bounded, smooth coefficient func-tion. We state the following standard regularity conditions on the nonlinear source term g(x, v).
+
+Assumption 4 The function g : [0, D] × R → R is continu-ously differentiable. It is also uniformly Lipschitz continuous with respect to its second argument, i.e., there exists a con-stant L g > 0 such that for all x ∈ [0, D] and any v 1, v2 ∈ R:
+
+|g(x, v1) − g(x, v2)| ≤ Lg|v1 − v2|. (41) 
+
+Furthermore, reflecting the physical nature of many recy-cling systems, we assume that g(x, 0) = 0, for all x ∈ [0, D]. (42) 
+
+Remark 8 (On the Structure of the Source Terms) The structure of the source terms in (39) is key to the control design. Their independence from the ODE state X prevents a destabilizing feedback loop that could violate forward completeness (Assumption 1). Additionally, the linear fric-tion term in u ensures that the backstepping kernel (48) 
+
+admits an explicit exponential form; a nonlinear friction term requires solving an intractable nonlinear PDE. 
+
+The predictor-feedback control law for the plant (37)–(40) is designed as follows: 
+
+U(t) = λ (p3(0,t)) κ(p1(D,t)) 
+
+λ (p3(D,t)) K(D, D,t)
+
+−
+
+Z D
+
+> 0
+
+λ (p3(0,t)) 
+
+K(D, y,t)
+
+g(D − y, p2(y,t)) 
+
+λ (p3(y,t)) dy , (43) 
+
+p1(x,t) = X(t) + 
+
+Z x
+
+> 0
+
+f (p1(y,t), λ (p3(y,t)) p2(y,t)) 
+
+λ (p3(y,t)) dy ,
+
+(44) 
+
+p2(x,t) = K(x, x,t) · u(x,t)+
+
+Z x
+
+> 0
+
+K(x, x,t)
+
+K(x, y,t) · g(x − y, p2(y,t)) 
+
+λ (p3(y,t)) dy , (45) 
+
+p3(x,t) = 
+
+Z tt−τ
+
+γ(s, σ (x,t)) X(s) ds 
+
++
+
+Z x
+
+> 0
+
+γ(σ (y,t), σ (x,t)) · p1(y,t)
+
+λ (p3(y,t)) dy , (46) 6Fig. 2. Schematic of the closed-loop system 
+
+σ (x,t) = t + 
+
+> Zx
+> 0
+
+1
+
+λ (p3(y,t)) dy , (47) where the weight function γ is still defined by (15) and the kernel is defined by 
+
+K(x1, x2,t) := exp 
+
+Z x2
+
+> 0
+
+c(x1 − z)
+
+λ (p3(z,t)) dz 
+
+
+
+(48) on the domain T := {(x1, x2,t), 0 ≤ x2 ≤ x1 ≤ D, t ≥ 0}.Under the layer predictor feedback control law (43)–(48), we state the following stability theorem. 
+
+Theorem 9 Under Assumptions 1–4, for all initial condi-tions h ∈ C0([ −τ, 0]) and Lipschitz continuous u 0 on [0, D]
+
+that satisfies the compatibility condition u0(D) = 1
+
+K(D, D, 0)
+
+κ(p1(D, 0)) 
+
+λ (p3(D, 0)) 
+
+− 
+
+> ZD
+> 0
+
+1
+
+K(D, y, 0)
+
+g(D − y, p2(y, 0)) 
+
+λ (p3(y, 0)) dy , (49) 
+
+there exists a unique strong solution (X, u) , where X ∈
+
+C1([ 0, ∞)) and u is locally Lipschitz on [0, D] × [0, ∞), to the closed-loop system (37) –(40) with the control law (43) –
+
+(48) . Moreover, there exists a class K L function L2 such that the following holds: 
+
+sup 
+
+> s∈[t−τ,t]
+
+X(s) + sup 
+
+> x∈[0,D]
+
+u(x,t)
+
+≤ L2 sup 
+
+> s∈[−τ,0]
+
+h(s) + sup 
+
+> x∈[0,D]
+
+u0(x) , t
+
+!
+
+(50) 
+
+for all t ≥ 0.
+
+The proof of Theorem 9 is mainly related to the follow-ing lemmas. Indeed, the closed-loop system (37)–(40) under feedback control law (43)–(48) is mapped into a desired tar-get system via an infinite-dimensional backstepping trans-formation as follows. 
+
+Lemma 10 (Backstepping Transformation) The con-trol law defined by (43) –(48) , together with the following infinite-dimensional backstepping transformation w(x,t) = λ (p3(x,t)) K(x, x,t)u(x,t) − κ(p1(x,t)) + λ (p3(x,t))  
+
+> Zx
+> 0
+
+K(x, x,t)
+
+K(x, y,t) · g(x − y, p2(y,t)) 
+
+λ (p3(y,t)) dy , (51) 
+
+maps the system (37) –(40) into the following target system 
+
+˙X = f (X(t), κ(X(t)) + w(0,t)) , (52) 
+
+∂t w(x,t) = λ
+
+Z tt−τ
+
+X(s)ds 
+
+
+
+∂xw(x,t), (53) 
+
+w(D,t) = 0. (54) 
+
+Lemma 11 (Inverse Backstepping Transformation) The inverse of the infinite-dimensional backstepping trans-formation (51) , which maps the system (52) –(54) to the closed-loop system (37) –(40) , is given by u(x,t) = L(x, x,t)
+
+λ (π3(x,t)) (w(x,t) + κ(π1(x,t))) 
+
+− 
+
+> Zx
+> 0
+
+L(x, y,t) g(x − y, π2(y,t)) 
+
+λ (π3(y,t)) dy , (55) 
+
+where πi, i = 1, 2, 3 are defined as the solutions to the fol-lowing coupled integral equations 
+
+π1(x,t)= X(t)+  
+
+> Zx
+> 0
+
+f (π1(y,t), λ (π3(y,t)) π2(y,t)) 
+
+λ (π3(y,t)) dy , (56) 
+
+π2(x,t) = w(x,t) + κ(π1(x,t)) 
+
+λ (π3(x,t)) , (57) 
+
+π3(x,t) =  
+
+> Ztt−τ
+
+γ(s, σ (x,t)) X(s) ds 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) · π1(y,t)
+
+λ (π3(y,t)) dy , (58) 
+
+σ (x,t) = t + 
+
+> Zx
+> 0
+
+1
+
+λ (π3(y,t)) dy , (59) 
+
+with the kernel function defined on the domain T as L(x1, x2,t) := exp 
+
+
+
+− 
+
+> Zx2
+> 0
+
+c(x1 − z)
+
+λ (π3(z,t)) dz 
+
+
+
+. (60) 
+
+Remark 12 The nonlinear backstepping transformations 
+
+(51) generalize (18) in two key ways. They incorporate the predicted propagation speed λ (p3(x,t)) to account for the flux-based system (37) –(40) , and use a state-dependent ex-ponential kernel K to cancel the friction term c · u that is absent in (2) . Therefore, the resulting Volterra-type trans-formation (51) preserve a homogeneous transport structure in the target system (52) –(54) .
+
+Next, we establish the norm equivalence between the orig-inal system and that of the target system. 
+
+Lemma 13 (Norm Equivalence) There exists a class K∞
+
+7function K3 such that 
+
+sup 
+
+> x∈[0,D]
+
+w(x,t) ≤ K3 X(t) + sup 
+
+> x∈[0,D]
+
+u(x,t)
+
+!
+
+(61) 
+
+for all t ≥ 0.
+
+Lemma 14 (Inverse Norm Equivalence) There exists aclass K∞ function K4 such that 
+
+sup 
+
+> x∈[0,D]
+
+u(x,t) ≤ K4 |X(t)| + sup 
+
+> x∈[0,D]
+
+w(x,t)
+
+!
+
+(62) 
+
+for all t ≥ 0.
+
+The proofs of Lemmas 10–11 and Lemmas 13–14 are pro-vided in Appendix A. We are in a position to prove the main result, Theorem 9. 
+
+Proof. The well-posedness of the closed-loop system is es-tablished in Appendix B. Specifically, the analysis in Ap-pendix B guarantees that the target system (52)–(54) admits a unique, locally Lipschitz solution w, given explicitly by: 
+
+w(x,t) = 
+
+w0(ζ (0; x,t)) , if 0 ≤ ζ (0; x,t) ≤ D,
+
+0, if ζ (0; x,t) > D. (63) The compatibility condition of the solution (63) at (D, 0)
+
+can be easily checked from the transformation (51) and the compatibility condition (49). The subsequent development of this section is concerned with the proof of the stability estimate (50). From the explicit solution (63), we directly obtain sup 
+
+> x∈[0,D]
+
+w(x,t) ≤ sup 
+
+> x∈[0,D]
+
+w0(x) , for all t ≥ 0, (64) and the fact that it vanishes in finite time: 
+
+|w(x,t)| = 0 for t > σ (D, 0). (65) Based on Assumption 2, there exist a class K L function 
+
+fL1 and a class K∞ function fK1 such that the solution of (52) satisfies 
+
+|X(t)| ≤ fL1(|X(s)|,t − s) + fK1
+
+
+
+sup 
+
+> τ∈[s,t]
+
+|w(0, τ)|
+
+
+
+(66) for all t ≥ s ≥ 0. We divide the time domain into different intervals and give the estimate respectively. For 0 ≤ t ≤ σ (D, 0), since the initial condition X(s) = 
+
+h(s), s ∈ [−τ, 0], from (64), (66), we have sup 
+
+> s∈[t−τ,t]
+
+|X(s)| ≤ sup 
+
+> s∈[−τ,0]
+
+|h(s)| + sup 
+
+> s∈[0,t]
+
+|X(s)|≤ sup 
+
+> s∈[−τ,0]
+
+|h(s)| + fL1 (|h(0)|, 0) + fK1 sup 
+
+> τ∈[0,t]
+
+|w(0, τ)|
+
+!
+
+≤ fK2 sup 
+
+> s∈[−τ,0]
+
+|h(s)| + sup 
+
+> x∈[0,D]
+
+|w0(x)|
+
+!
+
+, (67) where fK2(s) = s + fL1(s, 0) + fK1(s).For t ≥ σ (D, 0) + τ, from (65), (66), we have sup 
+
+> s∈[t−τ,t]
+
+|X(s)| ≤ fL1 ( |X(σ (D, 0)) |, t − τ − σ (D, 0) ) , (68) using (64), (66) again gives 
+
+|X(σ (D, 0)) | ≤ fL1(|h(0)|, σ (D, 0)) + fK1 sup 
+
+> x∈[0,D]
+
+|w0(x)|
+
+!
+
+.
+
+(69) Substituting (69) into (68) and recalling the property of 
+
+K L function, there exists a class K L function fL2 such that sup 
+
+> s∈[t−τ,t]
+
+|X(s)| ≤ fL1 fL1 (|h(0)|, σ (D, 0)) + fK1 sup 
+
+> x∈[0,D]
+
+|w0(x)|
+
+!
+
+, t − τ − σ (D, 0)
+
+!
+
+.
+
+(70) For σ (D, 0) + τ > t > σ (D, 0), from (67)–(69), we have sup 
+
+> s∈[t−τ,t]
+
+|X(s)| ≤ sup  
+
+> s∈[t−τ,σ(D,0)]
+
+|X(s)| + sup  
+
+> s∈[σ(D,0),t]
+
+|X(s)|≤ fK2
+
+
+
+sup 
+
+> s∈[−τ,0]
+
+|h(s)| + sup 
+
+> x∈[0,D]
+
+|w0(x)|
+
+
+
++ fL1 fL1 (|h(0)|, σ (D, 0)) + fK1 sup 
+
+> x∈[0,D]
+
+|w0(x)|
+
+!
+
+, 0
+
+!
+
+.
+
+(71) Combining the estimates (67), (70) and (71), from the prop-erty of K L , K∞ functions, we can conclude the existence of a class K L function fL3 such that for all t ≥ 0sup 
+
+> s∈[t−τ,t]
+
+|X(s)| ≤ fL3 sup 
+
+> s∈[−τ,0]
+
+|h(s)| + sup 
+
+> x∈[0,D]
+
+|w0(x)|,t
+
+!
+
+.
+
+(72) Moreover, from (64), (65), we can find a K L function fL4
+
+8such that sup 
+
+> x∈[0,D]
+
+|w(x,t)| ≤ fL4 sup 
+
+> x∈[0,D]
+
+|w0(x)|,t
+
+!
+
+. (73) Therefore, from (61), (62), (72) and (73), we deduce that 
+
+L2(s,t) = fL3 (s + K3(s),t)+ K4
+
+ fL3 (s + K3(s),t) + fL4(K3(s),t)
+
+
+
+,
+
+(74) which is K L function from the definition directly. There-fore the proof of estimation (50) is complete. 
+
+4 Modeling of a buffer-driven conveyor belt with source terms and backlog 
+
+We consider a buffer-driven production line or service queuing system extending the work of [15] to systems with transport speed depending on the real-time inventory level. In the case of a factory line, raw material enters the conveyor at its downstream end x = D, travels upstream to x = 0, and then exits the production line into the buffer. 
+
+4.1 Governing equations of the buffer ODE and conveyor PDE 
+
+Buffer ODE influx form. We denote the load of goods stored in the queue by Q(t) ≥ 0 to represent the buffer oc-cupancy. In particular, from the conservation of mass, the buffer evolves according to ˙Q(t) = νin (t) − νout (t), (75) where the influx of raw material 
+
+νin (t) = αϕ (t). (76) and the outflow retains the standard service-rate form 
+
+νout (t) = min { Q(t), μ}. (77) Here: 
+
+• ϕ(t) denotes the material flux exiting the production line at x = 0, which is available directly from the predictor; 
+
+• μ > 0 is the maximum service rate of the buffer; 
+
+• α > 0 is the connectivity coefficient between buffer and the production line; The connectivity coefficient denotes the fraction of materials flux flowing from the final stage to the buffer when the rate of losses is assumed to be known and equal to 1 − α.
+
+Queuing systems model. We consider a production-line model where the density of parts at stage 0 ≤ x ≤ D and time t ≥ 0 denoted by ρ(x,t), satisfies the following PDE 
+
+∂t ρ(x,t) = ω R(t) ∂xρ(x,t) + S(x,t) −C(x) ρ(x,t), (78) where ω R(t) is defined by 
+
+ω(R) = 1
+
+P (1 + R) , R(t) =  
+
+> Ztt−τ
+
+Q(s) ds, (79) with P defined as the processing time and τ, a chosen con-stant that indicates the effect of the history of the buffer load on the speed of production. The output flux of the produc-tion line (78) at x = 0 is defined as follows 
+
+ϕ(t) = ω(R(t)) ρ(0,t), (80) and influx at the controlled boundary, x = D, is given by 
+
+U(t) = ω(R(t)) ρ(D,t). (81) The term S in (78) models re-injection of reworked parts back into the production line, namely, the recycling effect 
+
+S(x,t) = A (D − x) ρ(0,t), (82) where ρ(0,t) is the part density value at the exit of the line and A > 0 a factor of the total rework rate at each production stage, which should be properly chosen according to real applications (see Proposition 16). The friction term 
+
+C(x) ρ(x,t), (83) with C(x) ≥ 0, captures losses during part processing (e.g. scrap or wear) along the conveyor. In summary, the model (78)–(83) extends the classical transport equation by (i) a state-dependent convection speed 
+
+ω(R(t)) that reflects buffer congestion, (ii) a recycling source S linked to lost material recovery, and (iii) a friction term C · ρ accounting for in-process losses. By using the ϕ(t), we avoid the density-based transfor-mation employed in prior work (e.g. [9, 15, 23], and instead feed the predicted flux directly into (75). This simplifies im-plementation and improves numerical efficiency. 
+
+4.2 Safe softened “bang-bang” control of the delay-free plant 
+
+Before introducing the delay compensation, we briefly recall the nominal feedback control law u(Q∗, Q(t)) for the delay-free buffer dynamics of (75)–(77), as developed in [15] ˙Q(t) = α u(Q∗, Q(t)) − min {Q(t), μ}. (84) Our objective is to regulate Q(t) to a prescribed set-point 
+
+Q∗ ∈ [0, μ].We adopt a piecewise-exponential “bang–bang” law of 9the form 
+
+u(Q∗, Q(t)) = Bℓ
+
+ Q(t), Q∗ H  Q∗ − Q(t)
+
++ Br
+
+ Q(t), Q∗ H  Q(t) − Q∗, (85) where H denotes the Heaviside function. The branches Bℓ
+
+and Br are defined so as to match the value and slope at 
+
+Q = Q∗:
+
+Bℓ(Q, Q∗) = Q∗
+
+α +  Bmax − Q∗
+
+α
+
+ 1 − eΛℓ(Q∗) ( Q−Q∗)
+
+1 − e−Λℓ(Q∗) Q∗ , (86) 
+
+Br(Q, Q∗) = Q∗
+
+α − Q∗
+
+α
+
+1 − e−Λr (Q∗) ( Q−Q∗)
+
+1 − e−Λr (Q∗) ( Qmax −Q∗ ) . (87) Here u is the input flux and Bmax and Qmax are the maxi-mum value of the input flux and capacity of the queue, re-spectively. In order to guarantee a well-running process, we require that the maximum input remains below both the sys-tem service capacity and the queue upper bound Qmax , which means that these maximum values are chosen to satisfy 
+
+Bmax ≤ min {Qmax , μ}
+
+α . (88) The flux-based representation of the ODE dynamics reduced to (84) does not require an explicit constraint on Qmax ,
+
+thereby lifting the limitation Qmax < α/P imposed in [15]. The positive gains Λℓ(Q∗), Λr(Q∗) are uniquely deter-mined to ensure the continuous differentiability of the ex-tended control law (85), namely, they are chosen to satisfy 
+
+S(Q∗) := − ∂ Bℓ(Q, Q∗)
+
+∂ Q Q=Q∗ = − ∂ Br(Q, Q∗)
+
+∂ Q Q=Q∗ , (89) where S(Q∗) is the slope design parameter of the controller satisfied 
+
+S(Q∗) = 
+
+Λℓ(Q∗)
+
+
+
+Bmax − Q∗
+
+> α
+
+
+
+1 − e−Λℓ(Q∗)Q∗ , (90) 
+
+S(Q∗) = Λr(Q∗)
+
+1 − e−Λr (Q∗)( Qmax −Q∗)
+
+Q∗
+
+α . (91) The right hand sides of (90) and (91) are deduced by differ-entiating (86) and (87) with respect to the state Q for Q = Q∗.The gains Λℓ(Q∗) and Λr(Q∗) are computed as the unique strictly positive solutions of the fixed point equations (90) and (91), selecting S(Q∗) satisfied S(Q∗) ≥ Smin (Q∗) where 
+
+Smin (Q∗) = max 
+
+( Bmax − Q∗
+
+> α
+
+Q∗ ,
+
+> Q∗
+> α
+
+Qmax − Q∗
+
+)
+
+. (92) 
+
+Proposition 15 [18] For any setpoint Q ∗ ∈ [0, min {Qmax , μ}]
+
+and for any chosen setpoint slope S (Q∗) ∈ R satisfying S(Q∗) ≥ Smin (Q∗), where S min (Q∗) is given by (92) , taking the control gains (Λℓ, Λr) as solutions of 
+
+Λℓ(Bmax − Q∗
+
+α ) − S(Q∗)
+
+
+
+1 − e−ΛℓQ∗ 
+
+= 0, (93) 
+
+Λr
+
+Q∗
+
+α − S(Q∗)
+
+
+
+1 − e−Λr (Qmax −Q∗)
+
+= 0, (94) 
+
+the closed-loop system consisting of (84) with an initial condition Q 0 ∈ [0, min {Qmax , μ}] and control law (85) is asymptotically stable. 
+
+We refer the reader to [18] for the proof of Proposition 15 and detailed derivation of the above result. From (43)–(48), the predictor feedback control law of the production line is written as 
+
+U(t) = (1 + p3(D,t)) u(Q∗, p1(D,t)) (1 + p3(0,t)) K(D, D,t)
+
+−
+
+Z D
+
+> 0
+
+AP y p 2(y,t)( 1 + p3(y,t)) 
+
+K(D, y,t)( 1 + p3(0,t)) dy , (95) 
+
+p1(x,t) = Q(t)+
+
+Z x
+
+> 0
+
+(α p2(y,t)− P (1+ p3(y,t)) min (p1(y,t), μ)) dy , (96) 
+
+p2(x,t) = K(x, x,t) · ρ(x,t)+
+
+Z x
+
+> 0
+
+K(x, x,t)
+
+K(x, y,t) A(D− x+ y) p2(y,t) P(1+ p3(y,t)) dy , (97) 
+
+p3(x,t) = 
+
+Z tt−τ
+
+γ(s, σ (x,t)) Q(s) ds 
+
++
+
+Z x
+
+> 0
+
+γ(σ (y,t), σ (x,t)) · P p 1(y,t) ( 1 + p3(y,t)) dy , (98) 
+
+σ (x,t) = t +
+
+Z x
+
+> 0
+
+P(1 + p3(y,t)) dy ,
+
+where the kernel is 
+
+K(x, y,t) := exp 
+
+
+
+−
+
+Z y
+
+> 0
+
+C(x − z) P (1 + p3(z,t)) dz 
+
+
+
+.
+
+As stated in the following proposition, we derive a locally safe softened “bang-bang” control law for the closed-loop system. Specifically we ensure that the control input U(t) ≥
+
+0 and the states (Q, ρ) ≥ 0 by deriving relevant constraints. 
+
+Proposition 16 (Locally safe “bang-bang” control) 
+
+10 Let the recycle rate satisfies A > 0, the spatial friction satisfies C (x) ≥ 0, and the initial buffer level satisfies 
+
+0 ≤ Q(0) < Qmax . Assume that the initial state verifies 
+
+0 ≤ p1(D, 0) ≤ Qmax and the compatibility condition (49) ,which ensures U (0) > 0.If, in addition, the following constraint holds: Mu < 2
+
+ADP 2(1 + τQmax ) , (99) 
+
+where, u = min 
+
+ Q∗
+
+α , u(Q∗, Q(0)) , u(Q∗, p1(D, 0)) 
+
+
+
+denotes the global minimum nominal control, and the con-stant M is defined by M = ρ e2APD 2(1+τQmax ), (100) 
+
+with 
+
+ρ = max 
+
+
+
+max  
+
+> 0≤x≤D
+
+ρ(x, 0), P(1 + τQmax )2Bmax 
+
+
+
+,
+
+then the control input U (t) remains positive for all t ≥ 0.Consequently, the solution (Q, ρ) to the closed-loop system 
+
+(75) –(83) remains non-negative for all t ≥ 0.
+
+Proof. The estimates (99)–(100) are derived from the pre-dictive nature of the control law (34)–(36) and (95), (97) and the positivity of the actuator and plant states can be estab-lished via the method of characteristics [39]. We omit the details here. In contrast to [18] and [14], which establish globally stabilizing, safe softened bang–bang control under a predictor feedback design, the present setting admits only local guarantees due to the presence of source terms. 
+
+5 Simulation Results 
+
+To evaluate the effectiveness of the proposed control strat-egy, we carry out numerical simulations with the objective of stabilizing the queue state Q at a desired setpoint Q∗ = 0.3. The system parameters are selected as follows: the output capacity is set to μ = 0.8, the processing time to P = 0.25, and the buffer capacity to Qmax = 1. The maximum control input is limited by Bmax = 1.2, and the distribution coeffi-cient is fixed as α = 0.5. Additionally, the integration win-dow of length τ = 0.2 in the propagation speed. The production line domain spans from x = 0 to x = 2, where the raw materials enter at the right boundary. The system is initialized with an empty line, i.e., the part density satisfies ρ0(x) = 0 for all x, and the buffer is also initialized to be empty over the initial integration window, that is, Q(s) = 
+
+0 for s ∈ [−0.2, 0]. To capture loss and recycling effects, the dissipation coefficient is set to C(x) ≡ 1 (i.e., spatially uniform friction), and the total rework injection rate is set 
+
+> Fig. 3. Evolution of ODE state under the compensated control, uncompensated control, open-loop control.
+
+to A = 0.1. To implement the delay-compensated bang–bang control, we set the slope parameter to exceed its minimum admissible value by a fixed offset: S(Q∗) = Smin (Q∗) + 20. The closed-loop PDE–ODE system is discretized using a first-order upwind finite difference scheme on a uniform spatial grid of N = 80 points over [0, D]. The time integration employs the forward Euler method with a CFL-constrained time step of ∆t ≈ 0.0025 s. At each time step, the multi-layer predictor integral equations are solved by forward spatial marching from x = 0 to x = D.The simulation results presented in Figure 3 compellingly demonstrate the efficacy of the proposed predictor-feedback controller by contrasting its performance with open-loop and uncompensated scenarios. In the open-loop case, the plant state Q exhibits a very slow convergence towards the set-point. More critically, when the nominal bang-bang con-troller is applied directly without compensation, the inher-ent control lag leads to pronounced oscillations in both the plant state and the control input, preventing stabilization. In stark contrast, the introduction of our delay compensator yields a perfect convergence. As shown by the solid red line in Figure 3, the compensated system achieves smooth and rapid stabilization at the set-point Q∗ without overshoot or oscillatory behavior, which means the multi-layer predictor feedback law completely compensate the delay and elimi-nate the influence of the source term. Figure 4 depicts the spatiotemporal evolution of the PDE state ρ(x,t) under each scenario. In the open-loop and un-compensated cases, the density profile exhibits persistent transients and oscillatory behavior, respectively. In the com-pensated case, ρ(x,t) converges smoothly to its steady-state profile. The fourth panel shows a snapshot of the backstep-ping kernel K(x, y,t), which captures the combined effect of friction and recycling compensation. Figure 5 shows the time evolution of K(D, D,t), confirming its monotonic con-vergence to the steady-state value as Q(t) → Q∗.
+
+6 Conclusion 
+
+In this study, we developed a control framework for coupled non-conservative PDE–ODE systems in which the propagation speed depends on the integral of past ODE 11 Fig. 4. Evolution of PDE state under open-loop, compensated, uncompensated control and snapshot of the gain K(x, y,t)0 1 2 3 4 50.596 0.598 0.6 0.602 
+
+> Dynamics of the Kernel Function
+> K(D,D,t) Steady-State Value
+
+Fig. 5. Evolution of the gain K(x, y,t)
+
+states. Our approach introduces a layered predictor struc-ture for nonlinear integro-differential equations with state-dependent input delays, modeled as a nonlinear composite PDE–ODE system. By incorporating flux-based actuation and sensing, the boundary conditions become highly non-linear, posing challenges beyond those addressed in prior work. The control design relies on nonlinear backstepping transformations, and both global asymptotic stability (in the supremum norm of the state and actuator) and well-posedness are established through the characteristic method and a fixed-point argument, which differs from the classical approach relying on a Lyapunov argument. The proposed design applies to systems with both constant and time-varying transport speeds and retains a separation principle, relying on the design of a nominal control law for the delay-free plant. Future work will extend this framework to other classes of hyperbolic PDEs and to networks of coupled PDE–ODE subsystems. 
+
+Appendix A The proofs of the lemmas in Section 3 
+
+A.1 Proof of Lemma 10 
+
+Define A(y,t) = λ (p3(y,t)) p2(y,t), differentiating (44) w.r.t t, we have 
+
+∂t p1(x,t) = 
+
+Z x
+
+> 0
+
+f1(p1(y,t), A(y,t)) ∂t p1(y,t)
+
+λ (p3(y,t)) dy 
+
++
+
+Z x
+
+> 0
+
+f2(p1(y,t), A(y,t)) ∂t A(y,t)
+
+λ (p3(y,t)) dy 
+
+−
+
+Z x
+
+> 0
+
+∇λ (p3(y,t)) · ∂t p3(y,t)
+
+λ 2(p3(y,t)) f (p1(y,t), A(y,t)) dy 
+
++ f (X(t), λ (p3(0,t)) u(0,t) ) , (101) differentiating (44) w.r.t x and employing the Newton-Leibniz formula gives 
+
+∂x p1(x,t) = 
+
+Z x
+
+> 0
+
+f1(p1(y,t), A(y,t)) ∂y p1(y,t)
+
+λ (p3(y,t)) dy 
+
++
+
+Z x
+
+> 0
+
+f2(p1(y,t), A(y,t)) ∂yA(y,t)
+
+λ (p3(y,t)) dy 
+
+−
+
+Z x
+
+> 0
+
+∇λ (p3(y,t)) · ∂y p3(y,t)
+
+λ 2(p3(y,t)) f (p1(y,t), A(y,t)) dy 
+
++ 1
+
+λ (p3(0,t)) f (p1(0,t), A(0,t)) . (102) Here, f1 and f2 represent partial derivatives of the vector function f w.r.t. its first and second variable respectively. 12 Similarly, for simplification, we set: 
+
+H(x, y,t) = K(x, x,t)
+
+K(x, y,t) = exp 
+
+Z xy
+
+c(x − z)
+
+λ (p3(z,t)) dz 
+
+
+
+, (103) 
+
+J(x, y,t) = g(x − y, p2(y,t)) 
+
+λ (p3(y,t)) . (104) Thus, from (45), 
+
+p2(x,t) = K(x, x,t)u(x,t) +  
+
+> Zx
+> 0
+
+H(x, y,t)J(x, y,t)dy . (105) Differentiating (105) with respect to t and x involves care-ful use of the Leibniz integral rule, along with the differ-entiation of the kernel K(x, x,t) and the auxiliary functions 
+
+H(x, y,t), J(x, y,t) defined in (48) and (103), (104). After algebraic simplifications, we obtain the final expressions as 
+
+∂t p2(x,t) = K(x, x,t) ∂t u(x,t)
+
+−K(x, x,t)u(x,t) 
+
+> Zx
+> 0
+
+c(x − z) ∇λ (p3(z,t)) · ∂t p3(z,t)
+
+λ 2(p3(z,t)) dz 
+
+− 
+
+> Zx
+> 0
+
+
+
+H(x, y,t)J(x, y,t)
+
+× 
+
+> Zxy
+
+c(x − z) ∇λ (p3(z,t)) · ∂t p3(z,t)
+
+λ 2(p3(z,t)) dz 
+
+
+
+dy 
+
++ 
+
+> Zx
+> 0
+
+H(x, y,t)
+
+λ (p3(y,t)) g2(x − y, p2(y,t)) ∂t p2(y,t) dy 
+
+− 
+
+> Zx
+> 0
+
+H(x, y,t) g(x − y, p2(y,t)) 
+
+λ 2(p3(y,t)) ∇λ (p3(y,t)) · ∂t p3(y,t) dy ,
+
+(106) and 
+
+∂x p2(x,t) = K(x, x,t) ∂xu(x,t) + H(x, 0,t)J(x, 0,t)+ K(x, x,t)u(x,t)
+
+×
+
+ c(x)
+
+λ (p3(0,t)) − 
+
+> Zx
+> 0
+
+c(x − z) ∇λ (p3(z,t)) · ∂z p3(z,t)
+
+λ 2(p3(z,t)) dz 
+
+
+
++ 
+
+> Zx
+> 0
+
+H(x, y,t) g2(x − y, p2(y,t)) 
+
+λ (p3(y,t)) ∂y p2(y,t) dy 
+
+− 
+
+> Zx
+> 0
+
+H(x, y,t)g(x − y, p2(y,t)) ∇λ (p3(y,t)) 
+
+λ 2(p3(y,t)) · ∂y p3(y,t) dy 
+
+− 
+
+> Zx
+> 0
+
+H(x, y,t)J(x, y,t)
+
+× 
+
+> Zxy
+
+c(x − z) ∇λ (p3(z,t)) 
+
+λ 2(p3(z,t)) · ∂z p3(z,t) dz dy . (107) Here, g1 and g2 represent partial derivatives of the scalar function g w.r.t. to its first and second variable respectively. As σ (x,t) ≥ t implies that the first integral term in (46) van-ishes effectively for 0 ≤ s < t − τ, the lower limit of integral can be treated as fixed at 0. Consequently, differentiating (46) with respect to t and x yields: 
+
+∂t p3(x,t) = γ(t, σ (x,t)) X(t)+ 
+
+> Ztt−τ
+
+γ2(s, σ (x,t)) X(s)ds ∂t σ (x,t)+ 
+
+> Zx
+> 0
+
+γ1(σ (y,t), σ (x,t)) ∂t σ (y,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ2(σ (y,t), σ (x,t)) ∂t σ (x,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) · ∂t p1(y,t)
+
+λ (p3(y,t)) dy 
+
+− 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) ∇λ (p3(y,t)) · ∂t p3(y,t)
+
+λ 2(p3(y,t)) p1(y,t)dy 
+
+(108) and 
+
+∂x p3(x,t) = γ(t, σ (x,t)) p1(0,t)
+
+λ (p3(0,t)) + 
+
+> Ztt−τ
+
+γ2(s, σ (x,t)) X(s)ds ∂xσ (x,t)+ 
+
+> Zx
+> 0
+
+γ1(σ (y,t), σ (x,t)) ∂yσ (y,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ2(σ (y,t), σ (x,t)) σx(x,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) ∂y p1(y,t)
+
+λ (p3(y,t)) dy 
+
+− 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) ∇λ (p3(y,t)) · ∂y p3(y,t)
+
+λ 2(p3(y,t)) p1(y,t)dy .
+
+(109) Differentiating (47) at t and x gives 
+
+∂t σ (x,t) = 1 − 
+
+> Zx
+> 0
+
+∇λ (p3(y,t)) · ∂t p3(y,t)
+
+λ 2(p3(y,t)) dy , (110) 
+
+∂xσ (x,t) = 1
+
+λ (p3(0,t)) − 
+
+> Zx
+> 0
+
+∇λ (p3(y,t)) · ∂y p3(y,t)
+
+λ 2(p3(y,t)) dy .
+
+(111) We define the vectors Z(x,t) and p(x,t) as follows: 
+
+Z(x,t) = ( Z1(x,t), Z2(x,t), Z3(x,t), Z4(x,t)) ⊤
+
+p(x,t) = ( p1(x,t), p2(x,t), p3(x,t), σ (x,t)) ⊤ ,
+
+13 where 
+
+Z(x,t) = ∂t p(x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xp(x,t). (112) Combining (39), (101), (107), and considering (44)–(46) at 
+
+x = 0, note that A(y,t) = λ (p3(y,t)) p2(y,t), we have 
+
+Z1(x,t) =  
+
+> Zx
+> 0
+
+f1(p1(y,t), A(y,t)) 
+
+λ (p3(y,t)) Z1(y,t) dy 
+
++ 
+
+> Zx
+> 0
+
+f2(p1(y,t), A(y,t)) Z2(y,t) dy 
+
++ 
+
+> Zx
+> 0
+
+f2(p1(y,t), A(y,t)) ∇λ (p3(y,t)) p2(y,t)
+
+λ (p3(y,t)) · Z3(y,t) dy 
+
+− 
+
+> Zx
+> 0
+
+∇λ (p3(y,t)) · Z3(y,t)
+
+λ 2(p3(y,t)) f (p1(y,t), A(y,t)) dy . (113) Via (106) and (107), using (39) and note that 
+
+H(x, 0,t)J(x, 0,t) = K(x, x,t)g(x, u(0,t)) 
+
+λ (p3(0,t)) ,
+
+we have 
+
+Z2(x,t) = −K(x, x,t)u(x,t)
+
+× 
+
+> Zx
+> 0
+
+c(x − y) ∇λ (p3(y,t)) · Z3(y,t)
+
+λ 2(p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+H(x, y,t)g2(x − y, p2(y,t)) 
+
+λ (p3(y,t)) Z2(y,t)dy 
+
+− 
+
+> Zx
+> 0
+
+H(x, y,t)g(x − y, p2(y,t)) ∇λ (p3(y,t)) · Z3(y,t)
+
+λ 2(p3(y,t)) dy 
+
+− 
+
+> Zx
+> 0
+
+H(x, y,t)J(x, y,t)
+
+× 
+
+> Zxy
+
+c(x − ζ ) ∇λ (p3(ζ ,t)) 
+
+λ 2(p3(ζ ,t)) · Z3(ζ ,t) dζ dy .
+
+(114) From (108)–(111), we have 
+
+Z3(x,t) =  
+
+> Ztt−τ
+
+γ2(s, σ (x,t)) X(s)ds Z 4(x,t)+ 
+
+> Zx
+> 0
+
+γ1(σ (y,t), σ (x,t)) Z4(y,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ2(σ (y,t), σ (x,t)) Z4(x,t) p1(y,t)
+
+λ (p3(y,t)) dy 
+
++ 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) Z1(y,t)
+
+λ (p3(y,t)) dy 
+
+− 
+
+> Zx
+> 0
+
+γ(σ (y,t), σ (x,t)) ∇λ (p3(y,t)) · Z3(y,t)
+
+λ 2(p3(y,t)) p1(y,t)dy ,
+
+(115) and 
+
+Z4(x,t) = − 
+
+> Zx
+> 0
+
+∇λ (p3(y,t)) · Z3(y,t)
+
+λ 2(p3(y,t)) dy . (116) Noticing that Z(0,t) = 0, we deduce from (113) to (116) that Z(x,t) ≡ 0 for all x ∈ [0, D], which means 
+
+∂t pi(x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂x pi(x,t) = 0 (117) for i = 1, 2, 3 and 
+
+∂t σ (x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xσ (x,t) = 0. (118) From (45) and (51), we have w(x,t) = λ (p3(x,t)) p2(x,t)−
+
+κ(p1(x,t)) . Therefore, from (117) 
+
+∂t w(x,t) = λ
+
+Z tt−τ
+
+X(s)ds 
+
+
+
+∂xw(x,t). (119) We can get (52) from (37)–(38), combining (44), (46), (51) at x = 0. The boundary condition (54) comes from (40), (43) to-gether with (51) at x = D.
+
+A.2 Proof of Lemma 11 
+
+Comparing (56)–(59) and (44)–(47), following an argu-ment analogous to the proof of Lemma 10, we can conclude that 
+
+∂t πi(x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xπi(x,t) = 0 (120) for i = 1, 2, 3 and 
+
+∂t σ (x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+∂xσ (x,t) = 0. (121) From (60), we have 
+
+∂t L(x, x,t) = L(x, x,t) 
+
+> Zx
+> 0
+
+c(x − z)∇λ (π3(z,t)) ∂t π3(z,t)
+
+λ 2(π3(z,t)) dz ,
+
+(122) and 
+
+∂t L(x, y,t) = L(x, y,t) 
+
+> Zy
+> 0
+
+c(x − z)∇λ (π3(z,t)) ∂t π3(z,t)
+
+λ 2(π3(z,t)) dz .
+
+(123) 14 In this lemma, for the sake of simplification, we define 
+
+G(x, y,t) = g(x − y, π2(y,t)) 
+
+λ (π3(y,t)) . (124) Differentiating (55) at t, from (60), (122) and (123), we have 
+
+∂t u(x,t) = ∂∂t
+
+ π2(x,t)
+
+λ (π3(x,t)) 
+
+
+
++ L(x, x,t) π2(x,t)
+
+λ (π3(x,t)) 
+
+× 
+
+> Zx
+> 0
+
+c(x − z) ∇λ (π3(z,t)) 
+
+λ 2(π3(z,t)) ∂t π3(z,t)dz 
+
+− 
+
+> Zx
+> 0
+
+L(x, y,t)G(x, y,t)
+
+×
+
+Z y
+
+> 0
+
+c(x − z)
+
+λ 2(π3(z,t)) ∇λ (π3(z,t)) ∂t π3(z,t) dz 
+
+
+
+dy 
+
+− 
+
+> Zy
+> 0
+
+L(x, y,t) g2(x − y, π2(y,t)) 
+
+λ (π3(y,t)) ∂t π2(y,t) dy 
+
++ 
+
+> Zy
+> 0
+
+L(x, y,t) G(x, y,t)∇λ (π3(y,t)) 
+
+λ (π3(y,t)) ∂t π3(y,t) dy . (125) From (60), we can also obtain 
+
+∂xL(x, x,t) = L(x, x,t)
+
+
+
+− c(x)
+
+λ (π3(0,t)) + 
+
+> Zx
+> 0
+
+c(x − z) ∇λ (π3(z,t)) ∂zπ3(z,t)
+
+λ 2(π3(z,t)) dz 
+
+
+
+, (126) and 
+
+∂xL(x, y,t) = −L(x, y,t) 
+
+> Zy
+> 0
+
+c′(x − z)
+
+λ (π3(z,t)) dz . (127) Differentiating (55) at x, from (60), (126) and (127), we have 
+
+∂xu(x,t) = ∂∂ x
+
+ π2(x,t)
+
+λ (π3(x,t)) 
+
+
+
+− L(x, 0,t)G(x, 0,t)+ L(x, x,t) π2(x,t)
+
+λ (π3(x,t)) 
+
+
+
+− c(x)
+
+λ (π3(0,t)) + 
+
+> Zx
+> 0
+
+c(x − z) ∇λ (π3(z,t)) 
+
+λ 2(π3(z,t)) ∂zπ3(z,t)dz 
+
+
+
+− 
+
+> Zx
+> 0
+
+L(x, y,t)G(x, y,t)
+
+
+
+− c(x)
+
+λ (π3(0,t)) + 
+
+> Zy
+> 0
+
+c(x − z)
+
+λ 2(π3(z,t)) ∇λ (π3(z,t)) ∂zπ3(z,t) dz 
+
+
+
+dy 
+
+− 
+
+> Zy
+> 0
+
+L(x, y,t) g2(x − y, π2(y,t)) 
+
+λ (π3(y,t)) ∂yπ2(y,t) dy 
+
++ 
+
+> Zy
+> 0
+
+L(x, y,t) G(x, y,t)∇λ (π3(y,t)) 
+
+λ (π3(y,t)) ∂yπ3(y,t) dy . (128) From (120), (121), (125), (128), we have 
+
+∂t u(x,t) − λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+ux(x,t)= L(x, x,t)c(x) π2(x,t)
+
+λ (π3(x,t)) − c(x) 
+
+> Zx
+> 0
+
+L(x, y,t)G(x, y,t)dy 
+
++ λ
+
+Z tt−τ
+
+X(s) ds 
+
+
+
+L(x, 0,t)G(x, 0,t). (129) Substituting (55), (57), (58), (60), (124) into (129), we obtain (39). Substituting x = 0 into (52), (55), (56), (58), we have (37)–(38). Finally, we verify that the boundary condition (40) is satisfied. To do this, we first establish the equivalence 
+
+pi ≡ πi (130) for i = 1, 2, 3 and 
+
+σ ≡ σ . (131) Indeed, from (117), (118) and (120), (121), they satisfy the same transport equation. Moreover, evaluating x = 0into (44)–(47), (56)–(59) and (55), we can conclude that 
+
+pi(0,t) = πi(0,t) and σ (0,t) = σ (0,t). From the uniqueness of the solutions to the transport equations, we obtain (130) and (131). After that, by substituting x = D into equation (55) and utilizing equation (43), (45) at x = 0, (48), (54), (60), as well as (130)–(131), we can conclude (40). 
+
+A.3 Proof of Lemma 13 
+
+We first establish a bound for the predictor state p2. Taking 
+
+t as a parameter, using (9) and (48), for any fixed t ≥ 0, we define 
+
+K1 = max  
+
+> 0≤x≤D
+
+|K(x, x,t)|, (132) 
+
+K2 = max  
+
+> 0≤x≤D
+
+max 
+
+> 0≤y≤x
+
+K(x, x,t)
+
+K(x, y,t) . (133) From (45) and using (9), (132), (133) we derive 
+
+|p2(x,t)| ≤ K1 |u(x,t)| + 
+
+> Zx
+> 0
+
+K2
+
+ε |g(x − y, p2(y,t)) | dy .
+
+(134) Applying Assumption 4 to (134) yields: 
+
+|p2(x,t)| ≤ K1 |u(x,t)| + K2 Lg
+
+ε 
+
+> Zx
+> 0
+
+|p2(y,t)| dy . (135) 15 By Gronwall’s inequality, an upper bound for sup x∈[0,D] |p2(x,t)|
+
+is given by: sup 
+
+> x∈[0,D]
+
+|p2(x,t)| ≤ K1 sup 
+
+> x∈[0,D]
+
+|u(x,t)|e K2LgD  
+
+> ε
+
+. (136) After the derivation of the uniform estimate of p2, we move to the deduction of the bound of p1.Taking the derivative of (44) w.r.t. x, we get 
+
+∂x p1(x,t) = f (p1(x,t), λ (p3(x,t)) p2(x,t)) 
+
+λ (p3(x,t)) , (137) with the boundary condition 
+
+p1(0,t) = X(t). (138) From Assumption 1, noticing (9) and (7), we have 
+
+∂ Θ(p1(x,t)) 
+
+∂ p1
+
+f (p1(x,t), λ (p3(x,t)) p2(x,t)) 
+
+λ (p3(x,t)) 
+
+≤ 1
+
+λ (p3(x,t)) 
+
+
+
+Θ(p1(x,t)) + G3(λ (p3(x,t)) |p2(x,t)|)
+
+
+
+.
+
+From the property of K∞ function G3 and (9), there exists constant λ1, which together with (137) gives 
+
+∂ Θ(p1(x,t)) 
+
+∂ x ≤ 1
+
+ε Θ(p1(x,t)) + λ1
+
+ε G3(|p2(x,t)|). (139) Thus, 
+
+Θ(p1(x,t)) ≤ ex/ε Θ(p1(0,t)) + λ1
+
+ε
+
+Z x
+
+> 0
+
+e x−y 
+
+> ε
+
+G3|p2(y,t)|)dy .
+
+(140) We derive from (138) that 
+
+Θ(p1(x,t)) ≤ eD/ε Θ(X(t)) + λ1
+
+
+
+eD/ε − 1
+
+
+
+G3 sup 
+
+> x∈[0,D]
+
+|p2(x,t)|
+
+!
+
+. (141) Using (6), the following inequality holds sup 
+
+> x∈[0,D]
+
+|p1(x,t)| ≤ G −11 eD/ε G2(|X(t)|)+ λ1
+
+
+
+eD/ε − 1
+
+
+
+G3 sup 
+
+> x∈[0,D]
+
+|p2(x,t)|
+
+! ! 
+
+(142) for all x ∈ [0, D].The continuity assumption on κ in Assumption 2 implies the existence of a class K∞ function ρ such that for all 
+
+ξ ∈ Rn
+
+|κ(ξ )| ≤ ρ(|ξ |). (143) From (9), (132), (133), Assumption 4, backstepping trans-formation (51) and (143), we have sup 
+
+> x∈[0,D]
+
+|w(x,t)| ≤ K1
+
+ε sup 
+
+> x∈[0,D]
+
+|u(x,t)| + ρ sup 
+
+> x∈[0,D]
+
+|p1(x,t)|
+
+!
+
++ λ K2
+
+ε Lg sup 
+
+> x∈[0,D]
+
+|p2(x,t)|
+
+!
+
+. (144) Substituting (136), (142) into (144), from the property of 
+
+K∞ function, we can deduce that there exists a K∞ function 
+
+K3, thereby establishing Lemma 13. 
+
+A.4 Proof of Lemma 14 
+
+The proof consists of two main steps. First, we estab-lish a bound for the predictor state sup x∈[0,D] |π1(x,t)|. Sec-ond, we use this bound to derive the final estimate for sup x∈[0,D] |u(x,t)|. In this section, we treat the variable t as a parameter. Differentiating (56) with respect to x and substituting (57 )
+
+yields the dynamics of π1 for x ∈ [0, D]:
+
+∂xπ1 = f (π1, κ(π1) + w)) 
+
+λ (π3) , π1(0,t) = X(t). (145) We proceed by using the forward completeness property from Assumption 1. Let V (x) := Θ(π1(x,t)) , where Θ is the smooth positive definite function from (6)–(7). Letting 
+
+ωarg = κ(π1) + w and differentiating V with respect to x
+
+along the solution of (145 ) gives 
+
+dV dx = ∂ Θ(π1)
+
+∂ π 1
+
+∂xπ1 = 1
+
+λ (π3)
+
+∂ Θ(π1)
+
+∂ π 1
+
+f (π1, ωarg )
+
+≤ 1
+
+λ (π3)
+
+ Θ(π1) + G3(|ωarg |) .
+
+Using the bounds from (9) and (143 ) yields 
+
+|ωarg | ≤ ρ(|π1|) + sup 
+
+> x∈[0,D]
+
+|w(x,t)|.
+
+Substituting this into the inequality for V and using (9), we obtain 
+
+dV dx ≤ 1
+
+ε V + G3 ρ(|π1|) + sup 
+
+> x∈[0,D]
+
+|w(x,t)|
+
+!! 
+
+. (146) 16 From (6), we have |π1| ≤ G −11 (V ). Let ˜ρ = ρ ◦ G −11 ,which is a class K∞ function. Using the property 
+
+G3(a + b) ≤ G4(a) + G4(b) (e.g. G4(s) = G3(2s), we have 
+
+G3(a + b) ≤ G3(2 max {a, b}) ≤ G3(2a) + G3(2b)) for some class K∞ function G4, we get 
+
+dV dx ≤ W (V ) + C, (147) where W (V ) := 1 
+
+> ε
+
+[V + G4( ˜ρ(V ))] is a class K∞ function, and C := 1 
+
+> ε
+
+G4(sup x∈[0,D] |w(x,t)|) is a non-negative constant, since we consider t as a parameter. By the classical comparison principle, V is bounded by the solution z of the ODE ˙z(x) = W (z(x)) + C, (148) with z(0) = V (0) = Θ(X(t)) . There exists a solution z
+
+on [0, D] denoted by β (z(0),C, x), where β (z0,C, D) ≥
+
+β (z0,C, x) for all x ∈ [0, D] since the non-negative property of the right side of (148). From (148), we can deduce that G5(x) = β (x, x, D) is a class K∞ function. Specifically, G5(0) = β (0, 0, D) = 0 since 
+
+z ≡ 0 is the solution for z0 = 0, C = 0; moreover, since β is strictly increasing in z0 and C respectively from (148), G5 is strictly increasing. From (6), since z(0) = Θ(X(t)) and C is a class K∞ func-tion of sup x∈[0,D] |w(x,t)|, G5 is a composition of class K∞
+
+functions of |X(t)| and sup x∈[0,D] |w(x,t)|. This implies the existence of a class K∞ function G6 such that sup 
+
+> x∈[0,D]
+
+π1(x,t) ≤ G6
+
+
+
+X(t) + sup 
+
+> x∈[0,D]
+
+w(x,t)
+
+
+
+. (149) Since π1 is bounded, we now estimate u. From (9), (60), there exists a constant L such that 
+
+L(x, y,t) ≤ L (150) for all 0 ≤ y ≤ x ≤ D. From (150), the inverse transformation (55) and Assumption 4, we have sup 
+
+> x∈[0,D]
+
+u(x,t) ≤ L
+
+ε sup 
+
+> x∈[0,D]
+
+w(x,t) + ρ( sup 
+
+> x∈[0,D]
+
+π1(x,t) )
+
+!
+
++ DLL g
+
+ε sup 
+
+> x∈[0,D]
+
+|π2(x,t)|. (151) From (57), sup x∈[0,D] |π2(x,t)| ≤ (sup x∈[0,D] |w(x,t)| +
+
+ρ(sup x∈[0,D] |π1(x,t)|)) /ε. Substituting this and the bound (149) into (151 ) confirms the existence of a class K∞
+
+function K4 that satisfies (62 ).
+
+Appendix B Well-posedness proof of Theorem 9 
+
+B.1 Well-posedness proof of the initial condition of (52) –
+
+(54) Given the initial condition h and u0 in Theorem 9, we begin by rigorously showing that the initial condition w0 for the target state is well-defined. This is achieved by proving that the initial predictor states (44)–(48), which defines the backstepping transformation (51) at t = 0, admit a unique solution (p1,0, p2,0, p3,0, σ0)( x).Since the switching nature of the function γ in (46) depen-dent on the state σ0, we establish the proof via the method of steps. For a sufficiently small initial interval [0, δ ] where σ0 < τ,from (15), (46), we have 
+
+p3,0(x) =  
+
+> Z0
+> σ0(x)−τ
+
+X(s) ds + 
+
+> Zx
+> 0
+
+p1,0(y)
+
+λ (p3,0(y)) dy , (152) The initial predictors, namely (44)–(48) at t = 0, reduce to a standard set of coupled Volterra integral equations. On this interval, from a classical result based on the Contrac-tion Mapping Principle for such equations, relying on the Assumption 1, the assumed regularity of f , g, λ , c and the initial data h, u0, we can deduce the existence of a unique 
+
+C1 solution (p1,0, p2,0, p3,0, σ0).This local solution can be uniquely extended over the entire compact interval [0, D] by a step-by-step continuation argument. As the solution is extended from a point xk to xk+1,the unique C1 solution on [0, xk] serves as a well-defined history for the next interval. During this process, as long as 
+
+σ0 ≤ τ, the system of Volterra equations maintains its initial structure. Should the extension reach a point where 0 ≤ x ≤ D and 
+
+σ0 > τ, the structure of the equation for p3,0 changes. Specif-ically, the integral involving the ODE’s history vanishes. The equation for p3,0 then takes the form of a functional integral equation: 
+
+p3,0(x) =    
+
+> Zx
+> σ−10(σ0(x)−τ)
+
+p1,0(y)
+
+λ (p3,0(y)) dy . (153) This transition in the structure of the equation for p3,0 is rigorously handled by the continuation argument. The strict positivity of the propagation speed (9) ensures that σ0 is a strictly increasing, continuously differentiable function, and thus locally invertible. Consequently, the term σ −10 (σ0(x) −
+
+τ) is well-defined at each step, as its evaluation depends only on the solution over the preceding interval [0, x), which has already been uniquely constructed. The problem can there-fore be re-posed at each stage as a well-defined local system of Volterra equations, which is known to admit a unique C1
+
+solution. This constructive procedure, repeated over a finite number of steps, covers the entire compact domain [0, D]
+
+and guarantees that a unique C1([ 0, D]) solution for the ini-tial predictor states (p1,0, p2,0, p3,0, σ0) exists. The existence of this unique C1([ 0, D]) solution for the 17 initial predictor states directly implies that the initial condi-tion for the target system, w0, as defined by the backstep-ping transformation (51) at t = 0, is itself well-defined and Lipschitz continuous on [0, D]. Thus there exists a Lipschitz constant L such that for all x1, x2 ∈ [0, D]
+
+|w0(x1) − w0(x2)| ≤ L|x1 − x2|. (154) 
+
+B.2 Well-posedness of the Closed-Loop System 
+
+With a well-defined initial condition w0, we prove the well-posedness of the target system (52)–(54). The proof hinges on a fixed-point argument detailed in our prior con-ference paper [38], where an identical target system was analyzed. The core of the analysis in [38] is to first establish the existence of a unique solution pair (X, ξ ) ∈ C1 ×C1, where 
+
+ξ is the integrated propagation speed defined as: 
+
+ξ (t) :=
+
+Z t
+
+> 0
+
+λ
+
+Z σσ −τ
+
+X(η)dη
+
+
+
+dσ . (155) Once the unique solution for ξ is secured, the solution for the distributed state w is constructed via the method of char-acteristics. As shown in [38, eq. (46)], this solution is given by w(x,t) = w0(x + ξ (t)) , for x + ξ (t) ∈ [0, D].To connect this expression with the notation used in equa-tion (63), we recall that the characteristic curve ζ (s; x,t) is defined by (29), with its explicit solution given by: 
+
+ζ (s; x,t) = x + ξ (t) − ξ (s). (156) By setting s = 0 in (156) and noting that ξ (0) = 0 by defi-nition, we establish the identity x + ξ (t) = ζ (0; x,t).Since w0 is Lipschitz and ξ is C1, it follows that the solution w is locally Lipschitz continuous. With this solution established, the equations (56)–(59) for (π1, π2, π3, σ ) are globally well-defined. Indeed, noticing (56), we can consider 
+
+(π1, π3, σ ) firstly. Following the proof in Lemma 11, we obtain 
+
+πππ(x,t) = ( π1(x,t), π3(x,t), σ (x,t)) ⊤ , (157) which satisfies 
+
+∂t πππ(x,t) = λ
+
+Z tt−τ
+
+X(s)ds 
+
+
+
+∂xπππ(x,t), (158) with the boundary condition 
+
+πππ(0,t) = 
+
+
+
+X(t),
+
+Z tt−τ
+
+X(s)ds , t
+
+⊤
+
+. (159) Using the method of characteristics, the solution to the sys-tem (157)–(159) can be expressed as σ (x,t) = ξ −1(x+ξ (t)) 
+
+and π1(x,t) = X(σ (x,t)) , π3(x,t) = R σ (x,t)  
+
+> σ(x,t)−τ
+
+X(s) ds . The regularity of πππ is determined by the regularity of the func-tions that constitute its boundary data at x = 0, namely X
+
+and ξ . Given that (X, ξ ) ∈ (C1([ 0, ∞))) 2, the components 
+
+π1, π3, and σ are continuously differentiable. After that, from (57), since w is the locally Lipschitz continuous solution to the target system, π2 is obtained and also locally Lipschitz continuous. This set of regularities is sufficient for the well-posedness of the inverse backstepping transformation (55). Specifically, the expression for u involves π2 only within the function 
+
+g(·, π2), which is then integrated. As g is assumed to be Lipschitz continuous with respect to its second argument, the local Lipschitz continuity of π2 ensures that the integral term is well-defined and that the resulting control input u is locally Lipschitz on [0, D] × [0, ∞).Finally, from (130)–(131), we obtain the well-posedness of the forward predictor states (p1, p2, p3, σ ).Above all, we have proved the well-posedness of the closed-loop system (37)–(40) with the controller (43)–(48). 
+
+Acknowledgments 
+
+The work of Peipei Shang and Li Tong is supported by the National Natural Science Foundation of China (No. 12171368). The work of Mamadou Diagne was funded by the NSF CAREER Award CMMI-2302030 and the NSF grant CMMI-2222250. 
+
+References                                                    
+
+> [1] I. Abel, M. Jankovic, and M. Krsti´ c. Constrained stabilization of multi-input linear systems with distinct input delays. IFAC-PapersOnLine , 52(2):82–87, 2019. [2] I. Abel, M. Krsti´ c, and M. Jankovi´ c. Safety-critical control of systems with time-varying input delay. IFAC-PapersOnLine , 54(18):169–174, 2021. [3] Z. Artstein. Linear systems with delayed controls: A reduction. IEEE Transactions on Automatic control , 27(4):869–879, 1982. [4] N. Bekiaris-Liberis and M. Krstic. Lyapunov stability of linear predictor feedback for distributed input delays. IEEE Transactions on Automatic Control , 56(3):655–660, 2010. [5] N. Bekiaris-Liberis and M. Krstic. Compensation of time-varying input delay for nonlinear systems. In 2011 19th Mediterranean Conference on Control & Automation (MED) , pages 1040–1045. IEEE, 2011. [6] N. Bekiaris-Liberis and M. Krstic. Compensation of state-dependent input delay for nonlinear systems. IEEE Transactions on Automatic Control , 58(2):275–289, 2012. [7] N. Bekiaris-Liberis and M. Krstic. Nonlinear control under nonconstant delays ,volume 25 of Advances in Design and Control .Society for Industrial and Applied Mathematics (SIAM), Philadelphia, PA, 2013. [8] N. Bekiaris-Liberis and M. Krstic. Compensation of actuator dynamics governed by quasilinear hyperbolic PDEs. Automatica J. IFAC , 92:29–40, 2018. [9] R. Borsche, R. M. Colombo, and M. Garavello. On the coupling of systems of hyperbolic conservation laws with ordinary differential equations. Nonlinearity , 23(11):2749–2770, 2010.
+
+18 [10] F. Cacace, F. Conte, A. Germani, and P. Pepe. Stabilization of strict-feedback nonlinear systems with input delay using closed-loop predictors. International Journal of Robust and Nonlinear Control ,26(16):3524–3540, 2016. [11] F. Cacace, A. Germani, C. Manes, and M. Papi. Predictor-based output-feedback control of linear stochastic systems with large i/o delays. IEEE Transactions on Automatic Control , 66(1):307–313, 2020. [12] J.-M. Coron, M. Kawski, and Z. Wang. Analysis of a conservation law modeling a highly re-entrant manufacturing system. Discrete Contin. Dyn. Syst. Ser. B , 14(4):1337–1359, 2010. [13] J. Deutscher, N. Gehring, and R. Kern. Output feedback control of general linear heterodirectional hyperbolic ODE–PDE–ODE systems. 
+
+Automatica , 95:472–480, 2018. [14] M. Diagne, N. Bekiaris-Liberis, and M. Krstic. Compensation of input delay that depends on delayed input. Automatica , 85:362–373, 2017. [15] M. Diagne, N. Bekiaris-Liberis, and M. Krstic. Compensation of input delay that depends on delayed input. Automatica J. IFAC ,85:362–373, 2017. [16] M. Diagne, N. Bekiaris-Liberis, and M. Krstic. Time- and state-dependent input delay-compensated bang-bang control of a screw extruder for 3D printing. Internat. J. Robust Nonlinear Control ,27(17):3727–3757, 2017. [17] M. Diagne, N. Bekiaris-Liberis, A. Otto, and M. Krstic. Control of transport PDE/nonlinear ODE cascades with state-dependent propagation speed. IEEE Trans. Automat. Control , 62(12):6278– 6293, 2017. [18] M. Diagne and M. Krstic. State-dependent input delay-compensated bang-bang control: Application to 3d printing based on screw-extruder. In 2015 American Control Conference (ACC) , pages 5653– 5658. IEEE, 2015. [19] N. Espitia and W. Perruquetti. Predictor-feedback prescribed-time stabilization of lti systems with input delay. IEEE Transactions on Automatic Control , 67(6):2784–2799, 2021. [20] E. Fridman and U. Shaked. Delay-dependent stability and h∞ control: constant and time-varying delays. International journal of control ,76(1):48–60, 2003. [21] E. Fridman, U. Shaked, and L. Xie. Robust h∞ filtering of linear systems with time-varying delay. IEEE Transactions on Automatic Control , 48(1):159–165, 2003. [22] J. Gabriel and J. Deutscher. Robust cooperative output regulation for networks of hyperbolic pide–ode systems. IEEE Transactions on Automatic Control , 69(2):888–903, 2023. [23] M. Herty, A. Klar, and B. Piccoli. Existence of solutions for supply chain models based on partial differential equations. SIAM J. Math. Anal. , 39(1):160–173, 2007. [24] A. Irscheid, J. Deutscher, N. Gehring, and J. Rudolph. Output regulation for general heterodirectional linear hyperbolic pdes coupled with nonlinear odes. Automatica , 148:110748, 2023. [25] A. Irscheid, J. Deutscher, N. Gehring, and J. Rudolph. Output regulation for general heterodirectional linear hyperbolic PDEs coupled with nonlinear ODEs. Automatica J. IFAC , 148:Paper No. 110748, 14, 2023. [26] A. Irscheid, N. Espitia, W. Perruquetti, and J. Rudolph. Prescribed-time control for a class of semilinear hyperbolic PDE-ODE systems. 
+
+IFAC-PapersOnLine , 55(26):47–52, 2022. [27] I. Karafyllis and M. Krstic. Predictor feedback for delay systems: Implementations and approximations . Springer, 2017. [28] V. Kolmanovskii and J.-P. Richard. Stability of some linear systems with delays. IEEE Transactions on Automatic Control , 44(5):984– 989, 1999. [29] V. B. Kolmanovskii. On the liapunov-krasovskii functionals for stability analysis of linear delay systems. International Journal of Control , 72(4):374–384, 1999. [30] S. Kong and D. Bresch-Pietri. Prediction control for nonlinear systems with stochastic input delay. In Advances in Distributed Parameter Systems , pages 27–44. Springer International Publishing, Cham, 2022. [31] M. Krstic. On compensating long actuator delays in nonlinear control. 
+
+IEEE Transactions on Automatic Control , 53(7):1684–1688, 2008. [32] M. Krstic. Delay compensation for nonlinear, adaptive, and PDE systems . Springer, London, 2009. [33] M. Krstic. Input delay compensation for forward complete and strict-feedforward nonlinear systems. IEEE Transactions on Automatic Control , 55(2):287–303, 2009. [34] M. Krstic. Compensation of infinite-dimensional actuator and sensor dynamics. IEEE Control Systems Magazine , 30(1):22–41, 2010. [35] M. Krstic. Input delay compensation for forward complete and strict-feedforward nonlinear systems. IEEE Trans. Automat. Control ,55(2):287–303, 2010. [36] M. Krstic. Lyapunov stability of linear predictor feedback for time-varying input delay. IEEE Transactions on Automatic Control ,55(2):554–559, 2010. [37] T. Li and P. Shang. Control of the transport pde-ode cascade with integral-type propagation speed. Mathematics of Control, Signals, and Systems , 37(1):1–20, 2025. [38] T. Li, P. Shang, and M. Diagne. Predictor feedback design for state-dependent delay integro–differential equations. In Proceedings of the 5th IFAC/IEEE-CSS Workshop on Control of Systems Governed by Partial Differential Equations (CPDE 2025) , Beijing, China, June 2025. IFAC. [39] T. Li and W. Yu. Boundary value problems for quasilinear hyperbolic systems . Duke University mathematics series (vol. V). Durham: Duke University Mathematics Department, 1985. [40] M. Malisoff and M. Krstic. Delayed multivariable extremum seeking with sequential predictors. In 2020 American Control Conference (ACC) , pages 2649–2653. IEEE, 2020. [41] A. Manitius and A. Olbrot. Finite spectrum assignment problem for systems with delays. IEEE transactions on Automatic Control ,24(4):541–552, 1979. [42] F. Mazenc and M. Malisoff. Stabilization of nonlinear time-varying systems through a new prediction based approach. IEEE Transactions on Automatic Control , 62(6):2908–2915, 2016. [43] F. Mazenc and M. Malisoff. Stabilization and robustness analysis for time-varying systems with time-varying delays using a sequential subpredictors approach. Automatica , 82:118–127, 2017. [44] T. R. Oliveira, M. Krsti´ c, and D. Tsubakino. Extremum seeking for static maps with delays. IEEE Transactions on Automatic Control ,62(4):1911–1926, 2016. [45] A. Polyakov, D. Efimov, W. Perruquetti, and J.-P. Richard. Output stabilization of time-varying input delay systems using interval observation technique. Automatica , 49(11):3402–3410, 2013. [46] P. Shang and Z. Wang. Analysis and control of a scalar conservation law modeling a highly re-entrant manufacturing system. 
+
+J. Differential Equations , 250(2):949–982, 2011. [47] O. J. Smith. Closer control of loops with dead time. Chemical engineering progress , 53:217–219, 1957. [48] O. J. Smith. A controller to overcome dead time. iSA journal ,6(2):28–33, 1959. [49] C. A. Soman, D. P. Van Donk, and G. Gaalman. Combined make-to-order and make-to-stock in a food production system. International journal of production economics , 90(2):223–235, 2004. 
+
+19 [50] E. D. Sontag and Y. Wang. On characterizations of the input-to-state stability property. Systems Control Lett. , 24(5):351–359, 1995. [51] T. Strecker and O. M. Aamo. Output feedback boundary control of 2 × 2 semilinear hyperbolic systems. Automatica J. IFAC , 83:290– 302, 2017. [52] T. Strecker, O. M. Aamo, and M. Cantoni. Predictive feedback boundary control of semilinear and quasilinear 2 ×2 hyperbolic PDE-ODE systems. Automatica J. IFAC , 140:Paper No. 110272, 9, 2022. [53] O. M. A. Timm Strecker and M. Cantoni. Direct predictive boundary control of a first-order quasilinear hyperbolic pde. In 2019 IEEE 58th Conference on Decision and Control (CDC) , pages 4984–4989, 2019. [54] J. Weston and M. Malisoff. Sequential predictors under time-varying feedback and measurement delays and sampling. IEEE Transactions on Automatic Control , 64(7):2991–2996, 2018. [55] C. T. Yilmaz, M. Diagne, and M. Krstic. Unbiased extremum seeking for pdes. In 2024 IEEE 63rd Conference on Decision and Control (CDC) , pages 1199–1204, 2024. [56] C. T. Yilmaz and M. Krstic. Prescribed-time extremum seeking for delays and pdes using chirpy probing. IEEE Transactions on Automatic Control , 2024. [57] H. Yu, M. Diagne, L. Zhang, and M. Krstic. Bilateral boundary control of moving shockwave in lwr model of congested traffic. 
+
+arXiv preprint arXiv:1904.04303 , 2019. [58] B. Zhou, Q. Liu, and F. Mazenc. Stabilization of linear systems with both input and state delays by observer–predictors. Automatica ,83:368–377, 2017. 
+
+20

@@ -1,0 +1,1015 @@
+Title: MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems
+
+URL Source: https://arxiv.org/pdf/2604.06881v1
+
+Published Time: Thu, 09 Apr 2026 00:59:04 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+# MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+Tianyue Yang 1 Xiao Xue 1
+
+# Abstract 
+
+Neural operators have emerged as powerful sur-rogates for dynamical systems due to their grid-invariant properties and computational efficiency. However, the Fourier-based neural operator frame-work inherently truncates high-frequency com-ponents in spectral space, resulting in the loss of small-scale structures and degraded prediction quality at high resolutions when trained on low-resolution data. While diffusion-based enhance-ment methods can recover multi-scale features, they introduce substantial inference overhead that undermines the efficiency advantage of neural operators. In this work, we introduce MeanFlow-
+
+Enhanced Neural Operators (MENO), a novel framework that achieves accurate all-scale predic-tions with minimal inference cost. By leveraging the improved MeanFlow method, MENO restores both small-scale details and large-scale dynamics with superior physical fidelity and statistical accu-racy. We evaluate MENO on three challenging dy-namical systems, including phase-field dynamics, 2D Kolmogorov flow, and active matter dynamics, at resolutions up to 256 ×256. Across all bench-marks, MENO improves the power spectrum den-sity accuracy by up to a factor of 2 compared to baseline neural operators while achieving 12 ×
+
+faster inference than the state-of-the-art Diffu-sion Denoising Implicit Model (DDIM)-enhanced counterparts, effectively bridging the gap between accuracy and efficiency. The flexibility and effi-ciency of MENO position it as an efficient surro-gate model for scientific machine learning appli-cations where both statistical integrity and com-putational efficiency are paramount. 
+
+> 1The Center for Computational Science, University Col-lege London, United Kingdom. Correspondence to: Xiao Xue
+> <x.xue@ucl.ac.uk >.
+> Preprint. April 9, 2026.
+
+# 1. Introduction 
+
+The accurate and efficient simulation of complex dynam-ical systems, such as those governing fluid flow, weather patterns, and material science, remains a grand challenge in computational science. These systems are often de-scribed by complex, non-linear Partial Differential Equa-tions (PDEs) (Evans, 2022), such as the Navier-Stokes equa-tions, whose solutions exhibit rich multi-scale structures spanning a wide range of spatial and temporal scales. In particular, small-scale dynamics play a critical role in de-termining macroscopic behavior, governing energy transfer, dissipation, and long-term system evolution (Pope, 2001). While traditional numerical methods such as Direct Numer-ical Simulation (DNS) (Lee & Moser, 2015) can resolve these small-scale features with high fidelity, they are noto-riously expensive, incurring computational costs that are often prohibitive for many practical applications. This has led to the development of approximation methods such as Reynolds-Averaged Navier-Stokes (RANS) (Alfonsi, 2009) and Large Eddy Simulation (LES) (Piomelli, 1999), which reduce the computational burden by partially modelling or filtering fine-scale dynamics, at the expense of physical fidelity. 
+
+Neural Operators. A new paradigm has emerged in re-cent years with the application of deep learning to these problems. Among the most promising of these are Neu-ral Operators (NOs), a class of models designed to learn mappings between infinite-dimensional function spaces (Li et al., 2020; Rahman et al., 2022; Cao et al., 2024; Lu et al., 2021). Unlike traditional neural networks that operate on finite-dimensional vectors, NOs can learn the underlying solution operator of a PDE. This gives them a powerful prop-erty: resolution invariance, which allows them to be trained on low-resolution data and evaluated at higher resolutions, offering a flexible and efficient alternative to traditional nu-merical solvers. Pioneering architectures such as the Fourier Neural Operator (FNO) (Li et al., 2020), U-shaped Neural Operator (UNO) (Rahman et al., 2022) and the Laplace Neu-ral Operator (LNO) (Cao et al., 2024) have demonstrated remarkable success in learning complex dynamics. Despite their strong theoretical foundations and their frequent char-acterization as resolution-independent models, the empirical accuracy of neural operators tends to deteriorate as the evalu-ation resolution increases beyond the training regime. Such 1
+
+> arXiv:2604.06881v1 [cs.LG] 8 Apr 2026 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems
+
+resolution-dependent degradation fundamentally limits their applicability to high-fidelity, fine-scale simulations. The root cause of this issue can often be traced to architectural design choices: for example, Fourier-based neural operators rely on a truncated spectral representation, which inher-ently limits the bandwidth of resolvable modes and leads to the systematic loss of high-frequency components. As a consequence, fine-scale structures essential for accurately capturing multi-scale dynamics are poorly represented in the predicted solutions (Qin et al., 2024; Gao et al., 2025; Khodakarami et al., 2025). 
+
+Stochastic Generative Models. To enhance the physical fidelity of predictions, generative models offer a promising direction due to their capacity for capturing fine-grained data structures. While diffusion-based approaches like DDPMs (Ho et al., 2020) and DDIMs (Song et al., 2020) have proven effective in various applications (Chihaoui et al., 2023; 2024; Kawar et al., 2022; Wang et al., 2024; Yue et al., 2025; Choi et al., 2021; Mokady et al., 2023), their practical use is hampered by the high computational cost of multi-step sampling. Other ODE-based methods, including Flow Matching (FM) (Lipman et al., 2022) and Stochastic Inter-polants (SIs) (Albergo et al., 2023), face similar efficiency challenges. This has motivated the development of “fast forward” generative models capable of single-step gener-ation. These include distillation-based consistency mod-els (Song et al., 2023) and more recent train-from-scratch methods like Shortcut Diffusion (Frans et al., 2024), Induc-tive Moment Matching (Zhou et al., 2025), and Consistency Training (Song et al., 2023; Lu & Song, 2024). A leading approach in this domain is MeanFlow (MF) (Geng et al., 2025a), which models the time-averaged velocity to enable direct, one-step synthesis. The recently proposed improved MeanFlow (i-MF) (Geng et al., 2025b) further enhances training stability and performance, achieving state-of-the-art results without requiring distillation. 
+
+Our Method. In this work, we leverage the efficiency of i-MF to resolve the limitations of neural operators. We in-troduce MeanFlow-Enhanced Neural Operators (MENO), a novel, hybrid framework that achieves accurate all-scale predictions with minimal inference overhead. MENO de-couples the learning task: a standard neural operator learns the low-resolution dynamics of the system, and a down-stream generative decoder, built upon the i-MF model, then enhances the spatial resolution of the predictions in a single, efficient step. The main contributions of this work are: • A novel framework, MENO, that combines a neural op-erator with a stochastic generative decoder to achieve accurate and efficient all-scale predictions of dynami-cal systems. • The first use of an improved MeanFlow model for one-step generative refinement in scientific ML, which is significantly more efficient than diffusion-based coun-terparts. • We provide comprehensive empirical results demon-strating improved prediction accuracy and faithful sta-tistical property recovery on 3 different cross-physics and high-resolution dynamical systems governed by diverse governing equations. We demonstrate the effectiveness and flexibility of the MENO framework through extensive experimental valida-tion on three challenging benchmarks, including phase-field dynamics, the two-dimensional Kolmogorov flow, and a two-dimensional active matter system with resolutions up to 
+
+256 ×256 derived from The Well scientific machine learning dataset (Ohana et al., 2024). MENO achieves high-fidelity predictions for high-resolution dynamical systems with min-imal computational overhead. We compare MENO against a widely used approach for generative fidelity refinement of physical fields, namely dif-fusion model (DM) based enhancement (Shu et al., 2023; Oommen et al., 2024). MENO achieves up to a 12 × infer-ence speedup over DM-enhanced counterparts while pre-serving small-scale accuracy, and it consistently outper-forms neural operator baselines in predictive fidelity. 
+
+# 2. Method 
+
+2.1. Neural Operator Framework 
+
+We adopt the Neural Operator (NO) framework, which ex-tends classical deep learning to model mappings between infinite-dimensional function spaces (Li et al., 2020). Unlike standard neural networks that operate on finite-dimensional vectors, a neural operator Gθ learns an approximation of a target solution operator G†, which maps an input function 
+
+a to an output function u. This is formally expressed as learning the mapping: 
+
+G† : A → U , a 7 → u, (1) where A and U are separable Banach spaces of input and output functions, respectively. Given data pairs {(aj , u j )} with uj = G†(aj ), the neural operator Gθ with parameters θ is trained to minimize the expected error: 
+
+θ† = arg min  
+
+> θ
+
+Ea∼μ
+
+L  Gθ (a), G†(a) , (2) where L is a suitable loss function and μ is a probability measure in A. For a finite dataset, this reduces to: 
+
+θ† = arg min 
+
+> θ
+
+1
+
+N
+
+> N
+
+X
+
+> j=1
+
+L (Gθ (aj ), u j ) . (3) 2MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+The architecture of a neural operator is typically defined as a composition: 
+
+Gθ = Q ◦ K (L) 
+
+> θ
+
+◦ · · · ◦ K (1)  
+
+> θ
+
+◦ P . (4) Here, P is a lifting operator that projects the input function into a high-dimensional latent feature space. A series of kernel integration layers K(l) 
+
+> θ
+
+then transform this feature field. Each layer is often formulated as a non-local integral operator: 
+
+vl(x) = σ
+
+
+
+W v l−1(x) + 
+
+Z
+
+> Ω
+
+κ(l) 
+
+> θ
+
+(x, y)vl−1(y) dy
+
+
+
+,
+
+(5) where κ(l) 
+
+> θ
+
+is a learned kernel, W is a linear weight matrix, and σ is a non-linear activation. Finally, the projection oper-ator Q maps the last latent feature field to the target output space U. However, despite their theoretical appeal, the res-olution invariance of neural operators often breaks down in practice. When evaluated at resolutions substantially higher than those used during training, their empirical per-formance degrades markedly, particularly in fluid-dynamics settings where fine-scale structures and statistical properties are poorly reproduced (Qin et al., 2024; Gao et al., 2025; Khodakarami et al., 2025). This limitation motivates the need for a mechanism that enhances resolution while restor-ing the physical fidelity of neural operator predictions. To address this challenge, we turn to generative models, which have demonstrated strong capabilities in synthesizing high-fidelity, multi-scale data. 
+
+2.2. Improved MeanFlow Model Flow Matching. Flow Matching is a class of generative models that construct a continuous-time flow between a simple base distribution pbase (e.g., a Gaussian) and a com-plex target data distribution ptarget (Lipman et al., 2022). This flow is defined by a time-dependent probability density path pt(zt) and a corresponding velocity field vt(zt) that generates it. A common and tractable approach is to define the flow via a conditional path. Given a data sample x ∼ ptarget and noise 
+
+ϵ ∼ pbase , the conditional flow is often formulated as the linear interpolant 
+
+zt = atx + btϵ, (6) where at, b t : [0 , 1] → R are differentiable time-dependent functions. The corresponding conditional velocity field is 
+
+v(zt|x, ϵ ) = dz t
+
+dt = a′
+
+> t
+
+x + b′
+
+> t
+
+ϵ. (7) In this work, we focus on the optimal transport path, defined by at = 1 − t and bt = t. This simplifies the conditional velocity to v(zt|x, ϵ ) = ϵ − x, establishing a straight-line trajectory between the data and noise in latent space. The ideal Flow Matching objective minimizes the discrep-ancy between a parametrized velocity model vθ and the true marginal velocity that generates pt(zt):
+
+LFM = Et,p t(zt)∥vθ (zt, t ) − Ept(x,ϵ |zt)[v(zt|x, ϵ )] ∥2. (8) However, computing the marginal velocity 
+
+Ept(x,ϵ |zt)[v(zt|x, ϵ )] is intractable. The Conditional Flow Matching (CFM) objective circumvents this by matching the conditional velocity instead, using the key result that its gradient aligns with that of the ideal FM loss: 
+
+LCFM = Et,x,ϵ ∥vθ (zt, t ) − v(zt|x, ϵ )∥2. (9) Once trained, samples can be generated from ptarget by solv-ing the ordinary differential equation (ODE) dz t 
+
+> dt
+
+= vθ (zt, t )
+
+from t = 1 (noise) to t = 0 (data). 
+
+MeanFlow. While solving the ODE yields accurate sam-ples, it requires multiple evaluations of vθ . The MeanFlow model improves sampling efficiency by directly modelling the average velocity over a time interval (Geng et al., 2025a). For a time interval [r, t ], the average velocity u is defined as: 
+
+u(zt, r, t ) = 1
+
+t − r
+
+Z tr
+
+v(zt|x, ϵ ) dτ. (10) This representation allows for single-step sampling from zt
+
+to zr , since zr = zt − (t − r)u(zt, r, t ).To train a network uθ that predicts this quantity, we derive a self-supervised objective. Differentiating the definition of u
+
+with respect to the end time t yields the MeanFlow Identity: 
+
+u(zt, r, t ) = v(zt|x, ϵ ) − (t − r) ddt u(zt, r, t ), (11) where the total derivative expands as ddt u = ∂tu +
+
+vt(zt|x, ϵ ) · ∂zt u. This identity provides a target for the average velocity, leading to the MeanFlow objective: 
+
+LMF = ∥uθ (zt, r, t ) − sg (utgt )∥2, (12) with the target defined as 
+
+utgt = v(zt|x, ϵ )−(t−r) [ ∂tuθ + v(zt|x, ϵ ) · ∂zt uθ ] . (13) Here, sg (·) denotes the stop-gradient operation. This formu-lation enables uθ to be trained in a self-consistent manner: the network learns to predict the average velocity that must satisfy the kinematic identity dictated by the underlying instantaneous velocity field v.3MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems  
+
+> Figure 1. The MeanFlow-Enhanced Neural Operators framework. Panel (a) illustrates training the MeanFlow decoder on high-resolution fields by learning denoising trajectories. Panel (b) shows training an autoregressive neural operator on low-resolution data. Panel (c) combines both components into the full MENO pipeline: given a low-resolution initial condition, the neural operator produces a low-resolution rollout, which is then decoded into a high-resolution prediction by the MeanFlow decoder.
+
+Improved MeanFlow. MeanFlow objective, defined in Equation 12, relies on a target utgt that depends recursively on the network’s own predictions via the stop-gradient oper-ation. This self-referential structure can, in practice, lead to training instability and suboptimal gradient dynamics. To address this, improved MeanFlow (i-MF) objective was introduced, which reformulates the learning problem into a standard regression loss (Geng et al., 2025b). Starting from the MeanFlow identity, we rearrange terms to define a new network-predicted quantity: 
+
+Vθ (zt, r, t ) ≡ uθ + ( t − r) sg ([ ∂tuθ + v(zt|x, ϵ )∂zt uθ ]) .
+
+(14) Substituting this definition back into the MeanFlow iden-tity shows that a perfect model should satisfy Vθ (zt, r, t ) = 
+
+v(zt|x, ϵ ). This yields a direct and stable regression objec-tive: 
+
+Li-MF = Et,x,ϵ ∥Vθ (zt, r, t ) − v(zt|x, ϵ )∥2. (15) This formulation removes the self-consistency loop, result-ing in a conventional conditional velocity matching loss. Consequently, the i-MF objective improves both training stability and final sampling quality compared to the origi-nal MeanFlow approach on generative tasks (Geng et al., 2025b). 
+
+2.3. General Algorithm 
+
+The proposed framework operates in two distinct, sequen-tial training stages to balance computational efficiency with high-fidelity generative refinement. In the first stage, a Neu-ral Operator (NO) backbone is trained to learn the core temporal dynamics of the system in a low-resolution la-tent , as shown in Figure 1 (b). This model, trained via a standard autoregressive objective (e.g., mean squared error on future states), provides accurate but coarse-grained fu-ture predictions. The second stage focuses on enhancing spatial resolution. A separate MeanFlow-Enhanced Neural Operator decoder is trained to perform a one-step mapping from these corrupted latent states to high-resolution physical fields, demonstrated in Figure 1 (a) and Algorithm 1, which does not explicitly condition on low-resolution latent states. This flexible modular design enables the framework to be adapted easily to any existing NO pipeline. This decoder is optimized using the Li-MF loss (Equation 15). During inference, the pre-trained NO autoregressively rolls out a low-resolution trajectory, and the MENO decoder acts as a one-step generative refining module on each predicted frame, yielding a high-resolution, physically consistent fore-cast. This is summarized in Figure 1 (c) and Algorithm 2. 
+
+# 3. Experiments 
+
+In this section, we evaluate the performance of MENO models instantiated with two operator backbones, UNO and FNO, across three representative dynamical systems. The Cahn-Hilliard phase-field model captures explicit phase separation. The active matter model also exhibits phase-transition-like behavior, but typically develops richer, more heterogeneous spatio-temporal structures, making it a more challenging test of long-range interactions and small-scale pattern formation. Finally, Kolmogorov flow is a canonical system with externally imposed periodic forcing that pro-4MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems         
+
+> Figure 2. Columns show snapshots along a trajectory from KF256 dataset at t= 6 ,12 , . . . , 54 . The top row reports the high-resolution ground truth at 256 ×256 . The next three rows visualize the absolute error for predictions from UNO-SR, MENO-UNO, and DM-UNO, respectively. The color bars indicate the vorticity field and absolute error magnitude.
+
+Algorithm 1 MENO Decoder Training 
+
+Require: high-resolution dataset D (empirical distribution 
+
+ˆpD ), decoder uθ , iterations K, batch size B, learning rate η 
+
+> 1:
+
+Initialize θ 
+
+> 2:
+
+for k = 1 , . . . , K do  
+
+> 3:
+
+Sample {x(i)}Bi=1 ∼ ˆpD , ϵ(i) ∼ N (0 , I ), t(i), r(i) 
+
+> 4:
+
+z(i) 
+
+> t
+
+← (1 − t(i))x(i) + t(i)ϵ(i), v(i) ← ϵ(i) − x(i) 
+
+> 5:
+
+V (i) 
+
+> θ
+
+← uθ (z(i) 
+
+> t
+
+, r (i), t (i)) + ( t(i) − r(i)) · sg 
+
+
+
+∂tuθ +
+
+v(i)⊤∇z uθ
+
+ 
+
+> 6:
+
+Li-MF ← 1
+
+> B
+
+PBi=1 ∥V (i) 
+
+> θ
+
+− v(i)∥22 
+
+> 7:
+
+θ ← θ − η∇θ
+
+ Li-MF 
+
+ 
+
+> 8:
+
+end for 
+
+duces statistically stationary turbulent dynamics; it is widely used as a controlled testbed for turbulence modelling and long-horizon prediction. 
+
+Baselines. We benchmark MENO against diffusion-decoder-enhanced operator models built on FNO and UNO. Here, UNO can be viewed as an improved variant of FNO that incorporates skip connections and a U-Net-inspired multi-scale architecture, typically improving parameter ef-ficiency and reconstruction fidelity. As a strong baseline for field-quality enhancement, we use a diffusion-model decoder, which is among the most widely adopted state-of-the-art approaches for high-fidelity field refinement (Shu et al., 2023; Oommen et al., 2024). Training follows the De-noising Diffusion Probabilistic Model (DDPM) formulation, while inference uses Denoising Diffusion Implicit Models (DDIM) to accelerate sampling; please refer to Appendix A for details. For completeness, we also report autoregressive 
+
+Algorithm 2 MENO Inference 
+
+Require: low-resolution initial state aLR  
+
+> 0
+
+, trained models 
+
+Gϕ∗ , uθ∗ , horizon T , uniform upsampler U (·), noise strength τ 
+
+> 1:
+
+for t = 1 , . . . , T do  
+
+> 2:
+
+˜aLR  
+
+> t
+
+← G ϕ∗ (˜ aLR 
+
+> t−1
+
+) 
+
+> 3:
+
+Sample ϵt ∼ N (0 , I ), zt = (1 − τ )U (˜ aLR  
+
+> t
+
+) + τ ϵ t 
+
+> 4:
+
+ˆxt ← zt − uθ∗ (zt, 0, τ ) 
+
+> 5:
+
+end for Return: High-resolution forecast {ˆxt}Tt=1 .results from the corresponding vanilla FNO/UNO super-resolution (SR) models (i.e., without generative refinement). In addition to accuracy, we report the speed of inference to highlight the practical trade-off between fidelity and com-putational cost. All models of the same type were trained using the same hyperparameter settings; please refer to Ap-pendix E for details. 
+
+Metrics. We evaluate each model via autoregressive time series rollouts initialized from the low resolution ground truth initial condition, and compare the resulting predic-tions with the corresponding high resolution ground truth fu-tures. Performance is quantified using three complementary metrics: the Structural Similarity Index Measure (SSIM), Relative L2 Error (R L2), and Power Spectrum Density Dis-crepancy (PSDD). SSIM captures perceptual and structural agreement by emphasizing local patterns such as edges, tex-tures, and contrast (Wang et al., 2004; Hore & Ziou, 2010), while R L2 provides a standard measure of pointwise recon-struction accuracy and overall visual fidelity. Because SSIM and R L2 primarily reflect instantaneous prediction quality, we report them over the short term prediction horizon. In 5MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+contrast, PSDD evaluates how well the model preserves the distribution of energy across spatial frequencies, which is critical for multi-scale dynamics and turbulent flows (Hess et al., 2023; Volkmann et al., 2024). PSDD is computed over the full rollout trajectory, as it characterize trajectory level statistical properties. Please refer to Appendix D for detailed explanation of the metrics. All reported metric values are averaged over evaluation batches. The impact of randomness is discussed in detail in Appendix B.4. The percentage advantage values are computed by comparing the MENO models with their corresponding NO baselines. 
+
+Benchmarks. We evaluate MENO on three benchmark datasets spanning phase separation, turbulent chaos, and active fluids. The Cahn-Hilliard phase field model, derived from continuum mixture theory (Novick-Cohen, 2008), de-scribes the time evolution of an order parameter characteriz-ing a binary mixture; we consider simulations at 100 × 100 
+
+resolution ( PF100 ). To assess performance in chaotic dy-namics, we use the Kolmogorov flow vorticity dataset at 
+
+256 × 256 resolution ( KF256 ), generated from the two-dimensional incompressible Navier-Stokes equations with a sinusoidal forcing term. Finally, the active-matter dataset (AM256 ) models a suspension of self-driven, rod-like par-ticles with finite excluded volume immersed in a Stokes fluid (Maddu et al., 2024). This dataset is sourced from the The Well (Ohana et al., 2024) physical dataset library at 
+
+256 × 256 resolution; in this work, we focus on the concen-tration field. Further details on the governing equations and data generation procedures are provided in Appendix C. For each dataset, we evaluate two resolution settings, denoted as low-resolution → high-resolution. Baseline neural operators are trained on the low-resolution fields, and high-resolution predictions are produced either by direct autoregressive super-resolution of the operator or by applying a gener-ative decoder (Diffusion Model or MENO) to the operator’s low-resolution rollout. For instance, 20 → 100 indicates training on 20 × 20 data and generating 100 × 100 outputs via operator rollout and decoder-based enhancement. Since the generation quality of MENO and diffusion-enhanced operators depends on the noise level used in MENO and the number of denoising steps used in diffusion-based decoders, we provide a detailed discussion of how these parameters are selected in Appendix B. The generative decoders are trained once per dataset on high-resolution fields and reuse it unchanged when the neural operator is evaluated on dif-ferent grids, because the decoder operates on the HR grid and is agnostic to the operator’s rollout resolution. 
+
+3.1. Cahn-Hilliard Phase Field 
+
+We begin our evaluation with the Cahn-Hilliard phase field dataset, a standard benchmark for coarsening dynamics that provides a foundational test of MENO’s ability to capture phase separation phenomena. Table 1(a) reports the evalua-tion metrics for neural operators trained on low-resolution data and deployed for autoregressive super-resolution, along with neural operators augmented with fidelity enhancement modules (DDIM and i-MF). Across all metrics on the PF100 dataset, the MENO family consistently delivers the strongest performance. For perceptual and reconstruction quality, the MENO-FNO variants achieve the best R L2 and SSIM, yield-ing gains of 67.2% and 43.3% at the 20 × 20 setting, and 69.2% and 12.9% at the 50 × 50 setting, relative to the base-line neural operators. In terms of spectral accuracy, MENO achieves improvements that exceed 50% at every resolution. Despite the significant improvement, the MENO decoder is approximately 4 times smaller then the corresponding neural operators, and surpasses the performance of diffu-sion model decoder, underscoring the effectiveness of the proposed architecture. Figure 3(a) shows the relative L2 loss (batch-averaged over trajectory time) and the corresponding energy spectrum pro-files for the 20 → 100 resolution task across all FNO-based models. The L2 curves indicate that MENO consistently outperforms the diffusion-based enhancement at all time steps, and surpasses the FNO-SR rollout baseline from the second time step onward. Consistently, MENO closely matches the energy spectrum at all scales and provide clos-est matching at small scales. In contrast, FNO-SR fails to accurately capture the mid- and small-scale structures, while DM-FNO exhibits larger deviations at the smallest scales. To further assess whether MENO captures physically mean-ingful structure, we analyze free energy reconstruction in Appendix F.1. Across all resolution settings, the MENO variants consistently achieve the best reconstruction fidelity. In terms of inference speed, the MENO variants are approx-imately six times faster than their DM-enhanced counter-parts. Table 1(b) reports the frame-wise mean inference time, along with its uncertainty, measured at the 50 × 50 
+
+resolution for the full pipeline, including the neural oper-ator and the corresponding enhancement module. Note that all low-resolution autoregressive predictions are first upsampled to 100 × 100 before applying enhancement; con-sequently, the decoder runtime is independent of the chosen low-resolution setting. 
+
+3.2. Kolmogorov Flow 
+
+Having established the effectiveness of MENO on phase separation dynamics, we next consider a more challenging high-resolution setting: turbulent Kolmogorov flow, charac-terized by strongly nonlinear dynamics and a broad range of interacting spatial scales. From Table 2(a), all evaluations are conducted on the 256 × 256 Kolmogorov flow dataset. The 32 → 256 and 64 → 256 settings denote neural op-erators trained at coarse resolutions and evaluated at full 6MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems                        
+
+> Figure 3. Relative L2loss over rollout time (top row) and the corresponding wavenumber energy spectra (bottom row). Shaded regions denote the standard error of the mean (SEM) computed over multiple test trajectories (PF100: 10, KF256: 8, AM256: 25). (a) PF100
+> 20 →100 : a FNO model trained on 20 ×20 data and its enhanced variants. (b) KF256 64 →256 : performance of a UNO model trained on 64 ×64 data and its enhanced variants. (c) AM256 64 →256 : performance of a UNO model trained on 64 ×64 data and its enhanced variants.
+
+resolution. Under this protocol, the MENO variants achieve stronger performance on most metrics for the 32 → 256 
+
+setting and on all metrics for 64 → 256 . For the 32 → 256 
+
+case, although the relative L2 error is approximately 9% higher than the UNO baseline, the improved SSIM indi-cates superior recovery of small-scale structures. Moreover, the roughly 30% gain in PSDD suggests that MENO more faithfully captures the long-range spectral statistics of the target dynamics. In the 64 → 256 setting, MENO yields consistent improvements across all metrics, exceeding 20% on each visual metric and achieving PSDD improvement about factor of 2. Figure 2 shows qualitative predictions from an uncurated KF256 trajectory. MENO consistently exhibits the smallest error growth over time, outperforming the DDIM-enhanced counterpart, while direct UNO-SR fails to preserve fine-scale structures. Figure 3 (b) reports the relative L2 loss (batch-averaged over trajectory time) and the vorticity field energy spectrum profiles for the 64 → 256 
+
+task across all UNO-based models. The L2 curves indicate that MENO consistently outperforms the diffusion-based en-hancement across all time frames and substantially mitigates late-time divergence from the ground truth. In the frequency domain, UNO-SR exhibits pronounced bumps in the mid to high frequency bands, whereas MENO produces the closest high-frequency tail to the ground truth, which is particu-larly important for chaotic dynamics. Table 2(b) shows that MENO achieves approximately a 12 × inference speed-up over the baseline diffusion models, while using only about one quarter of the parameters of the corresponding neural op-erator. These results highlight the computational efficiency of the MENO architecture. 
+
+3.3. Active Matter 
+
+Finally, to demonstrate MENO’s cross-physics capabili-ties, we evaluate it on an active matter system, a canonical example of complex, non-equilibrium dynamics from the field of biophysics (Maddu et al., 2024). We conducted experiments on the AM256 dataset using UNO and two enhanced variants, and summarize the results in Table 3(a). Across both resolution settings, MENO-UNO achieves the strongest performance on all reported metrics, improving both visual fidelity (R L2 and SSIM) and spectral consis-tency (PSDD). In contrast, the diffusion-enhanced base-line (DM-UNO) does not consistently improve these met-rics compared to the NO super-resolution baselines and notably degrades SSIM in both settings. Importantly, Ta-ble 3(b) shows that MENO-UNO achieves an approximately 
+
+14 × speed-up over the diffusion-based enhancement despite matching the parameter budget of DM-UNO. Figure 3 (c) 7MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+Table 1. PF100 results: (a) metrics of predictions by FNO, UNO, DM-enhanced NOs and MENOs; Note that the stand-alone UNO model cannot reliably perform autoregressive super-resolution under the same training setting as the FNO model; therefore, it is not included here as it has no impact on the validity of other results. (b) model size and inference time for neural operators at 50 × 50 resolution with generative decoders. (a) Metric values.                                                                          
+
+> 20 →100 50 →100 Model RL2↓SSIM ↑PSDD ↓RL2↓SSIM ↑PSDD ↓
+> Neural Operators Without Enhancement
+> FNO 0.64 0.60 4.98 ×10 −50.26 0.85 1.99 ×10 −5
+> Diffusion-Enhanced Neural Operators
+> DM-FNO 0.50 0.65 2.97 ×10 −50.30 0.77 2.28 ×10 −5
+> DM-UNO 0.54 0.63 3.34 ×10 −50.32 0.76 2.40 ×10 −5
+> MENO Models
+> MENO-FNO 0.21 0.86 1.59 ×10 −50.08 0.96 6.52 ×10 −6
+> MENO-UNO 0.29 0.82 2.15 ×10 −50.13 0.94 9.89 ×10 −6
+> Advantage (%) 67.2 43.3 68.1 69.2 12.9 67.2
+
+(b) Model size and inference time. 
+
+Model Size (NO + Decoder) Inference Time per Frame 
+
+Diffusion-Enhanced Neural Operators 
+
+DM-FNO 6.33M + 1.44M 0.176 ± 0.022 DM-UNO 6.38M + 1.44M 0.178 ± 0.021 
+
+MENO Models 
+
+MENO-FNO 6.33M + 1.44M 0.028 ± 0.022 
+
+MENO-UNO 6.38M + 1.44M 0.031 ± 0.021 
+
+reports the relative L2 loss (batch-averaged over trajectory time) and the energy spectrum profiles for the 64 → 256 
+
+task. The L2 curves show that MENO consistently outper-forms the diffusion-based enhancement at all time frames. The overall decrease in relative L2 over time reflects the dynamics of AM256, where the concentration field becomes progressively more homogeneous; additional examples are provided in Appendix F. In the spectral domain, MENO most closely matches the ground-truth high-frequency tail, which is critical for preserving physical fidelity. Across all three systems, MENO achieves superior high-resolution accuracy and spectral fidelity while being an order of magnitude faster than state-of-the-art DDIM refine-ment. In addition, the MeanFlow decoder contains only a few million parameters, making it readily applicable across different neural operator backbones. 
+
+# 4. Conclusion 
+
+In this work, we introduced MENO, a novel hybrid frame-work that resolves the common failure of neural operators to capture fine-scale structures at high resolutions. By cou-pling a neural operator with a single-step generative de-coder based on the improved MeanFlow model, MENO efficiently restores multi-scale physical details and statisti-
+
+Table 2. KF256 results: (a) metrics for FNO, UNO, DM-enhanced NOs, and MENOs. R L2 and SSIM are computed over the first 20 frames, while PSDD is computed over the full trajectories (180 frames). (b) model size and inference time for neural operators at 64 × 64 resolution with generative decoders. (a) Metric values.                                                                                     
+
+> 32 →256 64 →256 Model RL2↓SSIM ↑PSDD ↓RL2↓SSIM ↑PSDD ↓
+> Neural Operators Without Enhancement
+> FNO 0.19 0.73 1.22 ×10 −50.13 0.82 1.00 ×10 −5
+> UNO 0.23 0.66 1.74 ×10 −50.22 0.71 1.76 ×10 −5
+> Diffusion-Enhanced Neural Operators
+> DM-FNO 0.34 0.64 8.79 ×10 −60.27 0.72 6.70 ×10 −6
+> DM-UNO 0.35 0.64 9.22 ×10 −60.26 0.72 5.76 ×10 −6
+> MENO Models
+> MENO-FNO 0.21 0.76 8.62 ×10 −60.09 0.92 6.25 ×10 −6
+> MENO-UNO 0.21 0.76 9.06 ×10 −60.08 0.93 5.16 ×10 −6
+> Advantage (%) -4.11 29.3 63.6 31.0 48.4
+
+(b) Model size and inference time. 
+
+Model Size (NO + Decoder) Inference Time per Frame (s) 
+
+Diffusion-Enhanced Neural Operators 
+
+DM-FNO 27.10M + 6.63M 0.377 ± 0.008 DM-UNO 26.83M + 6.63M 0.376 ± 0.008 
+
+MENO Models 
+
+MENO-FNO 27.10M + 6.63M 0.030 ± 0.004 MENO-UNO 26.83M + 6.63M 0.030 ± 0.004 
+
+Table 3. AM256 results: (a) metrics for UNO, DM-enhanced NOs, and MENOs. R L2 and SSIM are computed over the first 10 frames, while PSDD is computed over the full trajectories (80 frames). (b) model size and inference time for neural operators at 64 × 64 resolution with generative decoders. (a) Metric values.                                                                   
+
+> 32 →256 64 →256 Model RL2↓SSIM ↑PSDD ↓RL2↓SSIM ↑PSDD ↓
+> Neural Operator Without Enhancement
+> UNO 2.11 ×10 −30.72 1.09 ×10 −52.05 ×10 −30.73 1.12 ×10 −5
+> Diffusion-Enhanced Neural Operator
+> DM-UNO 2.17 ×10 −30.56 1.24 ×10 −52.14 ×10 −30.56 1.30 ×10 −5
+> MENO Model
+> MENO-UNO 1.02 ×10 −30.74 1.02 ×10 −52.03 ×10 −30.75 1.08 ×10 −5
+> Advantage (%) 51.7 2.78 6.42 0.98 2.74 3.57
+
+(b) Model size and inference time. 
+
+Model Size (NO + Decoder) Inference Time per Frame (s) 
+
+Diffusion-Enhanced Neural Operator 
+
+DM-UNO 26.83M + 6.63M 0.456 ± 0.011 
+
+MENO Model 
+
+MENO-UNO 26.83M + 6.63M 0.032 ± 0.005 
+
+cal properties without the substantial overhead of multi-step diffusion-based methods. Our comprehensive experiments on dynamical systems governed by diverse physical equa-tions demonstrate that MENO consistently and substantially improves predictive accuracy over baseline operators. More importantly, it achieves this while being an order of magni-8MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+tude faster than diffusion-enhanced counterparts, effectively bridging the gap between accuracy and efficiency. MENO represents a significant step toward fast, reliable surrogate modelling of dynamical systems, enabling accelerated sci-entific discovery in settings that demand high-fidelity spatio-temporal data. 
+
+Limitations and future work. Our MeanFlow decoder does not incorporate explicit physical priors or parameter conditioning, leaving physics-informed extensions for future work. 
+
+# Acknowledgments 
+
+Authors acknowledge the use of resources provided by the Isambard-AI National AI Research Resource (AIRR). Isambard-AI is operated by the University of Bristol and funded by the UK Government’s Department for Science, Innovation and Technology (DSIT) through UK Research and Innovation (UKRI). This work was supported under project proposals “GenFLOW” and “GenFLOW2”. 
+
+# Impact Statement 
+
+MENO is an efficient hybrid framework that overcomes the resolution limits of neural operators, enabling fast and phys-ically consistent surrogate modeling of complex multiscale dynamical systems, with a MeanFlow decoder that readily adapts to different neural operator backbones. 
+
+# References 
+
+Albergo, M. S., Boffi, N. M., and Vanden-Eijnden, E. Stochastic interpolants: A unifying framework for flows and diffusions. arXiv preprint arXiv:2303.08797 , 2023. Alfonsi, G. Reynolds-averaged navier–stokes equations for turbulence modeling. 2009. Cao, Q., Goswami, S., and Karniadakis, G. E. Laplace neural operator for solving differential equations. Nature Machine Intelligence , 6(6):631–640, 2024. Chihaoui, H., Lemkhenter, A., and Favaro, P. Zero-shot image restoration via diffusion inversion. 2023. Chihaoui, H., Lemkhenter, A., and Favaro, P. Blind image restoration via fast diffusion inversion. Advances in Neu-ral Information Processing Systems , 37:34513–34532, 2024. Choi, J., Kim, S., Jeong, Y., Gwon, Y., and Yoon, S. Ilvr: Conditioning method for denoising diffusion probabilistic models. arXiv preprint arXiv:2108.02938 , 2021. Evans, L. C. Partial differential equations , volume 19. American mathematical society, 2022. Frans, K., Hafner, D., Levine, S., and Abbeel, P. One step diffusion via shortcut models. arXiv preprint arXiv:2410.12557 , 2024. Gao, W., Xu, R., Deng, Y., and Liu, Y. Discretization-invariance? on the discretization mismatch errors in neu-ral operators. In The Thirteenth International Conference on Learning Representations , 2025. Geng, Z., Deng, M., Bai, X., Kolter, J. Z., and He, K. Mean flows for one-step generative modeling. arXiv preprint arXiv:2505.13447 , 2025a. Geng, Z., Lu, Y., Wu, Z., Shechtman, E., Kolter, J. Z., and He, K. Improved mean flows: On the chal-lenges of fastforward generative models. arXiv preprint arXiv:2512.02012 , 2025b. Hess, F., Monfared, Z., Brenner, M., and Durstewitz, D. Generalized teacher forcing for learning chaotic dynam-ics. arXiv preprint arXiv:2306.04406 , 2023. Ho, J., Jain, A., and Abbeel, P. Denoising diffusion proba-bilistic models. Advances in neural information process-ing systems , 33:6840–6851, 2020. Hore, A. and Ziou, D. Image quality metrics: Psnr vs. ssim. In 2010 20th international conference on pattern recognition , pp. 2366–2369. IEEE, 2010. Kawar, B., Elad, M., Ermon, S., and Song, J. Denoising diffusion restoration models. Advances in neural infor-mation processing systems , 35:23593–23606, 2022. Khodakarami, S., Oommen, V., Bora, A., and Karniadakis, G. E. Mitigating spectral bias in neural operators via high-frequency scaling for physical systems. arXiv preprint arXiv:2503.13695 , 2025. Kochkov, D., Smith, J. A., Alieva, A., Wang, Q., Brenner, M. P., and Hoyer, S. Machine learning–accelerated com-putational fluid dynamics. Proceedings of the National Academy of Sciences , 118(21), 2021. ISSN 0027-8424. doi: 10.1073/pnas.2101784118. URL https://www. pnas.org/content/118/21/e2101784118 .Lee, M. and Moser, R. D. Direct numerical simulation of turbulent channel flow up to. Journal of fluid mechanics ,774:395–415, 2015. Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhat-tacharya, K., Stuart, A., and Anandkumar, A. Fourier neural operator for parametric partial differential equa-tions. arXiv preprint arXiv:2010.08895 , 2020. Li, Z., Liu-Schiaffini, M., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart, A., and Anandku-mar, A. Learning chaotic dynamics in dissipative systems. 9MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+Advances in Neural Information Processing Systems , 35: 16768–16781, 2022. Lipman, Y., Chen, R. T., Ben-Hamu, H., Nickel, M., and Le, M. Flow matching for generative modeling. arXiv preprint arXiv:2210.02747 , 2022. Lu, C. and Song, Y. Simplifying, stabilizing and scal-ing continuous-time consistency models. arXiv preprint arXiv:2410.11081 , 2024. Lu, L., Jin, P., Pang, G., Zhang, Z., and Karniadakis, G. E. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. Nature machine intelligence , 3(3):218–229, 2021. Maddu, S., Weady, S., and Shelley, M. J. Learning fast, accurate, and stable closures of a kinetic theory of an active fluid. Journal of Computational Physics , 504: 112869, 2024. Mokady, R., Hertz, A., Aberman, K., Pritch, Y., and Cohen-Or, D. Null-text inversion for editing real images us-ing guided diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 6038–6047, 2023. Novick-Cohen, A. The cahn–hilliard equation. Handbook of differential equations: evolutionary equations , 4:201– 228, 2008. Ohana, R., McCabe, M., Meyer, L., Morel, R., Agocs, F., Beneitez, M., Berger, M., Burkhart, B., Dalziel, S., Fielding, D., et al. The well: a large-scale collection of diverse physics simulations for machine learning. Ad-vances in Neural Information Processing Systems , 37: 44989–45037, 2024. Oommen, V., Bora, A., Zhang, Z., and Karniadakis, G. E. Integrating neural operators with diffusion models im-proves spectral representation in turbulence modeling. 
+
+arXiv preprint arXiv:2409.08477 , 2024. Piomelli, U. Large-eddy simulation: achievements and challenges. Progress in aerospace sciences , 35(4):335– 362, 1999. Pope, S. B. Turbulent flows. Measurement Science and Technology , 12(11):2020–2021, 2001. Qin, S., Lyu, F., Peng, W., Geng, D., Wang, J., Tang, X., Leroyer, S., Gao, N., Liu, X., and Wang, L. L. Toward a better understanding of fourier neural operators from a spectral perspective. arXiv preprint arXiv:2404.07200 ,2024. Rahman, M. A., Ross, Z. E., and Azizzadenesheli, K. U-no: U-shaped neural operators. arXiv preprint arXiv:2204.11127 , 2022. Shu, D., Li, Z., and Farimani, A. B. A physics-informed diffusion model for high-fidelity flow field reconstruction. 
+
+Journal of Computational Physics , 478:111972, 2023. Song, J., Meng, C., and Ermon, S. Denoising diffusion implicit models. arXiv preprint arXiv:2010.02502 , 2020. Song, Y., Dhariwal, P., Chen, M., and Sutskever, I. Consis-tency models. 2023. Volkmann, E., Br ¨andle, A., Durstewitz, D., and Koppe, G. A scalable generative model for dynamical system recon-struction from neuroimaging data. Advances in Neural Information Processing Systems , 37:80328–80362, 2024. Wang, Y., Yang, W., Chen, X., Wang, Y., Guo, L., Chau, L.-P., Liu, Z., Qiao, Y., Kot, A. C., and Wen, B. Sinsr: diffusion-based image super-resolution in a single step. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pp. 25796–25805, 2024. Wang, Z., Bovik, A. C., Sheikh, H. R., and Simoncelli, E. P. Image quality assessment: from error visibility to struc-tural similarity. IEEE transactions on image processing ,13(4):600–612, 2004. Xue, X., ten Eikelder, M. F., Yang, T., Li, Y., He, K., Wang, S., and Coveney, P. V. Equivariant u-shaped neural op-erators for the cahn-hilliard phase-field model. arXiv preprint arXiv:2509.01293 , 2025. Yue, Z., Liao, K., and Loy, C. C. Arbitrary-steps image super-resolution via diffusion inversion. In Proceedings of the Computer Vision and Pattern Recognition Confer-ence , pp. 23153–23163, 2025. Zhou, L., Ermon, S., and Song, J. Inductive moment match-ing. arXiv preprint arXiv:2503.07565 , 2025. 10 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# A. Details of Diffusion Model Fidelity Enhancement 
+
+In this section, we describe how the diffusion model based decoder is trained, following the standard DDPM objective. DDPM defines a forward noising process that progressively corrupts a clean sample with Gaussian noise until it becomes indistinguishable from a standard normal sample. The forward process is given by 
+
+xt = √¯αt x0 + √1 − ¯αt ϵ, ϵ ∼ N (0 , I ), (16) where ¯αt = Qts=1 (1 − βs) and {βt}Tt=1 denotes the noise schedule, with t, T ∈ Z+. As t increases, the field becomes progressively noisier, and the original sample corresponds to t = 0 . A denoiser network ϵθ (xt, t ) is trained to predict the injected noise, and is then used to parametrize the reverse denoising (sampling) process. The complete training procedure is summarized in Algorithm 3. 
+
+Algorithm 3 Training Diffusion Model Decoder by DDPM 
+
+Require: noise schedule {βt}Tt=1 , model ϵθ (xt, t ), high-resolution dataset D (empirical distribution ˆpD ), regularization strength β > 0, iterations K, batch size B, learning rate η
+
+1: Initialize θ
+
+2: Compute αt = 1 − βt, and cumulative product ¯αt = Qts=1 αs
+
+3: for k = 1 , . . . , K do 
+
+4: Sample {x(i)}Bi=1 ∼ ˆpD , ϵ(i) ∼ N (0 , I ), t(i) ∼ Uniform ({1, . . . , T })
+
+5: x(i) 
+
+> t
+
+← √¯αtx(i) + √1 − ¯αtϵ(i)
+
+6: ˆϵ(i) ← ϵθ (x(i) 
+
+> t
+
+, t (i))
+
+7: Lddpm ← 1
+
+> B
+
+PBi=1 ∥ϵ(i) − ˆϵ(i)∥22
+
+8: θ ← θ − η∇θ
+
+ Lddpm 
+
+
+
+9: end for 
+
+At inference time, DDPM performs the reverse diffusion process by iteratively denoising an initial Gaussian sample using the learned noise predictor. This update can be written as 
+
+xt−1 = 1
+
+√αt
+
+
+
+xt − βt
+
+√1 − ¯αt
+
+ϵθ (xt, t )
+
+
+
++ ϵ
+
+r 1 − ¯αt−1
+
+1 − ¯αt
+
+βt, ϵ ∼ N (0 , I ). (17) In practice, sampling typically uses the same number of steps T as training, which can be computationally expensive. DDIM accelerates generation by using a non-Markovian parametrization that allows skipping intermediate denoising steps while preserving a consistent trajectory, thereby reducing the effective number of sampling iterations. This sampling process is summarized in Algorithm 4. 
+
+Algorithm 4 DDIM-Enhanced Neural Operator 
+
+Require: DDPM noise predictor ϵθ , schedule {¯αt}Tt=0 , steps 0 = τ0 < · · · < τ K , low-resolution initial state aLR  
+
+> 0
+
+, trained neural operator Gϕ∗ , horizon T , uniform upsampler U (·)
+
+1: for t = 1 , . . . , T do 
+
+2: ˜aLR  
+
+> t
+
+← G θ∗ (˜ aLR 
+
+> t−1
+
+)
+
+3: s ← τk, u ← τk−1
+
+4: ϵt ← ϵθ (U (˜ aLR  
+
+> t
+
+), s )
+
+5: ˜x0,t ← U (˜ aLR  
+
+> t
+
+) − √1 − ¯αs ϵt
+
+√¯αs
+
+6: ˆx0,t ← √¯αu ˜x0 + √1 − ¯αu ϵ
+
+7: end for Return: High-resolution forecast {ˆxt}Tt=1 .11 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# B. Impact of Denoising Settings for MENOs and Diffusion Models 
+
+B.1. Diffusion Models 
+
+Shu et al. (Shu et al., 2023) extensively study diffusion-based generative decoders for KF256, using the procedure summarized in Appendix A. The key observation we use is shown in Figure 4: when the low-resolution input is ground truth (unlike our setting where low-resolution states may be predicted by neural operators), the reconstruction error decreases monotonically as the number of DDIM steps increases. Guided by this efficiency-accuracy trade-off, we use 20 DDIM steps with a noise level of 400, which provides a strong diffusion baseline and avoids overstating the gains of MENO.        
+
+> Figure 4. Image adapted from (Shu et al., 2023), showing the reconstruction error trends for the 32 →256 generative refinement task. The legend compares three reconstruction strategies; in this work, we focus on the Baseline method.
+
+B.2. MENO Noise Strength 
+
+Since i-MF is an intrinsic one-step method, the only tuning parameter is the noise level. We perform a weighted stochastic search over τ ∈ (0 , 1] and record the reconstruction L2 loss using Optuna , with results shown in Figure 5. To avoid data leakage, this study uses ground-truth low-resolution inputs rather than neural operator predictions. We evaluate both 
+
+32 → 256 and 64 → 256 generative refinement tasks. While the overall trend is similar, the optimal noise levels differ, with            
+
+> Figure 5. Absolute L2loss of MENO decoder models on the KF256 dataset for the 32 →256 and 64 →256 generative refinement tasks.
+
+12 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+τ ≈ 0.432 for 32 → 256 and τ ≈ 0.197 for 64 → 256 . Intuitively, lower-resolution inputs require stronger noise to better match the distribution of intermediate states, whereas higher-resolution inputs benefit from weaker noise. This provides a qualitative explanation of i-MF decoder: it implicitly relies on distributional similarity between corrupted low-resolution states and true intermediate states. Consequently, performance is expected to degrade when the low-resolution input deviates substantially from the ground truth. 
+
+B.3. Distributional Drift 
+
+Although a fully quantitative analysis is beyond the scope of this study, we can qualitatively illustrate the effect of distributional drift in the low-resolution latent. During autoregressive rollouts, neural operators inevitably accumulate errors, causing later frames to deviate increasingly from the ground truth. This behavior is reflected by the long-range growth of relative L2 error in Figure 6.        
+
+> Figure 6. Long range relative L2loss of all UNO-based models on the KF256 dataset for the 32 →256 generative refinement tasks. Shaded regions denote the SEM computed over 8 test trajectories.
+
+While these later frames lie outside the prediction range, generative refinement can still substantially reduce error with respect to the ground truth, indicating that the decoder remains effective under moderate, non-severe drift. 
+
+B.4. Impact of Generation Randomness 
+
+In this section, we shall illustrate how the stochastic nature of generative models affect the metric values. To investigate the impact of random seed, we use 100 randomly generated integers for the generative decoder and see how uncertainty arises across different runs on the KF256 tasks. The result is summarised in Table 4. This small errors confirms that the metric values, up to the digits we report in the main body, is not affected by the randomness of generative models.          
+
+> Table 4. KF256 32 →256 metrics for DM-enhanced NOs, and MENOs. RL2and SSIM are computed over the first 20 frames, while PSDD is computed over the full trajectories (180 frames). Uncertainties are computed over 100 runs with different random seeds. We report values to four significant figures; uncertainties smaller than this precision are rounded and reported as ±1in the last digit.
+
+32 → 256 64 → 256 Model RL2 ↓ SSIM ↑ PSDD ↓ RL2 ↓ SSIM ↑ PSDD ↓
+
+DM-UNO 0.3541(4) 0.6383(2) (9 .221 ± 0.001) × 10 −6 0.2581(1) 0.7178(3) (5 .764 ± 0.001) × 10 −6
+
+MENO-UNO 0.2131(1) 0.7612(1) (9 .058 ± 0.001) × 10 −6 0.0813(1) 0.9321(2) (5 .161 ± 0.001) × 10 −6
+
+13 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# C. Dataset preparation 
+
+C.1. Dataset: phase-field Governing equation. The phase-field dataset is generated by numerically solving the two-dimensional Cahn-Hilliard equation, which describes phase separation and coarsening dynamics in binary mixtures. The evolution of the phase-field variable ϕ(x, t ) is governed by 
+
+∂ϕ ∂t = ∇ · (M ∇μ) , (18) where M denotes the mobility and μ is the chemical potential defined as the variational derivative of the free energy functional. The free energy takes the Ginzburg-Landau form 
+
+F[ϕ] = 
+
+Z
+
+> Ω
+
+ λε W (ϕ) + λε 
+
+2 |∇ ϕ|2
+
+
+
+dx, (19) with a double-well potential 
+
+W (ϕ) = 14 (ϕ2 − 1) 2. (20) This yields the chemical potential 
+
+μ = λ
+
+ ϕ(ϕ2 − 1) 
+
+ε − ε∇2ϕ
+
+
+
+. (21) 
+
+Dataset description. All simulations employ constant mobility M = 1 and interface thickness λ = 0 .01 in Equation (21). The system is evolved on a two-dimensional square domain under homogeneous Neumann or periodic boundary conditions, ensuring mass conservation throughout the evolution. Based on this physical model, the first dataset considered in this work is a two-dimensional phase-field dataset generated from numerical simulations of the Cahn-Hilliard equation, which describes phase separation and coarsening dynamics in binary mixtures. The phase-field variable ϕ(x, t ) ∈ [−1, 1] represents the local composition difference between the two components, where ϕ = ±1 correspond to pure phases and intermediate values indicate diffuse interfaces. All simulations are performed on a unit square domain Ω = [0 , 1] 2 discretized using a uniform Cartesian grid of size 100 ×100 . The temporal evolution follows the standard Cahn-Hilliard dynamics with constant mobility, and the interface thickness parameter is fixed across all simulations to ensure consistent interfacial resolution. Each simulation starts from an identical homogeneous initial condition ϕ(x, 0) = 0 , with stochastic perturbations introduced through different random seeds, leading to diverse phase separation trajectories. The dataset consists of 300 independent simulation runs using COMSOL Multiphysics, each producing a full spatio-temporal trajectory of the phase-field variable. Each trajectory contains 25 consecutive temporal frames, generated with a fixed temporal sampling interval of ∆t, corresponding to the complete evolution of the phase separation process (Xue et al., 2025). From each trajectory, multiple overlapping temporal fragments are extracted to construct supervised learning samples. Specifically, given a sequence of nin consecutive phase-field snapshots as input, the learning task is to predict the subsequent 
+
+nout snapshots. By sliding the input-output window along each trajectory, multiple training samples are obtained from a single simulation run, enabling both autoregressive prediction and multi-step rollout evaluation. We randomly split the dataset into training, validation, and test sets with a ratio of 80% /10% /10% . This dataset exhibits rich multi-scale spatial structures, including rapidly evolving interfaces at early times and slow coarsening dynamics at later stages, making it a challenging benchmark for operator learning methods. Due to its strong nonlinearity, long-range spatial correlations, and strict physical constraints such as mass conservation and energy dissipation, the phase-field dataset provides a rigorous testbed for evaluating the accuracy, stability, and physical fidelity of learned surrogate models. 
+
+C.2. Dataset: kolmogorov flow Governing equation. The Kolmogorov flow dataset is generated from numerical simulations of the two-dimensional incompressible Navier-Stokes equations with a spatially periodic body force (Kochkov et al., 2021). The governing equations 14 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+read ∂u
+
+∂t + u · ∇ u = −∇ p + ν∇2u + f (x),
+
+∇ · u = 0 ,
+
+(22) where u(x, t ) = ( u, v ) is the velocity field, p is the pressure, and ν denotes the kinematic viscosity. The external forcing is given by the Kolmogorov forcing 
+
+f (x) = (sin( ny ), 0) , (23) with forcing wavenumber n, which injects energy at a prescribed spatial scale while preserving periodicity. The system is evolved on a two-dimensional periodic square domain Ω = [0 , 2π]2. Under this forcing, the Kolmogorov flow admits laminar solutions at low Reynolds numbers and undergoes a sequence of instabilities and transitions to spatio-temporally chaotic dynamics as the Reynolds number increases, making it a canonical testbed for studies of turbulence, transition, and data-driven modelling (Li et al., 2022). 
+
+Dataset description. Based on the governing equations described above, the Kolmogorov flow dataset consists of 70 
+
+independent simulation trajectories of the two-dimensional incompressible Navier-Stokes equations with Kolmogorov forcing at Reynolds number Re = 1000 . All simulations are performed on a doubly periodic square domain, discretized using a uniform Cartesian grid of size 256 × 256 . The community code can be found in (Kochkov et al., 2021). Each simulation produces a full spatio-temporal trajectory of the vorticity field consisting of 180 consecutive temporal frames. From each trajectory, multiple overlapping temporal fragments are extracted to construct supervised learning samples. 
+
+Dataset availability. The dataset can be downloaded at: https://figshare.com/ndownloader/files/39181919 
+
+C.3. Dataset: active matter Dataset description. The active matter dataset used in this work is a part of The Well benchmark dataset (Ohana et al., 2024; Maddu et al., 2024). Instead of using the full dataset, we focus only on the scalar concentration fields. We follow the standard data splits and evaluation protocol provided in the dataset. 
+
+Dataset availability. The dataset can be found at: https://polymathic-ai.org/the well/datasets/active matter/ 15 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# D. Definition of Metrics 
+
+D.1. Relative L2 Norm 
+
+The model’s step-by-step prediction accuracy for 2D physical fields is quantified using the relative L2 norm. Specifically, the relative error is computed as 
+
+Relative L2-error( k) = 1
+
+N
+
+> N
+
+X
+
+> j=1
+
+ˆz jk − z jk 2
+
+z jk 2
+
+, (24) where ˆz jk and z jk denote the predicted and ground-truth states at time step k for the jth test trajectory, respectively. 
+
+D.2. Structural Similarity Index Measure 
+
+To quantify structural agreement between predicted and reference 2D scientific fields, we use the Structural Similarity Index Measure (SSIM) (Wang et al., 2004). SSIM compares local luminance (mean), contrast (variance), and structure 
+
+(cross-covariance) between two signals. For a reference field x ∈ RH×W and a prediction y ∈ RH×W , SSIM is computed pointwise over a local window and then averaged over the spatial domain. 
+
+Gaussian-window local statistics. Local moments are estimated using a Gaussian-weighted window of size w × w (odd 
+
+w) with standard deviation σ. Denoting Gaussian smoothing by H(·), the local means are 
+
+μx = H(x), μy = H(y), (25) and the (biased) local variances and covariance are computed as 
+
+σ2 
+
+> x
+
+= H(x2) − μ2
+
+> x
+
+, σ2 
+
+> y
+
+= H(y2) − μ2 
+
+> y
+
+, σxy = H(xy ) − μxμy . (26) In our implementation, H is applied via a separable 2D convolution using a 1D normalized Gaussian kernel, with “same” padding to preserve spatial resolution. 
+
+SSIM map and aggregation. The SSIM map is given by 
+
+SSIM( x, y ) = (2 μxμy + C1) (2 σxy + C2)
+
+ μ2 
+
+> x
+
++ μ2 
+
+> y
+
++ C1
+
+   σ2 
+
+> x
+
++ σ2 
+
+> y
+
++ C2
+
+ . (27) The final scalar SSIM score is the spatial mean of this map: 
+
+SSIM( x, y ) = 1
+
+HW 
+
+> H
+
+X
+
+> i=1
+> W
+
+X
+
+> j=1
+
+SSIM ij (x, y ). (28) 
+
+Stability constants and data range. To improve numerical stability, SSIM uses constants 
+
+C1 = ( K1L)2, C2 = ( K2L)2, (29) where L is the data range. Because our fields are unnormalized scientific quantities , we compute L per-sample from the reference field: 
+
+L = max( x) − min( x). (30) We use the standard choices K1 = 0 .01 and K2 = 0 .03 . If L = 0 (the reference is constant), we return SSIM = 1 if x and 
+
+y match within numerical tolerance, and 0 otherwise. 
+
+Batched evaluation. For batched 1-channel inputs of shape (B, H, W, 1) , we compute SSIM independently per sample b,producing {SSIM( xb, y b)}Bb=1 , and report averages over the batch. 16 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+D.3. Power Spectrum Density Discrepancy 
+
+To evaluate whether predicted fields reproduce the correct distribution of energy across spatial frequencies, we compute a 
+
+PSDD between predictions and references. This metric compares the (normalized) Fourier power spectra and penalizes mismatches in the frequency-domain energy content, which is particularly relevant for multi-scale dynamics (e.g., turbulent or textured fields). 
+
+Fourier transform. Given a batch of B fields x, y ∈ RB×H×W ×C , we compute the 2D discrete Fourier transform (DFT) over spatial axes for each sample and channel: 
+
+Fx = F{ x}, Fy = F{ y}, (31) and apply a frequency shift so that the zero-frequency (DC) component is centred: 
+
+eFx = fftshift( Fx), eFy = fftshift( Fy ). (32) 
+
+Mean-centering. To reduce domination by the DC component (which corresponds to the spatial mean), we remove the per-sample mean prior to the FFT: 
+
+x ← x − Ei,j [x], y ← y − Ei,j [y], (33) where Ei,j denotes averaging over spatial indices (i, j ). This step emphasizes differences in fluctuations rather than absolute offsets. 
+
+Normalized PSD. Let eF denote the complex FFT output for a given sample. The (unnormalized) power spectrum is 
+
+| eF |2 = Re( eF )2 + Im( eF )2. For numerical robustness on high-dynamic-range scientific fields, we compute an overflow-safe PSD by introducing a per-sample scale factor 
+
+s = max 
+
+> i,j,c
+
+
+
+max 
+
+
+
+| Re( eFi,j,c )|, | Im( eFi,j,c )|
+
+ 
+
+, (34) and scaling the real and imaginary parts before squaring: 
+
+Re( eF ) ← Re( eF )/ max( s, ε ), Im( eF ) ← Im( eF )/ max( s, ε ). (35) The scaled PSD is then 
+
+P = Re( eF )2 + Im( eF )2, (36) and we normalize it to form a discrete probability distribution over frequency bins: 
+
+bP = P
+
+P 
+
+> i,j,c
+
+Pi,j,c + ε . (37) This normalization removes sensitivity to overall amplitude and focuses the metric on the relative allocation of spectral energy. 
+
+PSD Discrepancy. Finally, the PSD Discrepancy between x and y is computed as the mean ℓ1 distance between their normalized PSDs, averaged across the batch: 
+
+LPSD (x, y ) = 1
+
+B
+
+> B
+
+X
+
+> b=1
+
+ 1
+
+HW C 
+
+> H
+
+X
+
+> i=1
+> W
+
+X
+
+> j=1
+> C
+
+X
+
+> c=1
+
+bP (b) 
+
+> x,i,j,c
+
+− bP (b)
+
+> y,i,j,c
+
+ . (38) Lower values indicate closer agreement in spectral content between prediction and reference. 17 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# E. Hyperparameters 
+
+In this section, we give all the relevant experiment settings for reproducibility. Inference hyperparameters are discussed in Appendix B. 
+
+E.1. PF100 Experiment Setting 
+
+The neural operator architectures are summarized in Table 5 for the 20 → 100 and 50 → 100 tasks. Hyperparameters are chosen so that the two configurations have matched parameter counts, with comparable depth and a similar number of Fourier modes. All neural operators are trained by Adam optimizers with learning rate 0.0001 for 1500 epochs. 
+
+Parameter Name FNO Configuration UNO Configuration 
+
+channel mlp dropout 0 0channel mlp expansion 0.5 0.5 channel mlp skip soft-gating linear factorization tucker tucker fno skip linear linear hidden channels 78 128 horizontal skip linear implementation factorized factorized in channels 1 1lifting channel ratio 2lifting channels 256 n layers 7 7n modes (16,16) out channels 1 1projection channel ratio 2projection channels 64 rank 1.0 1.0 uno n modes (32,32),(16,16),(8,8),(4,4),(8,8),(16,16),(32,32) uno out channels 32,64,64,128,64,64,32 uno scalings (1,1),(0.5,0.5),(0.5,0.5),(1,1),(2,2),(2,2),(1,1)  
+
+> Table 5. FNO and UNO architectures used in all tasks for PF100 dataset.
+
+The diffusion model setting and the neural network backbone architecture are shown in Table 6. MF models share the same backbone model. All decoder modules are trained by Adam oprimizers with learning rate 0.0001 and weight decay rate 
+
+0.0001 for 150 epochs. 
+
+E.2. KF256 Experiment Setting 
+
+The neural operator architectures are summarized in Table 7 for the 64 → 256 and 32 → 256 tasks. Hyperparameters are chosen so that the two configurations have matched parameter counts, with comparable depth and a similar number of Fourier modes. The diffusion model setting and the neural network backbone architecture are shown in Table 8. MF models share the same backbone model. 
+
+E.3. AM256 Experiment Setting 
+
+All neural operator models on AM256 are trained autoregressively using a five-step input window to predict the next frame. All other experimental settings for AM256 follow those used for KF256. 18 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+UNet hyperparameters Model setting hyperparameters 
+
+attention resolutions: (16) channel multipliers: (1, 1, 2) latent dims: 32 num res blocks: 3type: UNet beta end: 0.02 beta start: 0.0001 diffusion steps: 1000 
+
+Table 6. Diffusion model setting for the PF100 experiment. 
+
+Parameter Name FNO Configuration UNO Configuration 
+
+channel mlp dropout 0 0channel mlp expansion 2 2channel mlp skip soft-gating linear factorization tucker tucker fno skip linear linear hidden channels 84 64 horizontal skip linear implementation factorized factorized in channels 1 1lifting channel ratio 2lifting channels 64 n layers 7 7n modes (32,32) out channels 1 1projection channel ratio 1projection channels 64 rank 1.0 1.0 uno n modes (64,64),(32,32),(32,32),(8,8),(4,4),(8,8),(32,32),(32,32),(64,64) uno out channels 32, 64, 64, 128, 64, 64, 32 uno scalings (1,1),(1,1),(0.5,0.5),(1,1),(2,2),(1,1),(1,1) 
+
+Table 7. FNO and UNO architectures used in all tasks for KF256 dataset. 
+
+UNet hyperparameters Model setting hyperparameters 
+
+attention resolutions: (16) channel multipliers: (1, 1, 1, 2) latent dims: 64 num res blocks: 3type: UNet beta end: 0.02 beta start: 0.0001 diffusion steps: 1000 
+
+Table 8. Diffusion model setting for the PF100 experiment. 
+
+19 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+# F. More Results 
+
+F.1. Free Energy Plots for Cahn-Hilliard Phase Field Model 
+
+We compute the (Ginzburg–Landau) Cahn–Hilliard free energy of a 2D order-parameter field ϕ(x, y ) by discretizing and integrating the standard energy density 
+
+F[ϕ] = 
+
+Z
+
+> Ω
+
+ λ
+
+2 |∇ ϕ|2 + λ
+
+4ε2 (ϕ2 − 1) 2
+
+
+
+dx dy, 
+
+where ε controls interface thickness and λ is set from the surface-tension parameter σ via λ =
+
+
+
+σ 32√2
+
+
+
+ε. The implementa-tion accepts fields shaped as (H, W ), (B, H, W ), or (B, T, H, W ) and promotes them to a unified (B, T, H, W ) layout, enabling batch- and time-resolved evaluation. Spatial gradients are computed only along the two spatial axes using finite differences with spacing dx , yielding |∇ ϕ|2 = ( ∂xϕ)2 + ( ∂y ϕ)2. The gradient (interfacial) term and the double-well bulk potential are summed to obtain the energy density on the grid, which is then integrated over the domain by summing over 
+
+(H, W ) and multiplying by the cell area dx 2 to produce a free-energy trajectory per batch and time. Finally, we report the mean free energy across the batch at each time step and its standard error of the mean, computed from the sample standard deviation (with a configurable degrees-of-freedom correction) divided by √B. 
+
+> Figure 7. Free-energy trajectories for all models and resolution settings. Only the MENO variants consistently recover the correct free-energy evolution across all tasks. Shaded regions denote the SEM computed over 10 test trajectories
+
+Figure 7 shows free energy evolution on the PF100 system under fidelity enhancement. Upper Panel report results for UNO-based models and Lower Panel for FNO-based models. The left column corresponds to the 20 → 100 case, while the right column shows 50 → 100 case. In all cases, the ground-truth energy decay is shown in black. Direct neural-operator super-resolution rollouts (UNO/FNO, blue) exhibit significant drift and fail to preserve the correct dissipative behavior, particularly at longer time horizons. Diffusion-enhanced refinement (DM-UNO / DM-FNO, green) improves stability but still deviates from the true energy trajectory. In contrast, MENO (red) consistently tracks the true free-energy decay with substantially improved long-term accuracy, demonstrating superior physical fidelity across both architectures. 
+
+F.2. Autocorrelation Functions 
+
+In this study, we compute the autocorrelation by leveraging the Wiener–Khinchin identity to obtain the linear (non-circular) autocorrelation efficiently via FFTs. For each batch element b and spatial location (h, w ), we form the time series xb,t (h, w )
+
+20 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+for t = 0 , . . . , T − 1 and, when enabled, de-mean it over time: 
+
+˜xb,t (h, w ) = xb,t (h, w ) − 1
+
+T 
+
+> T−1
+
+X
+
+> t=0
+
+xb,t (h, w ).
+
+We then zero-pad ˜x along the time axis to a length nfft ≥ 2T − 1 to avoid wrap-around, compute its Fourier transform 
+
+Xb(ω; h, w ) = F{ ˜xb, ·(h, w )}, and recover the autocorrelation sequence from the inverse transform of the power spectrum: 
+
+rb(ℓ; h, w ) = F−1
+
+Xb(ω; h, w ) Xb(ω; h, w )
+
+
+
+[ℓ], ℓ = 0 , . . . , L − 1,
+
+which is equivalent to the time-domain sum 
+
+rb(ℓ; h, w ) =  
+
+> T−1−ℓ
+
+X
+
+> t=0
+
+˜xb,t (h, w ) ˜ xb,t +ℓ(h, w ).
+
+We convert this to an auto-covariance estimate using either the unbiased normalization 
+
+ˆγb(ℓ; h, w ) = rb(ℓ; h, w )
+
+T − ℓ ,
+
+or the biased alternative ˆγb(ℓ; h, w ) = rb(ℓ; h, w )/T , and optionally report the autocorrelation function by normalizing with the lag-zero value: 
+
+ˆρb(ℓ; h, w ) = ˆγb(ℓ; h, w )ˆγb(0; h, w ) + ε ,
+
+so that ˆρb(0; h, w ) ≈ 1. Finally, we aggregate over the batch dimension to obtain the mean autocorrelation ¯ρ(ℓ; h, w ) = 
+
+> 1
+> B
+
+PBb=1 ˆρb(ℓ; h, w ) and quantify uncertainty across batch samples using either the standard deviation or the standard error of the mean. Figure 8 evaluates the ability of different models to reproduce long-time temporal statistics via the auto-correlation function. The shaded error bands indicate the SEM computed over multiple trajectories (PF100: 10, KF256: 8, AM256: 25). Across the PF100, KF256, and AM256 systems, direct neural-operator super-resolution rollouts exhibit accelerated decorrelation and increased variance, indicating a loss of temporal coherence at longer lags. Diffusion-enhanced refinement partially alleviates this issue but still shows noticeable deviations from the ground-truth decay. In contrast, MENO consistently recovers the correct auto-correlation behavior across all systems and both FNO- and UNO-based backbones, closely matching the true decay rate. 21 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+Figure 8. Autocorrelation functions for all resolution settings across all datasets. For KF256 and AM256, we emphasize the early-time decay behavior, while for PF100, which has shorter trajectories, we report the full autocorrelation curves. 
+
+22 MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems 
+
+F.3. Model Rollout Visualizations for PF100 and AM256 
+
+Figure 9 presents qualitative comparisons of rollout predictions and absolute error fields for PF and AM systems at 100 × 100 
+
+and 256 × 256 . For PF ( 50 → 100 ), direct FNO-SR rollouts exhibit rapidly growing errors and fail to recover fine-scale structures as time progresses, while DM-based refinement reduces early-stage errors but accumulates noticeable artifacts at later times. In contrast, MENO maintains low error levels throughout the rollout and more faithfully preserves the evolving small-scale morphology. For AM ( 64 → 256 ), UNO-SR rollouts show persistent structural distortions and elevated errors across all time steps. DM-UNO provides partial improvement but still suffers from residual inconsistencies. MENO consistently yields the lowest error magnitude and best qualitative agreement with the ground truth.  
+
+> Figure 9. Columns show snapshots along uncurated trajectories from PF100 and AM256. The top row presents the high-resolution ground truth. The following three rows visualize errors for predictions from NO-SR, MENO-NO, and DM-NO, respectively, using absolute error for both cases. Since the AM256 mean intensity varies over time, we normalize each frame before visualization and use consistent colormaps to highlight the evolution of error magnitude.
+
+23
