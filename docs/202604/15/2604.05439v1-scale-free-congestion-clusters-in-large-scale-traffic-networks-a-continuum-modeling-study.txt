@@ -1,0 +1,988 @@
+Title: Scale-free congestion clusters in large-scale traffic networks: a continuum modeling study
+
+URL Source: https://arxiv.org/pdf/2604.05439v1
+
+Published Time: Wed, 08 Apr 2026 00:39:00 GMT
+
+Number of Pages: 24
+
+Markdown Content:
+# Scale-free congestion clusters in large-scale traffic networks: a continuum modeling study 
+
+Yuki Chiba a, Norikazu Saito a, Yuki Ueda a,1 , Hiroaki Yoshida b,2 
+
+> aGraduate School of Mathematical Sciences, The University of Tokyo, 3-8-1 Komaba, Meguro-ku, Tokyo, 153-8914, Japan
+> bToyota Central R&D Labs., Inc., Nagakute, Aichi, 480-1192, Japan
+
+Abstract 
+
+Recent empirical studies have reported that spatiotemporal congestion clusters in urban traffic exhibit scale-free statistics, with cluster size following a power-law distribution. In this study, we address whether macroscopic continuum descriptions of traffic flow are capable of generating such scale-free spatiotemporal congestion patterns. To this end, we analyze the second-order Aw-Rascle-Zhang model on directed net-works under junction coupling. The governing equations are solved by a high-order discontinuous Galerkin scheme, and junction fluxes are determined by an optimization-based coupling procedure enforcing con-servation and admissibility at intersections. Congestion is defined by thresholding the road-averaged density, and spatiotemporal clusters are extracted as connected components in space and time. Numeri-cal experiments on lattice networks of varying sizes reveal that the cluster size follows a robust power-law distribution. Moreover, when rescaled by the linear system size inherent to the two-dimensional network geometry, the distribution collapses onto an approximately universal curve, indicating finite-size scaling governed by the linear system size. The observed power-law statistics and finite-size scaling are remi-niscent of scale-invariant dynamics characteristic of self-organized criticality. These results demonstrate that macroscopic continuum traffic models can reproduce large-scale statistical features observed in real urban congestion dynamics. 
+
+Keywords: Aw-Rascle-Zhang model; discontinuous Galerkin method; Traffic flow on networks; Spatiotemporal congestion clusters; Scale-free distribution; Finite-size scaling 
+
+1. Introduction 
+
+Urban traffic congestion has intensified worldwide and now exceeds pre-pandemic levels in many major cities. According to recent reports [1], drivers lose dozens of hours annually to congestion, with substantial economic and environmental costs. Congestion is therefore recognized as a complex urban phenomenon affecting mobility, emissions, and economic activity. Correspondingly, research on traffic dynamics has expanded across multiple modeling scales. Comprehensive reviews such as Helbing’s survey of self-driven many-particle systems [2] and Kerner’s three-phase traffic theory [3] summarize decades of 
+
+> 1Present address: Research Institute for Electronic Science, Hokkaido University, Sapporo 060-0812, Japan
+> 2Correspondence to: h-yoshida@mosk.tytlabs.co.jp
+> arXiv:2604.05439v1 [physics.soc-ph] 7 Apr 2026
+
+traffic jam at t3
+
+time t1 t2 t3 t4 t5
+
+cluster Figure 1: Schematic illustration of congestion clusters. Congested regions on the network (red) at times t1, . . . , t 5 are shown, indicating that a traffic jam at a given time (e.g., t3) forms a cluster as a set connected in space and time. 
+
+microscopic and macroscopic investigations. Empirical studies have further demonstrated large-scale traffic patterns, including the macroscopic fundamental diagram observed in Yokohama [4] and network-wide spatiotemporal analyses based on probe-vehicle data [5, 6]. Together, these works highlight the growing emphasis on understanding congestion as a large-scale collective phenomenon. While the concept of resilience — quantifying the persistence of congestion — has attracted attention across various fields [7, 8, 9], Zhang et al. [10] analyzed link-speed data from Beijing and Shenzhen and reported that both the cluster size and the recovery time follow power-law distributions. This observation suggests that urban congestion exhibits features reminiscent of self-organized criticality (SOC) [11, 12]. Similar scaling behavior had previously been discussed in traffic models [13, 14]. These findings naturally raise the broader question of whether such scale-free statistics can be reproduced within theoretical models of traffic flow. Congestion mechanisms have been extensively studied using discrete microscopic formulations, par-ticularly cellular automata, as well as through microsimulation platforms such as SUMO [15, 16], which resolve individual vehicle dynamics in detail. While these approaches capture fine-scale behavior, their vehicle-level resolution and modeling complexity can hinder systematic investigations of network-scale statistical structures. In contrast, macroscopic traffic dynamics are commonly described by hyperbolic conservation laws, following the foundational works of Lighthill-Whitham and Richards [17, 18]. The Aw-Rascle-Zhang (ARZ) model [19, 20] provides a widely used second-order continuum formulation incorpo-rating driver anticipation. Because continuum models offer a coarse-grained yet dynamically consistent representation of traffic at the network scale, they provide a natural framework for investigating the emer-gence of scale-free congestion statistics. When continuum traffic models are extended to urban networks, a central technical challenge lies in prescribing consistent coupling conditions at junctions where multiple 2roads merge and diverge. Optimization-based formulations of junction fluxes, combined with high-order discontinuous Galerkin (DG) discretizations, provide a flexible framework for solving hyperbolic traffic systems on complex networks [21]. In the present study, we investigate the emergence and scaling structure of spatiotemporal congestion clusters within a coarse-grained continuum network formulation. Using the Aw-Rascle-Zhang model combined with a high-order discontinuous Galerkin scheme and optimization-based junction coupling, we analyze congestion clusters extracted from network simulations of varying sizes. Particular emphasis is placed on examining the scaling behavior of cluster size and on identifying possible finite-size scaling structures associated with network size. Numerical experiments are conducted on lattice networks with different numbers of intersections in order to assess the robustness of the observed statistical behavior. While previous empirical and discrete modeling studies have reported scale-free congestion statistics, it remains unclear whether such behavior requires microscopic stochasticity or agent-based interactions. In this study, we show that even a macroscopic continuum model, when posed on a complex network with physically consistent junction coupling, can generate scale-free spatiotemporal congestion clusters with finite-size scaling structure. This provides evidence that scale invariance may arise as an intrinsic property of nonlinear networked traffic dynamics at the continuum level. This paper is organized as follows. In Section 2, we introduce the continuum traffic flow model, the network configuration, and the coupling conditions imposed at junctions. Section 3 describes the DG discretization and the numerical framework. In Section 4, we present numerical results on spatiotemporal congestion clusters, analyze the resulting power-law statistics, and examine finite-size scaling behavior across networks of varying sizes. Finally, in Section 5, we summarize the paper and outline directions for future research. Some technically more involved material is deferred to the appendices. In Appendix A, we provide supplementary remarks on the continuum mathematical model from the viewpoint of hyperbolic systems, while Appendix B presents a precise formulation of the coupling conditions. 
+
+2. The continuum model 
+
+2.1. The ARZ traffic flow model 
+
+We first consider an infinitely long single-lane road on which infinitely many vehicles are traveling in one direction. Let ρ(x, t ) > 0 denote the vehicle density and v(x, t ) > 0 the velocity, both assumed to be smooth functions. The ARZ traffic flow model is given by 
+
+
+
+∂tρ + ∂x(ρv ) = 0 ,∂t
+
+ ρ(v + p) + ∂x
+
+ ρ(v + p)v = 0 ,
+
+(1) where p denotes the “pressure” of the traffic flow and is interpreted as an anticipation factor that deter-mines the velocity from the density. Henceforth, we assume that p = p(ρ) is a given smooth, increasing 3function of ρ.The first equation in Eq. (1) expresses the so-called mass conservation law, which states that the total number of vehicles is conserved. In the classical continuum traffic flow model known as the Lighthill– Whitham–Richards model [17, 18], only this first equation is considered, and the velocity v is assumed to be a prescribed function of the density ρ. This model is commonly referred to as a first-order model. As an improvement of these classical models, systems have been proposed in which one does not assume an a priori function relationship between v and ρ. Instead, an additional equation is introduced to determine 
+
+v, leading to a coupled system. These models are referred to as second-order models. Among such models, a well-known example is the Payne–Whitham model [22, 23], in which the second equation is derived by imposing a momentum conservation law, by analogy with one-dimensional fluid models. However, it is a trivial but important fact that traffic flow, unlike a fluid, does not satisfy a momentum conservation law. To address this issue, Aw and Rascle [19] proposed setting the material derivative of v + p equal to zero: 
+
+DDt (v + p) = ∂t(v + p) + v ∂ x(v + p) = 0 .
+
+By rewriting this equation using the first equation of the system, one obtains the second equation in Eq. (1). This second equation represents a conservation law for 
+
+q = ρ(v + p).
+
+As pointed out in [19], this quantity does not possess any particular physical meaning. On the other hand, [21] refers to q as “pseudo-momentum”. Almost simultaneously with the work of [19], Zhang [20] formalized fundamental principles of traffic flow, namely, that drivers react only to conditions ahead and that the speed of information propagation does not exceed the vehicle speed, and derived the same system of PDEs. Consequently, the model (1) is now commonly referred to as the ARZ model. Since the velocity is given by 
+
+v = qρ − p, (2) the ARZ model (1) can be equivalently written as 
+
+
+
+∂tρ + ∂x
+
+ q − ρp (ρ) = 0 ,∂tq + ∂x
+
+ q2
+
+ρ − p(ρ) q
+
+
+
+= 0 .
+
+(3) 4e5
+
+e4 e3
+
+e6
+
+e2 e1
+
+P4
+
+P3
+
+P2
+
+P5
+
+P1Figure 2: An example of the network geometry considered in this paper. J = {P2, P3, P4, P5}, B = {P1}, Out 3 = {e2, e 5},and In 3 = {e4}.
+
+For later convenience, we represent this system in terms of vectors. Let 
+
+U =
+
+ρq
+
+ , F (z) = 
+
+
+
+z2 − z1p(z1)
+
+z22
+
+z1
+
+− z2p(z1)
+
+ for z =
+
+z1
+
+z2
+
+ . (4) Then Eq. (3) can be rewritten as 
+
+∂tU + ∂xF (U ) = 0 . (5) 
+
+2.2. Networks 
+
+In this paper, we consider traffic flow modeled by the ARZ model (1) on a complex network rather than on a single road. The network considered in this paper is not an abstract graph in the sense of graph theory, but a geometric object consisting of points and line segments embedded in R2. A typical example is displayed in Fig. 2. More precisely, it is defined as follows. Let N = {P1, P2, . . . , Pν } be a finite set of distinct points in R2, which we call nodes. Let E =
+
+{e1, e 2, . . . , e μ} be a finite collection of line segments in R2, which we call roads (or edges). Each road ek
+
+connects two nodes Pj and Pl and is endowed with an orientation, that is, Pj is the source (initial node), and Pl is the target (terminal node) of ek.For a node Pj , we define 
+
+In j = {ek ∈ E | Pj is the target of ek}, Out j = {ek ∈ E | Pj is the source of ek}.
+
+Clearly, In j and Out j are subsets of E.We further assume that any two distinct roads ek and em either do not intersect or share exactly one common node. A node Pj satisfying |In j | > 0 and |Out j | > 0 is called a junction, where |In j | and 
+
+|Out j | denote the numbers of roads belonging to In j and Out j , respectively. In what follows, we call Pj
+
+an NI –NO junction if NI = |In j | and NO = |Out j |. A node Pl satisfying either (|In l| = 0 , |Out l| = 1) or 
+
+(|In l| = 1 , |Out l| = 0) is called a boundary node. We denote by J and B the sets of all junctions and boundary nodes, respectively, and assume that 
+
+N = J ∪ B .
+
+5Under this setting, each road ek is identified with the interval [0 , l k] on the real-line R, where lk
+
+denotes the length |ek| of ek. The coordinate x = 0 corresponds to the source of ek, while x = |ek|
+
+corresponds to its target. On each road, we solve the ARZ model (1). 
+
+2.3. Coupling and boundary conditions 
+
+To describe traffic flow on the entire network, it is necessary to prescribe coupling conditions at junctions and boundary conditions at boundary nodes. The boundary conditions are relatively simple. Indeed, we impose time-periodic Dirichlet boundary conditions at the boundary nodes. This allows us to control the inflow of vehicles into the network and the outflow to the exterior, thereby inducing a nonstationary evolution of the total number of vehicles within the network. On the other hand, the coupling conditions at junctions are more delicate. We essentially follow the approach proposed in the previous work [21]. For the reader’s convenience, we briefly review it below. The numerical scheme in [21] is based on the mathematical analysis for the unique existence of the solution to Riemann problem at junctions. First, it is quite natural to assume the conservation of mass (number of vehicles) at junctions, that is: (C1) The flux of the density must be conserved. Furthermore, the following assumption is often accepted as a reasonable rule. (C2) The waves produced at the junction must have negative speed in incoming roads and positive speed in outgoing road. In general, these coupling conditions cannot provide a unique solution to the Riemann problem for an NI –NO junction. We need additional conditions to the flux of the density at the junction: (C3) The density on each incoming road allocated to outgoing roads according to given “traffic distribu-tion matrix” A ∈ RNI ×NO .(C4) The sum of flux of density in incoming roads at the junction must be maximized. The condition (C4) can provide a unique solution on incoming roads. On the other hand, we need additional rule to determine the unique solution at outgoing roads. One of the proposed choices in [21] is: (C5) Maximize the velocity at each outgoing road. The descriptions of (C4) and (C5) given above are somewhat abstract. In Appendix B, we explain their concrete meaning using explicit mathematical expressions. In [21], the authors proposed two numerical schemes: one based on the coupling conditions introduced above, and the other based on the conditions proposed in [24]. They reported that the numerical results 6obtained with the two schemes are nearly identical, except in cases where a capacity drop occurs. In this paper, we obtain reasonable numerical results using the scheme proposed in [21], which applies the coupling conditions (C1)–(C5). 
+
+3. Model discretization and computational algorithm 
+
+In this section, we present the discretization of the ARZ model (1) on each edge under the coupling conditions (C1)–(C5), and the computational algorithm. The discretization and the handling of the coupling conditions are basically based on the method proposed in [21]. However, to enhance numerical stability and facilitate large-scale network simulations, we modify the computational approach proposed in [21] in several aspects. First, the coordinate direction on each road is chosen to coincide with the flow direction rather than the junction-based orientation. Second, we simplify the treatment of the constraints. In [21], the constraints for all roads at a junction are combined, leading to up to six coupled equations. In contrast, we treat the constraints for each road separately. As a result, the resulting minimization problem involves solving at most two equations per road. We explain the procedure in detail below. In what follows, we assume the following relation between the pressure and the density: 
+
+p(ρ) = ργ for some γ > 0, (6) 
+
+ρmax = 1 , vmax = p(ρmax ) = ργ 
+
+> max
+
+= 1 ,
+
+where ρmax > 0 and vmax > 0, respectively, denote the prescribed maximal density and the prescribed maximum velocity. 
+
+3.1. Spatial discretization 
+
+Let ek ∈ E and consider the ARZ model (1) on (0 , l k), where lk = |ek|. Under assumption (6), the ARZ model is expressed as Eq. (5) with 
+
+F (U ) = 
+
+q − ργ+1  
+
+> q2
+> ρ
+
+− qρ γ
+
+ .
+
+We introduce a subdivision of the interval (0 , l k) into small subintervals 
+
+Ij = ( xj−1/2, x j+1 /2), j = 1 , . . . , N k,
+
+and define the finite element space Vh,k by 
+
+Vh,k = Uh ∈ L2((0 , l k)) 2 | For each Ij , each component of Uh is affine on Ij .
+
+7For Uh, W h ∈ Vh,k , we write 
+
+(Uh, W h)Ij =
+
+Z
+
+> Ij
+
+Uh(x)Wh(x) dx. 
+
+We further define the one-sided traces at the cell interfaces by 
+
+U − 
+
+> h,j +1 /2
+
+:= lim 
+
+> x→xj+1 /2−0
+
+(Uh|Ij )( x), U + 
+
+> h,j +1 /2
+
+:= lim 
+
+> x→xj+1 /2+0
+
+(Uh|Ij+1 )( x).
+
+For Uh ∈ Vh,k and given boundary values U −
+
+> h, 1/2
+
+, U +  
+
+> h,N k+1 /2
+
+∈ R2, we define ˜L(Uh) ∈ Vh,k by the following DG scheme: find ˜L(Uh) ∈ Vh,k such that 
+
+( ˜L(Uh), ϕ h)Ij = ( F (Uh), ∂ xϕh)Ij − ˆFj+1 /2
+
+ U −
+
+> h,j +1 /2
+
+, U +
+
+> h,j +1 /2
+
+ ϕ−
+
+> h,j +1 /2
+
++ ˆFj−1/2
+
+ U −
+
+> h,j −1/2
+
+, U +
+
+> h,j −1/2
+
+ ϕ+
+
+> h,j −1/2
+
+, j = 1 , . . . , N k, ϕ h ∈ Vh,k , (7) where the numerical flux ˆFj+1 /2 is given by the Lax–Friedrichs flux 
+
+ˆFj+1 /2(U −, U +) = 12
+
+ F (U −) + F (U +) − α
+
+2 (U + − U −),
+
+and α > 0 is the Lax–Friedrichs constant. Finally, in order to reduce numerical instabilities, we apply the TVB limiter; see [25] for details. We denote by L(Uh) ∈ Vh,k the result obtained after applying the TVB limiter to ˜L(Uh).
+
+3.2. Time discretization 
+
+Let ∆t > 0 be a given time step. Given U ih ∈ Vh,k , we compute the solution at the next time level 
+
+U i+1  
+
+> h
+
+∈ Vh,k using the third-order strong stability preserving Runge–Kutta method (SSPRK3); see, for example, [26]. Specifically, we compute 
+
+U (1)  
+
+> h
+
+= U ih + ∆ t L (U ih), (8) 
+
+U (2)  
+
+> h
+
+= 34 U ih + 14 U (1)  
+
+> h
+
++ 14 ∆t L (U (1)  
+
+> h
+
+), (9) 
+
+U i+1  
+
+> h
+
+= 13 U ih + 23 U (2)  
+
+> h
+
++ 23 ∆t L (U (2)  
+
+> h
+
+). (10) 
+
+3.3. Boundary conditions for the DG scheme on a road 
+
+In order to implement the DG scheme presented in the previous subsections on a road ek, we need to specify the boundary values U − 
+
+> h, 1/2
+
+and U + 
+
+> h,N k+1 /2
+
+. If the source (respectively, the target) of ek is a boundary node, we impose Dirichlet boundary conditions at x = 0 (respectively, x = lk). At junctions, the boundary values are determined by introducing ghost-cell states whose values are computed from the coupling conditions. 8=Nj=1−−−−−−junction jkFigure 3: Schematic illustration of the junction boundary treatment in the DG scheme. At the cell interfaces j = 1 /2 and 
+
+j = Nk + 1 /2, the left and right traces of the numerical solution U ± 
+
+> h,j ±1/2
+
+and the ghost-side states determined from the coupling conditions (shown in red) are distinguished. 
+
+A schematic illustration of the junction treatment in the DG scheme is shown in Fig. 3. At each junction (e.g., at j = 1 /2 and j = Nk + 1 /2), the left and right traces of the numerical solution, denoted by U ±
+
+> h,j ±1/2
+
+, are distinguished. The ghost-side states (shown in red in Fig. 3 ) are computed by solving a local optimization problem that enforces the coupling conditions together with admissible wave directions. At a junction Pj ∈ J , if ek ∈ In j , we define 
+
+D(k) 
+
+> in
+
+(U + 
+
+> h,N k+1 /2
+
+) = − ˆFNk +1 /2(U − 
+
+> h,N k+1 /2
+
+, U + 
+
+> h,N k+1 /2
+
+) + F (U + 
+
+> h,N k+1 /2
+
+),
+
+whereas if ek ∈ Out j , we set 
+
+D(k) 
+
+> in
+
+(U −
+
+> h, 1/2
+
+) = ˆF1/2(U −
+
+> h, 1/2
+
+, U +
+
+> h, 1/2
+
+) − F (U −
+
+> h, 1/2
+
+).
+
+We determine the ghost-state values by minimizing ∥D(k) 
+
+> in
+
+∥R2 subject to the constraint Φ(k)(U (k) 
+
+> I
+
+) = 0 .Here, for ek ∈ In j , we define 
+
+U (k) 
+
+> I
+
+=
+
+ρ(k)
+
+> I
+
+q(k)
+
+> I
+
+ = 12
+
+ U −  
+
+> h,N k+1 /2
+
++ U + 
+
+> h,N k+1 /2
+
+ + 12α
+
+ F (U + 
+
+> h,N k+1 /2
+
+) − F (U − 
+
+> h,N k+1 /2
+
+),
+
+Φ(k)(U (k) 
+
+> I
+
+) = q(k) 
+
+> I
+
+− (ρ(k) 
+
+> I
+
+)γ+1 − ˆδj,k ,
+
+while for ek ∈ Out j , we set 
+
+U (k) 
+
+> I
+
+=
+
+ρ(k)
+
+> I
+
+q(k)
+
+> I
+
+ = 12
+
+ U − 
+
+> h, 1/2
+
++ U +
+
+> h, 1/2
+
+ − 12α
+
+ F (U +
+
+> h, 1/2
+
+) − F (U −
+
+> h, 1/2
+
+),
+
+Φ(k)(U (k) 
+
+> I
+
+) = 
+
+q(k) 
+
+> I
+
+− (ρ(k) 
+
+> I
+
+)γ+1 − ˆδj,k 
+
+q(k) 
+
+> I
+
+− ρ(k)
+
+> I
+
+ .
+
+9The density flux ˆδj,k is determined by solving the following optimization problem: 
+
+
+
+maximize X 
+
+> ek∈In j
+
+ˆδj,k subject to 
+
+ˆδj,k ∈ [0 , δ Max  
+
+> j,k
+
+], ˆδj,n = X 
+
+> ek∈In j
+
+an,k ˆδj,k , en ∈ Out j ,
+
+(11) where δMax  
+
+> j,k
+
+denotes the maximum admissible density flux (see Appendix B for the definition) and Aj =(an,k ) is the distribution matrix at the junction Pj .In the above construction, the coupling conditions (C1)–(C5) are incorporated as follows. Con-dition (C1) is expressed by the conservation constraint conditions in Eq. (11). The minimization of 
+
+∥D(k) 
+
+> in
+
+∥R2 ensures that the waves generated at the junction satisfy (C2). Condition (C3) is also included in Eq. (11). The relation q(k) 
+
+> I
+
+− (ρ(k) 
+
+> I
+
+)γ+1 = ˆδj,k together with Eq. (11) enforces the maximization of the total density flux on incoming roads (C4). Finally, the condition q(k) 
+
+> I
+
+= ρ(k) 
+
+> I
+
+ensures the maximization of the velocity on outgoing roads (C5). 
+
+3.4. Computational algorithm 
+
+In summary, the procedure for computing the solution at the next time level U i+1  
+
+> h
+
+from U ih on each road ek is summarized as follows. (a) Compute the maximum admissible density flux δMax  
+
+> j,k
+
+using U ih.(b) Determine the boundary conditions by solving the corresponding minimization problem at each junc-tion. (c) Solve the DG scheme (7) to compute L(U ih).(d) Apply the first stage of the SSPRK3 method (8) to obtain U (1)  
+
+> h
+
+.(e) Compute U i+1  
+
+> h
+
+by repeating steps (a)–(d) in accordance with the remaining stages of the SSPRK3 method, namely Eqs. (9) and (10). 
+
+4. Numerical results 
+
+In this section, we present numerical results obtained by solving the ARZ continuum traffic flow model on a large-scale road network. Our primary objective is to examine whether the scale-free statis-tical properties of traffic congestion clusters, reported in the empirical study by Zhang et al. [10], can be reproduced within a continuum modeling framework. In particular, we analyze the spatiotemporal structure of congestion clusters and the frequency distribution of their size S. The methodology of ex-tracting congestion clusters follows the spatiotemporal connectivity concept illustrated in Fig. 1. In this 10 section, we present numerical results on spatiotemporal congestion clusters and analyze their statisti-cal properties. Particular attention is paid to the resulting power-law distributions and their finite-size scaling behavior 
+
+4.1. Road network and boundary conditions 
+
+The numerical simulations are performed on a lattice-shaped road network shown in Fig. 4(a). The presented network consists of 13 × 13 = 169 intersections (nodes), each connected by road links to its nearest neighbors. We denote by N the total number of intersections (nodes) in the network, i.e., N = 169 
+
+in the case of Fig. 4(a). All links are assumed to be one-way roads, and their directions are assigned randomly at the beginning of each simulation. Although the geometric structure is regular, the random assignment of directions in-troduces significant asymmetry and heterogeneity in traffic flow. In particular, it creates local imbalances between incoming and outgoing connectivity, which is a key ingredient for producing nonuniform density patterns under junction coupling. At the outer boundary of the network, we impose time-periodic Dirichlet boundary conditions. More specifically, the boundary density at each outer node is prescribed as a periodic piecewise-defined time-dependent signal characterized by a baseline value, a driving period, and an oscillation amplitude. The initial value of a boundary node is set to the initial value of the road for which the node serves as either the source or the target, as described later. After that, at fixed time intervals, the boundary condition repeatedly cycles through holding constant, decreasing to the target value, holding constant, and increasing to the target value. The target value during the decreasing and increasing intervals is the same for all nodes. The corresponding boundary state is chosen consistently with the ARZ model so as to remain within the admissible invariant region. These boundary conditions allow inflow and outflow of vehicles and thus render the system non-conservative with respect to the total number of vehicles inside the network. As a consequence, the traffic state does not converge to a static steady state; instead, it remains in a driven, non-equilibrium regime in which congestion can repeatedly emerge and dissipate. This setting provides a controlled numerical analogue of time-varying demand in urban traffic, where boundary supply and sink effects are unavoidable. From the viewpoint of congestion statistics, the non-stationary driving is essential: it prevents the dynamics from becoming trapped in a trivial uniform state and yields a sufficiently rich ensemble of congestion events for reliable statistical characterization of P (S).Initial conditions are generated randomly, as illustrated in Fig. 4(b). The density on each link is assigned independently with random fluctuations around a prescribed mean value. By avoiding artificially imposed large-scale structures at t = 0 , we ensure that the observed congestion patterns are produced by the intrinsic dynamics of the ARZ model on a coupled network. In all simulations, the computed density remains within the admissible invariant region discussed in Appendix B, and the junction coupling rules maintain physically consistent propagation directions of waves. 11 (a) (b) (c) (d) 
+
+## t=0 t=5 t=50 Figure 4: Visualization of density distributions on a lattice network. (a) Overview of the lattice network used in the simulation. Panels (b), (c), and (d) show the density ρ on each link at times t = 0 , t = 5 , and t = 50 , respectively, illustrating the generation, propagation, and dissipation of high-density regions (the color bar indicates density). 
+
+4.2. Extracting congestion clusters 
+
+To characterize traffic congestion from a resilience perspective, we adopt the spatiotemporal congestion-cluster framework proposed by Zhang et al. [10]. In this approach, congestion is treated not as a purely instantaneous spatial pattern but as a connected object in space and time, as schematically illustrated in Fig. 1. This viewpoint enables us to treat congestion as a connected component in space and time, rather than a purely instantaneous spatial pattern. For a given density threshold ρthres , we first identify congested links at each time step and then construct spatiotemporal clusters by combining spatial and temporal connectivity. The cluster extraction procedure is defined as follows: (1) At each time instant, road links whose average density exceeds ρthres are labeled as congested links. (2) Congested links that are spatially adjacent through network nodes at the same time are grouped into spatial clusters. (3) Temporal connectivity is introduced by linking congested links (or spatial clusters) at time t to those at time t + ∆ t whenever they share at least one common node and the node has nonzero degree within the congested subgraph. 12 (4) By combining spatial and temporal adjacency, we obtain a spatiotemporal graph; each connected component of this graph is defined as a congestion cluster. (5) The cluster size S is defined as the total number of congested links contained in the cluster (summed over all time slices within the component). This definition is consistent with the d + 1 dimensional cluster concept of [10]. In practice, the choice of 
+
+ρthres affects the set of congested links. If ρthres is chosen too small, a single large congested component tends to span the network over the entire observation period, effectively producing one dominant cluster that masks the statistical diversity of events. Since too small values of ρthres tend to produce a single system-spanning cluster that persists over the entire observation period, thereby obscuring meaningful statistical characterization, we restrict attention to ρthres ≥ 0.9. In this regime, multiple clusters of different scales coexist, and no fine tuning of ρthres is required to observe power-law behavior. We confirm that the resulting scaling exponents remain robust under moderate variations of the threshold. 
+
+4.3. Evolution of density fields 
+
+Figures 4(b)–(d) show snapshots of the density field at times t = 0 , t = 5 , and t = 50 , respectively. Starting from random initial conditions, localized high-density regions emerge spontaneously. This be-havior can be understood as a network-level consequence of nonlinear wave propagation in the ARZ model combined with junction coupling: waves generated at one location are redistributed at junctions, which can amplify local density when multiple inflows compete for limited outgoing capacity, and can also relieve congestion when outflow becomes available. As time evolves, congested regions propagate along directed links, interact with other waves, and undergo merging and splitting events. Because time-dependent Dirichlet boundary conditions are imposed at the outer nodes, the system is continuously driven. As a result, congestion events do not simply decay and vanish permanently; instead, new congestion is repeatedly generated. This sustained non-equilibrium regime is particularly important for observing a wide range of congestion scales: small, short-lived events coexist with rare but persistent large events. From the numerical perspective, the repeated excitation also reduces sensitivity to the particular random initial condition, enabling the aggregation of statistics across multiple runs. 
+
+4.4. Spatiotemporal congestion clusters 
+
+Examples of extracted spatiotemporal congestion clusters for ρthres = 0 .9 are shown in Fig. 5. Panels (a)–(f) correspond to clusters ranked by size, specifically the 1st, 2nd, 3rd, 5th, 10th, and 20th largest clusters. The horizontal direction represents time, and each panel visualizes how a cluster persists and evolves across time slices. The fact that clusters form connected objects in space and time highlights that congestion is not a purely local phenomenon, but one that can propagate through the network and maintain temporal coherence. 13 (a) (b) (c) (d) (e) (f) 
+
+# t
+
+## 0 100 50 Figure 5: Examples of spatiotemporal structures of extracted congestion clusters. Links whose density exceeds the threshold 
+
+ρthres = 0 .9 are classified as congested, and clusters are defined based on spatial and temporal connectivity. The lattice at 
+
+t = 0 is shown in blue, and the horizontal axis represents time t. Panels (a)-(f) display clusters ordered by size, corresponding to the 1st, 2nd, 3rd, 5th, 10th, and 20th largest clusters, respectively. 
+
+14 P(S) N=169 N=64 N=9 S/ √NFigure 6: Frequency distribution of congestion cluster size for networks of different sizes. Distribution P (S) of the spa-tiotemporal cluster size S plotted against the scaled variable S/ √N . Here, N denotes the total number of intersections in the network. Results are shown for N = 9 , 64 , and 169 . Straight lines indicate linear fits in the log–log plane, performed over the range where the number of observed clusters remains statistically significant. 
+
+Large clusters exhibit complex spatiotemporal behavior. Rather than remaining localized at a fixed position, they expand and contract in space, and often undergo merging and splitting processes. Such events can be interpreted as congestion waves interacting at junctions: local bottlenecks create high-density patches, while alternative outgoing links can redirect flow and fragment a congested region. The coexistence of diverse cluster morphologies across scales provides a qualitative basis for the scale-free statistics discussed in the next subsection. 
+
+4.5. Cluster statistics 
+
+To obtain statistically robust results, simulations are carried out for the time interval t = 0 to 
+
+t = 120 , repeating the calculations 60 times with different random assignments of link directions and initial conditions. All congestion clusters extracted from these runs are aggregated to compute the frequency distribution of cluster size S. We denote by P (S) the frequency distribution of cluster sizes. Figure 6 presents the frequency distribution of cluster size P (S) for networks of different sizes. The linear fits in the log–log plot are performed over the scaling range where each bin contains a sufficient number of clusters to ensure statistical reliability, excluding the large-size tail influenced by finite-size cutoff. Here, N denotes the total number of intersections in the network. For a lattice of size L × L,we have N = L2, so that √N represents the linear system size. Instead of plotting the raw distribution, we rescale the horizontal axis by √N and display P (S) as a function of S/ √N . Remarkably, the data for different network sizes collapse approximately onto a single straight line in log–log coordinates. The resulting slope is approximately α ≈ 1.85 for P (S). This collapse suggests a finite-size scaling form, 
+
+P (S; N ) = S−αf
+
+ SSc(N )
+
+
+
+,
+
+15 with a cutoff scale satisfying 
+
+Sc(N ) ∝ √N . 
+
+The emergence of a cutoff scale proportional to √N admits a natural geometric interpretation. Since the underlying network is a two-dimensional lattice with N = L2 nodes, the only intrinsic macroscopic length scale of the system is the linear size L ∼ √N . The observed data collapse therefore indicates that the characteristic scale of large congestion clusters is governed by this linear system size rather than by any finite intrinsic correlation length. In other words, the continuum network dynamics do not exhibit a characteristic congestion scale smaller than the network size itself, and the cutoff in the cluster-size distribution is determined primarily by the global system size. We emphasize that the cluster size S analyzed here is defined as a spatiotemporal quantity, namely the total number of congested links accumulated over the entire lifetime of a cluster. Thus, S corresponds to a (d + 1) -dimensional connected component rather than a purely spatial one. In the language of critical phenomena, this behavior indicates that the effective correlation scale of congestion becomes comparable to the system size. Although we do not directly measure the spatial correlation length, the observed finite-size collapse suggests that congestion clusters are not governed by a fixed intrinsic scale but instead expand up to a scale limited only by the network size. We further note that the estimated exponents α remain within −1.69 ∼ − 1.84 when varying the density threshold ρthres from 0.9 to 0.94 . Therefore, the scale-free behavior and the finite-size scaling collapse are robust with respect to the threshold choice. Notably, the estimated exponents are quantitatively in good agreement with the highway results re-ported in [10], suggesting that the scale-free structure observed here is consistent with corridor-like traffic dynamics. The present directed network configuration, lacking explicit signal control and heterogeneous urban constraints, naturally captures features closer to highway systems than to complex urban grids. Although we refrain from claiming strict self-organized criticality, the observed coexistence of scale-free distributions and system-size–dependent cutoffs strongly resembles critical-like behavior in driven non-equilibrium systems. In the present continuum framework, such scale-free dynamics emerge without explicit parameter tuning, suggesting that scale invariance arises as an intrinsic property of nonlinear networked traffic flow. 
+
+5. Concluding remarks 
+
+In this study, we examined the spatiotemporal statistics of traffic congestion on large-scale networks within a macroscopic continuum framework. Solving the Aw-Rascle-Zhang model on lattice networks of varying sizes, we extracted congestion clusters and analyzed the distribution of their size S. The cluster size exhibits approximate power-law behavior over a wide range. 16 More importantly, when rescaled by the linear system size L ∼ √N , the distributions for different network sizes collapse onto a nearly universal curve, indicating finite-size scaling with a cutoff scale proportional to L. The scaling behavior remains robust under variations of the density threshold. These results demonstrate that scale-free spatiotemporal congestion statistics and their system-size dependence can emerge intrinsically from networked continuum traffic dynamics under non-equilibrium conditions. Although the quantitative exponents differ from empirical values reported for real urban networks, this discrepancy can be attributed to the simplified network setting. Clarifying the dependence of the scaling exponents and cutoff structure on network topology and boundary driving remains an important direction for future work. Extending the present analysis to heterogeneous or partially disrupted networks may further illuminate the relation between congestion scaling and complex-network structure, in connection with percolation and robustness theories developed for networked systems [27, 28]. Overall, the present findings indicate that scale-free spatiotemporal congestion dynamics can arise within a macroscopic continuum description of networked traffic flow. The observed power-law statistics and finite-size scaling suggest that large-scale statistical features of urban congestion do not necessarily require detailed microscopic modeling, but can emerge from coarse-grained network dynamics. 
+
+Appendix A. Mathematical remarks on the ARZ model 
+
+We briefly review the mathematical results for the ARZ model (1). Throughout this appendix, no particular functional form relating the pressure to the density, such as Eq. (6), is assumed. Thus, p = p(ρ)
+
+is assumed only to be smooth, increasing function of ρ.Recall that the ARZ model is described as the conservative form Eqs. (4) and (5). The Jacobian matrix DF (z) of F (z) at z = ( z1, z 2)⊤ is given by 
+
+DF (z) = 
+
+
+
+−p(z1) − z1p′(z1) 1
+
+−
+
+ z2
+
+z1
+
+2
+
+− z2p′(z1) 2 z2
+
+z1
+
+− p(z1)
+
+ ,
+
+and its eigenvalues are 
+
+λ1(z) = z2
+
+z1
+
+− p(z1) − z1p′(z1), λ2(z) = z2
+
+z1
+
+− p(z1).
+
+In physical notation, using Eq. (2), we have 
+
+λ1(U ) = v − ρp ′(ρ) < v = λ2(U ).
+
+Therefore, the ARZ model is strictly hyperbolic in the sense of Lax. Moreover, every wave propagation speed is at most equal to v, which is a desirable property for a traffic flow model. 17 We next recall further properties of the ARZ model as a hyperbolic system, as reported in [19]; see, for example, [29, Section 11], [30], and [31] for the basic theory of hyperbolic systems of conservation laws. Since the corresponding (right) eigenvectors associated with λ1(z) and λ2(z) are given by 
+
+r1(z) = 
+
+
+
+1
+
+z2
+
+z1
+
+ , r2(z) = 
+
+
+
+1
+
+z2
+
+z1
+
++ z1p′(z1)
+
+ ,
+
+we compute 
+
+∇λ1(z) · r1(z) = − 2p′(z1) + z1p′′ (z1), ∇λ2(z) · r2(z) = 0 .
+
+Therefore, the pair (λ2, r 2) is always linearly degenerate. Henceforth, we additionally assume that 
+
+2p′(ρ) + ρp ′′ (ρ)̸ = 0 for all ρ > 0, (A.1) which means that the function ρ 7 → ρp (ρ) is strictly convex. Under this assumption, the pair (λ1, r 1) is genuinely nonlinear, and therefore shocks or rarefaction waves may occur. Moreover, [19] observed that the Riemann invariants (in the sense of Lax) are given by 
+
+w1 = v + p(ρ), w2 = v. 
+
+Recall that a Riemann invariant wk is constant along integral curves of the k-th family. This implies that the 1-rarefaction curve in the (ρ, q )-plane is a straight line of the form q = ρ v + p(ρ), whose slope 
+
+v +p(ρ) is constant. The curve of the second family in the (ρ, q )-plane is also described by q = ρ v +p(ρ),where v is interpreted as a constant. Therefore, the curve of the second family through a given point 
+
+(ρ0, q 0) is given by 
+
+q = ρ
+
+ q0
+
+ρ0
+
+− p(ρ0) + p(ρ)
+
+
+
+. (A.2) Next, we consider invariant regions. Recall that ρmax > 0 is a prescribed maximal density and 
+
+vmax > 0 a prescribed maximal velocity. As noted in [19], if 
+
+p(ρ) ∝ ργ as ρ → 0 (A.3) for some γ > 0, then the region 
+
+R = (ρ, v ) | ρ ≥ 0, 0 ≤ v ≤ vmax − p(ρ)
+
+is invariant for the Riemann problem. Here we assume that vmax − p(ρmax ) = 0 . Since p(ρ) is assumed 18 to be an increasing function, we have vmax ≥ p(ρ) for all 0 ≤ ρ ≤ ρmax . Therefore, 
+
+ρ p (ρ) ≤ q = ρ v + p(ρ) ≤ ρ v max for all (ρ, v ) ∈ R .
+
+This implies that 
+
+(ρ, q ) | ρ p (ρ) ≤ q ≤ ρ p (ρmax )
+
+is an invariant region for the ARZ model (1). 
+
+Appendix B. Additional remarks on coupling conditions 
+
+In this appendix, we precisely describe what is meant by the coupling conditions (C4) and (C5) introduced in Subsection 2.3. In fact, (C4) and (C5) should be interpreted as (C4 ′) and (C5 ′) defined below. We consider an N –M junction, and assume that coupling conditions (C1), (C2) and (C3) are satisfied. Recall that we are assuming Eq. (6) relating the pressure to the density. Then, Eqs. (A.1) and (A.3) are satisfied. Moreover, the invariant region is given by 
+
+D = (ρ, q ) | ρ1+ γ ≤ q ≤ ρ .
+
+In [32], the authors focus on the density flux (the first component of the flux F (U )) and characterize the admissible final states of the density flux for the Riemann problem on incoming and outgoing roads. Following [32], we define two subdomains of D as 
+
+D1 = {(ρ, q ) ∈ D | (γ + 1) ργ+1 ≤ q ≤ ρ},
+
+D2 = {(ρ, q ) ∈ D | ργ+1 ≤ q ≤ (γ + 1) ργ+1 },
+
+and consider the Riemann problem with the initial state (ρ(n)0 , q (n)0 ) ∈ D at the n-th incoming road en
+
+and (ρ(m)0 , q (m)0 ) ∈ D at the m-th outgoing road em, where we write ρ(n)0 = ρ(n)(x, 0) for example. The density fluxes in the n-th incoming road and the m-th outgoing road are denoted by δn and δm,respectively. That is, for example, we set 
+
+δn = q(n) −  ρ(n)γ+1 .
+
+19 (a) (b) Figure B.7: (a) Conceptual diagram of the density flux δi at a junction. (b) Invariant domain D and its subdomains D1           
+
+> and D2in the (ρ, q )plane, together with the second-family curve passing through a given state (ρ(m)0, q (m)0). The straight line q=ρcorresponds to the velocity-maximization condition on outgoing roads (C5).
+
+It is proved that δn ∈ [0 , δ Max  
+
+> n
+
+] for incoming roads [32, Proposition 5.1], where 
+
+δMax  
+
+> n
+
+=
+
+
+
+q(n)0 − (ρ(n)0 )γ+1 if (ρ(n)0 , q (n)0 ) ∈ D 1,γ q(n)0
+
+(γ + 1) ρ(n)0
+
+! γ+1 
+
+> γ
+
+if (ρ(n)0 , q (n)0 ) ∈ D 2.
+
+Similarly, for the m-th outgoing road, the density flux satisfies δm ∈ [0 , δ Max  
+
+> m
+
+], see [32, Proposition 5.1], where δMax  
+
+> m
+
+is defined as follows. If the curve of the second family through (ρ(m)0 , q (m)0 ) is entirely contained in D1, then 
+
+δMax  
+
+> m
+
+= γ
+
+1 + γ
+
+
+
+1 − γγ + 1 
+
+ 1
+
+> γ
+
+. (B.1) Otherwise, δMax  
+
+> m
+
+is given by 
+
+δMax  
+
+> m
+
+= q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+1 − q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+! 1
+
+> γ
+
+. (B.2) From the admissible state of density flux, it has been proposed to determine the solution to the Riemann problem on incoming roads uniquely by the following condition: (C4 ′) The sum of flux of density in incoming roads 
+
+> N
+
+X
+
+> n=1
+
+δn at the junction must be maximized. Moreover, it has been proposed to introduce one of three different additional rules in order to determine a unique solution on outgoing roads. One of the proposed conditions is to maximize the velocity on each outgoing road [32, Proposition 5.4]. That is, (C5 ′) The final state (bq(m), bρ(m)) on the m-th outgoing road satisfies bq(m) = bρ(m)
+
+Under this assumption, the quantity δMax  
+
+> m
+
+can be determined by following the curve of the second family 20 issuing from (ρ(m)0 , q (m)0 ) ∈ D until it intersects the straight line q = ρ (see Figure B.7). Recall that the curve of the second family is given by Eq. (A.2). At this stage, we focus on this curve in the domain 
+
+0 ≤ ρ ≤
+
+ 1
+
+γ + 1 
+
+ 1
+
+> γ
+
+.
+
+Then, we see that 
+
+ρ q(m)0
+
+ρ(m)0
+
+− p(ρ(m)0 ) + p(ρ)
+
+!
+
+− (γ + 1) ργ+1 = ρ q(m)0
+
+ρ(m)0
+
+− (ρ(m)0 )γ − γρ γ
+
+!
+
+≥ ρ q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+− γγ + 1 
+
+!
+
+Therefore, we infer that the curve of the second family through (ρ(m)0 , q (m)0 ) is completely inside D1 if and only if 
+
+q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+− γγ + 1 > 0.
+
+Consequently, Eqs. (B.1) and (B.2) are summarized as 
+
+δMax  
+
+> m
+
+=
+
+
+
+γ
+
+1 + γ
+
+
+
+1 − γγ + 1 
+
+ 1
+
+> γ
+
+, if q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+> γγ + 1 ,q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+1 − q(m)0 − (ρ(m)0 )γ+1 
+
+ρ(m)0
+
+! 1
+
+> γ
+
+, otherwise .
+
+In the optimization problem (11) associated with the node Pj , the quantity δMax  
+
+> j,k
+
+is chosen as either 
+
+δMax  
+
+> k
+
+or δMax  
+
+> m
+
+defined above, depending on whether the road ek under consideration is incoming or outgoing. 
+
+Acknowledgements 
+
+This work was partially supported by JSPS KAKENHI Grant Number 21H04431 (Grant-in-Aid for Scientific Research (A)). 
+
+Author Contributions (CRediT) 
+
+Yuki Chiba: Methodology, Software, Investigation, Data curation, Formal analysis, Writing - review & editing. Yuki Ueda: Formal analysis, Methodology, Software, Investigation, Writing - review & editing. Norikazu Saito: Conceptualization, Supervision, Project administration, Writing - review & editing. Hiroaki Yoshida: Conceptualization, Formal analysis, Project administration, Supervision, Writing -original draft, Writing - review & editing. 21 Data Availability 
+
+The simulation data and analysis code supporting this study are available from the corresponding author upon reasonable request. 
+
+Declaration of Interests 
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+Declaration of Generative AI and AI-assisted Technologies in the Manuscript Preparation Process 
+
+During the preparation of this manuscript, the authors used generative AI tools to assist with English language refinement and clarity. All scientific content, analysis, and conclusions were developed and verified by the authors, who take full responsibility for the integrity of the manuscript. 
+
+References 
+
+[1] INRIX, INRIX 2023 global traffic scorecard (2024). [2] D. Helbing, Traffic and related self-driven many-particle systems, Rev. Mod. Phys. 73 (4) (2001) 1067–1141. doi:10.1103/RevModPhys.73.1067 .[3] B. S. Kerner, The Physics of Traffic: Empirical Freeway Pattern Features, Engineering Applications, and Theory, Understanding Complex Systems, Springer, Berlin, 2004. [4] N. Geroliminis, C. F. Daganzo, Existence of urban-scale macroscopic fundamental diagrams: Some experimental findings, Transp. Res. B: Methodol. 42 (9) (2008) 759–770. doi:10.1016/j.trb.2008. 02.002 .[5] M. Saberi, H. Hamedmoghadam, M. Ashfaq, S. A. Hosseini, Z. Gu, S. Shafiei, D. J. Nair, V. Dixit, L. Gardner, S. T. Waller, M. C. González, A simple contagion process describes spreading of traffic jams in urban networks, Nat. Commun. (2020). doi:10.1038/s41467-020-15353-2 .[6] Y. Zhao, C. Ma, M. Zhao, X. Xu, B. Du, An optimal multi-objective dynamic traffic guidance approach based on dynamic traffic assignment, Physica A 657 (2025) 130257. doi:10.1016/j. physa.2024.130257 .[7] C. S. Holling, Resilience and stability of ecological systems, Annu. Rev. Ecol. Syst. 4 (1973) 1–23. 
+
+doi:10.1017/9781009177856.038 .22 [8] S. E. Chang, M. Shinozuka, Measuring improvements in the disaster resilience of communities, Earthq. Spectra 20 (3) (2004). doi:10.1193/1.1775796 .[9] J. Gao, B. Barzel, A. L. Barabási, Universal resilience patterns in complex networks, Nature 530 (2016) 307–312. doi:10.1038/nature16948 .[10] L. Zhang, G. Zeng, D. Li, H. Huang, H. E. Stanley, S. Havlin, Scale-free resilience of real traffic jams, Proc. Natl. Acad. Sci. U. S. A. 116 (18) (2019) 8673–8678. doi:10.1073/pnas.1814982116 .[11] P. Bak, C. Tang, K. Wiesenfeld, Self-organized criticality, Phys. Rev. A 38 (1988) 364–374. doi: 10.1103/PhysRevA.38.364 .[12] Q. Chen, S. Zhu, J. Wu, G. Chen, H. Wang, Empirical dynamics of traffic moving jams: Insights from kerner’s three-phase traffic theory, Physica A 648 (2024) 129953. doi:10.1016/j.physa.2024. 129953 .[13] N. J. Linesch, R. M. D’Souza, Periodic states, local effects and coexistence in the bml traffic jam model, Physica A 387 (24) (2008) 6170–6176. doi:10.1016/j.physa.2008.06.052 .[14] T. Nagatani, Self-organized criticality and scaling in lifetime of traffic jams, J. Phys. Soc. Jpn. 64 (1) (1995) 31–34. doi:10.1143/JPSJ.64.31 .[15] D. Krajzewicz, J. Erdmann, M. Behrisch, L. Bieker, Recent development and applications of sumo – simulation of urban mobility, Int. J. Adv. Syst. Meas. 5 (3–4) (2012) 128–138. doi:10.1145/ 1595696.1595698 .[16] DLR Institute of Transportation Systems, Sumo – simulation of urban mobility, accessed on https: //www.eclipse.org/sumo/ (2026). [17] M. J. Lighthill, G. B. Whitham, On kinematic waves. II. A theory of traffic flow on long crowded roads, Proc. R. Soc. Lond. A 229 (1955) 317–345. doi:10.1098/rspa.1955.0089 .[18] P. I. Richards, Shock waves on the highway, Oper. Res. 4 (1956) 42–51. doi:10.1287/opre.4.1.42 .[19] A. Aw, M. Rascle, Resurrection of “second order” models of traffic flow, SIAM J. Appl. Math. 60 (3) (2000) 916–938. doi:10.1137/S0036139997332099 .[20] H. M. Zhang, A non-equilibrium traffic model devoid of gas-like behavior, Transp. Res. B: Methodol. 36 (3) (2002) 275–290. doi:10.1016/S0191-2615(00)00050-3 .[21] J. Buli, Y. Xing, A discontinuous Galerkin method for the Aw–Rascle traffic flow model on networks, J. Comput. Phys. 406 (2020) 109183. doi:10.1016/j.jcp.2019.109183 .23 [22] H. J. Payne, Models of freeway traffic and control, in: G. A. Bekey (Ed.), Mathematical Models of Public Systems, Vol. 1, Simulation Council, La Jolla, 1971, pp. 51–61. [23] G. B. Whitham, Linear and Nonlinear Waves, Pure Appl. Math., Wiley-Interscience, New York, 1974. [24] B. Haut, G. Bastin, A second order model of road junctions in fluid models of traffic networks, Netw. Heterog. Media 2 (2) (2007) 227–253. doi:10.3934/nhm.2007.2.227 .[25] C.-W. Shu, Discontinuous Galerkin methods: general approach and stability, in: Numerical Solutions of Partial Differential Equations, Adv. Courses Math. CRM Barcelona, Birkhäuser, Basel, 2009, pp. 149–201. [26] S. Gottlieb, C.-W. Shu, E. Tadmor, Strong stability-preserving high-order time discretization meth-ods, SIAM Rev. 43 (1) (2001) 89–112. doi:10.1137/S003614450036757X .[27] R. Cohen, S. Havlin, Complex Networks: Structure, Robustness and Function, Cambridge Univ. Press, Cambridge, 2010. [28] D. Li, B. Fu, Y. Wang, G. Lu, Y. Berezin, H. E. Stanley, S. Havlin, Percolation transition in dynamical traffic network with evolving critical bottlenecks, Proc. Natl. Acad. Sci. U. S. A. 112 (3) (2015) 669–672. doi:10.1073/pnas.1419185112 .[29] L. C. Evans, Partial Differential Equations, 2nd Edition, Vol. 19 of Grad. Stud. Math., Amer. Math. Soc., Providence, RI, 2010. doi:10.1090/gsm/019 .[30] C. M. Dafermos, Hyperbolic Conservation Laws in Continuum Physics, 4th Edition, Vol. 325 of Grundlehren Math. Wiss., Springer, Berlin, 2016. doi:10.1007/978-3-662-49451-6 .[31] H. Holden, N. H. Risebro, Front Tracking for Hyperbolic Conservation Laws, 2nd Edition, Vol. 152 of Appl. Math. Sci., Springer, Heidelberg, 2015. doi:10.1007/978-3-662-47507-2 .[32] M. Garavello, B. Piccoli, Traffic flow on a road network using the Aw–Rascle model, Commun. Partial Differ. Equ. 31 (1-3) (2006) 243–275. doi:10.1080/03605300500358053 .24

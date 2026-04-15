@@ -1,0 +1,912 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-15T20:25:43.925774+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 24,
+    "deep_cap": 6,
+    "deep_selected": 13,
+    "quick_candidates": 32,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.05187v1",
+      "source": "arxiv",
+      "title": "FNO$^{\\angle θ}$: Extended Fourier neural operator for learning state and optimal control of distributed parameter systems",
+      "abstract": "We propose an extended Fourier neural operator (FNO) architecture for learning state and linear quadratic additive optimal control of systems governed by partial differential equations. Using the Ehrenpreis-Palamodov fundamental principle, we show that any state and optimal control of linear PDEs with constant coefficients can be represented as an integral in the complex domain. The integrand of this representation involves the same exponential term as in the inverse Fourier transform, where the latter is used to represent the convolution operator in FNO layer. Motivated by this observation, we modify the FNO layer by extending the frequency variable in the inverse Fourier transform from the real to complex domain to capture the integral representation from the fundamental principle. We illustrate the performance of FNO in learning state and optimal control for the nonlinear Burgers' equation, showing order of magnitude improvements in training errors and more accurate predictions of non-periodic boundary values over FNO.",
+      "authors": [
+        "Zhexian Li",
+        "Ketan Savla"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "eess.SY"
+      ],
+      "published": "2026-04-06T21:33:30+00:00",
+      "link": "https://arxiv.org/pdf/2604.05187v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Extended Fourier Neural Operator for learning state and optimal control of PDEs",
+      "llm_evidence_cn": "扩展傅里叶神经算子用于学习偏微分方程的状态与最优控制",
+      "llm_evidence": "扩展傅里叶神经算子用于学习偏微分方程的状态与最优控制",
+      "canonical_evidence": "扩展傅里叶神经算子用于学习偏微分方程的状态与最优控制",
+      "llm_tldr_en": "Develops an extended FNO architecture to solve optimal control problems for distributed parameter systems.",
+      "llm_tldr_cn": "开发了一种扩展的 FNO 架构，用于解决分布参数系统的最优控制问题。",
+      "llm_tldr": "开发了一种扩展的 FNO 架构，用于解决分布参数系统的最优控制问题。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.11625v1",
+      "source": "arxiv",
+      "title": "SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving",
+      "abstract": "Neural operators have emerged as powerful surrogates for partial differential equation (PDE) solvers, yet they are typically trained as monolithic models for individual PDEs, require energy-intensive GPU hardware, and must be retrained from scratch when new physics emerge. We introduce the Spiking Compositional Neural Operator (SCNO), a modular architecture combining spiking and conventional components that addresses all three limitations. SCNO maintains a library of small spiking neural operator blocks, each trained on a single elementary differential operator (convection, diffusion, reaction), and composes them through a lightweight input-conditioned aggregator to solve coupled PDEs not seen during block training. A small correction network learns cross-coupling residuals while keeping all blocks and the aggregator frozen, preserving zero-forgetting modular expansion by construction. We evaluate SCNO on eight PDE families including five coupled systems and a nuclear-relevant 1-group neutron diffusion equation. SCNO with correction achieves the lowest relative $L^2$ error on four of five coupled PDEs, outperforming both a monolithic spiking DeepONet (by up to 62%, mean over 3 seeds) and a standard ANN DeepONet (by up to 65%), while requiring only 95K trainable parameters versus 462K for the monolithic baseline. To our knowledge, this is the first compositional spiking neural operator and the first proof-of-concept for modular neuromorphic PDE solving with built-in forgetting-free expansion.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Rizwan-uddin",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-13T15:36:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11625v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 10.0,
+      "llm_evidence_en": "Introduces Spiking Compositional Neural Operator for solving coupled PDEs",
+      "llm_evidence_cn": "引入脉冲组合神经算子用于求解耦合偏微分方程",
+      "llm_evidence": "引入脉冲组合神经算子用于求解耦合偏微分方程",
+      "canonical_evidence": "引入脉冲组合神经算子用于求解耦合偏微分方程",
+      "llm_tldr_en": "A modular spiking neural operator architecture for efficient and adaptable PDE solving.",
+      "llm_tldr_cn": "一种用于高效、可自适应求解偏微分方程的模块化脉冲神经算子架构。",
+      "llm_tldr": "一种用于高效、可自适应求解偏微分方程的模块化脉冲神经算子架构。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.05439v1",
+      "source": "arxiv",
+      "title": "Scale-free congestion clusters in large-scale traffic networks: a continuum modeling study",
+      "abstract": "Recent empirical studies have reported that spatiotemporal congestion clusters in urban traffic exhibit scale-free statistics, with cluster size following a power-law distribution. In this study, we address whether macroscopic continuum descriptions of traffic flow are capable of generating such scale-free spatiotemporal congestion patterns. To this end, we analyze the second-order Aw-Rascle-Zhang model on directed networks under junction coupling. The governing equations are solved by a high-order discontinuous Galerkin scheme, and junction fluxes are determined by an optimization-based coupling procedure enforcing conservation and admissibility at intersections. Congestion is defined by thresholding the road-averaged density, and spatiotemporal clusters are extracted as connected components in space and time. Numerical experiments on lattice networks of varying sizes reveal that the cluster size follows a robust power-law distribution. Moreover, when rescaled by the linear system size inherent to the two-dimensional network geometry, the distribution collapses onto an approximately universal curve, indicating finite-size scaling governed by the linear system size. The observed power-law statistics and finite-size scaling are reminiscent of scale-invariant dynamics characteristic of self-organized criticality. These results demonstrate that macroscopic continuum traffic models can reproduce large-scale statistical features observed in real urban congestion dynamics.",
+      "authors": [
+        "Yuki Chiba",
+        "Norikazu Saito",
+        "Yuki Ueda",
+        "Hiroaki Yoshida"
+      ],
+      "primary_category": "physics.soc-ph",
+      "categories": [
+        "physics.soc-ph",
+        "cond-mat.stat-mech",
+        "math-ph",
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-07T05:19:59+00:00",
+      "link": "https://arxiv.org/pdf/2604.05439v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "continuum modeling of traffic flow using second-order PDE models on networks",
+      "llm_evidence_cn": "在网络上使用二阶偏微分方程模型进行交通流连续建模",
+      "llm_evidence": "在网络上使用二阶偏微分方程模型进行交通流连续建模",
+      "canonical_evidence": "在网络上使用二阶偏微分方程模型进行交通流连续建模",
+      "llm_tldr_en": "Uses continuum PDE models to study scale-free congestion clusters in large-scale traffic networks.",
+      "llm_tldr_cn": "利用连续介质偏微分方程模型研究大规模交通网络中的无标度拥堵集群。",
+      "llm_tldr": "利用连续介质偏微分方程模型研究大规模交通网络中的无标度拥堵集群。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06475v1",
+      "source": "arxiv",
+      "title": "AE-ViT: Stable Long-Horizon Parametric Partial Differential Equations Modeling",
+      "abstract": "Deep Learning Reduced Order Models (ROMs) are becoming increasingly popular as surrogate models for parametric partial differential equations (PDEs) due to their ability to handle high-dimensional data, approximate highly nonlinear mappings, and utilize GPUs. Existing approaches typically learn evolution either on the full solution field, which requires capturing long-range spatial interactions at high computational cost, or on compressed latent representations obtained from autoencoders, which reduces the cost but often yields latent vectors that are difficult to evolve, since they primarily encode spatial information. Moreover, in parametric PDEs, the initial condition alone is not sufficient to determine the trajectory, and most current approaches are not evaluated on jointly predicting multiple solution components with differing magnitudes and parameter sensitivities. To address these challenges, we propose a joint model consisting of a convolutional encoder, a transformer operating on latent representations, and a decoder for reconstruction. The main novelties are joint training with multi-stage parameter injection and coordinate channel injection. Parameters are injected at multiple stages to improve conditioning. Physical coordinates are encoded to provide spatial information. This allows the model to dynamically adapt its computations to the specific PDE parameters governing each system, rather than learning a single fixed response. Experiments on the Advection-Diffusion-Reaction equation and Navier-Stokes flow around the cylinder wake demonstrate that our approach combines the efficiency of latent evolution with the fidelity of full-field models, outperforming DL-ROMs, latent transformers, and plain ViTs in multi-field prediction, reducing the relative rollout error by approximately $5$ times.",
+      "authors": [
+        "Iva Mikuš",
+        "Boris Muha",
+        "Domagoj Vlah"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "math.NA"
+      ],
+      "published": "2026-04-07T21:19:45+00:00",
+      "link": "https://arxiv.org/pdf/2604.06475v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Surrogate models for parametric partial differential equations using ViT",
+      "llm_evidence_cn": "使用ViT的参数化偏微分方程代理模型",
+      "llm_evidence": "使用ViT的参数化偏微分方程代理模型",
+      "canonical_evidence": "使用ViT的参数化偏微分方程代理模型",
+      "llm_tldr_en": "A stable long-horizon surrogate model for parametric PDEs using autoencoders and Vision Transformers.",
+      "llm_tldr_cn": "一种利用自动编码器和ViT构建的稳定长程参数化偏微分方程代理模型。",
+      "llm_tldr": "一种利用自动编码器和ViT构建的稳定长程参数化偏微分方程代理模型。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06881v1",
+      "source": "arxiv",
+      "title": "MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems",
+      "abstract": "Neural operators have emerged as powerful surrogates for dynamical systems due to their grid-invariant properties and computational efficiency. However, the Fourier-based neural operator framework inherently truncates high-frequency components in spectral space, resulting in the loss of small-scale structures and degraded prediction quality at high resolutions when trained on low-resolution data. While diffusion-based enhancement methods can recover multi-scale features, they introduce substantial inference overhead that undermines the efficiency advantage of neural operators. In this work, we introduce \\textbf{M}eanFlow-\\textbf{E}nhanced \\textbf{N}eural \\textbf{O}perators (MENO), a novel framework that achieves accurate all-scale predictions with minimal inference cost. By leveraging the improved MeanFlow method, MENO restores both small-scale details and large-scale dynamics with superior physical fidelity and statistical accuracy. We evaluate MENO on three challenging dynamical systems, including phase-field dynamics, 2D Kolmogorov flow, and active matter dynamics, at resolutions up to 256$\\times$256. Across all benchmarks, MENO improves the power spectrum density accuracy by up to a factor of 2 compared to baseline neural operators while achieving 12$\\times$ faster inference than the state-of-the-art Diffusion Denoising Implicit Model (DDIM)-enhanced counterparts, effectively bridging the gap between accuracy and efficiency. The flexibility and efficiency of MENO position it as an efficient surrogate model for scientific machine learning applications where both statistical integrity and computational efficiency are paramount.",
+      "authors": [
+        "Tianyue Yang",
+        "Xiao Xue"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-08T09:39:49+00:00",
+      "link": "https://arxiv.org/pdf/2604.06881v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "MeanFlow-Enhanced Neural Operators for dynamical systems",
+      "llm_evidence_cn": "用于动力系统的均值流增强神经算子",
+      "llm_evidence": "用于动力系统的均值流增强神经算子",
+      "canonical_evidence": "用于动力系统的均值流增强神经算子",
+      "llm_tldr_en": "Introduces MENO to improve neural operator accuracy for high-resolution dynamical system predictions.",
+      "llm_tldr_cn": "引入MENO框架，通过均值流增强提升神经算子在高分辨率动力系统预测中的精度。",
+      "llm_tldr": "引入MENO框架，通过均值流增强提升神经算子在高分辨率动力系统预测中的精度。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.06918v1",
+      "source": "arxiv",
+      "title": "Multi-layer Predictor Feedback Design for Nonlinear Integro-Differential Equations with State-dependent Input Delays",
+      "abstract": "We develop a novel multi-layer predictor-feedback to achieve exact compensation of state-dependent input delay of general nonlinear integro-differential equations. The system of interest is an unconventional mixed Partial Differential Equation (PDE)-Ordinary Differential Equation (ODE) system, in which a nonlinear ODE is actuated through an inhomogeneous advection PDE. Moreover, the propagation speed of the PDE depends on a moving window integral of the ODE state. The two above features are not addressed yet in standard PDE backstepping-based predictor-feedback designs. Unlike the conventional Lyapunov-based approaches used in the field, our stability and well-posedness analysis rely on the characteristic method and a fixed-point argument. Both of our designs achieve global asymptotic stability (GAS) in the supremum norm of the PDE and ODE states under the mild assumption that the nonlinearity in the PDE governing equation is uniformly Lipschitz continuous. The transport speed, governed by the integral of the ODE state, models systems such as production or queuing processes in which the state of a finite buffer-namely, the inventory level-determines the production or service rate. Numerical simulations demonstrate the effectiveness of the proposed control design for buffer-regulated production lines and queuing systems, ensuring asymptotic stability under a locally safe softened bang-bang feedback law that preserves the positivity of both the system state and the actuation signal.",
+      "authors": [
+        "Tong Li",
+        "Peipei Shang",
+        "Mamadou Diagne"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-04-08T10:17:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.06918v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "boundary control of mixed PDE-ODE systems with delays",
+      "llm_evidence_cn": "具有延迟的混合PDE-ODE系统的边界控制",
+      "llm_evidence": "具有延迟的混合PDE-ODE系统的边界控制",
+      "canonical_evidence": "具有延迟的混合PDE-ODE系统的边界控制",
+      "llm_tldr_en": "Designs predictor-feedback for nonlinear integro-differential equations using a mixed PDE-ODE framework.",
+      "llm_tldr_cn": "利用混合PDE-ODE框架为非线性积分微分方程设计预测反馈控制。",
+      "llm_tldr": "利用混合PDE-ODE框架为非线性积分微分方程设计预测反馈控制。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08357v1",
+      "source": "arxiv",
+      "title": "Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training",
+      "abstract": "Conditional Diffusion Models are powerful surrogates for emulating complex spatiotemporal dynamics, yet they often fail to match the accuracy of deterministic neural emulators for high-precision tasks. In this work, we address two critical limitations of autoregressive PDE diffusion models: their sub-optimal single-step accuracy and the prohibitive computational cost of unrolled training. First, we characterize the relationship between the noise schedule, the reconstruction error reduction rate and the diffusion exposure bias, demonstrating that standard schedules lead to suboptimal reconstruction error. Leveraging this insight, we propose an \\textit{Adaptive Noise Schedule} framework that minimizes inference reconstruction error by dynamically constraining the model's exposure bias. We further show that this optimized schedule enables a fast \\textit{Proxy Unrolled Training} method to stabilize long-term rollouts without the cost of full Markov Chain sampling. Both proposed methods enable significant improvements in short-term accuracy and long-term stability over diffusion and deterministic baselines on diverse benchmarks, including forced Navier-Stokes, Kuramoto-Sivashinsky and Transonic Flow.",
+      "authors": [
+        "Constantin Le Cleï",
+        "Nils Thürey",
+        "Xiaoxiang Zhu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-09T15:21:31+00:00",
+      "link": "https://arxiv.org/pdf/2604.08357v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Addresses PDE emulations and spatiotemporal dynamics using diffusion models",
+      "llm_evidence_cn": "使用扩散模型解决偏微分方程仿真和时空动力学问题",
+      "llm_evidence": "使用扩散模型解决偏微分方程仿真和时空动力学问题",
+      "canonical_evidence": "使用扩散模型解决偏微分方程仿真和时空动力学问题",
+      "llm_tldr_en": "Proposes an adaptive noise schedule for diffusion models to improve accuracy in PDE emulation tasks.",
+      "llm_tldr_cn": "提出一种扩散模型自适应噪声调度框架，以提高偏微分方程仿真任务的精度。",
+      "llm_tldr": "提出一种扩散模型自适应噪声调度框架，以提高偏微分方程仿真任务的精度。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.08689v1",
+      "source": "arxiv",
+      "title": "An Energy-Efficient Lyapunov-Based Cooperative Adaptive Cruise Controller for Electric Vehicles",
+      "abstract": "As electric vehicles (EVs) are increasingly adopted as platforms for connected and automated vehicles (CAVs), enhancing their energy efficiency becomes critical. With the emergence of vehicle-to-vehicle (V2V) communication, cooperative adaptive cruise control (CACC) offers improved traffic flow, safety, and energy efficiency by enabling real-time coordination among EVs. However, conventional CACC algorithms neglected acceleration and regenerative braking dynamics in their implementation. To address this gap, this paper proposes a third-order dynamic model for EVs which has been derived from real-world experimental data. We also propose a novel, practical, and energy-efficient Lyapunov-based CACC controller explicitly designed for EV platoons. The proposed controller is requiring lower control gains while ensuring string stability and energy efficiency. To validate its effectiveness, we conduct both simulation and experimental environments, demonstrating that our approach reduces velocity fluctuations, maintains string stability at lower headway times, and improves energy efficiency of the CACC platoon by up to 38.5% compared to a baseline CACC.",
+      "authors": [
+        "Hamed Faghihian",
+        "Parisa Ansari Bonab",
+        "Arman Sargolzaei"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-09T18:21:34+00:00",
+      "link": "https://arxiv.org/pdf/2604.08689v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Cooperative adaptive cruise controller for improved traffic flow",
+      "llm_evidence_cn": "用于改善交通流的协同自适应巡航控制器",
+      "llm_evidence": "用于改善交通流的协同自适应巡航控制器",
+      "canonical_evidence": "用于改善交通流的协同自适应巡航控制器",
+      "llm_tldr_en": "Proposes a Lyapunov-based CACC controller for electric vehicles to enhance traffic flow and energy efficiency.",
+      "llm_tldr_cn": "提出了一种基于李雅普诺夫的电动汽车 CACC 控制器，以提高交通流效率和能源利用率。",
+      "llm_tldr": "提出了一种基于李雅普诺夫的电动汽车 CACC 控制器，以提高交通流效率和能源利用率。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Traffic Flow",
+      "matched_requirement_id": "req-7",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.09289v1",
+      "source": "arxiv",
+      "title": "Meta-Learned Basis Adaptation for Parametric Linear PDEs",
+      "abstract": "We propose a hybrid physics-informed framework for solving families of parametric linear partial differential equations (PDEs) by combining a meta-learned predictor with a least-squares corrector. The predictor, termed \\textbf{KAPI} (Kernel-Adaptive Physics-Informed meta-learner), is a shallow task-conditioned model that maps query coordinates and PDE parameters to solution values while internally generating an interpretable, task-adaptive Gaussian basis geometry. A lightweight meta-network maps PDE parameters to basis centers, widths, and activity patterns, thereby learning how the approximation space should adapt across the parametric family. This predictor-generated geometry is transferred to a second-stage corrector, which augments it with a background basis and computes the final solution through a one-shot physics-informed Extreme Learning Machine (PIELM)-style least-squares solve. We evaluate the method on four linear PDE families spanning diffusion, transport, mixed advection--diffusion, and variable-speed transport. Across these cases, the predictor captures meaningful physics through localized and transport-aligned basis placement, while the corrector further improves accuracy, often by one or more orders of magnitude. Comparisons with parametric PINNs, physics-informed DeepONet, and uniform-grid PIELM correctors highlight the value of predictor-guided basis adaptation as an interpretable and efficient strategy for parametric PDE solving.",
+      "authors": [
+        "Vikas Dwivedi",
+        "Monica Sigovan",
+        "Bruno Sixou"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-10T13:00:03+00:00",
+      "link": "https://arxiv.org/pdf/2604.09289v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Hybrid physics-informed framework for solving parametric linear PDEs",
+      "llm_evidence_cn": "用于求解参数化线性偏微分方程的混合物理信息框架",
+      "llm_evidence": "用于求解参数化线性偏微分方程的混合物理信息框架",
+      "canonical_evidence": "用于求解参数化线性偏微分方程的混合物理信息框架",
+      "llm_tldr_en": "A meta-learned basis adaptation method to solve parametric linear PDEs with high accuracy.",
+      "llm_tldr_cn": "一种元学习基函数自适应方法，用于高精度求解参数化线性偏微分方程。",
+      "llm_tldr": "一种元学习基函数自适应方法，用于高精度求解参数化线性偏微分方程。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.09374v2",
+      "source": "arxiv",
+      "title": "Variational Quantum Physics-Informed Neural Networks for Hydrological PDE-Constrained Learning with Inherent Uncertainty Quantification",
+      "abstract": "We propose a Hybrid Quantum-Classical Physics-Informed Neural Network (HQC-PINN) that integrates parameterized variational quantum circuits into the PINN framework for hydrological PDE-constrained learning. Our architecture encodes multi-source remote sensing features into quantum states via trainable angle encoding, processes them through a hardware-efficient variational ansatz with entangling layers, and constrains the output using the Saint-Venant shallow water equations and Manning's flow equation as differentiable physics loss terms. The inherent stochasticity of quantum measurement provides a natural mechanism for uncertainty quantification without requiring explicit Bayesian inference machinery. We further introduce a quantum transfer learning protocol that pre-trains on multi-hazard disaster data before fine-tuning on flood-specific events. Numerical simulations on multi-modal satellite and meteorological data from the Kalu River basin, Sri Lanka, show that the HQC-PINN achieves convergence in ~3x fewer training epochs and uses ~44% fewer trainable parameters compared to an equivalent classical PINN, while maintaining competitive classification accuracy. Theoretical analysis indicates that hydrological physics constraints narrow the effective optimization landscape, providing a natural mitigation against barren plateaus in variational quantum circuits. This work establishes the first application of quantum-enhanced physics-informed learning to hydrological prediction and demonstrates a viable path toward quantum advantage in environmental science.",
+      "authors": [
+        "Prasad Nimantha Madusanka Ukwatta Hewage",
+        "Midhun Chakkravarthy",
+        "Ruvan Kumara Abeysekara"
+      ],
+      "primary_category": "quant-ph",
+      "categories": [
+        "quant-ph",
+        "cs.LG"
+      ],
+      "published": "2026-04-10T14:45:38+00:00",
+      "link": "https://arxiv.org/pdf/2604.09374v2",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Uses Saint-Venant shallow water equations and Manning's flow equation as PDE constraints in a neural network.",
+      "llm_evidence_cn": "在神经网络中使用圣维南浅水方程和曼宁流方程作为偏微分方程约束。",
+      "llm_evidence": "在神经网络中使用圣维南浅水方程和曼宁流方程作为偏微分方程约束。",
+      "canonical_evidence": "在神经网络中使用圣维南浅水方程和曼宁流方程作为偏微分方程约束。",
+      "llm_tldr_en": "Proposes a hybrid quantum-classical PINN for hydrological PDE-constrained learning and uncertainty quantification.",
+      "llm_tldr_cn": "提出一种混合量子-经典物理信息神经网络，用于水文偏微分方程约束学习和不确定性量化。",
+      "llm_tldr": "提出一种混合量子-经典物理信息神经网络，用于水文偏微分方程约束学习和不确定性量化。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.11031v1",
+      "source": "arxiv",
+      "title": "A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings",
+      "abstract": "We study the input-to-state stability (ISS) of boundary control systems allowing for infinitely many boundary couplings. Using semigroup perturbation theory and the theory of positive linear operators on Banach lattices, we derive a spectral small-gain condition ensuring exponential ISS. We further investigate linear Boltzmann-type equations on an infinite network of intersecting circles, incorporating delays, scattering, and disturbances acting at the junction. For this class of systems, we prove that a spectral small-gain condition on the transmission operator matrix guarantees exponential ISS with respect to disturbances propagating through the network. Moreover, we derive explicit ISS estimates for {certain} classes of dynamical processes. Finally, we demonstrate the practical applicability of our results by considering two important classes of time-delayed transmission conditions.",
+      "authors": [
+        "Yassine El Gantouh",
+        "Jun Zheng",
+        "Guchuan Zhu",
+        "Dingshi Li"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-04-13T05:56:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.11031v1",
+      "tags": [
+        "keyword:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "boundary control systems with infinite couplings and transmission operator matrix",
+      "llm_evidence_cn": "具有无限耦合和传输算子矩阵的边界控制系统",
+      "llm_evidence": "具有无限耦合和传输算子矩阵的边界控制系统",
+      "canonical_evidence": "具有无限耦合和传输算子矩阵的边界控制系统",
+      "llm_tldr_en": "Develops stability theorems for boundary control systems with infinite couplings on networks.",
+      "llm_tldr_cn": "研究了具有无限耦合的网络边界控制系统的输入到状态稳定性定理。",
+      "llm_tldr": "研究了具有无限耦合的网络边界控制系统的输入到状态稳定性定理。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.11375v1",
+      "source": "arxiv",
+      "title": "DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems",
+      "abstract": "Diffusion models have emerged as powerful generative priors for solving PDE-constrained inverse problems. Compared to end-to-end approaches relying on massive paired datasets, explicitly decoupling the prior distribution of physical parameters from the forward physical model, a paradigm often formalized as Plug-and-Play (PnP) priors, offers enhanced flexibility and generalization. To accelerate inference within such decoupled frameworks, fast neural operators are employed as surrogate solvers. However, directly integrating them into standard diffusion sampling introduces a critical bottleneck: evaluating neural surrogates on partially denoised, non-physical intermediate states forces them into out-of-distribution (OOD) regimes. To eliminate this, the physical surrogate must be evaluated exclusively on the fully denoised parameter, a principle we formalize as the Manifold Consistency Requirement. To satisfy this requirement, we present Diffusion Latent Optimization (DiLO), which transforms the stochastic sampling process into a deterministic latent trajectory, enabling stable backpropagation of measurement gradients to the initial latent state. By keeping the trajectory on the physical manifold, it ensures physically valid updates and improves reconstruction accuracy. We provide theoretical guarantees for the convergence of this optimization trajectory. Extensive experiments across Electrical Impedance Tomography, Inverse Scattering, and Inverse Navier-Stokes problems demonstrate DiLO's accuracy, efficiency, and robustness to noise.",
+      "authors": [
+        "Haibo Liu",
+        "Guang Lin"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA"
+      ],
+      "published": "2026-04-13T12:15:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11375v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Neural operators as surrogate solvers for PDE-constrained inverse problems",
+      "llm_evidence_cn": "神经算子作为PDE约束反问题的代理求解器",
+      "llm_evidence": "神经算子作为PDE约束反问题的代理求解器",
+      "canonical_evidence": "神经算子作为PDE约束反问题的代理求解器",
+      "llm_tldr_en": "Decouples generative priors and neural operators to solve PDE-constrained inverse problems efficiently.",
+      "llm_tldr_cn": "通过解耦生成先验与神经算子，利用扩散潜空间优化高效解决PDE约束的反问题。",
+      "llm_tldr": "通过解耦生成先验与神经算子，利用扩散潜空间优化高效解决PDE约束的反问题。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.11825v1",
+      "source": "arxiv",
+      "title": "Quantum algorithms for Young measures: applications to nonlinear partial differential equations",
+      "abstract": "Many nonlinear PDEs have singular or oscillatory solutions or may exhibit physical instabilities or uncertainties. This requires a suitable concept of physically relevant generalized solutions. Dissipative measure-valued solutions have been an effective analytical tool to characterize PDE behavior in such singular regimes. They have also been used to characterize limits of standard numerical schemes on classical computers. The measure-valued formulation of a nonlinear PDE yields an optimization problem with a linear cost functional and linear constraints, which can be formulated as a linear programming problem. However, this linear programming problem can suffer from the curse of dimensionality. In this article, we propose solving it using quantum linear programming (QLP) algorithms and discuss whether this approach can reduce costs compared to classical algorithms. We show that some QLP algorithms, such as the quantum central path algorithm, have up to polynomial advantage over the classical interior point method. For problems where one is interested in the dissipative weak solution, namely the expected values of the Young measure, we show that the QLP algorithms offer no advantage over direct classical solvers. Moreover, for random PDEs, there can be up to polynomial advantage in obtaining the Young measure over direct classical PDE solvers. This is a significant advantage over standard PDE solvers, since the Young measure provides a more detailed description of the solution. We also propose some open questions for future development in this direction.",
+      "authors": [
+        "Shi Jin",
+        "Nana Liu",
+        "Maria Lukacova-Medvidova",
+        "Yuhuan Yuan"
+      ],
+      "primary_category": "quant-ph",
+      "categories": [
+        "quant-ph",
+        "math-ph"
+      ],
+      "published": "2026-04-11T11:37:24+00:00",
+      "link": "https://arxiv.org/pdf/2604.11825v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 9.0,
+      "llm_evidence_en": "Proposes quantum algorithms for solving nonlinear partial differential equations",
+      "llm_evidence_cn": "提出用于求解非线性偏微分方程的量子算法",
+      "llm_evidence": "提出用于求解非线性偏微分方程的量子算法",
+      "canonical_evidence": "提出用于求解非线性偏微分方程的量子算法",
+      "llm_tldr_en": "Quantum algorithms for measure-valued solutions to address singular or oscillatory nonlinear PDEs.",
+      "llm_tldr_cn": "针对具有奇异或振荡特性的非线性偏微分方程的量子度量值解法。",
+      "llm_tldr": "针对具有奇异或振荡特性的非线性偏微分方程的量子度量值解法。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.07412v1",
+      "source": "arxiv",
+      "title": "Physics-informed neural operators for the in situ characterization of locally reacting sound absorbers",
+      "abstract": "Accurate knowledge of acoustic surface admittance or impedance is essential for reliable wave-based simulations, yet its in situ estimation remains challenging due to noise, model inaccuracies, and restrictive assumptions of conventional methods. This work presents a physics-informed neural operator approach for estimating frequency-dependent surface admittance directly from near-field measurements of sound pressure and particle velocity. A deep operator network is employed to learn the mapping from measurement data, spatial coordinates, and frequency to acoustic field quantities, while simultaneously inferring a globally consistent surface admittance spectrum without requiring an explicit forward model. The governing acoustic relations, including the Helmholtz equation, the linearized momentum equation, and Robin boundary conditions, are embedded into the training process as physics-based regularization, enabling physically consistent and noise-robust predictions while avoiding frequency-wise inversion. The method is validated using synthetically generated data from a simulation model for two planar porous absorbers under semi free-field conditions across a broad frequency range. Results demonstrate accurate reconstruction of both real and imaginary admittance components and reliable prediction of acoustic field quantities. Parameter studies confirm improved robustness to noise and sparse sampling compared to purely data-driven approaches, highlighting the potential of physics-informed neural operators for in situ acoustic material characterization.",
+      "authors": [
+        "Jonas M. Schmid",
+        "Johannes D. Schmid",
+        "Martin Eser",
+        "Steffen Marburg"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.data-an"
+      ],
+      "published": "2026-04-08T12:19:24+00:00",
+      "link": "https://arxiv.org/pdf/2604.07412v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 8.5,
+      "llm_evidence_en": "Uses physics-informed neural operators to estimate surface admittance from acoustic field measurements.",
+      "llm_evidence_cn": "使用物理信息神经算子从声场测量中估计表面导纳。",
+      "llm_evidence": "使用物理信息神经算子从声场测量中估计表面导纳。",
+      "canonical_evidence": "使用物理信息神经算子从声场测量中估计表面导纳。",
+      "llm_tldr_en": "Applies neural operators to characterize sound absorbers by learning mappings between acoustic fields.",
+      "llm_tldr_cn": "应用神经算子通过学习声场之间的映射来表征吸声体。",
+      "llm_tldr": "应用神经算子通过学习声场之间的映射来表征吸声体。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.07671v1",
+      "source": "arxiv",
+      "title": "On the Unique Recovery of Transport Maps and Vector Fields from Finite Measure-Valued Data",
+      "abstract": "We establish guarantees for the unique recovery of vector fields and transport maps from finite measure-valued data, yielding new insights into generative models, data-driven dynamical systems, and PDE inverse problems. In particular, we provide general conditions under which a diffeomorphism can be uniquely identified from its pushforward action on finitely many densities, i.e., when the data $\\{(ρ_j,f_\\#ρ_j)\\}_{j=1}^m$ uniquely determines $f$. As a corollary, we introduce a new metric which compares diffeomorphisms by measuring the discrepancy between finitely many pushforward densities in the space of probability measures. We also prove analogous results in an infinitesimal setting, where derivatives of the densities along a smooth vector field are observed, i.e., when $\\{(ρ_j,\\text{div} (ρ_j v))\\}_{j=1}^m$ uniquely determines $v$. Our analysis makes use of the Whitney and Takens embedding theorems, which provide estimates on the required number of densities $m$, depending only on the intrinsic dimension of the problem. We additionally interpret our results through the lens of Perron--Frobenius and Koopman operators and demonstrate how our techniques lead to new guarantees for the well-posedness of certain PDE inverse problems related to continuity, advection, Fokker--Planck, and advection-diffusion-reaction equations. Finally, we present illustrative numerical experiments demonstrating the unique identification of transport maps from finitely many pushforward densities, and of vector fields from finitely many weighted divergence observations.",
+      "authors": [
+        "Jonah Botvinick-Greenhouse",
+        "Yunan Yang"
+      ],
+      "primary_category": "stat.ML",
+      "categories": [
+        "stat.ML",
+        "cs.LG",
+        "math.DS",
+        "math.NA"
+      ],
+      "published": "2026-04-09T00:26:30+00:00",
+      "link": "https://arxiv.org/pdf/2604.07671v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 7.5,
+      "llm_evidence_en": "Discusses PDE inverse problems and unique recovery of transport maps from measure-valued data.",
+      "llm_evidence_cn": "讨论了偏微分方程反问题以及从测度值数据中唯一恢复输运映射的问题。",
+      "llm_evidence": "讨论了偏微分方程反问题以及从测度值数据中唯一恢复输运映射的问题。",
+      "canonical_evidence": "讨论了偏微分方程反问题以及从测度值数据中唯一恢复输运映射的问题。",
+      "llm_tldr_en": "Establishes guarantees for recovering vector fields and transport maps, relevant to PDE inverse problems.",
+      "llm_tldr_cn": "确立了恢复向量场和输运映射的保证，与偏微分方程反问题相关。",
+      "llm_tldr": "确立了恢复向量场和输运映射的保证，与偏微分方程反问题相关。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.05778v1",
+      "source": "arxiv",
+      "title": "Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables",
+      "abstract": "The ISOKANN (Invariant Subspaces of Koopman Operators Learned by Artificial Neural Networks) framework provides a data-driven route to extract collective variables (CVs) and effective dynamics from complex molecular systems. In this work, we integrate the theoretical foundation of Koopman operators with Krylov-like subspace algorithms, and reduced dynamical modeling to build a coherent picture of how to describe metastable transitions in high-dimensional systems based on CVs. Starting from the identification of CVs based on dominant invariant subspaces, we derive the corresponding effective dynamics on the latent space and connect these to transition rates and times, committor functions, and transition pathways. The combination of Koopman-based learning and reduced-dimensional effective dynamics yields a principled framework for computing transition rates and pathways from simulation data. Numerical experiments on one-, two-, and three-dimensional benchmark potentials illustrate the ability of ISOKANN to reconstruct the coarse-grained kinetics and reproduce transition times across enthalpic and entropic barriers.",
+      "authors": [
+        "Alexander Sikorski",
+        "Luca Donati",
+        "Marcus Weber",
+        "Christof Schütte"
+      ],
+      "primary_category": "math.DS",
+      "categories": [
+        "math.DS",
+        "physics.chem-ph",
+        "stat.ML"
+      ],
+      "published": "2026-04-07T12:16:14+00:00",
+      "link": "https://arxiv.org/pdf/2604.05778v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Neural learning of Koopman operators for dynamical systems",
+      "llm_evidence_cn": "用于动力系统的 Koopman 算子神经学习",
+      "llm_evidence": "用于动力系统的 Koopman 算子神经学习",
+      "canonical_evidence": "用于动力系统的 Koopman 算子神经学习",
+      "llm_tldr_en": "Integrates Koopman operator theory with neural networks to extract effective dynamics from complex systems.",
+      "llm_tldr_cn": "将 Koopman 算子理论与神经网络结合，从复杂系统中提取有效动力学特征。",
+      "llm_tldr": "将 Koopman 算子理论与神经网络结合，从复杂系统中提取有效动力学特征。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08076v1",
+      "source": "arxiv",
+      "title": "$φ-$DeepONet: A Discontinuity Capturing Neural Operator",
+      "abstract": "We present $φ-$DeepONet, a physics-informed neural operator designed to learn mappings between function spaces that may contain discontinuities or exhibit non-smooth behavior. Classical neural operators are based on the universal approximation theorem which assumes that both the operator and the functions it acts on are continuous. However, many scientific and engineering problems involve naturally discontinuous input fields as well as strong and weak discontinuities in the output fields caused by material interfaces. In $φ$-DeepONet, discontinuities in the input are handled using multiple branch networks, while discontinuities in the output are learned through a nonlinear latent embedding of the interface. This embedding is constructed from a {\\it one-hot} representation of the domain decomposition that is combined with the spatial coordinates in a modified trunk network. The outputs of the branch and trunk networks are then combined through a dot product to produce the final solution, which is trained using a physics- and interface-informed loss function. We evaluate $φ$-DeepONet on several one- and two-dimensional benchmark problems and demonstrate that it delivers accurate and stable predictions even in the presence of strong interface-driven discontinuities.",
+      "authors": [
+        "Sumanta Roy",
+        "Stephen T. Castonguay",
+        "Pratanu Roy",
+        "Michael D. Shields"
+      ],
+      "primary_category": "cs.CE",
+      "categories": [
+        "cs.CE",
+        "math.AP"
+      ],
+      "published": "2026-04-09T10:47:31+00:00",
+      "link": "https://arxiv.org/pdf/2604.08076v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 8.5,
+      "llm_evidence_en": "Presents a physics-informed neural operator designed to learn mappings between function spaces.",
+      "llm_evidence_cn": "提出了一种旨在学习函数空间之间映射的物理信息神经算子。",
+      "llm_evidence": "提出了一种旨在学习函数空间之间映射的物理信息神经算子。",
+      "canonical_evidence": "提出了一种旨在学习函数空间之间映射的物理信息神经算子。",
+      "llm_tldr_en": "Introduces a neural operator capable of capturing discontinuities in scientific and engineering problems.",
+      "llm_tldr_cn": "引入了一种能够捕捉科学和工程问题中不连续性的神经算子。",
+      "llm_tldr": "引入了一种能够捕捉科学和工程问题中不连续性的神经算子。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.05984v1",
+      "source": "arxiv",
+      "title": "Formalization of De Giorgi--Nash--Moser Theory in Lean",
+      "abstract": "We present a formalization in Lean of the core interior De Giorgi--Nash--Moser theory for uniformly elliptic divergence-form equations with bounded measurable coefficients. The formalized results include local boundedness of weak subsolutions, the weak Harnack inequality for positive weak supersolutions, Moser's Harnack inequality for positive weak solutions, and interior Hölder regularity. This is, to our knowledge, the first machine-checked formalization of a major theorem in modern PDE theory. The development also required substantial new infrastructure for Sobolev spaces on bounded domains, weak solutions of elliptic equations, and quantitative regularity estimates. More broadly, it suggests that large-scale autoformalization of hard analysis in Lean is now within reach.",
+      "authors": [
+        "Scott Armstrong",
+        "Julia Kempe"
+      ],
+      "primary_category": "math.AP",
+      "categories": [
+        "math.AP"
+      ],
+      "published": "2026-04-07T15:12:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.05984v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "formalization of modern PDE theory in Lean",
+      "llm_evidence_cn": "在Lean中对现代偏微分方程理论进行形式化",
+      "llm_evidence": "在Lean中对现代偏微分方程理论进行形式化",
+      "canonical_evidence": "在Lean中对现代偏微分方程理论进行形式化",
+      "llm_tldr_en": "Presents the first machine-checked formalization of De Giorgi-Nash-Moser PDE theory in Lean.",
+      "llm_tldr_cn": "在Lean中首次实现了De Giorgi-Nash-Moser偏微分方程理论的机器验证形式化。",
+      "llm_tldr": "在Lean中首次实现了De Giorgi-Nash-Moser偏微分方程理论的机器验证形式化。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.06732v1",
+      "source": "arxiv",
+      "title": "Extraction of linearized models from pre-trained networks via knowledge distillation",
+      "abstract": "Recent developments in hardware, such as photonic integrated circuits and optical devices, are driving demand for research on constructing machine learning architectures tailored for linear operations. Hence, it is valuable to explore methods for constructing learning machines with only linear operations after simple nonlinear preprocessing. In this study, we propose a framework to extract a linearized model from a pre-trained neural network for classification tasks by integrating Koopman operator theory with knowledge distillation. Numerical demonstrations on the MNIST and the Fashion-MNIST datasets reveal that the proposed model consistently outperforms the conventional least-squares-based Koopman approximation in both classification accuracy and numerical stability.",
+      "authors": [
+        "Fumito Kimura",
+        "Jun Ohkubo"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-08T06:53:39+00:00",
+      "link": "https://arxiv.org/pdf/2604.06732v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Koopman operator theory for extracting linearized models",
+      "llm_evidence_cn": "利用Koopman算子理论提取线性化模型",
+      "llm_evidence": "利用Koopman算子理论提取线性化模型",
+      "canonical_evidence": "利用Koopman算子理论提取线性化模型",
+      "llm_tldr_en": "Uses Koopman operator theory and distillation to extract linear models from pre-trained neural networks.",
+      "llm_tldr_cn": "结合Koopman算子理论与知识蒸馏，从预训练神经网络中提取线性化模型。",
+      "llm_tldr": "结合Koopman算子理论与知识蒸馏，从预训练神经网络中提取线性化模型。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.05441v1",
+      "source": "arxiv",
+      "title": "The Stability of a Coupled Degenerate Wave System Under Boundary Control",
+      "abstract": "In this paper, we investigate a system composed of two degenerate wave equations which are connected at one point. By introducing some inequalities on the weighted spaces and employing the frequency domain method, we prove that the system is polynomially stable,which depends on the degree of the degeneracy.",
+      "authors": [
+        "Ya-nan Sun",
+        "Qiong Zhang"
+      ],
+      "primary_category": "math.AP",
+      "categories": [
+        "math.AP"
+      ],
+      "published": "2026-04-07T05:22:35+00:00",
+      "link": "https://arxiv.org/pdf/2604.05441v1",
+      "tags": [
+        "keyword:PDE控制交通流"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Investigates stability of coupled wave equations under boundary control",
+      "llm_evidence_cn": "研究了边界控制下耦合波动方程系统的稳定性",
+      "llm_evidence": "研究了边界控制下耦合波动方程系统的稳定性",
+      "canonical_evidence": "研究了边界控制下耦合波动方程系统的稳定性",
+      "llm_tldr_en": "Analyzes the polynomial stability of coupled degenerate wave equations using frequency domain methods.",
+      "llm_tldr_cn": "利用频域方法分析了边界控制下耦合退化波动方程系统的多项式稳定性。",
+      "llm_tldr": "利用频域方法分析了边界控制下耦合退化波动方程系统的多项式稳定性。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.06774v1",
+      "source": "arxiv",
+      "title": "Sparse-Aware Neural Networks for Nonlinear Functionals: Mitigating the Exponential Dependence on Dimension",
+      "abstract": "Deep neural networks have emerged as powerful tools for learning operators defined over infinite-dimensional function spaces. However, existing theories frequently encounter difficulties related to dimensionality and limited interpretability. This work investigates how sparsity can help address these challenges in functional learning, a central ingredient in operator learning. We propose a framework that employs convolutional architectures to extract sparse features from a finite number of samples, together with deep fully connected networks to effectively approximate nonlinear functionals. Using universal discretization methods, we show that sparse approximators enable stable recovery from discrete samples. In addition, both the deterministic and the random sampling schemes are sufficient for our analysis. These findings lead to improved approximation rates and reduced sample sizes in various function spaces, including those with fast frequency decay and mixed smoothness. They also provide new theoretical insights into how sparsity can alleviate the curse of dimensionality in functional learning.",
+      "authors": [
+        "Jianfei Li",
+        "Shuo Huang",
+        "Han Feng",
+        "Ding-Xuan Zhou",
+        "Gitta Kutyniok"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "math.FA"
+      ],
+      "published": "2026-04-08T07:42:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.06774v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Investigates functional learning as a central ingredient in operator learning for infinite-dimensional spaces.",
+      "llm_evidence_cn": "研究泛函学习，这是无限维空间算子学习的核心组成部分。",
+      "llm_evidence": "研究泛函学习，这是无限维空间算子学习的核心组成部分。",
+      "canonical_evidence": "研究泛函学习，这是无限维空间算子学习的核心组成部分。",
+      "llm_tldr_en": "Proposes sparse-aware neural networks to improve the efficiency and stability of learning nonlinear functionals.",
+      "llm_tldr_cn": "提出稀疏感知神经网络，以提高学习非线性泛函的效率和稳定性。",
+      "llm_tldr": "提出稀疏感知神经网络，以提高学习非线性泛函的效率和稳定性。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.07216v1",
+      "source": "arxiv",
+      "title": "An Inexact Trust-Region Method for Structured Nonsmooth Optimization with Application to Risk-Averse Stochastic Programming",
+      "abstract": "We develop a trust-region method for efficiently minimizing the sum of a smooth function, a nonsmooth convex function, and the composition of a finite-valued support function with a smooth function. Optimization problems with this structure arise in numerous applications including risk-averse stochastic programming and subproblems for nonsmooth penalty nonlinear programming methods. Our method permits the use of inexact value and derivative information, enabling the solution of infinite-dimensional problems governed by, e.g., partial differential equations (PDEs). We prove global convergence of our method and under additional regularity assumptions, demonstrate that the sequence of iterates accumulates at a stationary point of our target problem. We demonstrate our method's efficiency on two PDE-constrained optimization examples, showing that its performance is invariant to the PDE discretization size.",
+      "authors": [
+        "Drew P. Kouri"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-04-08T15:38:00+00:00",
+      "link": "https://arxiv.org/pdf/2604.07216v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "optimization for problems governed by PDEs",
+      "llm_evidence_cn": "受偏微分方程约束的问题优化",
+      "llm_evidence": "受偏微分方程约束的问题优化",
+      "canonical_evidence": "受偏微分方程约束的问题优化",
+      "llm_tldr_en": "Develops a trust-region method for nonsmooth optimization applicable to PDE-governed problems.",
+      "llm_tldr_cn": "开发了一种适用于受偏微分方程约束问题的非光滑优化信赖域方法。",
+      "llm_tldr": "开发了一种适用于受偏微分方程约束问题的非光滑优化信赖域方法。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.08357v2",
+      "source": "arxiv",
+      "title": "Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training",
+      "abstract": "Conditional Diffusion Models are powerful surrogates for emulating complex spatiotemporal dynamics, yet they often fail to match the accuracy of deterministic neural emulators for high-precision tasks. In this work, we address two critical limitations of autoregressive PDE diffusion models: their sub-optimal single-step accuracy and the prohibitive computational cost of unrolled training. First, we characterize the relationship between the noise schedule, the reconstruction error reduction rate and the diffusion exposure bias, demonstrating that standard schedules lead to suboptimal reconstruction error. Leveraging this insight, we propose an \\textit{Adaptive Noise Schedule} framework that minimizes inference reconstruction error by dynamically constraining the model's exposure bias. We further show that this optimized schedule enables a fast \\textit{Proxy Unrolled Training} method to stabilize long-term rollouts without the cost of full Markov Chain sampling. Both proposed methods enable significant improvements in short-term accuracy and long-term stability over diffusion and deterministic baselines on diverse benchmarks, including forced Navier-Stokes, Kuramoto-Sivashinsky and Transonic Flow.",
+      "authors": [
+        "Constantin Le Cleï",
+        "Nils Thuerey",
+        "Xiaoxiang Zhu"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-09T15:21:31+00:00",
+      "link": "https://arxiv.org/pdf/2604.08357v2",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Diffusion schedules for PDE emulations and spatiotemporal dynamics",
+      "llm_evidence_cn": "用于PDE仿真和时空动力学的扩散调度",
+      "llm_evidence": "用于PDE仿真和时空动力学的扩散调度",
+      "canonical_evidence": "用于PDE仿真和时空动力学的扩散调度",
+      "llm_tldr_en": "Proposes an adaptive noise schedule to minimize reconstruction errors in autoregressive PDE diffusion models.",
+      "llm_tldr_cn": "提出自适应噪声调度框架，旨在最小化自回归PDE扩散模型中的重构误差。",
+      "llm_tldr": "提出自适应噪声调度框架，旨在最小化自回归PDE扩散模型中的重构误差。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "PDE",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "8plus"
+    },
+    {
+      "id": "2604.07421v1",
+      "source": "arxiv",
+      "title": "SPAMoE: Spectrum-Aware Hybrid Operator Framework for Full-Waveform Inversion",
+      "abstract": "Full-waveform inversion (FWI) is pivotal for reconstructing high-resolution subsurface velocity models but remains computationally intensive and ill-posed. While deep learning approaches promise efficiency, existing Convolutional Neural Networks (CNNs) and single-paradigm Neural Operators (NOs) struggle with one fundamental issue: frequency entanglement of multi-scale geological features. To address this challenge, we propose Spectral-Preserving Adaptive MoE (SPAMoE), a novel spectrum-aware framework for solving inverse problems with complex multi-scale structures. Our approach introduces a Spectral-Preserving DINO Encoder that enforces a lower bound on the high-to-low frequency energy ratio of the encoded representation, mitigating high-frequency collapse and stabilizing subsequent frequency-domain modeling. Furthermore, we design a novel Spectral Decomposition and Routing mechanism that dynamically assigns frequency bands to a Mixture-of-Experts (MoE) ensemble comprising FNO, MNO, and LNO. On the ten OpenFWI sub-datasets, experiments show that SPAMoE reduces the average MAE by 54.1% relative to the best officially reported OpenFWI baseline, thereby establishing a new architectural framework for learning-based full-waveform inversion.",
+      "authors": [
+        "Zhenyu Wang",
+        "Peiyuan Li",
+        "Yongxiang Shi",
+        "Ruoyu Wu",
+        "Chenfei Liao",
+        "Lei Zhang"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-08T15:21:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.07421v1",
+      "tags": [
+        "keyword:PDE控制交通流",
+        "query:PDE控制交通流"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "The paper proposes a novel spectrum-aware Neural Operator framework (SPAMoE) for solving inverse problems.",
+      "llm_evidence_cn": "该论文提出了一种新型频谱感知神经算子框架（SPAMoE）用于解决反问题。",
+      "llm_evidence": "该论文提出了一种新型频谱感知神经算子框架（SPAMoE）用于解决反问题。",
+      "canonical_evidence": "该论文提出了一种新型频谱感知神经算子框架（SPAMoE）用于解决反问题。",
+      "llm_tldr_en": "Introduces SPAMoE, a spectrum-aware hybrid neural operator framework to improve multi-scale inverse problem solving.",
+      "llm_tldr_cn": "引入SPAMoE，一种频谱感知混合神经算子框架，旨在改进多尺度反问题的求解效率与精度。",
+      "llm_tldr": "引入SPAMoE，一种频谱感知混合神经算子框架，旨在改进多尺度反问题的求解效率与精度。",
+      "llm_tags": [
+        "query:pde"
+      ],
+      "matched_query_tag": "query:pde",
+      "matched_query_text": "Neural Operator",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

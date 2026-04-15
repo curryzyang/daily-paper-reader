@@ -1,0 +1,2175 @@
+Title: Quantum algorithms for Young measures: applications to nonlinear partial differential equations
+
+URL Source: https://arxiv.org/pdf/2604.11825v1
+
+Published Time: Wed, 15 Apr 2026 00:00:45 GMT
+
+Number of Pages: 40
+
+Markdown Content:
+# Quantum algorithms for Young measures – applications to nonlinear partial differential equations 
+
+## Shi Jin ∗
+
+## , Nana Liu †
+
+## , Mária Lukáčová-Medvid’ová ‡ and Yuhuan Yuan §
+
+## April 15, 2026 
+
+Abstract 
+
+Many nonlinear PDEs have singular or oscillatory solutions or may exhibit physical instabilities or uncertainties. This requires a suitable concept of physically relevant generalized solutions. Dissipative measure-valued solutions have been an effective analytical tool to characterize PDE behavior in such singular regimes. They have also been used to characterize limits of standard numerical schemes on classical computers. The measure-valued formulation of a nonlinear PDE yields an optimization problem with a linear cost functional and linear constraints, which can be formulated as a linear programming problem. However, this linear programming problem can suffer from the curse of dimensionality. In this article, we propose solving it using quantum linear programming (QLP) algorithms and discuss whether this approach can reduce costs compared to classical algorithms. We show that some QLP algorithms, such as the quantum central path algorithm, have up to polynomial advantage over the classical interior point method. For problems where one is interested in the dissipative weak solution, namely the expected values of the Young measure, we show that the QLP algorithms offer no advantage over direct classical solvers. Moreover, for random PDEs, there can be up to polynomial advantage in obtaining the Young measure over direct classical PDE solvers. This is a significant advantage over standard PDE solvers, since the Young measure provides a more detailed description of the solution. We also propose some open questions for future development in this direction. 
+
+> ∗
+
+School of Mathematical Sciences, Institute of Natural Sciences, Ministry of Education Key Laboratory in Scientific and Engineering Computing, Shanghai Jiao Tong University, Shanghai 200240, China, shijin-m@sjtu.edu.cn. 
+
+> †
+
+Institute of Natural Sciences, Global College, Ministry of Education Key Laboratory in Sci-entific and Engineering Computing, Shanghai Jiao Tong University, Shanghai 200240, China, 
+
+nana.liu@quantumlah.org 
+
+> ‡
+
+Johannes Gutenberg-University Mainz, Institute of Mathematics, Staudingerweg 9, 55128 Mainz, Ger-many, RMU Co-Affiliate TU Darmstadt, Germany lukacova@uni-mainz.de 
+
+> §
+
+School of Mathematics, Nanjing University of Aeronautics and Astronautics, Jiangjun Avenue No. 29, 211106 Nanjing, P. R. China, yuhuanyuan@nuaa.edu.cn 
+
+1
+
+> arXiv:2604.11825v1 [quant-ph] 11 Apr 2026
+
+Keywords. quantum algorithms, linear programming, nonlinear partial differential equa-tions, uncertainty quantification, random parameterized Young measures, moment closure problems 
+
+AMS Subject Classification. 60C50, 60H35, 82C40 
+
+# Contents 
+
+1 Introduction 22 Problem Setting 6
+
+2.1 Measure-valued solution . . . . . . . . . . . . . . . . . . . . . . . . . . . . 72.2 Linear programming problem . . . . . . . . . . . . . . . . . . . . . . . . . 82.3 Discretization . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 92.4 Numerical justification . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 
+
+3 Quantum algorithms to compute the Young measures for deterministic nonlinear PDEs 12 
+
+3.1 Computational complexities of QLP algorithms . . . . . . . . . . . . . . . 13 3.2 Computing the Young measures for three prototype examples . . . . . . . 18 
+
+4 Quantum algorithms to compute the Young measures for random non-linear PDEs 19 
+
+4.1 Linear programming problem . . . . . . . . . . . . . . . . . . . . . . . . . 19 4.2 Collocation framework and cost of quantum algorithms . . . . . . . . . . . 20 
+
+5 Outlook and open questions 24 A Numerical simulations 29 
+
+A.1 The Inviscid Burgers equation . . . . . . . . . . . . . . . . . . . . . . . . . 29 A.2 The barotropic Euler equations . . . . . . . . . . . . . . . . . . . . . . . . 32 A.3 The Allen-Cahn equation . . . . . . . . . . . . . . . . . . . . . . . . . . . . 34 
+
+B The Interior point method for LP 38 
+
+# 1 Introduction 
+
+The development of quantum algorithms for scientific computing problems has quickly emerged as an active area of research due to their potential for providing up to polynomial or even exponential quantum advantage, subject to certain caveats. The first milestone in this direction is the HHL algorithm for solving linear systems of equations [37], which achieves an up to exponential advantage in the quantum linear systems of equations prob-lem. PDEs pose tremendous hurdles for classical simulation when the dimension is high, 2like in quantum dynamics and kinetic theory; or when small or multiple scales require high-resolution numerical simulation, like in fluid dynamics, turbulence, and other multi-scale problems. Due to the potential in using quantum simulation to alleviate the curse of dimensionality, the development of efficient quantum algorithms is an attractive direction. There are several approaches in quantum algorithms for linear PDEs. The first one fully discretizes the PDEs, making it a linear algebra problem; then HHL-like quantum linear algebra solvers are used [4]. The second uses Schrödingerization [38, 41, 42] that maps a non-unitary evolution into a unitary one by adding one higher dimension, where unitary evolution is most suitable for quantum simulation. This is a quite general framework for all linear dynamical systems, and is suitable for both qubit-based (see the related approach LCHS [1]) as well as continuous variable (qumodes) [38] platform, making it competitive for both general and analog quantum computing. The nonlinear PDEs, on the other hand, have remained one of the main challenges for quantum simulation, and so far, there has been limited success in developing quantum algorithms that can demonstrate quantum advantage for truly nonlinear regimes. Since quantum computation is based primarily on linear processes, it becomes necessary to lin-earize nonlinear PDEs to make them suitable for quantum computation. The first such approach uses the Carleman truncation, whose validity is limited to weak nonlinearity and strong dissipation [47]. For most physical problems, like those studied in this article, the nonlinearity is strong and dissipation weak. This regime is challenging not only because of the nonlinearities, but also due to the singular behavior brought in by the nonlinearity, such as shocks, caustics, blow-ups, ill-posedness, etc. that cannot be easily handled by naive linearizations that do not yield the physically relevant weak or generalized solutions. One of the most important nonlinear PDEs that has strong nonlinearity and weak dissipation is the Hamilton-Jacobi equation, where efficient quantum algorithms have been developed for both multivalued solutions [39] and viscosity solutions [40]– both of which are of physical interest but are relevant in different applications– that are valid beyond the formation of caustics. For multi-valued solutions, the level set method is used to map the equation exactly into the phase space linear Liouville equation, which can be handled by quantum simulation. For viscosity solutions, an entropy-penalization method was used to approximate the Hamilton-Jacobi equations by a discrete time nonlinear dynamical system which, via the Cole-Hopf transformation, gives rise to a heat equation like linear dynamics that can be solved by quantum algorithms. 
+
+The goal of this paper is to launch the program of developing Young measure-based quantum algorithms for broader classes of nonlinear PDEs. The notion of Young measures was introduced as a rigorous analytical framework for nonlinear PDEs that exhibit singu-lar and/or oscillatory and concentration behavior, in physical systems such as nonlinear hyperbolic systems and gas dynamics, homogenization problems in composite materials, Hamilton-Jacobi equations in optimal control, etc., in which the characterization of weak limit of the solution becomes necessary but difficult [25,26], see also [24]. Instead of solving nonlinear PDEs in the class of distributional (weak) solutions, we extend the solution class 3to measure-valued solutions. The latter is represented by the space-time parametrized probability measure, the so-called Young measure. While the concept of Young measure was introduced as a theoretical tool in modern mathematical analysis and nonlinear PDEs, its use as a novel computational tool has seen increasing activity only in recent years [9, 11, 15, 33, 36]. However, computing the Young measure directly suffers from the curse of dimensionality for classical computations. Amain feature of the measure-valued formulation is that it transforms a nonlinear system of PDEs into a linear programming problem with linear constraints. Thus, it provides a nat-ural setup for quantum computation, whose evolution is intrinsically linear and naturally handles linear dynamics. 
+
+Dissipative measure-valued solutions and computation of the Young measures 
+
+Our approach is motivated by recent works on dissipative measure-valued solutions to compressible fluid flows; see, e.g., [30, 32, 33], where convergence of classical numerical al-gorithms was analyzed for relevant problems. Dissipative measure-valued solutions are a weak closure of consistent and stable approximations [28–30, 32, 33]. Thus, they naturally arise as weak limits of numerical approximations. Dissipative measure-valued solutions provide a framework for capturing oscillations and concentrations, which commonly arise in phenomena such as turbulent flows. Measure-valued formulation thus allows to connect-ing large-scale fluid behavior with unresolved microscopic dynamics, offering a coherent description across different scales. Although the class of dissipative measure-valued solutions of fluid flows is larger than the class of classical or weak solutions, it enjoys several important properties. If a strong solution exists, then all dissipative measure-valued solutions coincide with the classical (smooth) solution emanating from the same initial data. For a given initial data, all dissipative measure-valued solutions create a convex, bounded, and compact set in a suitable topology. Thus, dissipative measure-valued solutions are well suited to the variational formulation of selection criteria for determining a unique solution or selecting a physically desirable solution. For example, for the compressible Euler equa-tions, which are known to be non-unique in the class of weak entropy solutions, selection criteria based on the entropy and energy defect maximization in the class of dissipative measure-valued solutions were proposed to recover well-posedness of the Euler equations, cf. [27, 31]. 
+
+Novelties of our approach In the present work, we use a measure-valued formulation 
+
+directly and construct Linear Programming (LP) algorithms to approximate the corre-sponding density distribution function. Due to the high dimensionality of this function, we use quantum algorithms to reduce the cost associated with dimensionality. In a digital quantum algorithm, one needs only n qubits to simulate a 2n-dimensional space. The rationale for our program is as follows. First, quasilinear PDEs such as the Euler and Navier-Stokes equations may have non-unique weak (distributional) solutions [12, 20], or instability (such as the Rayleigh-Taylor instability in fluid dynamics), and Young mea-4sure helps to determine or characterize the physically relevant unique solutions in several scenarios [22, 23] that could not be obtained or understood directly by solving the original PDEs. It was pointed out by Glimm etc. in [46] that " weak solutions in the form of a space time dependent pdf for the primitive variables are actually what is required scientifically for a combustion simulation." 
+
+Secondly, these physical systems may contain uncertainties in initial and/or boundary data, coefficients in the equations, etc., that call for uncertainty quantification (UQ). Usu-ally, uncertainties lie in high-dimensional dimensions, and Young measure is a convenient tool to conduct UQ or moment closures for these problems [9, 15]. Thirdly, there are many physical or engineering problems in which one is not inter-ested in solutions of PDEs at each point, but rather their probability measure, in order to understand, for example, the maximum values of certain quantities of interest (maxi-mum lift on a wing, peak temperature in a reactor, optimal bounds on dissipation rate in turbulent flows without tracking every individual eddy) [46], etc. Therefore, developing efficient algorithms to compute the probability measure is of significant interest in its own right. Finally, the Young measure formulation transforms the original nonlinear PDEs into a Linear Programming problem in which both the objective functions and constraints are 
+
+all linear , and thus, it sets the foundation for possible development of efficient quantum algorithms for many nonlinear PDEs. We show the performance of several quantum linear programming (QLP) algorithms to solve the LP problems for Young measures associated with nonlinear PDEs, and compare their complexities or costs with the classical LP solvers. We find that certain quantum LP solvers like the quantum central path (QCP) algorithms provide algebraic advantages over the classical LP algorithms, for both deterministic and random nonlinear PDEs, in obtaining the Young measure. For random PDEs (not deterministic PDEs), the quantum cost for obtaining the Young measure can be up to polynomially more efficient than even direct classical PDE solvers, where the latter provides much less information than the Young measures themselves. These results make the quantum algorithms for computing the Young measures–not the solution of the original PDEs–attractive. Nevertheless, we have not demonstrated quantum advantage when compared with the classical solvers directly solving the original nonlinear PDEs. To achieve quantum advan-tages, more efficient QLP algorithms need to be developed. This is an important future direction of research. 
+
+Organization of the paper The paper is organized as follows. In Section 2, we intro-duce the concept of the measure-valued solutions and the corresponding Young measures for nonlinear PDEs and show how they can be computed via LP problems. To demon-strate the potential of our approach for broad classes of nonlinear PDEs, we consider three prototype nonlinear PDEs: the inviscid Burgers equation, the barotropic Euler equations, and the Allen-Cahn equation, and present numerical results for the resulting LP problems using classical computers, see Appendix A. In Section 3 we introduce quantum algorithms for the corresponding LP problem for deterministic nonlinear PDEs, and compare their 5performance to classical LP algorithms, and compute costs for the three prototype non-linear PDEs. In Section 4, we compare the costs of classical and quantum algorithms for nonlinear PDEs with uncertain parameters, and conclude with an outlook and open questions in Section 5. 
+
+# 2 Problem Setting 
+
+To explain the ideas of the measure-valued solutions and the construction of the LP method, let us start with a nonlinear hyperbolic conservation law 
+
+∂tu(t, x ) + div xf (u(t, x )) = 0 , (t, x ) ∈ (0 , T ) × Ω, Ω ⊂ Rd, (2.1) subject to the initial condition u(0 , x ) = u0(x) and suitable boundary condition, e.g. peri-odic boundary conditions. Here, u(t, x ) ∈ Rn is the conservative variable and f ∈ Rn×d is the corresponding flux. Furthermore, the Second Law of Thermodynamics selects the solution satisfying the entropy inequality 
+
+∂tη(u(t, x )) + div xq(u(t, x )) ≥ 0, (2.2) where η ∈ R is the total physical entropy and q ∈ Rd is the corresponding entropy flux. Note that the entropy function η is a concave function of u.We start by introducing the weak entropy solution of (2.1): 
+
+Definition 2.1 u(t, x ) is a weak solution to (2.1) if 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+
+
+∂tψ(t, x ) · u(t, x ) + ∇xψ(t, x ) : f (u(t, x )) 
+
+
+
+dxdt = 0 , (2.3) 
+
+for all test functions ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω; Rn). It satisfies the entropy condition if 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+
+
+∂t ˜ψ(t, x )u(t, x ) + ∇x ˜ψ(t, x ) · q(u(t, x )) 
+
+
+
+dxdt ≤ 0, (2.4) 
+
+for all test functions ˜ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω) , ˜ψ ≥ 0.
+
+Here, we have used the symbol " :" for the Hadamard product, which is an entry-wise multiplication of two matrices. For theoretical results on existence and uniqueness of weak entropy solutions for one-dimensional systems of hyperbolic conservation laws and multidimensional scalar hyper-bolic conservation laws, we refer to [7, 9, 17, 50]. The situation changes dramatically for multidimensional systems of hyperbolic conser-vation laws. As shown in the pioneering works of De Lellis and Székelyhidi [18, 19], there 6might exist infinitely many weak entropy solutions, see also [14, 49] and the references therein. As shown recently in [13], the set of initial data for which infinitely many weak entropy solutions of the compressible Euler equations exist is dense in Lp-topology. We also refer to recent works, where various selection criteria were studied to recover well-posedness of the compressible Euler equations in the class of measure-valued or dissipative (measure-valued) solutions [6, 27, 35, 44]. Young measure is an elegant tool for characterizing weak limits of oscillating and con-centrating sequences and has been shown to be particularly well-suited to describe low-regularity solutions of nonlinear PDEs. In addition, it is a convenient tool to analyze uncertainty quantification in many problems arising in physics, biology, or engineering. Motivated by the selection criteria proposed in [27, 31, 35] and by [15], we seek a direct ap-proximation of the Young measure that generates a measure-valued solution of (2.1)-(2.2), and highlight the potential of this approach for QLP. 
+
+## 2.1 Measure-valued solution 
+
+Next we introduce the concept of measure-valued solution of (2.1)-(2.2). 
+
+Definition 2.2 The Young measure Vt,x ∈ P (Rn) with 
+
+V0,x (·) = δ(· − u0(x)) for a.a. x ∈ Ω (2.5) 
+
+is a measure-valued solution of (2.1) -(2.2) if 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+
+
+∂tψ(t, x ) ·
+
+Z
+
+> Rn
+
+˜u dVt,x (˜ u) + ∇xψ(t, x ) : 
+
+Z
+
+> Rn
+
+f (˜ u) d Vt,x (˜ u)
+
+
+
+dxdt = 0 , (2.6) 
+
+for all test functions ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω; Rn);
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+
+
+∂t ˜ψ(t, x )
+
+Z
+
+> Rn
+
+η(˜ u) d Vt,x (˜ u) + ∇x ˜ψ(t, x ) ·
+
+Z
+
+> Rn
+
+q(˜ u) d Vt,x (˜ u)
+
+
+
+dxdt ≤ 0, (2.7) 
+
+for all test functions ˜ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω) , ˜ψ ≥ 0.
+
+For simplicity of presentation, we do not consider here a concentration measure that may arise in an unbounded case. Existence of measure-valued solutions, their compat-ibility, and measure-valued–strong uniqueness principle for multidimensional hyperbolic conservation laws (2.1)-(2.2) were investigated, e.g., in [33]. Moreover, provided that Vt,x 
+
+is a Dirac measure concentrated at u = u(t, x ) for every (t, x ) ∈ [0 , T ] × Ω, the standard weak formulation of (2.1)-(2.2) is recovered. 72.2 Linear programming problem 
+
+Without loss of generality, we assume that the Young measure Vt,x has at each (t, x ) the corresponding probability distribution function F (t, x, ·), that is an absolutely continuous random variable on Rn with respect to P(Rn). Let us denote it with 
+
+F : (0 , T ) × Ω × Rn → [0 , ∞),
+
+satisfying 
+
+Z
+
+> Rn
+
+F (t, x, ξ )dξ = 1 , F (t, x, ξ ) ≥ 0, ξ ∈ Rn,
+
+which represents the probability that u(t, x ) attains a value ξ.Due to the linearity of (2.6)-(2.7), there may be many Young measures satisfying (2.6)-(2.7). On the other hand, the entropy inequality (2.2) or (2.7) is used to single out un-physical solutions, whereas the election criterion (entropy maximization and/or energy minimization) is used to obtain the unique solution. Both conditions reflect the Second Law of Thermodynamics; the selection criterion needs to be applied in addition to the entropy inequality if the latter does not yield a unique solution. Consequently, we formulate (2.1)-(2.2) as a linear optimization problem with the cost functional realizing the entropy maximization: argmax F (t,x,ξ )
+
+Z
+
+> Ω
+
+Z
+
+> Rn
+
+η(ξ)F (t, x, ξ )dξdx (2.8) subject to: 
+
+Z
+
+> Rn
+
+F (t, x, ξ )dξ = 1 , F (t, x, ξ ) ≥ 0, (2.9) 
+
+Z
+
+> Rn
+
+
+
+ξ ∂F (t, x, ξ )
+
+∂t + f (ξ) · ∇ xF (t, x, ξ )
+
+
+
+dξ = 0 . (2.10) 
+
+Remark 2.1 From a computational or numerical perspective, maximising entropy or min-imizing energy makes the optimization convex and stable. It may eliminate high-frequency oscillations (common in high-resolution schemes) and ensure the convergence of the nu-merical scheme to the correct weak solution. 
+
+Next we give a few physical examples and the corresponding concave entropies. 
+
+Example 1 : Consider the inviscid Burgers equation with f (u) = u2/2. Then one can take the entropy as 
+
+η(ξ) = −ξ2.
+
+Maximizing entropy (which in this example corresponds to minimizing the energy) avoids oscillations and selects a Dirac measure corresponding to a physically relevant solution. Furthermore, minimizing energy is equivalent to minimizing the variance of the solutions, thereby concentrating the measure. 8Example 2 : Consider the barotropic Euler system with 
+
+u = ( ϱ, m), f (u) = 
+
+
+
+m, m ⊗ m
+
+ϱ + p(ϱ)Id
+
+
+
+, p = ϱγ ,
+
+where ϱ, m, p represent the density, momentum, and pressure of the fluid, respectively, and 
+
+γ is the adiabatic index. One can take the entropy as 
+
+−η = |m|2
+
+2ϱ + ϱγ
+
+γ − 1.
+
+Being inspired by the recent theoretical results of Feireisl, Jüngel and Lukácová [27], our LP problem (2.8)-(2.10) satisfies the selection criteria by minimizing the total energy 
+
+E =
+
+Z
+
+> Ω
+
+Z
+
+> Rn
+
+(−η)( ξ)F (t, x, ξ )dξdx, 
+
+As shown in [27,31], if there is a unique solution selected in (2.8)-(2.10) then it is a unique weak solution of the barotropic Euler system. 
+
+Example 3 : Consider the full Euler system with the perfect gas law: 
+
+u = ( ϱ, m, E ), f (u) = 
+
+
+
+m, m ⊗ m
+
+ϱ + pId, m
+
+ϱ (E + p)
+
+
+
+, p = ( γ − 1) ϱe, E = 12
+
+|m|2
+
+ϱ + ϱe, 
+
+where E, e represent the energy and specific internal energy of the fluid, respectively. The entropy reads 
+
+η = ϱ ln ( p/ϱ γ ).
+
+Alternatively, one could also work with the governing equations for variables (ϱ, m, η ) and minimize the energy. In Appendix A we justify the mathematical validity of the LP formulations for three prototype nonlinear PDEs: the inviscid Burgers equation, the barotropic Euler equations, and the Allen-Cahn equations. 
+
+Remark 2.2 It is easy to generalize this linear programming method to a broader class of models, such as the Allen-Cahn equation and the Navier-Stokes equations. The efficiency of the method applied to the Allen-Cahn equation will be demonstrated through numerical simulations in Section A.3. 
+
+## 2.3 Discretization 
+
+We proceed to discretize the LP problem (2.8)-(2.10). For the sake of simplicity, we dis-cretize (2.8)-(2.10) applying a finite volume method together with the Lax-Friedrichs nu-merical flux. 9Let (t, x, ξ ) ∈ [0 , T ] × Ω × [ξmin , ξ max ]n be divided into uniform grid Th with NtN dx N nξ
+
+cells. The discretization parameters in time, space, and phase space are denoted by ∆t, h x
+
+and hξ, respectively. We introduce the following notation 
+
+ul = 1
+
+hnξ
+
+Z
+
+> Klξ
+
+ξdξ, f l = 1
+
+hnξ
+
+Z
+
+> Klξ
+
+f (ξ)dξ, ηl = 1
+
+hnξ
+
+Z
+
+> Klξ
+
+η(ξ)dξ. (2.11) We seek 
+
+Fh = 1
+
+hnξNtX
+
+> j=1
+
+X
+
+> k
+
+X
+
+> l
+
+F jkl 1Kjt
+
+1Kkx 1Klξ
+
+for the linear programming problem (2.8)-(2.10) as follows: argmax F
+
+X
+
+> k
+
+X
+
+> l
+
+ηlF j+1  
+
+> kl
+
+(2.12) subject to 
+
+X
+
+> l
+
+F j+1  
+
+> kl
+
+= 1 , F j+1  
+
+> kl
+
+≥ 0, (2.13) 
+
+X
+
+> l
+
+ul
+
+F j+1  
+
+> kl
+
+− F jkl 
+
+∆t +
+
+> d
+
+X
+
+> i=1
+
+"
+
+(f l)(i) F jk+ei,l − F jk−ei,l 
+
+2hx
+
+− εlul
+
+F jk+ei,l − 2F jk,l + F jk−ei,l 
+
+h2
+
+> x
+
+#! 
+
+= 0 .
+
+(2.14) Here k ∈ { 1, 2, . . . , N x}d, l ∈ { 1, 2, . . . , N ξ}n are vectors, ei is the unit vector in the positive 
+
+i-th direction, the superscription f (i) represents the i-th component of f . Moreover, ε is taken as 
+
+εl = 12hρ (Klξ), with ρ : maximum absolute characteristic speed . (2.15) For each fixed j ∈ { 1, 2, . . . , N T }, we assemble a vector F j of size N dx N nξ with the entries 
+
+F jkl . To illustrate the ideas, we start with d = 1 :1. 
+
+X
+
+> k
+
+X
+
+> l
+
+ηlF j+1  
+
+> kl
+
+= 11×Nx ⊗ ηN nξ · F j+1 , ηN nξ = ( η1, . . . , η N nξ ); 
+
+2. 
+
+X
+
+> l
+
+F j+1  
+
+> kl
+
+= INx ⊗ 11×N nξ · F j+1 ;
+
+10 3. 
+
+0nN x = X
+
+> l
+
+
+
+ul(F j+1  
+
+> kl
+
+− F jkl ) + f l
+
+∆t
+
+2hx
+
+(F jk+1 ,l − F jk−1,l ) − εlul
+
+∆th2
+
+> x
+
+(F jk+1 ,l − 2F jk,l + F jk−1,l )
+
+
+
+= X
+
+> l
+
+ulF j+1  
+
+> kl
+
++ X
+
+> l
+
+(alF jk−1,l + blF jkl + clF jk+1 ,l )= INx ⊗ uN nξ · F j+1 +
+
+
+
+JNx (0)) T ⊗ aN nξ + INx ⊗ bN nξ + JNx (0) ⊗ cN nξ + RnN x×NxN nξ
+
+
+
+F j
+
+with 
+
+al = −f l
+
+∆t
+
+2hx
+
+− εlul
+
+∆th2
+
+> x
+
+, bl = −ul + 2 εlul
+
+∆th2
+
+> x
+
+, cl = f l
+
+∆t
+
+2hx
+
+− εlul
+
+∆th2
+
+> x
+
+,XN nξ = ( X1, . . . , X N nξ ), X ∈ { u, a, b, c }.
+
+Here, JNx (0) is the Jordan matrix and RnN x×NxN nξ represents the boundary effects. Further, denoting 
+
+eΞ = 11×Nx ⊗ ηN nξ , eA = INx ⊗ 11×N nξ , eB = INx ⊗ uN nξ ,
+
+eD = JNx (0) T ⊗ aN nξ + INx ⊗ bN nξ + JNx (0) ⊗ cN nξ + RnN x×NxN nξ ,
+
+we rephrase the linear programming problem (2.8)-(2.10) into the following matrix formu-lation: argmax Fj+1 eΞFj+1 ,
+
+Fj+1 ≥ 0NxN nξ ×1, fM Fj+1 = cj , fM = eA
+
+eB
+
+!
+
+, cj =
+
+ 1Nx×1
+
+− eDFj := dj
+
+
+
+, (2.16) or argmax F Ξ F,
+
+F ≥ 0NtNxN nξ ×1, M F = ( 1Nx×1; 0nN x×1), (2.17) with 
+
+M =
+
+AB
+
+
+
+, Ξ = 11×Nt ⊗ eΞ, A = INt ⊗ eA, B = JNt (0) T ⊗ eD + INt ⊗ eB. 
+
+It is easy to see that the matrices eΞ, eA, eB, eD are independent of j and obtained once 
+
+[ξmin , ξ max ] and Nξ are given. Moreover, eA, eB, eD have a sparsity structure of N nξ , max( n, N nξ )
+
+and 3 max( n, N nξ ), respectively. Consequently, fM is a r × s matrix with r = Nx(1 + n) rows and s = NxN nξ columns. The total number of non-zero elements of fM is NxN nξ (n + 1) .Correspondingly, Ξ, A, B are independent of j and obtained once [ξmin , ξ max ] and Nξ
+
+are given. Moreover, A, B have a sparsity structure of N nξ and 4 max( n, N nξ ), respectively. 11 Consequently, M is a r × s matrix with r = NtNx(1 + n) rows and s = NtNxN nξ columns. The total number of non-zero elements of M is NtNxN nξ (4 n + 1) .Now we generalize d = 1 to d > 1 with 
+
+eΞ = 11×N dx ⊗ ηN nξ , eA = IN dx ⊗ 11×N nξ , eB = IN dx ⊗ uN nξ ,
+
+eD =
+
+> d
+
+X
+
+> i=1
+
+
+
+KiN dx (0) T ⊗ aN nξ + IN dx ⊗ bN nξ + KiN dx (0) ⊗ cN nξ + RiN dx n×N dx N nξ
+
+
+
+,
+
+KiN dx (0) = O
+
+> k<i
+
+INx ⊗ JNx (0) ⊗ O
+
+> k>i
+
+INx .
+
+Therefore, we have that M is a r × s matrix with r = NtN dx (1 + n) rows and s = NtN dx N nξ
+
+columns. The total number of non-zero elements of M is NtN dx N nξ
+
+h
+
+2( d + 1) n + 1 
+
+i
+
+.
+
+## 2.4 Numerical justification 
+
+We conclude this section with a numerical justification of the LP problem (2.8)-(2.10) and its discrete counterpart (2.17). To this end, we have performed one-dimensional simulations on classical computers for three prototype nonlinear PDEs: the inviscid Burgers equation, the barotropic Euler equations, and the Allen-Cahn equation. The first two equations are nonlinear hyperbolic conservation laws, while the Allen-Cahn equation is a reaction-diffusion equation. Thanks to the well-known results on the existence and uniqueness of weak entropy solutions for the above three (one-dimensional) nonlinear PDEs, it is expected that our mathematical model - Young-measure based LP problem - will recover the unique weak entropy solution. In the numerical simulations, we present the numerical errors, comparisons with an exact (or a reference) solution, and defects. The latter represents oscillations of a truly measure-valued solution. As we illustrate in the Appendix, the defects are of the order of 
+
+10 −4 (due to discretization errors in phase space), indicating that the measure obtained by (2.17) is a Dirac measure, i.e., the measure-valued solution is the weak entropy solution. Moreover, our numerical solutions are accurate approximations of the exact solutions. Overall, these observations validate our mathematical model. For completeness, we present the results of numerical simulations in Appendix A. 
+
+# 3 Quantum algorithms to compute the Young measures for deterministic nonlinear PDEs 
+
+Thanks to the linearity of the LP formulation using the Young measure, it is natural to see whether one can develop efficient quantum algorithms for the original nonlinear PDEs based on the LP formulation in order to overcome the curse of dimensionality. Two questions naturally arise. First, is the mathematical formulation valid for general nonlinear 12 PDEs? For three prototype examples – the inviscid Burgers equations, the Barotropic Euler equations, and the Allen-Cahn equation – we give numerical results in one space dimension in Appendix A. While we have not yet demonstrated the validity of the LP approach for the full Euler and Navier-Stokes equations, we also include these examples in our comparison of compu-tational costs to illustrate the complexities of potential future applications. The second question is: Does this formulation yield quantum algorithms that offer advantages compared to their classical counterparts? It is the aim of this section to examine the cost of solving (2.17) with quantum algorithms and their comparison to classical LP methods. 
+
+## 3.1 Computational complexities of QLP algorithms 
+
+The majority of quantum algorithms for LP outputs the classical vector F. While they are mostly built on quantum versions of the interior-point method (IPM), there are also other approaches, such as quantum zero-sum games and the quantum central path (QCP) method, which have no direct classical analog. For an LP problem with r constraints and 
+
+s variables, see Table 1 for a summary of the cost of classical and some different classes of quantum algorithms. To apply this to our problem of computing Young measures, see Table 2 for the relationship of r, s and other properties of the LP problem in terms of the physical dimension d, the size n of the original nonlinear PDE system, and discretisation sizes Nt, Nx and Nξ.The quantum interior-point methods (QIPMs) for LP largely retains the classical primal-dual IPM architecture, which relies on ˜O(√s) (where there is a logarithmic depen-dence on 1/ϵ ) iterations of the primal-dual Newton’s steps. In the quantum algorithm, this outer path-following loop and its ˜O(√s) iteration complexity remain essentially unchanged, while the main quantum ingredient is to replace the Newton’s step at each iteration by a quantum linear systems algorithm (QLSA), whose cost depends on the condition number 
+
+κN ewt of the matrix that needs to be inverted in each iteration (see Appendix B). This is followed by quantum state tomography to recover a classical approximation of the New-ton direction before the next iterate is formed [10, 43]. In this sense, current QIPMs are hybrid quantum-classical rather than fully quantum: the potential advantage comes from accelerating the inner linear algebra, but the need to tomographically read out the search direction – together with dependence on conditioning and strong data-access assumptions such as block-encodings or QRAM – often erodes the asymptotic gain in end-to-end set-tings. In [43] the worst-case end-to-end cost (including tomography) is claimed to be 
+
+˜O(κ3
+
+> N ewt
+
+s1.5μ/δ 2), where μ ≤ √2s and δ is the precision in measurement in each tomogra-phy step. The estimation of the condition number κN ewt is required for each case and would be a direction for future work in this direction to diminish the dependence on condition number. Subsequent work has focused less on changing the outer IPM logic and more on making the Newton-step more quantum-compatible, for example, by using inexact-feasible 13 Table 1: Summary of cost of classical and some different classes of quantum algorithms for LP problems, where ˜O hides logarithmic factors in the number of constraints r, number of variables s, and precision ϵ. The quantum cost is expressed in terms of query complexity, but the types of oracles used vary across algorithms. Here F denotes the classical output of the LP solution F and R1 = ∥F∥1. The density matrix containing F along its diagonal is denoted ρ∗ 
+
+> F
+
+. The number of non-zero elements in the constraint matrix M in the primal LP problem is denoted nnz (M ), and sM is the maximum of the row and column sparsity of M . κN ewt is the condition number of the matrix to be inverted at each Newton step of the IPM. Here and hereafter, Stochastic IPM, Quantum IPM, Quantum zero-sum-game, Quantum central path, Quantum SDP are denoted by SIPM, QIPM, QZSG, QCP, QSDP, respectively. Algorithm Time/query complexity Output Comments IPM [45] ˜O(√s(nnz (M ) + s2)) F log(1 /ϵ ) dependence SIPM [16] ˜O(sω), ω ∼ 2.38 F log(1 /ϵ ) dependence QIPM [43] ˜O(κ3
+
+> N ewt
+
+s2/δ 2) F Error δ for tomography QZSG [52] ˜O(√sM (R1/ϵ )3.5) F inf ∥λ∥1 ∼ ˜O(1) 
+
+QCP [3] ˜O(√r + sR 1/ϵ ) F Gate complexity: query ×nnz (M )
+
+QSDP [48] ˜O(rR 21s/ϵ 2) ρ∗ 
+
+> F
+
+ρF prep cost not incl. or inexact-infeasible formulations, iterative refinement, and improved error management so that fewer or less accurate tomography calls are needed while preserving classical con-vergence guarantees [51]. There have been developments on QIPM beyond QLSA and tomography, for example, in [2], where the cost does not depend on the condition number 
+
+κN ewt . However, here the quantum advantage only applies to ’tall’ LPs ( r ≫ s), which is not the regime we have in our LP problem. For LP, two notably different quantum routes are the quantum central path (QCP) 
+
+method and quantum zero-sum-games. QCP encodes the entire self-dual central path into a time-dependent Hamiltonian, followed by a single continuous evolution step, so the so-lution is obtained in a single final measurement rather than by repeated Newton steps. It is particularly notable for avoiding the iterative QLSA + tomography loop that burdens the previous hybrid QIPMs. For LPs, it has query complexity ˜O(√r + sR 1/ϵ ) and gate complexity ˜O(√r + sR 1nnz (M )/ϵ ) without QRAM, while recovering an exactly feasible primal-dual pair up to the stated optimization error. Here R1 = ∥F∥1 and nnz (M ) is the number of non-zero elements of matrix M . For our problem applied to PDEs, the normal-isation of F in l1-norm is R1 = ˜O(NtN dx ), which comes from the probability interpretation of F with respect to ξ, while nnz (M ) = ˜O(s). This means that even without considering 
+
+κN ewt in QIPM, the QCP method has better scaling in both r and n, as seen in Table 1 and Table 3. In fact, compared with classical IPM methods, the query complexity of QCP has an advantage in r by up to a factor of r, where r scales exponentially with the physical dimension d. It also has polynomial advantage in Nξ, by a factor of N 2nξ . The dependence 14 Table 2: Sizes of parameters related to LP problem in (2.17), where equalities are stated in terms of ˜O for simplicity, which denotes that all terms logarithmic or smaller in r, s are suppressed, so no multiplicative dependence on d, n is included. Here, we express these parameters in terms of the discretization sizes and dimensions of the original formulation of the problem, as well as in terms of a modification based on a particle method. Here F
+
+denotes the classical output of the LP solution F and R1 = ∥F∥1. The number of non-zero elements in the constraint matrix M in the primal LP problem is denoted nnz (M ), and 
+
+sM is the maximum of the row and column sparsity of M .Parameter LP-FxM ˜O(·) LP-Particle method ˜O(·)
+
+r NtN dx NtNx
+
+s rN nξ = NtN dx N nξ rN ξ = NtNxNξ
+
+R1 r = NtN dx r = NtNx
+
+nnz (M ) s = NtN dx N nξ s = NtNxNξ
+
+sM N nξ Nξ
+
+of the cost on precision ϵ, however, is greater than the log(1 /ϵ ) in the classical algorithm. If we instead compare classical cost with the gate complexity in QCP, there is only favorable scaling with respect to Nξ but not with respect to r. For example, if an k-th order numer-ical quadrature is used to discretize the integral in ξ, then the total quantum advantage is 
+
+N nξ ϵ = O(N n−kξ ), so this advantage can be large when n ≫ k.By contrast, the quantum zero-sum-game methods (QZSG) first reduce the LP to a matrix zero-sum-game and then use quantum Gibbs sampling and multiplicative-weights-style updates. This gives sublinear dependence on the problem size. In particular, in the case when M is sparse, with sparsity sM , the cost is ˜O  √sm(( R1(inf ∥λ∥1 + 1) /ϵ )3.5,where λ is the r− dimensional Lagrange multiplier vector in the dual LP problem. In the PDE problem, this inf ∥λ∥1 parameter can be considered an additional stability parameter of the discretised LP problem, where in the stable and well-behaved LP and PDE case one would not expect to be exponential in d or D and could even be O(1) , so here we use inf ∥λ∥1 = ˜O(1) . However, its exact behavior for each PDE should be further investi-gated. Unlike in QCP, this complexity comes at the price of stronger QRAM-style input assumptions, and the returned primal-dual pair is only approximately feasible. One can see from Table 3 that its complexity is not favorable in terms of r compared to classical methods, but, like QCP, has polynomial advantage in terms of Nξ, namely by a factor of 
+
+N 2nξ . However, the dependence on both r and 1/ϵ is higher for QZSG. While the quantum algorithms above directly return the classical output F, in princi-ple it is also possible to prepare quantum states that embed the solution F. One notable example is quantum algorithms for SDPs [5, 48], where LPs are a special instance of Semi-definite Programming (SDP), where the SDP problem is to find min ρF Tr (Cρ F ) for matrix 
+
+ρF subject to the constraints Tr (QiρF ) = qi, i = 1 , · · · , r . These algorithms are built on 15 preparing quantum thermal states ρF , and there are r classical parameters (considered as chemical potentials) to be updated classically [48]. The typical way to embed LP into SDP is by embedding F into the diagonal of the matrix ρF . However, if ρF appears to be diag-onal, this could be generated by a diagonal Hamiltonian, thus one would not be exploiting quantum coherence. Then it is unclear what quantum advantage this would provide, if any, and it remains to be further investigated. If the thermal state preparation is considered as an oracle, then there are r parameter updates with ˜O(R21s/ϵ 2) iterations, so a total query complexity is of ˜O(rR 21s/ϵ 2) = ˜O(r4N nξ /ϵ 2). Compared to the classical methods in Table 3, we see that this could be potentially favorable only in terms of Nξ-dependence, but at the cost of greater r-dependence. Thus, in Table 3, we list only algorithms with F
+
+as the output; we do not list QSDP there, and we leave the details of QSDP for future study. Table 3: Comparison of costs to output classical F for different algorithms in terms of 
+
+r = NtN dx , n and discretisation size Nξ.Algorithm Time/query complexity Comments IPM [45] ˜O(r2.5N 5n/ 2 
+
+> ξ
+
+) log(1 /ϵ ) dependence SIPM [16] ˜O(r2.38 N 2.38 nξ ) log(1 /ϵ ) dependence QIPM [43] ˜O(κ3
+
+> N ewt
+
+r2N 2nξ /δ 2) κN ewt bound to be determined QZSG [52] ˜O(( r/ϵ )3.5N n/ 2 
+
+> ξ
+
+) Assuming inf ∥λ∥1 ∼ ˜O(1) 
+
+QCP [3] ˜O(r1.5N n/ 2 
+
+> ξ
+
+/ϵ ) Gate complexity ˜O(r2.5N 3n/ 2 
+
+> ξ
+
+/ϵ )
+
+From Table 3 one can see that quantum algorithms are often more favorable in terms of the cost-dependence on Nξ, where the polynomial advantage in Nξ depends on n. This suggests that one can expect greater quantum advantage for problems where n ≫ 1. For fluid equations (as can be seen from Table 4), one can have n = d + 2 , but here one is restricted to dmax = 3 , so the quantum advantage for fluid dynamics is not that large. Examples, where n can be extremely large, include cases where one studies chemically reacting flows of many chemical species, with n corresponding to the number of chemical species. Another extension is to consider a particle-methods reformulation of the LP problem, where instead of using s = NtN dx N nξ grid points for F, we use r particles that traverse the spatial dimensions in x-space and s/r particles that traverse the dimensions in ξ-space, so 
+
+r and s no longer depend on the number of physical dimensions. See Table 2 for how r, s,and other parameters depend on the discretization sizes, and these factors no longer have exponential dependence on d or n. Simple estimates using Table 2 and Table 1 show that the expected quantum advantages are in fact much less when using a particle-methods approach, as those advantages would not grow as d and n grow. Suppose we go beyond the first-order methods, and use, e.g., higher-order FxMs (finite element, finite difference, and finite volume methods) ( 1/ϵ ∼ N k for kth -order methods) 16 and spectral methods ( 1/ϵ ∼ eN ). If we let discretisation size N ∼ Nx ∼ Nξ ∼ Nt for simplicity, we can represent the classical cost by O(N c) (neglecting the logarithmic factor 
+
+log(1 /ϵ )) and let O(N q/ϵ ) represent the quantum cost, so quantum advantage can be ex-pressed in terms of O(N c−qϵ). If we re-express in terms of discretization size alone, we see that ϵ ∼ N −k for FxM, thus O(N c−q/ϵ ) = O(N c−q−k) becomes much smaller as k grows, and the disadvantage of the quantum scaling is worse for spectral methods. Thus, we see that the current quantum advantages in N are expected to be smaller and even vanish as k grows. This is due to the more favorable scaling of classical methods with precision, 
+
+log(1 /ϵ ), compared to quantum algorithms, which, even in the best-case scenario, have scaling of 1/ϵ . The latter is true if we want the quantum algorithm to recover a classical 
+
+F output, since the cost in sampling from quantum states cannot exceed 1/ϵ .Since this 1/ϵ or 1/ϵ 2 scaling with precision is inevitable for quantum algorithms that are expected to output classical results F, one can speculate on possible advantages that can be obtained in developing quantum algorithms that output instead a quantum state embedding F. This would have two potential advantages: (i) to decrease the dependence on 1/ϵ and (ii) to have potential advantages in the computation of moments of the averaged solutions ¯um = R ξmF (t, x, ξ )dξ n. The latter has been done using the Lasserre hierarchy [9], which can be considered as an inner product. For example, in realistic scenarios, we would be interested in the first and second moments of F , such as density, velocity, and energy for the fluid equations. If one prepares a quantum state |F ⟩ ∝ P 
+
+> i,j,k
+
+F (ti, x j , ξ k)|i⟩| j⟩| k⟩,then ¯um could be estimated by a state-overlap algorithms. like quantum swap-tests, which are up to exponentially more efficient than computing classical inner products, since one is essentially taking an inner product with a state of size log( NtN dx N nξ ). One must be careful of the impact of normalization constants, so a more careful study is required. If one instead prepares a quantum state |√F ⟩ ∝ P
+
+> i,j,k
+
+pF (ti, x j , ξ k)|i⟩| j⟩| k⟩, then ¯um can be recovered instead by quantum sampling, and here one can have up to polynomial advantage. To solve nonlinear PDEs, recovering a final classical F is not always strictly necessary unless one wants Young measures. Indeed, we are typically interested to recover the related observ-ables/moments (expected values with respect to the Young measure or variances/defects). In such a situation, the quantum algorithms for outputting quantum states that contain 
+
+F could be more appropriate and would be an important direction for future research. Overall, the current quantum LP algorithms, such as QCP, appear most promising for computing Young measures when n is large; see Table 3, which shows quantum advantage for first-order methods of order ˜O(N n−1 
+
+> ξ
+
+). However, while current quantum algorithms appear promising for computing the Young measures associated with nonlinear PDEs when 
+
+n is large, the conclusion is different if we instead compare the complexity of the quantum LP algorithm with that of direct classical solvers for the original nonlinear PDEs. For direct classical solvers of a system of n nonlinear PDEs in physical dimension d, the cost is of order O(nN tN dx ) = ˜O(r). Comparing this to the costs in Table 3 (without even including the extra cost in recovering the measure-valued solution from F), we see that none of the quantum LP algorithms can improve upon the direct classical solvers for the observables, 17 the expected value ¯u of the measure-valued solution. Thus, further investigation in this direction – either finding improved quantum LP algorithms; constructing new quantum LP algorithms by constructing quantum states like |F ⟩ or |√F ⟩ embedding the Young measure (to get quantum advantage in 1/ϵ when recovering moments ¯um); and/or utilizing the special structure of the underlying mathematical model to reduce the cost of the current quantum LP algorithms – is needed. 
+
+## 3.2 Computing the Young measures for three prototype examples 
+
+In Table 4, we have summarised the costs to recover the Young measures for the inviscid Burgers, Allen-Cahn, Euler, and the Navier-Stokes equations in terms of the discretiza-tion size and the physical dimension d. In Table 5, we restrict d = 3 , from which we see that the quantum central path (QCP) method provides the most promising direc-tion for quantum advantage to output F. For simplicity, assuming first order methods, 
+
+Nt ∼ Nx ∼ Nξ ∼ 1/ϵ = N , then comparing the query complexity of QCP with time com-plexity of stochastic IPM, there is a factor ∼ N 4.4 quantum advantage for inviscid Burgers and Allen-Cahn equations, a factor ∼ N 10 .04 quantum advantage for barotropic Euler’s equations and a factor ∼ N 11 .92 quantum advantage for the full Euler’s and Navier-Stokes equations, which is a more than quadratic advantage. If we compare stochastic IPM with the gate complexity of QCP on the other hand, there is no quantum advantage for inviscid Burgers (see [40] for a different quantum algorithm for inviscid Burgers’ that is globally valid in time) or Allen-Cahn equations, in fact the quantum gate complexity requires an extra factor ∼ N 0.6 compared to the classical stochastic IPM. For barotropic Euler’s equa-tions, there is a more modest quantum advantage of ∼ N 2.04 , and for the compressible Euler and the Navier-Stokes equations, there is a potential quantum advantage by a factor 
+
+∼ N 2.92 .While these advantages appear quite modest for recovering the Young measure, they are nevertheless non-trivial and are the first quantum algorithms to show quantum advan-tage for problems related to nonlinear fluid dynamical equations that remain globally valid in time, thus capable of capturing truly nonlinear and global properties. Since this is only a first exploration, these numbers are only a rough indication at this point, and further studies are required to study these algorithms and their potential improvements in more depth. However, it is important to emphasize that none of these quantum methods are cur-rently advantageous compared to the cost of classical algorithms that directly solve the original PDEs (instead of the Young measures), where the complexity of the classical algo-rithms is O(dN tN dx ). In this paper, we focus only on the problem of recovering the Young measure - so the comparison is with classical LP methods - which is an important problem in its own right. 18 Table 4: Time/query complexity for different nonlinear PDEs (to compute the Young measures), in terms of discretization sizes Nt, Nx, and Nξ and physical dimension d. For the inviscid Burgers and Allen-Cahn equations, n = 1 . For the barotropic Euler equations, 
+
+n = d + 1 . For the full compressible Euler equations and the Navier-Stokes-Fourier (NSF) equations, n = d + 2 .Algorithm Burgers; Allen-Cahn Barotropic Euler Full Euler; NSF IPM N 2.5 
+
+> t
+
+N 2.5dx N 2.5 
+
+> ξ
+
+N 2.5 
+
+> t
+
+N 2.5dx N 2.5( d+1)  
+
+> ξ
+
+N 2.5 
+
+> t
+
+N 2.5dx N 2.5( d+2) 
+
+> ξ
+
+SIPM N 2.38  
+
+> t
+
+N 2.38 dx N 2.38  
+
+> ξ
+
+N 2.38  
+
+> t
+
+N 2.38 dx N 2.38( d+1)  
+
+> ξ
+
+N 2.38  
+
+> t
+
+N 2.38 dx N 2.38( d+2) 
+
+> ξ
+
+QIPM κ3
+
+> N ewt
+
+N 2 
+
+> t
+
+N 2dx N 2 
+
+> ξ
+
+/δ 2 κ3
+
+> N ewt
+
+N 2 
+
+> t
+
+N 2dx N 2( d+1)  
+
+> ξ
+
+/δ 2 κ3
+
+> N ewt
+
+N 2 
+
+> t
+
+N 2dx N 2( d+2)  
+
+> ξ
+
+/δ 2
+
+QZSG N 3.5 
+
+> t
+
+N 3.5dx N 0.5 
+
+> ξ
+
+/ϵ 3.5 N 3.5 
+
+> t
+
+N 3.5dx N 0.5( d+1)  
+
+> ξ
+
+/ϵ 3.5 N 3.5 
+
+> t
+
+N 3.5dx N 0.5( d+2)  
+
+> ξ
+
+/ϵ 3.5
+
+QCP N 1.5 
+
+> t
+
+N 1.5dx N 0.5 
+
+> ξ
+
+/ϵ N 1.5 
+
+> t
+
+N 1.5dx N 0.5( d+1)  
+
+> ξ
+
+/ϵ N 1.5 
+
+> t
+
+N 1.5dx N 0.5( d+2)  
+
+> ξ
+
+/ϵ 
+
+Table 5: Time/query complexity for different nonlinear PDEs (for the Young measures), in terms of discretization sizes Nt, Nx, and Nξ when dimension d = 3 .Algorithm Burgers; Allen-Cahn Barotropic Euler Full Euler; NSF IPM N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 2.5 
+
+> ξ
+
+N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 10  
+
+> ξ
+
+N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 12 .5
+
+> ξ
+
+SIPM N 2.38  
+
+> t
+
+N 7.14  
+
+> x
+
+N 2.38  
+
+> ξ
+
+N 2.38  
+
+> t
+
+N 7.14  
+
+> x
+
+N 9.52  
+
+> ξ
+
+N 2.38  
+
+> t
+
+N 7.14  
+
+> x
+
+N 11 .9
+
+> ξ
+
+QZSG N 3.5 
+
+> t
+
+N 10 .5 
+
+> x
+
+N 0.5 
+
+> ξ
+
+/ϵ 3.5 N 3.5 
+
+> t
+
+N 10 .5 
+
+> x
+
+N 2 
+
+> ξ
+
+/ϵ 3.5 N 3.5 
+
+> t
+
+N 10 .5 
+
+> x
+
+N 2.5 
+
+> ξ
+
+/ϵ 3.5
+
+QCP (query) N 1.5 
+
+> t
+
+N 4.5 
+
+> x
+
+N 0.5 
+
+> ξ
+
+/ϵ N 1.5 
+
+> t
+
+N 4.5 
+
+> x
+
+N 2 
+
+> ξ
+
+/ϵ N 1.5 
+
+> t
+
+N 4.5 
+
+> x
+
+N 2.5 
+
+> ξ
+
+/ϵ 
+
+QCP (gate) N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 1.5 
+
+> ξ
+
+/ϵ N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 6 
+
+> ξ
+
+/ϵ N 2.5 
+
+> t
+
+N 7.5 
+
+> x
+
+N 7.5 
+
+> ξ
+
+/ϵ 
+
+# 4 Quantum algorithms to compute the Young measures for random nonlinear PDEs 
+
+In this section, we consider a random system of nonlinear hyperbolic conservation laws 
+
+∂tu(t, x, ω ) + div xf (u(t, x, ω )) = 0 , (t, x, ω ) ∈ (0 , T ) × Ω × D, u(0 , x, ω ) = u0(x, ω ) ∈ Rn. (4.1) For simplicity, we use periodic boundary conditions and assume that the randomness enters only through the random initial data u0, which is a Borel measurable mapping from D ⊂
+
+Rm to the phase space in Rn with probability density p(ω). In addition to (4.1) we look for a (measure-valued) solution satisfying the entropy inequality, i.e. 
+
+∂tη(u(t, x, ω )) + div xq(u(t, x, ω )) ≥ 0. (4.2) 
+
+## 4.1 Linear programming problem 
+
+We start by recalling the definition of the measure-valued solution of (4.1)-(4.2) in [15], which is a natural extension of the definition for the deterministic problem. 19 Definition 4.1 The Young measure Vt,x,ω ∈ P (Rn) is a measure-valued solution of (4.1) -
+
+(4.2) with 
+
+V0,x,ω (·) = δ(· − u0(x, ω )) for a.a. x ∈ Ω, ω ∈ D, (4.3) 
+
+if 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+Z
+
+> D
+
+
+
+∂tψ(t, x )
+
+Z
+
+> Rn
+
+˜u dVt,x,ω (˜ u) + ∇xψ(t, x ) : 
+
+Z
+
+> Rn
+
+f (˜ u) d Vt,x,ω (˜ u)
+
+
+
+ϕ(ω)p(ω)dωdxdt = 0 ,
+
+(4.4) 
+
+for all test functions ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω; Rn), ϕ ∈ C(D); and 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+Z
+
+> D
+
+
+
+∂t ˜ψ(t, x )
+
+Z
+
+> Rn
+
+η(˜ u) d Vt,x,ω (˜ u) + ∇x ˜ψ(t, x ) ·
+
+Z
+
+> Rn
+
+q(˜ u) d Vt,x,ω (˜ u)
+
+
+
+˜ϕ(ω)p(ω)dωdxdt ≤ 0,
+
+(4.5) 
+
+for all test functions ˜ψ ∈ C1 
+
+> c
+
+((0 , T ) × Ω) , ˜ϕ ∈ C(D), ˜ψ ≥ 0, ˜ϕ ≥ 0.
+
+We are now ready to formulate the LP problem for the random hyperbolic system (4.1)-(4.2). We denote the probability distribution function of the Young measure Vt,x,ω by f
+
+and set F (x, t, ω, ξ ) = f (x, t, ω, ξ )p(ω), thus, 
+
+F : (0 , T ) × Ω × D × Rn → [0 , ∞),
+
+satisfying 
+
+Z
+
+> D
+
+Z
+
+> Rn
+
+F (t, x, ω, ξ )dξdω = 1 , F (t, x, ω, ξ ) ≥ 0, (ω, ξ ) ∈ D × Rn.
+
+Analogously to Section 2.2, the linear optimization problem of entropy maximization for random nonlinear PDE (4.1)-(4.2) can be formulated as follows: argmax F (t,x,ω,ξ )
+
+Z
+
+> Ω
+
+Z
+
+> D
+
+Z
+
+> Rn
+
+η(ξ)F (t, x, ω, ξ )dξdωdx (4.6) subject to: 
+
+Z
+
+> D
+
+Z
+
+> Rn
+
+F (t, x, ω, ξ )dξdω = 1 , F (t, x, ω, ξ ) ≥ 0, (4.7) 
+
+Z
+
+> Rn
+
+
+
+ξ ∂F (t, x, ω, ξ )
+
+∂t + f (ξ) · ∇ xF (t, x, ω, ξ )
+
+
+
+dξ = 0 . (4.8) 
+
+## 4.2 Collocation framework and cost of quantum algorithms 
+
+In this section, we propose an approximation to the LP problem (4.6)-(4.8) by combining the finite volume method from Section 2.3 with the collocation method in the random space. Let (t, x, ξ ) ∈ [0 , T ] × Ω × [ξmin , ξ max ]n be divided into a uniform grid consisting of 
+
+NtN dx N nξ cells, as in the deterministic case described in Section 2.3. 20 Let {ωq}N mω 
+
+> q=1
+
+be the collocation points with respect to p(ω).We seek 
+
+Fh = 1
+
+hnξNtX
+
+> j=1
+
+X
+
+> k
+
+X
+
+> q
+
+X
+
+> l
+
+F jkql 1Kjt
+
+1Kkx 1ωq 1Klξ
+
+for the linear programming problem (4.6)-(4.8) as follows: argmax F
+
+X
+
+> k
+
+X
+
+> q
+
+X
+
+> l
+
+ηlF j+1  
+
+> kql
+
+, (4.9) subject to 
+
+X
+
+> q
+
+X
+
+> l
+
+F j+1  
+
+> kql
+
+= 1 , F j+1  
+
+> kql
+
+≥ 0, (4.10) 
+
+X
+
+> l
+
+ul
+
+F j+1  
+
+> kql
+
+− F jkql 
+
+∆t +
+
+> d
+
+X
+
+> i=1
+
+"
+
+(f l)(i) F jk+ei,ql − F jk−ei,ql 
+
+2hx
+
+− εlul
+
+F jk+ei,ql − 2F jk,ql + F jk−ei,ql 
+
+h2
+
+> x
+
+#! 
+
+= 0 .
+
+(4.11) As mentioned above, we apply the Lax-Friedrichs finite volume method for time-space discretization. Analogous to the deterministic case in Section 2.3, for any fixed j ∈ { 1, 2, . . . , N T },, we assembly a vector F j of size N dx N mω N nξ with the entries F jkql :1. 
+
+X
+
+> k
+
+X
+
+> q
+
+X
+
+> l
+
+ηlF j+1  
+
+> kql
+
+= 11×N dx N mω ⊗ ηN nξ · F j+1 := eΞF j+1 ;
+
+2. 
+
+X
+
+> q
+
+X
+
+> l
+
+F j+1  
+
+> kql
+
+= IN dx ⊗ 11×N mω N nξ · F j+1 := eAF j+1 ;
+
+3. 
+
+0nN dx N mω = X
+
+> l
+
+ulF j+1  
+
+> kql
+
++ X
+
+> ld
+
+X
+
+> i=1
+
+(ail F jk−ei,ql + bil F jkql + cil F jk+ei,ql )= IN dx N mω ⊗ uN nξ · F j+1 +
+
+> d
+
+X
+
+> i=1
+
+
+
+KiN dx N mω (0) T ⊗ aN nξ
+
++ IN dx N mω ⊗ bN nξ + KiN dx N mω (0) ⊗ cN nξ + RinN dx N mω ×N dx N mω N nξ
+
+
+
+F j
+
+:= eBF j+1 + eDF j .
+
+21 Consequently, the LP problem (4.9)-(4.11) can be written in the following matrix form: argmax F Ξ F,
+
+F ≥ 0NtN dx N mω N nξ ×1, M F = ( 1NtN dx ×1; 0nN tN dx N mω ×1), (4.12) with 
+
+M =
+
+AB
+
+
+
+, Ξ = 11×Nt ⊗ eΞ, A = INt ⊗ eA, B = JNt (0) T ⊗ eD + INt ⊗ eB. 
+
+In Table 6 we have computed the sizes of the relevant properties of M .Table 6: Sizes of parameters related to the LP problem (4.9)-(4.11). Here, d, n and m are much smaller than Nt, N x, N ω, N ξ. Here the cost is in ˜O since we neglect multiplicative factors of d, m, n .Parameter LP-FxM ˜O(·)
+
+r NtN dx N mω
+
+s rN nξ = NtN dx N mω N nξ
+
+R1 NtN dx
+
+nnz (M ) NtN dx N mω N nξ
+
+sM N mω N nξ
+
+Inserting the results of Table 6 into Table 1, we obtain the costs for outputting classical 
+
+F in Table 7. Similarly to Section 3, we do not expect quantum advantage in Nt or Nx.However, there is the possibility of quantum advantage in both Nξ and Nω. In fact, we can see that using QCP (gate complexity), compared to IPM, the quantum advantage is 
+
+˜O(N mω N nξ ϵ). Since n corresponds to the number of equations in the PDE system, this number is typically not so high, so the advantage can become marginal when n is small. Here, m denotes the dimension of the random space, and it can be very large even when 
+
+n is small. For example, in the case of first-order methods, if we choose Nξ ∼ Nω ∼ N ∼
+
+1/ϵ , then the quantum advantage scales as ˜O(N m+n−1). Thus, we observe a polynomial quantum advantage in recovering the Young measure with respect to both n and m.An important distinction between deterministic and random nonlinear PDEs is the computational cost of the classical algorithms that directly solve the original PDEs rather than their Young measures. In the deterministic nonlinear PDE case discussed in the pre-vious sections, we saw that the cost of classical algorithms that directly solve the original PDEs (instead of the Young measures) is O(dN tN dx ), which is always less than the cost of any classical or quantum algorithm for computing the Young measure F. The same conclusion does not necessarily hold for random nonlinear PDEs. If one uses the stochastic collocation method to directly recover the solution of a system of n nonlinear PDEs in d
+
+spatial dimensions and m random dimensions, the cost is O(nN tN dx N mω ) = ˜O(qN mω ). We already see from Table 7 that both QZSG and QCP have query complexities that scale 22 Table 7: Comparison of costs to output classical F (using Table 6) different algorithms in terms of q = NtN dx , m, n and discretisation sizes Nω, N ξ.Algorithm Time/query complexity Comments IPM [45] ˜O(q2.5N 5m/ 2 
+
+> ω
+
+N 5n/ 2 
+
+> ξ
+
+) log(1 /ϵ ) dependence SIPM [16] ˜O(q2.38 N 2.38 mω N 2.38 nξ ) log(1 /ϵ ) dependence QIPM [43] ˜O(κ3
+
+> N ewt
+
+q2N 2mω N 2nξ /δ 2) κN ewt bound to be determined QZSG [52] ˜O(( q/ϵ )3.5N m/ 2 
+
+> ω
+
+N n/ 2 
+
+> ξ
+
+) Assuming inf ∥λ∥1 ∼ ˜O(1) 
+
+QCP [3] ˜O(q1.5N m/ 2 
+
+> ω
+
+N n/ 2 
+
+> ξ
+
+/ϵ ) Gate complexity ˜O(q2.5N 3m/ 2 
+
+> ω
+
+N 3n/ 2 
+
+> ξ
+
+/ϵ )
+
+with Nω like N m/ 2 
+
+> ω
+
+. This suggests that if m is large enough, then it costs less for the quantum algorithm to recover F. If one uses the query complexity of QCP and assuming first-order methods where 1/ϵ = N ∼ Nt ∼ Nx ∼ Nω ∼ Nξ, then comparing the QCP query complexity ˜O(q1.5N N m/ 2 
+
+> ω
+
+N n/ 2 
+
+> ξ
+
+) = ˜O(N (m+n)/2+1 .5d+2 .5) (to obtain F) with the direct classical solver ˜O(qN mω ) = ˜O(N m+d+1 ), we can see that there is a quantum advantage in 
+
+N as long as m > n + d + 3 .This advantage is important to emphasize, since F in fact has much more information about the properties of the PDE (especially in highly nonlinear settings) than a solution 
+
+u computed by standard numerical methods that directly solve the nonlinear PDE. Using first order methods for simplicity N = 1 /ϵ ∼ Nt ∼ Nx ∼ Nξ ∼ Nω, one can see from Table 8 that for our three prototype nonlinear PDEs, for only moderate m, quantum algorithms can recover F more efficiently – by polynomial factors of Nω – compared to direct classical solvers of the random nonlinear PDE. For example, for the compressible Euler or Navier-Stokes equations, one can see that the quantum cost is more efficient by a factor of ∼ N m/ 2−5.5. In real applications, m can even be as high as 100 , thus this could lead to a polynomial factor of N 44 .5.Table 8: Comparison of quantum cost to output classical F and classical cost to output solution u by direct PDE numerical solver (stochastic collocation). We use first-order methods to compare the QCP query complexity ˜O(N (m+n)/2+1 .5d+2 .5) to the direct classical stochastic collocation cost ˜O(N m+d+1 ) and d = 3 .Equation Quantum query complexity ( F) Cost of direct classical solver ( u)Burgers; Allen-Cahn ˜O(N m/ 2+7 .5) ˜O(N m+4 )
+
+Barotropic Euler ˜O(N m/ 2+9 ) ˜O(N m+4 )
+
+Full Euler; NSF ˜O(N m/ 2+9 .5) ˜O(N m+4 )
+
+However, we note that this advantage is not the same as comparing the directly ob-tained solution u with ¯u = R
+
+> D
+
+R 
+
+> Ω
+
+ξF (t, x, ω, ξ )dξdω , where the latter is the expected value (observable) with respect to the Young measure. This is because the cost in performing 23 the numerical integration over ξ and ω is already of size ˜O(N nξ N mω ), which carries its own curse of dimensionality problem. Here we do not assume any quantum advantage in the integration step since the output of quantum LP solvers considered here is the classical F.However, if quantum LP algorithms are developed that output instead |F ⟩ or |√F ⟩, then there could be a possibility of overall quantum advantage in obtaining the measure-valued solutions themselves, as briefly explained in Section 3. We note that Monte Carlo methods for this integration step are generally not preferred when an accurate approximation is desired. However, if one were to use Monte Carlo methods for this integration step (and thereby bypassing the curse of dimensionality here), then this would imply that one ought to also use Monte Carlo based methods for the direct classical solver (instead of using stochastic collocation methods), in which case there would also be no quantum advantage since the cost of classical Monte Carlo solvers for the random PDEs will not scale with N mω but with exponentially less dependence on m.
+
+# 5 Outlook and open questions 
+
+There are two goals in developing quantum algorithms for computing the Young measures of associated nonlinear PDEs. First, there are many scenarios where computing the Young measures is of strong scientific interest. This is due to the fact that the measure-valued formulation describes physically relevant solutions for problems that contain singularities, ill-posedness, or uncertainties, and for problems in which one is not interested in the so-lutions of the underlying PDEs at each grid point, but rather their probability density distributions. The latter arises in many physical or engineering applications, including combustion and turbulence modelling [11, 31, 34, 44, 46]. In these cases, one should com-pare the costs of quantum LP algorithms with those of classical LP, in which we have demonstrated that some quantum algorithms, for example, the quantum central path al-gorithms [3], offer polynomial advantages. The second goal is to investigate where the LP formulation, due to its linearity, is able to provide greater efficiency when using quantum algorithms for the original nonlinear PDEs. For uncertain PDE problems, when the number of random uncertain variables is sufficient large, the cost saving can be significant. But for deterministic problems, our analysis does not find any quantum advantages over the direct classical solvers for the original PDEs. We believe that there is room for further improvement, and hopefully, this program will eventually lead to quantum algorithms with quantum advantages. Here we provide a few possible open questions: 
+
+• Utilize the special structure of the equations and solutions to reduce the computa-tional costs of the LP problems. One possibility is to utilize the special feature of the Young measure, which is close to a Dirac mass, thus it is highly concentrated around the solutions of the original PDEs in physical space. One may take advantage of this special structure, or sparsity, to significantly reduce computational cost by using adaptive (discretization) meshes concentrated over the support of the Dirac measure. 24 • Using the Lasserre hierarchy, which evolves the moments of the Young measure [9] using Semi-Definite Programming (SDP). (See also the discussion in Section 3.1 for why quantum algorithms for SDP are more suited to a direct SDP problem than for an LP problem). Is it possible to obtain more efficient algorithms than those using the Young measure based LP formulation? 
+
+• Improved quantum LP algorithms and also new quantum LP algorithms that output the solution as a quantum state (like |F ⟩ or |√F ⟩) instead of as a classical state. 
+
+# Acknowledgements 
+
+S.J. and N.L. acknowledge the support of the NSFC grant No. 12341104, the Shanghai Pilot Program for Basic Research, the Science and Technology Commission of Shanghai Municipality (STCSM) grant no. 24LZ1401200 (21JC1402900), the Shanghai Jiao Tong University 2030 Initiative, and the Fundamental Research Funds for the Central Universi-ties. N.L. is also supported by grant NSFC No. 12471411. M.L.-M. gratefully acknowledges the support of DFG Project 5258 3336 funded within the Focused Program SPP 2410 “Hyperbolic Balance Laws: Complexity, Scales and Ran-domness” and of the Mainz Institute of Multiscale Modeling. She is also grateful to the Gutenberg Research College for supporting her research. Y.Y. acknowledges the support of the National Natural Science Foundation of China under grant No. 12401527, and the Natural Science Foundation of Jiangsu Province under grant No. BK20241364. 
+
+# References 
+
+[1] D. An, J. Liu, and L. Lin , Linear combination of Hamiltonian simulation for non-unitary dynamics with optimal state preparation cost , Phys. Rev. Lett., 131 (2023), p. 150603. [2] S. Apers and S. Gribling , Quantum speedups for linear programming via interior point methods , arXiv preprint arXiv:2311.03215, (2023). [3] B. Augustino, J. Leng, G. Nannicini, T. Terlaky, and X. Wu , A quan-tum central path algorithm for linear optimization , arXiv preprint arXiv:2311.03977, (2023). [4] D. W. Berry, A. M. Childs, A. Ostrander, and G. Wang , Quantum algorithm for linear differential equations with exponentially improved dependence on precision ,Commun. Math. Phys., 356 (2017), pp. 1057–1081. [5] F. G. Brandao and K. M. Svore , Quantum speed-ups for solving semidefinite programs , in 2017 IEEE 58th Annual Symposium on Foundations of Computer Science (FOCS), IEEE, 2017, pp. 415–426. 25 [6] D. Breit, E. Feireisl, and M. Hofmanová , Dissipative solutions and semiflow selection for the complete Euler system , Comm. Math. Phys., 376 (2020), pp. 1471– 1497. [7] A. Bressan , Hyperbolic systems of conservation laws , vol. 20 of Oxford Lecture Series in Mathematics and its Applications, Oxford University Press, Oxford, 2000. The one-dimensional Cauchy problem. [8] A. Brunk, H. Egger, O. Habrich, and M. Lukáčová-Medviďová , Stability and discretization error analysis for the Cahn-Hilliard system via relative energy estimates ,ESIAM: M2AN, 57 (2023), pp. 1297–1322. [9] C. Cardoen, S. Marx, A. Nouy, and N. Seguin , A moment approach for entropy solutions of parameter-dependent hyperbolic conservation laws , Numer. Math., 156 (2024), pp. 1289–1324. [10] P. A. Casares and M. A. Martin-Delgado , A quantum interior-point predictor– corrector algorithm for linear programming , Journal of physics A: Mathematical and Theoretical, 53 (2020), p. 445305. [11] A. Chertock, M. Herty, A. I. A. Ishakov, A. Kurganov, and M. Lukáčová-Medviďová , Numerical study of random Kelvin-Helmholtz instability , Comm. Comp. Phys., (2026). [12] E. Chiodaroli, C. De Lellis, and O. Kreml , Global ill-posedness of the isentropic system of gas dynamics , Commun. Pure Appl. Math., 68 (2015), pp. 1157–1190. [13] E. Chiodaroli and E. Feireisl , On the density of “wild” initial data for the barotropic Euler system , Ann. Mat. Pura Appl. (4), 203 (2024), pp. 1809–1817. [14] E. Chiodaroli, O. Kreml, V. Mácha, and S. Schwarzacher , Non-uniqueness of admissible weak solutions to the compressible Euler equations with smooth initial data , Trans. Am. Math. Soc., 374 (2021), pp. 2269–2295. [15] S. Chu, M. Herty, M. Lukáčová-Medviďová, and Y. Zhou , Solving random hyperbolic conservation laws using linear programming , 2025. [16] M. B. Cohen, Y. T. Lee, and Z. Song , Solving linear programs in the current matrix multiplication time , Journal of the ACM (JACM), 68 (2021), pp. 1–39. [17] C. M. Dafermos , Hyperbolic conservation laws in continuum physics , vol. 325 of Grundlehren der mathematischen Wissenschaften [Fundamental Principles of Mathe-matical Sciences], Springer-Verlag, Berlin, fourth ed., 2016. [18] C. De Lellis and L. Székelyhidi, Jr. , The Euler equations as a differential in-clusion , Ann. of Math. (2), 170 (2009), pp. 1417–1436. 26 [19] , On admissibility criteria for weak solutions of the Euler equations , Arch. Ration. Mech. Anal., 195 (2010), pp. 225–260. [20] C. De Lellis and L. Székelyhidi Jr. , The Euler equations as a differential inclu-sion , Ann. Math., 170 (2009), pp. 1417–1436. [21] P. Degond and M. Tang. , All speed scheme for the low Mach number limit of the isentropic Euler equations , Commun. Comput. Phys., 10 (2011), pp. 1–31. [22] R. DiPerna and A. Majda , Oscillations and concentrations in weak solutions of the incompressible fluid equations , Comm. Math. Phys., 108 (1987), pp. 667–689. [23] R. J. DiPerna , Generalized solutions to conservation laws , Springer Netherlands, 1983, pp. 305–309. [24] R. J. DiPerna , Measure-valued solutions to conservation laws , Arch. Rational Mech. Anal., 88 (1985), pp. 223–270. [25] L. C. Evans and R. F. Gariepy , Measure theory and fine properties of functions ,Textbooks in Mathematics, CRC Press, Boca Raton, FL, revised ed., 2015. [26] H. Federer , Geometric measure theory , vol. Band 153 of Die Grundlehren der math-ematischen Wissenschaften, Springer-Verlag New York, Inc., New York, 1969. [27] E. Feireisl, A. Jüngel, and M. Lukáčová-Medviďová , Maximal dissipation and well-posedness of the Euler system of gas dynamics , 2025. [28] E. Feireisl and M. Lukáčová-Medviďová , Convergence of a mixed finite element-finite volume scheme for the isentropic Navier-Stokes system via dissipative measure-valued solutions , Found. Comput. Math., 18 (2018), pp. 703–730. [29] E. Feireisl, M. Lukáčová-Medviďová, S. Schneider, and B. She , Approxi-mating viscosity solutions of the Euler system , Math. Comput., 91 (2022), pp. 2129– 2164. [30] E. Feireisl and M. Lukáčová-Medviďová , Convergence of a stochastic collo-cation finite volume method for the compressible Navier-Stokes system , Ann. Appl. Probab., 33 (2023), pp. 4936–4963. [31] E. Feireisl and M. Lukáčová-Medviďová , Well-posedness of the Euler system of gas dynamics , 2025. [32] E. Feireisl, M. Lukáčová-Medviďová, and H. Mizerová , Convergence of fi-nite volume schemes for the Euler equations via dissipative measure-valued solutions ,Found. Comput. Math., 20 (2020), pp. 923–966. 27 [33] E. Feireisl, M. Lukáčová-Medviďová, H. Mizerova, and B. She , Numeri-cal analysis of compressible fluid flows , vol. 20 of MS&A. Modeling, Simulation and Applications, Springer, Cham, 2021. [34] E. Feireisl, M. Lukáčová-Medviďová, B. She, and Y. Yuan , Temperature-driven turbulence in compressible fluid flows , 2026. [35] E. Feireisl, M. Lukáčová-Medviďová, and C. Yu , Oscillatory approximations and maximum entropy principle for the Euler system of gas dynamics , 2025. [36] U. S. Fjordholm, S. Mishra, and E. Tadmor , On the computation of measure-valued solutions , Acta numerica, 25 (2016), pp. 567–679. [37] A. W. Harrow, A. Hassidim, and S. Lloyd , Quantum algorithm for linear sys-tems of equations , Phys. Rev. Lett., 103 (2009), pp. 150502, 4 pp. [38] S. Jin and N. Liu , Analog quantum simulation of partial differential equations , Quan-tum Science and Technology, (2023). [39] S. Jin and N. Liu , Quantum algorithms for nonlinear partial differential equations ,Bull. Sci. math, 194 (2024), p. 103457. [40] S. Jin and N. Liu , Quantum algorithms for viscosity solutions to nonlinear hamilton-jacobi equations based on an entropy penalisation method , arXiv preprint arXiv:2512.07919, (2025). [41] S. Jin, N. Liu, and Y. Yu , Quantum simulation of partial differential equations: Applications and detailed analysis , Physical Review A, 108 (2023), p. 032603. [42] , Quantum simulation of partial differential equations via schrödingerization ,Physical Review Letters, 133 (2024), p. 230602. [43] I. Kerenidis and A. Prakash , A quantum interior point method for lps and sdps ,ACM Transactions on Quantum Computing, 1 (2020), pp. 1–32. [44] C. Klingenberg, S. Markfelder, and E. Wiedemann , Maximal turbulence as a selection criterion for measure-valued solutions , 2025. [45] Y. T. Lee and A. Sidford , Efficient inverse maintenance and faster algorithms for linear programming , in 2015 IEEE 56th annual symposium on foundations of computer science, IEEE, 2015, pp. 230–249. [46] H. Lim, Y. Yu, J. Glimm, X. Li, and D. Sharp , Chaos, transport and mesh convergence for fluid mixing. , Acta Math. Appl. Sin. Engl., 24 (2008). [47] J.-P. Liu, H. O. i. Kolden, H. K. Krovi, N. F. Loureiro, K. Trivisa, and A. M. Childs , Efficient quantum algorithm for dissipative nonlinear differential equa-tions , Proc. Natl. Acad. Sci. USA, 118 (2021), pp. Paper No. e2026805118, 6. 28 [48] N. Liu, M. Minervini, D. Patel, and M. M. Wilde , Quantum thermodynamics and semi-definite optimization , arXiv preprint arXiv:2505.04514, (2025). [49] S. Markfelder and C. Klingenberg , The Riemann problem for the multidi-mensional isentropic system of gas dynamics is ill-posed if it contains a shock , Arch. Ration. Mech. Anal., 227 (2018), pp. 967–994. [50] S. Mishra and C. Schwab , Monte-Carlo finite-volume methods in uncertainty quan-tification for hyperbolic conservation laws , in Uncertainty quantification for hyperbolic and kinetic equations, vol. 14 of SEMA SIMAI Springer Ser., Springer, Cham, 2017, pp. 231–277. [51] M. Mohammadisiahroudi, Z. Wu, P. Sampourmahani, A. Harkness, and T. Terlaky , Quantum interior point methods: A review of developments and an optimally scaling framework , arXiv preprint arXiv:2512.06224, (2025). [52] J. van Apeldoorn and A. Gilyén , Quantum algorithms for zero-sum games , arXiv preprint arXiv:1904.03180, (2019). 
+
+# A Numerical simulations 
+
+In the following three subsections, we justify the mathematical validity of the LP formu-lations (2.8)-(2.10) on three prototype nonlinear PDEs: the inviscid Burgers equation, the barotropic Euler equations, and the Allen-Cahn equation. 
+
+## A.1 The Inviscid Burgers equation 
+
+Let us define the solution u, the energy ˆE and the energy defect E as follows 
+
+u =
+
+Z
+
+> R
+
+ξF (t, x, ξ )dξ, ˆE =
+
+Z
+
+> R
+
+ξ2F (t, x, ξ )dξ, E = ˆE − u2. (A.1) 
+
+Example A.1 (Rarefaction wave) The computational domain is [−3, 3] , and the out-flow boundary condition is applied. The initial data is 
+
+u0(x) = 
+
+(
+
+−1, if x < 0,
+
+2, if x > 0.
+
+In the experiment we take T = 1 and [ξmin , ξ max ] = [ −1.05 , 2.05] .Figure 1 shows the measure characterized by F (T, x, ξ ), i.e. R
+
+> Klξ
+
+F (T, x, ξ )dξ or F Nt 
+
+> kl
+
+,solution u(T, x ), energy ˆE(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx and the total energy defects R 
+
+> Ω
+
+Edx obtained with the discretization parameters (Nt, N x, N ξ) = (150 , 200 , 200) .Further, the Lp-errors and corresponding rates on consecutively refined meshes are pre-sented in Table 9. 29 Figure 1: Experiment 1 for the inviscid Burgers equation: the measure characterized by F (T, x, ξ ),solution u(T, x ), energy ˆE(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx and the total energy defects R 
+
+> Ω
+
+Edx with T = 1 and (Nt, N x, N ξ) = (150 , 200 , 200) .
+
+Table 9: Experiment 1 for the inviscid Burgers equation (rarefaction wave): error and convergence rate. 
+
+(Nt, N x, N f ) L1-error rate L2-error rate (10, 15, 10) 2.3182e-01 - 2.7073e-01 -(20, 30, 20) 1.2837e-01 0.8527 1.5941e-01 0.7641 (40, 60, 40) 7.9106e-02 0.6984 1.0612e-01 0.5870 (80, 120, 80) 5.6584e-02 0.4834 7.7059e-02 0.4617 (160, 240, 160) 3.3934e-02 0.7377 5.0642e-02 0.6056 30 Example A.2 (Shock wave) The computational domain is [−3, 3] . The initial data is 
+
+u0(x) = 
+
+(
+
+2, if x < 0,
+
+−1, if x > 0.
+
+In the experiment we take T = 1 and [ξmin , ξ max ] = [ −1.05 , 2.05] .Figure 2 shows the measure characterized by F (T, x, ξ ), solution u(T, x ), energy ˆE(T, x ),the evolution of total energy R 
+
+> Ω
+
+ˆEdx and the total energy defects R 
+
+> Ω
+
+Edx obtained with 
+
+(Nt, N x, N ξ) = (150 , 200 , 200) . Further, the Lp-errors and corresponding rates on consecu-tively refined meshes are presented in Table 10. 
+
+Figure 2: Experiment 2 for the inviscid Burgers equation: the measure characterized by F (T, x, ξ ),solution u(T, x ), energy ˆE(T, x ), the evolution of total energy R           
+
+> ΩˆEdx and the total energy defects R
+> ΩEdx with T= 1 and (Nt, N x, N f) = (150 ,200 ,200) .
+
+Table 10: Experiment 2 for the inviscid Burgers equation (shock wave): error and conver-gence rate. 
+
+(Nt, N x, N f ) L1-error rate L2-error rate (10, 15, 10) 2.2612e-01 - 3.3309e-01 -(20, 30, 20) 9.5736e-02 1.2400 2.3111e-01 0.5273 (40, 60, 40) 4.1352e-02 1.2111 1.3917e-01 0.7317 (80, 120, 80) 2.4833e-02 0.7357 1.0081e-01 0.4652 (160, 240, 160) 9.7789e-03 1.3445 7.0210e-02 0.5219 31 Example A.3 The computational domain is [−3, 3] and the periodic boundary condition is applied. The initial data are 
+
+u0(x) = 
+
+
+
+sin( πx ) if |x| ≥ 1,
+
+3 if x ∈ (−1, −0.5] S(0 , 0.5] ,
+
+1 if x ∈ (−0.5, 0] ,
+
+2 if x ∈ (0 .5, 1] .
+
+In this experiment, we set T = 0 .4 and [ξmin , ξ max ] = [ −1.05 , 3.05] .Figure 3 shows the measure characterized by F (T, x, ξ ), solution u(T, x ), energy ˆE(T, x ),the evolution of total energy R 
+
+> Ω
+
+ˆEdx and the total energy defects R 
+
+> Ω
+
+Edx obtained with 
+
+(Nt, N x, N f ) = (300 , 400 , 401) .
+
+Figure 3: Experiment 3 for the inviscid Burgers equation: the measure characterized by F (T, x, ξ ),solution u(T, x ), energy ˆE(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx and the total energy defects R 
+
+> Ω
+
+Edx with T = 0 .4. (Nt, N x, N f ) = (300 , 400 , 401) .
+
+## A.2 The barotropic Euler equations 
+
+We denote by ˆE and E the energy and the energy defect, respectively, 
+
+ˆE =
+
+Z
+
+> R2
+
+| em|2
+
+2˜ ϱ + ˜ϱγ
+
+γ − 1
+
+
+
+F (t, x, ˜ϱ, em)d˜ϱd em, (A.2) 
+
+E = ˆE −
+
+|m|2
+
+2ϱ + ϱγ
+
+γ − 1
+
+
+
+. (A.3) 32 Here, the solution (expected value with respect to the Young measure characterized by its probability distribution function) is 
+
+(ϱ, m) = 
+
+Z
+
+> R2
+
+(˜ ϱ, em)F (t, x, ˜ϱ, em)d˜ϱd em.
+
+We note that the reference solutions marked with black lines were obtained using the standard finite volume method with the Lax-Friedrichs numerical flux and (Nt, N x) = (2000 , 1000) .
+
+Example A.4 (Degond-Tang problem [21]) The computational domain is chosen to be Ω = [0 , 1] and the periodic boundary conditions are applied. The initial conditions read 
+
+(ϱ0, m 0) ( x) = 
+
+
+
+(1 , 1 − ϵ2/2) if x ∈ [0 , 0.2] ∪ [0 .8, 1] ,
+
+(1 + ϵ2, 1) if x ∈ (0 .2, 0.3] ,
+
+(1 , 1 + ϵ2/2) if x ∈ (0 .3, 0.7] ,
+
+(1 − ϵ2, 1) if x ∈ (0 .7, 0.8] .
+
+(A.4) In this experiment, we take ϵ = 0 .8, T = 0 .06 and (ϱ, m ) ∈ [0 .105 , 1.805] × [0 .205 , 1.805] .Figure 4 presents the density ϱ, momentum m, the evolution of total energy R 
+
+> Ω
+
+ˆEdx 
+
+and energy defect R 
+
+> Ω
+
+Edx obtained with (Nt, N x, N ϱ, N m) = (200 , 300 , 151 , 151) .
+
+Figure 4: Experiment 1 for the barotropic Euler system: density ϱ, momentum m, the evo-lution of total energy R          
+
+> ΩˆEdx and energy defect R
+> ΩEdx obtained with (Nt, N x, N ϱ, N m)=(200 ,300 ,151 ,151) .
+
+Example A.5 (Two colliding acoustic waves) The computational domain is set to 
+
+Ω = [ −1, 1] and the periodic boundary conditions are applied. The initial conditions are given as 
+
+ϱ0(x) = 0 .955 + 0 .5ϵ(1 − cos(2 πx )) , u0(x) = −sign (x)√2(1 − cos(2 πx )) . (A.5) In the experiment we set ϵ = 0 .1, T = 0 .01 and (ϱ, m ) ∈ [0 .805 , 1.205] × [−3.105 , 3.105] .Figure 5 shows the density ϱ, momentum m, the evolution of total energy R 
+
+> Ω
+
+ˆEdx and energy defect R 
+
+> Ω
+
+Edx obtained with (Nt, N x, N ϱ, N m) = (50 , 100 , 51 , 201) .33 Figure 5: Experiment 2 for the Euler system: density ϱ, momentum m, the evolution of total energy R 
+
+> Ω
+
+ˆEdx and energy defect R 
+
+> Ω
+
+Edx obtained with (Nt, N x, N ϱ, N m) = (50 , 100 , 51 , 201) .
+
+Example A.6 (Riemann problem) The computational domain is taken to be Ω = [0 , 1] 
+
+and the outflow boundary conditions are used. The initial conditions are chosen to be as follows 
+
+ϱ0(x) = 
+
+(
+
+3 if x < 0.5,
+
+1 if x ≥ 0.5, m0(x) = 0 . (A.6) In this experiment, we set T = 0 .06 and (ϱ, m ) ∈ [0 .505 , 3.505] × [−0.505 , 2.005] .Figure 6 shows density ϱ, momentum m, the evolution of total energy R 
+
+> Ω
+
+ˆEdx and energy defect R 
+
+> Ω
+
+Edx obtained with (Nt, N x, N ϱ, N m) = (180 , 200 , 201 , 201) .
+
+Figure 6: Experiment 3 for the barotropic Euler system: density ϱ, momentum m, the evo-lution of total energy R 
+
+> Ω
+
+ˆEdx and energy defect R 
+
+> Ω
+
+Edx obtained with (Nt, N x, N ϱ, N m) =(180 , 200 , 201 , 201) 
+
+## A.3 The Allen-Cahn equation 
+
+Finally, we demonstrate the applicability of the LP formulation with the one-dimensional Allen-Cahn equation 
+
+∂tu = ∂xx u − G′(u), G(u) = (1 − u2)2
+
+4 , Ω = [0 , 1] , (A.7) where periodic boundary conditions are applied. 34 Clearly, the potential energy G(u) is double-well and not convex. Therefore, in general, minimizing G(u) does not yield a Dirac measure, which is confirmed by numerical simula-tions for Experiment A.8. The Young measure obtained by minimizing G(u) is a convex combination of two Dirac measures sitting at ξ = ±1, whereas its corresponding solution, i.e., expected value with respect to the Young measure, agrees well with the reference so-lution. We do not present these numerical simulations here and leave them for interested readers. As the one-dimensional Allen-Cahn equation (A.7) admits a unique (weak) solution for a large class of initial data (e.g. u0 ∈ L2(Ω)) , our aim is to obtain a Dirac measure for the LP problem (2.8) - (2.10). Inspired by the weak-strong uniqueness via a regularized energy functional [8], here we employ the regularization ˜G of the potential energy G yielding a convex cost functional in the resulting LP problem 
+
+eG(u) = G(u) + α
+
+2 u2, α > 1.
+
+Consequently, the LP problem reads argmin 
+
+Z
+
+> Ω
+
+Z
+
+> R
+
+eG(ξ)F (t, x, ξ ) dξdx, (A.8) subject to 
+
+Z
+
+> R
+
+F (t, x, ξ )dξ = 1 , F (t, x, ξ ) ≥ 0, (A.9) 
+
+Z
+
+> R
+
+
+
+ξ∂ tF (t, x, ξ ) − ξ∆F (t, x, ξ ) + G′(ξ)F (t, x, ξ )
+
+
+
+dξ = 0 . (A.10) Accordingly, we again apply a finite volume method to obtain a finite-dimensional discrete formulation: argmin FNxX
+
+> k=1
+> Nξ
+
+X
+
+> l=1
+
+eGlF jkl (A.11) subject to 
+
+X
+
+> l
+
+F jkl = 1 , F ljk ≥ 0, (A.12) 
+
+X
+
+> l
+
+ul
+
+F j+1  
+
+> kl
+
+− F jkl 
+
+∆t − ul
+
+F jk+1 ,l − 2F jk,l + F jk−1,l 
+
+h2
+
+> x
+
++ G′lF jk,l 
+
+!
+
+= 0 , (A.13) with 
+
+ul = 1
+
+hξ
+
+Z
+
+> Klξ
+
+ξdξ, eGl = 1
+
+hξ
+
+Z
+
+> Klξ
+
+eG(ξ)dξ, G′l = 1
+
+hξ
+
+Z
+
+> Klξ
+
+G′(ξ)dξ. (A.14) 35 Let us denote the solution (expected value with respect to the Young measure) as follows 
+
+u =
+
+Z
+
+> R
+
+ξF (t, x, ξ )dξ. 
+
+Further, we define the energies 
+
+E = G(u) + 12|∇ xu|2, ˆE =
+
+Z
+
+> R
+
+G(ξ)F (t, x, ξ )dξ + 12
+
+Z
+
+> R
+
+(∇xF (t, x, ξ )) 2 dξ, ERE = eG(u) + 12|∇ xu|2, ˆERE =
+
+Z
+
+> R
+
+eG(ξ)F (t, x, ξ )dξ + 12
+
+Z
+
+> R
+
+(∇xF (t, x, ξ )) 2 dξ, 
+
+as well as the corresponding defects 
+
+E = ˆE − E, ERE = ˆERE − ERE .
+
+In the following simulations, we set α = 1 .1 and use the central difference to approximate 
+
+∇x. Moreover, the reference solutions marked with black lines are obtained by a standard finite volume method with (Nt, N x) = (100000 , 1000) .
+
+Example A.7 (Double interfaces) The computational domain is taken to be Ω = [0 , 1] .The initial data read 
+
+u0(x) = tanh 
+
+x − 0.25 
+
+√2
+
+
+
+− tanh 
+
+x − 0.75 
+
+√2
+
+
+
+− 1. (A.15) We take T = 0 .02 and [ξmin , ξ max ] = [ −0.75 , −0.55] .Figure 7 shows the measure characterized by F (T, x, ξ ), solution u(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx , the defect of total energy R 
+
+> Ω
+
+Edx as well as the defect of total regularized energy R 
+
+> Ω
+
+ERE dx obtained with (Nt, N x, N U ) = (100 , 50 , 200) .
+
+Example A.8 The computational domain is set to Ω = [ −1, 1] and the initial data are chosen as follows 
+
+u0(x) = 
+
+(
+
+1, if |x| < 0.5,
+
+−1, else. (A.16) In this experiment we take T = 0 .02 and [ξmin , ξ max ] = [ −1.05 , 1.05] .Figure 8 presents the measure characterized by F (T, x, ξ ), solution u(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx , the defect of total energy R 
+
+> Ω
+
+Edx , as well as the defect of total regularized energy R 
+
+> Ω
+
+ERE dx obtained with (Nt, N x, N U ) = (150 , 80 , 100) .36 Figure 7: Experiment 1 for the Allen-Cahn equation (Double interfaces): the measure char-acterized by F (T, x, ξ ), solution u(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx , the defect of total energy R 
+
+> Ω
+
+Edx as well as the defect of total regularized energy R 
+
+> Ω
+
+ERE dx obtained with 
+
+(Nt, N x, N U ) = (100 , 50 , 200) .
+
+Figure 8: Experiment 2 for the Allen-Cahn equation: the measure characterized by F (T, x, ξ ),solution u(T, x ), the evolution of total energy R 
+
+> Ω
+
+ˆEdx , the defect of total energy R 
+
+> Ω
+
+Edx as well as the defect of total regularized energy R 
+
+> Ω
+
+ERE dx obtained with (Nt, N x, N U ) = (150 , 80 , 100) .
+
+37 B The Interior point method for LP 
+
+To solve for F using the interior point method on the primal problem, we have the following primal LP formulation: argmin FΞT F,
+
+F ≥ 0
+
+M F = c, M =
+
+AB
+
+
+
+, (B.1) where M is a 2NtN dx × NtN dx N nξ matrix and c is a vector of size 2NtN dx .To solve this problem, one can write the corresponding Lagrangian 
+
+L(F, Θ, s) = Ξ T F − ΘT (M F − c) − sT F. (B.2) We do not directly use gradient-descent methods on this Lagrangian, since that would be a first-order method. To guarantee optimality, we need to satisfy the KKT conditions. The first of such conditions comes from 
+
+∇FL = Ξ − M T Θ − s = 0 , (B.3) which is also the feasibility condition in the dual problem. The primal and dual problems are thus: 1. Primal: argmin FΞT F,
+
+F ≥ 0
+
+M F = c (B.4) where F has size NtN dx Nξ and c has size 2NtN dx .2. Dual: argmax ΘΘT c,
+
+s ≥ 0Ξ − M T Θ − s = 0 (B.5) where Θ has size NtN dx (the Lagrange multiplier to the equality constraint) and s
+
+(the Lagrange multiplier to the F ≥ 0 inequality constraint) has size NtN dx Nξ.The KKT conditions for optimality (i.e. (F∗, Θ∗, s∗) are optimal if and only if) are: 1. Primal feasibility: M F = c, F ≥ 0,38 2. Dual feasibility: M T Θ + s = Ξ , s ≥ 0
+
+3. Complementarity: Fisi = 0 , ∀i
+
+To use interior point methods, we replace the complementarity condition with a perturbed complementarity condition 
+
+Fisi → F S e = τ e, τ > 0 (B.6) where F = diag (F), S = diag (s), e = (1 , · · · , 1) T . With the replacement of the perturbed complementarity condition, this leads to the log-barrier 
+
+L(F(τ ), Θ) = Ξ T F(τ ) − ΘT (M F(τ ) − c) − τ log( −F(τ )) , (B.7) but we also do not directly use gradient descent on this Lagrangian since it’s still a first-order method and the problem becomes ill-conditioned as τ becomes small. Instead, we look at the perturbed KKT system 
+
+Gτ (F, Θ, s) = 
+
+
+
+M F − c
+
+M T Θ + s − Ξ
+
+F S e − τ e
+
+ = 0 , (B.8) where the solutions trace a central path and strict positivity F ≥ 0, s ≥ 0 are enforced, and as τ → 0, (F(τ ), Θ( τ ), s(τ )) → (F∗, Θ∗, s∗).To solve this with the interior point method, we use the primal-dual Newton step (which is a core step in the interior point method). Here we want Gτ → 0, but we cannot reach it directly; instead, we approach the solution using Newton’s method to identify where the zero occurs. So we define the following residuals 
+
+rp = M F − c, rd = M T Θ + s − Ξ, rc = F S e − τ e. (B.9) Using Newton’s method for finding the zeros of Gτ (z), it’s clear that each Newton step ∆z
+
+has size 
+
+Gτ (z + ∆ z) → 0 = ⇒ G′ 
+
+> τ
+
+(z)∆ z = −Gτ (z), (B.10) and we can write it out explicitly 
+
+Gτ (z + ∆ z) = 
+
+
+
+M (F + ∆ F) − c
+
+M T (Θ + ∆Θ) + s + ∆ s − Ξ(F + ∆ F )( S + ∆ S)e − τ e
+
+ ≈
+
+
+
+rp + M ∆F
+
+rd + M T ∆Θ + ∆ s
+
+rc + F ∆Se + ∆ F S e
+
+ → 0 = ⇒
+
+
+
+0 M T IM 0 0
+
+S 0 F
+
+
+
+∆F
+
+∆Θ ∆s
+
+ = −
+
+
+
+rd
+
+rp
+
+rc
+
+ . (B.11) 39 After solving the above system at each step, τ is reduced, and the process is repeated until 
+
+τ is sufficiently small and we obtain a good approximation of the desired optimal solution. A common way of dealing with the above linear system is to reduce it using the Schur complement. One thus updates F and s to ensure positivity. Finally, to update τ , one can choose 
+
+τ = μ FT s
+
+NtN dx Nξ
+
+, μ ∈ (0 , 1) (B.12) and repeat the process until μ, ∥rd∥, ∥rp∥ are small. We can summarise the classical cost in this procedure with s variables and r constraints: 1. Cost per iteration: We have a sparse matrix M , then we can use sparse factorization 2. Number of iterations: √s log(1 /ϵ )
+
+The earliest quantum algorithms based on primal-dual interior point methods are the preparation of quantum states |∆F ⟩, |∆s⟩, and |Θ⟩ at each Newton iteration step [43], then performing tomography at each step before going to the next step. The cost of using quantum linear systems of equations (QLSA) to invert the matrix in Eq. (B.11) depends on the condition number κN ewt of this matrix. 40

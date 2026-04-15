@@ -1,0 +1,353 @@
+Title: Formalization of De Giorgi--Nash--Moser Theory in Lean
+
+URL Source: https://arxiv.org/pdf/2604.05984v1
+
+Published Time: Wed, 08 Apr 2026 01:26:37 GMT
+
+Number of Pages: 11
+
+Markdown Content:
+FORMALIZATION OF DE GIORGI–NASH–MOSER THEORY IN LEAN 
+
+SCOTT ARMSTRONG AND JULIA KEMPE 
+
+Abstract. We present a formalization in Lean 4 of the core interior De Giorgi–Nash– Moser theory for uniformly elliptic divergence-form equations with bounded measurable coefficients. The formalized results include local boundedness of weak subsolutions, the weak Harnack inequality for positive weak supersolutions, Moser’s Harnack inequality for positive weak solutions, and interior Hölder regularity. This is, to our knowledge, the first machine-checked formalization of a major theorem in modern PDE theory. The development also required substantial new infrastructure for Sobolev spaces on bounded domains, weak solutions of elliptic equations, and quantitative regularity estimates. More broadly, it suggests that large-scale autoformalization of hard analysis in Lean 4 is now within reach. 
+
+1. Introduction 
+
+The De Giorgi–Nash continuity estimate, proved independently by De Giorgi [ DG57 ]and Nash [ Nas58 ], states that every weak solution u ∈ H1(B1) of an elliptic equation of the form (1) −∇ · a∇u = 0 in B1 ⊆ Rd ,
+
+where B1 is the unit ball in Rd and a is a measurable function from B1 to the set of invertible, real d × d matrices satisfying, for some 0 < λ ≤ Λ < ∞, the uniform ellipticity condition (2) ξ · a(x)ξ ≥ λ|ξ|2 and ξ · a−1(x)ξ ≥ Λ−1|ξ|2 for a.e. x ∈ B1, ξ ∈ Rd ,
+
+is α-Hölder continuous in B1/2 (more precisely, there exists a version of u which is Hölder continuous) for an exponent α(d, Λ/λ ) ∈ (0 , 1/2], and satisfies the estimate 
+
+∥u∥L∞(B1/2) + sup 
+
+> x,y ∈B1/2, x ̸=y
+
+|u(x) − u(y)||x − y|α ≤ C∥u∥L2(B1) .
+
+The prior state of the art, rooted in Schauder theory, required Hölder regularity of the coefficients to obtain regularity of solutions. It was a remarkable discovery that the purely measure-theoretic coercivity condition (2) is sufficient to force continuity of solutions, a pointwise property. This conceptual and technical breakthrough resolved Hilbert’s nineteenth problem on the regularity of minimizers of uniformly convex variational problems. 
+
+Date : April 7, 2026. 2020 Mathematics Subject Classification. 68V20, 35B65, 35J15. 
+
+Key words and phrases. elliptic regularity, De Giorgi–Nash–Moser theory, Harnack inequality, Lean, formalized mathematics. S.A. acknowledges support from the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme, grant agreement number 101200828. J.K. thanks the Simons Foundation for support through the Collaborative Grant “The Physics of Learning and Neural Computation”.  
+
+> 1
+> arXiv:2604.05984v1 [math.AP] 7 Apr 2026 2SCOTT ARMSTRONG AND JULIA KEMPE
+
+Several years later, Jürgen Moser [ Mos60 , Mos61 ] gave a third proof of Hölder regularity and established the stronger statement that nonnegative solutions of (1) satisfy a Harnack inequality, namely (3) ess sup 
+
+> B1/2
+
+u ≤ C ess inf 
+
+> B1/2
+
+u . 
+
+These estimates and the circle of ideas surrounding them are known as De Giorgi–Nash– Moser theory and are now foundational across elliptic and parabolic PDE, geometric analysis, and probability theory. This paper describes a complete formalization using the Lean 4 proof assistant [ dMU21 ]of the core interior De Giorgi–Nash–Moser theory for uniformly elliptic divergence-form equations. We formalize local boundedness of weak subsolutions, the weak Harnack inequality for positive weak supersolutions, Moser’s Harnack inequality for positive weak solutions, and interior Hölder regularity of solutions. The formalized theorem statements are given in Section 2, and the classical proof route they follow is outlined informally in Section 3. This project required developing a collection of analytic tools that were not yet available in Lean 4, and in some cases had not previously been formalized in the form needed here. The proofs of De Giorgi–Nash–Moser theory intertwine weak derivatives, Sobolev spaces on bounded domains, functional inequalities for Sobolev functions, truncation arguments, and nonlinear test functions. A substantial part of the work therefore lay in building a reusable infrastructure for weak solutions of elliptic equations before the regularity theory itself could be carried out. Against this background, the present work enters genuinely new territory. To our knowledge, it is the first formalization in Lean 4 of a nontrivial theorem about solutions of a partial differential equation, and in particular the first Lean formalization of a regularity result for weak solutions of a PDE. The closest directly relevant Lean antecedents are the recent formalization of the Gagliardo–Nirenberg–Sobolev inequality by van Doorn and Macbeth [ vDM24 ], and Doll’s formalization of Schwartz functions, tempered distributions, and Sobolev spaces on Rd defined via the Fourier transform [ Dol25 ]. The h-principle formalized by Massot, van Doorn, and Nash [ MvDN22 ] concerns partial differential relations rather than the analytic theory of elliptic equations. Beyond Lean, the Coq formalization of the Lax–Milgram theorem by Boldo, Clément, Faissole, Martin, and Mayero [ BCF +17 ]provides an abstract existence and uniqueness tool for weak problems. These earlier achievements are important precursors, but they address either foundational infrastructure or substantially simpler PDE settings, rather than a full regularity theory for weak solutions of rough-coefficient elliptic equations. At the same time, our development relies crucially on the broader analytic library already present in mathlib, especially the formalized Gagliardo– Nirenberg–Sobolev inequality and the surrounding whole-space measure-theoretic and functional-analytic tools. The Lean code is available at 
+
+https://github.com/scottnarmstrong/DeGiorgi 
+
+The version described in this paper corresponds to commit 6614c52 ; it is built with Lean 4 v4.29.0-rc6 and mathlib commit 5c8398d . The repository also contains the file 
+
+DeGiorgi_Lean_to_Tex.tex , a machine-generated natural-language translation of the Lean development. FORMALIZATION OF DE GIORGI–NASH–MOSER THEORY 3
+
+The formal development was carried out with extensive use of large language models (LLMs), under close supervision by the authors. We supplied detailed proof blueprints, intervened whenever the formal development stalled or required a reorganization of the argument, and validated the final mathematical claims against the checked Lean artifact. In the concluding section of [ Dol25 ], Doll wrote that “it is currently not possible to prove [formalize] non-trivial results about solutions of partial differential equations.” Our experience in this project is that recent advances in large language models (LLMs) have changed the situation substantially, making a formalization of this scale practically feasible in Lean. The paper is organized as follows. Section 2 states the formalized theorem package in ordinary mathematical language. Section 3 then sketches the informal proof architecture. Section 4 describes the analytic infrastructure that had to be built in order to support the proof. Section 5 discusses the main formalization challenges, and Section 6 concludes. 2. Formalized Statements of the Main Results 
+
+Throughout, we work on the ambient Euclidean space Rd for a fixed dimension d ≥ 3, and we write Br for the open ball B(0 , r ) centered at the origin. This restriction entails no real loss of generality: in dimension d = 2 , a simpler argument already gives Hölder regularity, and the two-dimensional case may also be deduced from the three-dimensional one by adding a dummy variable. We work in dimension d ≥ 3 because the Sobolev embedding 
+
+W 1,2 ,→ L2∗
+
+with 2∗ = 2 d/ (d − 2) is then supercritical and including d = 2 would require splitting into a separate case. 2.1. Analytic setting. Sobolev spaces. Let Ω ⊆ Rd be open. A measurable function g : Ω → R is a weak partial derivative of f : Ω → R in the i-th coordinate direction if 
+
+ˆ
+
+> Ω
+
+f (x) ∂iφ(x) dx = −
+
+ˆ
+
+> Ω
+
+g(x) φ(x) dx 
+
+for every test function φ ∈ C∞ 
+
+> c
+
+(Ω) . We write f ∈ W 1,p (Ω) if f ∈ Lp(Ω) and each weak partial derivative belongs to Lp(Ω) . The space W 1,20 (Ω) is defined as the closure of C∞ 
+
+> c
+
+(Ω) 
+
+in the W 1,2 topology. 
+
+Elliptic coefficients. An elliptic coefficient field on Ω is a measurable map a : Ω → Rd×d
+
+together with positive constants 0 < λ ≤ Λ < ∞ such that, for Lebesgue-a.e. x ∈ Ω and every ξ ∈ Rd,(4) ξ · a(x)ξ ≥ λ|ξ|2 and ξ · a(x)−1ξ ≥ Λ−1|ξ|2.
+
+For most of the final theorem statements it is convenient to normalize to λ = 1 , so that the dependence of the estimates is displayed only through Λ.
+
+Weak solutions. Given an elliptic coefficient field a on Ω and functions u, φ ∈ W 1,2(Ω) ,we define 
+
+Ba(u, φ ) := 
+
+ˆ
+
+> Ω
+
+∇φ(x) · a(x)∇u(x) dx. 
+
+We say that u is a weak subsolution of −∇ · (a∇u) ≤ 0 on Ω if u ∈ W 1,2(Ω) and 
+
+Ba(u, φ ) ≤ 04 SCOTT ARMSTRONG AND JULIA KEMPE 
+
+for every nonnegative φ ∈ W 1,20 (Ω) . Weak supersolutions and weak solutions are defined analogously. 2.2. Main theorems. Theorem 2.1 (Local boundedness of subsolutions) . Let d ≥ 3 and let a be an elliptic coefficient field on B1. If u is a weak subsolution of −∇ · (a∇u) ≤ 0 on B1 and u+ =max( u, 0) belongs to L2(B1), then for almost every x ∈ B1/2,
+
+(5) max( u(x), 0) ≤ CDG (d, a)
+
+ˆ
+
+> B1
+
+|u+|21/2
+
+.
+
+Theorem 2.2 (Weak Harnack inequality) . Let d ≥ 3, let a be a normalized elliptic coefficient field on B1, let 0 < q < 1, and let u be a positive weak supersolution of −∇ · (a∇u) ≥ 0 on 
+
+B1. Writing 
+
+q∗ := qd d − 2 ,
+
+one has 
+
+ˆ
+
+> B1/4
+
+|u|q∗ 1/q ∗
+
+≤
+
+ CwH (d)(1 − q)γd
+
+Λ1/2
+
+ess inf 
+
+> B1/4
+
+u, 
+
+where CwH (d) and γd depend only on d.
+
+Theorem 2.3 (Crossover estimate) . Let d ≥ 3, let a be a normalized elliptic coefficient field on B1, and let u be a positive weak supersolution on B1. Then 
+
+
+
+> B1/2
+
+|u|c 
+
+> B1/2
+
+|u|−c
+
+≤ C′
+
+> cross
+
+(d), c := c′
+
+> cross
+
+(d)Λ1/2 ,
+
+for dimension-dependent constants c′
+
+> cross
+
+(d) and C′
+
+> cross
+
+(d).
+
+Theorem 2.4 (Harnack inequality) . Let d ≥ 3 and let a be a normalized elliptic coefficient field on B1. If u is a positive weak solution of −∇ · (a∇u) = 0 on B1, then 
+
+(6) ess sup 
+
+> B1/2
+
+u ≤ exp  CH(d)Λ 1/2 ess inf 
+
+> B1/2
+
+u. 
+
+Theorem 2.5 (Interior Hölder regularity) . Let d ≥ 3, let a be a normalized elliptic coefficient field on B1, let p0 > 1, and let u be a weak solution of −∇ · (a∇u) = 0 on 
+
+B1 with |u|p0 ∈ L1(B1). Then there exists a function v : Rd → R satisfying v = u almost everywhere on B1, and there exists an exponent α > 0 with 
+
+(7) α ≥ exp  −CH¨ ol (d)Λ 1/2,
+
+such that, for all x, y ∈ B1/2,
+
+(8) |v(x) − v(y)| ≤ CH¨ ol (d)Λ d/ (2 p0) p0
+
+p0 − 1
+
+d/p 0 ˆ
+
+> B1
+
+|u|p0
+
+1/p 0
+
+|x − y|α.FORMALIZATION OF DE GIORGI–NASH–MOSER THEORY 5
+
+2.3. Quantitative form of the results. Every constant appearing in Theorems 2.1–2.5 is a closed-form arithmetic expression in the dimension, with the dependence on ellipticity displayed explicitly in the statement. The proofs contain no compactness or contradiction arguments that hide constants behind qualitative existence statements: the bounds are assembled from named quantities by elementary operations. For the local boundedness theorem, the dependence on the ellipticity ratio is polynomial and comes from the one-step energy estimate and the De Giorgi recurrence threshold. For Harnack, the formalization follows Bombieri–Giusti [ BG72 ] and recovers the sharp dependence 
+
+exp  CH(d)Λ 1/2
+
+on the ellipticity parameter. The same crossover mechanism yields the lower bound (7) for the Hölder exponent. This lower bound is not expected to be sharp in Λ; however, in dimensions d > 2 no better quantitative lower bound is currently known in the literature. 3. Outline of the Informal Proof 
+
+Having stated the formalized theorem package, we now sketch the mathematical proof route formalized in Lean 4. The proof proceeds through four layers: a bounded-domain Sobolev library, nonlinear iteration schemes for sub- and supersolutions, the weak and strong Harnack inequalities, and finally oscillation decay leading to Hölder regularity.  
+
+> GNS constant (Cgns )
+> Weak derivatives Sobolev spaces
+> Poincaré inequality
+> Smooth approximation
+> Sobolev chain rule
+> John– Nirenberg exponential decay
+> Ball extension and cutoffs
+> Stampacchia truncation
+> Positive parts
+> (u−k)+
+> Lpfunction toolkit
+> Sobolev– Poincaré on balls
+
+Figure 1. Sobolev infrastructure. All boxes are reusable library compo-nents not specific to De Giorgi–Nash–Moser theory. 3.1. Analytic infrastructure. The proof begins with a bounded-domain Sobolev library. Weak derivatives are defined by integration by parts against smooth compactly supported test functions, and Sobolev spaces on an open set Ω ⊆ Rd are defined through the existence of weak partial derivatives in Lp(Ω) . Since later arguments repeatedly reuse a specific weak gradient, the formal development is organized around explicit witnesses for weak derivatives rather than bare existential statements. 6 SCOTT ARMSTRONG AND JULIA KEMPE    
+
+> Sobolev in-frastructure (Fig. 1)
+> Elliptic coef-ficients and weak formulation
+> Log-gradient bound
+> John–Nirenberg (Fig. 1)
+> Caccioppoli inequality
+> De Giorgi L∞
+> (Thm 2.1)
+> Crossover estimate
+> Moser iteration
+> Lp→L∞
+> Supersolution estimates
+> Weak Harnack inequality
+> Harnack inequality (Thm 2.4)
+> Hölder regularity (Thm 2.5)
+
+Figure 2. PDE proof chain. Gray boxes are Sobolev infrastructure from Figure 1. The De Giorgi L∞ bound (Theorem 2.1) anchors the Moser iteration at p = 2 . The crossover estimate uses the log-gradient bound and John–Nirenberg to bridge positive and negative moments. Harnack (Theorem 2.4) combines the Moser bound with weak Harnack via a chain argument. Hölder regularity (Theorem 2.5) follows by oscillation decay. Smooth approximation on balls is the gateway to the Sobolev chain rule. Once one knows that a Sobolev function can be approximated in both function and gradient by smooth compactly supported functions, one may apply the classical chain rule to the smooth approximants and pass to the limit. Combined with Stampacchia’s truncation lemma, this yields the positive-part closure u 7 → (u − k)+ and makes the truncated test functions used in De Giorgi and Moser iteration admissible. To import whole-space analytic tools from mathlib, the formalization extends a function on B1 to a compactly supported function on Rd by an explicit inversion-based extension operator. This feeds into Poincaré and Sobolev–Poincaré inequalities on balls. Finally, the John–Nirenberg theorem supplies exponential integrability from BMO bounds, which is the key bridge between logarithmic Caccioppoli estimates and the crossover argument. 3.2. De Giorgi and Moser iterations. The L∞ bound for subsolutions is obtained by two related iteration schemes. The De Giorgi iteration works with truncation levels. Given a weak subsolution u and a level k > 0, one inserts the test function η2(u − k)+, where η is a cutoff between concentric balls, into the subsolution inequality to obtain a Caccioppoli estimate. Combined with Sobolev–Poincaré, this yields a nonlinear recurrence 
+
+Yn+1 ≤ Crec BnY 1+ αnFORMALIZATION OF DE GIORGI–NASH–MOSER THEORY 7
+
+for the energies Yn = ´ 
+
+> Brn
+
+|(u − kn)+|2 on shrinking balls and rising levels. A general recurrence closeout lemma then shows that Yn → 0 once the initial energy is below an explicit threshold, giving local boundedness. The Moser iteration works instead with powers. Testing with η2|u+|p−1 promotes Lp
+
+control to Lp∗
+
+control, where p∗ = pd/ (d − 2) , and iteration along a geometric sequence of exponents gives an Lp → L∞ bound. In our formal development, the De Giorgi L2 → L∞
+
+estimate provides the qualitative boundedness needed to anchor the Moser argument at 
+
+p = 2 ; it is the Moser version, with its flexibility in the starting exponent, that feeds the Harnack and Hölder theorems downstream. We decided to formalize both iteration arguments. In our development they are not logically independent, since the upper bound provided by De Giorgi’s iteration is used as a qualitative input in the Moser iteration. This allows us to avoid the usual truncation step needed to produce an admissible test function at the start of the Moser argument. 3.3. Weak Harnack and the crossover estimate. The weak Harnack inequality controls an Lq norm of a positive supersolution from below by its essential infimum. Its proof combines three ingredients. The first is a forward estimate for positive supersolutions, obtained by applying Moser iteration to negative powers of the solution. The second is a logarithmic Caccioppoli estimate: after a suitable regularization of the logarithm, inserting φ2/u into the supersolution inequality gives ˆ
+
+φ2 |∇ u|2
+
+u2 ≤ 4Λ 
+
+λ
+
+ˆ
+
+|∇ φ|2.
+
+Writing v = − log u, this gives control of ∇v in L2 and hence, via Poincaré, control of the BMO (bounded mean oscillation) norm of v, namely 
+
+∥v∥BMO( B) := sup  
+
+> B′⊆BB′
+
+|v − (v)B′ |, (v)B′ := B′
+
+v. 
+
+The third ingredient is the Bombieri–Giusti crossover estimate. John–Nirenberg upgrades the BMO control of v to exponential integrability, which in turn bounds the product of positive and negative moments of u:
+
+
+
+> B1/2
+
+|u|c 
+
+> B1/2
+
+|u|−c
+
+≤ C′(d), c = c′(d)Λ −1/2.
+
+This exponent is what ultimately produces the sharp exp (CΛ1/2) dependence in the Harnack constant. 3.4. From local estimates to regularity. The Harnack inequality (Theorem 2.4) is assembled from the Moser Lp → L∞ bound and the weak Harnack inequality through a chain argument. The half-ball B1/2 is covered by 17 overlapping quarter-balls, each centered in B1/2, such that consecutive balls overlap by a definite amount. Multiplying the local Harnack ratios along the chain gives the global estimate 
+
+ess sup 
+
+> B1/2
+
+u ≤ exp  CH(d)Λ 1/2 ess inf 
+
+> B1/2
+
+u. 
+
+Interior Hölder regularity (Theorem 2.5) then follows from Harnack by the standard oscillation-decay argument. Applying Harnack to ess sup Br u − u and to u − ess inf Br u
+
+shows that the oscillation decreases by a fixed factor when the radius is halved. Iterating this 8 SCOTT ARMSTRONG AND JULIA KEMPE 
+
+decay yields a Hölder modulus of continuity, and the formalization constructs a continuous representative directly from nested essential suprema and infima on dyadic balls. 4. Formalizing the Analytic Infrastructure 
+
+A substantial part of the project consisted of building the analytic infrastructure needed before the De Giorgi–Nash–Moser arguments themselves could begin. The Sobolev library alone comprises roughly 20,000 lines of Lean and is, to our knowledge, the first formalization in any proof assistant of Sobolev spaces on bounded domains via weak derivatives. This is complementary to Doll’s Fourier-analytic construction of Sobolev spaces on Rd [Dol25]. 4.1. Weak derivatives and Sobolev spaces. Weak partial derivatives are defined by integration by parts against smooth compactly supported test functions, and W 1,p (Ω) is defined by combining Lp membership of the function with Lp membership of its weak partial derivatives. In the formal development, however, existential statements about weak gradients are rarely sufficient for downstream use. Many later arguments need to reuse the same chosen gradient repeatedly, so the library is organized around explicit witness structures that package a function together with a specific weak gradient and its Lp bounds. The space W 1,20 (Ω) is defined by approximation in both function and gradient by smooth compactly supported functions. This is the formulation best suited to the PDE applications, since the admissible test functions in the weak formulation naturally live in W 1,20 . It is also the formulation that interacts most cleanly with the chain rule, truncation arguments, and the extension operator discussed below. 4.2. Approximation, truncation, and extension. The Sobolev chain rule is proved by approximation: if u ∈ W 1,2(Ω) and Φ : R → R is smooth with bounded derivative and 
+
+Φ(0) = 0 , then Φ ◦ u ∈ W 1,2(Ω) with weak gradient Φ′(u)∇u. The proof passes from smooth approximants to the limit in both function and gradient. This is one of the key interfaces between the classical differential calculus available in mathlib and the weak-derivative framework needed for PDE. Combined with Stampacchia’s truncation lemma, the chain rule gives the positive-part closure 
+
+(u − k)+ ∈ W 1,2(Ω) , ∇(u − k)+ = ∇u 1{u>k },
+
+which is the analytic fact that legitimizes the truncated test functions used throughout the De Giorgi and Moser iterations. To pass from balls to the whole-space inequalities available in mathlib, the formalization constructs an explicit extension operator from B1 to Rd using sphere inversion on the shell 1 < |x| < 2 together with a radial cutoff. This operator preserves Sobolev regularity with quantitative control. Although the idea is classical, verifying it at the level of weak derivatives, approximation, and transport of witnesses is one of the longest pieces of the supporting library. 4.3. Poincaré, Sobolev–Poincaré, and John–Nirenberg. The Poincaré inequality on balls is proved from a representation formula obtained by integrating the fundamental theorem of calculus along rays. After subtracting the average and extending to the whole space, one obtains Sobolev–Poincaré on balls by applying the Gagliardo–Nirenberg–Sobolev inequality from mathlib and restricting back. These inequalities are the quantitative engine behind both the De Giorgi and Moser iterations. FORMALIZATION OF DE GIORGI–NASH–MOSER THEORY 9
+
+The John–Nirenberg theorem provides the other major analytic input. Once one has a BMO bound for log u on a ball, John–Nirenberg upgrades it to exponential integrability, and this is exactly what drives the crossover estimate. From the point of view of the formalization, this is one of the places where a substantial general-purpose analytic library pays off directly inside a delicate PDE argument. 5. Main Formalization Challenges 
+
+The De Giorgi–Nash–Moser theory has been textbook mathematics for decades. The interesting formalization issues therefore do not arise from any mystery in the mathematics, but from the gap between the way these arguments are written on paper and the way they must be organized for a proof assistant. A recurring theme is that textbook proofs are often existential and modular only at an informal level: one says that a weak gradient exists, that a cutoff can be chosen, or that a function may be transported to another ball without naming the associated data. In the formal development, this level of abstraction is insufficient for downstream reuse. 5.1. Type-class synthesis and quotient Lp spaces. One of the most time-consuming obstacles in the project was not mathematical but computational. In mathlib, Lp spaces are defined as quotients of measurable functions by almost-everywhere equality. Each time Lean is asked to move between a concrete function f : Rd → R and an element of this quotient space, it must resolve a substantial chain of type-class instances. For the types appearing in our development, these compatibility checks can exceed Lean’s internal resource budget. Our workaround was to avoid the abstract quotient space whenever possible. Instead, we built a thin bare-function toolkit that establishes the completeness and convergence results needed in the project directly for concrete functions equipped with the Lp seminorm. This avoids the expensive elaboration path through the quotient construction while preserving exactly the analytic results needed for limit passages in the Sobolev and PDE arguments. 5.2. Truncated test functions. In a textbook proof, one inserts η2(u − k)+ into the weak formulation and moves on. Formalizing this step required a full infrastructure for the Sobolev chain rule, Stampacchia’s truncation lemma, and positive-part closure in W 1,2.The chain rule itself already involves a delicate limit passage from smooth approximants; Stampacchia’s lemma reduces to a one-dimensional statement about absolutely continuous functions and then returns to higher dimensions through Fubini. Only after these ingredients are in place can one certify that the standard truncated test functions are actually admissible in the weak formulation. 5.3. Extension, rescaling, and change of variables. Another major challenge was the extension-and-transport layer connecting local Sobolev arguments on balls to the whole-space tools available in mathlib. In informal mathematics, one moves freely between a function on B1, an extension to Rd, a rescaled copy on another ball, and a smooth approximation. In Lean, each of these operations had to be implemented as a theorem with the correct hypotheses, transported weak-gradient data, and quantitative norm bounds. The extension operator itself is explicit and classical, but proving that it preserves Sobolev regularity for rough functions required a substantial amount of geometry and analysis: inversion formulas, change-of-variables estimates, approximation by smooth functions, 10 SCOTT ARMSTRONG AND JULIA KEMPE 
+
+and the transport of chosen weak-gradient witnesses through restriction, extension, and rescaling. 5.4. The crossover estimate. The crossover estimate is the most delicate step in the proof of the weak Harnack inequality. Mathematically, the argument we formalized is the Bombieri–Giusti one: write v = − log u, obtain a BMO bound from a logarithmic Caccioppoli estimate, and then apply John–Nirenberg to control positive and negative moments simultaneously. Formally, however, the proof has to manage several layers of regularization, since neither log u nor the test function φ2/u is directly available in the Sobolev framework. The solution is to replace the logarithm by smooth regularizations with bounded deriva-tive, prove the energy estimates at the regularized level, and then pass to the limit. A second regularization is used to replace u by u + ε in the crossover product so that negative powers are legitimate. Much of the formal work lies in coordinating these regularizations with the Poincaré and John–Nirenberg machinery and in making the limit passages compatible with the chosen weak-gradient witnesses. 5.5. Tracking explicit constants. A design goal of the project was that the final theorem statements should display the dependence on ellipticity explicitly, rather than hide it behind qualitative constants depending on (d, Λ/λ ). This required naming and propagating constants throughout the entire development. In particular, the passage from the crossover exponent c′(d)Λ −1/2 to the Bombieri–Giusti Harnack constant exp (C(d)Λ 1/2) had to be formalized without any informal “absorption of constants” arguments. The resulting quantitative bookkeeping is one of the mathematical virtues of the formal-ization. Every constant in the final chain is a named definition with an explicit body, and the Harnack and Hölder estimates display their Λ-dependence directly in the conclusion. 6. Conclusion and Future Work 
+
+We have described a complete formalization in Lean 4 of the core interior De Giorgi– Nash–Moser theory on Euclidean balls: local boundedness of weak subsolutions, the crossover estimate and weak Harnack inequality for positive supersolutions, and Harnack and interior Hölder regularity for weak solutions. Beyond the headline theorems, the project contributes a reusable analytic infrastructure for weak derivatives, Sobolev spaces on bounded domains, approximation and extension arguments, Poincaré and Sobolev–Poincaré inequalities, truncation lemmas, and John–Nirenberg theory. Methodologically, the project was carried out with extensive use of large language models under close supervision by the authors. The present project suggests that LLM-assisted workflows can materially accelerate long formalizations in hard analysis when they are paired with explicit proof planning, careful interface design, and rigorous validation against a small trusted kernel. 
+
+References        
+
+> [BCF +17] Sylvie Boldo, François Clément, Florian Faissole, Vincent Martin, and Micaela Mayero, A Coq formal proof of the Lax–Milgram theorem , Proceedings of the 6th ACM SIGPLAN Conference on Certified Programs and Proofs (New York, NY, USA), CPP 2017, ACM, 2017, pp. 79–89. [BG72] Enrico Bombieri and Enrico Giusti, Harnack’s inequality for elliptic differential equations on minimal surfaces , Invent. Math. 15 (1972), 24–46. MR 0305715 FORMALIZATION OF DE GIORGI–NASH–MOSER THEORY 11
+
+[DG57] Ennio De Giorgi, Sulla differenziabilità e l’analiticità delle estremali degli integrali multipli regolari , Mem. Accad. Sci. Torino. Cl. Sci. Fis. Mat. Nat. (3) 3 (1957), 25–43. MR 0093649 [dMU21] Leonardo de Moura and Sebastian Ullrich, The lean 4 theorem prover and programming language ,Automated Deduction – CADE 28 (Cham) (André Platzer and Geoff Sutcliffe, eds.), Lecture Notes in Computer Science, vol. 12699, Springer, 2021, pp. 625–635. [Dol25] Moritz Doll, Formalizing Schwartz functions and tempered distributions , arXiv:2510.24060, 2025. [Mos60] Jürgen Moser, A new proof of De Giorgi’s theorem concerning the regularity problem for elliptic differential equations , Comm. Pure Appl. Math. 13 (1960), 457–468. MR 0170091 [Mos61] , On Harnack’s theorem for elliptic differential equations , Comm. Pure Appl. Math. 14 
+
+(1961), 577–591. MR 0159138 [MvDN22] Patrick Massot, Floris van Doorn, and Oliver Nash, Formalising the h-principle and sphere eversion , arXiv:2210.07746, 2022. [Nas58] John Nash, Continuity of solutions of parabolic and elliptic equations , Amer. J. Math. 80 (1958), no. 4, 931–954. MR 0100158 [vDM24] Floris van Doorn and Heather Macbeth, Integrals within integrals: a formalization of the Gagliardo–Nirenberg–Sobolev inequality , 15th International Conference on Interactive Theorem Proving (ITP 2024), LIPIcs, vol. 309, 2024, pp. 37:1–37:18. 
+
+CNRS & Laboratoire Jacques-Louis Lions, Sorbonne Université and Courant Institute, School of Mathematics, Computing, and Data Science, New York University. 
+
+Email address : scottnarmstrong@gmail.com 
+
+Courant Institute, School of Mathematics, Computing, and Data Science, New York University. 
+
+Email address : kempe@nyu.edu

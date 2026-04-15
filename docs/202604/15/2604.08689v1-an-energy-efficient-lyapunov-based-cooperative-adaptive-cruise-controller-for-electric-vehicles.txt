@@ -1,0 +1,695 @@
+Title: An Energy-Efficient Lyapunov-Based Cooperative Adaptive Cruise Controller for Electric Vehicles
+
+URL Source: https://arxiv.org/pdf/2604.08689v1
+
+Published Time: Mon, 13 Apr 2026 00:09:54 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+> 1
+
+# An Energy-Efficient Lyapunov-Based Cooperative Adaptive Cruise Controller for Electric Vehicles 
+
+Hamed Faghihian 1, Parisa Ansari Bonab 1, Arman Sargolzaei 1
+
+Abstract—As electric vehicles (EVs) are increasingly adopted as platforms for connected and automated vehicles (CAVs), enhancing their energy efficiency becomes critical. With the emergence of vehicle-to-vehicle (V2V) communi-cation, cooperative adaptive cruise control (CACC) offers improved traffic flow, safety, and energy efficiency by enabling real-time coordination among EVs. However, conventional CACC algorithms neglected acceleration and regenerative braking dynamics in their implementation. To address this gap, this paper proposes a third-order dynamic model for EVs which has been derived from real-world experimental data. We also propose a novel, practical, and energy-efficient Lyapunov-based CACC controller explicitly designed for EV platoons. The proposed controller is requiring lower control gains while ensuring string stability and energy efficiency. To validate its effectiveness, we conduct both simulation and experimental environments, demonstrating that our approach reduces velocity fluctuations, maintains string stability at lower headway times, and improves energy efficiency of the CACC platoon by up to 38.5% compared to a baseline CACC. 
+
+I. Introduction In recent years, advancements in sensors, communica-tion technologies, and high-precision positioning technolo-gies push the automotive industries to a significant trans-formation toward autonomous driving. Connected and autonomous vehicles (CAVs) are equipped with advanced sensors, perception systems, and artificial intelligence-based control algorithms, enabling self-driving capabilities [1]. These vehicles utilize vehicle-to-vehicle (V2V) commu-nication technology to communicate with other vehicles, enhancing coordination, safety, and overall efficiency in modern transportation networks [2]. Since EVs are already equipped with most of the necessary technologies for CAVs, many CAVs are now being built on EV platforms [3]. Although EVs produce zero emissions, they still face range anxiety issues [4]. Increasing battery capacity to address range issues presents a trade-off, as it raises concerns about the environmental impact and emissions, and higher energy consumption in associated with larger batteries [5]. To mitigate the impact of limited driving range due to battery constraints, researchers explored various solutions, such as charging stations placement, driving and braking torque distribution and control [6], route planning, driving behaviors optimization, and driv-ing motors’ efficiency optimization [7]. While EVs are widely regarded as highly energy-efficient, there remain  
+
+> 1Hamed Faghihian, Parisa Ansari Bonab, and Arman Sargolzaei are with the Department of Mechanical and Aerospace Engineer-ing, University of South Florida, Tampa, FL 33620, USA. Emails: hfaghihian@usf.edu
+
+significant opportunities to further enhance the energy efficiency of electric CAVs (E-CAVs) [8]. Additionally, as the penetration of E-CAVs increases, the demand for transportation rises due to the appeal of zero-emission vehicles with autonomous features. This surge in demand further highlights the range limitations of E-CAVs [9]. Therefore, these facts highlight the urgent need to improve the energy efficiency of E-CAVs. To increase energy efficiency of E-CAVs, several recent studies conducted. For instance in [10] an energy-saving optimization and control (ESOC) framework proposed, which integrates multiconstraint driving scene data with powertrain control by using traditional model predictive control (MPC) and dynamically adjusting powertrain operations. Also in [11] authors developed a three-power nonlinear controller within their eco-cruise control (ECC) system, leveraging real-time slope estimations to adjust motor torque. Their system demonstrated significant en-ergy savings compared with conventional cruise control. However these works showing promising opportunity, but none of them studied vehicle-following scenarios. In most studies on vehicle-following scenarios, energy efficiency has not been a priority in many approaches. This addressed by proposing a two-stage decision-making model integrating safety zones and powertrain optimiza-tion [12]. Their results demonstrated improved energy effi-ciency without compromising safety, marking a significant advancement over traditional vehicle-following strategies that prioritize one objective over the other. Despite suc-cessful demonstrations of E-CAV capabilities in improving energy efficiency and safety across various scenarios and platooning, most studies have not specifically focused on cooperative adaptive cruise control (CACC). Given that a significant portion of automated driving occurs in this mode, optimizing CACC can have a substantial impact on E-CAV energy efficiency. The enhancement of adaptive cruise control (ACC) through the use of V2V communication leads CACC, which is a crucial component of CAVs [13]. There is a large number of studies in literature in which authors tried to increase energy efficiency or decrease fuel consumption of CACC through different control method or under different circumstances [14]–[16]. The study in [16] demonstrates that CACC can reduce fuel consumption by controlling acceleration and deceleration variations. The effectiveness of CACC in a mixed scenario with vehicles using ACC and CACC presented in [17] in which authors demonstrated that connectivity-enabled controllers can achieve up to 30% energy savings. In [18], a real-time, practical, and robust eco-CACC system was introduced, achieving up to a 23.5% improvement in fuel efficiency, highlighting its 
+
+> arXiv:2604.08689v1 [eess.SY] 9 Apr 2026 2
+
+potential for enhancing energy efficiency. However, these studies do not account for string stability and safety, which are critical for practical deployment. In [19], a delay-based spacing policy within a CACC employed to maintain string stability under various dis-turbances to minimize energy losses and enhancing fuel efficiency across the vehicle platoon using proportional-derivative (PD) gains. A real-time predictive cruise control (ED-PCC) system for eco-driving was developed, which utilizing Pontryagin’s Minimum Principle (PMP) to op-timize engine torque and gearshift to decrease fuel con-sumption reported in [20]. The proposed method achieved up to 8% fuel savings by utilizing smoother acceleration profiles and reducing unnecessary braking in car-following scenarios. Although the reported fuel savings were modest, a separate study in [21] analyzing CACC in mixed traffic demonstrated that CACC could reduce fuel consumption by up to 50% compared to ACC at full market penetration. However, these studies lack checking the effect of headway time on energy efficiency and string stability. In [22], a multiple-predecessor following (MPF) strategy in aCACC framework proposed, enhancing energy efficiency by maintaining string stability through a constant time headway policy. These studies revealing the effect of headway time and string stability on increasing energy efficiency; however, still they lack showing how string stability will affect energy efficiency. CACC capability in decreasing energy consumption is not limited to passenger vehicles. The study in [23] details the development and im-plementation of a CACC system on heavy-duty trucks in which string stability demonstrated as a vital aspect that ensures a string of vehicles improves distance attenuation rejection, energy efficiency, and safety measures. Despite these studies discussing how CACC can contribute both in safety and energy efficiency, none of these works targeted E-CAVs and EVs. Integrating energy efficiency management and safety into CACC for E-CAVs has been reported in some studies. Authors in [24] proposed an Eco-CACC system designed for EVs operating near signalized intersections. By optimizing vehicle trajectories, their model significantly reduced energy consumption and travel delay, demonstrating up to 9.3% energy savings, they extended their works in [25] within a smart city framework, achieving up to 23.8% energy savings. While these works showed the effectiveness of eco-CACC; however, they did not consider platooning. To improve energy efficiency in vehicle platoons, the work reported in [26] introduced a predictive energy-saving framework using nonlinear model predictive control (NMPC) for CACC platoon. Similarly, [27] proposed a CACC optimization strategy based on simulated annealing particle swarm optimization (SA-PSO) combined with MPC, enhancing both platoon stability and minimizing energy use. However, most of these studies overlook the switching dynamics between driving and braking in EVs. Unlike internal combustion engine vehicles (ICEVs), EVs exhibit distinct acceleration and deceleration behaviors due to regenerative braking systems (RBS). While [28] introduced a switching mode controller for EVs, it relies on predefined controllers rather than a continuous control approach and has not been integrated into CACC. The integration of a truly continuous control strategy into CACC design remains unexplored. The absence of a practical EV model that accurately represents both motoring and RBS phases, coupled with the lack of a Lyapunov-based CACC approach, highlights a significant research gap. Moreover, the effect of string stability criteria on energy efficiency has not been system-atically explored in the literature. Unlike previous studies, we propose a novel Lyapunov-based CACC design that ensures safety, string stability, and energy efficiency for EVs. The performance, safety, and string stability of our proposed controller are validated in both simulation and practical environments. Additionally, the results demon-strate a significant reduction in total energy consumption compared to existing controllers. Thus, the contributions of this paper are i) We Proposed a realistic third-order switched dy-namic system differential equation model of an EV (Mustang Mach-E) through a real-world experimental analysis that explicitly models EV acceleration and deceleration separately. ii) We designed an energy-efficient and novel Lyapunov-based CACC for EVs based on the proposed switched dynamic system model, which is implementable in the real world and requires lower controller gains.The proposed CACC guarantees safety and time-domain string stability at a headway time which is smaller than typically reported for string-stable CACC pla-toons which implies higher achievable traffic capacity and improved energy efficiency at the system level. iii) We utilized the Filippov framework for Lyapunov stability analysis and time-domain string stability as a performance measure to evaluate how the proposed CACC enhances both string stability and energy efficiency in EV platoons, and demonstrating its en-ergy efficiency improvement through an experimental comparison with a baseline controller. The paper is organized as follows: Section II presents the mathematical model of a CACC. Section III outlines the problem statement. The proposed solution is discussed in section IV. Section V presents the outcomes of the proposed CACC, beginning with the experimental results to identify the EV model. This is followed by simulation and experimental results of the proposed CACC to assess its performance in maintaining a safe and stable distance. The section then analyzes time-domain string stability criteria using a rigorous standard drive cycle and concludes with an experimental energy analysis that compares the energy efficiency of the proposed controller with a baseline CACC. Section VI provides the conclusion and possible future works. Also, the stability analysis of the proposed controller presented in the Appendix section. II. Mathematical Model of CACC Schematic of a string of CACC-equipped in a platoon of vehicles is demonstrated in Figure 1. For simplicity of 3D D D D D
+
+Vehicle  Vehicle  Vehicle  Vehicle  Vehicle 
+
+u 
+
+> LLLL
+> xxxxx
+> i-iiii
+> Leader
+> i-iiii
+> i
+
+uiuiui       
+
+> iiii
+> iiiii-
+
+Fig. 1: Schematic of a string of CACC-equipped vehicles. analysis, it is assumed that vehicles are homogeneous. The dynamic model of ith vehicle ( i ∈ { 1, · · · , n }, with n ∈ N)
+
+is the number of vehicles) is obtained from experimental analysis as 
+
+
+
+˙xi(t) = vi(t),
+
+˙vi(t) = ai(t),
+
+˙ai(t) = −γi(ui)ai(t) + βi(ui)ui(t),
+
+(1) where γi(ui) ∈ R and βi(ui) ∈ R are defined as 
+
+γi(ui) = 1 + sgn (ui)2 γi1 + 1 − sgn (ui)2 γi2 ,βi(ui) = 1 + sgn (ui)2 βi1 + 1 − sgn (ui)2 βi2 ,
+
+where, xi ∈ R, vi ∈ R, ai ∈ R, and ui ∈ R represent the position, velocity, acceleration, and control input, respectively. Also, γi1 , γ i2 ∈ R and βi1 , β i2 ∈ R are exper-imentally identified positive constants (see Section V-A) that distinguish acceleration and deceleration dynamics in EVs. This distinction in acceleration and declaration behavior in EVs is crucial for accurately modeling EV acceleration and RBS effects, improving the representation of EV behavior during acceleration and deceleration. Remark 1. For each vehicle i, the control input ui(t) : [t0, ∞) → R generated by the CACC law in Section IV-B satisfies 1) ui(t) is piecewise and continuously differentiable with uniformly bounded derivative, i.e., there exists Li > 0
+
+such that | ˙ui(t)| ≤ Li.2) There exists a constant δi > 0 such that between any two consecutive zero crossings of ui(t), the signal reaches to a magnitude of at least δi. This means, if tk < t k+1 are two consecutive times with 
+
+ui(tk) = ui(tk+1 ) = 0 and sgn (ui) changes over these two consecutive times, then there is a time 
+
+t⋆ ∈ (tk, t k+1 ) with |ui(t⋆)| ≥ δi.Remark 1 is physically valid since ui(t) is produced by a continuous CACC controller acting on smooth error and filtering by the drivetrain dynamics, therefore it cannot switch infinitely fast. Moreover, the traction and regenerative braking controllers always exhibit finite resolution and hysteresis, which imposes a minimum effective torque level associated with δi between two sign changes. In implementation, this corresponds to a small deadband around zero acceleration/torque and prevents high-frequency dithering near ui = 0 . Because 
+
+ui is produced by a continuous CACC law and filtered through drivetrain/actuator dynamics, it is continuous and bandwidth-limited. Therefore the Remark 1 holds for all scenarios. III. Problem Statement A. Safety As shown in Figure 1, vehicles transmit their control signals to followers using wireless communication. This means each vehicle follows the leader ahead of it. The follower vehicle receives data from its lead vehicle through a wireless communication channel, which it uses to match the leader’s speed and maintain a safe distance. Thus, the primary objective of this paper’s CACC design is to use this communication method to ensure safety and maintain the desired distance between vehicles. In order to quantify the safety objective, we define distance errors and their first and second derivatives. To define the distance error, first the actual distance between the ith follower and its leader is calculated as 
+
+Li(t) = xi−1(t) − xi(t) − Di−1, (2) where Li(t) ∈ R is the distance between the ith follower and its leader, Di−1 ∈ R is the length of the lead vehicle. Also, the desired distance between the ith follower and its leader is defined as 
+
+Ldi (t) ∆
+
+= ci + bivi(t), (3) where Ldi (t) ∈ R is the desired distance between vehicles, 
+
+ci ∈ R is the standstill distance which is a constant, and 
+
+bi ∈ R+ is the headway time, and R+ defined as R > 0.Therefore, distance error ei : [ t0, ∞) → R is defined as 
+
+ei(t) ∆
+
+= Li(t) − Ldi (t). (4) Achieving and maintaining the desired distance is our objective to ensure safety, therefore, as t → ∞, the distance error ei(t) must approach zero. B. String Stability Another objective is to ensure the string stability of vehicles in a platoon, focusing on the amplification of oscillations from vehicle i to those that follow. To address this objective and quantify that, the system is defined as string stable if and only if 
+
+|| ζi|| m ≤ || ζi−1|| m, (5) 4
+
+where ζi ∈ R can represent the distance error (ei), velocity ( vi), or acceleration ( ai) being evaluated in the 
+
+i-th vehicle, with || .|| m denoting the m-th norm of the signal. C. Energy Efficiency The CACC has to be designed to reduce total energy consumption. Although there is no direct relationship between any controller parameters and energy efficiency, the designed controller should be verified in terms of energy efficiency. Energy efficiency can be investigated based on the total amount of energy spent through a scenario involving a string of vehicles. In the context of the EV model utilized in this study, the overall energy sourced from the vehicles, Ec ∈ R, is described as [29] 
+
+Ec = Eair + Eroll + Eacc + Eg − Erb , (6) where Eair ∈ R represents the energy required to overcome aerodynamic effects, Eroll ∈ R is the energy consumed to overcome rolling resistance, Eacc ∈ R corresponds to the energy expended for vehicle acceleration, Eg ∈ R accounts for the energy consumed in altering the vehicle’s elevation, and Erb ∈ R shows the amount of recaptured energy. To minimize the total consumed energy denoted in (6) in CACC, velocity variations should be minimized [8]. IV. Proposed Solution A. Error Signals To facilitate the stability analysis, the following error signals as the first and second derivative of distance error are defined as 
+
+ei1 (t) ∆
+
+= ei(t),ei2 (t) ∆
+
+= ˙ ei1 (t),ei3 (t) ∆
+
+= ˙ ei2 (t).
+
+(7) Using (2) and (4), ˙ei3 (t) can be written as 
+
+˙ei3 (t) = ... 
+
+x i−1(t) − ... 
+
+x i(t) − bi
+
+... 
+
+v i(t), (8) using (1) and since ... 
+
+v i = ¨ ai, (8) we can have 
+
+˙ei3 (t) = − γi−1(ui−1)ai−1(t) + βi−1(ui−1)ui−1(t)+ γi(ui)ai(t) − βi(ui)ui(t)
+
+− bi
+
+( − γi(ui) ˙ ai(t) + βi(ui) ˙ ui(t)),
+
+(9) further simplification yields 
+
+˙ei3 (t) = βi−1(ui−1)ui−1(t)
+
+− βi(ui)( bi ˙ui(t) + ui(t)) 
+
+− γi−1(ui−1)ai−1(t) + γi(ui)ai(t)
+
+− γ2 
+
+> i
+
+(ui)biai(t) + biγi(ui)βi(ui)ui(t),
+
+(10) and we can write (10) as 
+
+˙ei3 (t) = βi−1(ui−1)ui−1(t)
+
+− βi(ui)( bi ˙ui(t) + ui(t)) 
+
+− γi−1(ui−1)ai−1(t) + γi(ui)ai(t)+ biγi(−γiai(t) + βi(ui)ui(t)) ,
+
+(11) considering ai−1 = ¨ xi−1, ai = ¨ xi, and (1), equation (11) can be written as 
+
+˙ei3 (t) = βi−1(ui−1)ui−1(t)
+
+− βi(ui)(bi ˙ui(t) + ui(t))
+
+− [γi−1(ui−1)¨ xi−1(t) − γi(ui)¨ xi(t)
+
+− biγi(ui)( ˙ ai(t)) ],
+
+(12) By defining ϕi(t) ∈ R as 
+
+ϕi(t) ≜
+
+[γi−1(ui−1)¨ xi−1(t) − γi(ui)¨ xi(t) − biγi(ui)( ˙ ai(t)) ], (13) therefore, we can write (12) as 
+
+˙ei3 (t) = βi−1(ui−1)ui−1(t) − βi(ui)( bi ˙ui(t) + ui(t)) 
+
+− ϕi(t), (14) we can write (14) as 
+
+˙ei3 (t) = −ϕi(t) − Pi(t) + βi−1(ui−1)ui−1(t). (15) where, Pi(t) ∈ R, defined as 
+
+Pi(t) ≜ βi(ui)(bi ˙ui + ui
+
+). (16) For simplicity of notations, t and ui is removed in the equations of the following sections. B. Control Design The filtered control signal, Pi(t), must stabilize the error dynamics in (15). Therefore, to derive the control signal 
+
+ui(t) for CACC from (16), the control law for Pi(t) was developed based on the Lyapunov stability analysis in Appendix as 
+
+Pi =( αi1 + αi2 )ei3 + βiCiri2 + βi−1ui−1
+
++ ( αi1 αi2 + 1) ri1 − αi2 α2 
+
+> i1
+
+ei1 − ϕi, (17) where Ci ∈ R+ is a gain specified by the user, and two auxiliary error signals ri1 ∈ R and ri2 ∈ R are defined as 
+
+ri1 (t) ∆
+
+= ˙ ei1 (t) + αi1 ei1 (t), (18) 
+
+ri2 (t) ∆
+
+= ˙ ri1 (t) + αi2 ri1 (t), (19) where αi1 and αi2 ∈ R+ are defined as user-specified known gains. By selecting appropriate coefficients, the proposed controller guarantees a safe distance between vehicles. C. String Stability Assessment Given the practical limitations of frequency-domain methods in experimentally evaluating string stability, and the inability to derive complementary sensitivity for switched dynamic system, we propose the adoption of time-domain approaches. This method offers a more feasible framework for experimental analysis, as evidenced by recent studies [30]. Using same principles Considering (5) the string stability criterion, || Ωi|| 2 ∈ R, can be defined as 
+
+|| Ωi|| 2 ≜ || vi(t)|| 2
+
+|| vi−1(t)|| 2
+
+≤ 1, v i−1̸ = 0 , i ≥ 2. (20) The proposed criteria in (20) can be used as an evaluation factor. This criterion used as a reference to evaluate effectiveness of the designed controller in Section V. 5
+
+D. Energy Efficiency To investigate the effect of the controller on the energy efficiency of an EV, we can compare measurements of the total energy consumed by the EV under the same scenario but with different controllers. The total vehicle energy consumption, EC , introduced in (6), is obtained experimentally by integrating the real-time power over time from the start time, t0 ∈ R, to the end time, tf ∈ R,of the drive cycle, given by 
+
+EC =
+
+∫ tf
+
+> t0
+
+P (t) dt, (21) where P (t) ∈ R, is the Real-time power data obtained from the EV power management system. V. Results In the results section, we first demonstrate how we derived the model of the EV. Next, by using the derived model, we present the simulation and experimental results of a test scenario to assess CACC performance and tuning a minimum headway time. Following this, we show results from a rigorous standard drive cycle to evaluate the string stability of the designed controller. Finally, we present the results of a designed test scenario to assess both the energy efficiency and string stability of the proposed controller. A. Vehicle Model Through Experimental Analysis The EV longitudinal model in (1) identified experi-mentally using the Mustang Mach-E experiment platform shown in Figure 2. We applied step desired accelera-tion/deceleration commands, performed 25 trials in mo-toring mode and 40 trials in deceleration mode, scaled and averaged the measured acceleration responses. The resulting mean step responses for ui ≥ 0 and ui < 0 shown in Figure 3. Fitting a first-order model to each mode yields the values for the model presented in (1) as βi1 = 0 .7378 ,
+
+γi1 = 0 .6998 , βi2 = 0 .9315 , and γi2 = 0 .9009 .B. CACC Performance Evaluation (Scenario I) The controller was tested through simulation and ex-periment to ensure it handles CACC safety measures and headway time tuning. Lower headway times increase fluctuations, while higher times create undesirable gaps between vehicles. Identifying the minimum headway time that maintains safety with minimal fluctuations improves both energy and road efficiency. To determine the mini-mum headway time for CACC performance with reason-able error, we began testing at 0.1 seconds and gradually increased it until negligible fluctuations were observed. The desired acceleration for the lead vehicle for this test scenario is shown in Figure 4. 1) Simulation results for scenario I: The speed profile of all vehicles with 0.2 seconds headway time is shown in Figure 5. As shown, vehicles cannot maintain their leaders’ speeds, resulting in fluctuations. These fluctuations are undesirable as they increase the risk of crashes and reduce energy efficiency. Testing various headway times revealed that 0.5 seconds is the minimum headway time to ensure all followers move with negligible fluctuation. The speed of Ultrasonic 
+
+> Real -Time
+> Target Machine
+
+Fig. 2: The EV for experimental test equipped with ADAS features, Cellular-vehicle-to-everything (C-V2X) communication, Dedicated short-range communications (DSRC), light detection and ranging (LIDAR), multi-mode electronically scanning radar (ESR), and real-time target machine .0 5 10 15 20 
+
+> Time (Sec)
+> 00.2 0.4 0.6 0.8 11.2
+> Acceleration (m/s 2)
+> Step input
+> Mean value from experiment
+> Smooth data with small window
+> Smooth data with large window
+
+(a) 0 5 10 15 20 25 30 35 
+
+> Time (Sec)
+> -1.5 -1 -0.5 00.5 11.5
+> Acceleration (m/s 2)
+> step input
+> Mean value from experiment
+> smooth data with small window
+> smooth data with large window
+
+(b) 
+
+Fig. 3: Obtained experimental acceleration-step response (a) In acceleration (b) In deceleration 60 10 20 30 40 50 60 
+
+> Time (Sec)
+> 00.2 0.4 0.6 0.8 11.2 1.4 1.6 1.8 2
+> Acceleration (m/s 2)
+
+Fig. 4: Desired acceleration input for the lead vehicle in the scenario I. all vehicles with 0.5 seconds of headway time is illustrated in Figure 6. As shown, even the last vehicles reached the same value for the velocity in a reasonable time, without fluctuations. Position errors of two first and two last vehicles are depicted in Figure 7. 0 10 20 30 40 50 60      
+
+> Time (Sec)
+> 012345678910
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 12 14 16 18 20 22
+> 8.4 8.6 8.8 9
+
+Fig. 5: Speed profile of all vehicles with 0.2 seconds headway time in scenario I. Based on this figure, the position error quickly stabilizes to zero after a brief fluctuation, indicating that the designed controller can effectively compensate for changes in vehicle velocities and acceleration. The distance error maximum value decreases along the string. The fact that the distance error between the last two vehicles is less 0 10 20 30 40 50 60   
+
+> Time (Sec)
+> 012345678910
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 15 20 25
+> 77.5 88.5 9
+
+Fig. 6: Speed profile of all vehicles with 0.5 seconds headway time in scenario I .0 20 40 60 
+
+> Time (Sec)
+> -0.3 -0.15 00.15 0.3
+> Error (m)
+
+(a) 0 20 40 60  
+
+> Time (Sec)
+> -0.08 -0.04 00.04 0.08
+> Error (m)
+
+(b) 
+
+Fig. 7: (a) Position Error of two first vehicles (b) Position Error of the two last vehicles. than the length of the vehicle ensures that it is possible to control the whole string with this controller. 2) Experimental results for scenario I: Here, we present the results of implementing the de-signed controller on the vehicle shown in Figure 2. We used the vehicle-in-the-loop (VIL) as the second vehicle, as shown in Figure 8. The desired acceleration for the leader is the same as that used in the simulation, shown in Figure 4. The designed controller and simulated environment are implemented on a real-time machine, enabling realistic online calculations based on live data from vehicle sensors. This setup constitutes an experimental VIL test.. Acomparison of the speed of the first follower with the lead vehicle is depicted in Figure 9. As shown, the VIL experiment shows that the proposed controller is implementable on the EV using vehicle onboard sensors. The comparison of the average root mean square error (RMSE) of the string of five vehicles is shown in Table I. Leader 
+
+uleader 
+
+> SIL VIL
+
+Follower 
+
+Fig. 8: Configuration of vehicles for experimental testing in scenario I. TABLE I: Comparison of average of position RMSE in scenario I. 
+
+Configuration and headway time Distance RMSE Simulation, b = 0 .5 0.0696 Experiment, b = 0 .5 0.9486 
+
+C. String Stability Evaluation by Simulation A standard drive cycle test was employed to assess the string stability of the designed controller. The U S 06 drive cycle, known for modeling aggressive and rigorous driving, was used to evaluate both string stability and the proposed 70 10 20 30 40 50 60 
+
+> Time (Sec)
+> 0123456789
+> Speed (m/s)
+> Leader Speed
+> Follower Speed
+
+Fig. 9: Comparison of the speeds of the leader and the follower in the experimental testing in scenario I. controller’s performance. The leader’s desired acceleration was set to match the U S 06 speed, based on data from [31]. To analyze the effect of this drive cycle on our proposed controller, the speeds of all vehicles in the CACC with a 0.5-second headway time are shown in Figure 10. Results of the time domain string stability criterion for all of the followers in the CACC with different headway times based on [32] are shown in Figure 11. Based on equation (20) the string stability criteria, 
+
+|| Ωi|| 2, should be less than one and should not increase down the string. As shown, with a 0.2-second headway time, this criterion increases among the string, indicat-ing it cannot guarantee string stability. However, with higher headway times, the string stability criterion does not increase with the number of vehicles, especially for headway times greater than 0.4 seconds, ensuring string stability. At a headway time of 0.5 seconds, the string stability criterion remains within the acceptable limit. To compare, the string stability criteria using a baseline PID-based controller with this drive cycle are investigated and shown in Figure 12. As shown, the values of the string stability criteria increase significantly down the string of vehicles, indicating unstable behavior with this controller. The average time-domain string stability criteria using the 
+
+U S 06 drive cycle are presented in Table II. The proposed CACC guarantee safety and time-domain string stability at a headway of b = 0 .5 s, which is smaller than the 0.6 − 1.5 s minimum reported for stable CACC platoons, enabling higher capacity platoons without com-0 50 100 150 200 250 300 350 400 450 500     
+
+> Time (Sec)
+> -5 0510 15 20 25 30 35 40 45
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 145 150 155 160 165
+> 20 22 24 26
+
+Fig. 10: Speed profile of all vehicles under U S 06 drive cycle test. 2 3 4 5 
+
+> 0.9998 11.0002 1.0004 1.0006 1.0008 1.001 1.0012 1.0014 With 0.1 Seconds Headway Time
+> With 0.2 Seconds Headway Time
+> With 0.4 Seconds Headway Time
+> With 0.5 Seconds Headway Time
+
+Fig. 11: Time-domain string stability for the proposed controller with different headway times, b, using the U S 06 
+
+drive cycle. 2 3 4 5
+
+> 11.2 1.4 1.6 1.8 2
+
+Fig. 12: Time-domain string stability with the baseline controller using the U S 06 drive cycle. promising platoon stability and energy efficiency [33]–[36]. D. Energy Efficiency and String Stability Evaluation (Sce-nario II) In this test scenario, the acceleration input for the first vehicle (leader) is shown in Figure 13. A baseline PID-based CACC was enhanced to compare the effects of the designed controller on string stability and en-ergy efficiency. This scenario was chosen to measure the impact of different controllers on string stability and energy efficiency. Therefore, string stability criteria were investigated through simulation, and experiments assessed energy efficiency. 1) Simulation results for scenario II: The speed profiles of five vehicles in the simulation with the baseline controller and our proposed controller with 
+
+b = 0 .5 are shown in Figure 14. To investigate this more, the string stability measure was studied using this scenario with these two controllers, this has been shown in Figure 15. As shown, in our proposed controller, the string stability criteria decrease down the string of vehicles, whereas the baseline controller shows an increase in the string stability criteria. 2) Experimental results for scenario II: To assess the experimental effect of the proposed controller on energy efficiency and string stability, we considered a string of five vehicles. The leader and the first three vehicles were modeled in a software-in-the-loop 8
+
+TABLE II: Comparison of average time-domain string stability criteria under the U S 06 drive cycle simulation. 
+
+Controller Average time-domain string stability criteria Proposed controller 
+
+b = 0 .1 1.0005 
+
+b = 0 .2 1.0003 
+
+b = 0 .5 0.9999 Baseline controller b = 0 .5 1.3638 0 50 100 150 
+
+> Time (Sec)
+> -0.2 -0.1 00.1 0.2 0.3 0.4 0.5 0.6
+> Acceleration (m/s 2)
+
+Fig. 13: Desired acceleration input for the lead vehicle in scenario II. (SIL) environment, while the last vehicle was modeled in a VIL environment. This setup is depicted in Figure 16. The comparison of velocity profiles of the string of vehicles under this scenario in the experimental setup is shown in Figure 17. The Real-time power data, P (t), was obtained from vehicle sensors, measuring total power flow to the power management system and recorded in CAN messages. For test scenario II, the power consumption profile of both the baseline and proposed controllers is shown in Figure 18. In this plot, positive power values indicate energy consumption from the vehicle’s energy manage-ment system, while negative values correspond to RBS, where energy is recaptured and fed back into the power management system. Since vehicle accessory systems, such as air conditioning, always consume a constant amount of power, we can assume that the difference in total net energy consumed between these two graphs illustrates how our proposed controller, which provides better string stability, enhances energy efficiency. The calculated EC
+
+values, derived from the data in Figure 18 using (21), are reported in Table III which reveals that improving string stability can reduce energy consumption by up to 38.5%. TABLE III: Comparison of average time-domain string stability criteria and the average energy consumed in a platoon of 10 vehicles with the proposed controller and the baseline controller, based on the second scenario. 
+
+Controller Average time-domain string stability criteria Average energy consumed (KJ) Proposed Controller 0.9921 421.07 Baseline controller 0.9979 684.75 
+
+Platoon energy saving is a key metric. Prior CACC studies report about 4–10% fuel reduction for conventional vehicles and 10 –20% energy savings for EV platoons by 0 50 100 150   
+
+> Time (Sec)
+> 0123456789
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 90 95 100
+> 7.5 88.5
+
+(a) 0 50 100 150   
+
+> Time (Sec)
+> 0123456789
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 65 70 75
+> 7.2 7.4 7.6 7.8 88.2 8.4
+
+(b) 
+
+Fig. 14: Speed profiles of five vehicles in simulation in scenario II with (a) the baseline controller, (b) the proposed controller. 2 3 4 5 
+
+> 0.993 0.9935 0.994 0.9945 0.995 0.9955 0.996 0.9965 Baseline Controller
+> The Proposed Controller
+
+Fig. 15: Comparison of time-domain string stability crite-ria for scenario II. suppressing speed oscillations [33], [37]–[39]. In our results (Table III), the proposed controller shows total energy 38.5% improvement. For a representative 10 EV platoon, this corresponds to the same system-level reduction, which is more than typical CACC gains reported in the litera-ture. VI. Conclusion and Future Works In CACC, the controller algorithm is crucial for en-suring string stability, energy efficiency, and robustness to fluctuations. However, existing models lacks accurately capture the distinct acceleration and regenerative braking dynamics of EVs, which are critical for precise control 9Follower 4 Follower 3 Follower 2 Follower 1 Leader 
+
+> uleader u1u2u3
+> SIL SIL SIL SIL VIL
+
+Fig. 16: Configuration of vehicle string for experimental testing in scenario II 0 50 100 150      
+
+> Time (Sec)
+> 0123456789
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 60 65 70 75 80 85
+> 7.5 88.5
+
+(a) 0 50 100 150     
+
+> Time (Sec)
+> 0123456789
+> Speed (m/s)
+> Leader Speed
+> First Follower Speed
+> Second Follower Speed
+> Third Follower Speed
+> Forth Follower Speed
+> 60 65 70 75 80
+> 7.5 88.5
+
+(b) 
+
+Fig. 17: Velocity profiles of five vehicles in experiment test scenario II with (a) the baseline controller (b) the proposed controller and energy optimization. To address this limitation, we proposed a new third-order EV model derived from real-world experimental data, explicitly distinguishing between motoring and regenerative braking phases. Based on this refined model, we developed a Lyapunov-based controller. The designed controller was shown to stabilize a string of at least five vehicles with a relatively small headway time in both simulations and experiments, thereby reducing the total energy consumption up to 38.5 %. As the same CACC law governs all of vehicles, the per-vehicle energy reduction observed experimentally can be interpreted as the average saving per vehicle in a CACC platoon, affecting the entire platoon energy savings. It also high-lighted that time-domain string stability analysis can show how the controller aids in energy efficiency, with lower average string stability criteria indicating lower energy consumption. This analysis can be based on standard 0 50 100 150 
+
+> Time (Sec)
+> -2 0246810 12 14
+> Power (Kw)
+> The Proposed Controller
+> Baseline Controller
+
+Fig. 18: Comparison of average time-domain string sta-bility criteria and total energy consumption between the proposed controller and the baseline controller, based on scenario II drive cycles, like U S 06 , or any proposed cycle representing speed variations. Despite EVs being less impacted by speed fluctuations due to regenerative braking, such fluctuations can still lead to significant energy perturbations. Using the simulation method presented and evaluated in this paper, we have established a test and verification method for tuning headway time to ensure both string stability and energy efficiency. One of the possible future works for this study could be investigating the effect of disturbances, like communica-tion delay and noise in measuring data, and on necessary headway time for string stability and ensuring energy efficiency. Additionally, one can extend our analysis by deriving explicit frequency-domain conditions for string stability to gain deeper insights into the impact of control parameters on disturbance propagation in EV platoons. Appendix Stability Analysis A. Preliminary Calculations To prove stability, it is essential to first derive the relationships for the error dynamics, which will be utilized in the stability proof. Taking the time derivative of the position error in (18) results 
+
+˙ei1 = ri1 − αi1 ei1 , (22) time derivative of auxiliary errors from (19) are obtained as 
+
+˙ri1 = ri2 − αi2 ri1 , (23) and 
+
+˙ri2 = ¨ ri1 + αi2 ˙ri1 , (24) substituting (18) and (7) in (24) results 
+
+˙ri2 = ( ˙ ei3 + αi1 ei3 ) + αi2 (ei3 + αi1 ˙ei1 ), (25) and substituting (23), yields 
+
+˙ri2 = ˙ ei3 + αi1 ei3 + αi2 ei3 + αi2 αi1 ri1 − αi2 α2 
+
+> i1
+
+ei1 , (26) 10 
+
+substituting ˙ei3 from (15) and more simplification make (26) as 
+
+˙ri2 = − ϕi + ei3 (αi1 + αi2 ) − Pi + βi−1ui−1
+
++ αi2 αi1 ri1 − αi2 α2 
+
+> i1
+
+ei1 , (27) substituting Pi from (17) results 
+
+˙ri2 = −Ciβiri2 − ri1 . (28) B. Notion of Solution, and Well-Posedness The longitudinal EV dynamic in (1) is piecewise smooth and depend on the sign of the control input ui through the coefficients γi(ui) and βi(ui). As sgn (ui) introduces a discontinuity on the switching surface {ui = 0 }, so the closed-loop system is a switched (nonsmooth) system. On each region where ui(t)̸ = 0 , the right hand side (RHS) of (1) is smooth and locally Lipschitz in the state. At 
+
+ui = 0 , we interpret the dynamics in the sense of Filippov differential inclusions, i.e., ˙y ∈ F (y, t ), where F denotes the Filippov set-valued map associated with the RHS of (1). On domain where ui̸ = 0 , Filippov solutions coincide with classical Carathéodory solutions [40]. While, on the switching surface ui = 0 , the discontinuity in sgn (ui)
+
+is considered as the convexification described in Filip-pov’s construction [41], leading to absolutely continuous trajectory that may slide along the surface if needed. The generalized time derivative ˙˜VL used in the stability analysis is therefore understood in the Filippov sense. Using set-valued operator K[·] for non-smooth functions. This is precisely the framework adopted for the proof of stability, where K[sgn (ui)] = SGN( ui) ⊆ [−1, 1] is used to bound ˙˜VL on and near the switching surface. Lemma 1 (Absence of Zeno switching). Consider the closed-loop dynamics of vehicle i given by (1), with the control input ui(t) satisfying Remark 1. Then, on any finite time interval [t0, t f ], the switching signal σi(t) := 
+
+sgn (ui(t)) ∈ {− 1, 0, +1 } can switch only finitely many times. In particular, the closed-loop system admits no Zeno executions. Proof. Fix a finite interval [t0, t f ] and omit the subscript 
+
+i. Consider two consecutive zero crossings tk < t k+1 of u(t)
+
+such that sgn (u) changes over (tk, t k+1 ). By Remark 1(ii), there exists t⋆ ∈ (tk, t k+1 ) with |u(t⋆)| ≥ δ. Without loss of generality, assume u(t⋆) ≥ δ; the case u(t⋆) ≤ − δ
+
+is analogous. Using the mean value theorem and the derivative bound | ˙u(t)| ≤ L, we obtain 
+
+t⋆ − tk ≥ |u(t⋆) − u(tk)|
+
+L = |u(t⋆)|
+
+L ≥ δL ,
+
+since u(tk) = 0 . Similarly, because u(tk+1 ) = 0 , we have 
+
+tk+1 − t⋆ ≥ |u(t⋆) − u(tk+1 )|
+
+L ≥ δL .
+
+Therefore, 
+
+tk+1 − tk ≥ 2δL = : κmin > 0, (29) where, κmin ∈ R is minium dwell time. Equation (29) shows that each change in sgn (u(t)) requires at least 
+
+κmin units of time. Hence, on any finite interval [t0, t f ]
+
+the number of possible sign changes is upper bounded by (tf − t0)/κ min and is therefore finite. Consequently, the switching signal σi(t) cannot exhibit infinitely many switches in finite time, and “Zeno” executions are ex-cluded. ■
+
+C. Proof of Stability Let the following be the sufficient conditions for the stability 
+
+αi2 > ε1i
+
+2 , αi1 > 12ε1i
+
+, Ci > 0, (30) where ε1i ∈ R+ denotes a positive known constant. Theorem 1. For the dynamic model described in (1), the controller developed in (17) and (16), ensures asymptot-ically tracking, which means that the tracking errors in the Lyapunov functions converge to zero, given that the control gains satisfy the conditions in (30). Proof. Let y ≜ [ei1 ri1 ri2 ]T ∈ D ⊆ R3, and VL : D ×
+
+[0 , +∞) → R be a Lipschitz continuous, regular, positive definite function defined as 
+
+VL = 12 e2 
+
+> i1
+
++ 12 r2 
+
+> i1
+
++ 12 r2 
+
+> i2
+
+, (31) which can satisfies the following inequalities 
+
+U1(y) ≤ VL(y) ≤ U2(y), (32) where U1(y) and U2(y) are continuous positive definite functions, defined as 
+
+U1(y) = 12 ∥y∥2,U2(y) = ∥y∥2.
+
+Since the dynamic model in (1) is discontinuous in the set {(y, t ) | u = 0 }, the existence and stability of solutions cannot be analyzed using classical methods. To address this, we employ the Filippov differential inclusion, 
+
+˙y ∈ F (y, t ) where y is absolutely continuous, and F (·) is Lebesgue measurable and locally bounded. Under Filip-pov’s framework, a generalized Lyapunov stability theory can be applied to establish the robust stability [42]. For almost all t ∈ [t0, t f ], the generalized time derivative of (31) exists almost everywhere (a.e.), which can be written as ˙VL(y) ∈ a.e. ˙˜VL(y), (33) ensuring that stability can be rigorously analyzed even in the presence of discontinuities in the system dynamics. Therefore, 
+
+˙˜VL(y) = ∩
+
+> χ∈∂V L(y)
+
+χT K[ ˙ei1 ˙ri1 ˙ri2
+
+]T (34) where 
+
+K[J]( s, t ) ≜ ∩
+
+> δ> 0
+
+∩ 
+
+> R(N)=0
+
+co J(B(s, r ) − N, t ),
+
+where ∩  
+
+> R(N)=0
+
+represents the intersection of all sets N of Lebesgue measure zero, co denotes the convex closure, and 11 
+
+B(s, r ) is a ball of radius r centered at s. Considering the fact that VL(y) is a Lipschitz continuous regular function the operator is applicable. Therefore, we can simplify the RHS of (34) as 
+
+˙˜VL(y) = [ei1 ri1 ri2
+
+]K[ ˙ei1 ˙ri1 ˙ri2
+
+]T (35) Utilizing the calculus framework for K[.] as presented in [43], we can express (35) as follows 
+
+˙˜VL(y) ⊂ ei1 ˙ei1 + ri1 ˙ri1 + ri2 ˙ri2 . (36) using time derivatives of all errors in (22), (23), and (28) we can write (36) as 
+
+˙˜VL(y) ⊂ ei1 (ri1 − αi1 ei1 ) + ri1 (ri2 − αi2 ri1 )+ ri2 (−Ciβiri2 − ri1 ), (37) simplification of (37) gives 
+
+−αi2 r2 
+
+> i1
+
+− Ciβir2 
+
+> i2
+
+− αi1 e2 
+
+> i1
+
++ ei1 ri1 . (38) By using (1), the expression in (38) can be written as 
+
+˙˜VL(y) ⊂ − αi2 r2 
+
+> i1
+
+− αi1 e2
+
+> i1
+
+− Ci( 1 + K[sgn (ui)] 2 βi1 + 1 − K[sgn (ui)] 2 βi2 )r2
+
+> i2
+
++ ei1 ri1 ,
+
+(39) where K[sgn (ui)] = SGN (ui) can be calculated as [43] SGN (ui) = 
+
+
+
+1, if ui > 0,
+
+[−1, 1] if ui = 0 ,
+
+−1, if ui < 0.
+
+Simplification of (39) yields 
+
+˙˜VL(y) ⊂ − αi2 r2 
+
+> i1
+
+− αi1 e2 
+
+> i1
+
++ ei1 ri1
+
+− Ci
+
+2
+
+(
+
+(βi1 + βi2 ) + ( βi1 − βi2 )SGN (ui)
+
+)
+
+r2 
+
+> i2
+
+.
+
+(40) Defining δi ≜
+
+(
+
+(βi1 + βi2 ) + ( βi1 − βi2 )SGN (ui)
+
+)
+
+, we can write (40) as 
+
+˙˜VL(y) ⊂ − αi2 r2 
+
+> i1
+
+− αi1 e2 
+
+> i1
+
++ ei1 ri1 − δiCi
+
+2 r2 
+
+> i2
+
+. (41) Remark 2. As mentioned in Section II, βi1 , β i2 ≥ 0,therefore we can write 
+
+δi ≥ ((βi1 + βi2 ) − | βi1 − βi2 |) > 0. (42) By defining mi ≜ 12 (( βi1 + βi2 ) − | βi1 − βi2 |) and noting from Remark 2 that mi is a positive constant, we can then apply (41) to obtain 
+
+˙˜VL ≤ − αi2 ∥ri1 ∥2 − αi1 ∥ei1 ∥2 + ∥ei1 ∥ ∥ ri1 ∥− Cimi ∥ri2 ∥2 . (43) Young’s Inequality is applied to select terms in (43) as 
+
+∥ei1 ∥ ∥ ri1 ∥ ≤ 12ε1i
+
+∥ei1 ∥2 + ε1i
+
+2 ∥ri1 ∥2 , (44) using (44), the inequality in (43) can be written as 
+
+˙˜VL(y) ≤ − αi2 ∥ri1 ∥2 − Cimi ∥ri2 ∥2 − αi1 ∥ei1 ∥2
+
++ 12ε1i
+
+∥ei1 ∥2 + ε1i
+
+2 ∥ri1 ∥2 . (45) Simplifying (45) results 
+
+˙˜VL(y) ≤ − (αi2 − ε1i
+
+2 ) ∥ri1 ∥2 − (αi1 − 12ε1i
+
+) ∥ei1 ∥2
+
+− Cimi ∥ri2 ∥2 .
+
+(46) Satisfying the sufficient conditions in (30) and Remark 2, yields finding U (y) ≜ λ|| y|| 2 such that 
+
+˙˜VL(y) ≤ − U (y) = −λ ∥y∥2 , (47) where λ = min {αi2 − ε1i 
+
+> 2
+
+, α i1 − 12ε1i
+
+, C imi}. The inequality in (47) will lead to 
+
+˙VL(y) ≤ − U (y), ∀ ˙V (y) a.e. 
+
+∈ ˙˜V (y) (48) which results in 
+
+˙VL(y) ≤ − λ ∥y∥2 , (49) by considering bonds in (32), we can write (49) as 
+
+˙VL(y) ≤ − λV L (50) By designing the controller is derived from (17) and considering (50), which means ˙V is made negative definite, ensuring ei1 , r i1 , and ri2 converges to zero, thus achieving asymptotic tracking. 
+
+■
+
+Remark 3 (Filippov solutions and stability of the switched dynamics). Under Remark 1, the closed-loop EV dynamics define a Filippov differential inclusion as in with a locally bounded, measurable right-hand side. Together with the non-Zeno property established in Lemma 1, this guar-antees the existence of complete, absolutely continuous Filippov solutions for all initial conditions of interest. The generalized derivative ˙˜VL, is computed with respect to this Filippov inclusion, using K[sgn (ui)] = SGN( ui) on the switching surface. Therefore, Theorem 1 establishes asymptotic tracking and time-domain string stability for all Filippov solutions of the switched EV dynamics, while ensuring that no Zeno or chattering behavior arises from the regenerative braking switching mechanism. acknowledgment Partial support for this research was provided by the National Science Foundation under Grant No. ECCS-EPCN-2241718. Any opinions, findings, conclusions, or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the sponsoring agency. 12 
+
+References 
+
+[1] J. Shen and L. Du, “Sequential feasibility and constraint properties of cav platoons under various vehicle dynamics and safety distance constraints,” Transportation research part B: methodological, vol. 185, p. 102966, 2024. [2] M. Nourinejad, S. Bahrami, and Y. Yin, “Optimal investment in driving automation: Individual vs. cooperative sensing,” Trans-portation research part B: methodological, vol. 174, p. 102777, 2023. [3] Y. Zhang, R. Ma, D. Zhao, Y. Huangfu, and W. Liu, “A novel energy management strategy based on dual reward function q-learning for fuel cell hybrid electric vehicle,” IEEE Transactions on Industrial Electronics, vol. 69, no. 2, pp. 1537–1547, 2021. [4] Y. Zhang, J. Chen, T. You, Y. Zhang, Z. Liu, and C. Du, “Energy-aware optimization of connected and automated elec-tric vehicles considering vehicle-traffic nexus,” IEEE Transac-tions on Industrial Electronics, vol. 71, no. 1, pp. 282–293, 2023. [5] C. R. Hung, S. Völler, M. Agez, G. Majeau-Bettez, and A. H. Strømman, “Regionalized climate footprints of battery electric vehicles in europe,” Journal of Cleaner Production, vol. 322, p. 129052, 2021. [6] H. Faghihian, J. Holland, and A. Sargolzaei, “Chapter 1 -introduction to autonomous vehicles,” in Handbook of Power Electronics in Autonomous and Electric Vehicles (M. H. Rashid, ed.), pp. 1–16, Academic Press, 2024. [7] Y. Zhang, Y. Zhang, Z. Ai, Y. L. Murphey, and J. Zhang, “Energy optimal control of motor drive system for extending ranges of electric vehicles,” IEEE Transactions on Industrial Electronics, vol. 68, no. 2, pp. 1728–1738, 2019. [8] H. Faghihian and A. Sargolzaei, “Energy efficiency of connected autonomous vehicles: A review,” Electronics, vol. 12, no. 19, p. 4086, 2023. [9] H. Faghihian, J. Holland, and A. Sargolzaei, “Introduction to autonomous vehicles,” in Handbook of Power Electronics in Autonomous and Electric Vehicles, pp. 1–16, Elsevier, 2024. [10] Y. Zhang, Z. Ai, J. Chen, T. You, C. Du, and L. Deng, “Energy-saving optimization and control of autonomous electric vehicles with considering multiconstraints,” IEEE Transactions on Cybernetics, vol. 52, no. 10, pp. 10869–10881, 2021. [11] Y. Zhang, Y. Zhang, Z. Liu, J. Chen, T. You, and C. Du, “An eco-cruise control for electric vehicles moving on slope road with constant speed,” Journal of Advanced Transportation, vol. 2021, no. 1, p. 9562560, 2021. [12] Y. Zhang, T. You, J. Chen, C. Du, Z. Ai, and X. Qu, “Safe and energy-saving vehicle-following driving decision-making frame-work of autonomous vehicles,” IEEE Transactions on Industrial Electronics, vol. 69, no. 12, pp. 13859–13871, 2021. [13] P. Ansari-Bonab, J. C. Holland, J. Cunningham-Rush, S. Noei, and A. Sargolzaei, “Secure control design for cooperative adap-tive cruise control under false data injection attack,” IEEE Transactions on Intelligent Transportation Systems, 2024. [14] X. Chen, J. Yang, C. Zhai, J. Lou, and C. Yan, “Economic adaptive cruise control for electric vehicles based on adhdp in a car-following scenario,” IEEE Access, vol. 9, pp. 74949–74958, 2021. [15] Y. Zhang, Y. Bai, M. Wang, and J. Hu, “Cooperative adaptive cruise control with robustness against communication delay: An approach in the space domain,” IEEE Transactions on Intelligent Transportation Systems, vol. 22, no. 9, pp. 5496– 5507, 2020. [16] I. Mahdinia, R. Arvin, A. J. Khattak, and A. Ghiasi, “Safety, energy, and emissions impacts of adaptive cruise control and cooperative adaptive cruise control,” Transportation Research Record, vol. 2674, no. 6, pp. 253–267, 2020. [17] M. Shen, R. A. Dollar, T. G. Molnar, C. R. He, A. Vahidi, and G. Orosz, “Energy-efficient reactive and predictive connected cruise control,” IEEE Transactions on Intelligent Vehicles, vol. 9, no. 1, pp. 944–957, 2023. [18] Y. Shao and Z. Sun, “Robust eco-cooperative adaptive cruise control with gear shifting,” in 2017 American Control Confer-ence (ACC), pp. 4958–4963, IEEE, 2017. [19] B. Besselink and K. H. Johansson, “String stability and adelay-based spacing policy for vehicle platoons subject to dis-turbances,” IEEE Transactions on Automatic Control, vol. 62, no. 9, pp. 4376–4391, 2017. [20] H. Chen, L. Guo, H. Ding, Y. Li, and B. Gao, “Real-time pre-dictive cruise control for eco-driving taking into account traffic constraints,” IEEE Transactions on Intelligent Transportation Systems, vol. 20, no. 8, pp. 2858–2868, 2018. [21] H. Liu, S. E. Shladover, X.-Y. Lu, and X. Kan, “Freeway vehicle fuel efficiency improvement via cooperative adaptive cruise control,” Journal of Intelligent Transportation Systems, vol. 25, no. 6, pp. 574–586, 2021. [22] Y. Bian, Y. Zheng, W. Ren, S. E. Li, J. Wang, and K. Li, “Reducing time headway for platooning of connected vehicles via v2v communication,” Transportation Research Part C: Emerging Technologies, vol. 102, pp. 87–105, 2019. [23] P. Smith and D. Bevly, “Analysis of on-road highway testing for a two truck cooperative adaptive cruise control (cacc) platoon,” tech. rep., SAE Technical Paper, 2020. [24] H. Chen and H. A. Rakha, “Battery electric vehicle eco-cooperative adaptive cruise control in the vicinity of signalized intersections,” Energies, vol. 13, no. 10, p. 2433, 2020. [25] H. Chen, H. A. Rakha, and J. Wang, “Developing and testing a smart city signalized eco-cooperative adaptive cruise control system,” in 2024 IEEE International Conference on Smart Mobility (SM), pp. 275–280, IEEE, 2024. [26] F. Ma, Y. Yang, J. Wang, Z. Liu, J. Li, J. Nie, Y. Shen, and L. Wu, “Predictive energy-saving optimization based on nonlinear model predictive control for cooperative connected vehicles platoon with v2v communication,” Energy, vol. 189, p. 116120, 2019. [27] H. Ma, L. Chu, J. Guo, J. Wang, and C. Guo, “Cooperative adaptive cruise control strategy optimization for electric vehicles based on sa-pso with model predictive control,” IEEE Access, vol. 8, pp. 225745–225756, 2020. [28] S. E. Li, F. Gao, D. Cao, and K. Li, “Multiple-model switching control of vehicle longitudinal dynamics for platoon-level au-tomation,” IEEE Transactions on Vehicular Technology, vol. 65, no. 6, pp. 4480–4492, 2016. [29] H. Faghihian, M. Sarkar, and A. Sargolzaei, “A novel energy-efficient regenerative braking system for electric vehicles,” in SoutheastCon 2024, pp. 1300–1305, 2024. [30] A. Alipour-Fanid, M. Dabaghchian, and K. Zeng, “Impact of jamming attacks on vehicular cooperative adaptive cruise control systems,” IEEE transactions on vehicular technology, vol. 69, no. 11, pp. 12679–12693, 2020. [31] U.S. Environmental Protection Agency, “EPA Vehicle Chassis Dynamometer Driving Schedules (DDS),” 2022. ([Online]. https://www.epa.gov/vehicle-and-fuel-emissions-testing/dynamometer-drive-schedules. (Accessed on: 2023, September 29). [32] A. Alipour-Fanid, M. Dabaghchian, H. Zhang, and K. Zeng, “String stability analysis of cooperative adaptive cruise control under jamming attacks,” in 2017 IEEE 18th International Symposium on High Assurance Systems Engineering (HASE), pp. 157–162, IEEE, 2017. [33] G. Naus, J. Ploeg, M. J. G. van de Molengraft, W. H. Heemels, and M. Steinbuch, “String-stable CACC design and experimental validation: A frequency-domain approach,” IEEE Transactions on Vehicular Technology, vol. 59, no. 9, pp. 4268– 4279, 2010. [34] H. Liu, Y. Liang, Y. Lin, and Y. Wang, “Modified cacc with delay compensation for improved string stability,” IEEE Transactions on Intelligent Transportation Systems, vol. 21, no. 11, pp. 4718–4730, 2020. [35] Y. Zhang, H. Chen, and Z. Cao, “A review of delay-robust cooperative adaptive cruise control,” Transportation Research Part C: Emerging Technologies, vol. 153, p. 104211, 2023. [36] S. E. Shladover, C. Nowakowski, X.-Y. Lu, and R. Ferlis, “Cooperative adaptive cruise control: Definitions and operating concepts,” Transportation Research Record, vol. 2489, no. 1, pp. 145–152, 2015. [37] V. Milanés, J. Perez, J. Godoy, and E. Onieva, “Automated on-ramp merging system using cooperative ACC,” IEEE Trans-actions on Intelligent Transportation Systems, vol. 15, no. 4, pp. 1641–1653, 2014. [38] X. Zhao, Y. Guo, S. Feng, Y. Zhang, and L. Li, “Energy-efficient control of electric vehicle platoons,” Applied Energy, vol. 259, p. 114192, 2020. [39] X. Liu, R. Tan, M. Liu, Y. Wang, and M. F. N. Riaz, “Cooper-ative adaptive cruise control for electric vehicles considering 13 
+
+regenerative braking characteristics,” IEEE Transactions on Intelligent Transportation Systems, vol. 23, no. 7, pp. 8678– 8690, 2022. [40] D. Liberzon, Switching in Systems and Control. Boston: Birkhäuser, 2003. [41] A. F. Filippov, Differential Equations with Discontinuous Righthand Sides. Dordrecht: Kluwer Academic Publishers, 1988. [42] A. F. Filippov, Differential equations with discontinuous right-hand sides: control systems, vol. 18. Springer Science & Business Media, 2013. [43] B. Paden and S. Sastry, “A calculus for computing filippov’s differential inclusion with application to the variable structure control of robot manipulators,” IEEE transactions on circuits and systems, vol. 34, no. 1, pp. 73–82, 1987.

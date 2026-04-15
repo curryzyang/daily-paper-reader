@@ -1,0 +1,1424 @@
+Title: Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training
+
+URL Source: https://arxiv.org/pdf/2604.08357v2
+
+Published Time: Mon, 13 Apr 2026 00:36:07 GMT
+
+Number of Pages: 20
+
+Markdown Content:
+# Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training 
+
+Constantin Le Cle¨ ı 1 Nils Thuerey 1 Xiaoxiang Zhu 1
+
+## Abstract 
+
+Conditional Diffusion Models are powerful sur-rogates for emulating complex spatiotemporal dynamics, yet they often fail to match the accu-racy of deterministic neural emulators for high-precision tasks. In this work, we address two crit-ical limitations of autoregressive PDE diffusion models: their sub-optimal single-step accuracy and the prohibitive computational cost of unrolled training. First, we characterize the relationship between the noise schedule, the reconstruction error reduction rate and the diffusion exposure bias, demonstrating that standard schedules lead to suboptimal reconstruction error. Leveraging this insight, we propose an Adaptive Noise Sched-ule framework that minimizes inference recon-struction error by dynamically constraining the model’s exposure bias. We further show that this optimized schedule enables a fast Proxy Unrolled Training method to stabilize long-term rollouts without the cost of full Markov Chain sampling. Both proposed methods enable significant im-provements in short-term accuracy and long-term stability over diffusion and deterministic base-lines on diverse benchmarks, including forced Navier-Stokes, Kuramoto-Sivashinsky and Tran-sonic Flow. 
+
+## 1. Introduction 
+
+Machine learning-based emulators have achieved perfor-mance comparable to traditional numerical solvers for fluid dynamics tasks, operating at a fraction of the computational cost. Among these, Diffusion Models have recently demon-strated strong performance while resolving key limitations of deterministic approaches, such as instability (Kohl et al., 2023; R ¨uhling Cachay et al., 2023; Lippe et al., 2023), and over-smoothing over long simulation horizons (Liu et al., 2025). Beyond stability, they allow to obtain uncertainty 
+
+> 1
+
+Technical University of Munich, Munich, Germany. Corre-spondence to: Constantin Le Cle¨ ı <constantin.le.clei@tum.de >.
+
+Preprint. April 13, 2026. 
+
+estimates (Liu and Thuerey, 2024), can be used flexibly across tasks (Shysheya et al., 2024) for super-resolution and forecasting, and can sample multiple consistent scenarios (Price et al., 2023) However, Diffusion Models typically lag behind determinis-tic baselines in terms of pure reconstruction accuracy, which can lead to biased estimates despite their probabilistic for-mulation. Furthermore, because their sampling process requires tens to hundreds of function evaluations, standard stabilization techniques, such as multi-step unrolled training, are computationally prohibitive to apply directly. In this work, we argue that these limitations are intrinsically linked through the phenomenon of Diffusion Exposure-Bias 
+
+(Li et al., 2023). This refers to the performance drop caused by the discrepancy between the ground-truth noisy targets seen during training and the estimated noisy states gener-ated via ancestral sampling at inference. In the case of spatio-temporal forecasting, we demonstrate that standard conditional diffusion models suffer from this bias and obtain a sub-optimal error, mainly because their noise schedules are not designed to align the rate of error reduction with the intrinsic model capacity and task difficulty . In particular, we make the following contributions: • We define the Reconstruction Exposure-Bias , a special case of exposure-bias, which denotes the discrepancy between intermediate reconstruction errors during in-ference and training. We experimentally show that the main driver of this bias is the rate of decrease of the reconstruction error as a function of the noise level. • We propose a novel Adaptive Scheduling algorithm that treats schedule design as a final noise-level minimiza-tion problem under the constraint that the model stays within stability at every denoising step, thus jointly optimizing the Final Reconstruction Error and the Re-construction Exposure-Bias • Connection between the exposure-biases : Reducing the diffusion exposure-bias naturally leads to a fast in-distribution proxy for the full diffusion process, only requiring a few steps to provide an accurate sample which can be used for Unrolled training, therefore re-1
+
+> arXiv:2604.08357v2 [cs.LG] 10 Apr 2026 Bias-Constrained Diffusion Schedules for PDE Emulations
+
+ducing simulation exposure-bias. • Our proposed adaptive schedule systematically re-duces first-step reconstruction error, while the fast proxy unrolled-training drastically mitigates artifact-ing effects, leading to an improvement multiple or-ders of magnitude in Fr ´echet Spectral Distance on Kol-mogorov turbulent flow (see Table 1). 
+
+## 2. Related Work 
+
+Diffusion for fluid flows Diffusion models (Ho et al., 2020; Sohl-Dickstein et al., 2015) have been shown to perform well for autoregressively generating videos (Ho et al., 2022), naturally expanding to other spatio-temporal tasks such as weather forecasting (Price et al., 2023) or time-series (Shen et al., 2024). In the context of fluid dynamics, there have been multiple applications : (Kohl et al., 2023) demonstrated that diffusion models can pre-dict fluid states over extended horizons while preserving both sample quality and temporal stability. For fluid-flow reconstruction, (Shu et al., 2023) leveraged DDPMs for turbulent flow super-resolution, accurately reconstructing high-fidelity fields from low-resolution inputs, while (Rozet and Louppe, 2023) relied on score-based generative models for reconstruction. For 3D turbulent flows, (Lienen et al.) achieved fast spatio-temporal prediction. (Liu et al., 2025) merged the time and diffusion axis to produce fast physically plausible samples on very long horizons. 
+
+Diffusion Hyperparameters Noise schedules are a cen-tral component of diffusion models, determining the rate of information destruction and the weighting of the learn-ing objective (Kingma et al., 2021). The design of these schedules has evolved from heuristic linear and cosine for-mulations (Ho et al., 2020; Nichol and Dhariwal, 2021) to principled parameterizations based on the Signal-to-Noise Ratio (SNR) (Kingma et al., 2021; Choi et al., 2022) and the continuous noise level formulations of the EDM frame-work (Karras et al., 2022). However, these schedules are predominantly optimized for perceptual fidelity, prioritiz-ing regimes where visual features emerge. This focus is ill-suited for high-precision fluid dynamics tasks, where the objective is not only to generate physically plausible fields, but also to remain tightly correlated with a specific ground-truth trajectory. In particular, (Lippe et al., 2023) has shown that schedules that focus on very low noise-levels tend to perform well on turbulence tasks. 
+
+Exposure bias in diffusion models. This phenomenon arises from the mismatch between training, where the model sees ground-truth noisy data, and sampling, where it de-noises its own predictions, causing errors to accumulate along the reverse trajectory. Different method have been developed to mitigate this effect, including scaling the pre-dicted noise (Ning et al., 2023), shifting sampling timesteps (Li et al., 2023) or adding a regularization term in the dif-fusion loss (Daras et al., 2023). For PDE simulations how-ever, the target posterior is highly concentrated, unlike the broad distributions typical of unconditional image genera-tion. Consequently, this regime requires a tailored frame-work to address its specific constraints. 
+
+External Loss terms and Unrolled Training Constrain-ing the output of diffusion models has become an active area of research, particularly through guidance mechanisms (Bansal et al., 2023; Ho and Salimans, 2022). In the con-text of trajectory generation, these constraints serve a dual purpose: facilitating accurate autoregressive predictions and improving robustness to error accumulation during unrolled training. In fluid dynamics tasks, physical consistency losses are typically enforced by approximating the clean output via DDIM shortcuts (Bastek et al., 2024) or linear interpolation (Amor ´os-Trepat et al., 2026). However, such approxima-tions are insufficient for unrolled training; they lack the fidelity required to mimic the model’s actual inference be-havior. Consequently, the model fails to learn how to correct its own generated artifacts, potentially leading to gradient in-accuracies. Specialized strategies to stabilize autoregressive diffusion have also emerged : (Chen et al., 2024) condition the model on noise-corrupted histories, while (Huang et al., 2025) relies on cached prior predictions rather than ground-truth. Alternative strategies for estimating the final output include Consistency Models (Song et al., 2023; Stock et al., 2025) or diffusion shortcuts (Shehata et al., 2025). 
+
+## 3. Schedule, Reconstruction Error, and Exposure-Bias 
+
+3.1. Background: Conditional Diffusion Models for Autoregressive Fluid Simulations 
+
+For Fluid Dynamics tasks, our goal is to construct a neural operator Mθ that emulates the ground-truth time evolution of a fluid. Given an initial condition x0, we approximate the subsequent trajectory {x1, . . . , xK } via autoregressive estimates: 
+
+ˆx1 = Mθ (x0), (1) 
+
+ˆxk = Mθ (ˆ xk−1) ∀k ∈ { 2, . . . , K }. (2) Conditional Denoising Diffusion Probabilistic Models (CD-DPMs) learn the conditional distribution p(xk+1 | xk) by reversing a gradual noise-addition process. The sampling op-erator Mθ iteratively refines a noise sample yT ∼ N (0, I)
+
+into a prediction ˆxk+1 conditioned on the previous state 
+
+xk. A broader introduction can be found in Appendix A. To simplify notation for the remainder of this section, we 2Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+denote the condition as x and the target as y. We adopt the 
+
+ϵ-prediction formulation for the diffusion process, where at each step a denoiser ϵθ predicts the Gaussian noise added to the target y = y0. The reverse process starts by sampling 
+
+ˆyT ∼ N (0, I), and the following denoising steps are given by: 
+
+ˆyt−1 = ˜ μt(ˆ yt, ϵθ (ˆ yt, x, σ t)) + 
+
+q
+
+˜βt ϵt−1, (3) where t ∈ { 1, . . . , T }, σt ≜ √1 − ¯αt is the noise level at time t, ϵt ∼ N (0, I), and the posterior mean and variance are: 
+
+˜μt(yt, ϵθ ) = 1
+
+√αt
+
+
+
+yt − βt
+
+σt
+
+ϵθ
+
+
+
+, (4) 
+
+˜βt = 1 − ¯αt−1
+
+1 − ¯αt
+
+βt. (5) The model is trained to minimize the reconstruction loss: 
+
+Ldiff (θ) = Ex,y,t, ϵ
+
+∥ϵθ (˜ yt, x, σ t) − ϵ∥2 , (6) where ϵ ∼ N (0, I) and ˜yt = √¯αty + σtϵ is the noisy ground-truth target. Given any noisy input yt at noise level 
+
+σt, the neural estimate of the clean signal is: 
+
+yest (yt, x, σ t) = yt − σtϵθ (yt, x, σ t)
+
+√¯αt
+
+. (7) During training, this is evaluated on the ground-truth noisy target ˜yt; during inference, on the sampling iterate ˆyt.Throughout this work, we use the following simplified one-step transition as a practical approximation to the full DDPM posterior (3): 
+
+ˆyt−1 = √¯αt−1 yest (ˆ yt, x, σ t) + σt−1 ϵt (8) i.e., the forward noising process applied to the predicted clean signal, bypassing the explicit dependence on ˆyt in the mean. In the rest of this work, we will discard the dependency of x and σt in yest (·) to improve readability. 
+
+3.2. Problem Definition: Minimizing Reconstruction Error 
+
+While metrics like FID assess distributional quality, preci-sion tasks such as PDE modeling require minimizing the specific trajectory error relative to the ground truth. In this setup, we aim to identify the schedule that leads to the op-timal reconstruction error. We define the Optimal-Error Schedule S∗ as the configuration that minimizes the final inference reconstruction error: 
+
+S∗ = argmin 
+
+> {S}
+
+Ex,y,ϵ
+
+∥M θ∗(S)(x) − y∥ , (9) where θ∗(S) denotes the model parameters converged via (6) under schedule S. In the following, we fix a trained model and a pair (x, y), and omit these dependencies from the notation; all quantities are implicitly functions of (x, y),and θ is reintroduced from Proposition 3.4 onwards where model comparisons are needed. To analyze how the sched-ule influences (9), we first define the concept of reconstruc-tion exposure-bias: 
+
+Definition 3.1 (Clean-Input vs. Inference-Input Error ).
+
+The Clean-Input Error measures prediction error when the state input is the noised ground-truth state ˜yt:
+
+Eclean (t) = Eϵ∥yest (˜ yt) − y∥
+
+The Inference-Input Error measures error when the state input is the ancestor-sampling state ˆyt:
+
+Einf (t) = Eϵ [∥yest (ˆ yt) − y∥] .
+
+The divergence between these two via the Reconstruction Exposure-Bias (REB): 
+
+REB( t) ≜ Einf (t)
+
+Eclean (t)
+
+3.3. Decomposing the REB: Two-Steps Bias as the Primary Driver 
+
+We now analyze the sources of REB by introducing the 
+
+Two-Steps Bias , isolating the degradation that occurs in a single transition. 
+
+Definition 3.2 (Two-Steps Bias ). Define the two-steps noisy state at time t as renoising the estimate of y obtained from a noised ground-truth state as input at time t + 1 :
+
+ˆy(2 S) 
+
+> t
+
+≜ √¯αt yest (˜ yt+1 ) + σt ϵ, (10) The Two-Steps Bias is defined as the ratio between the error of the second estimate and the clean-input error at time t:
+
+B(2 S)(t) ≜ Eϵ∥yest (ˆ y(2 S) 
+
+> t
+
+) − y∥Eclean (t) (11) The following proposition shows that the REB is dominated by the individual two-steps biases. 
+
+Proposition 3.3 (Re-noising Attenuation ). When esti-mated errors are nearly aligned, the following recursive bound holds: 
+
+REB( t) ≲ B(2 S)(t) + λt REB( t + 1) ,
+
+where λt := ∥Jt∥ · √¯αt · ∥yest (˜ yt+1 )−y∥∥yest (˜ yt)−y∥ . The REB is thus driven by the local two-step bias, and attenuated (resp. am-plified) across steps when λt < 1 (resp. λt > 1). A full bound without the alignment assumption is given in Ap-pendix B. 
+
+3Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+The proof is given in Appendix B, along with a visualization of the impact of the two-steps bias on the total REB for our practical datasets. This motivates enforcing B(2 S)(t) ≤ τ
+
+at each timestep as a practical proxy for controlling the full REB. We further decompose the two-steps bias into two distinct contributions: 
+
+B(2 S)(t) = B(own )(t) + δ(t), (12) 
+
+1. The Own-Prediction Bias B(own ) measures the error am-plification when the model is fed its own prediction instead of the ground-truth noisy input: 
+
+ˆy(own ) 
+
+> t
+
+≜ √¯αt yest (˜ yt) + σt ϵ, (13) 
+
+B(own) (t) ≜ Eϵ∥yest (ˆ y(own ) 
+
+> t
+
+) − y∥Eclean (t) (14) A model is stable at a step t when B(own )(t) ≈ 1, meaning that repeated denoise-renoise iterations introduce no drift from the noised ground-truth state prediction. Conversely, 
+
+B(own )(t) ≫ 1 signals instability. 
+
+2. The Propagation Residual δ(t) > 0 denotes the residual error due to additional error inherited from the step t + 1 .Minimizing B(own ) is a necessary condition for stability. The following result establishes that own-prediction bias directly depends on clean-input error, and that for each noise level there exists a natural stability boundary. 
+
+Proposition 3.4 (Stability Threshold ). Assuming (A1) 
+
+Wiener denoiser structure and (A2) Spectral bias of the neural denoiser (detailed in Appendix C), B(own ) 
+
+> θ
+
+(t) is an increasing function of Eclean  
+
+> θ
+
+(t). In particular, at each noise level σt and for any threshold τ ≥ 1, there exists a critical clean-input error γ(σt, τ ), increasing in σt and decreasing in τ , such that if Eclean  
+
+> θ
+
+(σt) ≤ γ(σt, τ ) then B(own ) 
+
+> θ
+
+(t) ≤ τ .
+
+The proof is given in Appendix C. In other words, at each noise level, there is a minimal clean-input error to be achieved in order for the model to be stable. (A1) does not hold exactly in practice, and (A2) may not be true for all classes of neural networks, however we display the em-pirical correlation between the clean-input error and the own-prediction bias for a diffusion model in Figure 1, on different benchmark datasets (see Section 6.1 for setup). 
+
+3.4. Schedules control Clean-Input Error decrease rate 
+
+In the rest of this work, we will restrict the schedule opti-mization problem to schedules that are stable. Given a small 
+
+τ , we therefore restrict (9) to identifying the Optimal Stable Schedule :
+
+S∗ = argmin 
+
+> {S}
+
+Ex,y
+
+Eclean  
+
+> θ∗(S)
+
+(0)  (15) s.t. ∀t < T, Ex,y
+
+B(2 S)
+
+> θ∗(S)
+
+(t) ≤ τ, 1.8×10 −1 10 ×10 −1                     
+
+> Noise Level σ
+> 10 −4
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> Clean-Input Error  Eclean
+> Kolmo
+> Stability Thresholds
+> γ(σ,1.01 )
+> γ(σ,1.03 )
+> γ(σ,1.05 )
+> γ(σ,1.1)
+> γ(σ,1.15 )
+> 3.2×10 −35×10 −2
+> Noise Level σ
+> 10 −7
+> 10 −6
+> Clean-Input Error  Eclean
+> KS
+> Stability Thresholds
+> γ(σ,1.01 )
+> γ(σ,1.03 )
+> γ(σ,1.05 )
+> γ(σ,1.1)
+
+Figure 1. Stability Thresholds. We train a diffusion model on a log-uniform schedule. For a given training checkpoint, if the own-prediction bias at a given noise level falls in the τ ± 0.05 box, where τ ∈ [1 .01 , .., 1.15] , we report its clean-input error. One sees that Clean-Input Error and Own-Prediction Bias correlate on both datasets. The red crosses correspond to the smallest noise-level for which the model achieves Ex,y B(own ) ≤ τ at convergence, indicating that there is a – data and model-dependent – minimal noise-level where the model can be bias-free. 
+
+The reason is that a model with large REB drifts outside of distribution, leading to unpredictable behaviour and making sub-optimal allocation of model capacity (reducing clean-input error on noise-levels where it cannot be reduced during inference). We therefore expect that the true optimal sched-ule falls in this category. As illustrated in Figure 2, the schedule governs the decay rate of the reconstruction error, directly influencing the final prediction. In the absence of any stability constraint, one could simply set σ0 → 0, making the final denoising task trivially easy ( Eclean (0) → 0). However, this degenerate schedule doesn’t take into account that a larger input error is propagated during inference compared to training. Conse-quently, ˆy0 diverges from ˜y0, leading to high REB. Using the stability threshold, we can formalize this: 4Bias-Constrained Diffusion Schedules for PDE Emulations 10 0                  
+
+> 10 1
+> Schedule Distribution
+> Sampling direction, T= 100
+> LowLevels-Focus
+> Linear
+> Cubic
+> 1e 06
+> 1e 05
+> 1e 03
+> 1e 02
+> MSE  with target
+> clean (0) = 1.2e-06
+> inf (0) = 1.3e-06 clean (0) = 2.6e-06
+> inf (0) = 3.1e-06 clean (0) = 1.7e-06
+> inf (0) = 2.2e-06
+> Clean Input
+> Inference Input
+> 10 110 0
+> Noise-level
+> 1.00
+> 1.05
+> 1.10
+> 1.15
+> own  / clean 10 0
+> 10 1
+> Schedule Distribution
+> LowLevels-Focus
+> Linear
+> Cubic
+> 1e 06
+> 1e 05
+> 1e 03
+> 1e 02
+> MSE  with target
+> clean (0) = 1.2e-06
+> inf (0) = 1.3e-06 clean (0) = 2.6e-06
+> inf (0) = 3.1e-06 clean (0) = 1.7e-06
+> inf (0) = 2.2e-06
+> Clean Input
+> Inference Input
+> 10 110 0
+> Noise-level
+> 1.00
+> 1.05
+> 1.10
+> 1.15
+> own  / clean
+
+Figure 2. Effect of schedule on final reconstruction error : Clean and Inference Input Errors during training. The diffusion sampling direction goes from right (high noise-levels) to left (low noise-levels). Schedules with more weight on low noise-levels obtain a better reconstruction performance early in the denoising process. However they are then unable to reduce the error further compared to schedules that put more focus on low noise-levels. At the end of sampling, schedules with higher clean-input reconstruction error start suffering from REB. 
+
+Proposition 3.5 (Slow Error Decrease Principle ). Under the stability condition of Proposition 3.4, a finite capacity assumption (A1) , and assuming Eclean  
+
+> θ
+
+(σ) is strictly decreas-ing in σ (A2) , the schedule minimizing (15) contains no unnecessary noise levels: every intermediate σk is neces-sary in the sense that removing it would violate the bias constraint, i.e. lead to B(2 S)(k − 1) > τ . In particular, the greedy construction that always takes the largest feasible jump is optimal. 
+
+This follows from the observation that any unnecessary in-termediate step represents wasted capacity that could be reallocated to reduce Eclean  
+
+> θ
+
+(0) (a formal proof is given in Appendix D). Note that the bias constraint need not be tight at each step — it suffices that no larger jump is feasible. Since satisfying the bias constraint is increasingly easy at higher noise levels (as γ(σ, τ ) increases with σ), the sched-ule is naturally coarse at high noise and fine near σ0. This motivates reformulating (15) as minimizing the final noise level σ0 subject to the bias constraint: 
+
+min σ0 s.t. ∀t < T, Ex,y B(2 S) 
+
+> θ
+
+(x, y, t ) ≤ τ (16) 
+
+## 4. Bias-Constrained Schedule Construction via Error Constraints 
+
+Based on decomposition (12), a stable schedule must ensure that the sum of the own-prediction bias B(own ) and the propagation bias δ remain bounded, yielding the following principles: • At every σt in S, clean-input error must be reduced enough to reach stability, i.e. B(own )(t) ≤ τ .• The step size σt+1 − σt must be constrained to limit the propagation bias such that B(2 S)(t) ≤ τ .• Efficient Capacity Allocation: Driving the two-steps bias well below the stability boundary for a given noise-level is wasteful. Capacity should be conserved for lower noise levels. 
+
+4.1. Adaptive Scheduling Algorithm 
+
+Our algorithm contains two stages : an exploration stage, where the stability thresholds are discovered for the task at hand; and a schedule construction phase, where we greedily pick the noise levels such that the 2-steps bias remains bounded by τ at each step. While the ideal τ is 1, a value of τ slightly above 1 allows more flexibility in constructing the schedule and is shown experimentally to still lead to no error accumulation, potentially due to error correction at next step. 
+
+Phase 1: Exploration of Stability Thresholds. We ini-tialize a dense log-uniform exploration schedule σexp =
+
+{σ(1) , . . . , σ (N )} covering [σmin , σ T ] with uniform weight. We train the model on this schedule, periodically evalu-ating B(own )(i) for all active levels. Any level satisfying 
+
+B(own )(i) ≤ τ is solved : we save the corresponding check-point θ∗(σ(i)) and remove σ(i) from the active schedule. Because solved levels are progressively removed, the active schedule shrinks continuously, making later epochs strictly cheaper than earlier ones. The exploration terminates once no new level is solved in a pass, ensuring the total epoch count does not exceed E (the number of epochs required to train a single baseline model to convergence). This yields a set of checkpoints {θ∗(σ)}σ∈σsolved .
+
+Phase 2: Bias-Constrained Schedule Construction. 
+
+Given the solved checkpoints, we construct the final sched-ule greedily, by setting σ0 = min σsolved and proceeding forward: 
+
+σt+1 = max 
+
+n
+
+σ′ ∈ σsolved : B(2 S)
+
+> θ∗(σ′),θ ∗(σt)
+
+(σt, σ ′) ≤ τ
+
+o
+
+,
+
+(17) where B(2 S)
+
+> θ∗(σ′),θ ∗(σt)
+
+(σt, σ ′) denotes the two-steps bias eval-uated using checkpoint θ∗(σ′) for the first denoising step 5Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+and θ∗(σt) for the second. At each step we take the largest feasible jump, directly implementing the slow decrease prin-ciple (Proposition 3.5). This ensures (1) a schedule with the minimal number of diffusion steps and (2) no wasted model capacity on unnecessary intermediate steps. The number of steps T emerges naturally from the construction. This phase requires only forward passes to evaluate two-steps biases between checkpoint pairs (no gradient computation) and is therefore computationally negligible. The algorithm pseudo-code can be found in Appendix G. The model is trained from scratch on the constructed schedule using the standard diffusion loss (6). 
+
+## 5. Proxy Unrolled Training 
+
+Training neural emulators via Teacher Forcing (TF) is no-torious for leading to Simulation Exposure Bias (Schmidt, 2019; Brandstetter et al., 2022b; Chen et al., 2024): during inference, the model must condition on its own past predic-tions ˆxk rather than the ground-truth used in training. Small errors in ˆxk shift the input distribution for subsequent steps, causing errors to accumulate and trajectories to diverge. For fast-inference models, this limitation is typically miti-gated via Unrolled Training (UT) (List et al., 2022), where the model is optimized over a horizon of U autoregressive steps. In the context of diffusion models, a naive unrolling takes the form: 
+
+LUT (θ) = EtUX
+
+> u=1
+
+Ldiff 
+
+ xk+u, M◦uθ
+
+ xk . (18) However minimizing this loss is computationally pro-hibitive, as generating a single step ˆxk+1 = Mθ (ˆ xk) neces-sitates executing the full iterative sampling chain (e.g., T
+
+function evaluations). Therefore obtaining a simple push-forward estimate (Brandstetter et al., 2022b) is intractable, let alone backpropagating through the sampling chain. 
+
+5.1. Estimating the Model’s Output 
+
+In this section, we assume that we have access to a diffusion model with low exposure-bias. We leverage this property for enabling computationally efficient unrolled training. In particular we introduce a Proxy Estimate P(n) 
+
+> θ
+
+, which ap-proximates the full model output using only the final n
+
+denoising steps : 
+
+P(n) 
+
+> θ
+
+(xk, xk+1 ) ≜ Denoise n... 0
+
+ ˜xk+1  
+
+> n
+
+, cond = xk .
+
+(19) Where ˜xk+1  
+
+> n
+
+= √¯αn xk+1 + √1 − ¯αn ϵ. and Denoise n... 0
+
+represents the sequence of n denoising steps from t = n
+
+down to t = 0 .
+
+Faithfulness of the proxy estimate. If the model does not suffer from exposure-bias up to step n, the distribution of latents obtained during sampling ˆxk+1  
+
+> n
+
+∼ pθ
+
+ · | xkn, z
+
+matches the ground-truth forward distribution ˜xk+1  
+
+> n
+
+∼
+
+q  · | xk+1 , and therefore the distribution of P(n) 
+
+> θ
+
+matches that of Mθ . We give an experimental visualization of the accuracy of the gradients in Appendix E. We consequently define the 2-steps proxy unrolled-training loss as: 
+
+LP-UT (θ) = Ek
+
+Ldiff 
+
+ xk, xk+1  +
+
+Ek
+
+Ldiff 
+
+ Pθ (xk, xk+1 ), xk+2  
+
+Although gradient propagation is truncated beyond the n
+
+proxy steps, the use of a high-fidelity estimate provides a precise supervision signal, enabling the model to build resilience to its own prediction and correct potential artifact generation. 
+
+## 6. Experimental Results 
+
+6.1. Experimental Setup Datasets. We evaluate our method on three distinct fluid dynamics datasets representing different physical regimes. Visualizations are provided in Figure 3 
+
+1D Kuramoto-Sivashinsky (KS) (Brandstetter et al., 2022a): Fourth-order nonlinear PDE, which governs flame front propagation and chaotic solidification dynamics. The scalar field u evolves according to ∂τ u + u∂ xu + ∂2
+
+> x
+
+u +
+
+ν∂ 4
+
+> x
+
+u = 0 . Numerical integration is performed on a periodic domain with 256 spatial points and a timestep ∆τ = 0 .2.We use 512 training trajectories of length 140∆ τ and 64 validation/testing trajectories of length 640∆ τ . The models are trained with a step-size of 4∆ τ .
+
+2D Transonic Flow (Tra) (Kohl et al., 2023) : Simulated flow over a cylinder on a 128 ×64 grid. Time evolving fields are 2D velocity u, pressure p, and density ρ. The evaluations assess model performance over R = 60 timesteps. 
+
+2D Kolmogorov Flow (Kolmo) (Rozet and Louppe, 2023) : Incompressible fluid driven by sinusoidal forcing. The sys-tem obeys the Navier-Stokes equations subject to the incom-pressibility constraint ∇ · u = 0 . 800 training trajectories of length 64, and 100 trajectories for validation/testing are sim-ulated, with a spatial resolution of 64 × 64 and ∆τ = 0 .2.
+
+Baselines. We train standard diffusion schedule baselines (Linear, Cosine, Sigmoid) using Teacher-Forcing loss. We further train deterministic U-Net baselines with Teacher-Forcing and Unrolled-Training with U = 2 and U = 8 (for each dataset we report the best performing U-Net training variant). Additionaly, we train PDE-Refiner (Lippe et al., 2023), a variant of diffusion that focuses on very low noise-levels. 6Bias-Constrained Diffusion Schedules for PDE Emulations Transonic (Pressure) Kolmogorov (Vorticity)  
+
+> Time
+> Kuramoto-Sivashinsky (Velocity)
+> 2
+> 1
+> 0
+> 1
+> 2
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> Figure 3. Samples from benchmark datasets
+
+Implementation Details. We use the same standard U-Net architecture with attention mechanisms following (Kohl et al., 2023) for all models (all diffusion models and vanilla U-Net baselines). We employ continuous time-embeddings parameterized by the Signal-to-Noise Ratio (SNR) rather than discrete timesteps. 
+
+Training strategy. The procedure contains two stages: 
+
+(1) Pre-training: We first run the Adaptive Schedule Pro-cedure to obtain a bias-constrained schedule for the given task. 
+
+(2) Proxy Unrolled Fine-tuning: Since diffusion exposure bias is directly correlated with model error through the in-stability threshold, we only use the Unrolled proxy as a fine-tuning stage. This prevents introducing noisy gradients derived from inaccurate proxy estimates during the early phases of training, and saves computation time. We set the number of proxy steps to n = 1 .
+
+Computational Cost & Hyperparameters. Each individ-ual training run uses the same number of epochs E. For our adaptive schedule, the total number of epochs is therefore 
+
+2E as exploration and final training both contain a single training runs. All baseline methods are also trained to con-vergence over E epochs. For each dataset, E was picked as the largest budget which leads to improvement of the 1-step MSE. Full hyper-parameter configurations and architectural details are provided in Appendix G. 
+
+Metrics. We report mean squared errors for the first predic-tion step and the short-term (10 steps) prediction. For KS and Kolmo, long-term accuracy is evaluated on the ground-truth correlation of the predicted signal and the vorticity 
+
+ω = ∂xuy − ∂y ux, respectively, while for Tra we compute the MSE at the last time-step. To assess physical consis-tency in long-horizon rollouts for the 2D case, we report the Fr´ echet Spectral Distance (FSD) (Liu et al., 2025). 
+
+6.2. Results and Analysis 
+
+Comparative results across the different benchmarks are displayed in Table 1. 
+
+Impact of Adaptive Schedule. Our experiments show that the proposed schedule optimization framework is the dominant factor driving performance gains. Regarding one-step MSE, our method consistently outperforms standard diffusion baselines by a significant margin. This improve-ment improves deccorelation time For Kolmogorov Flow and KS which are especially sensitive to initial error. We note that PDE-Refiner (Lippe et al., 2023) performs com-petitively on KS, achieving the best 1-step MSE and high-correlation time among all methods; this is consistent with its design, which explicitly focuses capacity on low noise levels — a strategy that aligns with our Slow Error Decrease Principle. Our method achieves comparable performance on KS while also generalising to the other benchmarks where PDE-Refiner’s fixed low-noise focus is less effective. 
+
+Visualisations of the obtained schedules. Figure 4 Left plot shows the reconstruction error landscape of the ob-tained schedule after running adaptive training over the 3 benchmark datasets. Inference-Input error nicely follows the Clean-input error, indicating that our proxy exposure-bias metrics yield consistent REB minimization. Furthermore, the obtained σ0 differ vastly for each dataset. Following observations made in (Lippe et al., 2023), a low optimal σ0
+
+appears to be correlated with more high-frequency compo-nents in the energy spectrum in the fluid data. However, we argue that the Energy spectrum is not the only driver of σ0.In particular, modifications in step-size naturally influence task difficulty, and could therefore lead to different errors and minimal sigma. Investigating the main drivers of noise-level landscapes is of relevant importance, furthermore it remains to be investigated whether the instability thresholds 
+
+γ(σ, τ ) are shared quantities across tasks. 
+
+Impact of Proxy Unrolled Training. Consistent with the hypothesis that exposure bias degrades autoregressive roll-outs, Proxy Unrolled Training significantly enhances both short-term precision and long-term stability. Notably, on Kolmogorov Flow, while the one-step error is similar as Teacher Forcing, our proxy method leads to an improved long-term correlation with the ground-truth trajectory. FSD improvements demonstrate the prevention of artifact forma-tion and maintains bounded physical consistency for long-rollouts, compared to baseline models. This validates that the proxy estimate is sufficient to sensitize the model to its own distribution shifts. We provide the temporal evolution 7Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+Dataset Method 1-step MSE 10-steps MSE High-Correlation Time (s) / Final MSE Last-step FSD 
+
+Kolmo U-Net UT, U = 2 9.53e-7 2.79e-5 10.0 (6.5, 12.4) 9.1e-1 Linear TF 1.30e-6 3.16e-4 9.7 (6.0, 12.3) 2.1e5 Sigmoid TF 1.25e-6 9.81e7 9.5 (4.6, 12.1) 2.4e6 PDERefiner (Lippe et al., 2023) 1.12e-6 8.16e-5 10.2 (7.9, 12.2) 1.05e1 Adaptive (Ours) 8.12e-7 2.18e-4 10.7 (7.6, 12.6) 3.7e5 Adaptive + Proxy UT, U = 1 (Ours) 8.07e-7 1.72e-5 11.0 (9.0, 12.6) 3.8e-1 Tra U-Net UT, U = 1 5.63e-5 2.0e-5 7.50e-1 2.2e5 U-Net UT, U = 8 4.15e-4 2.54e-3 1.08e-1 6.3e1 Linear TF 5.76e-5 9.73e-4 6.1e-1 3.54e1 Cosine TF 4.90e-5 8.79e-4 1.22e-1 2.3e1 Adaptive (Ours) 3.87e-5 8.11e-4 1.33e-1 3.3e1 Adaptive + Proxy UT, U = 1 (Ours) 4.05e-5 6.66e-4 1.25e-1 3.8e1 
+
+KS U-Net TF 1.60e-7 1.50e-5 68.4 (50.5, 80.0) –Cosine TF 2.79e-7 1.43e-5 74.9 (48.8, 105.4) –Sigmoid TF 1.55e-7 1.57e-5 78.4 (50.4, 113.4) –PDERefiner (Lippe et al., 2023) 8.99e-8 1.19e-5 88.0 (52.5, 123.6) Adaptive (Ours) 9.55e-8 9.74e-6 85.8 (55.7, 117.4) –Adaptive + Proxy UT, U = 1 (Ours) 8.83e-8 1.04e-5 86.1 (55.0, 111.7) –
+
+Table 1. Comparison of Method Performance on Fluid Dynamics Datasets. We compare standard deterministic baselines and diffusion schedules against our Adaptive + Unrolling framework. For High-Correlation Time, the numbers in parenthesis are the high-correlation time of the worst and best 10 trajectories. The bolded numbers are the smallest value across methods in a (dataset, metric) pair. For FSD, we only consider improvements to be significant if they lead to an order of magnitude improvement. On each dataset, we report the best-performing models among baselines. 
+
+of the Fr´ echet Spectral Distance (FSD) in Appendix F. 10 2 10 1 10 0                  
+
+> Noise Level
+> 10 7
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> MSE
+> KS (Clean)
+> KS (Inference)
+> Kolmo (Clean)
+> Kolmo (Inference)
+> Tra (Clean)
+> Tra (Inference)
+> 10 010 1
+> Wavenumber k
+> 10 9
+> 10 8
+> 10 7
+> 10 6
+> 10 5
+> 10 4
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Normalised  E(k)
+> KS
+> Kolmo
+> Tra
+
+Figure 4. On the three benchmark datasets, the obtained adap-tive schedules are, as shown in the left plot, exposure-bias free (inference error matches clean-input error). Interestingly, tasks which contain a higher high-frequency content tend to obtain a smaller minimal σ0, matching the observations made in (Lippe et al., 2023). 
+
+## 7. Discussion and Future Work 
+
+In this work, we have established an empirically grounded link between noise schedules, reconstruction error, and dif-fusion exposure bias for PDE diffusion models. We demon-strated that our adaptive schedule can yield near-optimal reconstruction, showing superior performance compared to both deterministic and probabilistic baselines. Furthermore, we proposed to leverage exposure-bias reduction and obtain a proxy unrolled training estimate, leading to considerable improvements in mitigating artifact formation. Beyond au-toregressive simulations, our schedule holds promise for other reconstruction-bound scenarii, such as diverse inverse problems, data-assimilation or super-resolution tasks. While our primary goal was to isolate the governing fac-tors of sampling reconstruction error, one may be suspi-cious of the double training time required to idenfy a bias-constrained schedule. We claim, however, that our method can be considered a ”smart hyperparameter exploration”: given how large the space of schedules is, iterating over all possible schedules one by one would be much more com-putationally expensive. We showed that our method adapts well to different data statistics, with potential insights for larger-scale applications. A fundamental question raised by our findings is the balance between modeling uncertainty and maintaining reconstruc-tion accuracy. Traditional diffusion schedules in computer vision are optimized for perceptual diversity, often at the expense of strict pixel-wise accuracy (Blau and Michaeli, 2018). Investigating the trade-off between those two objec-tives remains a compelling direction for future research. Finally, whether the reconstruction error landscape is in-fluenced by the choice of denoising prediction parameter-ization (e.g., x0-prediction (Hoogeboom et al., 2023) and 
+
+v-prediction (Salimans and Ho, 2022)) is an important ques-tion. For instance, x0-prediction typically yields smaller errors in early sampling steps, which may fundamentally alter the dynamics. Another potential direction would be to evaluate if the type of exposure bias we have shed light on, which is, different from the bias identified in (Ning et al., 2023), rather bound to allocation of model capacity, is also present in unconditional diffusion models. 8Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## 8. Impact Statement 
+
+This paper displays methodologies for enhancing probabilis-tic fluid models. While this could be of societal benefit for forecasting tasks such as weather and climate, we acknowl-edge that high-fidelity fluid simulations are general-purpose tools that can also be applied to military contexts, such as aerodynamics for defense technologies. 
+
+## References 
+
+Marc Amor ´os-Trepat, Luis Medrano-Navarro, Qiang Liu, Luca Guastoni, and Nils Thuerey. Guiding diffusion mod-els to reconstruct flow fields from sparse data. Physics of Fluids , 38(1), 2026. Arpit Bansal, Hong-Min Chu, Avi Schwarzschild, Soumyadip Sengupta, Micah Goldblum, Jonas Geiping, and Tom Goldstein. Universal guidance for diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 843–852, 2023. Jan-Hendrik Bastek, WaiChing Sun, and Dennis MKochmann. Physics-informed diffusion models. arXiv preprint arXiv:2403.14404 , 2024. Yochai Blau and Tomer Michaeli. The perception-distortion tradeoff. In Proceedings of the IEEE conference on com-puter vision and pattern recognition , pages 6228–6237, 2018. Johannes Brandstetter, Max Welling, and Daniel E Wor-rall. Lie point symmetry data augmentation for neural pde solvers. In International Conference on Machine Learning , pages 2241–2256. PMLR, 2022a. Johannes Brandstetter, Daniel Worrall, and Max Welling. Message passing neural pde solvers. arXiv preprint arXiv:2202.03376 , 2022b. Boyuan Chen, Diego Mart ´ı Mons ´o, Yilun Du, Max Sim-chowitz, Russ Tedrake, and Vincent Sitzmann. Diffu-sion forcing: Next-token prediction meets full-sequence diffusion. Advances in Neural Information Processing Systems , 37:24081–24125, 2024. Jooyoung Choi, Jungbeom Lee, Chaehun Shin, Sungwon Kim, Hyunwoo Kim, and Sungroh Yoon. Perception prioritized training of diffusion models. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition , pages 11472–11481, 2022. Giannis Daras, Yuval Dagan, Alex Dimakis, and Constanti-nos Daskalakis. Consistent diffusion models: Mitigating sampling drift by learning to be consistent. Advances in Neural Information Processing Systems , 36:42038– 42063, 2023. Jonathan Ho and Tim Salimans. Classifier-free diffusion guidance. arXiv preprint arXiv:2207.12598 , 2022. Jonathan Ho, Ajay Jain, and Pieter Abbeel. Denoising diffu-sion probabilistic models. Advances in neural information processing systems , 33:6840–6851, 2020. Jonathan Ho, Tim Salimans, Alexey Gritsenko, William Chan, Mohammad Norouzi, and David J Fleet. Video diffusion models. Advances in neural information pro-cessing systems , 35:8633–8646, 2022. Emiel Hoogeboom, Jonathan Heek, and Tim Salimans. sim-ple diffusion: End-to-end diffusion for high resolution images. In International Conference on Machine Learn-ing , pages 13213–13232. PMLR, 2023. Xun Huang, Zhengqi Li, Guande He, Mingyuan Zhou, and Eli Shechtman. Self forcing: Bridging the train-test gap in autoregressive video diffusion. arXiv preprint arXiv:2506.08009 , 2025. Tero Karras, Miika Aittala, Timo Aila, and Samuli Laine. Elucidating the design space of diffusion-based genera-tive models. Advances in neural information processing systems , 35:26565–26577, 2022. Diederik Kingma, Tim Salimans, Ben Poole, and Jonathan Ho. Variational diffusion models. Advances in neural information processing systems , 34:21696–21707, 2021. Georg Kohl, Li-Wei Chen, and Nils Thuerey. Benchmarking autoregressive conditional diffusion models for turbulent flow simulation. arXiv preprint arXiv:2309.01745 , 2023. Mingxiao Li, Tingyu Qu, Ruicong Yao, Wei Sun, and Marie-Francine Moens. Alleviating exposure bias in diffusion models through sampling with shifted time steps. arXiv preprint arXiv:2305.15583 , 2023. Marten Lienen, David L ¨udke, Jan Hansen-Palmus, and Stephan G ¨unnemann. From zero to turbulence: Gen-erative modeling for 3d flow simulation, 2024. URL https://arxiv. org/abs/2306.01776 .Phillip Lippe, Bas Veeling, Paris Perdikaris, Richard Turner, and Johannes Brandstetter. Pde-refiner: Achieving ac-curate long rollouts with neural pde solvers. Advances in Neural Information Processing Systems , 36:67398– 67433, 2023. Bj ¨orn List, Li-Wei Chen, and Nils Thuerey. Learned turbu-lence modelling with differentiable fluid solvers: physics-based loss functions and optimisation horizons. Journal of Fluid Mechanics , 949:A25, 2022. Kunhao Liu, Wenbo Hu, Jiale Xu, Ying Shan, and Shijian Lu. Rolling forcing: Autoregressive long video diffusion in real time. arXiv preprint arXiv:2509.25161 , 2025. 9Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+Qiang Liu and Nils Thuerey. Uncertainty-aware surrogate models for airfoil flow simulations with denoising dif-fusion probabilistic models. AIAA Journal , 62(8):2912– 2933, 2024. Alexander Quinn Nichol and Prafulla Dhariwal. Improved denoising diffusion probabilistic models. In Interna-tional conference on machine learning , pages 8162–8171. PMLR, 2021. Mang Ning, Mingxiao Li, Jianlin Su, Albert Ali Salah, and Itir Onal Ertugrul. Elucidating the exposure bias in diffu-sion models. arXiv preprint arXiv:2308.15321 , 2023. Ilan Price, Alvaro Sanchez-Gonzalez, Ferran Alet, Tom R Andersson, Andrew El-Kadi, Dominic Masters, Timo Ewalds, Jacklynn Stott, Shakir Mohamed, Peter Battaglia, et al. Gencast: Diffusion-based ensemble forecasting for medium-range weather. arXiv preprint arXiv:2312.15796 ,2023. Fran c¸ ois Rozet and Gilles Louppe. Score-based data as-similation. Advances in Neural Information Processing Systems , 36:40521–40541, 2023. Salva R ¨uhling Cachay, Bo Zhao, Hailey Joren, and Rose Yu. Dyffusion: A dynamics-informed diffusion model for spa-tiotemporal forecasting. Advances in neural information processing systems , 36:45259–45287, 2023. Tim Salimans and Jonathan Ho. Progressive distillation for fast sampling of diffusion models. arXiv preprint arXiv:2202.00512 , 2022. Florian Schmidt. Generalization in generation: A closer look at exposure bias. arXiv preprint arXiv:1910.00292 ,2019. Youssef Shehata, Benjamin Holzschuh, and Nils Thuerey. Improved sampling of diffusion models in fluid dynamics with tweedie’s formula. In The Thirteenth International Conference on Learning Representations , 2025. Lifeng Shen, Weiyu Chen, and James Kwok. Multi-resolution diffusion models for time series forecasting. In The Twelfth International Conference on Learning Representations , 2024. Dule Shu, Zijie Li, and Amir Barati Farimani. A physics-informed diffusion model for high-fidelity flow field re-construction. Journal of Computational Physics , 478: 111972, 2023. Aliaksandra Shysheya, Cristiana Diaconu, Federico Bergamin, Paris Perdikaris, Jos ´e Miguel Hern ´andez-Lobato, Richard Turner, and Emile Mathieu. On con-ditional diffusion models for pde simulations. Advances in Neural Information Processing Systems , 37:23246– 23300, 2024. Jascha Sohl-Dickstein, Eric Weiss, Niru Maheswaranathan, and Surya Ganguli. Deep unsupervised learning using nonequilibrium thermodynamics. In International con-ference on machine learning , pages 2256–2265. pmlr, 2015. Yang Song, Prafulla Dhariwal, Mark Chen, and Ilya Sutskever. Consistency models. 2023. Jason Stock, Troy Arcomano, and Rao Kotamarthi. Swift: An autoregressive consistency model for efficient weather forecasting. arXiv preprint arXiv:2509.25631 , 2025. 10 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## A. Preliminaries 
+
+A.1. Conditional Diffusion Models 
+
+Denoising Diffusion Probabilistic Models (DDPM) are generative models that learn to approximate a data distribution p(y)
+
+by reversing a gradual noising process. We consider the conditional setting where the generation of a target y ∈ Rd is conditioned on an input x.Given a fixed variance schedule {βt ∈ (0 , 1) }Tt=1 , the forward process q(˜ y1: T |y0) transforms a clean sample y0 ∼ p(y|x)
+
+into Gaussian noise ˜yT ∼ N (0, I) via a Markov chain: 
+
+q(˜ yt|˜yt−1) = N (˜ yt; p1 − βt ˜yt−1, β tI). (20) A notable property of this process is that any intermediate noisy state ˜yt can be sampled directly from y0:
+
+˜yt = √¯αty0 + √1 − ¯αtϵ, ϵ ∼ N (0, I), (21) where αt ≜ 1 − βt and ¯αt ≜ Qts=1 αs. We characterize the noise intensity at step t by the standard deviation σt ≜ √1 − ¯αt.The generative process pθ (y0: T |x) learns to reverse this corruption. A neural network yest is trained to predict the clean signal y0 (or equivalently the noise ϵ) given a noisy latent ˜yt, the conditioning x, and the time step t. The model is optimized by minimizing the re-weighted squared error: 
+
+Ldiff (θ) = Ex,y0,t, ϵ
+
+∥yest (˜ yt, x, σ t) − y0∥2 . (22) 
+
+A.2. Autoregressive Neural Emulators 
+
+In the context of fluid dynamics, we aim to construct a surrogate model Mθ that emulates the temporal evolution of a physical system. Given an initial state x0, the objective is to generate a trajectory {ˆx1, . . . , ˆxK } that approximates the ground-truth sequence {x1, . . . , xK }. This is typically formulated as an autoregressive problem: 
+
+ˆxk = Mθ (ˆ xk−1) for k ∈ { 1, . . . , K }, (23) with ˆx0 = x0.Standard training relies on Teacher Forcing (TF), which minimizes the one-step prediction error conditioned on ground-truth states: 
+
+LTF (θ) = Ek
+
+∥M θ (xk) − xk+1 ∥2 . (24) However, TF is susceptible to exposure bias : during inference, the model accumulates small errors, leading to a distributional shift in the input ˆxk that diverges from the training distribution. To mitigate this, Unrolled Training (UT) optimizes the model over a horizon of M autoregressive steps: 
+
+LUT (θ) = EkMX
+
+> m=1
+
+∥ˆxk+m − xk+m∥2, (25) where ˆxk+m is recursively generated from the model’s own prior prediction ˆxk+m−1.11 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## B. Proof of Proposition 3.3 
+
+Proposition B.1 (Re-noising Attenuation , restated) . When estimated errors are nearly aligned, the following recursive bound holds: 
+
+REB( t) ≲ B(2 S)(t) + λt REB( t + 1) ,
+
+where λt := ∥Jt∥ · √¯αt · ∥yest (˜ yt+1 )−y∥∥yest (˜ yt)−y∥ . The REB is thus driven by the local two-step bias, and attenuated (resp. amplified) across steps when λt < 1 (resp. λt > 1). 
+
+Full bound. Let ρ1 = cos θ1 where θ1 is the angle between yest (ˆ y(2 S) 
+
+> t
+
+) − y and yest (˜ yt) − y, and let ρ2 = cos θ2 where 
+
+θ2 is the angle between yest (ˆ yt) − y and yest (˜ yt) − y. Then: 
+
+REB( t) ≤ 1 + 
+
+q B(2 S)(t) − ρ1
+
+2 + (1 − ρ21) + λt ·
+
+q REB( t + 1) − ρ2
+
+2 + (1 − ρ22). (26) When ρ1, ρ 2 ≈ 1, the square-root terms simplify to B(2 S)(t) and REB( t + 1) respectively, recovering the statement above. 
+
+Sampling definitions. Both inference and ground-truth paths follow one-step backward diffusion: 
+
+ˆy(2 S) 
+
+> t−1
+
+= √¯αt−1 yest (˜ yt) + σt−1 ϵ, (27) 
+
+ˆyt−1 = √¯αt−1 yest (ˆ yt) + σt−1 ϵ, (28) 
+
+ˆyT ∼ N (0, I), (29) 
+
+˜yt = √¯αt y + σt ϵ, (30) where ϵ ∼ N (0, I) is the same noise draw shared between equations (27) and (28) . Similarly, ˆyt and ˆy(2 S) 
+
+> t
+
+use the same noise at their respective levels. 
+
+The two-steps and reconstruction bias are given as: 
+
+B(2 S)(t) ≜ yest (ˆ y(2 S) 
+
+> t
+
+) − y
+
+yest (˜ yt) − y , (31) 
+
+REB( t) ≜ yest (ˆ yt) − y
+
+yest (˜ yt) − y . (32) 
+
+Alternative biases definitions: We furthemore define an alternative version of the biases taking into account the distance of estimated values with each other, rather than only their distance to y.
+
+B(2 S)alt (t) ≜ yest (ˆ y(2 S) 
+
+> t
+
+) − yest (˜ yt)
+
+yest (˜ yt) − y , (33) 
+
+REB alt (t) ≜ yest (ˆ yt) − yest (˜ yt)
+
+yest (˜ yt) − y . (34) 
+
+Proof. We have that: 
+
+REB alt (t) = yest (ˆ yt) − yest (˜ yt)
+
+∥yest (˜ yt) − y∥ ≤ yest (ˆ y(2 S) 
+
+> t
+
+) − yest (˜ yt)
+
+∥yest (˜ yt) − y∥ + yest (ˆ yt) − yest (ˆ y(2 S) 
+
+> t
+
+)
+
+∥yest (˜ yt) − y∥ (35) 12 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+Both ˆyt and ˆy(2 S) 
+
+> t
+
+are obtained by a backward diffusion step with the same noise draw, so: 
+
+ˆyt − ˆy(2 S) 
+
+> t
+
+= √¯αt
+
+yest (ˆ yt+1 ) − yest (˜ yt+1 ). (36) A first-order Jacobian bound then gives: 
+
+yest (ˆ yt) − yest (ˆ y(2 S) 
+
+> t
+
+) ≲ ∥Jt∥ · √¯αt · yest (ˆ yt+1 ) − yest (˜ yt+1 ) , (37) where Jt := ∇yest |ˆy(2 S)
+
+> t
+
+.By definition, ∥yest (ˆ yt+1 ) − yest (˜ yt+1 )∥ = REB alt (t + 1) · ∥ yest (˜ yt+1 ) − y∥. Therefore (35) gives : 
+
+REB alt (t) ≲ B(2 S)alt (σt, σ t+1 ) + λt · REB alt (t + 1) . (38) with 
+
+λt := ∥Jt∥ · √¯αt · yest (˜ yt+1 ) − y
+
+yest (˜ yt) − y (39) 
+
+Relationship between the two definitions. Let a = yest (ˆ y(2 S) 
+
+> t
+
+) − y and b = yest (˜ yt) − y, so that the standard definition gives B(2 S) = ∥a∥/∥b∥ and the alternative gives B(2 S)alt = ∥a − b∥/∥b∥. Letting θ denote the angle between a and b, the law of cosines yields: 
+
+ B(2 S)alt 
+
+2 =  B(2 S)2 + 1 − 2 B(2 S) cos θ =  B(2 S) − cos θ2 + (1 − cos θ2), (40) Combining equation (40) and the triangle inequality: 
+
+B(2 S)(t) − 1 ≤ B (2 S)alt (t) = 
+
+q B(2 S)(t) − ρ1
+
+2 + (1 − ρ21), (41) The same inequalities applie for the REB: 
+
+REB( t) − 1 ≤ REB alt (t) ≤
+
+q REB( t) − ρ2
+
+2 + (1 − ρ22), (42) where ρ2 = cos θ2 and θ2 is the angle between yest (ˆ yt) − y and yest (˜ yt) − y.Therefore we can express the standard REB in terms of the standard 2-steps bias and the next-step REB: 
+
+REB( t) ≤ 1 + REB alt (t) (43) 
+
+≤ 1 + B(2 S)alt (t) + λt · REB alt (t + 1) (44) 
+
+≤ 1 + 
+
+q B(2 S)(t) − ρ1
+
+2 + (1 − ρ21) + λt ·
+
+q REB (t + 1) − ρ2
+
+2 + (1 − ρ22) (45) 13 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+B.1. Visualization 10 −1
+
+Noise Level σ        
+
+> 10 −5
+> 6×10 −6
+> 2×10 −5
+> 3×10 −5
+> 4×10 −5
+> Reconstruction Error
+> Input Type
+> Clean input Inference input Own-Pred input Two-Steps input
+
+Figure 5. Contributions of errors to the REB. Metrics are reported for the final diffusion steps of a linear schedule model. Two-steps error nearly corresponds to inference-input error even though it only contains errors propagated from current and previous step. Own-prediction error is the major driver of the two-steps bias. 
+
+14 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## C. Proof of Proposition 3.4 
+
+Proposition C.1 (Stability Threshold , restated) . Assuming (A1) Wiener denoiser structure and (A2) Spectral bias of the neural denoiser (detailed below), B(own ) 
+
+> θ
+
+(t) is an increasing function of Eclean  
+
+> θ
+
+(t). In particular, at each noise level σt and for any threshold τ ≥ 1, there exists a critical clean-input error γ(σt, τ ), increasing in σt and decreasing in τ , such that if 
+
+Eclean  
+
+> θ
+
+(σt) ≤ γ(σt, τ ) then B(own ) 
+
+> θ
+
+(t) ≤ τ .
+
+The proposition follows from the more precise result below, which makes assumptions (A1) and (A2) explicit. 
+
+Proposition C.2 (Bias reduction through error-spectral shift ). Let θA and θB be two denoisers and fix a noise level σ.Let Jθ denote the Jacobian of yest with respect to its noisy input, and let Eθ (k) denote the per-wavenumber residual error variance Eθ (k) = E[|ˆεk|2/N ], where ˆεk is the Fourier coefficient of the clean-input residual yest (˜ yσ , x, σ ) − y.1. (Own-Prediction Bias under Wiener denoiser structure.) Assuming that Jθ is diagonal in the Fourier basis with eigenvalue λk = ( √¯α/σ 2) Eθ (k) at each wavenumber k, then 
+
+B(own ) 
+
+> θ
+
+(σ) ≈ 1 + 2¯ ασ2
+
+P 
+
+> k
+
+Eθ (k)2
+
+P 
+
+> k
+
+Eθ (k) +
+
+ ¯ασ2
+
+2 P 
+
+> k
+
+Eθ (k)3
+
+P 
+
+> k
+
+Eθ (k) . (46) 
+
+2. (Spectral bias implies bias reduction.) Suppose both models satisfy the Wiener structure of (1), that EB (k) is decreasing in k (larger residual errors at low wavenumbers), and that 0 ≤ EA(k) ≤ EB (k) for all k with the ratio rk := EA(k)/E B (k) non-decreasing in k (the relative error reduction is larger at low wavenumbers). Then 
+
+R(θA) ≤ R(θB ), and hence B(own ) 
+
+> θA
+
+(σ) ≤ B (own ) 
+
+> θB
+
+(σ).Proof. Part (1). Let ε = yest (˜ yσ , x, σ ) − y denote the clean-input residual. In the own-prediction setting (?? ) , the model receives the re-noised input ˆyσ = √¯α yest (˜ yσ , x, σ ) + σ z instead of the ground-truth ˜yσ = √¯α y + σ z. The input perturbation is thus δ = ˆ yσ − ˜yσ = √¯α ε.By first-order Taylor Expansion around ˜yσ , we can write: 
+
+yest (ˆ yσ , x, σ ) − y ≈ ε + Jθ δ = ε + √¯α J θ ε. (47) Taking the squared norm and dividing by ∥ε∥2, we obtain: 
+
+B(own ) 
+
+> θ
+
+(σ) = ∥ε + √¯α J θ ε∥2
+
+∥ε∥2 = 1 + 2√¯α
+
+∥ε∥2 ε⊤Jθ ε + ¯α
+
+∥ε∥2 ∥Jθ ε∥2 (48) Under the Wiener structure, Jθ is diagonal in the Fourier basis with eigenvalue λk = ( √¯α/σ 2) Eθ (k) at wavenumber k. By Parseval’s theorem: 
+
+ε⊤Jθ ε = 1
+
+N
+
+X
+
+> k
+
+λk |ˆεk|2, ∥Jθ ε∥2 = 1
+
+N
+
+X
+
+> k
+
+λ2 
+
+> k
+
+|ˆεk|2, ∥ε∥2 = 1
+
+N
+
+X
+
+> k
+
+|ˆεk|2. (49) Since E[|ˆεk|2/N ] = Eθ (k), we replace |ˆεk|2 by its expectation N E θ (k) to obtain: 
+
+2√¯α ε⊤Jθ ε
+
+∥ε∥2 ≈ 2√¯α P 
+
+> k
+
+λk Eθ (k)
+
+P 
+
+> k
+
+Eθ (k) = 2¯ ασ2
+
+P 
+
+> k
+
+Eθ (k)2
+
+P 
+
+> k
+
+Eθ (k) , (50) 
+
+¯α ∥Jθ ε∥2
+
+∥ε∥2 ≈ ¯α P 
+
+> k
+
+λ2 
+
+> k
+
+Eθ (k)
+
+P 
+
+> k
+
+Eθ (k) =
+
+ ¯ασ2
+
+2 P 
+
+> k
+
+Eθ (k)3
+
+P 
+
+> k
+
+Eθ (k) , (51) where we substituted λk = ( √¯α/σ 2) Eθ (k). Combining both terms with (48) yields (46). 
+
+Part (2). By (46), B(own ) 
+
+> θ
+
+is determined (up to monotone transformations) by the ratio 
+
+R(θ) := 
+
+P 
+
+> k
+
+Eθ (k)2
+
+P 
+
+> k
+
+Eθ (k) ,
+
+15 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+which is the Eθ (k)-weighted mean of Eθ (k). (The cubic term P 
+
+> k
+
+Eθ (k)3/ P 
+
+> k
+
+Eθ (k) behaves analogously; we focus on R
+
+for clarity.) It therefore suffices to show that R(θA) ≤ R(θB ).Write EA(k) = rk EB (k) with rk ∈ [0 , 1] non-decreasing. Since R(θA) = P 
+
+> k
+
+r2 
+
+> k
+
+EB (k)2 P  
+
+> k
+
+rk EB (k), we have : 
+
+R(θA) = 
+
+P 
+
+> k
+
+r2 
+
+> k
+
+EB (k)2
+
+P 
+
+> k
+
+rkEB (k)
+
+≤
+
+P 
+
+> k
+
+rk EB (k)2
+
+P 
+
+> k
+
+rkEB (k) (Jensen’s inequality) 
+
+≤
+
+P 
+
+> k
+
+rk EB (k)
+
+P 
+
+> k
+
+EB (k) ·
+
+P 
+
+> k
+
+EB (k)2
+
+P 
+
+> k
+
+EB (k) (Chebyshev covariance inequality) 
+
+≤ · 
+
+P 
+
+> k
+
+EB (k)2
+
+P 
+
+> k
+
+EB (k) since 
+
+P 
+
+> k
+
+rk EB (k)
+
+P 
+
+> k
+
+EB (k) ≤ 1= R(θB )
+
+where Jensen’s Inequality states that r2 
+
+> k
+
+≤ rk for every k, given 0 ≤ rk ≤ 1 ; and Chebyshev covariance inequality states that for two sequences f (k) and g(k) that are oppositely monotone (one non-decreasing, the other non-increasing) and non-negative weights wk ≥ 0:
+
+X
+
+> k
+
+wk
+
+! X
+
+> k
+
+wkf (k) g(k)
+
+!
+
+≤ X
+
+> k
+
+wkf (k)
+
+! X
+
+> k
+
+wkg(k)
+
+!
+
+,
+
+or equivalently Ew[f (k) g(k)] ≤ Ew[f (k)] Ew[g(k)] . Given the probability weights wk = EB (k)/ P 
+
+> j
+
+EB (j), since rk is non-decreasing in k and EB (k) is non-increasing in k by assumption, applying this with f (k) = rk and g(k) = EB (k)
+
+gives Cov w(r, E B ) ≤ 0, i.e., 
+
+Ew[rk EB (k)] ≤ Ew[rk] Ew[EB (k)] .
+
+Finally, by (46), B(own ) 
+
+> θ
+
+is increasing in R, so R(θA) ≤ R(θB ) implies B(own ) 
+
+> θA
+
+(σ) ≤ B (own ) 
+
+> θB
+
+(σ).
+
+Remark. The decreasing-Eθ (k) condition in (2) is satisfied whenever P (k) is decreasing (e.g. turbulence spectra P (k) ∼
+
+k−β ), since the MMSE residual of the Wiener denoiser E(k) = σ2P (k)/(¯ αP (k) + σ2) is an increasing function of P (k).The spectral-bias condition (the tendency of gradient-trained networks to learn low-frequency components first) is necessary: without it, a uniform rescaling EA(k) = c E B (k) leaves R unchanged, and hence B(own ) unchanged too. 16 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## D. Proof of Proposition 3.5 
+
+Proposition D.1 (Slow Error Decrease Principle , restated) . Under the stability condition established in Proposition 3.4 and assumptions (A1) –(A2) , the schedule minimizing (15) contains no unnecessary noise levels: every intermediate σk is necessary in the sense that removing it — i.e., going directly from σk−1 to σk+1 — would violate the bias constraint, i.e. 
+
+B(2 S)(k − 1) > τ . In particular, the greedy construction that always takes the largest feasible jump is optimal. 
+
+The proof relies on the instability threshold (Proposition 3.4) and the following assumptions: 
+
+(A1) Finite capacity trade-off: Given a model trained on schedule S, adding an extra noise level σ′ to S and retraining to convergence necessarily increases Eclean  
+
+> θ
+
+(σs) for some σs ∈ S .
+
+(A2) Monotone error decay: Eclean  
+
+> θ
+
+(σ) is strictly decreasing in σ: lower noise levels yield strictly lower clean-input error. 
+
+Proof. The final inference error decomposes as Einf  
+
+> θ
+
+(0) = REB(0) · E clean  
+
+> θ
+
+(0) . Minimizing this requires both REB(0) ≈ 1
+
+and Eclean  
+
+> θ
+
+(0) as small as possible. Suppose the optimal schedule S∗ contains an intermediate noise level σk (0 < k < T ) that is unnecessary, i.e., 
+
+B(2 S)(σk−1, σ k+1 ) ≤ τ so that σk can be skipped without violating stability. Removing σk from S∗ yields a strictly shorter schedule. By (A1) , retraining on this shorter schedule frees capacity, which the model can reallocate to σ0, strictly decreasing Eclean  
+
+> θ
+
+(σ0) — possible by (A2) , since σ0 is the lowest noise level and thus has the most room for improvement relative to other levels. This strictly reduces the final inference error, contradicting the optimality of S∗.Therefore every intermediate step in the optimal schedule is necessary. Note that the bias constraint B(2 S)(σt, σ t+1 ) ≤ τ
+
+need not be tight at each step — it suffices that no larger jump is feasible. Furthermore, satisfying the bias constraint becomes increasingly easy at higher noise levels, since the instability threshold γ(σ, τ ) is increasing in σ: the model can afford larger clean-input errors at high noise, allowing larger jumps. This justifies the greedy construction, which always takes the largest feasible jump and is therefore optimal. 17 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## E. Accuracy of the Proxy Estimator 0
+
+10 
+
+20 
+
+30 
+
+40 
+
+50 
+
+60 
+
+> Noise Level sqrt(1- ) Distribution
+
+Linear Schedule 
+
+0
+
+5
+
+10 
+
+15 
+
+PSD Schedule 
+
+0
+
+5
+
+10 
+
+15 
+
+LogMinus5Uniform Schedule 
+
+10 2 10 1 10 0
+
+10 6
+
+10 5
+
+10 4
+
+10 3
+
+10 2
+
+10 1
+
+> MSE w/ ground-truth
+
+Training input 
+
+Inference input 
+
+10 2 10 1 10 0
+
+Noise Level sqrt(1- ), High = Only Noise, Low = Only Image 
+
+10 6
+
+10 5
+
+10 4
+
+10 3
+
+10 2
+
+10 1 Training input 
+
+Inference input 
+
+10 2 10 1 10 0
+
+10 6
+
+10 5
+
+10 4
+
+10 3
+
+10 2
+
+10 1 Training input 
+
+Inference input 
+
+Training Final Error: 2.81e-06 
+
+Inference Final Error: 3.43e-06 
+
+Training Final Error: 1.26e-06 
+
+Inference Final Error: 1.34e-06 
+
+Training Final Error: 6.54e-07 
+
+Inference Final Error: 2.01e-06 1.0 1.5 2.0 2.5 3.0 3.5 4.0                       
+
+> Number of proxy steps n
+> 0.960
+> 0.965
+> 0.970
+> 0.975
+> 0.980
+> 0.985
+> 0.990
+> 0.995
+> 1.000
+> Cosine similarity
+> Linear Schedule
+> 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+> Number of proxy steps n
+> PSD Schedule
+> GT vs. Diffusion sample D
+> Estimate Pnvs Diffusion sample D
+> Dsample 0 vs. Dsample 1 (upper-bound)
+> 1.0 1.5 2.0 2.5 3.0 3.5 4.0
+> Number of proxy steps n
+> LogMinus5Uniform Schedule
+
+Similarity of gradients obtained from next autoregressive step loss, using different inputs 
+
+Figure 6. Similarity of gradients obtained from the second step loss LP-2UT , using as input either the ground-truth data (= teacher forcing), the true previous step diffusion sample (= full unrolled training) or the proxy estimate P(n)
+
+θ , as a function of the number of steps n. PSD and LogMinus5Uniform Schedules are arbitrary schedules that we defined. The alignment of the gradients well reflect the different exposure-biases. In particular, with PSD Schedule, which doesn’t suffer from exposure-bias, the proxy estimate is already fully accurate in a single step ( n = 1 ). For LogMinus5Uniform Schedule, the estimate still isn’t accurate after 4 steps. 
+
+18 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## F. FSD Evolution   
+
+> Figure 7. Kolmogorov Flow
+> Figure 8. Transonic Flow
+
+Our proxy unrolled training is particularly useful when the model suffers from artifacts, as is the case on the Kolmogorov Flow. The improvement is however marginal when the distribution shift is steady and without jumps, as in Transonic Flow. 19 Bias-Constrained Diffusion Schedules for PDE Emulations 
+
+## G. Implementation details 
+
+G.1. Algorithm Pseudocode Algorithm 1 Phase 1 — Exploration 
+
+1: Require: bias tolerance τ , exploration grid σexp = {σ(1) , . . . , σ (N )} (log-uniform), shared weights w = 1 
+
+2: Initialize: active schedule σactive ← σexp , solved set σsolved ← ∅ 
+
+3: while σactive ̸ = ∅ do 
+
+4: Train θ on σactive with uniform weights until convergence 
+
+5: for each σ(i) ∈ σactive do 
+
+6: if B(own ) 
+
+> θ
+
+(σ(i)) ≤ τ then 
+
+7: Save checkpoint θ∗(σ(i)) ← θ
+
+8: σactive ← σactive \ { σ(i)}
+
+9: σsolved ← σsolved ∪ { σ(i)}
+
+10: end if 
+
+11: end for 
+
+12: if no new level solved this pass then 
+
+13: break 
+
+14: end if 
+
+15: end while 
+
+16: return {θ∗(σ)}σ∈σsolved 
+
+Algorithm 2 Phase 2 — Greedy Schedule Construction 
+
+1: Require: checkpoints {θ∗(σ)}σ∈σsolved , bias tolerance τ
+
+2: σ0 ← min σsolved , t ← 0, S ← [σ0]
+
+3: while σt < σ T do 
+
+4: σt+1 ← max 
+
+n
+
+σ′ ∈ σsolved : B(2 S)
+
+> θ∗(σ′), θ ∗(σt)
+
+(σt, σ ′) ≤ τ
+
+o
+
+5: S ← S ∪ [σt+1 ], t ← t + 1 
+
+6: end while 
+
+7: Fine-tune a single shared model θ on S, warm-started from θ∗(σ0)
+
+8: return S, θ
+
+G.2. Training Hyperparameters 
+
+We set τ = 1 .05 across all tasks as it constrains the two-steps bias while allowing for flexibility. A stricter value could potentially reduce the reconstruction error, but at the cost of making the optimization process more complex. If not mentioned otherwise, each baseline diffusion model uses T = 20 steps. A training run contains E = 1000 epochs on Kolmogorov Flow and KS, E = 2000 epochs on Transonic Flow. On the other hand, unrolled fine-tuning is done for 200 epochs on Kolmogorov Flow and KS, and 400 epochs for Transonic. 
+
+## H. Dataset and Data Generation 
+
+• Kolmogorov Flow : We use the generation pipeline from (Rozet and Louppe, 2023), to generate 800 trajectories for training, 100 for testing, 100 for validation. Generation scripts can be obtained in SDA. • Transonic Flow : We obtain the dataset from the ACDM benchmark (Kohl et al., 2023) (repository ACDM). The testing experiments are ran over the Extrapolate test case. • Kuramoto-Sivashinsky : We generate the data using the pipeline provide in (Brandstetter et al., 2022a) (repository LPSDA). We increase the number of validation and testing trajectories to 512, and fix the timestep ∆t to 0.2, as well as the grid spacing ∆x, following (Shysheya et al., 2024). 20

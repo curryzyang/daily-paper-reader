@@ -1,0 +1,1753 @@
+Title: An Inexact Trust-Region Method for Structured Nonsmooth Optimization with Application to Risk-Averse Stochastic Programming
+
+URL Source: https://arxiv.org/pdf/2604.07216v1
+
+Published Time: Thu, 09 Apr 2026 01:13:01 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# An Inexact Trust-Region Method for Structured Nonsmooth Optimization with Application to Risk-Averse Stochastic Programming 
+
+## Drew P. Kouri 1
+
+1Optimization and Uncertainty Quantification, Sandia National Laboratories, P.O. Box 5800, Albuquerque, 87185-1320, NM, USA. Contributing authors: dpkouri@sandia.gov; 
+
+Abstract 
+
+We develop a trust-region method for efficiently minimizing the sum of a smooth function, a nonsmooth convex function, and the composition of a finite-valued support function with a smooth function. Optimization problems with this struc-ture arise in numerous applications including risk-averse stochastic programming and subproblems for nonsmooth penalty nonlinear programming methods. Our method permits the use of inexact value and derivative information, enabling the solution of infinite-dimensional problems governed by, e.g., partial differen-tial equations (PDEs). We prove global convergence of our method and under additional regularity assumptions, demonstrate that the sequence of iterates accumulates at a stationary point of our target problem. We demonstrate our method’s efficiency on two PDE-constrained optimization examples, showing that its performance is invariant to the PDE discretization size. 
+
+Keywords: Trust Regions, Nonsmooth Optimization, Saddle Point Problems, Risk-Averse Optimization, Stochastic Optimization, Adaptivity 
+
+MSC Classification: 49M29 , 49M37 , 65K10 , 90C15 , 93E20 
+
+1
+
+> arXiv:2604.07216v1 [math.OC] 8 Apr 2026
+
+# 1 Introduction 
+
+We develop an efficient trust-region method for solving structured nonsmooth, nonconvex optimization problems with the form min  
+
+> x∈X
+
+{J(x) := f (x) + sup 
+
+> θ∈A
+
+(θ, F (x)) Y + ϕ(x)}, (1) where X and Y are real Hilbert spaces, f : X → R and F : X → Y are smooth functions, ϕ : X → (−∞ , +∞] is proper, closed and convex, and A ⊂ Y is nonempty, closed, convex and bounded. This class of problems arises in various applications including sparse estimation and learning [1], nonlinear programming with L1-penalties [2], and simulating mechanical systems subject to Tresca friction [3]. In addition to these applications, an extremely important application of our method is risk-averse optimization, which has the form min  
+
+> x
+
+f (x) + R(F (x)) + ϕ(x). (2) In the context of (2), f is a smooth deterministic function, F is a smooth stochas-tic function (i.e., F (x) is a random variable for each x), ϕ is a nonsmooth convex function, and R is a coherent risk measure [4] (in which case, A is the risk envelope associated with R). Risk-averse optimization problems arise in numerous applications ranging from financial mathematics to reliability engineering [5, 6]. Although ubiq-uitous, these problems are often challenging to solve because of the nonsmoothness arising in R and ϕ. In fact, traditional nonsmooth optimization methods are often intractable when (2) is nonconvex and F is computationally expensive to evaluate, as is the case when F involves the solution of a system of partial differential equations (PDEs) with uncertain coefficients [7–11]. Recently, [12] introduced the specialized primal-dual risk minimization algorithm. At each iteration of the primal-dual risk minimization algorithm, one approximately solves a smoothed risk-averse optimiza-tion problem, which can be expensive. Moreover, it is unclear how to leverage inexact evaluations of f , F and its derivatives during the primal-dual iteration. To address these shortcomings, we introduce a new trust-region method that can efficiently solve (1) even when f , F and their derivatives are computationally expen-sive to evaluate. In this setting, it is critical that (i) our algorithm exhibits rapid convergence and (ii) can leverage inexact evaluations of f , F and their derivatives while maintaining strong convergence guarantees. For example, in PDE-constrained optimization [13], evaluating F often requires the discretization and iterative numeri-cal solution of a system of nonlinear PDEs—a cost that is expounded when the PDE has uncertain or random coefficients. To address the algorithmic requirements (i) and 
+
+(ii) above, we extend the inexact proximal trust-region algorithm developed in [14]. The method in [14] is applicable for minimizing f + ϕ and is provably convergent even when f and its derivative are computed inexactly. Moreover, the method exhibits local superlinear—even quadratic—convergence rates under mild assumptions [15]. Roughly speaking, our algorithm applies the trust-region algorithm in [14] to (1) using a modified trust-region subproblem model to account for the supremum over A. By 2exploiting the structure of (1), we are able to extend the convergence theory from [14] to guarantee convergence of our algorithm. The remainder of the paper is structured as follows. In Section 2, we discuss the problem formulation, assumptions and optimality conditions for (1). In Section 3, we introduce our inexact trust-region algorithm and describe efficient ways to solve the trust-region subproblem in Section 3.1. We prove convergence of our method in Section 4 and demonstrate its numerical performance in Section 5. 
+
+# 2 Preliminaries 
+
+Let X and Y be real Hilbert spaces. We denote the inner product and associated norm on X by ( ·, ·)X and ∥ · ∥ X , respectively, and analogously for Y . We denote the Banach space of bounded linear operators mapping X into Y by L(X, Y ) and the topological dual space of X (i.e., the space of continuous linear functionals on X) by 
+
+X∗ := L(X, R). To simplify the presentation, we identify the dual space X∗ with X
+
+via the Riesz representation theorem and we denote L(X) := L(X, X ). Recall that an extended real-valued function ψ : X → [−∞ , +∞] is proper if ψ(x) > −∞ for all 
+
+x ∈ X and there exists at least one x0 ∈ X for which ψ(x0) < +∞. When ψ is convex, we denote its proximity operator by prox ψ : X → X, i.e., prox ψ (x) := arg min 
+
+> x′∈X
+
+{ 12 ∥x′ − x∥2 
+
+> X
+
++ ψ(x′)},
+
+its subdifferential by ∂ψ : X ⇒ X, i.e., 
+
+∂ψ (x) := {v ∈ X | ψ(x′) ≥ ψ(x) + ( v, x ′ − x)X ∀ x′ ∈ X},
+
+and its Fenchel conjugate by ψ∗ : X → (−∞ , +∞], i.e., 
+
+ψ∗(v) := sup 
+
+> x∈X
+
+{(v, x )X − ψ(x)}.
+
+If ψ is proper, closed and convex, then ψ∗∗ = ψ [16, Proposition 4.1]. We denote the effective domains of ψ and ∂ψ by dom ψ := {x ∈ X | ψ(x) < +∞} and dom ∂ψ := {x ∈ X | ∂ψ (x)̸ = ∅} ,
+
+respectively. Finally, for a nonempty, closed and convex subset C ⊆ X, we denote the indicator and support functions of C by δC and σC , respectively, i.e., 
+
+δC (x) := 
+
+ 0 if x ∈ C
+
++∞ otherwise and σC (x) := sup 
+
+> v∈C
+
+(v, x )X .
+
+3Recall that σC = δ∗ 
+
+> C
+
+= σ∗∗  
+
+> C
+
+, the proximity operator of δC is the metric projection onto 
+
+C, which we denote by proj C , and that the subdifferential of δC is the normal cone 
+
+NC (x) := 
+
+ { v ∈ X | (v, x ′ − x)X ≤ 0 ∀ x′ ∈ C} if x ∈ C
+
+∅ otherwise. Notice that the second term in (1) is the support function σA.We make the following assumptions on the problem data in (1). 
+
+Assumption 1 The problem data in (1) satisfies the following conditions. 1. The function ϕ : X → (−∞ , +∞] is proper, closed and convex. 2. The function f : X → R is Mf -smooth on dom ϕ, i.e., there exists an open set U containing 
+
+dom ϕ on which f is Fr´ echet differentiable and ∇f is Lipschitz continuous with modulus 
+
+Mf > 0.3. The set A ⊂ Y is nonempty, closed, convex and bounded. We denote the bound on A by 
+
+MA := sup θ∈A ∥θ∥Y .4. The function F : X → Y is MF -smooth on dom ϕ, i.e., there exists an open set V
+
+containing dom ϕ on which F is Fr´ echet differentiable and F ′ is Lipschitz continuous with modulus MF > 0.5. The objective function J = f + σA ◦ F + ϕ is bounded from below by κlb ∈ R.
+
+Under Assumption 1, [17, Proposition 2.2.1] ensures that f and F are locally Lipschitz continuous. Consequently, this and the boundedness of A ensure that 
+
+σA ◦ F is also locally Lipschitz continuous. Therefore, [17, Proposition 2.3.3] and [17, Theorem 2.3.10] yield 
+
+∂C (f + σA ◦ F )( x) = ∇f (x) + F ′(x)∗∂σ A(F (x)) for x ∈ U ∩ V , where ∂C denotes the Clarke subdifferential. It further follows from this, Corollary 1 of [17, Theorem 2.9.8] and [17, Theorem 2.9.9], that 
+
+∂C J(x) = ∇f (x) + F ′(x)∗∂σ A(F (x)) + ∂ϕ (x) (3) for x ∈ dom ∂ϕ . Hence, [17, Proposition 2.4.11] provides a first-order necessary opti-mality condition for (1). In particular, if ¯ x ∈ X is a local minimizer of (1), then ¯ x
+
+satisfies 
+
+∃ ¯θ ∈ ∂σ A(F (¯ x)) such that − (∇f (¯ x) + F ′(¯ x)∗ ¯θ) ∈ ∂ϕ (¯ x), (4) which can be equivalently rewritten as 
+
+∃ ¯θ ∈ ∂σ A(F (¯ x)) such that ¯x = prox tϕ (¯ x − t(∇f (¯ x) + F ′(¯ x)∗ ¯θ)) (5) for arbitrary fixed t > 0. We will say that ¯ x ∈ X is a stationary point of (1) if it satisfies (5). 4For the forthcoming analysis, it will be convenient to define the proper, closed and convex function ψ¯x : X → (−∞ , +∞] for fixed ¯ x ∈ X defined by 
+
+ψ¯x(x) := σA(F ′(¯ x)( x − ¯x) + F (¯ x)) + ϕ(x). (6) Using ψ¯x, we arrive at the following alternative characterization of stationary points for (1). 
+
+Theorem 2 Let ¯x ∈ X and consider ψ¯x defined in (6) . Then, ¯x is a stationary point of (1) 
+
+(i.e., (4) holds) if and only if 
+
+¯x = prox tψ ¯x (¯ x − t∇f (¯ x)) (7) 
+
+for arbitrary, fixed t > 0. In particular, if ¯x is a stationary point of (1) , then it is also a stationary point of the auxiliary optimization problem 
+
+min  
+
+> x∈X
+
+f (x) + ψ¯x(x). (8) 
+
+Proof Leveraging the same arguments that produced (3), we obtain 
+
+∂ψ ¯x(x) = F ′(¯ x)∗∂σ A(F ′(¯ x)( x − ¯x) + F (¯ x)) + ∂ϕ (x).
+
+From this follows the sequence of equivalences: (4) ⇐⇒ −∇ f (¯ x) ∈ F ′(¯ x)∗∂σ A(F (¯ x)) + ∂ϕ (¯ x) = ∂ψ ¯x(¯ x)
+
+⇐⇒ ¯x − t∇f (¯ x) ∈ (Id + t∂ψ ¯x)(¯ x) ∀ t > 0
+
+⇐⇒ (7) , cf. [18, Example 23.3] .
+
+Here, Id ∈ L (X) denotes the identity operator on X. To conclude, a stationary point ¯ p ∈ X
+
+for (8) satisfies 
+
+−∇ f (¯ p) ∈ ∂ψ ¯x(¯ p) = F ′(¯ x)∗∂σ A(F ′(¯ x)(¯ p − ¯x) + F (¯ x)) + ∂ϕ (¯ p). (9) Since ¯ x is a stationary point of (1), it satisfies (4) and therefore, substituting ¯ x for ¯ p in (9), we see that ¯ x is a stationary point of (8). □
+
+Our trust-region algorithm leverages nonsmooth functions of the form 
+
+ψk(x) = σA(Ak(x − xk) + bk) + ϕ(x),
+
+where xk is the k-th iterate, Ak ∈ L (X, Y ) is an approximation of F ′(xk) and bk ∈ Y
+
+is an approximation of F (xk) To prove convergence, we must relate the proximity operators of ψk with ψ¯x, which we can do leveraging the subsequent technical lemma. 
+
+Lemma 3 Let wi : X → Y , i = 1 , 2, be two affine maps defined by 
+
+wi(x) = Di(x − ui) + di, i = 1 , 2,
+
+where Di ∈ L (X, Y ), ui ∈ X and di ∈ Y , i = 1 , 2. Moreover, define Ψi : X → (−∞ , +∞] by 
+
+Ψi(x) = ϕ(x) + σA(wi(x)) , i = 1 , 2.
+
+If pi = prox tΨi (z), i = 1 , 2, for fixed t > 0 and z ∈ X, then 
+
+∥p1 − p2∥2
+
+> X
+
+max {1, ∥p1 − p2∥X }≤ 2tM A(∥D1 − D2∥L(X,Y )(1 + 2 ∥p1 − u1∥X ) + 2 ∥d1 − d2 − D2(u1 − u2)∥Y ).
+
+(10) 
+
+5Proof Let vi : X → (−∞ , +∞] denote the objective function associated with the proximity operator of Ψ i, i.e., 
+
+vi(x) = 12t ∥x − z∥2 
+
+> X
+
++ Ψ i(x), i = 1 , 2,
+
+and notice that, for x ∈ dom ϕ,
+
+v1(x) − v2(x) = σA(w1(x)) − σA(w2(x)) .
+
+Owing to the strong convexity of v2 as well as the optimality of pi, i = 1 , 2, we have that  
+
+> 12t
+
+∥p2 − p1∥2 
+
+> X
+
+≤ v2(p1) − v2(p2)
+
+≤ [( v1(p2) − v2(p2)) − (v1(p1) − v2(p1))] + ( v1(p1) − v1(p2)) 
+
+≤ [( v1(p2) − v2(p2)) − (v1(p1) − v2(p1))] . (11) It follows from the definition of the support function and the Fenchel-Young inequality that (θ2(x), w 1(x) − w2(x)) Y ≤ v1(x) − v2(x) ≤ (θ1(x), w 1(x) − w2(x)) Y
+
+for any x ∈ X and θi(x) ∈ ∂σ A(wi(x)), i = 1 , 2. Consequently, we have that [( v1(x) − v2(x)) −(v1(y) − v2(y))] (12a) 
+
+≤ (θ1(x), w 1(x) − w2(x)) Y − (θ2(y), w 1(y) − w2(y)) Y
+
+= ( θ1(x), (w1(x) − w2(x)) − (w1(y) − w2(y))) Y (12b) + ( θ1(x) − θ2(y), w 1(y) − w2(y)) Y (12c) for any x, y ∈ dom ϕ. To bound (12b), the boundedness of A and the definitions of wi yield 
+
+|(θ1(x), (w1(x) − w2(x)) − (w1(y) − w2(y))) Y | ≤ MA∥D1 − D2∥L(X,Y )∥x − y∥X .
+
+Now, to bound (12c), we have that 
+
+w1(y) − w2(y) = ( D1 − D2)( y − u1) + ( d1 − d2 − D2(u1 − u2)) ,
+
+and so 
+
+|(θ1(x) − θ2(y), w 1(y) − w2(y)) Y |≤ 2MA(∥D1 − D2∥L(X,Y )∥y − u1∥X + ∥d1 − d2 − D2(u1 − u2)∥Y ).
+
+Using these estimates, we can bound (12a) by 
+
+|(v1(x) − v2(x)) − (v1(y) − v2(y)) |≤ MA(∥D1 − D2∥L(X,Y )(∥x − y∥X + 2 ∥y − u1∥X ) + 2 ∥d1 − d2 − D2(u1 − u2)∥Y ). (13) Combining (11) with (13), we achieve the bound  
+
+> 12t
+
+∥p2−p1∥2 
+
+> X
+
+≤ MA(∥D1−D2∥L(X,Y )(∥p2−p1∥X +2 ∥p1−u1∥X )+2 ∥d1−d2−D2(u1−u2)∥Y ).
+
+Applying H¨ older’s inequality to the right-hand side yields the bound (10). □
+
+# 3 Algorithm 
+
+We now present an iterative method for solving (1). At each iteration of our method, we minimize a local model of the objective function J in (1) within a ball of radius ∆k > 0 called the trust region . To construct this subproblem, we employ a quadratic approximation of the Lagrangian functional 
+
+L(x, θ ) := f (x) + ( θ, F (x)) Y .
+
+6Notice that L is continuously differentiable and that x 7 → L(x, θ ) has Lipschitz continuous gradient. We approximate L around the current iterate xk by 
+
+Lk(x, θ ) := qk(x) + ( θ, ℓ k(x)) Y ,
+
+where θk ∈ A and 
+
+qk(x) := 12 (Bk(x − xk), x − xk)X + ( gk, x − xk)X
+
+ℓk(x) := Ak(x − xk) + bk.
+
+Here, Ak ≈ F ′(xk), bk ≈ F (xk), gk ≈ ∇ f (xk), and Bk ∈ L (X) encapsulates the curvature of ℓ(·, θ k) at xk. Using Lk, we approximate the objective function J by the local model 
+
+mk(x) := sup 
+
+> θ∈A
+
+Lk(x, θ ) + ϕ(x) = qk(x) + ψk(x), (14) where 
+
+ψk(x) := σA(ℓk(x)) + ϕ(x).
+
+Note that the function ψk involves the sum of two potentially nonsmooth, yet convex, terms σA ◦ ℓk and ϕ. To compute trial iterates x+ 
+
+> k
+
+, we approximately solve the trust-region subproblems min  
+
+> x∈X
+
+{mk(x) := qk(x) + ψk(x)} subject to ∥x − xk∥X ≤ ∆k, (15) where ∆ k > 0 is the current trust-region radius. To ensure convergence, we require that for each k the trial iterate x+ 
+
+> k
+
+satisfies 
+
+∥x+ 
+
+> k
+
+− xk∥X ≤ κrad ∆k (16a) 
+
+mk(xk) − mk(x+ 
+
+> k
+
+) ≥ κfcd hk min 
+
+ hk
+
+1 + ∥Bk∥L(X)
+
+, ∆k
+
+
+
+, (16b) where κrad > 0 and κfcd > 0 are independent of k and hk is the stationarity metric 
+
+hk := 1
+
+tk
+
+∥prox tk ψk (xk − tkgk) − xk∥X , tk > 0. (17) Note that (16b) ensures that x+ 
+
+> k
+
+∈ dom ϕ since otherwise the left-hand side would be 
+
+−∞ . The positive parameter tk > 0 in (17) is chosen as the step size for the Cauchy point discussed in Section 3.1. Once x+ 
+
+> k
+
+is computed, we decide whether or not to accept or reject x+ 
+
+> k
+
+based on the ratio of actual and predicted reduction: 
+
+ρ∗ 
+
+> k
+
+:= ared k
+
+pred k
+
+,
+
+where ared k := J(xk) − J(x+ 
+
+> k
+
+) and pred k := mk(xk) − mk(x+ 
+
+> k
+
+).
+
+7In many applications, the values and derivatives of f and F cannot be numerically computed exactly. For optimization problems governed by systems of PDEs, f and 
+
+F may require the discretization and iterative solution of the underlying PDEs [13]. Similarly, in risk-averse stochastic programming, evaluating the risk measure requires approximation, which can be done in some cases using quadrature [7, 8, 19, 20]. To leverage this inexactness, we enforce the following conditions on gk, bk and Ak.
+
+Condition 4 There exist positive constants κgrad , κval and κjac , independent of k, such that 
+
+∥gk − ∇ f (xk)∥X ≤ κgrad min {hk, ∆k} (18a) 
+
+∥bk − F (xk)∥Y ≤ κval min {hk, ∆2
+
+> k
+
+} (18b) 
+
+∥Ak − F ′(xk)∥L(X,Y ) ≤ κjac min {hk, ∆k}. (18c) 
+
+In these settings, the objective function value J, and thus ared k, cannot be com-puted exactly. Instead, we replace ared k with the computed reduction cred k. We enforce the following condition on the approximation cred k.
+
+Condition 5 There exists a positive constant κobj , independent of k, such that 
+
+|ared k − cred k| ≤ κobj [η min {pred k, ζ k}]ζ , (19) 
+
+where ζ, η, and ζk are (user-specified) positive real numbers that satisfy 
+
+ζ > 1, 0 < η < min {η1, 1 − η2}, and lim  
+
+> k→∞
+
+ζk = 0 .
+
+Using cred k, we replace the ratio of actual and predicted reduction ρ∗ 
+
+> k
+
+with 
+
+ρk := cred k
+
+pred k
+
+.
+
+As shown in [8, Lemma A.1], Condition 5 ensures that 
+
+∃ Kη ∈ N such that |ρ∗ 
+
+> k
+
+− ρk| ≤ η ∀ k ≥ Kη . (20) We list the trust-region method in Algorithm 1 and in the forthcoming subsections, we discuss methods to efficiently compute the trial iterate x+ 
+
+> k
+
+in line 3 of Algorithm 1. 
+
+## 3.1 Cauchy Point 
+
+In traditional trust-region methods, the trial iterate x+ 
+
+> k
+
+is selected to produce at least a fraction of the model decrease achieved by a benchmark called the Cauchy point. For smooth unconstrained optimization, the Cauchy point is chosen as a point in the negative gradient direction that produces sufficient decrease of the (usually quadratic) model [21], while for convex-constrained trust-region methods, the Cauchy point is 8Algorithm 1 TR-Risk Algorithm 
+
+Input: Initial guess x1 ∈ dom ϕ, initial radius ∆ 1 > 0, 0 < η 1 < η 2 < 1, and 0 < γ 1 ≤ γ2 < 1 ≤ γ3 
+
+> 1:
+
+for k = 1 , 2, . . . do  
+
+> 2:
+
+Model Selection: Choose Ak, bk, and gk that satisfy Condition 4  
+
+> 3:
+
+Step Computation: Compute x+ 
+
+> k
+
+∈ X that satisfies (16)  
+
+> 4:
+
+Step Acceptance and Radius Update: Compute the ratio of computed and predicted reduction ρk with cred k satisfying Condition 5  
+
+> 5:
+
+if ρk < η 1 then  
+
+> 6:
+
+Set xk+1 ← xk 
+
+> 7:
+
+Choose ∆ k+1 ∈ [γ1∆k, γ 2∆k] 
+
+> 8:
+
+else  
+
+> 9:
+
+Set xk+1 ← x+ 
+
+> k
+> 10:
+
+if ρk ∈ [η1, η 2) then  
+
+> 11:
+
+Choose ∆ k+1 ∈ [γ2∆k, ∆k] 
+
+> 12:
+
+else  
+
+> 13:
+
+Choose ∆ k+1 ∈ [∆ k, γ 3∆k] 
+
+> 14:
+
+end if  
+
+> 15:
+
+end if  
+
+> 16:
+
+end for 
+
+a point along the projected gradient path [22]. For this work, we define the Cauchy point for (15) as 
+
+xck := xk + αksk(tk) with sk(t) := prox tψ k (xk − tg k) − xk, (21) where αk ∈ (0 , 1] and tk > 0 are selected to satisfy (16). When minimizing f + ϕ, two basic approaches for selecting αk and tk are presented in [14, 23]. These approaches apply, without modification, to (15). The approach described in [14, Algorithm 2] sets 
+
+αk = 1 and selects the step length tk to satisfy certain sufficient decrease conditions using a bidirectional proximal search. In contrast, the method described in [23] first computes tk as a safeguarded spectral (also called Barzilai-Borwein) step length and then selects αk to minimize a quadratic upper bound of the model. In our numerical experiments, we employ the approach described in [23]. In order to compute xck, we must be able to evaluate the proximity operator of 
+
+ψk. However, ψk involves the sum of two convex functions, one of which involves the composition with an affine map. As a result, ψk is unlikely to admit an analytical proximity operator. If the proximity operator of ϕ is available and the projection onto 
+
+A is computable, then we can approximately compute the proximity operator of ψk
+
+iteratively by applying, e.g., projected gradient ascent to the dual problem. To this end, we recall that the dual problem associated with the optimization problem defining the proximity operator of ψk is given by max  
+
+> θ∈A
+
+min 
+
+> x∈X
+
+{ 12r ∥x − z∥2 
+
+> X
+
++ ϕ(x) + ( θ, A k(x − xk) + bk)Y }, r > 0. (22) 9Notice that Sion’s minimax theorem [24] ensures that there is no duality gap. More-over, the inner minimization problem in (22) has the unique minimizer ¯ p(θ), which satisfies the optimality conditions 0 ∈ 1 
+
+> r
+
+(¯ p(θ) − z) + A∗
+
+> k
+
+θ + ∂ϕ (¯ p(θ)) ⇐⇒ (z − rA ∗
+
+> k
+
+θ) ∈ ¯p(θ) + r∂ϕ (¯ p(θ)) 
+
+⇐⇒ ¯p(θ) = prox rϕ (z − rA ∗
+
+> k
+
+θ).
+
+Substituting ¯ p(θ) into (22) yields the dual objective function 
+
+d(θ) := 12r ∥¯p(θ) − z∥2 
+
+> X
+
++ ϕ(¯ p(θ)) + ( θ, A k(¯ p(θ) − xk) + bk)Y ,
+
+which is concave and differentiable with Lispchitz continuous gradient given by 
+
+∇d(θ) = Ak(prox rϕ (z − rA ∗
+
+> k
+
+θ) − xk) + bk = ℓk(prox rϕ (z − rA ∗
+
+> k
+
+θ)) and Lipschitz modulus r∥Ak∥2 
+
+> L(X,Y )
+
+. One can maximize d using, e.g., the spectral projected gradient method [25], which we list in Algorithm 2. The following proposition 
+
+Algorithm 2 ψk Proximity Operator Computation 
+
+Input: Proximity operator arguments z ∈ X and r > 0, initial guess θ(1) ∈ A,safeguards 0 < γ min < γ max < +∞, initial steplengths γ(1) ∈ [γmin , γ max ] and 
+
+λ0 ∈ (0 , 1], and 0 < σ 1 < σ 2 < 1, positive parameters α ∈ (0 , 1) and β ∈ [σ1, σ 2], and nonmonotone memory limit M ∈ N 
+
+> 1:
+
+for n = 1 , 2, . . . do  
+
+> 2:
+
+p(n) ← prox rϕ (z − rA ∗
+
+> k
+
+θ(n)) 
+
+> 3:
+
+μ(n) ← ℓk(p(n)) 
+
+> 4:
+
+if n > 1 then  
+
+> 5:
+
+γ(n) ← min 
+
+
+
+γmax , max 
+
+
+
+γmin , λ(n−1) ∥s(n−1) ∥2
+
+> Y
+
+(μ(n−1) − μ(n), s (n−1) )Y
+
+  
+
+> 6:
+
+end if  
+
+> 7:
+
+s(n) ← proj A(θ(n) + γ(n)μ(n)) − θ(n) 
+
+> 8:
+
+λ(n) ← λ0 
+
+> 9:
+
+dmin ← min {d(θ(n−j)) | 0 ≤ j ≤ min {n, M − 1}}  
+
+> 10:
+
+while d(θ(n) + λ(n)s(n)) < d min + αλ (n)(μ(n), s (n))Y do  
+
+> 11:
+
+δ ← −  
+
+> 12
+
+(λ(n))2(μ(n), s (n))Y
+
+d(θ(n) + λ(n)s(n)) − d(θ(n)) − λ(n)(μ(n), s (n))Y 
+
+> 12:
+
+if δ ∈ [σ1λ(n), σ 2λ(n)] then  
+
+> 13:
+
+λ(n) ← δ 
+
+> 14:
+
+else  
+
+> 15:
+
+λ(n) ← βλ (n) 
+
+> 16:
+
+end if  
+
+> 17:
+
+end while  
+
+> 18:
+
+θ(n+1) ← θ(n) + λ(n)s(n) 
+
+> 19:
+
+end for 
+
+10 summarizes convergence results for Algorithm 2. 
+
+Proposition 6 Let {(p(n), θ (n))} denote the sequence of primal and dual iterates generated by Algorithm 2, then θ(n) ⇀ ¯θ, where ¯θ ∈ A is a solution to the dual problem (22) . In addition, suppose one of the following conditions holds: (a) Ak is a compact operator; (b) Y is finite dimensional; (c) There exists ε ∈ (0 , min {1, (r∥Ak∥2 
+
+> L(X,Y )
+
+)−1}) for which 
+
+ε ≤ γ(n) ≤ 2
+
+r∥Ak∥2 
+
+> L(X,Y )
+
+− ε and ε ≤ λ(n) ≤ 1.
+
+Then, p(n) → prox rψ k (z) = prox rϕ (z − rA ∗ 
+
+> k
+
+¯θ).Proof Weak convergence follows from [26, Theorem 3.2], where we note that the proofs of [26, Proposition 3.1 & Theorem 3.1] are easily modified to handle the more general nonmonotic line search in Algorithm 2. To prove the final claim, we first note that [18, Proposition 19.5] ensures that ¯ p = prox rψ k (z) = prox rϕ (z − rA ∗ 
+
+> k
+
+¯θ). Consequently, if (a) holds, then A∗ 
+
+> k
+
+is compact, which implies that A∗
+
+> k
+
+θ(n) → A∗ 
+
+> k
+
+¯θ and the result follows from the continuity of the proximity operator. Similarly, if (b) holds, then θ(n) → ¯θ and again the result follows. Finally, if (c) holds, then by firm nonexpansivity [18, Proposition 4.4], we have that 
+
+∥p(n) − ¯p∥2 
+
+> X
+
+≤ (−A∗
+
+> k
+
+θ(n) + A∗ 
+
+> k
+
+¯θ, prox rϕ (z − rA ∗
+
+> k
+
+θ(n)) − ¯p)X
+
+= ( θ(n) − ¯θ, −Akprox rϕ (z − rA ∗
+
+> k
+
+θ(n)) + Ak ¯p)Y
+
+= ( θ(n) − ¯θ, ∇d(¯θ) − ∇ d(θ(n))) Y
+
+≤ ∥ θ(n) − ¯θ∥Y ∥∇ d(¯θ) − ∇ d(θ(n))∥Y .
+
+Since {θ(n)} is weakly convergent, {∥ θ(n) − ¯θ∥Y } is bounded. In addition, [18, Proposi-tion 28.13] ensures that ∇d(θ(n)) → ∇ d(¯θ), proving the claim. □
+
+Our subsequent convergence analysis assumes that the proximity operator of ψk
+
+is computed exactly. However, Algorithm 2 is only guaranteed to produce inexact evaluation, which motivates research on methods that can leverage inexact proximity operator evaluations [27, 28]. As we will see in the numerical results, Algorithm 2 typically produces sufficiently accurate approximations with only modest effort. 
+
+## 3.2 Trial Iterate Computation 
+
+To compute a trial step x+ 
+
+> k
+
+that improves upon the Cauchy point xck and satisfies (16), we can employ any of the methods introduced in [23], including the dogleg, spec-tral proximal gradient, or truncated conjugate gradient algorithms. In our numerical results, we employ the truncated conjugate gradient method [23, Algorithm 4]. This method first computes the Cauchy point xck and then improves upon it using modified nonlinear conjugate gradient iterations. 11 4 Convergence Theory 
+
+In this section, we prove convergence of Algorithm 1 assuming the proximity operator prox tψ k is computed exactly. The technical results are partitioned into two classes. First, we prove global convergence of Algorithm 1 in the sense that {hk} accumulates at zero. These results leverage traditional trust-region proof techniques like those used to prove [14, Theorem 2]. We then postulate additional assumptions on the problem data that ensure the sequence of iterates {xk} generated by Algorithm 1 accumulate at a stationary point of (1). For these results, we employ the following notation to distinguish between quantities depending on approximations (i.e., bk, Ak and gk) and those that do not: ˆℓk(x) := F ′(xk)( x − xk) + F (xk)ˆψk(x) := ϕ(x) + σA(ˆℓk(x)) ˆHk(t) := 1 
+
+> t
+
+∥xk − prox t ˆψk (xk − t∇f (xk)) ∥X
+
+Hk(t) := 1 
+
+> t
+
+∥xk − prox tψ k (xk − tg k)∥X .
+
+Notice that hk = Hk(tk) and we similarly denote ˆhk = ˆHk(tk). 
+
+## 4.1 Global Convergence 
+
+To prove global convergence of Algorithm 1, we extend the theory in [14]. In the sub-sequent lemma, we update [14, Lemma 8] to account for the more general nonsmooth term ψk.
+
+Lemma 7 Fix k ≥ Kη with Kη defined in (20) and let Assumption 1 hold. If hk > 0 and 
+
+(1 + ∥Bk∥L(X))∆ k ≤ κvs hk (23) 
+
+with κvs ∈ (0 , 1) defined by 
+
+κvs := κfcd (1 − η2 − η)max {κfcd , 12 κ2rad , Mf 
+
+> 2
+
+κ2rad + κgrad κrad + MA( MF 
+
+> 2
+
+κ2rad + κjac κrad + 2 κval )} ,
+
+then ρk ≥ η2 and ∆k+1 ≥ ∆k.Proof We first bound the difference between pred k and ared k. To this end, let sk = x+ 
+
+> k
+
+− xk
+
+and recall that pred k − ared k = ( qk(xk) + σA(bk) + ϕ(xk) − qk(x+ 
+
+> k
+
+) − σA(ℓk(x+ 
+
+> k
+
+)) − ϕ(x+ 
+
+> k
+
+)) 
+
+− (f (xk) + σA(F (xk)) + ϕ(xk) − f (x+ 
+
+> k
+
+) − σA(F (x+ 
+
+> k
+
+)) − ϕ(x+ 
+
+> k
+
+)) = ( qk(xk) − qk(x+ 
+
+> k
+
+)) − (f (xk) − f (x+ 
+
+> k
+
+)) + ( σA(bk) − σA(ℓk(x+ 
+
+> k
+
+)) − (σA(F (xk)) − σA(F (x+ 
+
+> k
+
+))) .
+
+We individually bound the smooth and nonsmooth terms. For the smooth term, we have that (qk(xk) − qk(x+ 
+
+> k
+
+)) − (f (xk) − f (x+ 
+
+> k
+
+)) 
+
+12 = − 12 (Bksk, s k)X − (gk, s k)X +
+
+Z 10
+
+(∇f (xk + ts k), s k)X dt
+
+≤ 12 ∥Bk∥L(X)∥sk∥2 
+
+> X
+
++ Mf 
+
+> 2
+
+∥sk∥2 
+
+> X
+
++ κgrad ∥sk∥X ∆k
+
+≤ ( 12 κ2rad ∥Bk∥L(X) + Mf 
+
+> 2
+
+κ2rad + κgrad κrad )∆ 2
+
+> k
+
+,
+
+where we used Assumption 1, Condition 4, and (16a). For the nonsmooth term, Condition 4 and (16a) ensure that 
+
+σA(bk) − σA(F (xk)) ≤ MA∥bk − F (xk)∥Y ≤ MAκval ∆2
+
+> k
+
+and we have that 
+
+σA(F (x+ 
+
+> k
+
+)) − σA(ℓk(x+ 
+
+> k
+
+)) = ( σA(F (x+ 
+
+> k
+
+)) − σA(F (xk) + F ′(xk)sk)) + ( σA(F (xk) + F ′(xk)sk) − σA(ℓk(x+ 
+
+> k
+
+))) . (24) Again using Condition 4, we can bound the second term on the right-hand side of (24) as 
+
+σA(F (xk) + F ′(xk)sk) − σA(ℓk(x+ 
+
+> k
+
+)) 
+
+≤ MA(∥(F ′(xk) − Ak)sk∥Y + ∥bk − F (xk)∥Y )
+
+≤ MA(κjac ∥sk∥X ∆k + κval ∆2
+
+> k
+
+)
+
+≤ MA(κjac κrad + κval )∆ 2
+
+> k
+
+,
+
+Finally, to bound the first term on the right-hand side of (24), we first recall that support functions are subadditive 1 and so 
+
+σA(F (x+ 
+
+> k
+
+)) − σA(F (xk) + F ′(xk)sk)) ≤ σA(F (x+ 
+
+> k
+
+) − F (xk) − F ′(xk)sk).
+
+To bound σA(F (x+ 
+
+> k
+
+) − F (xk) − F ′(xk)sk), Assumption 1 ensures that 
+
+σA(F (x+ 
+
+> k
+
+) − F (xk) − F ′(xk)sk) = sup 
+
+> θ∈A
+
+Z 10
+
+(θ, (F ′(xk + ts k) − F ′(xk)) sk)Y dt
+
+≤ 12 MAMF ∥sk∥2
+
+> X
+
+≤ 12 MAMF κ2rad ∆2
+
+> k
+
+,
+
+where we have used the definition of σA and the mean value theorem applied to the map 
+
+t 7 → (θ, F (xk + ts k)) Y for fixed θ ∈ A to arrive at the first equality. Combining these bounds yields 
+
+|pred k − ared k| ≤ κfcd (1 − η2 − η)
+
+κvs 
+
+(1 + ∥Bk∥L(X))∆ 2
+
+> k
+
+, (25) where we have used H¨ older inequality. Combining (25) and (16b), we obtain 
+
+|ρ∗ 
+
+> k
+
+− 1| ≤ κfcd (1 − η2 − η)
+
+κvs 
+
+(1 + ∥Bk∥L(X))∆ 2
+
+> k
+
+κfcd hk min 
+
+n hk  
+
+> 1+ ∥Bk∥L(X)
+
+, ∆k
+
+o ≤ (1 − η2 − η).
+
+Consequently, we have that ρ∗ 
+
+> k
+
+≥ η2 + η and ρk ≥ η2 as was to be shown. □
+
+Replacing [14, Lemma 8] with Lemma 7 in the proof of [14, Theorem 3] enables us to prove the convergence of Algorithm 1.                
+
+> 1The subadditivity of σAensures that
+> σA(y) = σA(y′+ ( y−y′)) ≤σA(y′) + σA(y−y′)∀y, y ′∈Y.
+
+13 Theorem 8 Let {xk} be the sequence of iterates generated by Algorithm 1. If Assumption 1 holds and if ∞X
+
+> k=1
+
+(1 + max 
+
+> j=1 ,...,k
+
+∥Bj ∥L(X))−1 = + ∞,
+
+then 
+
+lim inf  
+
+> k→∞
+
+hk = 0 .
+
+In addition, if there exists tmax > 0 satisfying tk ≤ tmax for all k, then 
+
+lim inf  
+
+> k→∞
+
+Hk(t) = 0 ∀ t > 0.
+
+Proof The proof of this result is nearly identical to the proof of [14, Theorem 3, Equation (40)] with [14, Lemma 8] replaced by Lemma 7. Finally, the monotonicity of t 7 → Hk(t) (cf. [14, Lemma 2]) and the upper bound on tk ensure that Hk(tmax ) ≤ hk proving the final result. □
+
+In our first corollary to Theorem 8, we relate the convergence of hk and Hk(t) with ˆhk and ˆHk(t). 
+
+Corollary 9 Let the assumptions of Theorem 8 hold. If there exist 0 < t min ≤ tmax such that tk ∈ [tmin , t max ] for all k then 
+
+lim inf 
+
+> k→∞
+
+ˆhk = 0 and lim inf 
+
+> k→∞
+
+ˆHk(t) = 0 ∀ t > 0.
+
+Proof We first prove a bound between the proximity operators associated with ψk and ˆψk.Let pk = prox tk ψk (xk − tk∇f (xk)) and ˆ pk = prox tk ˆψk (xk − tk∇f (xk)). Applying Lemma 3 with Ψ 1 = ψk and Ψ 2 = ˆψk and noting that 
+
+
+
+∥D1 − D2∥L(X,Y ) = ∥Ak − F ′(xk)∥ ≤ κjac hk
+
+∥p1 − u1∥X = ∥pk − xk∥X ≤ κgrad tkhk + tkhk ≤ tmax (κgrad + 1) hk
+
+∥d1 − d2 − D2(u1 − u2)∥Y = ∥bk − F (xk)∥Y ≤ κval hk,
+
+we arrive at the bound 1
+
+tk
+
+∥pk − ˆpk∥2
+
+> X
+
+max {1, ∥pk − ˆpk∥X } ≤ 2MA(κjac (1 + 2 tmax (κgrad + 1) hk) + 2 κval )hk.
+
+Notice that this and the bounds on tk imply that lim inf 
+
+> k→∞
+
+1
+
+tk
+
+∥pk − ˆpk∥X = 0 .
+
+The nonexpansivity of the proximity operator and Condition 4 then ensure that lim inf  
+
+> k→∞
+> 1
+> tk
+
+∥xk − prox tk ˆψk (xk − tk∇f (xk)) ∥X
+
+≤ lim inf  
+
+> k→∞
+> 1
+> tk
+
+∥xk − prox tk ψk (xk − tk∇f (xk)) ∥X + lim inf  
+
+> k→∞
+> 1
+> tk
+
+∥pk − ˆpk∥X
+
+≤ lim inf  
+
+> k→∞
+
+(κgrad + 1) hk = 0 .
+
+The final result follows from the monotonicity of t 7 → Hk(t) [14, Lemma 2]. In particular, 
+
+Hk(t) ≤ hk for all t ≥ tmax and for any t ≤ tmax , Hk(t) ≤ tmax  
+
+> t
+
+Hk(tmax ) ≤ tmax  
+
+> t
+
+hk. □
+
+14 Under additional assumptions, we can strengthen the lower limit in Theorem 8 to a limit. 
+
+Theorem 10 Let the assumptions of Corollary 9 hold. If there exists κcurv > 0 satisfying 
+
+∥Bk∥L(X) ≤ κcurv for all k ∈ N, then 
+
+lim  
+
+> k→∞
+
+hk = lim  
+
+> k→∞
+
+Hk(t) = lim 
+
+> k→∞
+
+ˆHk(t) = 0 ∀ t > 0.
+
+Proof The proof of this is similar to the proof of [15, Theorem 1] with modifications to account for the more general objective function. Let S := {k ∈ N | ρk ≥ η1} denote the set of indices corresponding to successful iterations. If S is finite, then xk = ¯ x for k ≥ |S| sufficiently large and ∆ k → 0. Define pk = prox tψ k (¯ x − t∇f (¯ x)) and ¯ p(t) = prox tψ ¯x (¯ x − t∇f (¯ x)) = prox t ˆψk (xk − t∇f (xk)) for fixed t > 0 and k ≥ |S| . Applying Lemma 3 with Ψ 1 = ψk and Ψ2 = ˆψk = ψ¯x and noting that (via Condition 4) 
+
+
+
+∥D1 − D2∥L(X,Y ) = ∥Ak − F ′(¯ x)∥ ≤ κjac ∆k
+
+∥p1 − u1∥X = ∥pk − xk∥X ≤ κgrad t∆k + t∆k ≤ t(κgrad + 1)∆ k
+
+∥d1 − d2 − D2(u1 − u2)∥Y = ∥bk − F (¯ x)∥Y ≤ κval ∆2
+
+> k
+
+,
+
+we arrive at the bound 1
+
+t
+
+∥pk − ¯p(t)∥2
+
+> X
+
+max {1, ∥pk − ¯p(t)∥X } ≤ 2MA(κjac (1 + 2 t(κgrad + 1)∆ k) + 2 κval ∆k)∆ k,
+
+which implies that lim 
+
+> k→∞
+
+1
+
+t ∥pk − ¯p(t)∥X = 0 .
+
+Consequently, we have that 
+
+|Hk(t) − 1 
+
+> t
+
+∥¯p(t) − ¯x∥X | ≤ κgrad ∆k + 1 
+
+> t
+
+∥pk − ¯p(t)∥X
+
+and so Hk(t) → 1 
+
+> t
+
+∥¯p(t) − ¯x∥X and the desired result follows from monotonicity of t 7 → Hk(t)and the arguments in the proof of Corollary 9. Now suppose that S is infinite and set t = tmax . To arrive at a contradiction, we assume that there exists ϵ > 0 and a subsequence K ⊆ S satisfying 
+
+hk ≥ Hk(t) ≥ 2ϵ > 0 ∀ k ∈ K . (26) By Theorem 8, for each k ≥ K there exists ℓ > k for which Hℓ(t) < ϵ . Let k+ > k denote the first such index and define 
+
+S0 := {j ∈ S | k ≤ j < k + ∀ k ∈ K} .
+
+Note that for all j ∈ S 0, we have that Hj (t) ≥ ϵ. By [14, Lemma 2], there exists Kη ∈ N such that |ρ∗ 
+
+> j
+
+−ρj | ≤ η for all j ≥ Kη . This, the boundedness of {∥ Bk∥L(X)} and (16b) ensure that 
+
+J(xj ) − J(xj+1 ) ≥ (η1 − η)κfcd ϵ min 
+
+ ϵ
+
+1 + κcurv 
+
+, ∆j
+
+
+
+for all j ∈ S 0 with j ≥ Kη . Since {J(xk)} is monotonically decreasing and bounded below, we have that the left-hand side converges to zero and hence so does ∆ j . Consequently, for sufficiently large j ∈ S 0, we obtain ∆j ≤ J(xj+1 ) − J(xj )
+
+κfcd ϵ(η1 − η) .
+
+15 For sufficiently large k ∈ K , this and the triangle inequality ensure that 
+
+∥xk − xk+ ∥X ≤
+
+> k+−1
+
+X
+
+> j=k
+
+∥xj − xj+1 ∥X ≤ κrad 
+
+> k+−1
+
+X
+
+> j=k
+
+∆j ≤ κrad [J(xk) − J(xk+ )] 
+
+κfcd ϵ(η1 − η) .
+
+The right-hand side converges to zero and therefore so does the left-hand side as K ∋ k → ∞ .Lipschitz continuity then ensures that ∥∇ f (xk) − ∇ f (xk+ )∥X and ∥F ′(xk) − F ′(xk+ )∥ tend to zero as K ∋ k → ∞ . Now, for k ∈ K , the reverse triangle inequality yields 
+
+ϵ ≤ | Hk(t) − Hk+ (t)|≤ 1
+
+t ∥xk − xk+ ∥X + 1
+
+t ∥prox tψ k (xk − tg k) − prox tψ k+ (xk+ − tg k+ )∥X .
+
+Nonexpansivity of the proximity operator then implies that 
+
+∥prox tψ k (xk − tg k) − prox tψ k+ (xk+ − tg k+ )∥X
+
+≤∥ xk − xk+ ∥X + t∥gk − gk+ ∥X
+
++ ∥prox tψ k (xk − tg k) − prox tψ k+ (xk − tg k)∥X . (27) Owing to Condition 4 and Lipschitz continuity, we have that 
+
+∥gk − gk+ ∥X ≤ κgrad (∆ k + ∆ k+ ) + Mf ∥xk − xk+ ∥X .
+
+It remains to bound the final term on the right-hand side of (27). For this, we employ Lemma 3 with Ψ 1 = ψk+ and Ψ 2 = ψk. In this setting, we have that 
+
+
+
+∥D1 − D2∥L(X,Y ) = ∥Ak+ − Ak∥L(X,Y )
+
+∥p1 − u1∥X = ∥prox tψ k+ (xk − tg k) − xk+ ∥X ≤ ∥ xk − xk+ ∥X + t∥gk − gk+ ∥X + tH k+ (t)
+
+∥d1 − d2 − D2(u1 − u2)∥Y = ∥bk+ − bk − Ak(xk+ − xk)∥Y .
+
+Note that ∥Ak+ − Ak∥L(X,Y ) tends to zero because of Condition 4 and the fact that ∆ k and 
+
+∥xk − xk+ ∥X tend to zero. That is, 
+
+∥Ak+ − Ak∥L(X,Y ) ≤ ∥ Ak − F ′(xk)∥L(X,Y ) + ∥Ak+ − F ′(xk+ )∥L(X,Y )
+
++ ∥F ′(xk) − F ′(xk+ )∥L(X,Y )
+
+≤ κjac (∆ k + ∆ k+ ) + MF ∥xk − xk+ ∥X .
+
+Using similar arguments combined with the mean value theorem, we can bound 
+
+∥bk+ −bk − Ak(xk+ − xk)∥Y
+
+≤ ∥ bk − F (xk)∥Y + ∥bk+ − F (xk+ )∥Y + ∥Ak − F ′(xk)∥L(X,Y )∥xk − xk+ ∥X
+
++ ∥F (xk+ ) − F (xk) − F ′(xk)( xk+ − xk)∥Y
+
+≤ κval (∆ 2 
+
+> k
+
++ ∆ 2 
+
+> k+
+
+) + κjac ∆k∥xk − xk+ ∥X + 12 MF ∥xk − xk+ ∥2 
+
+> X
+
+.
+
+Finally, there exists c > 0, independent of k, such that ∥prox tψ k+ (xk − tg k) − xk+ ∥X ≤ c for all k since ∥xk − xk+ ∥X and ∥gk − gk+ ∥X converge to zero, and Hk+ (t) ≤ hk+ ≤ ε. Defining 
+
+pk = prox tψ k (xk − tg k), ˜pk = prox tψ k+ (xk − tg k),μk = MA(κjac (∆ k + ∆ k+ ) + MF ∥xk − xk+ ∥X ) and 
+
+νk = MA(κval (∆ 2 
+
+> k
+
++ ∆ 2 
+
+> k+
+
+) + κjac ∆k∥xk − xk+ ∥X + 12 MF ∥xk − xk+ ∥2 
+
+> X
+
+),
+
+we arrive at the bound 1
+
+t
+
+∥pk − ˜pk∥2
+
+> X
+
+max {1, ∥pk − ˜pk∥X } ≤ 2((1 + 2 tc )μk + νk).
+
+Notice that μk K
+
+−→ 0 and νk K
+
+−→ 0. Therefore, ∥pk − ˜pk∥X K
+
+−→ 0. As a result, |Hk(t) − Hk+ (t)|
+
+converges to zero, arriving at a contradiction. Hence, no such subsequence exists, implying that Hk(t) → 0 and the desired result follows as before. □
+
+16 4.2 Convergence to Stationary Points 
+
+To prove convergence to a stationary point, we leverage results of the previous sub-section. However, we require additional regularity of the problem data. The principle challenge is in demonstrating convergence of the proximity operators of ψk to the prox-imity operator of ψ¯x, where ¯ x is a stationary point of (1). The following proposition postulates conditions on F for which this property is valid. 
+
+Proposition 11 Let {xk} be the sequence of iterates generated by Algorithm 1 and suppose Assumption 1 holds. Moreover, suppose there exists ¯x ∈ X and an index set K such that 
+
+{xk}K is bounded, hk K
+
+−→ 0, F ′(xk) K
+
+−→ F ′(¯ x), and 
+
+F (xk) − F (¯ x) − F ′(¯ x)( xk − ¯x) K
+
+−→ 0.
+
+Then, 
+
+prox tψ k (x) K
+
+−→ prox tψ ¯x (x) ∀ x ∈ X, t > 0. (28) 
+
+Proof Fix x ∈ X and t > 0. Lemma 3 with Ψ 1 = ψxk and Ψ 2 = ψ¯x (i.e., D1 = Ak, d1 = bk,
+
+u1 = xk, D2 = F ′(¯ x), d2 = F (¯ x) and u2 = ¯ x), combined with Condition 4, yields 
+
+
+
+∥D1 − D2∥L(X,Y ) ≤ κjac hk + ∥F ′(xk) − F ′(¯ x)∥L(X,Y )
+
+∥p1 − u1∥X = ∥prox tψ k (x) − xk∥X
+
+∥d1 − d2 − D2(u1 − u2)∥Y ≤ κval hk + ∥F (xk) − F (¯ x) − F ′(¯ x)( xk − ¯x)∥Y .
+
+If {∥ prox tψ k (x) − xk∥X }K is bounded, then our assumptions ensure that lim 
+
+> K∋ k→0
+
+∥prox tψ k (x) − prox tψ ¯x (x)∥2
+
+> X
+
+max {1, ∥prox tψ k (x) − prox tψ ¯x (x)∥X } = 0 ,
+
+and the desired result holds. As such, we will prove that {∥ prox tψ k (x) − xk∥X }K is bounded. To this end, we note that 
+
+|(ψk(z1) − ψ¯x(z1)) − (ψk(z2) − ψ¯x(z2)) | ≤ | (σA(ℓk(z1)) − σA(ℓk(z2)) |
+
++ |(σA(F (¯ x) + F ′(¯ x)( z1 − ¯x)) − σA(F (¯ x) + F ′(¯ x)( z2 − ¯x)) |≤ MA(∥Ak∥L(X,Y ) + ∥F ′(¯ x)∥L(X,Y ))∥z1 − z2∥X
+
+for all z1, z 2 ∈ X and therefore [29, Proposition 4.32] ensures that 
+
+∥prox tψ k (x) − prox tψ ¯x (x)∥X ≤ tM A(∥Ak∥L(X,Y ) + ∥F ′(¯ x)∥L(X,Y )).
+
+Applying Condition 4 yields 
+
+∥Ak∥L(X,Y ) ≤ κjac hk + ∥F ′(xk) − F ′(¯ x)∥L(X,Y ) + ∥F ′(¯ x)∥L(X,Y ),
+
+which is bounded for k ∈ K since F ′(xk) K
+
+−→ F ′(¯ x) and hk K
+
+−→ 0. Therefore, we have that 
+
+∥prox tψ k (x)∥X ≤ ∥ prox tψ k (x) − prox tψ ¯x (x)∥X + ∥prox tψ ¯x (x)∥X
+
+is bounded for k ∈ K , proving the claim. □
+
+17 In the subsequent corollaries, we provide conditions under which the assumptions of Proposition 11 hold. Our first corollary is particularly useful when X is finite dimen-sional as it assumes the existance of a strongly converging subsequence, while the second corollary is tailored to PDE-constrained optimization applications in which F
+
+and F ′ are completely continuous. Recall that completely continuous functions map weakly converging sequences into strongly converging sequences [30]. 
+
+Corollary 12 Let {xk} be the sequence of iterates generated by Algorithm 1 and suppose Assumption 1 holds. Moreover, suppose that ¯x ∈ X and K are such that hk K
+
+−→ 0 and xk K
+
+−→ ¯x.Then (28) holds. Proof Assumption 1 and strong convergence ensure that {xk}K is bounded, 
+
+F (xk) K
+
+−→ F (¯ x) and F ′(xk) K
+
+−→ F ′(¯ x).
+
+The result then follows from Proposition 11. □
+
+Corollary 13 Let {xk} be the sequence of iterates generated by Algorithm 1 and suppose Assumption 1 holds. Moreover, suppose that ¯x ∈ X and K are such that hk K
+
+−→ 0 and xk K
+
+−⇀ ¯x.Finally, assume that F and F ′ are completely continuous. Then (28) holds. Proof Weak convergence ensures that {xk}K is bounded and the assumed complete continuity ensures that 
+
+F (xk) K
+
+−→ F (¯ x) and F ′(xk) K
+
+−→ F ′(¯ x).
+
+Moreover, F ′(¯ x) is a completely continuous operator [30, Theorem 1.5.1] and therefore, 
+
+F ′(¯ x)( xk − ¯x) K
+
+−→ 0. The result then follows from Proposition 11. □
+
+Combining Corollaries 12 and 13 with Theorem 8 enables use to prove convergence to stationarity points of (1). Note that a consequence of Theorem 8 is that there exists a subsequence of the stationarity measures {hkj } that converges to 0. Our first result demonstrates that strong accumulations points are stationary. 
+
+Theorem 14 Let {xk} be the sequence of iterates generated by Algorithm 1 and let the assumptions of Theorem 8 hold. Moreover, suppose there exists ¯x ∈ X and an index set K ⊆ N
+
+such that hk K
+
+−→ 0 and xk K
+
+−→ ¯x. If there exists tmax > 0 with tk ≤ tmax for all k, then ¯x is a stationary point of (1) . In particular, (5) holds for all t > 0.Proof By Corollary 12, (28) holds. Using Condition 4, we have that 
+
+xk − tg k K
+
+−→ ¯x − t∇f (¯ x)
+
+18 for fixed t > 0 and so the nonexspansivity of the proximity operator ensures that 
+
+∥prox tψ k (xk − tg k)−prox tψ ¯x (¯ x − t∇f (¯ x)) ∥X
+
+≤∥ (xk − tg k) − (¯ x − t∇f (¯ x)) ∥X
+
++ ∥prox tψ k (¯ x − t∇f (¯ x)) − prox tψ ¯x (¯ x − t∇f (¯ x)) ∥X .
+
+In particular, we have that prox tψ k (xk − tg k) K
+
+−→ prox tψ ¯x (¯ x − t∇f (¯ x)) .
+
+Now, Theorem 8 ensures that 
+
+Hk(t) = ∥prox tψ k (xk − tg k) − xk∥X K
+
+−→ 0and therefore ¯ x = prox tψ ¯x (¯ x − t∇f (¯ x)). The result then follows from Theorem 2. □
+
+Theorem 14 is a useful result when X is finite dimensional. However, strong con-vergence is difficult to guarantee in infinite-dimensional Hilbert spaces where bounded sequences are only guaranteed to admit weak accumulation points. As demonstrated by the following theorem, this setting requires additional assumptions on f and F .
+
+Theorem 15 Let {xk} be the sequence of iterates generated by Algorithm 1 and let the assumptions of Corollary 9 hold. Moreover, suppose there exists ¯x ∈ X and an index set 
+
+K ⊆ N such that hk K
+
+−→ 0 and xk K
+
+−⇀ ¯x. Finally, suppose that f is strongly convex and F and 
+
+F ′ are completely continuous. If ¯x is a stationary point for (1) , then xk K
+
+−→ ¯x.Proof Let ω > 0 denote the strong convexity modulus of f . To simplify the presentation, define 
+
+Gk(x, t ) := 1 
+
+> t
+
+(x − prox tψ k (x − t∇f (x))) .
+
+By [15, Lemma 2], we have that Gk(·, t ) is a strongly monotone operator for all t ∈
+
+(0 , 2ωM −2 
+
+> f
+
+), which yields (ω − 12 tM −2 
+
+> f
+
+)∥xk − ¯x∥2 
+
+> X
+
+≤ (Gk(xk, t ) − Gk(¯ x, t ), x k − ¯x)X .
+
+Applying the Cauchy-Schwarz and triangle inequalities, we obtain (ω − 12 tM −2 
+
+> f
+
+)∥xk − ¯x∥X ≤ ∥ Gk(xk, t )∥X + ∥Gk(¯ x, t )∥X .
+
+By Corollary 9 and Condition 4, we have that lim  
+
+> K∋ k→∞
+
+∥Gk(xk, t )∥X ≤ lim 
+
+> K∋ k→∞
+
+(κgrad + 1) Hk(t) = 0 and by Corollary 13, in particular (28), we have that lim  
+
+> K∋ k→∞
+
+∥Gk(¯ x, t )∥X = 1 
+
+> t
+
+∥¯x − prox tψ ¯x (¯ x − t∇f (¯ x)) ∥X .
+
+Since ¯ x is stationary, Theorem 2 ensures that ¯ x = prox tψ ¯x (¯ x − t∇f (¯ x)) and therefore lim  
+
+> K∋ k→∞
+
+∥xk − ¯x∥X = 0 ,
+
+proving the desired result. □
+
+Theorem 15 demonstrates strong convergence when the weak limit of {xk}K is a stationary point. When f includes a Tikhonov regularization term, we can prove that this assumption is satisfied. 19 Theorem 16 Let the assumptions of Corollary 9 hold and assume that 
+
+f (x) = τ
+
+2 ∥x∥2 
+
+> X
+
++ f0(x),
+
+where τ > 0, f0 : X → R is Fr´ echet differentiable, and ∇f0, F and F ′ are completely continuous. Moreover, suppose there exists ¯x ∈ X and an index set K such that hk K
+
+−→ 0 and 
+
+xk K
+
+−⇀ ¯x. Then, ¯x is a stationary point of (1) . In addition, if f0 is τ0-weakly convex with 
+
+τ0 ∈ (0 , τ ), i.e., 
+
+x 7 → τ0
+
+2 ∥x∥2 
+
+> X
+
++ f0(x)
+
+is convex, then xk K
+
+−→ ¯x.Proof Set t = 1 
+
+> τ
+
+. Using Condition 4 and the assumed form of f , we have that 
+
+∥(xk − tg k)−(¯ x − t∇f (¯ x)) ∥X
+
+≤ t∥gk − ∇ f (xk)∥X + ∥(xk − t∇f (xk)) − (¯ x − t∇f (¯ x)∥X
+
+= t∥gk − ∇ f (xk)∥X + t∥∇ f0(xk) − ∇ f0(¯ x)∥X
+
+≤ tκ grad hk + t∥∇ f0(xk) − ∇ f0(¯ x)∥X
+
+and hence 
+
+xk − tg k K
+
+−→ ¯x − t∇f (¯ x).
+
+Therefore, Corollary 13 and the nonexspansivity of the proximity operator yield prox tψ k (xk − tg k) K
+
+−→ prox tψ ¯x (¯ x − t∇f (¯ x)) .
+
+Now, Theorem 8 ensures that 
+
+∥prox tψ k (xk − tg k) − xk∥X K
+
+−→ 0.
+
+Therefore, the weak lower semicontinuity of the norm yields 0 = lim inf  
+
+> K∋ k→∞
+
+∥prox tψ k (xk − tg k) − xk∥X ≥ ∥ prox tψ ¯x (¯ x − t∇f (¯ x)) − ¯x∥X
+
+and so ¯x = prox tψ ¯x (¯ x − t∇f (¯ x)), implying stationarity of ¯x. To conclude, if f0 is τ0-weakly convex with τ0 < τ , then f is strongly convex and strong convergence follows from Theorem 15. □
+
+Our final convergence result builds on Theorem 16, proving that when the Hes-sian sequence {Bk} is bounded and J is convex, the entire sequence of iterates {xk}
+
+converges to a stationary point of (1). 
+
+Corollary 17 Let the assumptions of Theorems 10 and 16 hold. Moreover, suppose J is convex and admits a unique minimizer ¯x ∈ X. If {xk} is bounded, then xk → ¯x.Proof Let ˜ x be any weak accumulation point of {xk}, which exists since {xk} is bounded, and let K be an index set on which xk K
+
+−⇀ ˜x. By Theorem 10, hk K
+
+−→ 0 and by Theorem 15, we have that xk K
+
+−→ ˜x and ˜ x is a stationary point of (1). Convexity of J ensures that the stationarity conditions (5) are necessary and sufficient for optimality, so ˜ x = ¯ x. Furthermore, boundedness of {xk} ensures that every subsequence has a further weakly converging subsequence with limit ¯ x. Consequently, xk → ¯x. □
+
+20 5 Numerics 
+
+In this section, we demonstrate the numerical performance of Algorithm 1 on various examples from PDE-constrained optimization. Throughout, D ⊂ Rd, d = 1 , 2, is the physical domain with boundary ∂D and (Ω , F, P) is a probability space with set of outcomes Ω, σ-algebra of events F ⊆ 2Ω and probability measure P : F → [0 , 1]. The optimization space in all examples is X = L2(D), while the space Y in the first example is Y = L2(Ω , F, P) and Y = R in the second. For each example, we employ the truncated conjugate gradients subproblem solver developed in [23, Algorithm 4] with the number of iterations capped at 15, lower and upper safeguards 10 −12 and 10 12 ,respectively, descent parameter 10 −4, and relative and absolute tolerances 10 −2 and 10 −4, respectively. In the notation of [23, Algorithm 4], these parameters are maxit ,
+
+tmin , tmax , η, τk and ¯ τ , respectively. Note that this choice of subproblem solver ensures that the Cauchy point steplengths tk satisfy 10 −12 = tmin ≤ tk ≤ tmax = 10 12 for all 
+
+k. In addition, we use Algorithm 2 to compute the subproblem proximity operator. For this, we set λ0 = 1, γmin = 10 −6, γmax = 10 6, σ1 = 0 .1, σ2 = 0 .9, α = 10 −4,
+
+β = 0 .5 and M = 1 (i.e., monotonic line search). We terminate Algorithm 2 when 
+
+∥s(n)∥Y
+
+γ(n) ≤ 10 −10 .
+
+For Algorithm 1, we set ∆ 1 = 10, η1 = 10 −4, η2 = 0 .5, γ1 = γ2 = 0 .25, and γ3 = 10. Finally, we terminate Algorithm 1 when 
+
+hk ≤ 10 −8. (29) A consequence of Theorem 8 is that (29) is guaranteed to be satisfied after finitely many iterations. 
+
+## 5.1 Risk-Averse Control of Burger’s Equation 
+
+The goal of this example is to compare our approach with the primal-dual risk mini-mization algorithm [12] and to demonstrate its ability to control inexact PDE solves via Conditions 4 and 5. Let D = (0 , 1) and τ > 0, and consider the optimization problem min  
+
+> z∈L2(D)
+
+R
+
+ 12 ∥S(z) − 1∥2
+
+> L2(D)
+
+
+
++ τ 
+
+> 2
+
+∥z∥2
+
+> L2(D)
+
+, (30) where u = S(z) : Ω → H1(D) solves the weak form of Burger’s equation 
+
+−ν(ω)∂xx u(ω) + u(ω)∂xu(ω) = f (ω) + z in D a.s. (31a) [u(ω)](0) = d0(ω), [u(ω)](1) = d1(ω) a.s. (31b) 21 Here, ν, f , d0 and d1 are the random functions specified in [12]. For this example, 
+
+σA = R is a convex combination of the expected value and the average value-at-risk 2
+
+R(y) = (1 − λ)E[y] + λ AVaR p[y]with λ = 0 .75 and p = 0 .9, i.e., A = {θ ∈ L2(Ω , F, P) | E[θ] = 1 , 0.25 ≤ θ ≤ 7.75 a.s. }.We discretize the state u and the control z in space using continuous piecewise linear finite elements on a uniform mesh with 257 intervals and solve the resulting nonlinear system of equations using Newton’s method globalized with a backtracking line search. Finally, we approximate the risk measure R using sample average approximation (SAA) with 10,000 Monte Carlo samples. We summarize the performance of Algorithm 1 in Table 1 and include the perfor-mance of the primal-dual risk minimization algorithm ( PD-Risk ) [12] and the bundle method ( Bundle ) described in [31] for comparison. The results for PD-Risk and Bundle 
+
+can also be found in [12, Tables 6 & 7]. In Table 1, iter is the number of iterations,                 
+
+> method iter nfval ngrad nhess Alg. 1 788119 PD-Risk 846 44 128 Bundle 69 182 182 ---
+
+Table 1 : Comparison of Algorithm 1 with the primal-dual risk minimiza-tion algorithm PD-Risk and a bundle method Bundle : iter is the number of iterations, nfval is the number of func-tion evaluations, ngrad is the number of gradient computations and nhess is the number of Hessian applications. 
+
+nfval is the number of evaluations of f and F , ngrad is the number of derivative evaluations for f and F , and nhess is the number of Hessian applications for f and F .Note that each gradient evaluation requires 10,000 deterministic adjoint (linear) PDE solves and each Hessian application requires 20,000 additional deterministic linearized PDE solves. Consequently, Algorithm 1 required 80,000 deterministic nonlinear PDEs to evaluate the objective function value and 2,460,000 deterministic linear PDE solves to evaluate and apply the derivatives. In contrast, PD-Risk required 460,000 deter-ministic nonlinear PDE solves and 3,000,000 deterministic linear PDE solves, while 
+
+Bundle required 1,820,000 deterministic nonlinear and linear PDE solves. Although 
+
+Bundle performed fewer linear PDE solves to compute derivatives, each nonlinear PDE solve requires multiple linear solves. When accounting for the linearized solves required to solve the state, PD-Risk required a total of 4,824,834 deterministic linear PDE solves, compared to 2,708,194 for Algorithm 1, and so Algorithm 1 reduced the 
+
+> 2Also called the conditional value-at-risk, expected shortfall and superquantile.
+
+22 total number of deterministic linear PDE solves by a factor of 1 .78. Algorithm 1 also provides additional benefits over PD-Risk since it can leverage inexact function and derivative evaluations. Let cn(u, z ) = 0 denote the weak form of (31) and un,ℓ k denote the ℓ-th iterate generated by Newton’s method for solving cn at the n-th sample and the k-iteration of Algorithm 1. Table 2 includes the iteration histories for two instances of Algorithm 1: The top half corresponds to the iteration history using highly accurate state PDE solves that we terminate based on the criterion 
+
+∥cn(un,ℓ k , z k)∥ ≤ τ max {1, ∥cn, 0 
+
+> k
+
+∥} ,
+
+where τ = 10 −4√ϵmach ≈ 1.49 × 10 −12 and ϵmach denotes machine precision, while the lower half is the iteration history where we have allowed Algorithm 1 to supply τ
+
+using Conditions 4 and 5 with κgrad = κval = κjac = 1 and κobj = 10 4. We selected this value for κobj so that the initial tolerances generated by Conditions 4 and 5 were the same order of magnitude. Both the exact and inexact algorithms perform comparably, requiring the same number of iterations. However, the inexact variant leverages significantly relaxed PDE solver tolerances, reducing the total number of Newton iterations from 248,194 to 216,706. 
+
+k J(xk) hk ∆k ∥x+ 
+
+> k
+
+− xk∥ val tol grad tol itsp 0 2.4289e-2 3.9059e-3 1.0000e+1 --- 1.490e-12 1.490e-12 ---1 1.3441e-2 3.5555e-3 1.0000e+2 1.1950e+0 1.490e-12 1.490e-12 15 2 1.2453e-2 2.5784e-3 1.0000e+3 3.5392e-1 1.490e-12 1.490e-12 15 3 1.2151e-2 6.9818e-4 1.0000e+4 2.6859e-1 1.490e-12 1.490e-12 15 4 1.2129e-2 6.1039e-5 1.0000e+5 1.3944e-1 1.490e-12 1.490e-12 15 5 1.2128e-2 1.6595e-6 1.0000e+6 1.8164e-2 1.490e-12 1.490e-12 15 6 1.2128e-2 3.9913e-7 1.0000e+7 5.4855e-4 1.490e-12 1.490e-12 15 7 1.2128e-2 3.2924e-9 1.0000e+8 4.5861e-5 1.490e-12 1.490e-12 15 0 2.3866e-2 4.4689e-3 1.0000e+1 --- 1.000e-2 4.469e-3 ---1 1.3256e-2 2.2653e-3 1.0000e+2 1.2599e+0 1.931e-3 2.265e-3 15 2 1.2478e-2 5.5037e-4 1.0000e+3 3.1316e-1 1.191e-4 5.504e-3 15 3 1.2132e-2 3.9939e-4 1.0000e+4 3.0440e-1 5.023e-5 3.994e-4 15 4 1.2128e-2 1.1822e-5 1.0000e+5 5.6905e-2 3.581e-7 1.182e-5 15 5 1.2128e-2 7.3445e-6 1.0000e+6 4.3233e-3 7.582e-10 7.344e-6 15 6 1.2128e-2 2.6303e-7 1.0000e+7 7.6969e-4 6.844e-11 2.630e-7 15 7 1.2128e-2 3.2007e-9 1.0000e+8 5.8116e-5 1.490e-12 3.201e-9 15 
+
+Table 2 : Algorithm 1 iteration history using high-fidelity (rows 2 through 8) and inexact (rows 9 through 15) PDE solves. Columns 6 and 7 list the relative residual tolerance determined by the trust-region algorithm. 23 5.2 Sparse Optimal Control 
+
+The goal of this example is to demonstrate the mesh independence of Algorithm 1. Let 
+
+D = (0 , 0.6) × (0 , 0.2). We consider a deterministic semilinear elliptic optimal control problem motivated by the one studied in [32]. Our control problem is given by min 
+
+> z∈L2(D)
+> −10 ≤z≤10
+
+max 
+
+
+
+0, w − 1
+
+|Do|
+
+Z
+
+> Do
+
+S(z) d x
+
+
+
++ τ
+
+2 ∥z∥2 
+
+> L2(D)
+
++ τ1∥z∥L1(D), (32) where S(z) = u ∈ H1(D) solves the weak form of the semilinear elliptic PDE 
+
+−κ∆u + γu 3 = 12 χDb + z in Du = 0 on Γ = [0 , 0.6] × { 0} (33) 
+
+κ∇u · n = 0 on ∂D \ Γ.
+
+Here, Db = (0 , 0.1) × (0 .167 , 0.2), Do = (0 .5, 0.6) × (0 .167 , 0.2), χDb denotes the characteristic function of Db, τ = 10 −4, τ1 = 10 −2, κ = 0 .25, γ = 1 .45 and w = 0 .2. For this problem, A = [0 , 1] and 
+
+F (z) = w − 1
+
+|Do|
+
+Z
+
+> Do
+
+S(z) d x. 
+
+Moreover, ϕ is the sum of the L1-penalty term and the indicator function associ-ated with the bound constraints −10 ≤ z ≤ 10 a.e. We discretized u in (33) using P1 finite elements on a uniform triangular mesh and z using piecewise constants on the same mesh. As in the previous example, we solve the discretized nonlinear PDE using a linesearch globalized Newton’s method. To investigate mesh independence, we performed a mesh refinement study, where we uniformly refined the initial mesh and solved the refined optimization problem from an initial guess of z ≡ 0. The ini-tial mesh was generated by splitting the elements of a 60-by-20 uniform quadrilateral mesh into triangles. Subsequent meshes were generated by uniformly refining the ini-tial quadrilateral mesh and then partitioning into triangles. Table 3 lists the results                                                  
+
+> mesh iter nfval ngrad nhess npsi nprox aprox 60 ×20 23334 1875 798 20.80 120 ×40 23334 2084 772 20.06 240 ×80 23334 2176 795 20.71 480 ×160 23334 2192 788 20.51 960 ×320 23334 2079 789 20.54 1920 ×640 23334 2138 787 20.49
+
+Table 3 : Mesh refinement study of Algorithm 1 applied to the sparse control application, demonstrating mesh independence. 24 of this study. The columns of Table 3 include the total number of iterations ( iter ), the number of evaluations of f and F (nfval ), the number of derivative computa-tions for f and F (ngrad ), the number of Hessian applications for f and F (nhess ), the number of evaluations of ψk (npsi ), the number of proximity operator evaluations for ψk (nprox ) and the average number of iterations of Algorithm 2 ( aprox ). As seen in Table 3, the performance of Algorithm 1 is essentially constant, suggesting that Algorithm 1 is mesh independent. To achieve this, our implementation uses infinite-dimensionally consistent scaled inner products and norms for X and Y . In addition, we see that the average number of iterations of Algorithm 2 to compute the proxim-ity operator of ψk is relatively modest, requiring roughly 20 iterations on average to achieve the requested tolerance of 10 −10 .
+
+# 6 Conclusions 
+
+We have introduced a provably convergent inexact trust-region algorithm, extended from [14], for the structured class of nonsmooth optimization problems represented by (1). This class encapsulates many important applications include risk-averse stochastic optimization and nonsmooth penalty methods for nonlinear programming. We verify through numerical examples that our method is quite efficient when solving discretized PDE-constrained optimization problems, demonstrating invariance to the discretiza-tion size and outperforming some existing nonsmooth methods. Although our method performs well in practice, the theoretical results rely heavily on the boundedness of A
+
+and the exact computation of the proximity operator prox tψ k . Permitting unbounded 
+
+A would enable, e.g., the solution of nonlinearly constrained problems, while per-mitting inexact proximity operator evaluation may further reduce the computation burden. In future work, we hope to relax these requirements. 
+
+Acknowledgements. We would like to thank Thomas Surowiec for the many fruit-ful discussions about earlier versions of this work. Sandia National Laboratories is a multimission laboratory managed and operated by National Technology and Engineer-ing Solutions of Sandia, LLC., a wholly owned subsidiary of Honeywell International, Inc., for the U.S. Department of Energy’s National Nuclear Security Administration under contract DE-NA0003525. This paper describes objective technical results and analysis. Any subjective views or opinions that might be expressed in the paper do not necessarily represent the views of the U.S. Department of Energy or the United States Government. 
+
+# Declarations 
+
+• Funding: This research was sponsored, in part, by the U.S. Department of Energy Office of Science under the Early Career Research Program and the U.S. Air Force Office of Scientific Research. 
+
+• Competing Interests: The author has no competing interests to declare that are relevant to the content of this article. 
+
+• Data Availability: No data was generated or used for this article. 25 References 
+
+[1] Tibshirani, R.: Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society Series B: Statistical Methodology 58 (1), 267–288 (1996) [2] Nocedal, J., Wright, S.J.: Numerical Optimization, 2nd edn. Springer, Berlin, Heidelberg, New York (2006) [3] Capatina, A.: Variational Inequalities and Frictional Contact Problems. Advances in Mechanics and Mathematics, vol. 31. Springer, Germany (2014) [4] Artzner, P., Delbaen, F., Eber, J.-M., Heath, D.: Coherent measures of risk. Math. Finance 9(3), 203–228 (1999) https://doi.org/10.1111/1467-9965.00068 [5] Dentcheva, D., Ruszczy´ nski, A.: Risk-Averse Optimization and Control: Theory and Methods. Springer Series in Operations Research and Financial Engineering Series. Springer, Germany (2024) [6] Shapiro, A., Dentcheva, D., Ruszczynski, A.: Lectures on Stochastic Program-ming: Modeling and Theory, Second Edition. MOS-SIAM Series on Optimization. Society for Industrial and Applied Mathematics, Philadelphia (2014) [7] Kouri, D.P., Heinkenschloss, M., Ridzal, D., Bloemen Waanders, B.G.: A trust-region algorithm with adaptive stochastic collocation for PDE optimization under uncertainty. SIAM Journal on Scientific Computing 35 (4), 1847–1879 (2013) https://doi.org/10.1137/120892362 [8] Kouri, D.P., Heinkenschloss, M., Ridzal, D., Bloemen Waanders, B.G.: Inexact objective function evaluations in a trust-region algorithm for PDE-constrained optimization under uncertainty. SIAM Journal on Scientific Computing 36 (6), 3011–3029 (2014) https://doi.org/10.1137/140955665 [9] Kouri, D.P., Shapiro, A.: In: Antil, H., Kouri, D.P., Lacasse, M.-D., Ridzal, D. (eds.) Optimization of PDEs with Uncertain Inputs, pp. 41–81. Springer, New York, NY (2018) [10] Kouri, D.P., Surowiec, T.M.: Risk-averse PDE-constrained optimization using the conditional value-at-risk. SIAM Journal on Optimization 26 (1), 365–396 (2016) https://doi.org/10.1137/140954556 [11] Kouri, D.P., Surowiec, T.M.: Existence and optimality conditions for risk-averse PDE-constrained optimization. SIAM/ASA Journal on Uncertainty Quantifica-tion 6(2), 787–815 (2018) https://doi.org/10.1137/16M1086613 [12] Kouri, D.P., Surowiec, T.M.: A primal–dual algorithm for risk minimization. Mathematical Programming 193 (1), 337–363 (2022) 26 [13] Hinze, M., Pinnau, R., Ulbrich, M., Ulbrich, S.: Optimization with PDE Con-straints. Mathematical Modelling: Theory and Applications, vol. 23, p. 270. Springer, Germany (2009) [14] Baraldi, R.J., Kouri, D.P.: A proximal trust-region method for nonsmooth optimization with inexact function and gradient evaluations. Mathematical Programming 201 (1), 1–40 (2022) [15] Baraldi, R.J., Kouri, D.P.: Local convergence analysis of an inexact trust-region method for nonsmooth optimization. Optimization Letters 18 (3), 663–680 (2024) [16] Ekeland, I., Temam, R.: Convex Analysis and Variational Problems. Classics in Applied Mathematics, Vol. 28. SIAM, Philadelphia (1999) [17] Clarke, F.H.: Nonsmooth Analysis and Control Theory. Graduate Texts in Mathematics. Springer, Germany (1998) [18] Bauschke, H.H., Combettes, P.L.: Convex Analysis and Monotone Operator Theory in Hilbert Spaces. CMS Books in Mathematics. Springer, Germany (2017) [19] Chen, M., Mehrotra, S., Papp, D.: Scenario generation for stochastic optimiza-tion problems via the sparse grid method. Computational Optimization and applications 62 (3), 669–692 (2015) [20] Heinkenschloss, M., Kouri, D.P.: Optimization problems governed by systems of pdes with uncertainties. Acta Numerica 34 , 491–577 (2025) [21] Conn, A.R., Gould, N.I.M., Toint, P.L.: Trust–Region Methods. SIAM, Philadel-phia (2000) [22] Lin, C.-J., Mor´ e, J.J.: Newton’s method for large bound-constrained optimization problems. SIAM Journal on Optimization 9(4), 1100–1127 (1999) [23] Baraldi, R.J., Kouri, D.P.: Efficient subproblem solvers for a nonsmooth trust-region method. Computational Optimization and Applications, (2024) [24] Sion, M.: On general minimax theorems. Pacific J. Math. 8, 171–176 (1958) [25] Birgin, E.G., Mart´ ınez, J.M., Raydan, M.: Nonmonotone spectral projected gra-dient methods on convex sets. SIAM Journal on Optimization 10 (4), 1196–1211 (2000) [26] Bello Cruz, J.: On weak and strong convergence of the projected gradient method for convex optimization in real hilbert spaces. Numerical Functional Analysis and Optimization 37 (2), 129–144 (2016) [27] Salzo, S., Villa, S., et al. : Inexact and accelerated proximal point algorithms. J. Convex Anal 19 (4), 1167–1192 (2012) 27 [28] Villa, S., Salzo, S., Baldassarre, L., Verri, A.: Accelerated and inexact forward-backward algorithms. SIAM Journal on Optimization 23 (3), 1607–1633 (2013) https://doi.org/10.1137/110844805 [29] Bonnans, J.F., Shapiro, A.: Perturbation Analysis of Optimization Problems. Springer, Berlin, Heidelberg, New York (2000) [30] Emelyanov, S.V., Korovin, S.K., Bobylev, N.A., Bulatov, A.V.: Homotopy of Extremal Problems: Theory and Applications. De Gruyter Series in Nonlinear Analysis and Applications. De Gruyter, Germany (2011) [31] Schramm, H., Zowe, J.: A version of the bundle idea for minimizing a nonsmooth function: Conceptual idea, convergence analysis, numerical results. SIAM Journal on Optimization 2(1), 121–152 (1992) https://doi.org/10.1137/0802008 [32] Kouri, D., Surowiec, T.: Risk-averse optimal control of semilinear elliptic pdes. ESAIM: Control, Optimisation and Calculus of Variations 26 , 53 (2020) 28
