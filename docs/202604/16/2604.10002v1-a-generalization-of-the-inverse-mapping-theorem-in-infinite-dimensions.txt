@@ -1,0 +1,549 @@
+Title: A generalization of the inverse mapping theorem in infinite dimensions
+
+URL Source: https://arxiv.org/pdf/2604.10002v1
+
+Published Time: Tue, 14 Apr 2026 00:24:50 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS     
+
+> SAJJAD LAKZIAN
+> Abstract. We present a generalization of the inverse mapping theorem, where variations of a weaker non-expansiveness property (referred to as property A) replace the key C1condition. We also obtain inverse mapping theorems that can be applied to non-smooth maps. Also as a by-product of the generalized inverse mapping theorem, we prove generalizations of the implicit function theorem and existence and uniqueness theorem of abstract PDE systems as well.
+
+1. Introduction and Main Results 
+
+Let (B, ∥ · ∥ ) be a Banach space. The classical inverse mapping theorem (IMT) states that a differentiable C1 map f : U ⊂ B → B (where U is an open domain) with invertible (Frechét) derivatives everywhere, is a local diffeomorphism. It is a folklore fact that the optimal regularity requirements for the IMT to hold, must strictly lie somewhere between mere differentiability and being C1.The continuity of the Fréchet derivative is a key assumption that can be removed when B is finite dimensional; this is attributed to Černavski˘ ı [3] and is known as the everywhere differen-tiable IMT. Alternative proofs were presented in [19, 25]. All the proofs in the aforementioned literature heavily rely on the local compactness of (a finite dimensional) B which characteristi-cally fails in infinite dimensions. Yet as we will see, still local weak compactness can be utilized to get a generalized IMT. There is an extensive literature concerning generalizations of IMT “beyond the C1 realm in in-finite dimensions” and/or “beyond the everywhere differentiable with non-degenrate derivative in finite dimensions”. Three major approaches are to either 
+
+• assume the non-degeneracy of stronger notions of derivatives : examples in this direction are abundant. We will mention a few important ones. Clarke’s IMT in finite dimensions that applies to Lipschitz maps and only requires the non-degeneracy of Clarke’s gen-eralized derivatives [5]. In [12], an IMT is proven that works for continuous self maps of reflexive Banach spaces yet it requires the non-degeneracy of a set-valued derivative. Using strong derivatives (or strict derivative), there is a host of IMTs for set-valued maps expressed in terms of strong and metric regularity including Bartle-Graves and Lyusternik-Graves theorems; see [9]. 
+
+• to consider weak derivatives but imposing stronger non-degeneracy conditions : This approach works best in finite dimensions and usually involves integrability assumptions on the distortion of maps. For example local inversion of Sobolev maps falls in this category. See e.g. [13, 17] and the references therein. 
+
+• to impose appropriate contraction assumptions that are weaker than being C1: gen-eralizations that utilize this approach, typically require imposing some sort of a “con-traction” assumption that will allow the use of the Banach fixed point theorem. For     
+
+> 2020 Mathematics Subject Classification. 46Bxx; 46Txx.
+> Key words and phrases. Banach spaces, inverse mapping, Fréchet derivative, everywhere differentiable, Radon-Nikodym property, fixed point property. 1
+> arXiv:2604.10002v1 [math.FA] 11 Apr 2026
+
+2 SAJJAD LAKZIAN 
+
+example, see [18] for an overview of the proof of a standard version of IMT for Lipschitz maps with this approach. As previously mentioned, infinite dimensional Banach spaces are not locally compact but a large class of them consists of those that are locally weakly compact. Our aim in these notes, is to take the third approach by imposing a (quasi)-non-expansiveness property (unlike the previous works in which strict contraction is required) in combination with weak local compactness. 1.1. Property A.  
+
+> Notation:
+
+Throughout, Bis denote Banach spaces. Unless otherwise stated, f : U ⊂ B 1 → B 2
+
+will denote a map from an open subset of B1 to B2. The domain of f will be denoted by 
+
+Dom (f ), mainly to emphasize the cases where the domain is not necessarily open. It is easy to see that for a C1 map f with an invertible derivative, the following two properties hold true: 
+
+• For every a, the function x 7 → x − (Daf )−1f (x) is La-Lipschitz for some La < 1 on a ball Bra (a) for some sufficiently small ra;
+
+• By making ra smaller if necessary, for all r < r a, and all y ∈ Br/2(a), the map 
+
+ga,y : x 7 → x − (Daf )−1(f (x) − y)
+
+is a contracting self-map of Br(a), see Remark 1.4. The Lipschitz constant La can be chosen arbitrarily close to zero. Note the elementary fact that Br(a) is convex. Based on these observations, we introduce the following properties (that will replace C1). 
+
+Definition 1.1 (Property A). f : Dom (f ) ⊂ B 1 → B 2 is said to satisfy strong A, A or weak A
+
+(respectively) at an interior point a of the domain, if there exist a radius sa,C a > 0, a bounded closed convex neighborhood Ca of a, and a continuous injective map Aa,C a : B2 → B 1 such that for all y ∈ Bsa,Ca (f (a)) , the map ˜fa,y,A a,Ca : x 7 → x − Aa,C a (f (x) − y) is respectively 
+
+• a contractive self map of Ca i.e. a map with a Lipschitz constant less than 1.
+
+• a non-expansive self map of Ca i.e. a map with a Lipschitz constant 1;
+
+• either without fixed points or is "quasi-nonexpansive" (see § 2.3 for the definition).  
+
+> Convention:
+
+At a general point a (not necessarily in the interior) of the domain, the afore-mentioned properties hold if f admits a local extension that satisfies the said property at a. 
+
+> Terminology:
+
+When the injective maps Aa,C a can be taken to be linear, we refer to the property as (strong, weak) LinA .Based on the observation preceding to Definition 1.1, the property A for a C1 map holds on all sufficiently small scales (determined locally uniformly in a). In the following definition we introduce a generalization of this property. 
+
+Definition 1.2. Suppose f : U ⊂ B 1 → B 2 satisfies (strong, weak) A on a set R ⊂ U . Let C
+
+denote the collection of the interiors of all possible convex subsets Ca for all a ∈ R that satisfy the Definition 1.1. 
+
+• We say that f satisfies property (strong, weak) A on R on all scales, if C forms a basis for the topology of U .
+
+• We say f satisfies (strong, weak) A on R, (locally) uniformly on all scales when there exist (locally) uniform (in a) parameters αa, β a, η a, γ a > 0 with ηa ≤ γa and a locally uniform radius ra, such that for all r ≤ ra, there exists a convex set Ca ∈ C with 
+
+dist( a, ∂C a) ≥ βa diam( Ca), sa,C a ≥ αa diam( Ca), and , ηar ≤ diam( Ca) ≤ γar. A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS 3
+
+Convention: For general domains (not necessarily open), we say f satisfies (strong, weak) A
+
+on all scales when it admits local extensions that do so. Similarly one defines (strong, weak) A
+
+locally uniformly on all scales for general domains. 
+
+Lemma 1.3 (pairing property) . Suppose f 1 : B1 → B 2 satisfies (weak,strong) A and f 2 : B3 →B4 is C1 then (1) the map (f 1, f 2) : B1 × B 3 → B 2 × B 4 satisfies (weak, strong) A;(2) if f 2 satisfies (weak, strong) A everywhere on all scales then so does (f 1, f 2).
+
+Proof . Based on Remark 1.4, f 2 satisfies strong A everywhere on all scales. Let τa = 12 diam( Ca).Let a ∈ B 1 and b ∈ B 3. Note that Ca × Bτa (b) is also a bounded and convex set with 
+
+diam ( Ca × Bτa (b)) = √2 diam ( Ca) .
+
+It is straightforward to see that 
+
+^(f 1, f 2)(a,b ),(y1,y 2),(Aa,(Dbf 2)−1),C a×Bτa (b) = (˜f 1a,y 1,A a,Ca , ˜f 2a2,y 2,(Dbf 2)−1
+
+)
+
+,
+
+for all (y1, y 2) ∈ Bs(( a, b )) for sufficiently small s depending on Cb and diam( Cb) only. Item (1) follows due to the following elementary facts: 
+
+• The Lipschitz constant of ( ˜f 1, ˜f 2) is the minimum of the Lipschitz constants of the constituent maps 
+
+• The map ( ˜f 1, ˜f 2) has a fixed point when both ˜f 1 and ˜f 2 have fixed points. 
+
+• If p1 and p2 are respective fixed points then 
+
+∥( ˜f 1(x1), ˜f 2(x2)) − (p1, p 2)∥ =
+
+√
+
+∥f 1(x1) − p1∥2 + ∥f 2(x2) − p2∥2
+
+≤
+
+√
+
+∥x1 − p1∥2 + ∥x2 − p2∥2
+
+= ∥(x1, x 2) − (p1, p 2)∥
+
+Item (2) follows by considering the following facts: 
+
+• Cartesian product of two topology bases is a topology basis for the product topology; 
+
+• dist (( a, b ), ∂ (Ca × Bτa (b))) ≥ min 
+
+{
+
+βa, β b = 12
+
+}
+
+diam( Ca)
+
+• s(a,b ),C a×Bτa (b) ≥ min 
+
+{
+
+αa, 12
+
+}
+
+diam Ca
+
+• 1
+
+√2 min {ηa, 1} r ≤ diam ( Ca × Bτa (b)) ≤ √2 max {γa, 1} r
+
+Hence one can take 
+
+β(a,b ) = 1
+
+√2 min {βa, β b = 12}, α(a,b ) = 1
+
+√2 min 
+
+{
+
+αa, 12
+
+}
+
+,η(a,b ) = 1
+
+√2 min {ηa, 1} , γ(a,b ) = √2 max {γa, 1} .
+
+## ❏
+
+Relations with other regularity conditions. Note that we do not require f to be con-tinuous, however, (strong) A automatically implies continuity since for every x0, continuity of 
+
+˜fa,y,A a,Ca 
+
+and Aa,C a imply 
+
+Aa,C a (f (x+0 ) − y) = Aa,C a (f (x−) − y)
+
+and by injectivity of Aa,C a , we deduce f (x0+) = f (x0−).4 SAJJAD LAKZIAN 
+
+Next let us note that the property weak A does not require f to even be continuous or have continuous inverse (let alone Lipschitz or metric regular) as the following example illustrates.  
+
+> Example 1.
+
+Let c > 0. Let ha : R → R denote the function 
+
+ha(x) := 
+
+> 
+
+x − a − c 
+
+> 2
+
+x ≤ ax − a + c 
+
+> 2
+
+x > a 
+
+Let A(x) = x. Then 
+
+˜hy : x 7 → x − A(f (x) − y)
+
+is given by 
+
+˜hy(x) = 
+
+> 
+
+a + c 
+
+> 2
+
++ y x ≤ aa − c 
+
+> 2
+
++ y x > a 
+
+hence for sufficiently small y (|y| < c 
+
+> 2
+
+), ˜hy : [ a − c, a + c] → [a − c, a + c] does not have fixed points. Hence ha satisfies a weak A at a.Note that in Example 1, ha is invertible with a discontinuous inverse thus h also fails to be metric regular at a.The following example illustrates that a non-Lipschitz function can satisfy strong A. Understanding a function that satisfies property (weak, strong) A on all scales and its regu-larity is a challenging question that we do not have a definite answer for. As far as the inverse function theorem in concerned, “ C1 + invertible derivative” is stronger than property A as in argues in the following Remark. 
+
+Remark 1.4. A C1 map f with an invertible derivative satisfies strong LinA , locally uniformly on all scales. To see this, we first note that by differentiability, it holds 
+
+x − a − (Daf )−1(f (x) − y) = o(∥x − a∥) + ( Daf )−1(y − f (a)) , as x → 0.(1.1) Thus, there exists an ra > 0 such that for all r ≤ ra, and y ∈ Br/2(f (a)) , the map ˜fa,y, (Df )−1 is a self map of Br(a) and ∥D ˜fa,y, (Df )−1 ∥ ≤ τa < 1 for some τa ∈ (0 , 1) . This means ˜fa,y, (Df )−1 is a contractive map. It is a well-known fact that continuous differentiability is equivalent to locally uniform dif-ferentiability (i.e. (3.1) holds locally uniformly in a); e.g. see [26, Page 35]. This implies that we can choose ra locally uniformly in a.Taking the convex sets Ca to be Br(a) for all sufficiently small r and letting βa = αa = 12
+
+and ηa = γa = 1 , the claim follows. Therefore, property A locally uniformly on all scales is weaker than C1 with invertible deriv-ative. For Lipschitz maps, the satisfaction of A on a locally uniform scale is again an intricate issue that will not be explored in these notes. 
+
+Remark 1.5. Note that the first part of the argument in Remark 1.4 only relies on the dif-ferentiability at a. Therefore, the same argument shows that if f is a Lipschitz map with a non-degenerate Clarke’s generalized Jacobian, then it satisfies property A at least at all of its differentiability points. By Rademacher’s theorem, this means that at almost every point when the Banach spaces B1 and B2 are finite dimensional. In the infinite dimensions, the latter implies that f satisfies A on a dense open subset of B1 provided B1 is norm differentiable or Asplund; this is indeed according to the infinite dimensional generalization of the Rademacher’s theorem; see the seminal work [23]. A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS 51.2. Main Results.  
+
+> Convention:
+
+f is said to be differentiable at a general point a (not necessarily an interior point) of the domain, when f admits a local extension at a that is differentiable. We say f has an invertible derivative at a, when at least one of the said local extensions around a does so. 
+
+Definition 1.6 (the fixed point property ( FPP )) . A Banach space B is said to have the fixed point property if any continuous non-expansive self mappings f : C → C, for bounded closed convex subsets C, has at least one fixed point. 
+
+Theorem 1 (Generalized IMT) . Let f : Dom (f ) ⊂ B 1 → B 2 be an everywhere differentiable map with invertible derivative. Then f is a local diffeomorphism provided any of the following items hold (1) if f satisfies strong A everywhere on all scales; (2) If B1 is locally weakly compact and f is weak-weak continuous and satisfies A everywhere on all scales; (3) If B1 is locally weakly compact with FPP and f satisfies A everywhere on all scales; (4) B1 is strictly convex with FPP and f satisfies weak A everywhere on all scales. 
+
+Remark 1.7. A large class of Banach spaces B1 that the last theorem applies to, are k-uniformly rotund spaces for k ∈ N. These spaces enjoy FPP , see § 2.3. These are also strictly convex and reflexive therefore, they are locally weakly compact, see § 2.1. The following two corollaries are generalizations of Hadamard type global inverse mapping theorems, see [15] for a survey on global inverse mapping theorems. 
+
+Corollary 1. If f : Dom (f ) ⊂ B 1 → B 2 is as in the Main Theorem, and is furthermore either (1) proper or, (2) with compact domain then, it is a finite-sheeted covering map. In particular if in addition, image( f ) is simply connected, then f is a (global) diffeomorphism. 
+
+Corollary 2. If f : B1 → B 2 satisfies either of the the hypotheses of the Main Theorem and 
+
+ˆ ∞
+
+> 0
+
+inf   
+
+> ∥f(x)∥≤ s
+
+∥Dxf ∥ ds = ∞,
+
+holds (this is referred to as the Hadamard-Levy criterion), then f is a (global) diffeomorphism. In particular, this holds when ∥Dxf ∥ is uniformly bounded away from zero. 
+
+Corollary 3. Suppose f : Dom (f ) ⊂ B 1 → B 2 is a locally injective continuous map. Then f is a local homeomorphism provided either of the following happens (1) f satisfies strong A on a dense set R locally uniformly on all scales; (2) If B1 is locally weakly compact and f is weak-weak continuous and satisfies A on a dense set R locally uniformly on all scales; (3) B1 satisfies FPP and f satisfies A on a dense set R, locally uniformly on all scales. (4) B1 is strictly convex with FPP and f satisfies weak A on a dense set R, locally uniformly on all scales. 
+
+In what follows we wish to provide criteria to ensure certain maps that are not everywhere differentiable, are still almost diffeomorphism in a certain suitable sense. Ideally one wishes to obtain an inverse mapping theorem that works for Lipschitz maps. But our analysis does not yet work in such generality. However this can be done for certain maps that are in a sense more regular than Lipschitz maps but less than everywhere differentiable with an invertible derivative. 6 SAJJAD LAKZIAN 
+
+First we need to introduce certain notion of large sets in terms of a convexity like property that works well with our tools. 
+
+Definition 1.8. A subset S of B1 is said to be segmentally dense if for any line segment L
+
+with endpoint in S, we have S ∩ L is dense in L. 
+
+> Notation:
+
+We denote the set of points at which f is differentiable by FD and the points where derivative is invertible (non-degenerate) by FD ±.The following notions are large scale analogues of a map having a non-degenerate derivative. 
+
+Definition 1.9. 
+
+• The map f is said to have weakly non-degenerate directional derivatives , if the directional derivatives of f along any line and in the direction of the line, are nonzero on a dense subset of that line; 
+
+• The map f is said to be segmentally non-degenerate when FD ± is a segmentally dense set. The geometric intuition is that one should think of maps with properties segmentally non-degenerate and/or having weakly non-degenerate directional derivatives as maps that do not collapse non-trivial line segments to zero length. 
+
+Definition 1.10. The map f : Dom (f ) ⊂ B 1 → B 2 is said to be an almost diffeomorphism when it is a homeomorphism onto its image and f and f −1 are differentiable on dense sets. 
+
+Corollary 4. Suppose f : Dom (f ) ⊂ B 1 → B 2 and B1 satisfy any of the items (1)–(4) as in Corollary 3. (1) If f has almost non-degenerate directional derivatives then, it is a local homeomorphism. (2) If f is segmentally non-degenerate, then it is a local almost diffeomorphism. 
+
+Another important consequence is the generalized implicit function theorem. 
+
+Theorem 2 (Generalized implicit function theorem) . Suppose B1 and B2 are two Banach spaces and g : W ⊂ B 1 × B 2 → B 2 is a function which we will write it as g(t, x ). Suppose g is everywhere differentiable and with invertible derivative Dxg(t, x ) with respect to the variable x.Assume g and the domain B1 × B 2 satisfy either of the hypotheses of Theorem 1. Then, every non-empty level set g−1(c) can be locally uniquely written, around (a, b ) ∈ g−1(c) as a graph of a differentiable function h : Ua ⊂ B 1 → B 2.
+
+1.3. Road map and Organization. In § 2, we provide some necessary background material needed for better readability of these notes. In § 3, we provide the detailed proofs of the main and auxiliary results. In particular, the road map of the generalized IMT is as follows: (1) Variants of property A along with suitable hypotheses on the domain Banach space in each case, is utilized to prove the existence of fixed points of the maps ˜f ; this in turn results in local surjectivity; (2) Differentiability along with an invertible derivative is argued to provide discreteness of the map f i.e. the fact it has discrete fibers; (3) Invoking the convexity hypotheses, we show local injectivity, thus establishing f is a local homeomorphism; (4) Revisiting differentiability with an invertible derivative, we show local diffeomorphism. In order to demonstrate the significance of these results, we have included an application to abstract ODE theory, of the generalized theorems we have established in § 4 where we show existence and uniqueness for a certain type of ODE system without continuity or Lipschitz condition on the RHS of the equation. A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS 7
+
+Acknowledgments  
+
+> ♦
+
+The author would like to express his gratitude to the anonymous referees whose valuable comments helped the author improve this article .2. Preliminaries 
+
+2.1. Weak topology and local weak compactness. The weak topology on a Banach space is one that topologizes weak convergence of sequences. In this paper, a weakly continuous map 
+
+f : Dom (f ) ⊂ B 1 → B 2 between Banach spaces, refers to a map that is weak-weak continuous. A well-known consequence of Banach-Alaoglu’s theorem (known as Kakukati’s theorem) is that reflexive Banach spaces are locally weakly compact; see [6, Theorem V.4.2] By the Schauder-Tychonoff fixed point theorem, when B is locally weakly compact, any weakly continuous self map f : C → C admits a fixed point when C is a bounded closed convex set. 2.2. Convexity of a Banach space. 
+
+Terminology: In some older literature it is customary to refer to convexity (mainly in the context of uniform ones) as rotundity. Characteristically, in any normed linear space, any ball is convex. Many important fixed point results in nonlinear functional analysis often requires stronger notions of convexity. Recall the modulus of convexity of a Banach space B is the non-decreasing function mc :[0 , 2] → [0 , 1] given by [21] 
+
+mc(ϵ) := inf 
+
+> ∥x∥=∥y∥=1
+> ∥x−y∥≥ ϵ
+> (
+
+1 − ∥x + y∥
+
+2
+
+> )
+
+.
+
+It is known that mc is convex; see [14]. The characteristic of convexity is defined as [14] 
+
+ϵ0 := sup {ϵ ¦ mc(ϵ) = 0 } .
+
+2.2.1. Strictly convex space. B is said to be strictly convex if the balls are strictly convex equivalently if mc(2) = 1 ; see [4]. 2.2.2. Uniformly convex space. Uniform convexity is stronger than strict convexity. 
+
+Definition 2.1 (uniform convexity) . B is said to be uniformly convex if 
+
+∀ϵ > 0, ∃δ > 0, s.t. ∥x∥ = ∥y = 1 and |∥ x − y∥ ≥ ϵ =⇒ ∥ x + y
+
+2 ∥ ≤ 1 − δ
+
+equivalently B is uniformly convex if and only if ϵ0 = 0 . Uniformly convex spaces are reflexive (Milman-Pettis theorem). 2.2.3. k-uniformly convex spaces. The k-uniformly convex (originally called k-uniformly rotund or k-UR) spaces were introduced in [24] as generalizations of uniformly convex spaces. These spaces are reflexive (as uniformly convex Banach spaces are). 
+
+Definition 2.2 (k-uniformly rotund (convex) [24]) . B is called k-UR if 
+
+∀ϵ > 0, ∃δ > 0 s.t. ∥x1∥ = · · · = ∥xk+1 ∥ = 1 and V (x1, x 2, · · · , x k+1 ) = ⇒ 
+
+> ∥∥∥∥∥∑k+1
+> i=1
+
+xi
+
+k + 1  
+
+> ∥∥∥∥∥
+
+≤ 1 − δ8 SAJJAD LAKZIAN 
+
+where V (x1, · · · , x k+1 ) is the k-dim volume given by 
+
+V (x1, · · · , x k+1 ) := sup 
+
+> fi∈B ∗
+> ∥fi∥≤ 1
+
+det 
+
+> 
+
+1 1 · · · 1
+
+f1(x1) f1(x2) · · · f1(xk+1 )
+
+... . . . . . . ...
+
+fk(x1) fk(x2) · · · fk(xk+1 ) 
+
+> 
+
+.
+
+2.3. Fixed points of (quasi)-nonexpansive maps. 
+
+2.3.1. Fixed points of non-expansive maps. A nonexpansive map is simply one with Lipschitz constant 1 i.e. it does not increase distances. According to the Browder-Göhde-Kirk fixed point theorem [11], a non-expanding self map on a bounded closed convex set C in a uniformly convex B, admits a fixed point. It is also well-known that if B is merely strictly convex, then f has a convex set of fixed points (possibly empty). A simple argument combined with the convexity results obtained in [2] for nonexpansive maps shows that, when C is a bounded closed convex subset of B and B satisfies FPP , then the set of fixed points of a non-expansive self map f on C is a closed convex subset of C, see Proposition 3.2. It was proven in [20] that k-uniformly rotund spaces satisfy the FPP .2.3.2. Fixed points of quasi-nonexpansive maps. A (not necessarily continuous) f : C → C (C
+
+closed and convex) is called quasi-nonexpansive if it has at least one fixed point and distances to the fixed point are not increased under it i.e. if for all such fixed points p ∈ C, it satisfies 
+
+∥f (x) − f (p)∥ ≤ ∥ x − p∥, ∀x ∈ C. 
+
+This was introduced in [7]. In [10], it has been shown that if B is strictly convex, then the set of fixed points of a quasi-nonexpansive map is a nonempty closed convex set on which f is continuous. 3. Proofs 
+
+Note that openness, local surjectivity and local injectivity are inherited by maps restricted to smaller domains and targets (equipped with induced topologies). Since all the arguments are local and with the conventions previously made, in the proof of the fact that f is a local homeomorphism, we can without loss of generality, assume that the domain of f is open. So we will proceed with this assumption. Let us note the simple yet key fact that, due to the injectivity of the maps Aa,C a , one deduces 
+
+f −1(y) ∩ Ca = the set of fixed points of ˜fa,y,A a,Ca .
+
+When all the variables can be inferred form the context, with a slight abuse of notation, we will simply write ˜fa,y and suppress the other variables. Similarly we will write sa and Aa.3.1. Key Lemmas. Lemma 3.1. If f : U ⊂ B 1 → B 2 satisfies either of the hypotheses of the Main Theorem, then it is open and locally surjective.  
+
+> Proof .
+
+For local surjectivity, it suffices to show that for every a, and y ∈ Bsa (f (a)) the map ˜fa,y 
+
+has at least one fixed point. Indeed, this implies Bsa (f (a)) ⊂ f (Ca). The FPP assumption in hypotheses 3 and 4, guarantees the existence of such a fixed point. In hypothesis 1, the Banach fixed point theorem can be applied. In hypothesis 2, the Leray-Schauder fixed point theorem can be invoked. Therefore in all cases, local surjectivity follows. A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS 9For openness, we need to show that the image of every open ball around some a contains an open ball around f (a). Consider the open ball Br(a). Since we have assumed property A on all scales, there exists a closed bounded convex set Ca ∈ C with Ca ⊂ Br(a). By the first part, 
+
+f (Ca) contains Bsa (f (a)) which implies that f (Br(a)) contains the ball Bsa (f (a)) . Therefore, 
+
+f is an open map. ❏
+
+The following is by now a standard result. For the definition of normal structure, we will refer the reader to [1]. 
+
+Proposition 3.2. Suppose B has a normal structure (in particular, if it is locally weakly com-pact (this contains reflexive spaces)) with FPP . Let g : C → C be a non-expanding self map of a bounded closed convex set C. Then the set of fixed points of g is a non-empty closed convex subset of C. 
+
+> Proof .
+
+See [2]. ❏
+
+Lemma 3.3. If f is differentiable everywhere with an invertible derivative, then it is a discrete map i.e. for every y, f −1(y) is a discrete set.  
+
+> Proof .
+
+Since discreteness of a map is preserved under compositions with linear isomorphisms, we can assume, without loss of generality, that a = 0 , y = f (0) = 0 and D0f = 1.The definition of differentiability implies that for each ε > 0, there exists r(ϵ) > 0 such that 
+
+∥f (x) − x∥ ≤ ε∥x∥, 0 < ∥x∥ < r (ϵ),(3.1) and thus one deduces f −1(0) ∩ Br(0) = {0}. This means that every x ∈ f −1(y) is an isolated point. Thus the inverse images of points are discrete sets. ❏
+
+Lemma 3.4. Suppose f is a discrete map and for every Ca ∈ C with sufficiently small diameter, and for every fixed y ∈ Bsa (f (a)) , we know that f −1(y) ∩ Ca is a non-empty closed convex set. Therefore, f is locally injective at a. 
+
+> Proof .
+
+Suppose, on the contrary that f is not locally injective at a. Take y ∈ Bsa (f (a)) and 
+
+z1, z 2 ∈ Ca with f (z1) = f (z2) = y where z1̸ = z2. According to the convexity hypothesis, we have [z1, z 2] ⊂ f −1(y) which contradicts the discreteness of f . ❏
+
+The following is well-known, yet the proof is provided for the sake of thoroughness. 
+
+Lemma 3.5. Suppose f (with an open domain) is a local homeomorphism and is differentiable at a with an invertible derivative. Then, the local inverse f −1 is differentiable at f (a) and 
+
+Df (a)f −1 = ( Daf )−1. 
+
+> Proof .
+
+Without loss of generality, let us assume a = f (a) = 0 and D0f = 1. Then we have 
+
+lim   
+
+> y=f(x)→f(a)
+
+∥f −1(y)∥∥y∥ = lim 
+
+> x→0
+
+∥x∥∥f (x)∥ = 1 .
+
+Hence, 
+
+∥x − f (x)∥ = o(∥f (x)∥), as ∥f (x)∥ → 0,(3.2) and the claim follows. ❏
+
+3.2. Proof of the main results. 10 SAJJAD LAKZIAN 
+
+3.2.1. Proof of Theorem 1 . The openness (and consequently the local surjectivity) follows from Lemma 3.1. We only need to argue the local injectivity of f ; since this implies that f is a local homeomorphism. Thus, by Lemma 3.5, it is a local diffeomorphism. In Statement (1) , the local injectivity is guaranteed by the uniqueness of he fixed point in the Banach fixed point theorem. In Statements (2), (3) , the local injectivity follows from the discreteness established in Lemma 3.3 together with Proposition 3.2 and Lemma 3.4. In Statement (4) , the local injectivity follows from Lemma 3.4 in combination with the fact that in strictly convex spaces, the set of fixed points of quasi-nonexpansive maps form a convex set, see § 2.3.2. ❏
+
+3.2.2. Proof of the Corollary 1 .Statement (1). Properness and being a local homeomorphism ensure that the inverse image of each point is a finite set which in turn implies that such a point admits a neighborhood that is evenly covered. Consequently f has the unique lifting property, see the proof of [16, Proposition 1.30]. A local homeomorphism with the unique lifting property with a path connected domain and locally simply connected target, is a covering map; e.g. see [8, Section 5.6, Proposition 6]. Applying the above argument to path connected components of U completes the proof of the claim.  
+
+> Statement (2).
+
+The claim directly follows from the topology fact that a local homeomorphism from a compact Hausdorff space to a Hausdorff space is a covering map. ❏
+
+3.2.3. Proof of the Corollary 2 . This follows from the Main Theorem in combination with the results in [22]. ❏
+
+3.2.4. Proof of the Corollary 3 . Let x be fixed. By the qualifier “locally uniform on all scales”, there exists a neighborhood Ux such that αa, β a > 0 can be taken to be the same constants for all a ∈ Ux ∩ R .Since R is dense, we can choose a ∈ R arbitrarily close to x. Now for sufficiently small 
+
+r, there exists a ∈ R and Ca with ηar ≤ diam( Ca) ≤ γar such that B2γar(x) contains Ca.Consequently by the proof of Lemma 3.1, f (B2γar(x)) contains Bαaηar(f (a)) which contains 
+
+B12 αaηar(f (x)) provided we had chosen a with ∥f (x) − f (a)∥ ≤ 12 αaηar.Thus openness (thus also local surjectivity) follows. ❏
+
+3.2.5. Proof of the Corollary 4 . Again local surjectivity and openness follows by a similar ar-gument as in the proof of Corollary 3. The local injectivity is argued as follows. Suppose f is not locally injective. Thus there exists a and Ca and y such that the fixed points of ˜fa,y form a bounded closed convex set that is not a singleton. In particular, it includes a line segment. The directional derivative of f along any line segment and in the direction of the line segment exists and vanishes. This contradicts both “non-degenerate directional derivatives” and “being segmentally non-degenerate”. ❏
+
+3.2.6. Proof of the Theorem 2 . Consider the map 
+
+F : B1 × B 2 → B 1 × B 2,
+
+given by 
+
+F(t, x ) = ( t, g (t, x )) .
+
+Note 
+
+D(t,x )F =
+
+> (
+
+1 0
+
+Dtg Dxg
+
+> )
+
+.A GENERALIZATION OF THE INVERSE MAPPING THEOREM IN INFINITE DIMENSIONS 11 Since Dxg is invertible, we deduce D(t,x )F is invertible as well. According to the key pairing Lemma (Lemma 1.3), F satisfies the same hypothesis of the Theorem 1 as g does. Thus by Theorem 1, we deduce F is a local diffeomorphism. Let F−1
+
+be the “unique” local inverse around (0 , c ) ∈ B 1 × B 2 whose image contains a neighborhood of 
+
+(0 , b ).It is straightforward to see that 
+
+F−1(t, y ) = ( t, k (t, y )) ,
+
+for some k : B1 × B 2 → B 2 thus k(t, g (t, x )) = ( t, x ). This means locally g−1(c) is the graph of the unique function t 7 → k(t, c ). ❏
+
+4. An application in abstract differential equation systems 
+
+Notation: For simplicity, in what follows, a function between two Banach spaces means a par-tial function i.e. a function defined on an open subset and this is signified by using the notation .
+
+Convention: We will suppress mentioning the domains of functions. The common sense as-sumptions when dealing with an pde are in order. Suppose B1 and B2 are two Banach spaces. We use variables t and x for elements of B1 and 
+
+B2 (resp.). Let 
+
+G := {g : B1 × B 2 B2 ¦ Dxg is invertible } .
+
+We furtheremore assume for each t, g(t, ·) and the Banach space B2 satisfy either of the hy-potheses in Theorem 1. Consider the function space 
+
+H := {
+
+f : B1 × B 2 B2 ¦ f (t, x ) := [ Dxg(t, x )] −1 Dtg(t, x ) for some g ∈ G }
+
+,
+
+and note that f ∈ H is neither necessarily Lipschitz nor even necessarily continuous. Consider the abstract differential equation (system) 
+
+> 
+
+u′(t) = f (t, u (t)) , f ∈ H 
+
+u(0) = b ∈ B 1
+
+.(4.1) The following theorem is a generalization of the standard existence and uniqueness theorem to equations where the RHS is not necessarily Lipschitz or even continuous though belong to H
+
+Theorem 3. The abstract pde system (4.1) has a unique solution locally given by 
+
+g(t, u (t)) = c = g(0 , b ). 
+
+> Proof .
+
+Let us rewrite the PDE 4.1. From 
+
+u′(t) = [ Dxg(t, u (t))] −1 Dtg(t, u (t)) ,
+
+(this is a pde since t comes from a multi-dimensional space) we deduce 
+
+Dxg(t, u (t)) ◦ u′(t) − Dtg(t, u (t)) = 0 .
+
+which by virtue of the chain rule, the latter is just 
+
+Dt (g(t, u (t))) = 0 .
+
+Thus any possible solution lies on a the level set g−1(c).By the IFT proven in Theorem 2, level set g−1(c) around any of its points is locally the graph of a unique function t 7 → u(t). It is then obvious that u(t) solves the system (4.1) and is unique since by IFT, locally it is uniquely determined. ❏12 SAJJAD LAKZIAN 
+
+References 
+
+[1] Belluce L. P. and Kirk W. A. and Steiner E. F., Normal structure in Banach spaces , Pac. J. Math. 26 
+
+no.3 (1968), 433–440. [2] Bruck, R. E., Properties of Fixed-Point Sets of Nonexpansive Mappings in Banach Spaces Source , Trans. Am. Math. Soc. 179 (1973), 251–262. [3] Černavski˘ ı, A. V., Finite-to-one open mappings of manifolds , Mat. Sb. (N.S.) 65 , no. 107 (1964), 357– 369. [4] Clarcson J. A., Uniformly convex spaces , Trans. Amer. Math. Soc. 40 (1936), 396–414. [5] Clarke, F. H., On the inverse function theorem , Pac. J. Math. 64 no. 1 (1976), 97–102. [6] Conway, J. B., A Course in Functional Analysis , Springer, 2nd edition, 2007. [7] Diaz, J. B. and Metcalf, F. T., On the structure of the set of subsequential limit points of successive approximations , Bull. Amer. Math. Soc. 73 (1967), 516–519. [8] Do Carmo, M., Differential Geometry of Curves and Surfaces , 2nd edition, Dover Publications, 2016. [9] Dontchev, A. L., Lectures on Variational Analysis , Springer, 2021. [10] Dotson, W. G., Fixed points of quasi-nonexpansive mappings , J. Aust. Math. Soc. 13 no. 2 (1972), 167–170. [11] Edelstein, M. Fixed Point Theorems in Uniformly Convex Banach Spaces Proc. Amer. Math. Soc. 44 
+
+no. 2 (1974), 369–374. [12] Feckan M., An Inverse Function Theorem for Continuous Mappings , J. Math. Anal. Appl. 185 no. 1 (1994), 118–128. [13] Fonseca, I. and Gangbo, W., Local Invertibility of Sobolev functions , Siam J. Math. Anal. 26 no. 2 (1995), 280–304. [14] Goebel K., Convexity of balls and fixed-point theorems for mappings with nonexpansive square , Com-positio Mathematica 22 no.3 (1970), 396–414. [15] Gutú, O., On global inverse theorems , Topol. Method. Nonl. An. 49 (2017), 401–444. [16] Hatcher, A., Algebraic Topology , Cambridge University Press, 2001. [17] Hencl, S. and Koskela, P., Lectures on Mappings of Finite Distortion , Springer Cham, 2014. [18] Howard, R., The inverse function theorem for Lipschitz maps , unpublished (available online). [19] Raymond, J. S. Local inversion for differentiable functions and the Darboux property . Mathematika 49 
+
+no. 1-2 (2002), 141–158. [20] Martínez-Yañez, C., A fixed point theorem on k-uniformly rotund spaces , Nonlinear Anal. Theory Meth-ods Appl. 13 no. 7 (1989), 857–861. [21] Opial Z., Lecture notes on nonexpansive and monotone mappings in Banach spaces , Brown University, 1967. [22] Plastock, R., Homeomorphisms Between Banach Spaces , Trans. Am. Math. Soc. 200 (1974), 169–183. [23] Preiss, D., Differentiability of Lipschitz functions on Banach spaces , J. Funct. Anal. 91 (1990), 312–345. [24] Sullivan F., A generalization of uniformly rotund Banach spaces , Can. J. Math. 31 (1979), 628–636. [25] Väisälä, J., Discrete open mappings on manifolds , Ann. Acad. Sci. Fenn. Ser. A I 392 (1966), 391–410. [26] Yamamuro, S., Differential Calculus in Topological Linear Spaces , Springer, 1974. 
+
+– Sajjad Lakzian Department of Mathematical Sciences Isfahan University of Technology (IUT) Isfahan 8415683111, Iran 
+
+Email address : slakzian@iut.ac.ir

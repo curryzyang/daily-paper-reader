@@ -1,0 +1,126 @@
+{
+  "version": 2,
+  "extractor": "pdffigures2",
+  "figures": [
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-001.webp",
+      "caption": "Figure 2: Mesh refinements and nested Fourier-MIONet architecture. (A) 2D and 3D visualizations of the mesh refinements for one example of the temperature field T . (B) 2D visualizations of level 4, 3, 2, and 1 refinement boxes above the burner surface with the grid resolutions and box sizes after linear interpolation. (C) Nested pipeline for predicting radiative intensity for four levels with gradually increasing resolution. Each level, starting from level 4, uses outputs from the previous coarser level on top of the absorption coefficient, temperature, and spatial directions (black arrows). The dashed arrows represent the deconvolution layers. The final global solution I(r, s) for the entire domain is assembled from the individual predictions by selecting the finest available resolution for each spatial node.",
+      "page": 6,
+      "index": 1,
+      "width": 842,
+      "height": 625
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-002.webp",
+      "caption": "Table 2: The global testing performance of the nested Fourier-MIONet for the 3D McCaffrey 58 kW and 14 kW fire. We report the individual per-level errors and the global errors obtained during nested inference. The reference radiative fractions χR are 21.26% and 17.83% for the 58 kW and 14 kW fires, respectively.",
+      "page": 11,
+      "index": 2,
+      "width": 965,
+      "height": 275
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-003.webp",
+      "caption": "Figure 8: Errors of McCaffrey fire models trained on the variable-HRR dataset and tested on fixed-HRR cases. The global inference errors of I (left) and G (right) for different model sizes evaluated across fixed HRRs from 14 kW to 58 kW. Darker colors indicate larger errors.",
+      "page": 15,
+      "index": 3,
+      "width": 877,
+      "height": 298
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-004.webp",
+      "caption": "Figure 7: Input fields with variable HRRs for the McCaffrey fires dataset in Section 4.3.",
+      "page": 15,
+      "index": 4,
+      "width": 810,
+      "height": 465
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-005.webp",
+      "caption": "Figure B.11: Illustration and comparison of data preprocessing approaches. (A) Comparison of the nearest neighbor interpolation approach (top path) and the linear interpolation approach (bottom path) on the raw mesh with a T example at level 2. The nearest neighbor interpolation approach performs a direct point lookup based on minimal Euclidean distance and assigns the corresponding values to the target grid locations. The linear interpolation approach utilizes barycentric weighting via Delaunay triangulation and produces smoother and more accurate fields. (B) Reference, global predictions, and absolute errors of I(s = s1) obtained using the two preprocessing approaches for direct comparison.",
+      "page": 21,
+      "index": 5,
+      "width": 867,
+      "height": 748
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-006.webp",
+      "caption": "Figure 3: Results of Fourier-MIONet for the 2D pool fire problem in Section 4.1. (A) Example of κ and T from the test data across half of a fire puff cycle. The red box highlights a specific example corresponding to that in (B). (B) One example of reference, prediction, and the absolute error of I and G on 4 different solid angles: s1 = (sin π16 , cos π16 ), s6 = (sin 11π 16 , cos 11π 16 ), s11 = (sin 21π 16 , cos 21π 16 ), and s15 = (sin 29π 16 , cos 29π 16 ).",
+      "page": 10,
+      "index": 6,
+      "width": 852,
+      "height": 555
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-007.webp",
+      "caption": "Figure 6: Emission, absorption, and the radiative heat loss ∇ · qrad fields of the McCaffrey fire predicted from the fixed-HRR medium model. Examples of x–z views of predictions, references, and the corresponding absolute errors for fire with HRR (A) 58 kW, and (B) 14 kW at y = 0.00625.",
+      "page": 14,
+      "index": 7,
+      "width": 771,
+      "height": 948
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-008.webp",
+      "caption": "Figure 10: Emission, absorption, and the radiative heat loss ∇ · qrad fields of the McCaffrey fire predicted from the medium variable-HRR model. Examples of predictions, references, and the corresponding absolute errors for fire with HRR (A) 58 kW, and (B) 14 kW.",
+      "page": 18,
+      "index": 8,
+      "width": 769,
+      "height": 954
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-009.webp",
+      "caption": "Table D.6: Architecture of the nested Fourier-MIONet across all four levels. C denotes the batch size, W the network width, and N the number of Fourier layers.",
+      "page": 23,
+      "index": 9,
+      "width": 654,
+      "height": 786
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-010.webp",
+      "caption": "Figure 5: Results of McCaffrey fire with HRR 58 kW and 14 kW in Section 4.2 using the fixed-HRR medium model. Examples of predictions, references, and the corresponding absolute errors of level 4, level 3, level 2, and level 1 of fire (A) 58 kW and (B) 14 kW. The predictions are combined to obtain the final global prediction I(s = s1) in the middle column. (C) Schematic of four representative directions from the 16 directions we sampled on the unit sphere. They are defined by the corresponding polar and azimuthal angles sk = (θi, ϕ j), with k = 8i + j, where θi = (2i+1)∆θ",
+      "page": 13,
+      "index": 10,
+      "width": 820,
+      "height": 1180
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-011.webp",
+      "caption": "Figure 9: Results of the McCaffrey fire using the variable-HRR medium model. Examples of predictions, references, and the corresponding absolute errors of level 4, level 3, level 2, and level 1 of fire (A) 58 kW and (B) 14 kW. The predictions are combined to obtain the final global prediction I(s = s1) in the middle column.",
+      "page": 17,
+      "index": 11,
+      "width": 820,
+      "height": 1173
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-012.webp",
+      "caption": "Figure 4: Model accuracy across refinement levels and HRRs for the nested Fourier-MIONet. (A) Per-level L2 relative errors for I and G for the 58 kW (left) and 14 kW (right) McCaffrey fires. Solid bars denote the individual per-level error εI and εG , and hatched bars denote the global inference error εlevel I and εlevel G . (B) The L2 relative errors of the radiative intensity I (left) and incident radiation G (right) versus the model size for 14, 22, 33, 45, and 58 kW cases during global inference.",
+      "page": 12,
+      "index": 12,
+      "width": 866,
+      "height": 730
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-013.webp",
+      "caption": "Table B.5: Comparison of linear versus nearest-neighbor interpolation on 3D McCaffrey 58 kW fire with per-level testing performance. The top panel reports per-level L2 relative errors and SSIM values for radiative intensity I and incident radiation G during training of the medium model. The lower panel summarizes the individual per-level errors and the global errors obtained during nested inference.",
+      "page": 20,
+      "index": 13,
+      "width": 894,
+      "height": 500
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-014.webp",
+      "caption": "Figure 1: Fourier-MIONet architecture. (A) Two independent branch nets take the discretized functions κ(r) and T(r) as inputs and output {bk} p k=1 and {ck} p k=1, respectively. The trunk net takes s and outputs {tk} p k=1. (B) The branch and trunk outputs are merged by element-wise products and then passed into L Fourier layers. Each Fourier layer maps v j to v j+1 by applying a 3D FFT F , multiplying by learnable weights R j in the Fourier space, and transforming back with F −1. A residual connection with a weight matrix W j is added.",
+      "page": 5,
+      "index": 14,
+      "width": 760,
+      "height": 312
+    },
+    {
+      "url": "assets/figures/arxiv/2604.13919v1/fig-015.webp",
+      "caption": "Table 3: 3D McCaffrey fire trained on variable HRRs and tested on fixed HRR fires. We summarize the individual per-level errors and the global errors obtained during nested inference for each HRR.",
+      "page": 16,
+      "index": 15,
+      "width": 879,
+      "height": 570
+    }
+  ]
+}

@@ -6,94 +6,85 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-15
-- 运行时间：2026-04-15 20:29:33 UTC
+- 最新运行日期：2026-04-16
+- 运行时间：2026-04-16 20:27:05 UTC
 - 运行状态：成功
-- 本次总论文数：24
-- 精读区：13
+- 本次总论文数：21
+- 精读区：10
 - 速读区：11
 
 ### 今日简报（AI）
-聚焦 24 篇算子学习与控制论文，深入精读 13 篇、速读 11 篇。  
-最亮点来自 FNO 与脉冲神经算子在分布参数系统和核物理 PDE 控制上的突破。  
-建议关注神经算子在多物理场和边界控制中的泛化能力提升。
-- 详情：[/202604/15/README](/202604/15/README)
+1) 深度聚焦神经算子在复杂物理建模中的前沿突破与应用。  
+2) 最突出方向是基于脉冲机制的核PDE算子与声音吸收材料的物理约束神经建模。  
+3) 下一步建议关注神经算子在多尺度预测与主动学习中的稳定性与泛化表现。
+- 详情：[/202604/16/README](/202604/16/README)
 
 ### 精读区论文标签
-1. [FNO$^{\angle θ}$: Extended Fourier neural operator for learning state and optimal control of distributed parameter systems](/202604/15/2604.05187v1-fnoangle--extended-fourier-neural-operator-for-learning-state-and-optimal-control-of-distributed-parameter-systems)  
-   标签：评分：10.0/10、query:pde
-   evidence：扩展傅里叶神经算子用于学习偏微分方程的状态与最优控制
-2. [SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving](/202604/15/2604.11625v1-scno-spiking-compositional-neural-operator----towards-a-neuromorphic-foundation-model-for-nuclear-pde-solving)  
-   标签：评分：10.0/10、query:pde
-   evidence：引入脉冲组合神经算子用于求解耦合偏微分方程
-3. [Scale-free congestion clusters in large-scale traffic networks: a continuum modeling study](/202604/15/2604.05439v1-scale-free-congestion-clusters-in-large-scale-traffic-networks-a-continuum-modeling-study)  
+1. [SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving](/202604/16/2604.11625v1-scno-spiking-compositional-neural-operator----towards-a-neuromorphic-foundation-model-for-nuclear-pde-solving)  
+   标签：评分：9.5/10、query:pde
+   evidence：用于求解耦合偏微分方程的脉冲组合神经算子
+2. [Physics-informed neural operators for the in situ characterization of locally reacting sound absorbers](/202604/16/2604.07412v1-physics-informed-neural-operators-for-the-in-situ-characterization-of-locally-reacting-sound-absorbers)  
    标签：评分：9.0/10、query:pde
-   evidence：在网络上使用二阶偏微分方程模型进行交通流连续建模
-4. [AE-ViT: Stable Long-Horizon Parametric Partial Differential Equations Modeling](/202604/15/2604.06475v1-ae-vit-stable-long-horizon-parametric-partial-differential-equations-modeling)  
+   evidence：用于声场物理量估计的物理信息神经算子方法
+3. [Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training](/202604/16/2604.08357v1-bias-constrained-diffusion-schedules-for-pde-emulations-reconstruction-error-minimization-and-efficient-unrolled-training)  
    标签：评分：9.0/10、query:pde
-   evidence：使用ViT的参数化偏微分方程代理模型
-5. [MENO: MeanFlow-Enhanced Neural Operators for Dynamical Systems](/202604/15/2604.06881v1-meno-meanflow-enhanced-neural-operators-for-dynamical-systems)  
+   evidence：研究自回归 PDE 扩散模型和时空动力学仿真。
+4. [Hierarchical Flow Decomposition for Turning Movement Prediction at Signalized Intersections](/202604/16/2604.09336v1-hierarchical-flow-decomposition-for-turning-movement-prediction-at-signalized-intersections)  
    标签：评分：9.0/10、query:pde
-   evidence：用于动力系统的均值流增强神经算子
-6. [Multi-layer Predictor Feedback Design for Nonlinear Integro-Differential Equations with State-dependent Input Delays](/202604/15/2604.06918v1-multi-layer-predictor-feedback-design-for-nonlinear-integro-differential-equations-with-state-dependent-input-delays)  
+   evidence：预测交叉口的转向流量和走廊流量
+5. [A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings](/202604/16/2604.11031v1-a-spectral-based-iss-small-gain-theorem-for-boundary-control-systems-with-infinite-couplings)  
    标签：评分：9.0/10、query:pde
-   evidence：具有延迟的混合PDE-ODE系统的边界控制
-7. [Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training](/202604/15/2604.08357v1-bias-constrained-diffusion-schedules-for-pde-emulations-reconstruction-error-minimization-and-efficient-unrolled-training)  
+   evidence：边界控制系统与网络稳定性
+6. [Towards Situation-aware State Modeling for Air Traffic Flow Prediction](/202604/16/2604.11198v2-towards-situation-aware-state-modeling-for-air-traffic-flow-prediction)  
    标签：评分：9.0/10、query:pde
-   evidence：使用扩散模型解决偏微分方程仿真和时空动力学问题
-8. [An Energy-Efficient Lyapunov-Based Cooperative Adaptive Cruise Controller for Electric Vehicles](/202604/15/2604.08689v1-an-energy-efficient-lyapunov-based-cooperative-adaptive-cruise-controller-for-electric-vehicles)  
+   evidence：空中交通流预测及空域边界接近度
+7. [DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems](/202604/16/2604.11375v1-dilo-decoupling-generative-priors-and-neural-operators-via-diffusion-latent-optimization-for-inverse-problems)  
    标签：评分：9.0/10、query:pde
-   evidence：用于改善交通流的协同自适应巡航控制器
-9. [Meta-Learned Basis Adaptation for Parametric Linear PDEs](/202604/15/2604.09289v1-meta-learned-basis-adaptation-for-parametric-linear-pdes)  
+   evidence：解耦生成先验和神经算子，用于解决 PDE 约束的逆问题。
+8. [End-to-end differentiable network traffic simulation with dynamic route choice](/202604/16/2604.11380v1-end-to-end-differentiable-network-traffic-simulation-with-dynamic-route-choice)  
    标签：评分：9.0/10、query:pde
-   evidence：用于求解参数化线性偏微分方程的混合物理信息框架
-10. [Variational Quantum Physics-Informed Neural Networks for Hydrological PDE-Constrained Learning with Inherent Uncertainty Quantification](/202604/15/2604.09374v2-variational-quantum-physics-informed-neural-networks-for-hydrological-pde-constrained-learning-with-inherent-uncertainty-quantification)  
+   evidence：基于 LTM 的可微网络交通流模拟器
+9. [FAST: A Synergistic Framework of Attention and State-space Models for Spatiotemporal Traffic Prediction](/202604/16/2604.13453v1-fast-a-synergistic-framework-of-attention-and-state-space-models-for-spatiotemporal-traffic-prediction)  
    标签：评分：9.0/10、query:pde
-   evidence：在神经网络中使用圣维南浅水方程和曼宁流方程作为偏微分方程约束。
-11. [A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings](/202604/15/2604.11031v1-a-spectral-based-iss-small-gain-theorem-for-boundary-control-systems-with-infinite-couplings)  
+   evidence：提出了一个用于传感器网络中时空交通预测和预报的框架。
+10. [Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires](/202604/16/2604.13919v1-nested-fourier-enhanced-neural-operator-for-efficient-modeling-of-radiation-transfer-in-fires)  
    标签：评分：9.0/10、query:pde
-   evidence：具有无限耦合和传输算子矩阵的边界控制系统
-12. [DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems](/202604/15/2604.11375v1-dilo-decoupling-generative-priors-and-neural-operators-via-diffusion-latent-optimization-for-inverse-problems)  
-   标签：评分：9.0/10、query:pde
-   evidence：神经算子作为PDE约束反问题的代理求解器
-13. [Quantum algorithms for Young measures: applications to nonlinear partial differential equations](/202604/15/2604.11825v1-quantum-algorithms-for-young-measures-applications-to-nonlinear-partial-differential-equations)  
-   标签：评分：9.0/10、query:pde
-   evidence：提出用于求解非线性偏微分方程的量子算法
+   evidence：提出了一种基于傅里叶增强神经算子的机器学习框架，用于求解辐射传输方程。
 
 ### 速读区论文标签
-1. [Physics-informed neural operators for the in situ characterization of locally reacting sound absorbers](/202604/15/2604.07412v1-physics-informed-neural-operators-for-the-in-situ-characterization-of-locally-reacting-sound-absorbers)  
+1. [Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator](/202604/16/2604.12794v1-stable-fine-time-step-long-horizon-turbulence-prediction-with-a-multi-stepsize-mixture-of-experts-neural-operator)  
    标签：评分：8.5/10、query:pde
-   evidence：使用物理信息神经算子从声场测量中估计表面导纳。
-2. [$φ-$DeepONet: A Discontinuity Capturing Neural Operator](/202604/15/2604.08076v1--deeponet-a-discontinuity-capturing-neural-operator)  
+   evidence：开发了一种用于流体预测的多步长混合专家神经算子
+2. [Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators](/202604/16/2604.13316v1-beyond-uniform-sampling-synergistic-active-learning-and-input-denoising-for-robust-neural-operators)  
    标签：评分：8.5/10、query:pde
-   evidence：提出了一种旨在学习函数空间之间映射的物理信息神经算子。
-3. [The Stability of a Coupled Degenerate Wave System Under Boundary Control](/202604/15/2604.05441v1-the-stability-of-a-coupled-degenerate-wave-system-under-boundary-control)  
+   evidence：用于物理模拟的鲁棒神经算子与主动学习
+3. [Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs](/202604/16/2604.13723v1-physics-informed-neural-networks-for-solving-derivative-constrained-pdes)  
+   标签：评分：8.5/10、query:pde
+   evidence：用于求解导数约束偏微分方程的物理信息神经网络
+4. [AE-ViT: Stable Long-Horizon Parametric Partial Differential Equations Modeling](/202604/16/2604.06475v1-ae-vit-stable-long-horizon-parametric-partial-differential-equations-modeling)  
    标签：评分：8.0/10、query:pde
-   evidence：研究了边界控制下耦合波动方程系统的稳定性
-4. [Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training](/202604/15/2604.08357v2-bias-constrained-diffusion-schedules-for-pde-emulations-reconstruction-error-minimization-and-efficient-unrolled-training)  
-   标签：评分：8.0/10、query:pde
-   evidence：用于PDE仿真和时空动力学的扩散调度
-5. [On the Unique Recovery of Transport Maps and Vector Fields from Finite Measure-Valued Data](/202604/15/2604.07671v1-on-the-unique-recovery-of-transport-maps-and-vector-fields-from-finite-measure-valued-data)  
+   evidence：参数化偏微分方程的代理模型
+5. [Bias-Constrained Diffusion Schedules for PDE Emulations: Reconstruction Error Minimization and Efficient Unrolled Training](/202604/16/2604.08357v2-bias-constrained-diffusion-schedules-for-pde-emulations-reconstruction-error-minimization-and-efficient-unrolled-training)  
    标签：评分：7.5/10、query:pde
-   evidence：讨论了偏微分方程反问题以及从测度值数据中唯一恢复输运映射的问题。
-6. [Formalization of De Giorgi--Nash--Moser Theory in Lean](/202604/15/2604.05984v1-formalization-of-de-giorgi--nash--moser-theory-in-lean)  
+   evidence：专注于偏微分方程模拟和时空动力学的扩散模型
+6. [Physics-guided surrogate learning enables zero-shot control of turbulent wings](/202604/16/2604.09434v1-physics-guided-surrogate-learning-enables-zero-shot-control-of-turbulent-wings)  
+   标签：评分：7.5/10、query:pde
+   evidence：利用物理引导的代理学习控制湍流边界层
+7. [Physics-guided surrogate learning enables zero-shot control of turbulent wings](/202604/16/2604.09434v2-physics-guided-surrogate-learning-enables-zero-shot-control-of-turbulent-wings)  
+   标签：评分：7.5/10、query:pde
+   evidence：利用物理引导的代理学习控制湍流边界层
+8. [Sparse-Aware Neural Networks for Nonlinear Functionals: Mitigating the Exponential Dependence on Dimension](/202604/16/2604.06774v1-sparse-aware-neural-networks-for-nonlinear-functionals-mitigating-the-exponential-dependence-on-dimension)  
    标签：评分：7.0/10、query:pde
-   evidence：在Lean中对现代偏微分方程理论进行形式化
-7. [Sparse-Aware Neural Networks for Nonlinear Functionals: Mitigating the Exponential Dependence on Dimension](/202604/15/2604.06774v1-sparse-aware-neural-networks-for-nonlinear-functionals-mitigating-the-exponential-dependence-on-dimension)  
-   标签：评分：7.0/10、query:pde
-   evidence：研究泛函学习，这是无限维空间算子学习的核心组成部分。
-8. [SPAMoE: Spectrum-Aware Hybrid Operator Framework for Full-Waveform Inversion](/202604/15/2604.07421v1-spamoe-spectrum-aware-hybrid-operator-framework-for-full-waveform-inversion)  
-   标签：评分：7.0/10、query:pde
-   evidence：该论文提出了一种新型频谱感知神经算子框架（SPAMoE）用于解决反问题。
-9. [Effective Dynamics and Transition Pathways from Koopman-Inspired Neural Learning of Collective Variables](/202604/15/2604.05778v1-effective-dynamics-and-transition-pathways-from-koopman-inspired-neural-learning-of-collective-variables)  
+   evidence：在函数空间上学习算子的框架
+9. [Extraction of linearized models from pre-trained networks via knowledge distillation](/202604/16/2604.06732v1-extraction-of-linearized-models-from-pre-trained-networks-via-knowledge-distillation)  
    标签：评分：6.0/10、query:pde
-   evidence：用于动力系统的 Koopman 算子神经学习
-10. [Extraction of linearized models from pre-trained networks via knowledge distillation](/202604/15/2604.06732v1-extraction-of-linearized-models-from-pre-trained-networks-via-knowledge-distillation)  
+   evidence：将 Koopman 算子理论与神经网络相结合
+10. [A generalization of the inverse mapping theorem in infinite dimensions](/202604/16/2604.10002v1-a-generalization-of-the-inverse-mapping-theorem-in-infinite-dimensions)  
    标签：评分：6.0/10、query:pde
-   evidence：利用Koopman算子理论提取线性化模型
-11. [An Inexact Trust-Region Method for Structured Nonsmooth Optimization with Application to Risk-Averse Stochastic Programming](/202604/15/2604.07216v1-an-inexact-trust-region-method-for-structured-nonsmooth-optimization-with-application-to-risk-averse-stochastic-programming)  
+   evidence：利用广义逆映射定理证明了抽象 PDE 系统的存在性和唯一性定理。
+11. [Euler-inspired Decoupling Neural Operator for Efficient Pansharpening](/202604/16/2604.12463v1-euler-inspired-decoupling-neural-operator-for-efficient-pansharpening)  
    标签：评分：6.0/10、query:pde
-   evidence：受偏微分方程约束的问题优化
+   evidence：受欧拉启发的解耦神经算子，用于连续函数映射
 
 
 <div class="dpr-home-promo-card">
