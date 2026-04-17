@@ -1,0 +1,7657 @@
+Title: A convergence rate for the entropic JKO scheme
+
+URL Source: https://arxiv.org/pdf/2604.08283v1
+
+Published Time: Fri, 10 Apr 2026 01:28:33 GMT
+
+Number of Pages: 46
+
+Markdown Content:
+A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 
+
+AYMERIC BARADAT AND SOFIANE CHERF 
+
+Abstract. The so-called JKO scheme, named after Jordan, Kinderlehrer and Otto [18], provides a variational way to construct discrete time approximations of certain partial differential equations (PDEs) appearing as gradient flows in the space of probability measures equipped with the Wasserstein metric. The method consists of an implicit Euler scheme, which can be implemented numerically. Yet, in practice, evaluating the Wasserstein distance can be numerically expensive. To address this problem, a common strategy introduced in [25] and which has been shown to produce faster com-putations, is to replace the Wasserstein distance with its entropic regularization, also known as the Schrödinger cost. In [4], the first author, Hraivoronska and Santambrogio, proved that if the regulariza-tion parameter ε is proportional to the time step τ , that is, ε = ατ for some α > 0, then as τ → 0, this change results in adding to the limiting PDE the additional linear diffusion term α 
+
+> 2
+
+∆ρ. Our goal in this article is to provide a convergence rate under convexity assumptions between the entropic JKO scheme and the solution of the initial PDE as both α and τ tend to zero. This will appear as a consequence of a new bound between the classical and entropic JKO schemes. 
+
+Contents 
+
+1. Introduction 12. Notations and preliminaries 63. Proof of the Main Result 23 4. Proof of Corollary 1.3.1 28 5. Optimality in α of the inequalities 34 Appendix 41 Appendix A. Proof of Theorem 1.4 42 Appendix B. A truncation argument for the small values of F 45 References 45 1. Introduction 
+
+1.1. Definition of JKO and Entropic JKO. Consider a functional F : P2(Rd) → R ∪ { +∞} ,where P2(Rd) is the set of probability measures with finite second moment. To fix the ideas, in this subsection, think of a functional of type 
+
+F : ρ 7 −→ 
+
+Z
+
+> Rd
+
+V (x) ρ(x) d x + 12
+
+Z
+
+> Rd
+
+(W ∗ ρ)( x) ρ(x) d x +
+
+Z
+
+> Rd
+
+f (ρ(x)) d x, (1.1) where V : Rd → R+, W : Rd → R+ and f : R+ → R+ are given smooth nonnegative functions, and F
+
+is set to +∞ if ρ is not absolutely continuous with respect to the Lebesgue measure. It is well known (see [18, 3, 26]) that the formal gradient flow of F in the Wasserstein space is the PDE 
+
+(∂tρ − div 
+
+
+
+ρ∇
+
+ δF 
+
+> δρ
+
+(ρ)
+
+ 
+
+= 0 ,ρ(0 , ·) = μ, (1.2) where the function δF 
+
+> δρ
+
+(ρ) is the so-called first variation of F, which equals 
+
+δF
+
+δρ (ρ) = V + W ∗ ρ + f ′(ρ)
+
+in the above case. This explains why the seminal work [18] suggested to construct solutions of equa-tion (1.2) using an implicit Euler scheme: this is the famous JKO scheme. In practice, the Wasserstein distance can be costly to evaluate numerically. For this reason and in a lot of applications, authors prefer to replace it by its entropic counterpart studied in [21]. Indeed, on the one hand, this entropic regularization converges towards the Wasserstein distance [20, 13, 22]. On the other hand, this change allows to use the very efficient Sinkhorn algorithm [27, 14, 7]. We refer for  
+
+> 1
+> arXiv:2604.08283v1 [math.AP] 9 Apr 2026 2AYMERIC BARADAT AND SOFIANE CHERF
+
+instance to [12] for an application of this idea to the computation of Wasserstein barycenters, to [8] in the context of incompressible flows. In the context of the JKO scheme, this change was proposed by Peyré in [25]. In this work, we want to compare the classical JKO scheme and this perturbed scheme. To begin, let us introduce them. Given a measure μ ∈ P 2(Rd), a time-step parameter τ > 0, a regularization parameter α > 0, and an energy functional F as before, we define one step of the JKO and entropic JKO schemes as follows, when the formulas make sense: 
+
+J0 
+
+> τ
+
+(μ) := arg min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
+, (JKO) 
+
+Jατ (μ) := arg min 
+
+> ρ∈P 2(Rd)
+
+ Sch ατ (μ, ρ )
+
+τ + F(ρ)
+
+
+
+, (Ent JKO) where the Wasserstein distance W2 and its entropic regularization of regularization level ατ a.k.a. the Schrodinger cost Sch ατ are defined below in Section 2. The reason why the level of regularization is taken proportional to the time-step parameter τ will be clear in a few lines. When minimizers exist but are not unique, J0 
+
+> τ
+
+and Jατ have to be understood as any choice among the minimizers. We then define the iterates of the scheme as follows: 
+
+• for all k ∈ N∗,
+
+J0 
+
+> k,τ
+
+(μ) := ( J0 
+
+> τ
+
+)◦k(μ) = J0 
+
+> τ
+
+◦ · · · ◦ J0
+
+> τ
+
+| {z } 
+
+> ktimes
+
+(μ),
+
+is the measure obtained after k steps of the classical JKO scheme with time step τ ;
+
+• for all k ∈ N∗,
+
+Jαk,τ (μ) := ( Jατ )◦k(μ) = Jατ ◦ · · · ◦ Jατ
+
+| {z } 
+
+> ktimes
+
+(μ),
+
+is the measure obtained after k steps of the entropic JKO scheme with time step τ and regular-ization parameter α.Since [18, 24, 3], it is known that under convexity or coercivity assumptions on the functional F, the JKO scheme converges to solutions of the limiting equation (1.2) in the sense that J0
+
+> n,t/n
+
+(μ) converges towards a distributional solution of (1.2) at time t as n → ∞ .Concerning the entropic JKO scheme, the first convergence result is due to Carlier, Duval, Peyré, and Schmitzer in [11]. They studied the case when the regularization parameter α = α(τ ) is itself a function of τ , approaching zero with a rate such that α| ln α| = O(τ ) (or equivalently, α = O(τ / | ln( τ )|)). In this case, they show as before that Jαn,t/n (μ) converges towards a solution at time t of (1.2). Building on asymptotics obtained in [1, 15, 16], the first author, Hraivoronska and Santambrogio, made an improvement in [4], where they studied the case where α(τ ) is of order one. They show that provided 
+
+α(τ ) → α∞ as τ → 0, then Jαn,t/n (μ) converges towards a solution at time t of 
+
+(∂tρ − div 
+
+
+
+ρ∇
+
+ δF 
+
+> δρ
+
+(ρ)
+
+ 
+
+= α∞
+
+2 ∆ρ, ρ(0 , ·) = μ, (1.3) instead of (1.2), that is, with an additional term α∞ 
+
+> 2
+
+∆ρ on the right hand side of the limiting PDE. In particular, the case α∞ = 0 , extends the result of [11]. However, neither [11] nor [4] provide explicit bounds between the schemes or between the entropic scheme and the corresponding solutions of equation (1.3). These are the questions that we want to address in the present paper. Our main contribution, stated at Theorem 1.3, is an explicit bound in α
+
+and τ on the Wasserstein distance between J0 
+
+> n,τ
+
+(μ) and Jαn,τ (μ). This result seems to us to be particularly interesting since combined with the known convergence rate of the JKO scheme, we easily deduce an explicit bound in α and τ on the Wasserstein distance between J0 
+
+> n,τ
+
+(μ) and the solution of (1.2) at time 
+
+t, see Corollary 1.3.1. Another part of our work consisted in studying the optimality of our bound in α as τ → 0. To that aim, we compare our discrete result with a bound obtained in the continuous case, and show that they only differ from a factor 2, but keep the orders of magnitude. Then, by extensively studying an example where everything can be computed, we identify precisely where the optimality of both the continuous and discrete bounds is lost. Since the pioneering work [3], it is well understood that the stability of equation (1.2) in the Wasserstein distance, and hence the question of convergence of the JKO scheme, is deeply linked to the so-called geodesic convexity of the functional F – a property discovered by McCann in [23] – or more precisely, to A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 3
+
+convexity along generalized geodesics, see Definition 2.4. Naturally, we have to work with this assumption as well. Unfortunately, no similar property has been discovered so far in the entropic setting, which explains why the convergence established in [4] does not come with a rate. Therefore, we had to bypass this difficulty by exploiting the stability of the classical JKO scheme only, and not of its entropic counterpart. 1.2. Main Results. The following set of assumptions on F will play a crucial role in our study. 
+
+Hypothesis 1.1. We assume that F satisfies: (1) F is lower semicontinous (l.s.c.) with respect to the weak convergence in P2(Rd), where we say that (ρn)n converges weakly in P2(Rd) if it weak-⋆ converges in duality with continuous bounded functions (later, we will say converges narrowly ), and has uniformly bounded second moments. (2) F is λ-convex along generalized geodesics (see Definition 2.4). (3) There exists K ∈ R such that for all μ ∈ P 2(Rd) and t ≥ 0, F(μ ∗ σt) ≤ F (μ) + K t 
+
+> 2
+
+, where (σt)
+
+is the heat kernel, that is, the fundamental solution of ∂tσt = 12 ∆σt.We will justify this set of assumptions and give examples of functionals satisfying them in Subsec-tion 1.3. For the moment, let us just notice that the points (1) and (2) allow Ambrosio, Gigli and Savaré [3] to find, for all t ≥ 0 and μ0 ∈ P 2(Rd) such that F(μ0) < +∞, a limit 
+
+ρ0(t) := lim  
+
+> n→+∞
+
+J0
+
+> n,t/n
+
+(μ0), (1.4) with explicit convergence rates. We will recall them in Section 4, but let us already mention that the rate corresponding to the case when λ = 0 and F is below bounded writes: 
+
+W 22
+
+
+
+ρ0(t), J 0
+
+> n,t/n
+
+(μ0)
+
+
+
+≤ tn
+
+
+
+F(μ0) − F (J0
+
+> t/n
+
+(μ0)) 
+
+
+
+≤ tn
+
+
+
+F(μ0) − inf 
+
+> P2(Rd)
+
+F
+
+
+
+. (1.5) Therefore, these assumptions are sufficient to give a meaning to the notion of gradient flow of F in 
+
+P2(Rd), even in cases when the PDE (1.2) cannot be written. Of course, in most practical cases such as (1.1), equation (1.2) can be written and ρ0 is indeed its unique distributional solution. With these assumptions at hand, we can provide our main bound in Theorem 1.3 below. This bound involves the Boltzmann entropy, defined as follows. 
+
+Definition 1.2. For all ρ ∈ P 2(Rd), the Boltzmann entropy is defined as 
+
+H(ρ) := 
+
+Z
+
+ρ(x) ln ρ(x)dx, if ρ has a density w.r.t. the Lebesgue measure ,
+
++ ∞, else. (Here, we used the same notation for a measure and its density with respect to the Lebesgue measure.) This quantity is always well defined in R ∪ { +∞} in virtue of Proposition 2.9. Our main result is: 
+
+Theorem 1.3 (Convergence estimate) . Let F satisfy Hypothesis 1.1 with given K and λ. Let τ, α be some positive parameter, and μ0 ∈ P 2(Rd) be an initial condition satisfying F(μ0) < +∞ and H(μ0) < +∞.Finally, let us fix n ≥ 0. Then the iterates J0 
+
+> n,τ
+
+(μ0) and Jαn,τ (μ0) exist and satisfy: 
+
+• If λ = 0 , then 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+q
+
+2τ (F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) + 
+
+q
+
+nτ α  H(μ0) − H(Jαn,τ (μ0)) + Knτ .
+
+• If λ̸ = 0 and τ ≤ 12λ− (where here and in the whole text, we use the convention 1/0 = + ∞ so that there is no condition on τ when λ ≥ 0), then 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤ √2(1 + 4 λ−τ ) 32 (1 − λ−τ )−n√τ
+
+q
+
+(F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) + (1 + 3 λ−τ )
+
+r 1 − (1 + λτ )−2n
+
+2λ
+
+q
+
+α  H(μ0) − H(Jαn,τ (μ0)) + Knτ .
+
+To us, the main interest of this result is that, combined with bounds on the convergence of the JKO scheme such as (1.5), it implies as a corollary a bound between the iterates of the entropic JKO scheme and the corresponding gradient flow ρ0 (and hence, in practical cases, the unique weak solution of (1.2)). 4 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Corollary 1.3.1. In the context of Theorem 1.3, given t ≥ 0 and ρ0(t) defined as in (1.4) , for all α0 > 0,there exists a constant C, depending only on the second moment of μ0, t, F(μ0), H(μ0), λ, K and α0,such that for all n ∈ N∗ and α ≤ α0,
+
+W2(Jαn,t/n (μ0), ρ 0(t)) ≤ C √α +
+
+r 1
+
+n
+
+!
+
+.
+
+The bound of Theorem 1.3 can be compared with the best bound we know between the solutions of the limiting equations (1.2) and (1.3). This bound has been communicated to us by Fanch Coudreuse, and for the sake of completeness, we reproduce its proof in Appendix A.3. As we will see then, this proof relies on formal computations on the PDEs, and therefore becomes rigorous when equations (1.2) and (1.3) admit sufficiently regular solutions. This is for instance the case when F is of the form (1.1) with V , W and f sufficiently regular. 
+
+Theorem 1.4. Let F be of the form (1.1) . We assume that: 
+
+• The PDEs (1.2) and (1.3) admit regular solutions ρ0 and ρα for all times t ≥ 0;
+
+• F is λ-geodesically convex for some λ ∈ R.Then, for all t > 0,
+
+• if λ = 0 the following inequalities hold: 
+
+W2(ρ0(t), ρ α(t)) ≤ α
+
+2
+
+Z t
+
+> 0
+
+sZ
+
+|∇ ln( ρα)|2dραds ≤
+
+r α
+
+2
+
+pt(H(μ0) − H(ραt ) + Kt ). (1.6) 
+
+• if λ̸ = 0 the following inequalities hold: 
+
+W2(ρ0(t), ρ α(t)) ≤ α
+
+2
+
+Z t
+
+> 0
+
+eλ(s−t)
+
+sZ
+
+|∇ ln( ρα)|2dραds ≤
+
+r α
+
+21 − e−2λt 
+
+2λ
+
+p(H(μ0) − H(ραt ) + Kt ). (1.7) 
+
+Remark 1.5 . In order to compare our bound of Theorem 1.3 and the bound of Theorem 1.4, let us fix 
+
+t > 0, define τ = tn and let n go to +∞; the following limits hold true: 
+
+lim 
+
+> n→+∞
+
+1 − (1 + λτ )−2n
+
+2λ = 1 − e−2λt 
+
+2λ ,
+
+lim 
+
+> n→+∞
+
+(1 − λ−τ )−n = eλ−t,
+
+lim sup 
+
+> n→+∞
+
+−H(Jαn,τ (μ0)) ≤ − H(ραt ).
+
+The two first lines are direct, and the last one is a consequence of the lower semicontinuity of the entropy together with the convergence result of the entropic JKO scheme towards the solutions of (1.3) stated in [4]. Now, taking the limsup in the bound of Theorem 1.3: 
+
+lim sup 
+
+> n→+∞
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+q
+
+αt  H(μ0) − H(ρα(t)) + Kt , if λ = 0 ,
+
+r
+
+α 1 − e−2λt 
+
+2λ
+
+ H(μ0) − H(ρα(t)) + Kt , if λ̸ = 0 ,
+
+which is twice bound between the limits stated at Theorem 1.4. This argument shows that our bound is close to being sharp in α, see Theorem 5.7 for a precise statement. However, our bound is far from being optimal in τ , since it does not even converge to 0 as α goes to 0.1.3. Comments on the hypothesis. Let us explain why Hypothesis 1.1 is a natural set of assumptions and give some usual cases where it is verified. 
+
+• The lower semicontinuity is a natural assumption to ensure the existence of minimizers along the schemes. The lower semicontinuity we require on F is weaker than the lower semicontinuity for the narrow convergence and stronger than the W2 lower semicontinuity (for which we are not able to prove existence for the entropic scheme). 
+
+• The convexity along generalized geodesics is a strengthen version of the geodesic convexity which is equivalent in all practical cases, see subsection 2.5.1 for the definition and some explanations. This hypothesis, which is already required in [3] to obtain the convergence and an explicit convergence rate of the JKO scheme toward its limit, will provide stability through the discrete Evolution Variational Inequality (discrete E.V.I); see Theorem 2.23. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 5
+
+• An important heuristic idea that guided us is that following the flow of F + α 
+
+> 2
+
+H (i.e., solving equation (1.3)) for a time dt should be asymptotically equivalent to first following the flow of F
+
+for a time dt, and then following the flow of α 
+
+> 2
+
+H for a time dt. Indeed, if ρ0 and ρα are regular solutions of (1.2) and (1.3) respectively, starting from the same initial measure μ0, then: 
+
+∂t
+
+ ρ0 ∗ σαt 
+
+
+
+> t=0
+
+= div 
+
+
+
+μ0∇ δF
+
+δρ (μ0)
+
+
+
++ α
+
+2 ∆μ0 = ∂tρα
+
+> t=0
+
+With this in mind, in order to compare the flow of F and of F + α 
+
+> 2
+
+H, it is not surprising that we need a bound on the flow of H (i.e., the heat flow) along our solution, which is our last hypothesis. Formally (that is, for sufficiently regular functionals and densities), this assumption is equivalent to the fact that for all sufficiently regular probability measure ρ,
+
+−
+
+Z
+
+∇ δF
+
+δρ (ρ) · ∇ ρ ≤ K. 
+
+Let us provide some examples relying on the form (1.1). Our Hypothesis 1.1 covers the following classic cases (extended and proved in Subsection 2.8). 
+
+Proposition 1.6. Let F be of the form (1.1) that is: 
+
+F : ρ ∈ P 2(Rd) 7 −→ 
+
+Z
+
+> Rd
+
+V (x) ρ(x) d x + 12
+
+Z
+
+> Rd
+
+(W ∗ ρ)( x) ρ(x) d x +
+
+Z
+
+> Rd
+
+f (ρ(x)) d x, 
+
+for some functions V , W and f , where F is set to +∞ if ρ is not absolutely continuous with respect to the Lebesgue measure. We assume that: 
+
+• V, W are nonnegative, and f is either nonnegative or positively proportional to s ∈ R+ 7 → s log s.
+
+• V, W are of regularity C1 with globally Lipchitz derivatives, 
+
+• f is convex with superlinear growth and verify the McCann condition, which means that the map 
+
+s 7 → sdf (s−d) is convex and non increasing on (0 , +∞).Then F satisfies Hypothesis 1.1 for some λ and K.Remark 1.7 . Some classic examples of functions f that verify the previous hypothesis are: 
+
+f (s) = s ln( s) and f (s) = sm
+
+m − 1 for m > 1.
+
+1.4. Structure of the Article. In Section 2, we gather the definitions of the objects appearing in our study: the Wasserstein distance in Subsection 2.1, the relative and Boltzmann entropy in Subsection 2.2 and the Schrödinger cost in Subsection 2.3. As we will see later, the main ingredient in the proofs is the convexity along the generalized geodesics, presented in Subsection 2.4, and on of its consequences, the discrete Evolution Variational Inequality (E.V.I.). In fact, this central inequality arises very naturally when we adopt a lifting point of view. For completeness, we explain this lifting and how it implies the E.V.I in Subsection 2.5. To our knowledge, this article is the first one to study systematically the entopic JKO scheme for λ-convex functionals. Therefore, one of the most natural questions is the existence of minimizers along the scheme. This is done in Subsection 2.6 for both schemes. Unfortunately, as presented in Subsection 2.7, we are only able to show uniqueness of the minimizers of the entropic JKO scheme in some reduced classes of functionals. Finally, in Subsection 2.8, we show that Hypothesis 1.1 is satisfied for a large class of functionals of the form (1.1). Section 3 contains the proof of the main convergence result stated in Theorem 1.3. Section 4 contains the proof of Corollary 1.3.1. In section 5 we investigate the optimality in α of both the bound at the continuous level and the bound between the two schemes. We are able to find examples where the first inequality of (1.6) and (1.7) are equalities. At the discrete level, we are able to show an analog version of this sharp bound in the continuous case, and for the same examples, this bound is an equality up to adding a term that goes to 0 when τ goes to 0.
+
+Acknowledgments. The authors wish to express their gratitude to Fanch Coudreuse for explaining to them the bound presented in Theorem 1.4. They also want to thank Hugo Malamut, Maxime Sylvestre and Filippo Santambrogio for interesting discussions and remarks. They finally acknowledge the support of European union via the ERC AdG 101054420 EYAWKAJKOS. 6 AYMERIC BARADAT AND SOFIANE CHERF 
+
+2. Notations and preliminaries 
+
+2.1. The Wasserstein distance. The quadratic Wasserstein distance admits three classical equivalent formulations: (1) the primal (Kantorovich) formulation, see Subsection 2.1.1, (2) the dual formulation, see Subsection 2.1.2, and (3) the dynamic Benamou–Brenier formulation, see Subsection 2.1.3. Let us start by introducing the primal formulation. 2.1.1. Primal formulation of the Wasserstein distance. 
+
+Definition 2.1 (Wasserstein Distance) . We denote by W2 the 2-Wasserstein distance associated with the Euclidean distance, defined for every μ, ν ∈ P 2(Rd) by: 
+
+W2(μ, ν ) := 
+
+
+
+inf 
+
+> γ∈Π( μ,ν )
+
+Z
+
+> Rd×Rd
+
+|x − y|2 dγ(x, y )
+
+1/2
+
+,
+
+where Π( μ, ν ) is the set of all couplings between μ and ν. These are the measures γ ∈ P (Rd × Rd) that satisfy that for every φ ∈ C 0 
+
+> c
+
+(Rd, R)
+
+Z
+
+> Rd×Rd
+
+φ(x) d γ(x, y ) = 
+
+Z
+
+> Rd
+
+φ(x) d μ(x) and 
+
+Z
+
+> Rd×Rd
+
+φ(y) d γ(x, y ) = 
+
+Z
+
+> Rd
+
+φ(y) d ν(y).
+
+It is well known that minimizers always exist [26]. In the following, we call these minimizers optimal transport plans. If moreover μ is absolutely continuous w.r.t. the Lebesgue measure, then by Brenier’s theorem [9], there exists a unique optimal plan, and this plan is concentrated on the graph of a map 
+
+T , called the optimal transport map , which is the gradient of a convex function. Moreover, T is unique 
+
+μ-almost everywhere. In particular, 
+
+γ = ( Id, T )# μ and T# μ = ν, 
+
+where if p ∈ P (Rn), n ∈ N∗ and A : Rn → Rm, m ∈ N∗ is a measurable map well defined p-almost everywhere, A# p is the push-forward of p by A, defined for all Borelian subset E of Rm by A# p(E) = 
+
+p(A−1(E)) . Moreover, 
+
+T = arg min 
+
+> S∈L2(μ;Rd)
+> S#μ=ν
+
+Z 
+
+|x − S(x)|2 dμ(x)
+
+
+
+and W 22 (μ, ν ) = 
+
+Z
+
+> Rd
+
+|x − T (x)|2 dμ(x).
+
+2.1.2. Dual formulation. The minimization problem defining the Wasserstein distance comes with a dual problem which can be expressed as follows (see [26] for more details and a proof of the equality of the primal and dual optimal values): 
+
+W 22 (μ, ν )2 = sup  
+
+> φ,ψ φ⊕ψ≤|x−y|22
+
+Z 
+
+φ dμ +
+
+Z
+
+ψ dν
+
+
+
+where the supremum is taken over (φ, ψ ) ∈ L1(μ) × L1(ν) that satisfies pointwise for all x, y ∈ Rd
+
+φ(x) + ψ(y) ≤ | x − y|2/2. Moreover, the previous supremum is achieved, and if the pair (φ, ψ ) achieves this maximum, φ and ψ are called Kantorovich potentials respectively from μ to ν and from ν to μ.When an optimal map exists, it can be recovered from Kantorovich potentials. 
+
+Proposition 2.2. Let μ, ν ∈ P 2(Rd). Assume that μ is absolutely continuous with respect to the Lebesgue measure. Let (φ, ψ ) be an associated optimal Kantorovich pair. Then φ is differentiable μ-a.e. and the optimal transport map T satisfies for μ-almost every x:
+
+T (x) = x − ∇ φ(x).
+
+Consequently, 
+
+W 22 (μ, ν ) = 
+
+Z
+
+> Rd
+
+|∇ φ(x)|2 dμ(x).
+
+2.1.3. The Benamou-Brenier formulation. These two formulations of the Wasserstein distance are said to be static : only the initial and final distribution of mass matter. Alternatively, the Benamou-Brenier formula [6] offers a dynamic viewpoint by determining a continuous trajectory followed by the distribution of mass during transport. It can stated as follows: A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 7
+
+Proposition 2.3. For all μ, ν ∈ P 2(Rd),
+
+W 22 (μ, ν )2 = inf 
+
+> (ρ,c )
+> ∂tρ+div( ρc )=0
+
+Z 10
+
+Z |ct|2
+
+2 dρt dt, 
+
+where the infimum is taken over curves (ρt), t ∈ [0 , 1] , valued in P2(Rd), and vector fields c = ct(x),
+
+t ∈ [0 , 1] and x ∈ Rd, such that the PDE ∂tρ + div( ρc ) = 0 holds distributionally, with ρ(0) = μ and 
+
+ρ(1) = ν. The infimum is achieved, and if the pair (ρt, c t) achieves this minimum, the curve (ρt) is called a geodesic between μ and ν and (ct) is called its associated velocity fields. Alternatively, rescaling the time according to a positive parameter τ > 0, we have for all μ, ν ∈ P 2(Rd):
+
+W 22 (μ, ν )2τ = inf 
+
+> (ρ,c )
+> ∂tρ+div( ρc )=0
+
+Z τ
+
+> 0
+
+Z |ct|2
+
+2 dρt dt
+
+where the infimum is taken over weak solutions (ρt, c t), t ∈ [0 , τ ] of ∂tρ + div( ρc ) = 0 such that ρ(0) = μ
+
+and ρ(τ ) = ν.
+
+Let us consider μ, ν ∈ P 2(Rd), and a curve (ρt), t ∈ [0 , 1] , valued in P2(Rd), connecting μ to ν. Let us call π1 and π2 the canonical projections from (Rd)2 to Rd. It can be proved (see [26, Section 5.4]) that (ρt) is a geodesic in the sense of Proposition 2.3 if and only if there exists γ ∈ Π( μ, ν ) an optimal transport plan such that for all t ∈ [0 , 1] ,
+
+ρt = ( tπ 2 + (1 − t)π1)#γ. (2.1) Therefore, geodesics can be related to Kantorovich potentials. In fact, if μ and ν are absolutely continuous with respect to the Lebesgue measure, in virtue of the Brenier theorem, the optimal transport plan γ is unique, and then the Wasserstein geodesic (ρt) from μ to ν is unique as well. In this case, formula (2.1) implies the following proposition. 
+
+Proposition 2.4. Let μ, ν ∈ P 2(Rd) be absolutely continuous with respect to the Lebesgue measure, let 
+
+(ρt) be the Wasserstein geodesic between μ and ν, and let (φ, ψ ) be an associated pair of Kantorovich potentials. Let a ∈ C1 
+
+> b
+
+(Rd). We have 
+
+ddt
+
+Z
+
+a dρt
+
+> t=0
+
+= −
+
+Z
+
+∇a · ∇ φ dμ, and ddt
+
+Z
+
+a dρt
+
+> t=1
+
+=
+
+Z
+
+∇a · ∇ ψ dν. 
+
+Proof. Let γ be the unique transport optimal plan, (ρt) the unique geodesic from μ to ν, and (φ, ψ ) apair of Kantorovic potentials. Let a ∈ C1 
+
+> b
+
+(Rd). By formula (2.1), we have for all t ∈ [0 , 1] 
+
+Z
+
+a dρt =
+
+Z
+
+a(ty + (1 − t)x) d γ(x, y ).
+
+Moreover, as μ is absolutely continuous with respect to the Lebesgue measure, we already saw in para-graph 2.1.1 and Proposition 2.2 that 
+
+γ = ( Id, T )#μ with T = Id − ∇ φ, 
+
+where the second equality holds μ-almost everywhere. Therefore, for all t ∈ [0 , 1] ,
+
+Z
+
+a dρt =
+
+Z
+
+a
+
+
+
+x − t∇φ(x)
+
+
+
+dμ(x).
+
+The first part of the statement follows easily using the fact that in virtue of Proposition 2.2, ∇φ ∈ L2(μ).The second part of the statement is obtained in the same way, interverting the roles of μ and ν. □
+
+Remark 2.5 . Let μ, ν ∈ P 2(Rd) be absolutely continuous with respect to the Lebesgue measure, let (ρt) be the Wasserstein geodesic between μ and ν, and let (φ, ψ ) be an associated pair of Kantorovich potentials. The previous proposition stated that the following equalities hold in the distributional sense: 
+
+∂tρt|t=0 = − div( μ∇φ) and ∂tρt|t=1 = − div( ν∇ψ).8 AYMERIC BARADAT AND SOFIANE CHERF 
+
+2.2. The entropy functional. The Schrödinger cost is defined by adding an entropy penalization term in the primal formulation of the Wasserstein distance. Hence, before defining the Schrödinger cost, we have to introduce our notion of entropy and its key properties. 
+
+Definition 2.6 (Relative entropy) . Let P, R two Borel probality measures on Rn, n ∈ N∗ (in what follows, we will consider the cases n = d and n = 2 d). We denote by H(P ∥R) the relative entropy defined as: 
+
+H(P ∥R) = 
+
+Z
+
+ln 
+
+ dP
+
+dR
+
+
+
+dP if P ≪ R, 
+
++ ∞ otherwise .
+
+The next proposition, which is an easy consequence of the Jensen inequality, insures that the relative entropy is defined in R+ ∪ { +∞} .
+
+Proposition 2.7. Let P, R two Borel probability measures. Whenever P ≪ R, then ln   dP
+
+> dR
+
+ 
+
+> −
+
+∈ L1(P ).Thus, the relative entropy is well defined. Moreover 
+
+H(P ∥R) ∈ R+ ∪ { +∞} .
+
+The Boltzmann entropy is defined as the relative entropy with respect to the Lebesgue measure (de-noted by Leb ). We give a separate definition because Leb is not a probability measure. 
+
+Definition 2.8. Let ρ ∈ P 2(Rn) then the Boltzmann entropy (simply called entropy in the following) is defined by: 
+
+H(ρ) = 
+
+Z
+
+ln 
+
+ dρ
+
+dLeb 
+
+
+
+dρ if ρ ≪ Leb ,
+
++ ∞ otherwise .
+
+where Leb is the Lebesgue measure on Rn.Since the Lebesgue is not a probability measure, Proposition 2.7 does not apply. However, the next proposition insures that for all ρ ∈ P 2(Rd), the entropy is always defined as an element of R ∪ { +∞} .
+
+Proposition 2.9. Let ρ ∈ P 2(Rn) then the entropy H(ρ) is always well defined in R ∪ { +∞} , and the following bound holds: 
+
+H(ρ) ≥ − n
+
+2 ln 
+
+ 2
+
+n πe 
+
+
+
+− n
+
+2 ln 
+
+Z 
+
+|x|2 dρ(x)
+
+
+
+.
+
+Proof. If ρ is not absolutely continuous with respect to the Lebesgue measures then H(ρ) = + ∞ and the proposition is obvious. Otherwise, if ρ ≪ Leb , by Proposition 2.7, 
+
+Z
+
+> Rn
+
+ln 
+
+ dρ
+
+dσt
+
+
+
+dρ ≥ 0,
+
+for every t > 0, where σt is the heat kernel at time t defined in Hypothesis 1.1. Moreover, we have for all 
+
+x ∈ Rd
+
+ln( σt(x)) = − |x|2
+
+2t − n
+
+2 ln(2 πt ).
+
+Since ρ ∈ P 2(Rn), then ln( σt) ∈ L1(ρ), and in particular: 
+
+H(ρ) ≥ − 
+
+Z
+
+> Rd
+
+|x|2
+
+2t dρ(x) − n
+
+2 ln(2 πt ),
+
+Optimizing the quantity in the right hand side with respect to t by taking t = 1
+
+> n
+
+R |x|2 dρ(x) we obtain the desired inequality. □
+
+An important property of the entropy is its behavior corresponding to disintegration of measures, that we state here without a proof. We refer to [21] for more details, where this property is called additivity of the entropy. It implies for instance that pushing forward measures reduces the value of the entropy. 
+
+Proposition 2.10. Let n, m ∈ N∗, P, R two Borel probability measures on Rn and T : Rn → Rm ameasurable map. Let (P y )y∈Rm and (Ry )y∈Rm be the measurable families of probability measures obtained by disinte-grating P and R with respect to T . In other words, (P y )y∈Rm and (Ry )y∈Rm are families respectively well defined for T #P and T #R almost all y ∈ Rm, that are such that for all y ∈ Rm where they are A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 9
+
+well defined, P y and Ry are concentrated on the set {x ∈ Rn such that T (x) = y}, and such that for all measurable function φ nonnegative or bounded 
+
+Z
+
+φ dP =
+
+Z
+
+> Rm
+
+Z 
+
+φ dP y
+
+
+
+dT #P (y) and 
+
+Z
+
+φ dR =
+
+Z
+
+> Rm
+
+Z 
+
+φ dRy
+
+
+
+dT #R(y).
+
+Then, we have 
+
+H(P ∥R) = H(T #P ∥T #R) + 
+
+Z
+
+H(P y ∥Ry ) d T #P (y).
+
+In particular, 
+
+H(T #P ∥T #R) ≤ H(P ∥R).
+
+2.3. The Schrodinger cost. The Schrödinger cost can be seen as a regularized version of the optimal transport obtained by adding a term of entropy in the infimum. 
+
+Definition 2.11 (Schrödinger cost) . For μ, ν ∈ P 2(Rd), α > 0 and τ > 0, we denote by Sch ατ the Schrödinger cost with parameter ατ defined as: 
+
+Sch ατ (μ, ν ) = inf  
+
+> γ∈Π( μ,ν )
+
+ατ H (γ∥Rατ ) = inf 
+
+> γ∈Π( μ,ν )
+
+Z |x − y|2
+
+2 dγ(x, y ) + ατ H (γ) + ατ d 
+
+2 ln(2 πατ )
+
+
+
+,
+
+where Π( μ, ν ) is the set of all couplings between μ and ν and Rατ is the measure on Rd × Rd with density 
+
+Rατ (x, y ) = 1
+
+√2πατ d exp 
+
+
+
+− |x − y|2
+
+2ατ 
+
+
+
+, x, y ∈ Rd.
+
+The Shrödinger cost Sch ατ (μ, ν ) is finite if and only if H(μ) < +∞ and H(ν) < +∞, see [21]. When 
+
+Sch ατ (μ, ν ) is finite, in view of the strict convexity of H, there exists a unique minimizer γ.Just like the Wasserstein distance, the Schrödinger cost has a dynamic formulation of Benamou-Brenier type, here written for the rescaled time t ∈ [0 , τ ] (see [17] for a proof). 
+
+Proposition 2.12 (Dynamic formulation of the Schrödinger c ost) . Let μ, ν ∈ P 2(Rd) with H(μ) < +∞
+
+and H(ν) < +∞. The Schrödinger cost can be expressed by one of the following equivalent formulations: 
+
+Sch ατ (μ, ν )
+
+τ = αH (μ) + min 
+
+
+
+12
+
+Z τ
+
+> 0
+
+Z
+
+|⃗v t|2 dρt dt
+
+ρ(0) = μ, ρ(τ ) = ν, ∂tρ + div( ρ⃗ v) = α
+
+2 ∆ρ
+
+ ,
+
+= α
+
+2 (H(μ) + H(ν)) + min 
+
+(
+
+12
+
+Z τ
+
+> 0
+
+Z
+
+|ct|2 + α
+
+2 ∇ ln( ρt) 2
+
+dρt dt ρ(0) = μ, ρ(τ ) = ν, ∂tρ + div( ρc ) = 0 
+
+)
+
+.
+
+Moreover, the infimum in each case is achieved for the same ρ and c =⃗v − α 
+
+> 2
+
+ln( ρ).
+
+Since our goal will be to compare schemes involving respectively the Wasserstein distance and the Schrödinger cost, it will be useful to be able to compare these quantities. Although elementary, the next proposition is the first step in comparing our schemes. 
+
+Proposition 2.13. For all μ, ν ∈ P 2(Rd) with H(μ) < +∞ and H(ν) < +∞, there holds: 
+
+Sch ατ (μ, ν )
+
+τ ≥ α
+
+2 (H(μ) + H(ν)) + W 22 (μ, ν )2τ + α2
+
+8
+
+Z τ
+
+> 0
+
+|∇ ln( ραt )|2 dραt dt
+
+≥ α
+
+2 (H(μ) + H(ν)) + W 22 (μ, ν )2τ ,
+
+where t 7 → ραt is the interpolation given by the Benamou-Brenier formulation of the Schrodinger cost defined in Definition 2.12. Proof. This bound can be easily deduced from the the second characterization of Proposition 2.12: calling 
+
+(ρα, c α) the corresponding minimizer, 
+
+Sch ατ (μ, ν )
+
+τ = α H(μ) + H(ν)2 +
+
+Z τ
+
+> 0
+
+Z |cαt |2
+
+2 dρt dt + α2
+
+8
+
+Z τ
+
+> 0
+
+Z
+
+|∇ ln ραt |2 dραt dt. (2.2) But the Benamou-Brenier formulation of the Wasserstein distance implies that: 
+
+W 22 (μ, ν )2 = inf 
+
+> (ρ,c )
+> ∂tρ+div( ρc )=0
+
+Z τ
+
+> 0
+
+Z |ct|2
+
+2 dρt dt ≤
+
+Z τ
+
+> 0
+
+Z |cαt |2
+
+2 dραt dt. 10 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Plugging this inequality in formula (2.2), we obtain: 
+
+Sch ατ (μ, ν )
+
+τ ≥ α H(μ) + H(ν)2 + W 22 (μ, ν )2τ + α2
+
+8
+
+Z τ
+
+> 0
+
+Z
+
+|∇ ln ραt |2ραt dt. 
+
+We conclude by positivity of R τ
+
+> 0
+
+R |∇ ln ραt |2ραt dt. □
+
+2.4. Generalized geodesics convexity. A crucial assumption for our study is the convexity of the functional F along generalized geodesics. This subsection follows the definitions and properties from [3]. The starting point of this notion is the following proposition, necessary to define what is a generalized geodesic. 
+
+Proposition 2.14. Let μ, ν, ρ ∈ P 2(Rd). There exists Π ∈ P 2(( Rd)3) such that (π1, π 2)#Π is an optimal transport plan between μ and ν and (π1, π 3)#Π is an optimal transport plan between μ and ρ, where 
+
+π1, π 2, π 3 denote the canonical projections of (Rd)3 onto Rd.
+
+The proof can be found in [2, Lemma 2.1]. 
+
+Remark 2.15 . If μ is absolutely continuous with respect to the Lebesgue measure and T, R are the optimal maps given by the Brenier theorem (see paragraph 2.1.1) then the measure Π given by Proposition 2.14 is unique, and Π = ( Id, T, R )#μ.We can now introduce the notion of generalized geodesics. 
+
+Definition 2.16. Let μ, ν, ρ ∈ P 2(Rd). The curve (ρt)t∈[0 ,1] is called a generalized geodesic between ν
+
+and ρ based on μ, if there exists a measure Π ∈ P (( Rd)3) such that (π1, π 2)#Π is an optimal transport plan between μ and ν and (π1, π 3)#Π is an optimal transport plan between μ and ρ, and such that for all t ∈ [0 , 1] , ρt = ((1 − t)π2 + tπ 3)#Π.
+
+Remark 2.17 . As a consequence of Proposition 2.14, for all μ, ν, ρ ∈ P 2(Rd), there exists a generalized geodesic between ν and ρ based on μ. Also, due to formula (2.1), when ν or ρ equals μ, any generalized geodesic between ν and ρ based on μ is simply a geodesic between ν and ρ.Now that we have defined generalized geodesics, we can define the notion of λ-convexity along gener-alized geodesics of a given functional F.
+
+Definition 2.18. The functional F is said to be λ-convex along generalized geodesics if for all measures 
+
+μ, ν, ρ ∈ P 2(Rd) and for every Π ∈ P 2(( Rd)3) such that (π1, π 2)#Π is an optimal transport plan between 
+
+μ and ν and (π1, π 3)#Π is an optimal transport plan between μ and ρ, for all t ∈ [0 , 1] , we have 
+
+F(( tπ 3 + (1 − t)π2)#Π) ≤ t F(ρ) + (1 − t) F(ν) − λ
+
+2 t(1 − t)
+
+Z
+
+|y − z|2 d(π2, π 3)#Π( y, z ).
+
+Remark 2.19 . If F is convex along generalized geodesics, then it is also convex along geodesics in the Wasserstein space. At first sight, convexity along generalized geodesics may seem involved. Yet, on the one hand, most classical functionals known to be convex along geodesics are also convex along generalized geodesics. On the other hand, by considering a slightly unusual perspective on the JKO scheme, we show that this hypothesis naturally arises. This is the purpose of paragraph 2.5.1 below, which is independent of the rest of the article, and whose aim is to help the reader get acquainted with this notion. 2.5. A useful Hilbertian interpretation of the JKO scheme. 
+
+2.5.1. JKO as a gradient flow in a Hilbert space. The purpose of this paragraph is to explain why it is natural to assume F to be geodesically convex along generalized geodesics when computing the iterates of the JKO scheme. In fact, the distance W2 is not just any distance. It is specifically related to the 
+
+L2-norm, which is Hilbertian. Geodesic convexity along generalized geodesics is connected to convexity in L2 through this connection. Let (Ω , P) = ([0 , 1] d, Leb) be seen as a probability space. To our functional 
+
+F, we associate the following functional F :
+
+F :
+
+(H := L2(Ω , P; Rd) −→ R
+
+X 7 −→ F (X#P). (2.3) When possible, given X ∈ H , we define the proximal operator: 
+
+Eτ (X) := arg min  
+
+> Y∈H
+
+ ∥X − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+
+
+. (Prox Op) As usual, when minimizers are not unique, Eτ (X) denotes any minimizer. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 11 
+
+Theorem 2.20 (Equivalence between schemes) . Let X0 ∈ L2(Ω , P, Rd) be such that μ0 := X0# P ≪ Leb .There exists a minimizer Eτ (X0) in (Prox Op) if and only if there exist a minimizer J0 
+
+> τ
+
+(μ0) in (JKO) .More precisely, the following holds: 
+
+
+
+Y #P, Y ∈ arg min  
+
+> Y∈H
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+ 
+
+= arg min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
+.
+
+In particular, if X0# P = Y0# P, then 
+
+
+
+Y #P, Y ∈ arg min  
+
+> Y∈H
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+ 
+
+=
+
+
+
+Y #P, Y ∈ arg min  
+
+> Y∈H
+
+ ∥Y0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+ 
+
+.
+
+Under Hypothesis 1.1, Proposition A.1 of the Appendix implies that if the starting point of the JKO scheme has finite entropy, and hence is absolutely continuous with respect to the Lebesgue measure, then this property remains true for all of its iterates. This allows to use Theorem 2.20 iteratively. In fact, more involved proofs relying on an adaptation of [19, Proposition 6.13] would imply the same result without assuming that X0# P is absolutely continuous, but we do not want to enter these details as we do not need them. 
+
+Proof. By definition of F ,
+
+inf  
+
+> Y∈H
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+
+
+= inf 
+
+> ρ∈P (Rd)
+
+inf   
+
+> Y∈H
+> Y#P=ρ
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F(ρ)
+
+
+
+= inf 
+
+> ρ∈P 2(Rd)
+
+
+
+12τ inf   
+
+> Y∈H
+> Y#P=ρ
+
+∥X0 − Y ∥2 
+
+> L2
+
++ F(ρ)
+
+ .
+
+Let us show that given ρ ∈ P 2(Rd),
+
+inf   
+
+> Y∈H
+> Y#P=ρ
+
+∥X0 − Y ∥2 
+
+> L2
+
+= W 22 (μ0, ρ ). (2.4) First, for all Y ∈ H such that Y #P = ρ, calling γ := ( X0, Y )#P, we have γ ∈ Π( μ0, ρ ), and so 
+
+∥X0 − Y ∥2 
+
+> L2
+
+=
+
+Z
+
+|x − y|2 dγ(x, y ) ≥ W 22 (μ0, ρ ).
+
+On the other hand, since X0# P = μ0 ≪ Leb , Brenier’s theorem provides a map Tρ ∈ L2(μ0; Rd) such that Tρ#μ0 = ρ and W 22 (μ0, ρ ) = R |x − Tρ(x)|2 dμ0(x). Therefore, considering Y := Tρ(X0), we have 
+
+∥X0 − Y ∥22 =
+
+Z
+
+|X0 − Tρ(X0)|2 dP =
+
+Z
+
+|x − Tρ(x)|2 dμ0(x) = W 22 (μ0, ρ ),
+
+and (2.4) follows. Therefore, 
+
+inf  
+
+> Y∈H
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+
+
+= inf 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ0, ρ )2τ + F(ρ)
+
+
+
+.
+
+Moreover, our proof shows that there is a one-to-one correspondence between the minimizers: If Y is a minimizer on the left-hand side, then ρ = Y #P is a minimizer on the right-hand side. Conversely, if ρ
+
+minimizes the right-hand side, then Y = Tρ(X0) is the unique minimizer of the left-hand side such that 
+
+Y #P = ρ. □
+
+Therefore, provided μ0 = X0# P ≪ Leb , finding the minimizer in (JKO) is equivalent to solving the minimization problem (Prox Op) in the Hilbert space H. In view of (Prox Op), it would be convenient to assume F to be convex. However this assumption is very restrictive in terms of F, as it fails for all functionals F of type ρ 7 → R f (ρ), for any f convex and superlinear. Yet, the fact that F is of the form X 7 → F (X#P) allows us to find a weaker assumption guaranteeing good properties for (Prox Op). Indeed, the Brenier theorem together with the proof of Theorem 2.20 implies 
+
+inf  
+
+> Y∈H
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+
+
+= inf   
+
+> Y=∇ψ(X0)
+> ψconvex
+
+ ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )
+
+
+
+.
+
+Hence, to ensure existence along the scheme, it suffices that the function 
+
+F X0 
+
+> τ
+
+: Y 7 → ∥X0 − Y ∥2
+
+> L2
+
+2τ + F (Y )12 AYMERIC BARADAT AND SOFIANE CHERF 
+
+admits a minimizer in the set 
+
+C(X0) = {T (X0) | T is the gradient of a convex function } .
+
+Let us take a closer look at the structure of this set. 
+
+Proposition 2.21 (Properties of C(X)). For every X ∈ H such that X#P ≪ Leb, the set C(X) satisfies: 
+
+• C(X) is convex. 
+
+• C(X) is closed for the strong topology of L2.
+
+• C(X) is stable under multiplication by a positive constant. 
+
+• For every ρ ∈ P 2(Rd), there exists a unique Y Xρ ∈ C(X) such that Y Xρ #P = ρ and W2(ρ, X #P) = 
+
+∥X − Y Xρ ∥L2 .
+
+Thus, a natural assumption on F is that F is convex on C(X) for every X. This assumption is equivalent to convexity along generalized geodesics. 
+
+Proposition 2.22. The functional F is λ-convex along generalized geodesics in the sense of Defini-tion 2.18 for all absolutely continuous base point if and only if for every X such that X#P ≪ Leb , F
+
+defined by formula 2.3 is λ-convex on C(X).Proof. Let us assume that F is λ-convex along generalized geodesics of absolutely continuous base point, and show that for every X such that X#P ≪ Leb , F is λ-convex on C(X). Let us fix X ∈ H and consider 
+
+Y, Z ∈ C(X). Since Y and Z are in C(X), by the converse of Brenier’s theorem, calling Π = ( X, Y, Z )#P
+
+and π1, π 2, π 3 the canonical projections from (Rd)3 to Rd, the plans (π1, π 2)#Π and (π1, π 3)#Π are optimal between their marginals. By Definition 2.4 of λ-convexity along generalized geodesics, for all t ∈ [0 , 1] ,
+
+F(( tπ 3 + (1 − t)π2)#Π) ≤ t F(Z#P) + (1 − t) F(Y #P) − λ
+
+2 t(1 − t)
+
+Z
+
+|y − z|2 d(π2, π 3)#Π( y, z ).
+
+or equivalently 
+
+F (tZ + (1 − t)Y ) ≤ t F (Z) + (1 − t) F (Y ) − λ
+
+2 t(1 − t)∥Z − Y ∥2.
+
+This exactly means that F is λ-convex on C(X).Now, let us assume that for every X such that X#P ≪ Leb , F is λ-convex on C(X) and show that 
+
+F is λ-convex along generalized geodesics of absolutely continuous base point. Fix μ ∈ P 2(Rd) such that μ ≪ Leb . Take X the optimal map from the Lebesgue measure on [0 , 1] d to μ. We have X ∈ H 
+
+and X#P = μ. Let Π ∈ P 2(( Rd)3) a three-plan such that π1# Π = μ and such that (π1, π 2)#Π and 
+
+(π1, π 3)#Π are optimal between their marginals. Since μ ≪ Leb the Brenier theorem ensures that the plans (π1, π 2)#Π and (π1, π 3)#Π are concentrated on the graphs of T, R , which are gradients of convex functions. Letting Y = T (X) and Z = R(X), Y, Z ∈ C(X) and Π = ( X, Y, Z )#P. Then the λ-convexity of F on C(X) implies that for all t ∈ [0 , 1] ,
+
+F (tZ + (1 − t)Y ) ≤ t F (Z) + (1 − t) F (Y ) − λ
+
+2 t(1 − t)∥Z − Y ∥2,
+
+or equivalently 
+
+F(( tπ 3 + (1 − t)π2)#Π) ≤ t F(π3# Π) + (1 − t) F(π2# Π) − λ
+
+2 t(1 − t)
+
+Z
+
+|y − z|2 d(π2, π 3)#Π( y, z ).
+
+Hence, F is λ-convex along generalized geodesics of base point μ. □
+
+2.5.2. Discrete EVI. One of the most important consequences of the convexity of F along generalized geodesics is the discrete Evolution Variational Inequality (EVI), a stability inequality that will play a crucial role in our work. 
+
+Theorem 2.23 (Discrete EVI, Ambrosio, Gigli, Savaré [3]) . Let τ > 0. Let F be λ-convex along generalized geodesics and W2-l.s.c. For every μ ∈ P 2(Rd) such that (JKO) admits a minimizer J0 
+
+> τ
+
+(μ)
+
+and every ρ ∈ P 2(Rd), we have: 
+
+12τ
+
+ W 22 (ρ, J 0 
+
+> τ
+
+(μ)) − W 22 (ρ, μ ) ≤ F (ρ) − F (J0 
+
+> τ
+
+(μ)) − 12τ W 22 (J0 
+
+> τ
+
+(μ), μ )− λ
+
+2 W 22 (ρ, J 0 
+
+> τ
+
+(μ)) .
+
+Remark 2.24 . In Theorem 2.28, we provide conditions for the existence of J0 
+
+> τ
+
+(μ).
+
+This inequality can be seen as an easy consequence of the same inequality at the level of H, which can be stated as follows. As usual, we only state it in the case of absolutely continuous measures. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 13 
+
+Proposition 2.25. Let τ > 0. Let F be λ-convex along generalized geodesics and W2-l.s.c. Let X ∈ H , be such that X#P ≪ Leb and such that (Prox Op) admits a minimizer Eτ (X). Then for every V ∈ C(X),the following inequality holds: 
+
+12τ
+
+ ∥V − Eτ (X)∥2 
+
+> L2
+
+− ∥ V − X∥2
+
+> L2
+
+ ≤ F (V ) − F (Eτ (X)) − 12τ ∥X − Eτ (X)∥2 
+
+> L2
+
+− λ
+
+2 ∥V − Eτ (X)∥2 
+
+> L2
+
+.
+
+Proof of Proposition 2.25. Let X ∈ H be such that X#P ≪ Leb . Assume that F is λ-convex along generalized geodesics and τ < 1 
+
+> λ−
+
+. Then, by Proposition 2.22, the penalized functional 
+
+F Xτ (Y ) := ∥X − Y ∥2
+
+> L2
+
+2τ + F (Y ) (Prox map) is 1+ λτ τ -convex on C(X). If F is W2-l.s.c, then Eτ (X) exists, see Theorem 2.28. If F is differentiable, then for every V ∈ C(X), we have 
+
+F Xτ (V ) ≥ F Xτ (Eτ (X)) + ∇F Xτ (Eτ (X)) , V − Eτ (X)
+
+| {z }
+
+> =0
+
++ 1 + λτ 
+
+2τ ∥Eτ (X) − V ∥2 
+
+> L2
+
+.
+
+In fact the convexity of F Xτ on C(X) is enough to establish this inequality. By standard results in convex analysis (see [5] Definition 6.38, Theorem 16.3 and Example 16.13), the point Eτ (X) is a minimizer of 
+
+F Xτ on the convex set C(X) if and only if 
+
+0 ∈ ∂(F Xτ + ιC(X))( Eτ (X)) = ∂F Xτ (Eτ (X)) + NC(x)(Eτ (X)) 
+
+where the subdifferential of F Xτ is defined by 
+
+∂F Xτ (Y ) := U ∈ H | ∀ V ∈ C(X), F Xτ (V ) ≥ ⟨ U, V − Y ⟩ + F Xτ (Y ) ,
+
+and the convex indicator function ιC(X) and the normal cone NC(X) are defined by 
+
+ιC(X)(Y ) := 
+
+( + ∞ if Y /∈ C(X),
+
+0 if Y ∈ C(X), and NC(X)(Y ) := {U ∈ H | ∀ V ∈ C(X), ⟨U, V − Y ⟩ ≤ 0}.
+
+This means that there is a point U in the subdifferential of F Xτ at point Eτ (X) such that for every 
+
+V ∈ C(X) the following holds: 
+
+⟨U, V − Eτ (X)⟩ ≥ 0.
+
+Then by definition of the subdifferential we obtain: 
+
+F Xτ (V ) ≥ F Xτ (Eτ (X)) + ⟨U, V − Eτ (X)⟩ + 1 + λτ 
+
+2τ ∥Eτ (X) − V ∥2
+
+> L2
+
+≥ F Xτ (Eτ (X)) + 1 + λτ 
+
+2τ ∥Eτ (X) − V ∥2 
+
+> L2
+
+,
+
+which is the desired result. □
+
+This discrete-time inequality has a continuous counterpart obtained in the limit τ → 0. When the solution of the PDE (1.2) is well defined, being a solution is equivalent to verifying this continuous-time inequality. However, this inequality still makes sense when the solution of the PDE (1.2) is not well-defined. Therefore it can be used to define what is a gradient flow of a functional that is λ-convex along generalized geodesics, see [3]. 
+
+Definition 2.26. Let F be λ-convex along generalized geodesics and W2-l.s.c. A curve in P2(Rd) is called a gradient flow of F in the Wasserstein space if for all ρ ∈ P 2(Rd) and all t ≥ 0, the following inequality holds: 
+
+12ddt W 22 (ρt, ρ ) ≤ F (ρ) − F (ρt)− λ
+
+2 W 22 (ρt, ρ ).
+
+Theorem 2.27 (EVI Characterization of Gradient Flows) . Let F be λ-convex along generalized geodesics and W2-l.s.c. The limiting curve (ρt)t≥0 defined by equation (1.4) is the only gradient flow of F in the Wasserstein space starting from μ0.
+
+2.6. Existence of minimizers along the schemes. 14 AYMERIC BARADAT AND SOFIANE CHERF 
+
+2.6.1. Existence and uniqueness along the JKO scheme. The well-posedness of the JKO scheme for func-tionals that are convex along generalized geodesics has been established in [3]. For the sake of complete-ness, we briefly revisit the arguments, using the framework introduced in the previous section. Surprinsingly, in terms of topology, this framework allows us to establish the result for functionals F
+
+that are only lower semicontinuous with respect to W2. This is weaker than requiring F to be lower semicontinuous in the sense of Hypothesis 1.1, and hence the direct method does not apply straightfor-wardly. Since in this work, we only deal with measures that are absolutely continuous with respect to the Lebesgue measure, we restrict ourselves to proving the existence of the JKO scheme in this situation. 
+
+Theorem 2.28. If F is W2-l.s.c and λ-convex along generalized geodesics, if τ < 1 
+
+> λ−
+
+, and if there exists 
+
+ν ∈ P 2(Rd) such that F(ν) < +∞, then for all μ ∈ P 2(Rd) such that μ ≪ Leb and for all X ∈ H such that X#P = μ, J0 
+
+> τ
+
+(μ) and Eτ (X) are well defined. 
+
+Due to this theorem, the JKO scheme can be defined iteratively. 
+
+Corollary 2.28.1. If F is λ-convex along generalized geodesics, W2-lower semicontinuous and τ < 1 
+
+> λ−
+
+,then there exists a unique sequence (J0 
+
+> k,τ
+
+(μ)) k≥0 satisfying the induction relation J0 
+
+> k,τ
+
+(μ) = J0 
+
+> τ
+
+(J0 
+
+> k−1,τ
+
+(μ)) ,for all k ∈ N∗.Remark 2.29 . The proof of Corollary 2.28.1 is done in [3]. Here Theorem 2.28 only implies it in the case when J0 
+
+> k,τ
+
+(μ) ≪ Leb for all k ∈ N. This will be verified is the rest of the article, as a consequence of Hypothesis 1.1, see Proposition A.1. In order to prove Theorem 2.28, we will need the following preliminary results. 
+
+Proposition 2.30. The functional F : P2(Rd) 7 → R is l.s.c with respect to W2 if and only if F defined in (2.3) is l.s.c with respect to the strong topology of L2.Proof. We start by showing that if F is l.s.c with respect to W2, then F is l.s.c with respect to the strong topology of L2. Let (Xn)n ∈ H N be a sequence strongly converging in L2 to X. Then 
+
+W2(Xn#P, X #P) ≤ ∥ Xn − X∥L2 −−−−−→ 
+
+> n→+∞
+
+0.
+
+But F is l.s.c with respect to W2, so 
+
+F (X) = F(X#P) ≤ lim inf  
+
+> n→+∞
+
+F(Xn#P) = lim inf  
+
+> n→+∞
+
+F (Xn),
+
+and F is l.s.c for the strong topology of L2.Now, we show the inverse implication i.e that if F is l.s.c with respect to the strong topology of L2,then F is l.s.c with respect to W2. Let (ρn)n ∈ P 2(Rd)N and ρ ∈ P 2(Rd) be such that (ρn)n is converging to ρ in W2. Then (ρn)n is converging to ρ for the narrow topology and the second moment converges i.e 
+
+Z
+
+|x|2dρn −−−−−→
+
+> n→+∞
+
+Z
+
+|x|2 dρ, (2.5) see [26]. By the Skorokhod theorem, there exists a sequence (Xn)n and a limit point X such that for all 
+
+n ∈ N, Xn#P = ρn, X#P = ρ and Xn converges almost everywhere to X. Moreover, the convergence of the moments (2.5) can be read as 
+
+∥Xn∥2 −−−−−→ 
+
+> n→+∞
+
+∥X∥2.
+
+Therefore, the Brezis-Lieb lemma implies that (Xn) converges to X in the strong topology of L2. But F
+
+is l.s.c with respect to the strong topology of L2, so 
+
+F(ρ) = F (X) ≤ lim inf  
+
+> n→+∞
+
+F (Xn) = lim inf  
+
+> n→+∞
+
+F(ρn),
+
+and F is l.s.c with respect to W2. □
+
+Let μ ∈ P 2(Rd) with μ ≪ Leb and X ∈ H such that X#P = μ. We recall that one step of the JKO scheme J0 
+
+> τ
+
+(μ) is well defined if and only if the functional F Xτ defined by (Prox map) has a unique minimizer, see Theorem 2.20. Therefore, the questions of existence and uniqueness of J0 
+
+> τ
+
+(μ) reduce to proving the existence of a unique minimizer of a strictly convex, lower semicontinuous functional on a Hilbert space. First, let us use strict convexity to guarantee coercivity of F Xτ .
+
+Proposition 2.31. Let X be such that X#P ≪ Leb . If the restriction of F to C(X) is λ-convex and 
+
+τ < 1 
+
+> λ−
+
+, then the sub-levels of the restriction of F Xτ to C(X) are bounded in C(X).A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 15 
+
+Proof. Let M ∈ R. Let us show that {Y ∈ C(X) such that F Xτ (Y ) ≤ M } is bounded in L2. Assume by contradiction that there exists (Yn)n a sequence in this set such that ∥Yn∥ → +∞. For a given n ∈ N∗,the convexity inequality given by Proposition 2.22 leads for all t ∈ [0 , 1] to: 
+
+F Xτ (tY n + (1 − t)Y0) ≤ tF Xτ (Yn) + (1 − t)F Xτ (Y0) − 1 + λτ 
+
+2τ t(1 − t)∥Y0 − Yn∥2
+
+≤ M − 1 + λτ 
+
+2τ t(1 − t)∥Y0 − Yn∥2. (2.6) Let tn := ∥Y0 − Yn∥− 32 and Zn := tnYn + (1 − tn)Y0. First, ∥Y0 − Yn∥ ≥ ∥ Yn∥ − ∥ Y0∥ → +∞, and tn → 0.Therefore, 
+
+tn(1 − tn)∥Y0 − Yn∥2 = ∥Y0 − Yn∥ 12 (1 − tn) −−−−−→ 
+
+> n→+∞
+
++∞,
+
+so that plugged in (2.6), we find 
+
+F Xτ (Zn) −−−−−→ 
+
+> n→+∞
+
+−∞ .
+
+Also, as tn → 0, (Zn) converges to Y0 in the strong topology of L2. Since F Xτ is lower semicontinuous for the strong topology of L2, we find: 
+
+F Xτ (Y0) ≤ lim inf  
+
+> n→+∞
+
+F Xτ (Zn) = −∞ .
+
+This is absurd, and the claim follows. □
+
+Finally, convexity allows to deduce weak lower semicontinuity out of strong lower semicontinuity. 
+
+Proposition 2.32. If F is W2-l.s.c, λ-convex along generalized geodesics, and if τ < 1 
+
+> λ−
+
+, then for all 
+
+X ∈ H such that X#P ≪ Leb , F Xτ defined by (Prox map) is l.s.c on C(X) for the weak topology of L2.Proof. By Proposition 2.30, F Xτ is l.s.c for the strong topology of L2. But according to the assumptions of this proposition and Proposition 2.22, the restriction of F Xτ is convex in the convex set C(X). The result follows from [10, corollary 3.9] □
+
+Now, we have all the requirements to attack the proof of Theorem 2.28. 
+
+Proof of Theorem 2.28. Let X ∈ H . Because of Proposition 2.20, we just need to show that Eτ (X) is well defined. By assumption, there exists a competitor X0 such that F (X0) < +∞, so we can restrict the search for a competitor to the set 
+
+
+
+Y ∈ C(X) such that ∥X − Y ∥22
+
+2τ + F (Y ) ≤ ∥X − X0∥22
+
+2τ + F (X0)
+
+
+
+.
+
+By Proposition 2.31, this set is bounded. Therefore, it is compact for the weak topology of L2. But in virtue of Proposition 2.32, F Xτ is l.s.c for the weak topology of L2 on C(X), and hence F Xτ admits a minimizer. Moreover the strict convexity of F Xτ implies uniqueness of this minimizer. So Eτ (X) is well defined and so is J0 
+
+> τ
+
+(X#P). □
+
+2.6.2. Existence along the Entropic JKO scheme. In this paragraph, we show that the entropic JKO scheme has minimizers. However, we will not be able to prove uniqueness in general, since there is no analogue of the discrete E.V.I inequality of Theorem 2.23 in the entropic setting. A list of cases where we are able to prove uniqueness is given in Proposition 2.35. 
+
+Theorem 2.33. Let F be λ-convex along generalized geodesics, lower semicontinuous in the sense of Hypothesis 1.1, τ < 1 
+
+> λ−
+
+. We assume that there exists ν0 ∈ P 2(Rd) with F(ν0) and H(ν0) finite. Then, for all μ ∈ P 2(Rd) with finite entropy there exists a minimizer Jατ (μ) ∈ P 2(Rd) in (Ent JKO) , and it has finite entropy. 
+
+An easy induction shows that: 
+
+Corollary 2.33.1. If F is λ-convex along generalized geodesics, lower semicontinuous in the sense of Hypothesis 1.1, τ < 1 
+
+> λ−
+
+and μ ∈ P 2(Rd) has finite entropy and satisfies F(μ) < +∞, then there exists a sequence (Jαk,τ (μ)) k≥0 satisfying the induction relation Jαk,τ (μ) = Jατ (Jαk−1,τ (μ)) , for all k ∈ N∗.
+
+The main ingredient in the proof of Theorem 2.33 is the following proposition. 
+
+Proposition 2.34. If F is λ-convex along generalized geodesics and τ < 1 
+
+> λ−
+
+, then for every μ ∈ P 2(Rd)
+
+with finite entropy, the sublevels of Sch ατ (μ, ·) 
+
+> τ
+
++ F(·) have uniformly bounded second moment and entropy. 16 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Proof. Let us consider μ ∈ P 2(Rd) with H(μ) and F(μ) finite, and let M ∈ R. Let us show that the set 
+
+
+
+ν ∈ P 2(Rd) such that Sch ατ (μ, ν )
+
+τ + F(ν) ≤ M
+
+
+
+has uniformly bounded second moment and entropy. This will be done in three steps. First, we derive a bound from below for the entropy, then a bound for the second moment, and finally we deduce an upper bound for the entropy using Proposition 2.9. So let us consider ν in the sublevel above. Proposition 2.13, implies: 
+
+Sch ατ (μ, ν )
+
+τ + F(ν) ≥ W 22 (μ, ν )2τ + α H(μ) + H(ν)2 + F(ν). (2.7) As F is λ-convex along generalized geodesics and τ < 1 
+
+> λ−
+
+, by Theorem 2.28, the minimizer J0 
+
+> τ
+
+(μ) of the classical JKO scheme (JKO) is well defined and: 
+
+M ≥ Sch ατ (μ, ν )
+
+τ + F(ν) ≥ min 
+
+> ρ
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
++ α H(ν)2 + α H(μ)2 ,
+
+which provides the following uniform upper bound for the entropy: 
+
+H(ν) ≤ 2
+
+α
+
+
+
+M − min 
+
+> ρ
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+ 
+
+− H(μ).
+
+Now, let us derive a uniform bound for the second moment of ν. As this second moment equals the distance W 22 (δ0, ν ) to δ0, the Dirac mass at 0, by the triangle inequality, we just have to show a uniform bound for the distance from ν to some measure in P2(Rd), independent of ν. We will bound the distance from ν to 
+
+J ατ (μ) := arg min 
+
+> ρ
+
+W 22 (μ, ρ )2τ + α H(ρ)2 + F(ρ).
+
+This measure is well defined in virtue of Theorem 2.28, because H is convex along generalized geodesics (Proposition 1.6), and so F + α 
+
+> 2
+
+H is λ-convex along generalized geodesics. Also, we can apply the discrete E.V.I of Theorem 2.23 to F + α 
+
+> 2
+
+H and obtain: 
+
+(1 + λτ ) W 22 (J ατ (μ), ν )2τ ≤ W 22 (μ, ν )2τ + F(ν) + α
+
+2 H(ν) −
+
+ W 22 (μ, J ατ (μ)) 2τ + F(J ατ (μ)) + α
+
+2 H(J ατ (μ)) 
+
+
+
+.
+
+Using the bound (2.7), we obtain: 
+
+(1 + λτ ) W 22 (J ατ (μ), ν )2τ ≤ Sch( μ, ν )
+
+τ + F(ν) − α
+
+2 H(μ) −
+
+ W 22 (μ, J ατ (μ)) 2τ + F(J ατ (μ)) + α
+
+2 H(J ατ (μ)) 
+
+
+
+≤ M − α
+
+2 H(μ) −
+
+ W 22 (μ, J ατ (μ)) 2τ + F(J ατ (μ)) + α
+
+2 H(J ατ (μ)) 
+
+
+
+,
+
+and the claim follows. Finally, a uniform bound for the entropy is directly obtained using Proposition 2.9. □
+
+Now, we can start the demonstration of Theorem 2.33. 
+
+Proof of Theorem 2.33. Let ν0 ∈ P 2(Rd) be such that both F(ν0) and H(ν0) are finite. Then, as explained below Definition 2.11, Sch ατ (μ,ν 0) 
+
+> τ
+
++ F(ν0) < +∞, so we can consider a minimizing sequence (ρn)n such that for all n ∈ N,
+
+Sch ατ (μ, ρ n)
+
+τ + F(ρn) ≤ Sch ατ (μ, ν 0)
+
+τ + F(ν0).
+
+Then, by Proposition 2.34, the second moment and the entropy of the sequence (ρn)n are uniformly bounded. In particular, the sequence is tight, so we can extract a subsequence converging narrowly to some ρ ∈ P (Rd). Because of the uniform bound of the second moments of (ρn), and since F is l.s.c in sense of Hypothesis 1.1, we have 
+
+F(ρ) ≤ lim inf  
+
+> n→+∞
+
+F(ρn).
+
+Because of the uniform bounds on the second moments and entropy of (ρn), and by the lower semiconti-nuity of Sch stated in [11, Lemma 2.4], we also have 
+
+Sch ατ (μ, ρ )
+
+τ ≤ lim inf 
+
+> n→+∞
+
+Sch ατ (μ, ρ n)
+
+τ .
+
+All in all Sch ατ (μ, ρ )
+
+τ + F(ρ) ≤ lim inf 
+
+> n→+∞
+
+Sch ατ (μ, ρ n)
+
+τ + F(ρn),A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 17 
+
+and so ρ is a minimizer. □
+
+2.7. Cases of uniqueness in the entropic JKO scheme. Once again, uniqueness is not as straight-forward as in the classical case. We can only prove it in the following cases: 
+
+Proposition 2.35. Let us assume that F is of the form F(ρ) = R V ρ + 12
+
+R W ∗ ρρ + R f (ρ) and that one of the next statements holds true: 
+
+• cW ≥ 0 and f is convex, where cW is the Fourier transform of W ;
+
+• V and W are λ-convex and f = 0 .Then, there is at most one minimizer in (Ent JKO) .Proof. In the first case, uniqueness is a direct consequence of the strict convexity of Sch ατ  
+
+> τ
+
+(μ, ·) + F(·)
+
+along interpolations of the form t 7 → tν 1 + (1 − t)ν0. Let us prove separately the convexity and strict convexity of F and Sch ατ (μ, ·) respectively along these interpolations in the two following lemmas. 
+
+Lemma 2.35.1. Let F be of the form F(ρ) = R V dρ + R W ∗ ρ dρ + R f (ρ(x)) d x, with f convex and 
+
+cW ≥ 0. Let ν0, ν 1 ∈ P 2(Rd), such that F(ν1) < +∞ and F(ν2) < +∞, then for all t ∈ [0 , 1] ,
+
+F(tν 1 + (1 − t)ν0) ≤ tF(ν1) + (1 − t)F(ν0).
+
+Lemma 2.35.2. Let μ ∈ P 2(Rd) be fixed. Consider ν0, ν 1 ∈ P 2(Rd) such that H(ν0) < +∞, H(ν1) < +∞
+
+and ν0̸ = ν1. Then for all t ∈ (0 , 1) , Sch( μ, tν 1 + (1 − t)ν0) < t Sch( μ, ν 1) + (1 − t)Sch( μ, ν 0).Proof of Lemma 2.35.1. Recall that there are three parts in F, as for all t ∈ [0 , 1] ,
+
+F(tν 1 +(1 −t)ν0) = 
+
+Z
+
+V d( tν 1 +(1 −t)ν0)+ 
+
+Z
+
+W ∗(tν 1 +(1 −t)ν0) d( tν 1 +(1 −t)ν0)+ 
+
+Z
+
+f (tν 1 +(1 −t)ν0).
+
+The part concerning V can be managed as follows 
+
+Z
+
+V d( tν 1 + (1 − t)ν0) = t
+
+Z
+
+V dν1 + (1 − t)
+
+Z
+
+V dν0. (2.8) For the part involving W , given ρ ∈ P 2(Rd), let us start by rewriting the functional using the Plancherel identity: Z
+
+W ∗ ρ dρ =
+
+Z
+
+\W ∗ ρ¯bρ =
+
+ZcW |bρ|2. (2.9) Hence, for all t ∈ [0 , 1] ,
+
+Z
+
+W ∗ (tν 1 + (1 − t)ν0) d( tν 1 + (1 − t)ν0) = 
+
+ZcW |tbν1 + (1 − t)bν0|2.
+
+As |tbν1 + (1 − t)bν0|2 = t|bν1|2 + (1 − t)|bν0|2 − t(1 − t)|bν1 − bν0|2, we get 
+
+Z
+
+W ∗ (tν 1 + (1 − t)ν0) d( tν 1 + (1 − t)ν0) = 
+
+Z 
+
+tcW |bν1|2 + (1 − t)cW |bν0|2 − t(1 − t)cW |bν1 − bν0|2
+
+.
+
+But cW ≥ 0 and so −t(1 − t)cW |bν1 − bν0|2 ≤ 0, so that 
+
+Z
+
+W ∗ (tν 1 + (1 − t)ν0) d( tν 1 + (1 − t)ν0) ≤
+
+Z 
+
+tcW |bν1|2 + (1 − t)cW |bν0|2
+
+.
+
+Finally, using equation (2.9) backwards, we obtain: 
+
+Z
+
+W ∗ (tν 1 + (1 − t)ν0) d( tν 1 + (1 − t)ν0) ≤ t
+
+Z
+
+W ∗ ν1 dν1 + (1 − t)
+
+Z
+
+W ∗ ν0 dν0. (2.10) Since F(ν0) < +∞ and F(ν1) < +∞, either f = 0 and there nothing more to show or ν0, ν 1 have densities 
+
+ν0(x), ν 1(x). Then, by convexity of f ,
+
+f (tν 1(x) + (1 − t)ν0(x)) ≤ tf (ν1(x)) + (1 − t)f (ν0(x)) ,
+
+and hence Z
+
+f (tν 1(x) + (1 − t)ν0(x)) d x ≤ t
+
+Z
+
+f (ν1(x)) d x + (1 − t)
+
+Z
+
+f (ν0(x)) d x. (2.11) Adding equation (2.8), equation (2.10) and equation (2.11), we obtain the Lemma 2.35.1. □
+
+Let us proceed to the proof of the second lemma. 18 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Proof of Lemma 2.35.2. By Definition 2.11 the Schrodinger cost can be expressed as: 
+
+Sch ατ (μ, ν i) = min 
+
+> γ∈Π( μ,ν i)
+
+Z |x − y|2
+
+2 dγ(x, y ) + ατ H (γ) + ατ d 
+
+2 ln(2 πατ )
+
+
+
+, i = 0 , 1.
+
+Let γi, i = 0 , 1 realize this minimum, and t ∈ (0 , 1) . Then, choosing γt = tγ 1 + (1 − t)γ0 as a competitor for the Schrödinger cost between μ and tν 1 + (1 − t)ν0, we obtain: 
+
+Sch( μ, tν 1 + (1 − t)ν0) ≤
+
+Z |x − y|2
+
+2 dγt(x, y ) + ατ H (γt) + ατ d 
+
+2 ln(2 πατ ). (2.12) The first term verifies: 
+
+Z |x − y|2
+
+2 dγ1(x, y ) = t
+
+Z |x − y|2
+
+2 dγ1(x, y ) + (1 − t)
+
+Z |x − y|2
+
+2 dγ0(x, y ), (2.13) and since the function h : s 7 → s ln( s) is strictly convex, then for every (x, y ) ∈ (Rd)2 such that γ0(x, y )̸ =
+
+γ1(x, y ), we obtain: 
+
+γt(x, y ) ln( γt(x, y )) < tγ 1(x, y ) ln( γ1(x, y )) + (1 − t)γ0(x, y ) ln( γ0(x, y )) , (2.14) while for every (x, y ) such that γ0(x, y ) = γ1(x, y ), we have: 
+
+γt(x, y ) ln( γt(x, y )) ≤ tγ 1(x, y ) ln( γ1(x, y )) + (1 − t)γ0(x, y ) ln( γ0(x, y )) .
+
+If we assume by contradiction that γ0(x, y ) = γ1(x, y ) almost everywhere, then π2# γ0 = π2# γ1, so 
+
+ν0 = ν1 and we have excluded this case. Hence, there is a non negligible set such that the previous inequality (2.14) holds, and then, by integration, 
+
+H(γt) = 
+
+Z
+
+ln( γt) d γt < t 
+
+Z
+
+ln( γ1) d γ1 + (1 − t)
+
+Z
+
+ln( γ0) d γ0 = tH (γ1) + (1 − t)H(γ0). (2.15) The result follows from plugging (2.13) and (2.15) into (2.12). □
+
+Uniqueness in the second case is also a consequence of the convexity of Sch ατ  
+
+> τ
+
+(μ, ·) + F(·) along a well-chosen interpolation. We construct the interpolation as follows; let ν0 and ν1 be two measures, consider the Schrodinger plans γ0, γ 1 from μ to ν0 and from μ to ν1 respectively. Now, let us disintegrate our plans with respect to their first marginal, in order to get two collections of measures defined for μ-almost every x, (νx 
+
+> 0
+
+)x and (νx 
+
+> 1
+
+)x. For a fixed x such that νx 
+
+> 0
+
+and νx 
+
+> 1
+
+are defined, let us consider the optimal transport plan between these two measures, and call it γx. The interpolation between ν0 and ν1 that we will consider is defined for all t ∈ [0 , 1] by νt := ( tπ 3 + (1 − t)π2) #Π, where Π is a the three plan of marginals μ, ν0 and ν1 defined by Π = μ ⊗ γx, that is, the unique measure such that for all φ ∈ Cc(R3d),
+
+Z
+
+φ(x, y, z ) dΠ( x, y, z ) = 
+
+Z
+
+φ(x, y, z ) d γx(y, z ) d μ(x).
+
+Since f = 0 , F is convex along this interpolation. This is a consequence of [3, Proposition 9.3.2, Proposition 9.3.5] whose proof we have reproduced to prove the second point of Proposition 2.36 for the part of the functional concerning W . Thus, it is enough to show that t 7 → Sch ατ (μ,ν t) 
+
+> τ
+
+is strictly convex. This is the purpose of the following lemma, which easily concludes the proof. □
+
+Lemma 2.35.3. With the notations of the proof of Proposition 2.35, for all t ∈ [0 , 1] , we have: 
+
+Sch ατ (μ, ν t) ≤ tSch ατ (μ, ν 0) + (1 − t)Sch ατ (μ, ν 1) − t(1 − t)
+
+Z |x − y|2
+
+2 d( π2, π 3)#Π.
+
+Proof. Let t ∈ [0 , 1] . Using (π1, tπ 3 + (1 − t)π2)#Π as competitor in Definition 2.11 of the Schrödinger cost, we find 
+
+Sch ατ (μ, ν t) ≤
+
+Z |x − y|2
+
+2 d( π1, tπ 3 + (1 − t)π2)#Π( x, y )+ ατ H (( π1, tπ 3 + (1 − t)π2)#Π) + ατ d 
+
+2 ln(2 πατ ). (2.16) A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 19 
+
+Concerning the distance part, we have 
+
+Z |x − y|2
+
+2 d( π1, tπ 3 + (1 − t)π2)#Π( x, y ) = 
+
+Z |x − (tz + (1 − t)y)|2
+
+2 dΠ( x, y, z )= t
+
+Z |x − z|2
+
+2 dΠ( x, y, z ) + (1 − t)
+
+Z |x − y|2
+
+2 dΠ( x, y, z ) − t(1 − t)
+
+Z |z − y|2
+
+2 dΠ( x, y, z )= t
+
+Z |x − z|2
+
+2 dγ1(x, z ) + (1 − t)
+
+Z |x − y|2
+
+2 dγ0(x, y ) − t(1 − t)
+
+Z |z − y|2
+
+2 d( π2, π 3)#Π( y, z ). (2.17) Now let us take care about the entropy term. First, let us remind that Π = μ ⊗ γx where γx is the optimal transport plan between νx 
+
+> 0
+
+and νx 
+
+> 1
+
+, so using Proposition 2.10, we find: 
+
+H(( π1, tπ 3 + (1 − t)π2)#Π) = H(π1# Π) + 
+
+Z
+
+H(( tπ 3 + (1 − t)π2)#γx) d μ(x).
+
+But since for μ-almost all x, γx is an optimal transort plan, t 7 → (tπ 3 + (1 − t)π2)#γx is a Wasserstein geodesic. As the entropy is convex along Wasserstein geodesics (for example, it verifies the McCann criterion, see Proposition 1.6), we have 
+
+H(( tπ 3 + (1 − t)π2)#γx) ≤ tH (π3# γx) + (1 − t)H(π2# γx) = tH (νx 
+
+> 1
+
+) + (1 − t)H(νx 
+
+> 0
+
+).
+
+Hence, 
+
+H(( π1, tπ 3 + (1 − t)π2)#Π) ≤ t
+
+
+
+H(μ) + 
+
+Z
+
+H(νx 
+
+> 1
+
+)) d μ(x)
+
+
+
++ (1 − t)
+
+
+
+H(μ) + 
+
+Z
+
+H(νx 
+
+> 0
+
+) d μ(x)
+
+
+
+.
+
+Using once again the additivity of the entropy, we end up with: 
+
+H(( π1, tπ 3 + (1 − t)π2)#Π) ≤ tH (γ1) + (1 − t)H(γ0). (2.18) The result follows from gathering formulas (2.16), (2.17) and (2.18). □
+
+2.8. Validity of Hypothesis 1.1 in usual cases. Hypothesis 1.1 covers a large variety of functionals F
+
+that are commonly used in the literature. In particular, the following proposition holds. The reader can find a lighter version of this proposition in Proposition 1.6. 
+
+Proposition 2.36. Let F be of the form (1.1) , that is, 
+
+F : ρ ∈ P 2(Rd) 7 −→ 
+
+Z
+
+> Rd
+
+V (x) ρ(x) d x + 12
+
+Z
+
+> Rd
+
+(W ∗ ρ)( x) ρ(x) d x +
+
+Z
+
+> Rd
+
+f (ρ(x)) d x, 
+
+for some functions V, W ∈ C0(Rd, R) and f ∈ C0(R+, R), where F is set to +∞ if ρ is not absolutely continuous with respect to the Lebesgue measure. 
+
+(1) Let us assume that: 
+
+• V−(x) 
+
+> |x|2
+
+−−−−−→ 
+
+> |x|→ +∞
+
+0,
+
+• W−(x) 
+
+> |x|2
+
+−−−−−→ 
+
+> |x|→ +∞
+
+0,
+
+• f is convex and superlinear and there exist q > dd+2 and two positive constants c1, c 2 such that f (0) = 0 and for all s ∈ [0 , +∞) f−(s) ≤ c1s + c2sq .Then F is well defined and l.s.c in the sense of Hypothesis 1.1. In other terms, it verifies the first point of Hypothesis 1.1. 
+
+(2) Let F satisfy (1), and let us further assume that: 
+
+• V is λ1-convex, 
+
+• W is symmetric and λ2-convex, with λ2 ≤ 0,
+
+• s 7 → sdf (s−d) is convex and non increasing on (0 , +∞).Then F is λ-convex along generalized geodesics for λ = λ1 + λ2. In other terms, it verifies the second point of Hypothesis 1.1. 
+
+(3) Let F satisfy (1), and let us further assume: 
+
+• V is λ1-convex and ∆V ≤ K1 in the distributional sense, 
+
+• W is λ2-convex, symmetric and ∆W ≤ K2 in the distributional sense, 
+
+• f is convex. Then for all μ ∈ P 2(Rd) and t ≥ 0, F(μ ∗ σt) − F (μ) ≤ K t 
+
+> 2
+
+with K := K1 + K2. In other terms, it verifies the third point of Hypothesis 1.1. In particular, if F verifies the point (1) , (2) and (3) right above, then F satisfies Hypothesis 1.1 for 
+
+λ := λ1 + λ2 and K := K1 + K2.20 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Remark 2.37 . If V is λ1-convex and ∆V ≤ K1, then V has to be C1(Rd, R) with globally Lipchitz derivatives. The same holds for W .We will do the proof of each point separately. 
+
+Proof of Proposition 2.36 point (1) . The proof is based on the fact that each functional: ρ 7 → R V dρ,
+
+ρ 7 → 12
+
+R W ∗ ρ dρ and ρ 7 → R f (ρ) are lower semicontinuous in sense of Hypothesis 1.1. For the part 
+
+ρ 7 → R f (ρ), taking ε small enough such that q > dd+(2 −ε) then following [3, Remark 9.3.8], we obtain that 
+
+ρ 7 → R f (ρ) is W2−ε- l.s.c which is stronger than the lower semicontinuity in the sense of Hypothesis 1.1. Here, we will only do the proof for the functional associated to V and W in the two next lemmas for which the semicontinuity in the sense of Hypothesis 1.1 is not standard. □
+
+Lemma 2.37.1. If V−(x) 
+
+> |x|2
+
+−−−−−→ 
+
+> |x|→ +∞
+
+0, then ρ 7 → R V dρ is l.s.c in the sense of Hypothesis 1.1. Proof. Consider (ρn)n ∈ P 2(Rd) such that (ρn)n has uniformly bounded second moment and converges for the narrow topology to ρ. We introduce S := sup n
+
+R |x|2 dρn(x). Let us quickly treat the positive part which is well known (see [3] for instance), and does not require any assumption on the moments of 
+
+(ρn)n. Let M ∈ R+, and V M 
+
+> +
+
+: x 7 → max {V+(x), M }. We have 
+
+lim inf 
+
+> n→+∞
+
+Z
+
+V+ dρn ≥ lim 
+
+> n→+∞
+
+Z
+
+V M 
+
+> +
+
+dρn =
+
+Z
+
+V M 
+
+> +
+
+dρ, 
+
+where the second equality follows from the fact that V M 
+
+> +
+
+is continuous and bounded. We get the desired lower semicontinuity by letting M tend to +∞ and using the monotone convergence theorem. Now, we have to prove that 
+
+lim sup 
+
+> n→+∞
+
+Z
+
+V− dρn ≤
+
+Z
+
+V− dρ. 
+
+Let χR ∈ Cc(Rd) be a function taking values in [0 , 1] , uniformly equal to 1 on the ball of center 0 and radius R, and of support inside the ball of center 0 and radius R + 1 . For all R ∈ R∗ 
+
+> +
+
+and n ∈ N,
+
+Z
+
+V− dρn(x) = 
+
+Z
+
+V−χR dρn +
+
+Z
+
+V−(1 − χR) d ρn
+
+≤
+
+Z
+
+V−χR dρn +
+
+Z
+
+|x|2 dρn(x) sup 
+
+> |x|≥ R
+
+V−(x)
+
+|x|2 .
+
+In the last line, the first term converges because V−χR is continuous with compact support, and its limit is smaller or equal to R V− dρ. By assumption, the second term converges to 0 uniformly in n as R → +∞.The result follows easily. □
+
+Lemma 2.37.2. If W−(x) 
+
+> |x|2
+
+−−−−−→ 
+
+> |x|→ +∞
+
+0 then ρ 7 → R W ∗ ρ dρ is l.s.c in the sense of Hypothesis 1.1. Proof. Consider (ρn)n ∈ P 2(Rd) such that (ρn)n have uniformly bounded second moment and converges for the narrow topology to ρ. As in the previous Lemma 2.37.1, the proof for the positive part is already known in the literature, see for instance [3], and does not require any assumption on the second moment. Consider once again χR ∈ Cc(Rd) a function taking values in [0 , 1] , uniformly equal to 1 on the ball of center 0 and radius R, and of support inside the ball of center 0 and radius R + 1 .Let W R 
+
+> +
+
+:= W+χR. This function is continuous and compactly supported, hence, uniformly continuous. Therefore, (W R 
+
+> +
+
+∗ ρn) is uniformly equicontinuous, hence relatively compact for the topology of locally uniform convergence thanks to Ascoli’s Theorem, and its limit clearly appears to be W R 
+
+> +
+
+∗ ρ. Finally, as 
+
+(ρn)n∈N is tight, W R 
+
+> +
+
+∗ ρn(x) converges to 0 as x → +∞, uniformly in n ∈ N. So the locally uniform convergence is actually a uniform convergence. Moreover, (ρn)n is converging for the narrow topology, which is the weak-* topology on P(Rd), seen as a subset of the dual of continuous and bounded functions endowed with the topology of uniform convergence. It follows that, 
+
+lim 
+
+> n→+∞
+
+Z
+
+W R 
+
+> +
+
+∗ ρn dρn =
+
+Z
+
+W R 
+
+> +
+
+∗ ρ dρ. (2.19) Therefore, Z
+
+W R 
+
+> +
+
+∗ ρ dρ = lim 
+
+> n→+∞
+
+Z
+
+W R 
+
+> +
+
+∗ ρn dρn ≤ lim inf 
+
+> n→+∞
+
+Z
+
+W+ ∗ ρn dρn,
+
+and we get the result by letting R tend to +∞ on the left hand side. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 21 
+
+Let us now treat the negative part. We need to show that 
+
+lim sup 
+
+> n→+∞
+
+Z
+
+W− ∗ ρn dρn ≤
+
+Z
+
+W− ∗ ρ dρ. 
+
+For all R > 0, let us define W R 
+
+> −
+
+= W−χR, where χR is the truncation function defined in the first part of the proof. Up to replacing W+ by W−, the proof made to obtain equation (2.19) provides 
+
+lim 
+
+> n→+∞
+
+Z
+
+W R 
+
+> −
+
+∗ ρn dρn =
+
+Z
+
+W R 
+
+> −
+
+∗ ρ dρ ≤
+
+Z
+
+W− ∗ ρ dρ. 
+
+To conclude, it remains to show that for all ε > 0, there exists R > 0 such that for all n ∈ N,
+
+Z
+
+W− ∗ ρn dρn ≤
+
+Z
+
+W R 
+
+> −
+
+∗ ρn dρn + ε. 
+
+Let ε > 0. By assumption, there exists R > 0 such that for all x, if |x| > R , then W−(x) ≤ ε|x|2. We have Z
+
+(W− − W R 
+
+> −
+
+) ∗ ρn dρn =
+
+Z
+
+> x,y :|x−y|>R
+
+(W−(x − y) − W R 
+
+> −
+
+(x − y)) d ρn(x) d ρn(y)
+
+≤ ε
+
+Z
+
+> x,y :|x−y|>R
+
+|x − y|2 dρn(x) d ρn(y)
+
+≤ 2ε
+
+Z  |x|2 + |y|2 dρn(x) d ρn(y).
+
+Calling S := sup 
+
+> n
+
+R |x|2 dρn(x), which is finite by assumption, we obtain: 
+
+Z
+
+(W− − W R 
+
+> −
+
+) ∗ ρn dρn ≤ 4εS, 
+
+and the result follows replacing ε by 4εS in our claim. □
+
+Proof of Proposition 2.36 point (2). For V , see [3, Proposition 9.3.2], for f see [3, Proposition 9.3.9], for 
+
+W and λ = 0 see [3, Proposition 9.3.5]. The only case left is for W and λ < 0. Consider γ ∈ P 2(( Rd)2
+
+and for t ∈ [0 , 1] , let ρt = ( tπ 2 + (1 − t)π1)#γ, where πi are the canonical projection. We start by writing the formula in term of γ
+
+12
+
+Z
+
+W (z − ˜z) d ρt(z) d ρt(˜ z) = 12
+
+Z
+
+W (t(y − ˜y) + (1 − t)( x − ˜x)) d γ(x, y ) d γ(˜ x, ˜y).
+
+Using the λ-convexity of W , we obtain 
+
+12
+
+Z
+
+W (z − ˜z) d ρt(z) d ρt(˜ z) ≤ t 12
+
+Z
+
+W (y − ˜y) d γ(x, y ) d γ(˜ x, ˜y) + (1 − t) 12
+
+Z
+
+W (x − ˜x) d γ(x, y ) d γ(˜ x, ˜y)
+
+−t(1 − t) λ
+
+2
+
+Z |y − ˜y − x + ˜ x|2
+
+2 dγ(x, y ) d γ(˜ x, ˜y).
+
+But 
+
+Z |y − ˜y − x + ˜ x|2
+
+2 dγ(x, y ) d γ(˜ x, ˜y)=
+
+Z |y − x|2
+
+2 dγ(x, y ) + 
+
+Z |˜y − ˜x|2
+
+2 dγ(˜ x, ˜y) − 2
+
+Z
+
+(y − x) · (˜ y − ˜x) d γ(x, y ) d γ(˜ x, ˜y)= 2 
+
+Z |y − x|2
+
+2 dγ(x, y ) − 2
+
+Z 
+
+(y − x) d γ(x, y )
+
+2
+
+≤ 2
+
+Z |y − x|2
+
+2 dγ(x, y ).
+
+Since λ < 0,
+
+12
+
+Z
+
+W (z − ˜z) d ρt(z) d ρt(˜ z) ≤ t 12
+
+Z
+
+W (y − ˜y) d γ(x, y ) d γ(˜ x, ˜y) + (1 − t) 12
+
+Z
+
+W (x − ˜x) d γ(x, y ) d γ(˜ x, ˜y)
+
+−t(1 − t) λ
+
+Z |y − x|2
+
+2 dγ(x, y ).
+
+which concludes the proof. □22 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Proof of Proposition 2.36 point (3) . In the whole proof, we fix μ ∈ P 2(Rd), and for all t ≥ 0, we define 
+
+ρt := μ ∗ σt. We will use the following classical property of the heat flow: for all t ≥ 0,
+
+12
+
+Z
+
+|x|2 dρt ≤ 12
+
+Z
+
+|x|2 dμ + dt. (2.20) First, let us show that if V is λ1-convex and ∆V ≤ K1, then for all t ≥ 0,
+
+Z
+
+V dρt ≤
+
+Z
+
+V dμ + 12 K1t. (2.21) First, if ¯V ∈ C∞ 
+
+> c
+
+(Rd), then t 7 → R ¯V ρ t is clearly continuous, and its distributional derivative is t 7 →
+
+> 12
+
+R ∆ ¯V ρ t. Therefore, Z
+
+¯V dρt =
+
+Z
+
+¯V dμ + 12
+
+Z t
+
+> 0
+
+Z
+
+∆ ¯V dρt dt. (2.22) We need to replace ¯V ∈ C∞ 
+
+> c
+
+(Rd) in (2.22) by the potential V given in the statement of Proposition 2.36. Notice that by Remark 2.37, V is necessarily in C1,1, and so it grows at most quadratically and its gradient grows at most linearly. In other words, there exists C > 0 such that for all x ∈ Rd,
+
+|V (x)| ≤ C(1 + |x|2) and |∇ V (x)| ≤ C(1 + |x|). (2.23) By convolution, we can replace the condition ¯V ∈ C∞ 
+
+> c
+
+(Rd) in (2.22) by ¯V ∈ C1,1 
+
+> c
+
+(Rd), and we just need to relax the fact that ¯V has compact support. Given R > 0, let χR := χ(·/R ), where χ is a smooth function with value in [0 , 1] , uniformly equal to 1 in the ball of center 0 and radius 1, and with support in the ball of center 0 and radius 2. We will apply (2.22) to ¯VR := V χ R. For all R ≥ 1 and x ∈ Rd,
+
+|∆VR(x) − (∆ V (x)χR(x)) | = ∇V (x) · ∇χ(x/R )
+
+R + V (x) ∆χ(x/R )
+
+R2
+
+≤ C1R≤| x|≤ 2R
+
+
+
+∥∇ χ∥∞
+
+1 + 2 RR + ∥∆χ∥∞
+
+1 + 4 R2
+
+R2
+
+
+
+≤ A1R≤| x|,
+
+where A is chosen sufficiently large, and where to get the second line, we used (2.23) and the fact that the supports of ∇χR and ∆χR are included in the annulus of center 0 and radiuses R and 2R. Therefore, writing (2.22) to ¯VR, we find 
+
+Z
+
+V χ R dρt ≤
+
+Z
+
+V χ R dμ + 12
+
+Z t
+
+> 0
+
+Z
+
+(∆ V )χR dρs ds + A
+
+Z t
+
+> 0
+
+ρs({x ∈ Rd s.t. |x| ≥ R}) d s. 
+
+Letting R tend to +∞ with the help of (2.20), (2.23) and the Markov inequality, we deduce 
+
+Z
+
+V dρt ≤
+
+Z
+
+V dμ + 12
+
+Z t
+
+> 0
+
+Z
+
+(∆ V ) d ρs ds, 
+
+and (2.21) follows bounding ∆V by K1 from above. Now, let us proceed to the proof of the bound for the W part. 
+
+ddt
+
+12
+
+Z
+
+W ∗ ρt dρt = dds
+
+12
+
+Z
+
+W ∗ ρt dρs
+
+> s=t
+
++ ddt
+
+12
+
+Z
+
+W ∗ ρs dρt
+
+> s=t
+
+= dds
+
+Z
+
+W ∗ ρt dρs
+
+> s=t
+
+.
+
+But if W is λ2-convex, then so does W ∗ ρt, and if ∆W ≤ K2, then ∆( W ∗ ρt) ≤ K2. So applying the the previous computation for V = W ∗ ρt we obtain 
+
+ddt
+
+12
+
+Z
+
+W ∗ ρt dρt ≤ 12 K2. (2.24) The only part remaining in the one on f . By the Jensen inequality, for all t > 0 and x ∈ Rd,
+
+f (ρt(x)) = f
+
+Z 
+
+μ(x − y) d σt(y)) 
+
+
+
+≤
+
+Z
+
+f (μ(x − y)) d σt(y),
+
+where the last integral is well defined in R ∪ { +∞} thanks to the hypothesis made on f−, which are made to ensure that for all absolutely continuous measure μ ∈ P 2(Rd), R f−(μ) < +∞ see [3]. Integrating this A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 23 
+
+inequality, using the Fubini theorem for the negative part and the Fubini-Tonelli theorem for the positive part, and then making the change of variable x = x − y in the second integral, we obtain 
+
+Z
+
+f (ρt) ≤
+
+Z
+
+f (μ). (2.25) The result follows from equations (2.21), (2.24) and (2.25). □
+
+3. Proof of the Main Result 
+
+The purpose of this Section is to prove Theorem 1.3. We first provide a sketch of the proof. 3.1. Sketch of proof. The proof proceeds iteratively, i.e. for all k ≥ 0, by comparing the distance at stage k+1 , that is W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) , with the one of stage k, W 22 (J0 
+
+> k,τ
+
+(μ0), J αk,τ (μ0)) . Rewriting 
+
+W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) as W 22 (J0 
+
+> τ
+
+(J0 
+
+> k,τ
+
+(μ0)) , J ατ (Jαk,τ (μ0))) , we need to compare one increment of two different schemes starting from two different measures. Our strategy is to use the following decomposition to treat the facts that the starting measures are different and that the schemes are different separately: 
+
+W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) ≤
+
+W2(J0 
+
+> τ
+
+(J0 
+
+> k,τ
+
+(μ0)) , J 0 
+
+> τ
+
+(Jαk,τ (μ0))) 
+
+| {z }
+
+> (I)
+
++ W2(J0 
+
+> τ
+
+(Jαk,τ (μ0)) , J ατ (Jαk,τ (μ0))) 
+
+| {z }
+
+> (II)
+
+
+
+> 2
+
+.
+
+The term (I) is the distance between two iterates of the classic JKO scheme starting from different measures, and the term (II) is the distance between two increments of different schemes starting from the same measure. Notably, the first one is already estimated in [3], see Theorem 3.1. Our main contribution is an estimate of the second part. Here we will see the entropic JKO scheme as a perturbation of the classic JKO scheme, thus reframing our question as a stability question: Why does this perturbation yield to a close solution? In fact, the stability of the JKO scheme is contained in the discrete E.V.I. Indeed, under our λ-convexity assumption, Theorem 2.23 implies for all μ ∈ P 2(Rd) admissible for both schemes and τ > 0:
+
+12τ W 22 (J0 
+
+> τ
+
+(μ), J ατ (μ)) ≤ 11 + λτ 
+
+ W 22 (μ, J ατ (μ)) 2τ + F(Jατ (μ)) −
+
+ W 22 (μ, J 0 
+
+> τ
+
+(μ)) 2τ + F(J0 
+
+> τ
+
+(μ)) 
+
+ 
+
+Hence, to show that Jατ (μ) is close to J0 
+
+> τ
+
+(μ), it suffices to show that it is a good competitor for the problem of which J0 
+
+> τ
+
+(μ) is a minimizer. Since the Schrödinger cost is a perturbation of the Wasserstein distance, standard inequalities allow to replace the Wasserstein distance with the Schrödinger cost up to error terms. Up to this change, estimating the distance between J0 
+
+> τ
+
+(μ) and Jατ (μ) reduces to estimating the difference between the optimal values of the classic and entropic problems. We estimate this difference by constructing a good competitor for the entropic JKO scheme by perturbing the minimizer of the classic JKO scheme. In order to do so, we will follow the heuristic idea that, for short times, the flow of F + α 
+
+> 2
+
+H
+
+can be obtained by following the flow of F and then following the flow of α 
+
+> 2
+
+H. In other words, we will take as a competitor Jτ (μ) ∗ σατ and obtain a sharp bound. Let us now enter the details of the proof. 3.2. Beginning of the proof. As already said, with the notations of the statement of the theorem, given k ∈ N, we aim at estimating 
+
+W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) .
+
+Because of the triangle inequality, 
+
+W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) ≤
+
+W2(J0 
+
+> τ
+
+(J0 
+
+> k,τ
+
+(μ0)) , J 0 
+
+> τ
+
+(Jαk,τ (μ0))) 
+
+| {z }
+
+> (I)
+
++ W2(J0 
+
+> τ
+
+(Jαk,τ (μ0)) , J ατ (Jαk,τ (μ0))) 
+
+| {z }
+
+> (II)
+
+
+
+> 2
+
+.
+
+(3.1) We will estimate the terms (I) and (II) separately. Indeed, (I) is related to the contraction property of the classic JKO scheme. The term (II) is related to the stability of the scheme through perturbation. 24 AYMERIC BARADAT AND SOFIANE CHERF 
+
+3.3. Bounding term (I). Let us start by considering the following contraction property of the classic JKO scheme, proven in [3]. 
+
+Theorem 3.1 (Contraction property of the JKO scheme [3]) . Let F be λ-convex along generalized geodesics and τ < 1 
+
+> λ−
+
+. Then, for all μ, ν ∈ P 2(Rd) such that (JKO) admit minimizers J0 
+
+> τ
+
+(μ) and J0 
+
+> τ
+
+(ν),
+
+W 22 (J0 
+
+> τ
+
+(μ), J 0 
+
+> τ
+
+(ν)) ≤
+
+ 11 + λτ 
+
+2
+
+W 22 (μ, ν ) + R(τ )1 + λτ 
+
+where R(τ ) = 2 τ  F (μ) − F  J0 
+
+> τ
+
+(μ) .Remark 3.2 . In virtue of Theorem 2.28, existence of J0 
+
+> τ
+
+(μ) and J0 
+
+> τ
+
+(ν) is guaranteed as soon as F(μ) < +∞
+
+and μ and ν are absolutely continuous. Applying this theorem to our case, with μ = J0 
+
+> k,τ
+
+(μ0) and ν = Jαk,τ (μ0), since F is λ-convex along generalized geodesics, we find: (I) 2 ≤
+
+ 11 + λτ 
+
+2
+
+W 22 (J0 
+
+> k,τ
+
+(μ0), J αk,τ (μ0)) + Rk(τ )1 + λτ ,
+
+where Rk(τ ) = 2 τ  F  J0 
+
+> k,τ
+
+(μ0) − F  J0 
+
+> k+1 ,τ
+
+(μ0) . (3.2) For the reader’s convenience, let us reprove Theorem 3.1. 
+
+Proof of Theorem 3.1. Taking μ = μ and ρ = J0 
+
+> τ
+
+(ν) in the discrete E.V.I of Theorem 2.23, we obtain following bound: 
+
+12τ
+
+ W 22 (J0 
+
+> τ
+
+(ν), J 0 
+
+> τ
+
+(μ)) − W 22 (J0 
+
+> τ
+
+(ν), μ ) ≤ F (J0 
+
+> τ
+
+(ν)) − F (J0 
+
+> τ
+
+(μ)) − 12τ W 22 (J0 
+
+> τ
+
+(μ), μ )− λ
+
+2 W 22 (J0 
+
+> τ
+
+(ν), J 0 
+
+> τ
+
+(μ)) .
+
+Doing the same for μ = ν and ρ = μ we get: 
+
+12τ
+
+ W 22 (μ, J 0 
+
+> τ
+
+(ν)) − W 22 (μ, ν ) ≤ F (μ) − F (J0 
+
+> τ
+
+(ν)) − 12τ W 22 (J0 
+
+> τ
+
+(ν), ν )− λ
+
+2 W 22 (μ, J 0 
+
+> τ
+
+(ν)) .
+
+Summing these two inequalities, we find, up to rearranging the terms: 
+
+(1 + λτ ) W 22 (J0 
+
+> τ
+
+(ν), J 0 
+
+> τ
+
+(μ)) 2τ − W 22 (μ, ν )2τ
+
+≤ F (μ) − F (J0 
+
+> τ
+
+(μ)) − 12τ W 22 (J0 
+
+> τ
+
+(μ), μ ) − 12τ W 22 (J0 
+
+> τ
+
+(ν), ν )− λ
+
+2 W 22 (μ, J 0 
+
+> τ
+
+(ν)) . (3.3) We easily conclude using the following lemma. □
+
+Lemma 3.2.1. For all μ, ν, ρ ∈ P 2(Rd) and for all λ ∈ R and τ < 1 
+
+> λ−
+
+, the following inequality holds: 
+
+λτ 
+
+1 + λτ W 22 (μ, ν ) ≤ λτ W 22 (μ, ρ ) + W 22 (ν, ρ )
+
+Applying this lemma to ρ = J0 
+
+> τ
+
+(ν), we find 
+
+λτ 
+
+1 + λτ W 22 (μ, ν )2τ ≤ λ
+
+2 W 22 (μ, J 0 
+
+> τ
+
+(ν)) + W 22 (ν, J 0 
+
+> τ
+
+(ν)) 2τ ,
+
+which, plugged into (3.3), provides 
+
+(1 + λτ ) W 22 (J0 
+
+> τ
+
+(ν), J 0 
+
+> τ
+
+(μ)) 2τ − W 22 (μ, ν )2τ ≤ F (μ) − F (J0 
+
+> τ
+
+(μ)) − 12τ W 22 (J0 
+
+> τ
+
+(μ), μ ) − λτ 
+
+1 + λτ W 22 (μ, ν )2τ .
+
+Forgetting the nonnegative term W 22 (J0 
+
+> τ
+
+(μ), μ ) and rearranging the terms leads to Theorem 3.1. Let us close this part of the proof with the proof of Lemma 3.2.1 (the case λ < 0 can be found in [3]). 
+
+Proof of lemma 3.2.1. For λ = 0 there is nothing to show. Otherwise let us distinguish the cases λ > 0
+
+and λ < 0.
+
+Case λ > 0. The triangle inequality gives that : W2(μ, ν ) ≤ W2(μ, ρ )+ W2(ρ, ν ). We will use the following classic inequality (a + b)2 ≤ pa 2 + p∗b2 where a, b ∈ R, p ∈ (1 , +∞) and 1 
+
+> p
+
++ 1 
+
+> p∗
+
+= 1 . Since λ > 0 then 
+
+1 + λτ > 1, so we can apply the inequality for p = 1 + λτ and p∗ = 1+ λτ λτ . We obtain: 
+
+W 22 (μ, ν ) ≤ (1 + λτ )W 22 (μ, ρ ) + 1 + λτ λτ W 22 (ρ, ν ).A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 25 
+
+Multiplying by λτ  
+
+> 1+ λτ
+
+> 0, we get the lemma for λ > 0.
+
+Case λ < 0. The triangle inequality gives that : W2(μ, ρ ) ≤ W2(μ, ν ) + W2(ν, ρ ) since −1 
+
+> τ
+
+< λ < 0, then  
+
+> 11+ λτ
+
+> 1 so as previously, we can apply the classic inequality for p = 11+ λτ and p∗ = −1 
+
+> λτ
+
+and obtain: 
+
+W 22 (μ, ρ ) ≤ 11 + λτ W 22 (μ, ν ) + −1
+
+λτ W 22 (ν, ρ ).
+
+Multiplying by λτ < 0, we get: 
+
+λτ W 22 (μ, ρ ) ≥ λτ 
+
+1 + λτ W 22 (μ, ν ) − W 22 (ν, ρ ),
+
+which is the lemma for λ < 0. □
+
+3.4. Bounding Term (II). Let us now estimate term (II) which is the main novelty of the proof. In this section, we want to show the following bound: (II) 2 ≤ ˜Rk(τ, α )1 + λτ where ˜Rk(τ, α ) = Kατ 2 + ατ  H(Jαk,τ (μ0)) − H(Jαk+1 ,τ (μ0))  . (3.4) In order to lighten the notations, let us denote: 
+
+μ = Jαk,τ (μ0), ν0 = J0 
+
+> τ
+
+(μ), να = Jατ (μ).
+
+The first step consists in applying the discrete E.V.I of Theorem 2.23 to μ and να, leading thanks to the 
+
+λ-convexity of F to: 
+
+12τ W 22 (ν0, ν α) ≤ 11 + λτ 
+
+ W 22 (μ, ν α)2τ + F(να) −
+
+ W 22 (μ, ν 0)2τ + F(ν0)
+
+ 
+
+.
+
+From Proposition 2.13, we have for all μ, ν ∈ P 2(Rd),
+
+Sch ατ (μ, ν )
+
+τ ≥ α
+
+2 (H(μ) + H(ν)) + W 22 (μ, ν )2τ .
+
+Therefore, defining the cost associated with the JKO scheme and the entropic JKO scheme as 
+
+C(τ, α ) = Sch ατ 
+
+τ (μ, ν α) + F(να) and C(τ, 0) = W 22
+
+2τ (μ, ν 0) + F(ν0),
+
+we find 12τ W 22 (ν0, ν α) ≤ 11 + λτ 
+
+
+
+C(τ, α ) − C(τ, 0) − α H(μ) + H(να)2
+
+
+
+.
+
+Then, the last step consists in proving the following bound between the different costs: 
+
+C(τ, α ) − C(τ, 0) ≤ αH (μ) + K α
+
+2 τ. (3.5) Indeed, plugging this inequality into the previous line directly leads to 
+
+12τ W 22 (ν0, ν ) ≤ Kατ 
+
+2(1 + λτ ) + α
+
+1 + λτ H(μ) − H(να)2 ,
+
+which is a rewriting of equation (3.4). Our last task is to prove inequality (3.5). The argument to compare the two costs is to construct a competitor of the entropic problem using the minimizer of the non entropic one; for this, we can follow the idea suggested by the heuristic remark made in Subsection 1.3, that starting from the same measure 
+
+μ the solution of the gradient flow and the regularized gradient flow ρ0 and ρα verify 
+
+ddt
+
+ ρ0 ∗ σαt 
+
+
+
+> t=0
+
+= ddt ρα
+
+> t=0
+
+.
+
+Hence, being ν0 an approximation of ρ0(τ ) and να an approximation of ρα(τ ) we expect να to be close to ν0 ∗ σατ . So let us consider this last measure as a competitor for the entropic JKO scheme. Let (ρ, c ) be the geodesic and its associated velocity between μ and ν0, defined in Definition 2.12. Define: 
+
+˜ρt = ρt ∗ σαt , ˜ct = (ρtct) ∗ σαt 
+
+˜ρt
+
+and ˜mt := ˜ ρ˜c = ( ρtct) ∗ σαt .
+
+Then: 
+
+∂t ˜ρt + div(˜ ρ˜ct) = α
+
+2 ∆˜ ρt.
+
+Hence, it is a competitor in the formulation of the Schrodinger cost from Definition 2.12. Therefore, 
+
+C(τ, α ) ≤ αH (μ) + 
+
+Z τ
+
+> 0
+
+Z |˜ct|2
+
+2τ d˜ ρt dt + F(ν0 ∗ σατ ).26 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Using the convexity of J : ( ρ, m ) 7 → R |m|2 
+
+> 2ρ
+
+and Jensen’s inequality: 
+
+J(˜ ρ, ˜m) ≤ J(ρ, m ) = W 22
+
+2τ (μ, ν 0).
+
+Therefore: 
+
+C(τ, α ) ≤ αH (μ) + C(τ, 0) + F(ν0 ∗ σατ ) − F (ν0).
+
+Since F verifies Hypothesis 1.1, in particular the last point implies that: 
+
+C(τ, α ) ≤ αH (μ) + C(τ, 0) + K α
+
+2 τ, 
+
+which is nothing but inequality (3.5). We are now in position to prove Theorem 1.3. 3.5. Conclusion of the result. In view of equations (3.2) and (3.4) we have almost enough to conclude. The last ingredient is the following technical proposition. 
+
+Proposition 3.3 (Squared discrete Gronwall lemma) . Let λ ∈ R, τ < 1 
+
+> λ−
+
+, and (ak) and (bk) be two non-negative sequences. If (uk) is a sequence verifying the following inequality: 
+
+u0 = 0 and uk+1 ≤
+
+s uk
+
+1 + λτ 
+
+2
+
++ ak+1 + bk+1 , (3.6) 
+
+then for all n ∈ N we have: 
+
+un(1 + λτ )n ≤
+
+vuut nX
+
+> k=1
+
+(1 + λτ )2k ak +
+
+> n
+
+X
+
+> k=1
+
+(1 + λτ )k bk.
+
+Proof. At step k ∈ N, multiplying inequality (3.6) by (1 + λτ )2( k+1) we obtain: 
+
+(1 + λτ )(k+1) uk+1 ≤
+
+q
+
+((1 + λτ )kuk)2 + (1 + λτ )2( k+1) ak+1 + (1 + λτ )(k+1) bk+1 .
+
+Up to replacing uk by (1 + λτ )kuk, ak+1 by (1 + λτ )2( k+1) ak+1 and bk+1 by (1 + λτ )k+1 bk+1 , we can assume that λ = 0 . Now let us introduce for all n ∈ N, An = nP
+
+> k=1
+
+ak, Bn = nP
+
+> k=1
+
+bk and (vk) the sequence defined by v0 = 0 and the following iterative scheme: 
+
+∀k ∈ N, vk+1 =
+
+q
+
+v2 
+
+> k
+
++ ak+1 + bk+1 .
+
+An easy induction shows that for all k ∈ N, uk ≤ vk. Moreover, for all k ∈ N;
+
+(vk+1 − Bk+1 )2 =
+
+q 
+
+v2 
+
+> k
+
++ ak+1 + bk+1 − Bk+1 
+
+2
+
+=
+
+q 
+
+v2 
+
+> k
+
++ ak+1 − Bk
+
+2
+
+= v2 
+
+> k
+
++ ak+1 − 2
+
+q
+
+v2 
+
+> k
+
++ ak+1 Bk + B2 
+
+> k
+
+.
+
+As this stage we simply use 
+
+−2
+
+q
+
+v2 
+
+> k
+
++ ak+1 Bk ≤ − 2vkBk
+
+to find 
+
+(vk+1 − Bk+1 )2 ≤ v2 
+
+> k
+
+− 2vkBk + B2 
+
+> k
+
++ ak+1 = ( vk − Bk)2 + ak+1 .
+
+Summing these inequalities, for all n ∈ N∗,
+
+(vn − Bn)2 ≤ An.
+
+Thus, 
+
+vn − Bn ≤ | vn − Bn| ≤ pAn
+
+and so un ≤ vn ≤ Bn + √An, as claimed. □A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 27 
+
+Let us now use this proposition to conclude the proof of Theorem 1.3. Putting the inequalities obtained in equations (3.2) and (3.4) into (3.1), we get: 
+
+W 22 (J0 
+
+> k+1 ,τ
+
+(μ0), J αk+1 ,τ (μ0)) ≤ ((I) + (II) )2
+
+≤
+
+vuut W2(J0 
+
+> k,τ
+
+(μ0), J αk,τ (μ0)) 1 + λτ 
+
+!2
+
++ Rk(τ )1 + λτ +
+
+s
+
+˜Rk(α, τ )1 + λτ 
+
+
+
+> 2
+
+.
+
+Then, applying Lemma 3.3 with, for all k ∈ N:
+
+uk = W2(J0 
+
+> k,τ
+
+(μ0), J αk,τ (μ0)) , ak+1 = Rk(τ )1 + λτ and bk+1 =
+
+s
+
+˜Rk(α, τ )1 + λτ ,
+
+we obtain for all n ∈ N∗:
+
+(1 + λτ )nW2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+vuutn−1X
+
+> k=0
+
+(1 + λτ )2k Rk(τ )1 + λτ +
+
+> n−1
+
+X
+
+> k=0
+
+(1 + λτ )k
+
+s
+
+˜Rk(α, τ )1 + λτ . (3.7) From now on, we fix n ∈ N. Using the Cauchy-Schwartz inequality, we deduce the following bound: 
+
+(1 + λτ )nW2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+vuutn−1X
+
+> k=0
+
+(1 + λτ )2k Rk(τ )1 + λτ +
+
+vuut 11 + λτ 
+
+> n−1
+
+X
+
+> k=0
+
+(1 + λτ )2kn−1X
+
+> k=0
+
+˜Rk(α, τ ).
+
+(3.8) From now on, we will treat the cases λ = 0 and λ̸ = 0 separately. 
+
+Case λ = 0 . In this case, equation (3.8) rewrites as: 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+vuutn−1X
+
+> k=0
+
+Rk(τ ) + 
+
+vuutn
+
+> n−1
+
+X
+
+> k=0
+
+˜Rk(α, τ ),
+
+where, by definitions of Rk(τ ) and ˜Rk(α, τ ) in equations (3.2) and (3.4), 
+
+> n−1
+
+X
+
+> k=0
+
+Rk(τ ) = 2 τ (F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) and 
+
+> n−1
+
+X
+
+> k=0
+
+˜Rk(α, τ ) = ατ  H(μ0) − H(Jαn,τ (μ0)) + Knτ  .
+
+Finally, 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+q
+
+2τ (F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) + 
+
+q
+
+nτ α  H(μ0) − H(Jαn,τ (μ0)) + Knτ ,
+
+which is the desired bound when λ = 0 .
+
+Case λ̸ = 0 . Using that for all k ≤ n − 1,
+
+(1 + λτ )2k ≤ max {1, (1 + λτ )2( n−1) } and 
+
+> n−1
+
+X
+
+> k=0
+
+(1 + λτ )2k = (1 + λτ )2n − 12λτ (1 + λτ  
+
+> 2
+
+) ,
+
+it follows: 
+
+(1 + λτ )nW2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) 
+
+≤
+
+s
+
+max {1, (1 + λτ )2( n−1) }
+
+1 + λτ 
+
+vuutn−1X
+
+> k=0
+
+Rk(τ ) + 
+
+r (1 + λτ )2n − 12λτ 
+
+vuutn−1X
+
+> k=0
+
+˜Rk(α, τ )(1 + λτ )(1 + λτ  
+
+> 2
+
+) ,
+
+where the following still holds true: 
+
+> n−1
+
+X
+
+> k=0
+
+Rk(τ ) = 2 τ (F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) and 
+
+> n−1
+
+X
+
+> k=0
+
+˜Rk(α, τ ) = ατ  H(μ0) − H(Jαn,τ (μ0)) + Knτ  .
+
+Finally, 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤
+
+s
+
+2 max {(1 + λτ )−2n+2 , 1}
+
+(1 + λτ )3
+
+√τ
+
+q
+
+F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) +
+
+r 1 − (1 + λτ )−2n
+
+2λ
+
+s
+
+α  H(μ0) − H(Jαn,τ (μ0)) + Knτ 
+
+(1 + λτ )  1 + λτ 
+
+> 2
+
+ .28 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Now, observe the following identity: 
+
+max {(1 + λτ )−2n+2 , 1} = (1 − λ−τ )−2n+2 .
+
+Second, if τ < 12λ− , then we have: 
+
+(1 − λ−τ )2 ≤ 1 and 11 + λτ ≤ 1 + 4 λ−τ. 
+
+Finally, the Mean value theorem provides: 
+
+1
+
+q
+
+(1 + λτ )(1 + λτ  
+
+> 2
+
+)
+
+≤ 1 + 3 λ−τ. 
+
+So we obtain: 
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤ √2(1 + 4 λ−τ ) 32 (1 − λ−τ )−n√τ
+
+q
+
+(F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) + (1 + 3 λ−τ )
+
+r 1 − (1 + λτ )−2n
+
+2λ
+
+q
+
+α  H(μ0) − H(Jαn,τ (μ0)) + Knτ .
+
+With this, we conclude the proof of the main theorem. 4. Proof of Corollary 1.3.1 
+
+The purpose of this section is to prove Corollary 1.3.1. The main idea is to apply the bound found in Theorem 1.3 and the following convergence rates depending on the value of λ, proved by Ambrosio, Gigli and Savaré in [3, Theorems 4.0.7, 4.0.9 and 4.0.10]: 
+
+(i) If λ = 0 . For all t > 0, we have for all n ∈ N∗:
+
+W 22
+
+
+
+ρ0(t), J 0
+
+> n,t/n
+
+(μ0)
+
+
+
+≤ tn
+
+
+
+F(μ0) − F (J0
+
+> t/n
+
+(μ0)) 
+
+
+
+.
+
+(ii) If λ < 0. For all t > 0, we have for all n ∈ N∗ such that τ = t/n < (−λ)−1 (or equivalently n > |λ|t): 
+
+W 22
+
+
+
+ρ0(t), J 0
+
+> n,t/n
+
+(μ0)
+
+
+
+≤ cn(t) tn
+
+
+
+F(μ0) − inf  
+
+> n′>−λt
+
+inf  
+
+> k≤n′
+
+F(J0 
+
+> k,t/n ′
+
+(μ0)
+
+
+
+e−2λt ,
+
+where cn(t) := 
+
+
+
+1 + 
+
+q 43 |λ| tn
+
+2
+
+. (4.1) 
+
+(iii) If λ > 0. For all θ > 0, let us define 
+
+λθ := ln  1 + θλ 
+
+θ .
+
+Then for all t > 0, we have for all n ∈ N∗:
+
+W 22
+
+
+
+ρ0(t), J 0
+
+> n,t/n
+
+(μ0)
+
+
+
+≤ cn(t) tn
+
+
+
+F(μ0) − inf 
+
+> P2(Rd)
+
+F
+
+
+
+e−2λt/n t,
+
+where cn(t) :=  1 + λ tn
+
+ 
+
+1 + √2λt 
+
+4
+
+.
+
+Remark 4.1 . In fact, in [3], when λ < 0, the estimate (4.1) is written with inf F in place of 
+
+inf  
+
+> n′>−λt
+
+inf  
+
+> k≤n′
+
+F(J0 
+
+> k,t/n ′
+
+(μ0)) .
+
+This could be a problem since when λ ≤ 0, F is not necessarily below bounded. But for a given t ≥ 0,let us call 
+
+Mt := inf  
+
+> n>λ −t
+
+inf  
+
+> k≤n
+
+F(J0
+
+> k,t/n
+
+(μ0)) .
+
+Using iteratively Proposition B.1 from the appendix, it appears that replacing the functional F by 
+
+FMt := max {F , M t} does not affect the points (J0
+
+> k,t/n
+
+(μ0)) 0≤k≤n reached by the JKO scheme up to step 
+
+k = n. Letting n tend to +∞, ρ0(t) is therefore the evaluation at time t of the gradient flow of both functionals F and FMt starting from μ0, and our bound (4.1) follows from using FMt instead of F in the right hand side. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 29 
+
+By comparing the bound that we want to prove in Corollary 1.3.1 with the bounds obtained in Theorem 1.3 and the bounds just stated, we can see that we only need to derive estimates to show that the following quantities: 
+
+F(μ0) − F (J0
+
+> k,t/n
+
+(μ0)) and H(μ0) − H(Jαn,t/n (μ0)) 
+
+do not tend to +∞ as n → +∞. This is the purpose of the two next propositions, which easily imply Corollary 1.3.1. 
+
+Proposition 4.2. Let F be λ-convex along generalized geodesics and W2-l.s.c. Let μ0 ∈ P 2(Rd) be absolutely continuous and such that F(μ0) < +∞. There exists c only depending on μ0 and F, such that for all t > 0, all n > 4λ−t, and all k ≤ n,
+
+• if λ = 0 ,
+
+F(μ0) − F (J0
+
+> k,t/n
+
+(μ0)) ≤ c
+
+
+
+1 + kn t
+
+
+
+,
+
+• if λ < 0,
+
+F(μ0) − F (J0
+
+> k,t/n
+
+(μ0)) ≤ c
+
+ nn + 2 λt 
+
+k
+
+,
+
+• if λ > 0,
+
+F(μ0) − F (J0
+
+> k,t/n
+
+(μ0)) ≤ c. 
+
+Proposition 4.3. Let F satisfy Hypothesis 1.1. Let μ0 be such that F(μ0) < +∞ and H(μ0) < +∞.Then for all α0 > 0, there exists C only depending on d, μ 0, F, α 0, K such that for every t > 0, α ≤ α0
+
+and n > 16 λ−t,
+
+• if λ = 0 ,
+
+H(μ0) − H(Jαn,t/n (μ0)) ≤ C(1 + ln( t)) ,
+
+• if λ < 0,
+
+H(μ0) − H(Jαn,t/n (μ0)) ≤ C(1 + t),
+
+• if λ > 0,
+
+H(μ0) − H(Jαn,t/n (μ0)) ≤ C. 
+
+We will now prove these propositions. Both of them can be deduced from an upper bound on the Wasserstein distances along our schemes. Firstly, we prove Proposition 4.2. The starting point is the following proposition, which relates an upper bound on the Wasserstein distance to a lower bound on F. In the Hilbertian framework developed in Subsection 2.5.1, this proposition follows from the λ-convexity of F along generalized geodesics and the Hahn-Banach theorem applied in L2, and we decided to skip the proof. 
+
+Proposition 4.4. Let F be λ-convex along generalized geodesics and W2-l.s.c, and let μ0 ∈ P 2(Rd)
+
+be such that F(μ0) < +∞. Then there exist c0, c 1 > 0 depending only on μ0 and F such that for all 
+
+ρ ∈ P 2(Rd),
+
+F(ρ) ≥ F (μ0) − c0 − c1W2(ρ, μ 0) + λ
+
+2 W 22 (ρ, μ 0).
+
+We will show Proposition 4.2 by using the discrete E.V.I of Theorem 2.23, Proposition 3.3 and the previous Proposition 4.4. 
+
+Proof of Proposition 4.2. The case λ > 0 is a direct consequence of Proposition 4.4. In the following we are assuming λ ≤ 0.For now, consider any 0 < τ < 14λ− and any k ∈ N. (Ultimately, we will obviously choose τ = tn and 
+
+k ≤ n, but this is not necessary for the following and will simplify the notation). Applying the discrete E.V.I of Theorem 2.23 to ρ = μ0 and μ = J0 
+
+> k,τ
+
+(μ0) provides, forgetting the nonnegative term W 22 (Jk,τ (μ0), J k+1 ,τ (μ0)) :
+
+12τ
+
+ W 22
+
+ μ0, J 0 
+
+> k+1 ,τ
+
+(μ0) − W 22 (μ0, J 0 
+
+> k,τ
+
+(μ0) ≤ F (μ0) − F (J0 
+
+> k+1 ,τ
+
+(μ0)) − λ
+
+2 W 22 (μ0, J 0 
+
+> k+1 ,τ
+
+(μ0)) .
+
+Proposition 4.4 gives: 
+
+12τ
+
+ W 22
+
+ μ0, J 0 
+
+> k+1 ,τ
+
+(μ0) − W 22 (μ0, J 0 
+
+> k,τ
+
+(μ0) ≤ c0 + c1W2(μ0, J 0 
+
+> k+1 ,τ
+
+(μ0)) − λW 22 (μ0, J 0 
+
+> k+1 ,τ
+
+(μ0)) .
+
+Then, rearranging the terms, 
+
+(1 + 2 λτ )W 22 (μ0, J 0 
+
+> k+1 ,τ
+
+(μ0)) − 2τ c 1W2(μ0, J 0 
+
+> k+1 ,τ
+
+(μ0)) −  2τ c 0 + W 22 (μ0, J 0 
+
+> k,τ
+
+(μ0) ≤ 0.30 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Letting uk = W2(μ0,J 0  
+
+> k,τ (μ0)) max {√c0,c 1}
+
+, then 
+
+(1 + 2 λτ )u2 
+
+> k
+
+− 2τ u k −  2τ + u2
+
+> k−1
+
+ ≤ 0.
+
+Remind that we chose τ small enough to obtain 1 + 2 λτ > 12 > 0, which implies that uk is between the two square roots of the polynomial: (1 + 2 λτ )X2 − 2τ X − (2 τ + uk−1). It follows: 
+
+uk+1 ≤ τ
+
+1 + 2 λτ +
+
+s
+
+τ 2
+
+(1 + 2 λτ )2 + 2τ
+
+1 + 2 λτ + u2
+
+> k
+
+1 + 2 λτ .
+
+Since, 1 + 2 λτ > 0, we can replace in Proposition 3.3, 1 + λτ by √1 + 2 λτ , and obtain for all k ∈ N,
+
+uk
+
+√1 + 2 λτ k ≤
+
+vuut kX
+
+> i=1
+
+(1 + 2 λτ )i
+
+ τ 2
+
+(1 + 2 λτ )2 + 2τ
+
+1 + 2 λτ 
+
+
+
++ τ
+
+1 + 2 λτ 
+
+> k
+
+X
+
+> i=1
+
+√1 + 2 λτ i.
+
+Dividing by √1 + 2 λτ k and making the change of variable i = k − i in the sums, we obtain: 
+
+uk ≤
+
+vuutk−1X
+
+> i=0
+
+(1 + 2 λτ )−i
+
+ τ 2
+
+(1 + 2 λτ )2 + 2τ
+
+1 + 2 λτ 
+
+
+
++ τ
+
+1 + 2 λτ 
+
+> k−1
+
+X
+
+> i=0
+
+√1 + 2 λτ −i. (4.2) In order to continue the discussion, we need to distinguish the case λ < 0 and λ = 0 .
+
+Case λ < 0. Computing the geometric sums leads to 
+
+uk ≤
+
+vuut 1
+
+−2λ
+
+" 11 + 2 λτ 
+
+k
+
+− 1
+
+#r τ
+
+1 + 2 λτ + 2 + 
+
+" 1
+
+√1 + 2 λτ 
+
+k
+
+− 1
+
+#
+
+τ
+
+√1 + 2 λτ − (1 + 2 λτ ) .
+
+Using that 1 + 2 λτ > 12 and forgetting the −1, we obtain: 
+
+uk ≤
+
+s 11 + 2 λτ 
+
+k s
+
+1 + τ
+
+|λ| + τ
+
+√1 + 2 λτ (1 − √1 + 2 λτ )
+
+!
+
+.
+
+But for every x ∈ [− 12 , 0] , 1 − √1 + x ≥ 1√6 |x|, so that 
+
+uk ≤
+
+s 11 + 2 λτ 
+
+k s
+
+1 + τ
+
+|λ| +
+
+√3
+
+|λ|
+
+!
+
+.
+
+Thus, W 22 (μ0, J 0 
+
+> n,τ
+
+(μ0)) ≤ C
+
+ 11+2 λτ 
+
+k
+
+where C depends only on F and μ0. Using Proposition 4.4, we obtain that: 
+
+F(μ0) − F (J0 
+
+> k,τ
+
+(μ0)) ≤ c0 + c1W2(μ0, J 0 
+
+> k,τ
+
+(μ0)) − λ
+
+2 W 22 (μ0, J 0 
+
+> k,τ
+
+(μ0)) .
+
+As c1W2(μ0, J 0 
+
+> k,τ
+
+(μ0)) ≤ c21 
+
+> 2
+
++ 12 W 22 (μ0, J 0 
+
+> k,τ
+
+(μ0)) and 1 ≤
+
+ 11+2 λτ 
+
+k
+
+, there exists a real number still called 
+
+C depending only on μ0 and F, such that: 
+
+F(μ0) − F (J0 
+
+> k,τ
+
+(μ0)) ≤ C
+
+ 11 + 2 λτ 
+
+k
+
+.
+
+Taking τ = tn , we conclude the lemma for λ < 0.
+
+Case λ = 0 . This time, equation (4.2) leads to 
+
+uk ≤ pkτ 2 + 2 kτ + kτ ≤ √2kτ + 2 kτ. 
+
+Thus, there exists C only depending on μ0 and F such that 
+
+W2(μ0, J 0 
+
+> k,τ
+
+(μ0)) ≤ C(√kτ + kτ ).
+
+Using Proposition 4.4, we obtain that: 
+
+F(μ0) − F (J0 
+
+> k,τ
+
+(μ0)) ≤ c0 + c1W2(μ0, J 0 
+
+> k,τ
+
+(μ0)) .
+
+It follows that there exists a real number still called C, depending only on μ0 and F, such that: 
+
+F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) ≤ C(1 + nτ ).
+
+We conclude the proof of the proposition by taking τ = tn . □A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 31 
+
+The next step is to prove Proposition 4.3 by obtaining a lower bound on H along the entropic JKO scheme. In view of Proposition 2.9 and of the following observation, holding for all μ, ρ ∈ P 2(Rd):
+
+sZ
+
+|x|2 dρ(x) = W2(ρ, δ 0) ≤ W2(ρ, μ ) + W2(μ, δ 0),
+
+we see that a below bound on the entropy along the entropic JKO scheme is equivalent to an upper bound on the Wasserstein distance between the initial measure and the iterates of the scheme. Such an estimate is proved in Proposition 4.6 below. Unfortunately, we are not aware of an analogue of the discrete E.V.I for the entropic JKO scheme. Therefore, it will not be possible to obtain an upper bound on the Wasserstein distance simply by adapting the previous argument to the entropic JKO scheme. However, we can straightforwardly adapt the argument in [3, lemma 3.2.2] designed to obtain a bound on the Wasserstein distance along the JKO scheme for functionals for which the discrete E.V.I is not available. We will need the following consequence of Proposition 4.4: 
+
+Proposition 4.5. Let F be λ-convex along generalized geodesics, W2-l.s.c, and μ0 be such that F(μ0)
+
+and H(μ0) are finite. 
+
+• If λ < 0, for all α0 ∈ R+, there exists c2 > 0 only depending only on μ0, F, α 0, d such that for all 
+
+α ≤ α0 and ρ ∈ P 2(Rd),
+
+F(ρ) + α
+
+2 H(ρ) ≥ F (μ0) + α
+
+2 H(μ0) − c2 + λW 22 (ρ, μ 0).
+
+• If λ = 0 , there exists c2, c 3 > 0 only depending on μ0, F, α 0, d such that for all α ≤ α0 and 
+
+ρ ∈ P 2(Rd),
+
+F(ρ) + α
+
+2 H(ρ) ≥ F (μ0) + α
+
+2 H(μ0) − c2 − c3W2(ρ, μ 0).
+
+Proof. Let ρ ∈ P 2(Rd), then because of Proposition 4.4, there exist c0, c 1 depending only on μ0, F such that for all ρ ∈ P 2(Rd),
+
+F(ρ) ≥ F (μ0) − c0 − c1W2(ρ, μ 0) + λ
+
+2 W 22 (ρ, μ 0).
+
+Also, because of Proposition 4.4 applied to H, there exist ˜c0, ˜c1 depending only on μ0, d such that for all 
+
+ρ ∈ P 2(Rd),
+
+H(ρ) ≥ H(μ0) − ˜c0 − ˜c1W2(ρ, μ 0).
+
+Combining these two inequalities, we obtain that 
+
+F(ρ) + α
+
+2 H(ρ) ≥ F (μ0) + α
+
+2 H(μ0) −
+
+
+
+c0 + α
+
+2 ˜c0
+
+
+
+−
+
+
+
+c1 + α
+
+2 ˜c1
+
+
+
+W2(ρ, μ 0) + λ
+
+2 W 22 (ρ, μ 0).
+
+If λ = 0 , there is nothing more to show. If λ < 0, the inequality 
+
+
+
+c1 + α
+
+2 ˜c1
+
+
+
+W2(ρ, μ 0) ≤ 1
+
+−2λ
+
+
+
+c1 + α
+
+2 ˜c1
+
+2
+
+− λ
+
+2 W 22 (ρ, μ 0)
+
+concludes the proof. □
+
+Now, we have all the ingredients to obtain a bound on the Wasserstein distance, and so to conclude the proof of Proposition 4.3. 
+
+Proposition 4.6. In the context of Proposition 4.3, for all α0 > 0, there exists c only depending on 
+
+d, μ 0, F, α 0 such that for all t > 0, every n > 16 λ−t and for all α ≤ α0,
+
+• if λ = 0 ,
+
+W 22 (Jαn,t/n (μ0), μ 0) ≤ c
+
+√t + t + Kαt 2
+
+,
+
+• if λ < 0,
+
+W 22 (Jαn,t/n (μ0), μ 0) ≤ c(1 + Kαt )
+
+ nn − 8|λ|t
+
+n
+
+,
+
+• if λ > 0,
+
+W 22 (Jαn,t/n (μ0), μ 0) ≤ c. 32 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Proof. Consider any 0 < τ < 14λ− and any k ∈ N. (Ultimately, we will obviously choose τ = tn and k ≤ n,but this is not necessary for the following and will simplify the notations.) We have for all α > 0,
+
+12 W 22 (Jαk,τ (μ0), μ 0) = 12
+
+> k
+
+X
+
+> i=1
+
+W 22 (Jαi,τ (μ0), μ 0) − W 22 (Jαi−1,τ (μ0), μ 0) ,
+
+while for all 1 ≤ i ≤ k,
+
+12
+
+ W 22 (Jαi,τ (μ0), μ 0) − W 22 (Jαi−1,τ (μ0), μ 0) ≤ W2(Jαi,τ (μ0), J αi−1,τ (μ0)) W2(Jαi,τ (μ0), μ 0).
+
+Indeed, this inequality is trivial if W2(Jαi−1,τ (μ0), μ 0) ≥ W2(Jαi,τ (μ0), μ 0) and otherwise: 
+
+12 (W 22 (Jαi,τ (μ0), μ 0) − W 22 (Jαi−1,τ (μ0), μ 0)) =  W2(Jαi,τ (μ0), μ 0) − W2(Jαi−1,τ (μ0), μ 0)  W2(Jαi,τ (μ0), μ 0) + W2(Jαi−1,τ (μ0), μ 0)2
+
+
+
+≤ W2(Jαi,τ (μ0), J αi−1,τ (μ0)) W2(Jαi,τ (μ0), μ 0).
+
+So we end up with 
+
+12 W 22 (Jαk,τ (μ0), μ 0) ≤
+
+> k
+
+X
+
+> i=1
+
+W2(Jαi,τ (μ0), J αi−1,τ (μ0)) W2(Jαi,τ (μ0), μ 0).
+
+Using the Cauchy-Schwartz inequality, we obtain 
+
+12 W 22 (Jαk,τ (μ0), μ 0) ≤
+
+vuut kX
+
+> i=1
+
+W 22 (Jαi,τ (μ0), J αi−1,τ (μ0)) 
+
+vuut kX
+
+> i=1
+
+W 22 (Jαi,τ (μ0), μ 0). (4.3) Moreover, using Proposition 2.13, for all i = 1 . . . , k ,
+
+W 22 (Jαi,τ (μ0), J αi−1,τ (μ0)) ≤ 2τ
+
+ Sch ατ (Jαi,τ (μ0), J αi−1,τ (μ0)) 
+
+τ − α H(Jαi,τ (μ0)) + H(Jαi−1,τ (μ0)) 2
+
+
+
+. (4.4) By definition of Jαi,τ (μ0) in (Ent JKO), testing as a competitor Jαi−1,τ (μ0) ∗ σατ ,
+
+Sch ατ (Jαi,τ (μ0), J αi−1,τ (μ0)) 
+
+τ + F(Jαi−1,τ (μ0)) ≤ Sch( Jαi−1,τ (μ0) ∗ σατ , J αi−1,τ (μ0)) 
+
+τ + F(Jαi−1,τ (μ0) ∗ σατ ).
+
+(4.5) Since F verifies the third point of Hypothesis 1.1, then 
+
+F(Jαi−1,τ (μ0) ∗ σατ ) ≤ F (Jαi−1,τ (μ0)) + K ατ 
+
+2 . (4.6) Finally, as an easy consequence of Proposition 2.12, 
+
+Sch( Jαi−1,τ (μ0) ∗ σατ , J αi−1,τ (μ0)) 
+
+τ ≤ αH (Jαi−1,τ (μ0)) (4.7) Gathering equations (4.4), (4.5), (4.6) and (4.7), we obtain: 
+
+W 22 (Jαi,τ (μ0), J αi−1,τ (μ0)) 
+
+≤ 2τ
+
+
+
+F(Jαi−1,τ (μ0)) − F (Jαi,τ (μ0)) + α
+
+2 H(Jαi−1,τ (μ0)) − α
+
+2 H(Jαi,τ (μ0)) + K α
+
+2 τ
+
+
+
+.
+
+Plugging this into equation (4.3), we obtain: 
+
+12 W 22 (Jαk,τ (μ0), μ 0)
+
+≤
+
+r
+
+2τ
+
+
+
+F(μ0) + α
+
+2 H(μ0) − F (Jαk,τ (μ0)) − α
+
+2 H(Jαk,τ (μ0)) + K α
+
+2 kτ 
+
+vuut kX
+
+> i=1
+
+W 22 (Jαi,τ (μ0), μ 0).
+
+From now on, we will need to distinguish the cases λ = 0 and λ < 0.
+
+Case λ = 0 . Using Proposition 4.5, there exists c2, c 3 only depending on μ0, d, F, α 0 such that for all 
+
+α ≤ α0:
+
+12 W 22 (Jαk,τ (μ0), μ 0) ≤
+
+r
+
+2τ
+
+
+
+c2 + c3W2(Jαk,τ (μ0), μ 0) + K α
+
+2 kτ 
+
+vuut kX
+
+> i=1
+
+W 22 (Jαi,τ (μ0), μ 0).A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 33 
+
+Now, consider the following lemma. 
+
+Lemma 4.6.1. Let τ ∈ R+ Let (wn)n ∈ RN such that, w0 = 0 and for all n ∈ N∗,
+
+w4 
+
+> n
+
+≤ τ (1 + wn)
+
+> n
+
+X
+
+> k=1
+
+w2
+
+> k
+
+!
+
+.
+
+Then for all n ∈ N,
+
+wn ≤ √nτ + nτ. 
+
+Let us show how this lemma allows to conclude, and postpone its proof to the end of the section. Define ˜wk = W2(Jαk,τ (μ0), μ 0), k ∈ N∗. Then, for all k ∈ N∗,
+
+˜w4 
+
+> k
+
+≤ τ (8 c2 + K4αkτ ) + c1 ˜wk)
+
+> k
+
+X
+
+> i=1
+
+˜w2
+
+> i
+
+!
+
+Thus, calling mk = max √8c2 + K4αkτ , c 1 and wk = ˜wk 
+
+> mk
+
+, we get: 
+
+w4 
+
+> k
+
+≤ τ
+
+ 8c2 + K4αkτ m2
+
+> k
+
++ c1
+
+mk
+
+˜wk
+
+mk
+
+ kX
+
+> i=1
+
+˜w2
+
+> i
+
+m2
+
+> k
+
+!
+
+,
+
+and thus, 
+
+w4 
+
+> k
+
+≤ τ
+
+ 8c2 + K4αkτ m2
+
+> k
+
++ c1
+
+mk
+
+wk
+
+ kX
+
+> i=1
+
+w2
+
+> i
+
+!
+
+.
+
+Since 8c2+K4αkτ m2
+
+> k
+
+≤ 1 and c1 
+
+> mk
+
+≤ 1, we obtain 
+
+w4 
+
+> k
+
+≤ τ (1 + wk)
+
+> k
+
+X
+
+> i=1
+
+w2
+
+> i
+
+!
+
+.
+
+Then, applying Lemma 4.6.1 we obtain ˜wk ≤ mk(kτ + √kτ ), which concludes the proposition for λ = 0 .
+
+Case λ < 0.Using Proposition 4.5, there exists a constant c2 only depending on μ0, F, α 0, d such that for all α ≤ α0:
+
+12 W 22 (Jαk,τ (μ0), μ 0) ≤
+
+r
+
+2τ
+
+
+
+c2 − λW 22 (Jαk,τ (μ0), μ 0) + K α
+
+2 kτ 
+
+vuut kX
+
+> i=1
+
+W 22 (Jαi,τ (μ0), μ 0). (4.8) We will use the following lemma, already used in [3]: 
+
+Lemma 4.6.2. Consider a non negative sequence (wn)n∈N∗ and two positive numbers C0, C 1 with C1 < 1,such that for all n ∈ N∗,
+
+w2 
+
+> n
+
+≤ C0 + C1
+
+> n
+
+X
+
+> k=1
+
+w2
+
+> k
+
+.
+
+Then for all n ∈ N∗,
+
+w2 
+
+> n
+
+≤ C0
+
+ 11 − C1
+
+n
+
+.
+
+Once again, we postpone the proof of this lemma to the end of this section. From equation (4.8) and the inequality ab ≤ εa  
+
+> 4τ
+
++ τ b ε , it follows that, 
+
+12 W 22 (Jαn,τ (μ0), μ 0) ≤ ε
+
+2
+
+
+
+c2 + K α
+
+2 kτ − λW 22 (Jαn,τ (μ0), μ 0)
+
+
+
++ τε
+
+> n
+
+X
+
+> k=1
+
+W 22 (Jαk,τ (μ0), μ 0).
+
+Thus 
+
+(1 + ελ )W 22 (Jαn,τ (μ0), μ 0) ≤ ε
+
+
+
+c2 + K α
+
+2 kτ 
+
+
+
++ 2τε
+
+> n
+
+X
+
+> k=1
+
+W 22 (Jαk,τ (μ0), μ 0),
+
+and hence 
+
+W 22 (Jαn,τ (μ0), μ 0) ≤ ε
+
+(1 + ελ )
+
+
+
+c2 + K α
+
+2 kτ 
+
+
+
++ 2τε(1 + ελ )
+
+> n
+
+X
+
+> k=1
+
+W 22 (Jαk,τ (μ0), μ 0).34 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Taking ε = − 12λ = 12|λ| , we obtain that 
+
+W 22 (Jαn,τ (μ0), μ 0) ≤ 1
+
+|λ|
+
+
+
+c2 + K α
+
+2 kτ 
+
+
+
++ 8 |λ|τ
+
+> n
+
+X
+
+> k=1
+
+W 22 (Jαk,τ (μ0), μ 0).
+
+We can then apply the Lemma 4.6.2 and obtain 
+
+W 22 (Jαn,τ (μ0), μ 0) ≤ 1
+
+|λ|
+
+
+
+c2 + K α
+
+2 kτ 
+
+  11 − 8|λ|τ
+
+n
+
+.
+
+Taking τ = tn concludes the proof for λ < 0. □
+
+Along the proof, we used Lemma 4.6.1 and Lemma 4.6.2, that we prove now. 
+
+Proof of Lemma 4.6.1. We do the proof by induction. For n = 0 the result is trivial. We assume now that the result holds for all k ≤ n − 1. Then using the induction hypothesis, we find 
+
+> n−1
+
+X
+
+> k=1
+
+w2 
+
+> k
+
+≤
+
+> n−1
+
+X
+
+> k=1
+
+
+
+kτ + √kτ 
+
+2
+
+≤
+
+> n−1
+
+X
+
+> k=1
+
+ nτ + √nτ 2
+
+≤ (n − 1)( √nτ + nτ )2.
+
+Substituting this into the inductive formula verified by wn, yields to: 
+
+w4 
+
+> n
+
+≤ τ (1+ wn)  w2 
+
+> n
+
++ ( n − 1)( nτ + √nτ )2 = ( n−1) τ (nτ +√nτ )2 +( n−1) τ (nτ +√nτ )2wn +τ w 2 
+
+> n
+
++τ w 3
+
+> n
+
+.
+
+Now, either wn ≤ nτ + √nτ and there is nothing more to show, or 
+
+wn ≤ (n − 1) τ (nτ + √nτ )2 1
+
+w3
+
+> n
+
++ ( n − 1) τ (nτ + √nτ )2 1
+
+w2
+
+> n
+
++ τ 1
+
+wn
+
++ τ
+
+≤ (n − 1) τnτ + √nτ + ( n − 1) τ + τnτ + √nτ + τ
+
+= nτ + nτ nτ + √nτ ≤ nτ + √nτ . 
+
+This shows that wn ≤ nτ + √nτ and concludes the proof. □
+
+Proof of Lemma 4.6.2. Consider the sequence (un)n∈N∗ defined inductively for all n ∈ N∗ by 
+
+(1 − C1)un = C0 + C1
+
+> n−1
+
+X
+
+> k=1
+
+uk.
+
+Then an easy induction shows that for all n ∈ N∗, w2 
+
+> n
+
+≤ un. Moreover, if we let U0 = 0 and for all 
+
+n ∈ N∗, Un = Pnk=1 uk, then for all n ∈ N∗,
+
+Un − Un−1 = un = C0 + C1
+
+> n
+
+X
+
+> k=1
+
+uk = C0 + C1Un.
+
+Solving this iterative scheme yields: 
+
+Un = C0
+
+C1
+
+ 11 − C1
+
+n
+
+− 1
+
+
+
+.
+
+Thus, we can deduce the expression of un
+
+un = Un − Un−1 = C0
+
+ 11 − C1
+
+n
+
+.
+
+This concludes the proof of the lemma. □
+
+5. Optimality in α of the inequalities 
+
+The purpose of this section is to investigate the optimality of the bounds obtained in Theorems 1.3 and 1.4, and to explicit the link between the two. Our main conclusions are: (1) The first inequalities in formulas (1.6) and (1.7) are sharp. At least, there are models for which the inequalities are in fact equalities. A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 35 
+
+(2) Similarly, we will exhibit a model for which one of the inequalities obtained along the proof of Theorem 1.3, that we reproduce at equations (5.7), (5.8) of Theorem 5.6 below, coincides with the first inequalities in (1.6) and (1.7) up to a term going to 0 when τ goes to 0. Remarkably, this implies that the lack of optimality in α of Theorem 1.3 is neither due to our splitting argument (3.1), nor to the suboptimality of the competitor built in the proof of equation (3.5), nor of the use of squared discrete Grönwall lemma, Proposition 3.3. (3) In fact, we expect these two bounds (the first inequalities in equation (1.6) and (1.7) on the one hand, and equations (5.7), (5.8) of Theorem 5.6 on the other hand) to always correspond to each other; letting τ → 0 in equations (5.7), (5.8), we show that we recover formally the first inequalities of equations (1.6) and (1.7) in the general case. Our toy model, set once for all in the whole section, consists in considering the very simple energy, corresponding to a parameter λ ∈ R:
+
+F : ρ ∈ P 2(Rd) →
+
+Z
+
+V dρ, V : x ∈ Rd → λ |x|2
+
+2 . (5.1) Note that this choice of F fulfills points (2) and (3) of Hypothesis 1.1 with the same value of λ and 
+
+K = λd .With this choice of F and centered gaussian initial conditions, we observe that the iterates of the JKO and entropic JKO schemes, as well as the solution of equations (1.2) and (1.3), which rewrite in this case 
+
+∂tρ − div( ρ∇V ) = 0 and ∂tρ − div( ρ∇V ) = α
+
+2 ∆ρ (5.2) respectively, remain centered gaussian. Furthermore, the variance of these Gaussians can be computed explicitly in each case, enabling us to prove our claims. In the next subsection, we state the evolution of the variance of the Gaussian solutions along the JKO and entropic JKO schemes, and of the corresponding limiting PDEs (5.2). In Subsection 5.2, we prove the optimality of the first inequality in equation (1.6) and (1.7). In Subsection 5.3, we prove that, in our gaussian settings, equations (5.7), (5.8) of Theorem 5.6 converge to the first inequality in equation (1.6) and (1.7). We conclude this section with Subsection 5.4, where we remark that this convergence is in fact formally expected in general. 5.1. Preliminaries. In the computations to come, we will need a more convenient notation for the variance of our gaussian. So let us replace the term σt in this section with the following definition. 
+
+Definition 5.1. We note for all s ∈ Rd, identifying a measure with its density with respect to the Lebesgue measure: 
+
+N (s) := 1
+
+√2πs d e− |x|22s = σs. (5.3) The following quantities of interest are easy to compute. 
+
+Proposition 5.2. Let s, u ∈ R∗ 
+
+> +
+
+with s ≥ u, ρ = N (s) and μ = N (u). We have 
+
+Z
+
+> Rd
+
+|∇ ln( ρ)|2 dρ = ds , (5.4) 
+
+W2(ρ, μ ) = √d  √s − √u , (5.5) 
+
+H(ρ) = − d
+
+2
+
+
+
+1 + ln(2 πs )
+
+
+
+. (5.6) 
+
+Proof. First formula. If ρ = N (s), then in in view of (5.3) ln( ρ) = − |x|2 
+
+> 2s
+
+− d 
+
+> 2
+
+ln(2 πs ) and ∇ ln( ρ) = − xs .Then, the Fisher information satisfies: 
+
+Z
+
+|∇ ln( ρ)|2 dρ =
+
+Z
+
+> Rd
+
+|x|2
+
+s2 dρ = ds s2 = ds .
+
+Second formula. Consider T : x 7 → p us x. Then T #ρ = μ and T is the gradient of the convex function 
+
+x 7 → p us 
+
+> |x|2
+> 2
+
+. Thus T is the Brenier map, see Subsection 2.1. Therefore, the Wasserstein distance is equal to: 
+
+W2(ρ, μ )2 =
+
+Z
+
+|x − T (x)|2 dρ(x) = 
+
+Z
+
+x −
+
+r us x
+
+> 2
+
+dρ =
+
+
+
+1 −
+
+r us
+
+2 Z
+
+|x|2 dρ
+
+=
+
+
+
+1 −
+
+r us
+
+2
+
+ds = d  √s − √u2 .36 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Third formula. Once again ln( ρ) = − d 
+
+> 2
+
+ln(2 πs ) − |x|2 
+
+> 2s
+
+. Therefore: 
+
+H(ρ) = 
+
+Z 
+
+− d
+
+2 ln(2 πs ) − |x|2
+
+2s
+
+
+
+dρ(x) = − d
+
+2 ln(2 πs ) − sd 
+
+2s ,
+
+as anounced. □
+
+As mentioned previously, it is possible to compute the solution of the PDEs and of the different schemes explicitly in this setting. In the case of the PDEs, the formulas write as follows. 
+
+Proposition 5.3. Let a ≥ 0, μ0 = N (a) and α > 0. The solutions ρ0 and ρα of equation (5.2) starting from μ0, satisfy for all t ≥ 0:
+
+ρ0(t) = 
+
+(N (a) , if λ = 0 ,
+
+N  ae −2λt  , if λ̸ = 0 , and ρα(t) = 
+
+
+
+N (a + αt ) , if λ = 0 ,
+
+N
+
+
+
+ae −2λt + α 1 − e−2λt 
+
+2λ
+
+
+
+, if λ̸ = 0 .
+
+We omit the proof of this proposition which only consists in plugging the different formulas into the PDEs (5.2). The iterates of each schemes can also be computed, thanks to the following proposition. 
+
+Proposition 5.4. Let a ≥ 0, μ = N (a), τ < 1 
+
+> λ−
+
+and α > 0. Then, we have 
+
+J0 
+
+> τ
+
+(μ) = 
+
+
+
+N (a) , if λ = 0 ,
+
+N
+
+ a
+
+(1 + λτ )2
+
+
+
+, if λ̸ = 0 , and Jατ (μ) = 
+
+
+
+N (a + ατ ) , if λ = 0 ,
+
+N
+
+ a
+
+(1 + λτ )2 + ατ 
+
+1 + λτ 
+
+
+
+, if λ̸ = 0 .
+
+Consequently, the iterates satisfy for all k ∈ N:
+
+J0 
+
+> k,τ
+
+(μ) = 
+
+
+
+N (a) , if λ = 0 ,
+
+N
+
+ a
+
+(1 + λτ )2k
+
+
+
+, if λ̸ = 0 ,Jαk,τ (μ) = 
+
+
+
+N (a + kατ ) , if λ = 0 ,
+
+N
+
+ a
+
+(1 + λτ )2k + αλ
+
+
+
+1 − 1(1 + λτ )2k
+
+ 1 + λτ 
+
+2 + λτ 
+
+
+
+, if λ̸ = 0 .
+
+The formulas for the iterative scheme can easily be deduced from those obtained for one step. Therefore, we only prove the two first formulas. 
+
+Proof. First, we show the formula for the JKO scheme. We have: 
+
+inf 
+
+> ρ∈P 2(Rd)
+
+W 22 (μ, ρ )2τ + λ
+
+Z |x|2
+
+2 dρ = inf 
+
+> γ∈P 2(Rd×Rd)
+> π1# γ=μ
+
+Z |x − y|2 + λτ |y|2
+
+2τ dγ(x, y )
+
+≥
+
+Z
+
+inf 
+
+> z∈Rd
+
+|x − z|2 + λτ |z|2
+
+2τ dμ(x).
+
+Since for all x ∈ Rd, arg min z  
+
+> |x−z|2+λτ |z|2
+> 2τ
+
+= x 
+
+> 1+ λτ
+
+, the last inequality is an equality if and only if for γ
+
+almost every (x, y ), there holds y = x 
+
+> 1+ λτ
+
+. Therefore, the only minimizer on the right-hand side of the first line is γ = ( Id, 11+ λτ Id)#μ . In particular, J0 
+
+> τ
+
+(μ) = 11+ λτ Id#μ, and so J0 
+
+> τ
+
+(μ) = N
+
+ a 
+
+> (1+ λτ )2
+
+
+
+.Now, we prove the formula for the entropic JKO scheme. Here as well, Jατ (μ) is the second marginal of the minimizer of a minimization problem (see Definition 2.11), which is: 
+
+inf 
+
+> γ∈P 2(Rd×Rd)
+> π1# γ=μ
+
+αH (γ∥Rατ ) + λ
+
+2
+
+Z
+
+|y|2 dγ(x, y ).
+
+Using the additivity of the entropy, (see Proposition 2.10, slightly adapted to the case when R is not a probability measure), for each γ ∈ P 2(Rd × Rd) of first marginal μ, calling (νx)x the family, well defined for μ almost every x, obtained by disintegrating γ with respect to the first projection, we find: 
+
+αH (γ∥Rατ ) + λ
+
+2
+
+Z
+
+|y|2 dγ(x, y ) = αH (μ) + 
+
+Z 
+
+H(νx∥Rxατ ) + 
+
+Z λ
+
+2 |y|2 dνx(y)
+
+
+
+dμ(x)
+
+≥ αH (μ) + 
+
+Z
+
+inf 
+
+> ρ∈P 2(Rd)
+
+
+
+H(ρ∥Rxατ ) + 
+
+Z λ
+
+2 |y|2 dρ(y)
+
+
+
+dμ(x)A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 37 
+
+where for all x, y ∈ Rd, Rxατ (y) = 1  
+
+> √2πατ d
+
+exp 
+
+
+
+− |x−y|2
+
+> 2ατ
+
+
+
+. Let x ∈ Rd, then 
+
+αH (ρ∥Rxατ ) + λ
+
+2
+
+Z
+
+|y|2 dρ = α
+
+Z
+
+ln ρe−λ |y|22α Rxατ 
+
+!
+
+dρ. 
+
+By the Jensen inequality, this quantity is minimized for ρ =: ρx of the form 
+
+ρx(y) = 1
+
+Zx exp 
+
+
+
+−λ |y|2
+
+2α
+
+
+
+Rxατ (y) = 1
+
+Zx exp 
+
+−
+
+(1 + λτ ) y − x
+
+> 1+ λτ
+> 2
+
+2ατ 
+
+ , y ∈ Rd,
+
+where Zx is a normalizing constant allowed to change in each equality, and where we used the identity 
+
+|x−y|2 +λτ |y|2 = (1+ λτ ) y − x
+
+> 1+ λτ
+> 2
+
++ λτ  
+
+> 1+ λτ
+
+|x|2, holding for all x, y ∈ Rd. Note that in the last identity, 
+
+Zx is in fact independent of x.Thus, γ is a minimizer if and only if for μ almost every x, νx = ρx. In particular, Jατ (μ) = R ρx dμ(x).But for all y ∈ Rd,
+
+Jατ (μ)( y) = 1
+
+Z
+
+Z
+
+exp 
+
+−
+
+(1 + λτ ) y − x
+
+> 1+ λτ
+> 2
+
+2ατ 
+
+ exp 
+
+
+
+− |x|2
+
+2a
+
+
+
+dx, 
+
+where Z is a normalizing constant allowed to change in the following computations. Since for all x, y ∈ Rd,
+
+a(1 + λτ ) y − x
+
+1 + λτ 
+
+> 2
+
++ ατ |x|2 =
+
+ a
+
+1 + λτ + ατ 
+
+
+
+x − a(1 + λτ )
+
+a + (1 + λτ )ατ y
+
+> 2
+
++ a(1 + λτ )2ατ a + (1 + λτ )ατ |y|2,
+
+we find 
+
+Jατ (μ)( y) = 1
+
+Z
+
+Z
+
+exp 
+
+− ( a 
+
+> 1+ λτ
+
++ ατ )|x − a(1+ λτ )  
+
+> a+(1+ λτ )ατ
+
+y|2
+
+2ατ a 
+
+ dx × exp 
+
+
+
+− (1 + λτ )2
+
+2( a + (1 + λτ )ατ ) |y|2
+
+
+
+.
+
+The integral in this last formula is independent of y, and hence: 
+
+Jατ (μ)( y) = 1
+
+Z exp 
+
+
+
+− (1 + λτ )2
+
+2( a + (1 + λτ )ατ ) |y|2
+
+
+
+.
+
+That is, Jατ (μ) = N
+
+ a  
+
+> (1+ λτ )2
+
++ ατ 
+
+> 1+ λτ
+
+
+
+, as announced. □
+
+5.2. Optimality in α at the continuous level. The purpose of this subsection is to compare the solutions of the two continuous equations (5.2), when V is defined as in (5.1) for some λ ∈ R and α > 0,starting from the same initial measure μ0 = N (a), where a > 0.
+
+Proposition 5.5. Let μ0 = N (a) and ρ0, ρ α be the associated solutions of (5.2) given by Proposition 5.3. We have for all t ≥ 0:
+
+W2(ρ0(t), ρ α(t)) = α
+
+2
+
+Z t
+
+> 0
+
+eλ(s−t)
+
+sZ
+
+|∇ ln( ραs )|2dραs ds. 
+
+Proof. Let us compute both sides of this equality explicitly, treating the case λ = 0 and λ̸ = 0 separately. 
+
+Case λ = 0 . For all s ≥ 0, using Proposition 5.3 and equation (5.4) of Proposition 5.2, we obtain 
+
+sZ
+
+|∇ ln( ραs )|2 dραs =
+
+√d
+
+√a + αs ,
+
+and hence for all t ≥ 0
+
+α
+
+2
+
+Z t
+
+> 0
+
+sZ
+
+|∇ ln( ραs )|2 dραs ds =
+
+√dα 
+
+2
+
+Z t
+
+> 0
+
+1
+
+√a + αs ds = √d  √a + αt − √a .
+
+Using Proposition 5.3 and equation (5.5) of Proposition 5.2, for all t ≥ 0, we observe that this quantity coincides with the Wasserstein distance between the solutions W2(ραt , ρ 0 
+
+> t
+
+), as anounced. 
+
+Case λ̸ = 0 . This time, for all s ≥ 0, we find 
+
+sZ
+
+|∇ ln( ραs )|2 dραs =
+
+√d
+
+q
+
+ae −2λs + α 1−e−2λs 
+
+> 2λ
+
+.38 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Thus, for all t ≥ 0, we have: 
+
+J(t) := 
+
+Z t
+
+> 0
+
+eλs 
+
+sZ
+
+|∇ ln( ραs )|2 dραs ds = √d
+
+Z t
+
+> 0
+
+eλs 
+
+q
+
+ae −2λs + α 1−e−2λs 
+
+> 2λ
+
+ds. 
+
+As λ̸ = 0 , changing the variables according to u = eλs leads to 
+
+J(t) = 
+
+√dλ
+
+Z eλt 
+
+> 1
+
+du
+
+q
+
+au −2 + α 1−u−2
+
+> 2λ
+
+=
+
+√dλ
+
+Z eλt 
+
+> 1
+
+u du
+
+q
+
+a + α u2−12λ
+
+.
+
+Changing once again the variables according to w = a + α u2−12λ , we end up with 
+
+J(t) = 
+
+√dα
+
+Z a+α e2λt −12λ
+
+> a
+
+dw
+
+√w = 2√dα
+
+r
+
+a + α e2λt − 12λ − √a
+
+!
+
+.
+
+All in all, 
+
+α
+
+2
+
+Z t
+
+> 0
+
+eλ(s−t)
+
+sZ
+
+|∇ ln( ραs )|2dραs ds = e−λt J(t) = √d
+
+r
+
+ae −2λt + α 1 − e−2λt 
+
+2λ − √ae −2λt 
+
+!
+
+.
+
+Once again, using Proposition 5.3 and equation (5.5) of Proposition 5.2, we observe that this quantity coincides with the Wasserstein distance W2(ραt , ρ 0 
+
+> t
+
+) between the solutions at time t ≥ 0, and the result follows. □
+
+5.3. Optimality in α at the discrete level. When proving Theorem 1.3, we always neglected the Fisher information term of Proposition 2.13. If we keep this term, if we do not use the third point of Hypothesis 1.1 and finally if we apply the Cauchy-Schwartz inequality in the estimate corresponding to (3.7) only to the term which does not depend on α, we obtain the following refinement of estimate (3.8). 
+
+Theorem 5.6 (A more precise bound) . Let F satisfy Hypothesis 1.1. Let μ0 ∈ P 2(Rd) be such that 
+
+F(μ0) < +∞ and H(μ0) < +∞. Let n ≥ 0 and τ < 1 
+
+> λ−
+
+. Then for all k ∈ N, the iterates J0 
+
+> k,τ
+
+(μ0) and 
+
+Jαk,τ (μ0) are well defined and satisfy: 
+
+• if λ = 0 ,
+
+W2
+
+ J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0) ≤
+
+q
+
+2τ  F(μ0) − F (J0 
+
+> n,τ
+
+(μ0))  +
+
+> n−1
+
+X
+
+> k=0
+
+√τ pRk(α, τ ), (5.7) 
+
+• if λ̸ = 0 and τ ≤ 12λ− ,
+
+W2(J0 
+
+> n,τ
+
+(μ0), J αn,τ (μ0)) ≤ √2(1 + 4 λ−τ ) 32 (1 − λ−τ )−n√τ
+
+q
+
+F(μ0) − F (J0 
+
+> n,τ
+
+(μ0)) +
+
+> n−1
+
+X
+
+> k=0
+
+(1 + λτ )k−n √τ
+
+r Rk(α, τ )1 + λτ , (5.8) 
+
+where in both cases, 
+
+Rk(α, τ ) = 2 F(J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ ) − 2F(J0 
+
+> τ
+
+(Jαk,τ (μ0))) + αH(Jαk,τ (μ0)) − H(Jαk+1 ,τ (μ0))  − α2
+
+4
+
+Z τ
+
+> 0
+
+Z
+
+|∇ ln(¯ ρατ (t)) |2 d¯ ρατ (t)d t, (5.9) 
+
+and ¯ρατ is the curve whose position at time kτ is Jαk,τ (μ0) for all k ∈ N, and interpolating between these timesteps along the solutions of the dynamic Schrödinger problem, defined in Definition 2.12. 
+
+The main result of this subsection asserts that inequalities (5.7) and (5.8) are optimal in the following sense: in our toy model where F is given by (5.1), inequalities (5.7) and (5.8) are equalities up to a term converging to 0 as τ to 0.From now on, we assume that F is given by (5.1), and we fix a value of α > 0. We recall that for this F, as soon as τ < 1/λ −, both schemes are well defined, and F satisfies the second and third point of Hypothesis 1.1. In particular, this model falls in the framework of Theorem 5.6, with the same value of λ and K = λd . The case where λ = 0 is trivial since the JKO scheme is stationary and the entropic JKO scheme follows the heat flow, so we focus on the case λ̸ = 0 . Our main result is: A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 39 
+
+Theorem 5.7. Let μ0 = N (a). For all n ∈ N and t ≥ 0, we have 
+
+W2(J0
+
+> n,t/n
+
+(μ0), J αn,t/n (μ0)) = 
+
+> n−1
+
+X
+
+> k=0
+
+
+
+1 + λ tn
+
+k−n r tn
+
+s
+
+Rk(α, tn )1 + λ tn
+
++ o
+
+> n→+∞
+
+(1) .
+
+Proof. Our proof relies on the previous section. First, comparing Propositions 5.3 and 5.4, we have for all t ≥ 0 (fixed for the whole proof) 
+
+lim  
+
+> n→+∞
+
+W2(J0
+
+> n,t/n
+
+(μ0), J αn,t/n (μ0)) = W2(ρ0(t), ρ α(t)) .
+
+Therefore, in view of Proposition 5.2, we just need to prove that 
+
+lim 
+
+> n→+∞
+> n−1
+
+X
+
+> k=0
+
+
+
+1 + λ tn
+
+k−n r tn
+
+s
+
+Rk(α, tn )1 + λ tn
+
+= α
+
+2
+
+Z t
+
+> 0
+
+eλ(s−t)
+
+sZ
+
+|∇ ln( ραs )|2dραs ds. (5.10) Let us artificially write the left-hand side as an integral. For all n ∈ N (sufficiently large to ensure that the schemes are well defined), 
+
+> n−1
+
+X
+
+> k=0
+
+
+
+1 + λ tn
+
+k−n r tn
+
+s
+
+Rk(α, tn )1 + λ tn
+
+= 1
+
+q
+
+1 + λ tn
+
+Z t
+
+> 0
+
+
+
+1 + λ tn
+
+⌊ sn t ⌋− n
+
+s
+
+R⌊ sn t ⌋(α, tn )
+
+t/n ds. 
+
+As n → +∞, p1 + λt/n → 1, and for all s ∈ [0 , t ] the quantity 
+
+
+
+1 + λ tn
+
+⌊ sn t ⌋− n
+
+is bounded uniformly in s ∈ [0 , t ] and n sufficiently large, and converges pointwise towards eλ(s−t). Hence, to prove (5.10), by the dominated convergence theorem, we just need to prove that for all s ∈ [0 , t ],
+
+lim 
+
+> n→+∞
+
+s
+
+R⌊ sn t ⌋(α, tn )
+
+t/n = α
+
+2
+
+sZ
+
+|∇ ln( ραs )|2dραs , (5.11) and that the quantity in the left-hand side is bounded uniformly in s ∈ [0 , t ] and n sufficiently large. Otherwise stated, we just need to prove that, 
+
+lim  
+
+> τ→0
+
+R⌊ sτ ⌋(α, τ )
+
+τ = α2
+
+4
+
+Z
+
+|∇ ln( ραs )|2dραs ,
+
+and that the quantity in the left-hand side is bounded uniformly in s ∈ [0 , t ] and τ sufficiently small. To that aim, we first prove the following identity, holding for all τ < 1/λ − and k ∈ N, providing a link between the quantities Rk defined in (5.9) and integrals in time of the Fisher information: 
+
+Rk(α, τ ) = α2
+
+4
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln(¯ ρατ (θ)) |2 d¯ ρατ (θ)d θ + dαλτ − dα ln (1 + λτ ) , (5.12) where ¯ρατ is the curve whose value at time kτ is Jαk,τ (μ0), and interpolating between these timepoints along the solution of the dynamic formulation of the Schrödinger problem, as in Proposition 2.12. Let k ∈ N and τ < 1/λ −. First, we have 
+
+2F(J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ ) − 2F(J0 
+
+> τ
+
+(Jαk,τ (μ0))) = λdατ. (5.13) Indeed, in view of Propositions 5.3 and 5.4, J0 
+
+> τ
+
+(Jαk,τ (μ0)) is a centered Gaussian. Call ˜a its variance. Then Jαk,τ (μ0)) ∗ σατ is the centered Gaussian of variance ¯a + ατ . Our claim therefore follows from the definition (5.1) of F. Second, it is well known that between the times kτ and (k + 1) τ , ¯ρατ solves 
+
+
+
+∂θ ¯ρατ + div(¯ ρατ ∇φατ ) = α
+
+2 ∆¯ ρατ ,
+
+¯ρατ |θ=kτ = Jαk,τ (μ0),
+
+where φατ solves 
+
+
+
+∂θ φατ + 12 |∇ φατ |2 + α
+
+2 ∆φατ = 0 ,φατ |θ=( k+1) τ = − λ
+
+2 |x|2.
+
+(The PDEs are the optimality conditions of the dynamic Schrödinger problem, and the terminal condition on ¯φατ is the optimality condition of the entropic JKO scheme, see [4].) These equations are solved if and only if for all θ ∈ [kτ, (k + 1) τ ],
+
+¯ρατ (θ) = N (¯ aθ ) and φ(θ, x ) = dθ − λθ
+
+2 |x|2, x ∈ Rd, (5.14) 40 AYMERIC BARADAT AND SOFIANE CHERF 
+
+for some parameters (¯ aθ ), (λθ ) and (dθ ) solving the following ODEs: 
+
+( ˙¯aθ = α − 2λθ ¯aθ ,
+
+¯akτ = aτk ,
+
+( ˙λθ = λ2
+
+> θ
+
+λ(k+1) τ = λ, 
+
+
+
+˙dθ = αd 
+
+2 λθ ,dτ = 0 ,
+
+(5.15) and where in view of Proposition 5.4, 
+
+aτk = a
+
+(1 + λτ )2k +
+
+
+
+1 − 1(1 + λτ )2k
+
+  αλ
+
+1 + λτ 
+
+2 + λτ 
+
+
+
+.
+
+With these equations and notations at hand, quick computations ensure 
+
+αH(Jαk,τ (μ0)) − H(Jαk+1 ,τ (μ0))  = −α
+
+Z (k+1) τkτ 
+
+ddθ H(¯ ρατ (θ)) d θ
+
+= α
+
+Z (k+1) τkτ 
+
+ddθ
+
+ d
+
+2 (1 + ln(2 π¯aθ )) 
+
+
+
+dθ
+
+= αd 
+
+2
+
+Z (k+1) τkτ 
+
+˙¯aθ
+
+¯aθ
+
+dθ
+
+= α2
+
+2
+
+Z (k+1) τkτ 
+
+d
+
+¯aθ
+
+dθ − αd 
+
+Z (k+1) τkτ 
+
+λθ dθ
+
+= α2
+
+2
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln ¯ ρατ (θ)|2 d¯ ρατ (θ) d θ − αd ln(1 + λτ ), (5.16) where we used formulas (5.6), (5.4), (5.14) and (5.15). In particular, we used the following consequence on the ODE solved by (λθ ) in (5.15): 
+
+Z (k+1) τkτ 
+
+λθ dθ = ln(1 + λτ ). (5.17) Formula (5.12) follows from plugging (5.16) and (5.13) in the definition (5.9) of Rk.Comparing (5.11) and (5.12), we see that it remains to prove that for all s ∈ [0 , t ],
+
+lim  
+
+> τ→0
+
+1
+
+τ
+
+Z (⌊ sτ ⌋+1) τ  
+
+> ⌊sτ⌋τ
+
+Z
+
+|∇ ln(¯ ρατ (θ)) |2 d¯ ρατ (θ) d θ =
+
+Z
+
+|∇ ln( ραs )|2dραs , (5.18) and that the quantity in the left-hand side is bounded uniformly in s ∈ [0 , t ] and τ sufficiently small. On the right-hand side of (5.18), Propositions 5.3 and 5.2 imply for all s ∈ [0 , t ]:
+
+Z
+
+|∇ ln( ραs )|2dραs = das
+
+, where as := ae −2λs + α 1 − e−2λs 
+
+2λ .
+
+Concerning the left-hand side of (5.18), for all k ∈ N, using the notations of (5.14) and (5.15), 
+
+1
+
+τ
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln(¯ ρατ (θ)) |2 d¯ ρατ (θ) d θ = dτ
+
+Z (k+1) τkτ 
+
+dθ
+
+¯aθ
+
+.
+
+But for all θ ≥ 0, in view of (5.15), 
+
+1¯aθ
+
+= 1
+
+α
+
+ddθ ln ¯ aθ + 2
+
+α λθ .
+
+Therefore, using (5.17), we find 
+
+1
+
+τ
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln(¯ ρατ (θ)) |2 d¯ ρατ (θ) d θ = dτ α 
+
+
+
+ln aτk+1 
+
+aτk
+
++ 2 ln(1 + λτ )
+
+
+
+= dτ α ln 
+
+ (1 + λτ )2aτk+1 
+
+aτk
+
+
+
+= dτ α ln 
+
+
+
+1 + ατ (1 + λτ )
+
+aτk
+
+
+
+,
+
+where in the last line, we used the following induction relation stated in Proposition 5.4: 
+
+aτk+1 = aτk
+
+(1 + λτ )2 + ατ 
+
+1 + λτ .
+
+Therefore, expanding the logarithm, the conclusion follows from the easy fact that for all s ∈ [0 , t ],
+
+lim   
+
+> τ→0
+
+aτ   
+
+> ⌊sτ⌋
+
+= as,A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 41 
+
+and that the left-hand side is bounded from below uniformly in s ∈ [0 , t ] and τ sufficiently small. □
+
+5.4. A formal remark on the optimality in α. As we saw the previous section, our proof of optimality in our toy model relies on the fact that for this model, the quantity: 
+
+αH(Jαk,τ (μ0)) − H(Jαk+1 ,τ (μ0))  + 2 F(J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ ) − 2F(J0 
+
+> τ
+
+(Jαk,τ (μ0))) , (5.19) which appears in the definition (5.9) of Rk in Theorem 5.6, is equal to 
+
+α2
+
+2
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln(¯ ρατ (s)) |2 d¯ ρατ (s)d s + Oτ →0(τ 2). (5.20) Indeed, this fact implied 
+
+Rk(α, τ ) = α2
+
+4
+
+Z (k+1) τkτ 
+
+Z
+
+|∇ ln(¯ ρατ (s)) |2 d¯ ρατ (s)d s + Oτ →0(τ 2),
+
+so that the right hand side in (5.7) and (5.8) are reminiscent of the first inequalities of (1.6) and (1.7). The fact that the quantity in (5.19) is (5.20) can be obtained formally. Indeed, using Proposition 2.12 there exists a pair (ρt, φ t) such that ρ0 = Jαk,τ (μ0), ρτ = Jαk+1 ,τ (μ0) and ∂tρ + div( ρ∇φ) = α 
+
+> 2
+
+∆ρ. Then, computing the derivative of the entropy along this interpolation, we obtain that: 
+
+dds H(ρs) = 
+
+Z
+
+ln( ρs)∂sρs = −
+
+Z
+
+ln( ρs) div( ρs∇φs) + α
+
+2
+
+Z
+
+ln( ρs)∆ ρs,
+
+and then, integrating by parts, 
+
+dds H(ρs) = 
+
+Z
+
+∇φs · ∇ ln( ρs)ρs − α
+
+2
+
+Z
+
+∇ ln( ρs) · ∇ ρs =
+
+Z
+
+∇φs · ∇ ρs − α
+
+2
+
+Z
+
+|∇ ln( ρs)|2 dρs.
+
+Therefore, integrating between times 0 and τ , we find 
+
+αH(Jαk,τ (μ0)) − H(Jαk+1 ,τ (μ0))  = α2
+
+2
+
+Z τ
+
+> 0
+
+Z
+
+|∇ ln( ρs)|2 dρs ds − α
+
+Z τ
+
+> 0
+
+Z
+
+∇ρs · ∇ φs ds. 
+
+On the other hand, concerning the second term, deriving along the heat flow, we find: 
+
+2F(J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ ) − 2F(J0 
+
+> τ
+
+(Jαk,τ (μ0))) = α
+
+Z τ
+
+> 0
+
+∆ δF
+
+δρ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ) d( J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ) d s, 
+
+so that integrating by parts, 
+
+2F(J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ ) − 2F(J0 
+
+> τ
+
+(Jαk,τ (μ0))) = −α
+
+Z τ
+
+> 0
+
+∇ δF
+
+δρ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ) · ∇ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ) d s. 
+
+Combining both identities, we obtain that the quantity in (5.19) equals 
+
+α2
+
+2
+
+Z τ
+
+> 0
+
+Z
+
+|∇ ln( ρs)|2 dρs ds − α
+
+Z τ
+
+> 0
+
+Z 
+
+∇φs · ∇ ρs + ∇ δF
+
+δρ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ) · ∇ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs )
+
+
+
+ds. 
+
+Moreover, the Euler Lagrange equation of (Ent JKO) is, see [4], 
+
+φτ = − δF
+
+δρ (Jαk+1 ,τ (μ0)) .
+
+Hence, since J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σατ should be close to Jαk+1 ,τ (μ0), we expect to have for all s ∈ [0 , τ ]
+
+∇φs ≈ −∇ δF
+
+δρ (J0 
+
+> τ
+
+(Jαk,τ (μ0)) ∗ σαs ).
+
+Lastly, all the densities are close to each other, as they are all close to Jαk,τ (μ0).All in all, we expect the last integral above to be at least o(τ ) as τ → 0, and maybe even a O(τ 2),as announced. The crucial point to prove this asymptotics rigorously is to establish the convergence of the integral in time of the Fischer information of the different curves involved at τ > 0 towards the one of the limiting curve. This convergence is necessary to compare the right hand side in (5.7) and (5.8) with (1.6) and (1.7). We have mathematical reasons to believe that it would be sufficient as well. 
+
+Appendix 
+
+The purpose of this Appendix is to first prove Theorem 1.4, and then Proposition B.1 that we used in Section 4, see Remark 4.1. During the proof of Theorem 1.4 we also establish that under Hypothesis 1.1, the entropy is increasing at most linearly along the JKO scheme. We used this fact in Subsection 2.5.1 to ensure that the densities are always absolutely continuous with respect to the Lebesgue measure. 42 AYMERIC BARADAT AND SOFIANE CHERF 
+
+Appendix A. Proof of Theorem 1.4 
+
+Sketch of proof: To prove Theorem 1.4, we must establish two inequalities. First, we need to show a bound on the Fisher information, and second, we need to show that the Wasserstein distance between our gradient flows is smaller than the Fisher information. 
+
+• For the first one, we will first establish the inequality at the JKO level, and then take the limit using the lower semicontinuity of the entropy and the Fisher information. This inequality will also ensure that the Fisher information is finite. 
+
+• For the second one, we will compute the derivative of the square of the Wasserstein distance between our gradient flows by differentiating the dual formulation of the Wasserstein distance (see Subsection 2.1.2) thanks to the envelope theorem and the PDEs that our densities solve. The λ-convexity of F implies that some terms should cancel out, leaving only those that can be bounded by the Fisher information. We start by proving the estimate for Fisher information by showing an analogous inequality for one step of the JKO scheme for the functional F + α 
+
+> 2
+
+H. We will only use the convexity on F to ensure the existence of minimizers at each stage of the JKO scheme, and to guarantee that the scheme converges towards the gradient flow. 
+
+Proposition A.1. If F satisfies Hypothesis 1.1, then for every τ < 1 
+
+> λ−
+
+, for every α ≥ 0, for every μ
+
+with H(μ) < +∞ and F(μ) < +∞, then 
+
+J ατ (μ) := arg min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ) + α
+
+2 H(ρ)
+
+
+
+(JKO+H) 
+
+is well defined. Moreover, 
+
+H(J ατ (μ)) − H(μ) + ατ 
+
+2
+
+Z
+
+|∇ ln( J ατ (μ)) |2 dJ ατ (μ) ≤ Kτ. 
+
+In particular H(J ατ (μ)) < +∞.Proof. Since F + α 
+
+> 2
+
+H is λ-convex along generalized geodesics J ατ (μ) is well defined as a consequence of Theorem 2.28. By optimality of J ατ (μ) in equation (JKO+H), for all s > 0,
+
+W 22 (J ατ (μ), μ )2τ + F(J ατ (μ)) + α
+
+2 H(J ατ (μ)) ≤ W 22 (J ατ (μ) ∗ σs, μ )2τ + F(J ατ (μ) ∗ σs) + α
+
+2 H(J ατ (μ) ∗ σs),
+
+so that 
+
+W 22 (J ατ (μ), μ )2s − W 22 (J ατ (μ) ∗ σs, μ )2s ≤ τs (F(J ατ (μ) ∗ σs) − F (J ατ (μ)) + ατ 
+
+2s (H(J ατ (μ) ∗ σs) − H(J ατ (μ)) .
+
+(A.1) On the one hand, the third point of Hypothesis 1.1 implies: 
+
+τs (F(J 0 
+
+> τ
+
+(μ) ∗ σs) − F (J 0 
+
+> τ
+
+(μ)) ≤ K τ
+
+2 . (A.2) On the other hand, as u 7 → ρ ∗ σu is the gradient flow of 12 H, which is convex along generalized geodesics, the E.V.I. of Theorem 2.27 provides for all u ≥ 0:
+
+12ddu W 22 (J 0 
+
+> τ
+
+(μ) ∗ σu, μ ) ≤ 12 H(μ) − 12 H(J 0 
+
+> τ
+
+(μ) ∗ σu).
+
+Therefore, 
+
+W 22 (J ατ (μ), μ )2s − W 22 (J ατ (μ) ∗ σs, μ )2s = −
+
+Z s
+
+> 0
+
+12s
+
+ddu W 22 (J ατ (μ) ∗ σu, μ )
+
+≥ 12s
+
+Z s
+
+> 0
+
+H(J ατ (μ) ∗ σu) d u − 12 H(μ).
+
+(A.3) Combining the equations (A.1), (A.2) and (A.3) we obtain for all s ∈ R+:
+
+12s
+
+Z s
+
+> 0
+
+H(J ατ (μ) ∗ σu) d u − 12 H(μ) + ατ 
+
+2s (H(J ατ (μ)) − H(J ατ (μ) ∗ σs) ≤ K τ
+
+2 . (A.4) Moreover, the function s 7 → H(J ατ (μ) ∗ σs) is nonincreasing and lower semicontinuous, hence right-continuous. Therefore, 
+
+lim 
+
+> s→0
+
+1
+
+s
+
+Z s
+
+> 0
+
+H(J ατ (μ) ∗ σu) d u = H(J ατ (μ)) .A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 43 
+
+Finally, for every ν ∈ P 2(Rd) such that H(ν) < +∞, we have the following equality in R+ ∪ { +∞} :
+
+lim 
+
+> s→0
+
+H(ν) − H(ν ∗ σs)
+
+s = 12
+
+Z
+
+|∇ ln( ν)|2 dν, 
+
+Consequently, we conclude the proof by sending s to 0 in equation (A.4). □
+
+Sending τ to 0 lets us deduce a similar inequality at the continuous level. 
+
+Proposition A.2. Let F satisfy Hypothesis 1.1, and let (ραt ) be the solution to the regularized gradient flow (1.3) associated with a parameter α > 0, starting from μ0 ∈ P 2(Rd), a measure such that both 
+
+H(μ0) < +∞ and F(μ0) < +∞. For all t ≥ 0, if λ = 0 , then 
+
+α
+
+2
+
+Z t
+
+> 0
+
+sZ
+
+|∇ ln( ρα)|2dραds
+
+!2
+
+≤ t(H(μ0) − H(ραt ) + Kt ),
+
+while if λ̸ = 0 ,
+
+α
+
+2
+
+Z t
+
+> 0
+
+eλs 
+
+sZ
+
+|∇ ln( ραs )|2dραs ds
+
+!2
+
+≤ e2λt − 12λ (H(μ0) − H(ραt ) + Kt ).
+
+Proof. Let t ≥ 0. By the Cauchy-Schwartz inequality we have: 
+
+Z t
+
+> 0
+
+eλs 
+
+sZ
+
+|∇ ln( ραs )|2dραs ds
+
+!2
+
+≤
+
+Z t
+
+> 0
+
+e2λs ds
+
+Z t
+
+> 0
+
+Z
+
+|∇ ln( ραs )|2dραs ds, 
+
+where Z t
+
+> 0
+
+e2λs ds =
+
+
+
+t, if λ = 0 ,e2λt − 12λ , if λ̸ = 0 .Now, using iteratively Proposition A.1 we find: 
+
+H(J αn,t/n (μ0)) − H(μ0) + ατ 
+
+2
+
+> n
+
+X
+
+> k=1
+
+Z
+
+|∇ ln 
+
+
+
+J αk,t/n (μ0)
+
+
+
+|2 dJ αk,t/n (μ0) ≤ Kt, 
+
+or otherwise stated 
+
+H(J αn,t/n (μ0)) − H(μ0) + α
+
+2
+
+Z t
+
+> 0
+
+Z
+
+|∇ ln 
+
+
+
+J α  
+
+> ⌈ns t⌉,t/n
+
+(μ0)
+
+
+
+|2 dJ α  
+
+> ⌈ns t⌉,t/n
+
+(μ0) d s ≤ Kt. 
+
+But for all s ≥ 0, J α  
+
+> ⌈ns t⌉,t/n
+
+(μ0) W2
+
+−−−−−→ 
+
+> n→+∞
+
+ρα(s), so the result is a consequence of the lower semicontinuity of the entropy and of the Fisher information. □
+
+We will now establish the main inequality of this section by estimating the Wasserstein distance along a geodesics between ρ0(t) and ρα(t) for each t ≥ 0. We restrict ourserleves to the case where F is of the form (1.1). 
+
+Proposition A.3. Let F be of the form (1.1) . We assume that: 
+
+• The PDEs (1.2) and (1.3) admit regular solutions ρ0 and ρα for all times t ≥ 0,
+
+• F is λ-geodesically convex for some λ ∈ R.Then, for all t > 0, if λ = 0 , then 
+
+W2(ρ0(t), ρ α(t)) ≤ α
+
+2
+
+Z t
+
+> 0
+
+sZ
+
+|∇ ln( ρα)|2dραds, 
+
+while if λ̸ = 0 , then 
+
+W2(ρ0(t), ρ α(t)) ≤ α
+
+2
+
+Z t
+
+> 0
+
+eλ(s−t)
+
+sZ
+
+|∇ ln( ρα)|2dραds. 
+
+As in the introduction, in the case where F is of the form (1.1), and in a coherent manner with respect to the theory of Wasserstein gradient flows [26], we define for all ρ ∈ P 2(Rd) absolutely continuous with respect to the Lebesgue measure: 
+
+∂F
+
+∂ρ (ρ) := V + W ∗ ρ + f ′(ρ).44 AYMERIC BARADAT AND SOFIANE CHERF 
+
+In that way, as soon as the curve t 7 → ρt is sufficiently regular, we have 
+
+ddt F(ρt) = 
+
+Z δF
+
+δρ (ρt)∂tρt. (A.5) In fact, the computations in the proof of Proposition A.3 are justified thanks to the following remark. 
+
+Remark A.4 . Since ρ0 is the flow of F and ρα is the flow of F + α 
+
+> 2
+
+H, for all t ≥ 0, the following integrals are finite (see [3, Chapter 10]): 
+
+Z t
+
+> 0
+
+Z
+
+∇ δF
+
+δρ (ρ0
+
+> s
+
+)
+
+> 2
+
+dρ0 
+
+> s
+
+ds < +∞,
+
+Z t
+
+> 0
+
+Z
+
+∇ δF
+
+δρ (ραs ) + α
+
+2 ∇ ln( ραs )
+
+> 2
+
+dραs ds < +∞.
+
+Moreover, we have shown in Proposition A.2 that 
+
+Z t
+
+> 0
+
+Z
+
+|∇ ln( ραs )|2 dραs ds < +∞.
+
+Therefore, by the triangle inequality in L2( d s ⊗ ραs ), we also have 
+
+Z t
+
+> 0
+
+Z
+
+∇ δF
+
+δρ (ραs )
+
+> 2
+
+dραs ds < +∞.
+
+Thus, for almost every s ≥ 0,
+
+Z
+
+∇ δF
+
+δρ (ρ0
+
+> s
+
+)
+
+> 2
+
+dρ0 
+
+> s
+
+< +∞,
+
+Z
+
+∇ δF
+
+δρ (ραs )
+
+> 2
+
+dραs < +∞ and 
+
+Z
+
+|∇ ln( ραs )|2 dραs < +∞.
+
+In the proof of Proposition A.3, we will need the following Lemma. 
+
+Lemma A.4.1. Under the assumption of Proposition A.3. For all μ, ν ∈ P 2(Rd) such that F(μ) < +∞
+
+and F(ν) < +∞, denoting by φ the Kantorovich potential from μ to ν and ψ the Kantorovich potential from ν to μ then Z
+
+∇ δF
+
+δρ (μ)∇φμ +
+
+Z
+
+∇ δF
+
+δρ (ν)∇ψν ≥ λW 22 (μ, ν ).
+
+Proof. Let us consider (ρs, v s) the Wasserstein geodesics from μ to ν. Then the map f : [0 , 1] ∈ s → F (ρs)
+
+is λW 22 (μ, ν ) convex, in particular 
+
+f ′(0) ≤ f ′(1) − λW 22 (μ, ν ).
+
+Bur for all s ∈ [0 , 1] , in view of (A.5), 
+
+f ′(s) = dds F(ρs) = 
+
+Z δF
+
+δρ (ρs)∂sρs.
+
+As a consequence of Remark 2.5, we find 
+
+f ′(0) = −
+
+Z
+
+∇ δF
+
+δρ (μ)∇φμ and f ′(1) = 
+
+Z
+
+∇ δF
+
+δρ (ν)∇ψν, 
+
+and hence 
+
+−
+
+Z
+
+∇ δF
+
+δρ (μ)∇φμ ≤
+
+Z
+
+∇ δF
+
+δρ (ν)∇ψν − λW 22 (μ, ν ),
+
+as announced. □
+
+We are now ready to prove Proposition A.3. 
+
+Proof of Proposition A.3. To prove Proposition A.3, the idea is to differentiate the dual formulation of the squared Wasserstein distance between our solutions. By Subsection 2.1.2, we have for all t ≥ 0
+
+W 22 (ρ0 
+
+> t
+
+, ρ αt )2 = max  
+
+> φ,ψ φ⊕ψ≤|x−y|22
+
+Z
+
+φ dρ0 
+
+> t
+
++
+
+Z
+
+ψ dραt .
+
+Let us call (φt, ψ t) a pair of maximizers. Applying the envelope theorem, we have for all t ≥ 0ddt
+
+ W 22 (ρ0 
+
+> t
+
+, ρ αt )2
+
+
+
+=
+
+Z
+
+φt ∂tρ0 
+
+> t
+
++
+
+Z
+
+ψt ∂tραt .A CONVERGENCE RATE FOR THE ENTROPIC JKO SCHEME 45 
+
+Using the PDEs satisfied by ρ0 
+
+> t
+
+and ραt , we obtain: 
+
+ddt
+
+ W 22 (ρ0 
+
+> t
+
+, ρ αt )2
+
+
+
+=
+
+Z
+
+φt div 
+
+
+
+ρ0 
+
+> t
+
+∇ δF
+
+δρ (ρ0 
+
+> t
+
+)
+
+
+
++
+
+Z
+
+ψt div 
+
+
+
+ραt ∇ δF
+
+δρ (ραt )
+
+
+
++ α
+
+2
+
+Z
+
+ψt ∆ραt
+
+= −
+
+Z
+
+∇φt · ∇ δF
+
+δρ (ρ0 
+
+> t
+
+) ρ0 
+
+> t
+
+−
+
+Z
+
+∇ψt · ∇ δF
+
+δρ (ραt ) ραt − α
+
+2
+
+Z
+
+∇ψt · ∇ ραt .
+
+Then, by applying Lemma A.4.1, we get the bound: 
+
+ddt
+
+ W 22 (ρ0 
+
+> t
+
+, ρ αt )2
+
+
+
+≤ − λW 22 (ρ0 
+
+> t
+
+, ρ αt ) − α
+
+2
+
+Z
+
+∇ψt · ∇ ραt . (A.6) Using the identity ∇ραt = ραt ∇ ln ραt and the Cauchy–Schwarz inequality in L2(ραt ), we get: 
+
+− α
+
+2
+
+Z
+
+∇ψt · ∇ ραt = − α
+
+2
+
+Z
+
+∇ψt · ∇ ln( ραt ) d ραt ≤ α
+
+2 W2(ρ0 
+
+> t
+
+, ρ αt )
+
+sZ
+
+|∇ ln( ραt )|2 dραt .
+
+After dividing both sides by W2(ρ0 
+
+> t
+
+, ρ αt ) in (A.6), we obtain: 
+
+ddt W2(ρ0 
+
+> t
+
+, ρ αt ) ≤ − λW 2(ρ0 
+
+> t
+
+, ρ αt ) + α
+
+2
+
+sZ
+
+|∇ ln( ραt )|2 dραt .
+
+Therefore, the results follows from applying Grönwall’s lemma. □
+
+Appendix B. A truncation argument for the small values of F
+
+In Section 4, we used the fact that replacing F by max {F , M } for a sufficiently small value of M
+
+does not affect the first iterates of the JKO scheme, see Remark 4.1. This is the content of the following proposition. 
+
+Proposition B.1. Let F : P2(Rd) → R, τ > 0 and μ ∈ P 2(Rd). Let us assume that the functional 
+
+W 22 (μ, ρ )2τ + F(ρ)
+
+admits at least one minimizer, and that there exists M ∈ R such that each of these minimizers ν satisfy 
+
+F(ν) ≥ M . Then, calling FM : ρ 7 → max {M, F(ρ)}, we have 
+
+arg min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
+= arg min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + FM (ρ)
+
+
+
+.
+
+Proof. First, as F ≤ F M , we have 
+
+min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
+≤ inf 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + FM (ρ)
+
+
+
+. (B.1) But by assumption, if ν is any minimizer in the left-hand side, FM (ν) = F(ν), so that 
+
+W 22 (μ, ν )2τ + F(ν) = W 22 (μ, ν )2τ + FM (ν) ≥ inf 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + FM (ρ)
+
+
+
+.
+
+So the inequality in (B.1) is in fact an equality, and the minimizers in the left-hand side are also minimizers in the right-hand side. As a consequence, if ν is any minimizer in the right-hand side of (B.1), we have 
+
+W 22 (μ, ν )2τ + FM (ν) = min 
+
+> ρ∈P 2(Rd)
+
+ W 22 (μ, ρ )2τ + F(ρ)
+
+
+
+≤ W 22 (μ, ν )2τ + F(ν) ≤ W 22 (μ, ν )2τ + FM (ν).
+
+Therefore, all the inequalities are in fact equalities, and ν is also a minimizer in the left-hand side of (B.1), which concludes the proof. □
+
+References 
+
+[1] S. Adams, N. Dirr, M. A. Peletier, and J. Zimmer. From a large-deviations principle to the Wasser-stein gradient flow: a new micro-macro passage. Communications in Mathematical Physics , 307:791– 815, 2011. [2] L. Ambrosio and N. Gigli. A User’s Guide to Optimal Transport. In Modelling and Optimisation of Flows on Networks , pages 1–155. 2013. [3] L. Ambrosio, N. Gigli, and G. Savaré. Gradient flows: in metric spaces and in the space of probability measures . Springer Science & Business Media, 2005. 46 AYMERIC BARADAT AND SOFIANE CHERF 
+
+[4] A. Baradat, A. Hraivoronska, and F. Santambrogio. Using Sinkhorn in the JKO scheme adds linear diffusion, 2025. [5] H. H. Bauschke and P. L. Combettes. Convex Analysis and Monotone Operator Theory in Hilbert Spaces . CMS Books in Mathematics. Springer, New York, 2nd edition, 2017. [6] J.-D. Benamou and Y. Brenier. A computational fluid mechanics solution to the Monge-Kantorovich mass transfer problem. Numerische Mathematik , 84(3):375–393, 2000. [7] J.-D. Benamou, G. Carlier, M. Cuturi, L. Nenna, and G. Peyré. Iterative Bregman projections for regularized transportation problems. SIAM Journal on Scientific Computing , 37(2):A1111–A1138, 2015. [8] J.-D. Benamou, G. Carlier, and L. Nenna. Generalized incompressible flows, multi-marginal trans-port and Sinkhorn algorithm. Numerische Mathematik , 142(1):33–54, 2019. [9] Y. Brenier. Polar factorization and monotone rearrangement of vector-valued functions. Communi-cations on Pure and Applied Mathematics , 44(4):375–417, 1991. [10] H. Brezis. Functional analysis, Sobolev spaces and partial differential equations . New York, NY: Springer, 2011. [11] G. Carlier, V. Duval, G. Peyré, and B. Schmitzer. Convergence of Entropic Schemes for Optimal Transport and Gradient Flows. SIAM Journal on Mathematical Analysis , 49(2):1385–1418, 2017. [12] G. Carlier, K. Eichinger, and A. Kroshnin. Entropic-Wasserstein barycenters: PDE characterization, regularity, and CLT. SIAM J. Math. Anal. , 53(5):5880–5914, 2021. [13] G. Conforti and L. Tamanini. A formula for the time derivative of the entropic cost and applications. 
+
+J. Funct. Anal. , 280(11), 2021. [14] M. Cuturi. Sinkhorn Distances: Lightspeed Computation of Optimal Transport. In Advances in Neural Information Processing Systems , volume 26, 2013. [15] M. H. Duong, V. Laschos, and M. Renger. Wasserstein gradient flows from large deviations of many-particle limits. ESAIM Control Optim. Calc. Var. , 19(4):1166–1188, 2013. [16] M. Erbar, J. Maas, and D. R. M. Renger. From large deviations to Wasserstein gradient flows in multiple dimensions. Electron. Commun. Probab. , 20, 2015. [17] I. Gentil, C. Léonard, and L. Ripani. About the analogy between optimal transport and minimal entropy. Annales de la Faculté des sciences de Toulouse : Mathématiques , Ser. 6, 26(3):569–600, 2017. [18] R. Jordan, D. Kinderlehrer, and F. Otto. The variational formulation of the Fokker–Planck equation. 
+
+SIAM journal on mathematical analysis , 29(1):1–17, 1998. [19] O. Kallenberg. Foundations of Modern Probability . Springer, New York, 2 edition, 2002. [20] C. Léonard. From the Schrödinger problem to the Monge–Kantorovich problem. Journal of Func-tional Analysis , 262(4):1879–1920, 2012. [21] C. Léonard. A survey of the Schrödinger problem and some of its connections with optimal transport. 
+
+Discrete and Continuous Dynamical Systems , 34(4):1533–1574, 2014. [22] H. Malamut and M. Sylvestre. Convergence rates of the regularized optimal transport: disentangling suboptimality and entropy. SIAM J. Math. Anal. , 57(3):2533–2558, 2025. [23] R. J. McCann. A convexity principle for interacting gases. Adv. Math. , 128(1):153–179, 1997. [24] F. Otto. Evolution of microstructure in unstable porous media flow: A relaxational approach. 
+
+Communications on Pure and Applied Mathematics , 52(7):873–915, 1999. [25] G. Peyré. Entropic Approximation of Wasserstein Gradient Flows. SIAM Journal on Imaging Sciences , 8(4):2323–2351, 2015. [26] F. Santambrogio. Optimal transport for applied mathematicians. Birkäuser, NY , 55(58-63):94, 2015. [27] R. Sinkhorn. Diagonal Equivalence to Matrices with Prescribed Row and Column Sums. The American Mathematical Monthly , 74(4):402–405, 1967.

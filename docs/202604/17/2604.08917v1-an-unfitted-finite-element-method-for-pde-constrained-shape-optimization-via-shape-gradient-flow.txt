@@ -1,0 +1,3811 @@
+Title: An unfitted finite element method for PDE-constrained shape optimization via shape gradient flow
+
+URL Source: https://arxiv.org/pdf/2604.08917v1
+
+Published Time: Mon, 13 Apr 2026 00:24:37 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+AN UNFITTED FINITE ELEMENT METHOD FOR PDE-CONSTRAINED SHAPE OPTIMIZATION VIA SHAPE GRADIENT FLOW  
+
+> WEI GONG ⋄, CHUWEN MA †AND ZIYI ZHANG ‡
+
+Abstract: In this paper, we propose an unfitted finite element method to solve PDE-constrained shape optimization problems via shape gradient flow. The shape gradient flow system consists of the state equation, the adjoint equation, the velocity equation, as well as the flow map that generates the evolution of the boundary driven by the velocity field, which can be viewed as a limit system of the classical shape gradient descent algorithm. In [17] the authors proposed an evolving finite element method to solve the shape gradient flow system. Instead, in this paper, we propose an unfitted finite element method in which the evolution of the boundary is realized by cubic splines and the equations are solved by cut finite element methods with ghost penalization. Under reasonable assumptions, we are able to prove some optimal convergence rates that are further validated by numerical experiments. 
+
+Keywords: Shape optimization, shape gradient flow, unfitted finite element method, convergence 1. I ntroduction 
+
+Shape optimization problems have been extensively studied in recent decades due to their wide applications in various fields, including structural mechanics, fluid mechanics, electromagnetics, and biology (cf. [1]). These models typically look for an optimal domain Ω by minimizing an objective functional: min  
+
+> Γ:=∂Ω
+
+J(Γ) =
+
+Z
+
+> Ω
+
+j(x, u)d x,
+
+where u is the solution to a partial di ff erential equation (PDE) defined in the domain Ω. The study for shape optimization problems ranges from the existence of a solution, the shape sensitivity analysis and the numerical algorithms, we refer to [1, 32] for more details. Shape optimization algorithms involve the evolution of the domain as well as the discretization of the underlined PDEs. For tracking or evolution of the domain, we may resort to the explicit or implicit method such as the moving mesh method, the parametric method, or the level-set method. For the optimization algorithm, shape gradient descent algorithm is the most popular one, where shape calculus plays a pivotal role as it provides the shape gradient by rigorous mathematical theory.               
+
+> ⋄SKLMS&NCMIS, Institute of Computational Mathematics, Academy of Mathematics and Systems Science, Chinese Academy of Sciences, Beijing 100190, China. Email: wgong@lsec.cc.ac.cn. This author was supported by the Strategic Priority Research Program of the Chinese Academy of Sciences XDB0640000 & XDB0640200, the National Key Research and Development Program of China (2022YFA1004402), and the NSFC under grant no. 12494543 and 12471393.
+> †School of Mathematical Sciences, Key Laboratory of Mathematics and Engineering Applications Ministry of Edu-cation,& Shanghai Key Laboratory of Pure Mathematics and Mathematical Practice, East China Normal University, Shanghai 200241, China. Email: cwma@math.ecnu.edu.cn. This author was partially supported by NSFC grant No. 12501607, the Science and Technology Commission of Shanghai Municipality (No. 22DZ2229014).
+> ‡School of Mathematical Sciences, University of Chinese Academy of Sciences, China. Email: zhangziyi21@mails.ucas.ac.cn.
+> 1
+> arXiv:2604.08917v1 [math.NA] 10 Apr 2026
+
+The convergence issue for shape optimization problems is an important but not fully exploited topic. There are some progresses from the perspective of both numerical PDEs and optimization al-gorithms. For convergence involving the discretization of the optimization problem and the governing PDEs, Eppler et al. [15] considered the boundary parameterization of an elliptic shape optimization problem posed on star-shaped domains and derived error estimates for a finite element method (FEM) using the second-order su ffi cient optimality condition. In [23] and [16] the authors considered two-dimensional shape optimization problems for the elliptic and Stokes equations, where the portion of the boundary to be optimized is the graph of a function. The second-order convergence of the nu-merical approximations to a local solution of the optimization problem was proved under the second-order su ffi cient optimality condition. The analyses in these articles are based on the second-order optimality condition and the computation of the shape Hessian, and are restricted to parametrization of boundaries with special shapes. In [8] an abstract convergence of the discrete optimal shape to the continuous optimal shape, measured in the Hausdor ff complementary metric, was proved for an elliptic shape optimization problem in two dimensions based on the compactness argument, where the discrete shape is represented by the finite element mesh. For the convergence of the shape gradient descent algorithm, we refer to [9] for the convergence analysis with W 1,∞ velocity. In [17] the authors proposed a shape gradient flow system and derived optimal convergence rates for an evolving finite element method. The shape gradient flow consists of the state equation, the adjoint state equation, and the flow map, where the flow map is driven by a velocity field satisfying the following equation with the so-called Hilbertian regularization approach Find w ∈ H : b(w, v) = −dJ(Γ; v) ∀v ∈ H.
+
+The choice of the Hilbert space H can significantly a ff ect the numerical performance of the shape optimization algorithm, as discussed in [1]. The most common choice is H := H1(Ω)d which favors practical implementations and numerical analysis in [17]. We remark that the shape optimization procedure can be viewed as a moving boundary or inter-face tracking problem. Conventional approaches to solving these problems can be classified into two main categories: body fitted and unfitted methods. For body fitted method, the moving mesh method [11–14] is the most popular one, as it o ff ers distinct advantages in precisely tracking domain deformation while maintaining straightforward numerical implementation. However, this method may su ff er from progressive mesh quality deterioration, often necessitating computationally expen-sive remeshing procedures. In contrast, unfitted methods eliminate the need for remeshing by em-ploying alternative interface representation techniques, such as level-set methods [28], parametric approaches, or cubic spline methods [25] adopted in the current work. The motivation to use cu-bic splines to approximate the domain boundary characterized by the flow map is that we can add or delete control points during the optimization course, which is in contrast to the parameterization approach. The unfitted method for solving interface problems, moving boundary problems, or problems with complex boundaries is quite popular and has been developed very well in recent decades. It decou-ples the mesh from the physical domain, simplifies the mesh generation, and is especially well-suited for problems with moving boundaries, evolving interfaces, multiphase flows, shape optimization, and so on. Peskin introduced the immersed boundary method (IBM) to simulate flows around complex shapes in [29]. Then the extended FEM (XFEM) was introduced in [2] for fracture modeling with enrichment functions that allow discontinuities across elements. An improvement of a new technique for modeling cracks in the finite element framework is presented in [26]. In [19] the authors laid the 
+
+> 2
+
+groundwork for CutFEM, proposing unfitted discretizations with consistent stabilizations. In [6] a general framework for the construction and analysis of discrete extension operators was developed with an application to the unfitted finite element approximation of partial di ff erential equations. Cut-FEM was also used to solve shape optimization problems with satisfactory numerical results, we refer to [3–5] for more details. Significant progress has been made in the convergence analysis of finite element approximations for linear parabolic PDEs with moving boundaries using fitted and unfitted elements. In [25] the authors proposed a fourth-order unfitted characteristic FEM to solve the advection-di ff usion equation in time-varying domains with a prescribed velocity. However, numerical analyses remain limited for moving boundary problems with solution-driven velocities. In this article, we present an analysis of a moving boundary problem with solution driven velocity, arising from the PDE-constrained shape optimization problem, using the unfitted method. Specifically, we used a cubic spline to track the boundary and defined an artificial mapping between the exact and numerical domains to quantify the geometric error. Furthermore, a careful choice of test functions is introduced to handle the nonlinear terms of the problem. We believe that the numerical analysis provided in [17] and the current paper may provide an alternative viewpoint for the convergence analysis of shape optimization problems. Throughout this paper, let C denote a generic positive constant which may depend on T , but is independent of the time step τ, the grid size h and the arc segment η. Vector-valued quantities are denoted by boldface symbols, such as L2(Ω) = (L2(Ω)) 2, and matrix-valued quantities are denoted by blackboard bold symbols, such as L2(Ω) = (L2(Ω)) 2×2. In the following, ( ·, ·)Ω denotes the inner products in L2(Ω), L2(Ω), and L2(Ω), in their respective circumstances. The remainder of this paper is organized as follows. In Section 2, we formulate the shape gradient flow model for PDE-constrained shape optimization problems. Then in Section 3 we give the temporal and spatial discretizations and introduce the boundary tracking algorithm based on the cubic spline. In Section 4, we present and prove our main theoretical result on the convergence of discrete problems solved using an unfitted finite element method. The numerical experiment is shown in Section 5. We conclude the paper in Section 6. 2. PDE-constrained shape optimization problems 
+
+In this paper, we consider the following shape optimization problem min  
+
+> Γ
+
+J(Γ) =
+
+Z
+
+> Ω
+
+j(·, u)d x(2.1) subject to 
+
+
+
+−∆u + u = f in Ω ⊂ R2,∂nu = 0 on Γ := ∂Ω,
+
+(2.2) where f is a given function defined in R2. The shape density function takes the form of j(·, u) = 12 |∇ u|2
+
+or j(·, u) = 12 |u − ud|2, which corresponds to di ff erent application background such as minimal energy dissipation or optimal shape reconstruction, respectively. For any smooth vector field v : R2 → R2 and t ≥ 0 we denote by F t[v] : Γ → R2 the flow map determined by the velocity field v, defined by the following evolution equation ddt F t[v] = v ◦ F t[v] on Γ with initial condition F 0[v] = id |Γ.
+
+> 3
+
+The Eulerian derivative of J(Γ) at Γ in the direction v is defined as dJ(Γ; v) : = ddt J(F t[v]( Γ)) t=0 = lim 
+
+> t→0+
+
+J(F t[v]( Γ)) − J(Γ)
+
+t .
+
+It can be formulated as an integral on the boundary in terms of the shape gradient defined on the boundary Γ (see [10, Chap. 9, Sec. 3.4]), i.e., (2.3) dJ(Γ; v) =
+
+Z
+
+> Γ
+
+J′(Γ)v · ndΓ.
+
+In fact, J′(Γ) is defined as the function on Γ satisfying the relation (2.3); n is the unit outward normal vector of Γ.If we choose j(·, u) = 12 |u − ud|2 defined in (2.1), then the Eulerian derivative of the functional J(Γ)has the following closed form (cf. [18, 21]): dJ(Γ; v) = dJ(Γ, u, p; v) : =
+
+Z
+
+> Ω
+
+2∇u · D(v)∇p + p∇ f · vdx
+
++
+
+Z
+
+> Ω
+
+12|u − ud|2 − ∇ u · ∇ p − up + f p ∇ · v − (u − ud)∇ud · vdx,(2.4) where D(v) = (∇v + (∇v)⊤)/2, u and p are determined by the following equations: 
+
+−∆u + u = f in Ω, with ∂nu = 0 on Γ,
+
+−∆p + p = u − ud in Ω, with ∂n p = 0 on Γ.
+
+We can also obtain the boundary type shape derivative defined in (2.3) with the shape gradient J′(Γ) =
+
+j(·, u) − ∇ u · ∇ p − up + f p (cf. [10]). In general, the shape gradient J′(Γ) admits a low regularity, which may cause stability issues in shape optimization algorithms. For the stability and convergence of the numerical approximations, we consider the H1 shape gradient flow of the shape functional in (2.1), i.e., the evolution of the boundary Γ(t) = ∂Ω(t), t ∈ [0 , T ], with initial position Γ0 = ∂Ω0, is determined by the following coupled system of equations (cf. [17]): 
+
+−∆u + u = f in Ω(t), ∂nu = 0 on Γ(t),(2.5a) 
+
+−∆p + p = j′
+
+> u
+
+(·, u) in Ω(t), ∂n p = 0 on Γ(t),(2.5b) 
+
+−∆w + w = 0 in Ω(t), ∂nw = −J′(Γ(t)) n on Γ(t),(2.5c) 
+
+∂tϕ = w ◦ ϕ in Ω0, ϕ(·, 0) = id |Ω0 in Ω0,(2.5d) where ϕ(·, t) : Ω0 → Ω(t) is the flow map that generates the boundary evolution through Γ(t) =
+
+ϕ(Γ0, t) under the velocity field w, j′ 
+
+> u
+
+is the derivative of j(·, u) with respect to u. Then the rate of change of the shape functional J(Γ) satisfies the following relation: (2.6) dJ(Γ(t)) dt =
+
+Z
+
+> Γ(t)
+
+J′(Γ(t)) w(t) · n dΓ(t).
+
+Therefore, testing (2.5c) with w and using the relation (2.6), the following property can be shown: dJ(Γ(t)) dt = −∥∇ w(t)∥2 
+
+> L2(Ω(t))
+
+− ∥ w(t)∥2 
+
+> L2(Ω(t))
+
+≤ 0,
+
+i.e., the shape functional decreases as time grows. Consequently, the H1 shape gradient flow evolves to a critical point of the PDE-constrained shape optimization problem. 
+
+> 4
+
+For any flow map ϕ : Ω0 × [0 , T ] → R2, we denote by Ω[ϕ(·, t)] the image of Ω0 under the map 
+
+ϕ(·, t). If Ω[ϕ(·, t)] has a Lipschitz boundary, then the boundary type Eulerian derivative in (2.3) and the distributed type Eulerian derivative in (2.4) are equivalent (cf. [10]). Consequently, by applying integration by parts, (2.5c) can be equivalently reformulated into the following weak formulation: Find w ∈ H1(Ω) such that 
+
+Z
+
+> Ω
+
+∇w : ∇v + w · vdx =
+
+Z
+
+> Γ
+
+∂nw · vdΓ = −
+
+Z
+
+> Γ
+
+J′(Γ)v · ndΓ= −dJ(Γ; v) = −dJ(Γ, u, p; v) ∀ v ∈ H1(Ω),
+
+where the closed form of d J(Γ, u, p; v) is given by (2.4). Then the moving boundary problem in (2.5) can be written into the following weak formulation: 
+
+Z
+
+> Ω[ϕ(·,t)]
+
+∇u · ∇ χu + uχudx =
+
+Z
+
+> Ω[ϕ(·,t)]
+
+f χudx ∀ χu ∈ H1(Ω[ϕ(·, t)]) ,(2.7a) 
+
+Z
+
+> Ω[ϕ(·,t)]
+
+∇p · ∇ χp + pχpdx =
+
+Z
+
+> Ω[ϕ(·,t)]
+
+j′
+
+> u
+
+(x, u)χpdx ∀ χp ∈ H1(Ω[ϕ(·, t)]) ,(2.7b) 
+
+Z
+
+> Ω[ϕ(·,t)]
+
+∇w : ∇χw + w · χwdx = −dJ(Γ(t), u, p; χw) ∀ χw ∈ H1(Ω[ϕ(·, t)]) ,(2.7c) 
+
+∂tϕ = w ◦ ϕ,(2.7d) under the initial condition ϕ(·, 0) = id |Ω0 , with Γ(t) = ∂Ω(t). 3. T he unfitted finite element method 
+
+In the following subsections, we present discretizations of the shape gradient flow system in both time and space, as well as the interface tracking approach. 3.1. Semi-discrete schemes. Let 0 = t0 < t1 < · · · < tN = T be the uniform partition of [0 , T ]with step size τ = T/N. The exact characteristic map from Γ(tm) to Γ(tn) is denoted by ϕm,n :=
+
+ϕ(·, tn) ◦ (ϕ(·, tm)) −1 for 0 ≤ m ≤ n ≤ N. The inverse of ϕm,n is denoted by 
+
+ϕn,m :=  ϕm,n−1.
+
+Suppose that we are seeking the approximate solution ϕ0,n 
+
+> τ
+
+(x) to (2.7d) and the approximate solution 
+
+un
+
+> τ
+
+, pn
+
+> τ
+
+, wn 
+
+> τ
+
+to (2.7a)–(2.7c), and that ϕ0,m 
+
+> τ
+
+(x) have been obtained for all 0 ≤ m < n and all x ∈ Γ0. The approximate domain Ωτ(tm) at tm is defined in such a way that ∂Ωτ(tm) = Γ τ(tm). For any 0 ≤ j ≤ m,the maps ϕj,m 
+
+> τ
+
+: Ωτ(tj) → Ωτ(tm) and ϕj,m: Ω(tj) → Ω(tm) are given by 
+
+ϕj,m 
+
+> τ
+
+= ϕ0,m 
+
+> τ
+
+◦  ϕ0, j
+
+> τ
+
+−1, ϕj,m = ϕ0,m ◦  ϕ0, j−1.
+
+The inverse of ϕj,m 
+
+> τ
+
+is denoted by ϕm, j 
+
+> τ
+
+:=  ϕj,m
+
+> τ
+
+−1.For the time discretization, we consider a linear semi-implicit Euler method: (3.1) ϕ0,n 
+
+> τ
+
+(x) = ϕ0,n−1 
+
+> τ
+
+(x) + τwn−1 
+
+> τ
+
+◦ ϕ0,n−1 
+
+> τ
+
+(x), ∀ x ∈ Γ0.
+
+By introducing the incremental map ϕn−1,n 
+
+> τ
+
+from tn−1 to tn, (3.1) can be equivalently rewritten as: 
+
+ϕn−1,n 
+
+> τ
+
+(x) = x + τwn−1 
+
+> τ
+
+(x), ∀ x ∈ Γτ(tn−1).
+
+> 5
+
+Clearly, ϕn−1,n 
+
+> τ
+
+defines the approximate domain Ωτ(tn) in the n-th time step such that ∂Ωτ(tn) =Γτ(tn) = ϕn−1,n 
+
+> τ
+
+(x) for all x ∈ Γτ(tn−1). The approximate solutions un
+
+> τ
+
+, pn 
+
+> τ
+
+and wn 
+
+> τ
+
+satisfy 
+
+−∆un 
+
+> τ
+
++ un 
+
+> τ
+
+= f in Ωτ(tn), ∂nun 
+
+> τ
+
+= 0 on Γτ(tn),(3.2a) 
+
+−∆pn 
+
+> τ
+
++ pn 
+
+> τ
+
+= j′
+
+> u
+
+(·, u) in Ωτ(tn), ∂n pn 
+
+> τ
+
+= 0 on Γτ(tn),(3.2b) 
+
+−∆wn 
+
+> τ
+
++ wn 
+
+> τ
+
+= 0 in Ωτ(tn), ∂nwn 
+
+> τ
+
+= −J′(Γτ(tn)) n on Γτ(tn).(3.2c) Then the moving boundary problem in (2.5) can be written in the following weak formulation: 
+
+Z
+
+> Ωτ(tn)
+
+∇un 
+
+> τ
+
+· ∇ χu + un
+
+> τ
+
+χudx =
+
+Z
+
+> Ωτ(tn)
+
+f χudx ∀ χu ∈ H1(Ωτ(tn)) ,
+
+Z
+
+> Ωτ(tn)
+
+∇pn 
+
+> τ
+
+· ∇ χp + pn
+
+> τ
+
+χpdx =
+
+Z
+
+> Ωτ(tn)
+
+j′
+
+> u
+
+(x, un
+
+> τ
+
+)χpdx ∀ χp ∈ H1(Ωτ(tn)) ,
+
+Z
+
+> Ωτ(tn)
+
+∇wn 
+
+> τ
+
+: ∇χw + wn 
+
+> τ
+
+· χwdx = −dJ  Γτ(tn), un
+
+> τ
+
+, pn
+
+> τ
+
+; χw
+
+ ∀ χw ∈ H1(Ωτ(tn)) ,
+
+ϕ0,n+1 
+
+> τ
+
+(x) = ϕ0,n 
+
+> τ
+
+(x) + τwn 
+
+> τ
+
+◦ ϕ0,n 
+
+> τ
+
+(x), ∀ x ∈ Γ0,
+
+under the initial condition ϕ0
+
+> τ
+
+(·) = id |Γ0 .3.2. Interface-tracking and finite element meshes. In this subsection, we consider spatial dis-cretization. Since we use the unfitted finite element method to solve the coupled system (2.7), we need to find an e ffi cient way to track the evolution of the domain boundary. In this paper, we as-sume that the initial domain boundary Γ0 can be represented by a cubic spline with control points 
+
+P0 = np0 
+
+> j
+
+: 0 ≤ j ≤ Jo. Then the evolution of the domain can be realized by the movement of the control points, which are driven by the discretization of the velocity in (2.7c). We suppose that the arc length of Γ0 between p00 and p0 
+
+> j
+
+is equal to L0 
+
+> j
+
+= jη for 1 ≤ j ≤ J, where 
+
+η := L0/J and L0 is the arc length of Γ0. For all 0 < n ≤ N, suppose that we are given the set of control points pn−1 
+
+> j
+
+at time tn−1. Then the control points at tn are obtained by (3.4) pnj = pn−1 
+
+> j
+
++ τwn−1 
+
+> h
+
+(pn−1 
+
+> j
+
+), 0 ≤ j ≤ J,
+
+where wnh will be given later in (3.5c). During domain evolution, we denote by Γn 
+
+> η
+
+the discrete boundary represented by a cubic spline, while the corresponding approximate domain Ωn 
+
+> η
+
+is defined such that ∂Ωn 
+
+> η
+
+= Γ n
+
+> η
+
+. The parametric representation Zn 
+
+> η
+
+∈ C2 of Γn 
+
+> η
+
+is a cubic spline and satisfies 
+
+Zn 
+
+> η
+
+(Lnj ) = pnj , Lnj =
+
+> j−1
+
+X
+
+> i=0
+
+pni+1 − pni , 0 ≤ j ≤ J.
+
+Let D be an open bounded domain (e.g. a rectangle) that satisfies Ω(t) ⊂ D for all 0 ≤ t ≤ T . We denote by Th a family of uniform partitions of ¯ D into closed regular squares with the mesh parameter 
+
+h. This partition induces two collections of elements that cover Ωn 
+
+> η
+
+and Γn
+
+> η
+
+, respectively: 
+
+T nh := nK ∈ T h : K ∩ Ωn 
+
+> η
+
+, ∅o ,
+
+T nh,B := nK ∈ T nh : K ∩ Γn 
+
+> η
+
+, ∅o .
+
+> 6
+
+The covers T nh , T nh,B generate fictitious domains Ωnh := interior  ∪K∈T nh K and ΩnB := interior  ∪K∈T nh,B K,respectively. Furthermore, let Eh be the set of all edges in Th. The set of interior edges associated with the boundary elements is defined as: 
+
+Enh,B = E ∈ E h : ∃K ∈ T nh,B s.t. E ⊂ ∂K\∂Ωnh .
+
+Figure 1 provides a visual representation of the meshes and the associated fictitious domains. 
+
+D
+
+Ωn
+
+> η
+
+Figure 1. The domain D and its partition Th, the approximate domain Ωn
+
+> η
+
+, the set of red and yellow squares T nh , the set of red squares T nh,B, the union of red and yellow squares Ωnh, the union of red squares ΩnB.
+
+Next, we define in the following the finite element spaces in D, Ωnh and ΩnB, respectively, 
+
+V(k, Th) : = v ∈ H1(D) : v|K ∈ Qk(K), ∀ K ∈ T h ,
+
+V(k, T nh ) : = v|Ωnh : v ∈ V(k, Th) , V(k, T nh,B) : = v|ΩnB : v ∈ V(k, Th) ,
+
+where Qk contains polynomials with each variable having degree at most k. The space of piecewise regular functions over T nh is defined by 
+
+Hm(T nh ) : = v ∈ L2(Ωnh) : v|K ∈ Hm(K), ∀ K ∈ T nh , m ≥ 1.
+
+3.3. Fully discrete schemes. In this subsection, we present the fully discrete schemes for the shape gradient flow system. Once we obtain Γn
+
+> η
+
+, we use the standard unfitted finite element methods to discretize (3.2). That is, we look for unh ∈ V(k, T nh ), pnh ∈ V(k, T nh ) and wnh ∈ V (k, T nh ) : = V(k, T nh )2
+
+such that Z
+
+> Ωn
+> η
+
+∇unh · ∇ χu + unhχudx + J nh (unh, χ u) =
+
+Z
+
+> Ωn
+> η
+
+f χudx ∀χu ∈ V(k, T nh ),(3.5a) 
+
+Z
+
+> Ωn
+> η
+
+∇pnh · ∇ χp + pnhχpdx + J nh (pnh, χ p) =
+
+Z
+
+> Ωn
+> η
+
+j′
+
+> u
+
+ x, unh
+
+ χpdx ∀χp ∈ V(k, T nh ),(3.5b) 
+
+Z
+
+> Ωn
+> η
+
+∇wnh : ∇χw + wnh · χwdx + J nh (wnh , χw) = −dJ Γn
+
+> η
+
+, unh, pnh; χw
+
+ ∀χw ∈ V (k, T nh ),(3.5c) where J nh is the ghost-penalty stabilization term [20], defined by 
+
+J nh (u, v) : = α
+
+X
+
+> E∈E nh,B
+> k
+
+X
+
+> s=1
+
+h2s−1
+
+Z
+
+> E
+
+⟦∂s
+
+> n
+
+u⟧⟦ ∂s
+
+> n
+
+v⟧ds.(3.6) 
+
+> 7
+
+Here α is a positive constant whose value will be specified in the section on numerical experiments, 
+
+∂s
+
+> n
+
+u denotes the sth -order normal derivative of u on the edge E, and n denotes the unit outward normal of E. Moreover, the jump of a quantity v over a face E is defined as ⟦v⟧ = v|K1 − v|K2 , with 
+
+E = K1 ∩ K2 ∈ E nh,B. Now we can define a new bilinear form on H1(Ωnh) as follows: 
+
+A nh (u, v) : = (∇u, ∇v)Ωn 
+
+> η
+
++ (u, v)Ωn 
+
+> η
+
++ J nh (u, v),
+
+then the discrete form can be written as 
+
+A nh (unh, χ u) = ( f, χ u)Ωn 
+
+> η
+
+∀χu ∈ V(k, T nh ),(3.7a) 
+
+A nh (pnh, χ p) = ( j′
+
+> u
+
+(·, unh), χ p)Ωn 
+
+> η
+
+∀χp ∈ V(k, T nh ),(3.7b) 
+
+A nh (wnh , χw) = −dJ(Γn
+
+> η
+
+, unh, pnh; χw) ∀χw ∈ V (k, T nh ).(3.7c) 
+
+Assumption 3.1. [25, Assumption 4.1] There exist an integer I > 0 and a constant γ > 0 which are independent of h and τ such that, for any K ∈ T nh,B, one can find at most I elements {Kj}Ij=1 ⊂ T nh
+
+satisfying K 1 = K, Kj−1 ∩ Kj ∈ E nh,B for 1 < j ≤ I and that K I ∩ Ωn 
+
+> η
+
+contains a disk of radius γh. 
+
+Under Assumption 3.1, we know from [25, Lemma 4.2] that the penalty term J nh (·, ·) has the following properties for any vh ∈ V(k, T nh ): 
+
+|vh|2 
+
+> H1(Ωnh)
+
+≤ C
+
+
+
+J nh (vh, vh) + |vh|2
+
+> H1(Ωn
+> η)
+
+
+
+,(3.8a) 
+
+|| vh|| 2 
+
+> L2(Ωnh)
+
+≤ C
+
+
+
+h2J nh (vh, vh) + || vh|| 2
+
+> L2(Ωn
+> η)
+
+
+
+,(3.8b) Moreover, one can show that 
+
+C∥vh∥2 
+
+> H1(Ωnh)
+
+≤ A nh (vh, vh), A nh (uh, vh) ≤ C∥uh∥H1(Ωnh)∥vh∥H1(Ωnh) ∀uh, vh ∈ V(k, T nh ).(3.9) Then the state equation, the adjoint state equation, and the velocity equation in (3.7) admit a unique solution, respectively. For the error analysis of the domain approximation, we need to define the discrete flow map func-tion ϕnh. Similarly to the definition of ϕ0,n 
+
+> τ
+
+, we define ϕnh as (3.10) ϕnh(x) = ϕn−1 
+
+> h
+
+(x) + τwn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+(x) ∀ x ∈ Γ0,
+
+with the initial condition ϕ0
+
+> h
+
+(·) = id |Γ0 . Furthermore, we can extend the above definition to the interior of Ω0, such that (3.11) ϕnh(x) = ϕn−1 
+
+> h
+
+(x) + τwn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+(x) ∀ x ∈ Ω0.
+
+We denote by Ωn the image of Ω0 under the mapping ϕnh, i.e., Ωn := ϕnh(Ω0). We note that ∂Ωn is continuous and consists of piecewise segments. According to (3.4) and (3.11), Ωn coincide with Ωn
+
+> η
+
+at the control points {pnj }. Although they are not identical, the latter can be viewed as a cubic spline interpolation of the former, or the former can be viewed as a piecewise interpolation of the latter. In the following analysis, we extend the finite element solution wn−1 
+
+> h
+
+from Ωn−1 
+
+> h
+
+to D such that wn−1
+
+> h
+
+vanishes at the nodes outside the domain ¯ Ωn−1 
+
+> h
+
+. Then we have || wn−1 
+
+> h
+
+|| H1(D) ≤ C|| wn−1 
+
+> h
+
+|| H1(Ωn−1  
+
+> h)
+
+(cf. [22, 25]). After extension of wn−1 
+
+> h
+
+to D, one can guarantee that the mapped point ϕn−1 
+
+> h
+
+(x) ∈ Ωn−1 ⊂ D
+
+for any x ∈ Ω0, which means that wn−1 
+
+> h
+
+is well-defined at the point ϕn−1 
+
+> h
+
+(x). Then the extension of the definition in (3.10) from Γ0 to Ω0 as in (3.11) is meaningful. We should emphasize here that the definition of the discrete flow map is compatible with the evolution of control points, since for any 0 ≤ j ≤ J and 0 < n ≤ N we have pnj = ϕnh(pn−1 
+
+> j
+
+) according to (3.4). In actual computations, we 
+
+> 8
+
+use the control points (3.4) for interface tracking to reduce computational cost. The domain extension (3.11) is introduced only for theoretical analysis, since it allows us to work on a fixed reference domain when deriving error estimates. 4. E rror Analysis 
+
+We can define Sobolev extensions of the exact solutions un := u(tn), pn := p(tn), wn := w(tn)from Ω(tn) to R2 which remain invariant in Ω(tn), and still denote them as un, pn, wn. Let ϕn be the exact flow map of time tn and ϕnh ∈ V(k, T 0 
+
+> h
+
+) be the discrete solution defined in (3.11). Let ˆ un, ˆpn ∈
+
+V(k, T nh ) and ˆwn ∈ V (k, T nh ) be the Lagrange interpolations of the Sobolev extensions un, pn, wn,while unh, pnh, wnh are the finite element solutions. For any χu, χ p ∈ V(k, T nh ) and χw ∈ V (k, T nh ), we have the following weak formulations: 
+
+Z
+
+> Ωn
+> η
+
+∇ˆun · ∇ χu + ˆunχudx + J nh (ˆ un, χ u) =
+
+Z
+
+> Ωn
+> η
+
+f χudx +
+
+Z
+
+> Ωn
+> η
+
+dnu χudx,(4.1a) 
+
+Z
+
+> Ωn
+> η
+
+∇ ˆpn · ∇ χp + ˆpnχpdx + J nh ( ˆ pn, χ p) =
+
+Z
+
+> Ωn
+> η
+
+j′ 
+
+> u
+
+(x, ˆun) χpdx +
+
+Z
+
+> Ωn
+> η
+
+dnpχpdx,(4.1b) 
+
+Z
+
+> Ωn
+> η
+
+∇ ˆwn : ∇χw + ˆwn · χwdx + J nh ( ˆ wn, χw) = −dJ Γn
+
+> η
+
+, ˆun, ˆpn; χw
+
+ +
+
+Z
+
+> Ωn
+> η
+
+dnw · χw dx,(4.1c) where dnu , dnp and dnw are some defects that will be estimated in subsection 4.3. Here, Ω(tn) denotes the true domain and Ωn 
+
+> η
+
+denotes the cubic spline domain of the FE solution. Define (4.2) en
+
+> ϕ
+
+(x) = ϕnh(x) − ϕn(x), enw(x) = wnh (x) − ˆwn(x),
+
+enu(x) = unh(x) − ˆun(x), enp(x) = pnh(x) − ˆpn(x),
+
+then the following estimate holds. 
+
+Theorem 4.1. Suppose that for all t ∈ [0 , T ], the domain Ω(t) is of class C 2. Furthermore, assume that the given function f ∈ Ck, the flow map ϕ(·, t) ∈ C2([0 , T ]; C1(Ω0)) , the exact solutions u (·, t), p(·, t)
+
+and the exact velocity w(·, t) are of type C ([0 , T ]; Ck(D)) . Then for k ≥ 2, τ = O(hk), η = O(hk+ 12 ),and su ffi ciently small h, the following estimate holds for any 0 ≤ n ≤ N: 
+
+(4.3) en  
+
+> ϕH1(Ω0)
+
++ enu H1(Ωnh) + enp H1(Ωnh) + enw H1(Ωnh) ≤ C(τ + hk).
+
+Remark 4.2. We remark that the above error estimate is only local in time during the shape opti-mization procedure. For our error analysis, we need the assumption that the arc length between two neighboring control points should be uniformly bounded from above and below by the parameter η,which, however, may be violated during the evolution of the domain boundary. In such cases, we can add or remove control points as done in [25]. We also refer to [17] for an evolving finite element method where remeshing may be necessary for large shape deformations. 
+
+To prove Theorem 4.1, we require the following assumption to hold for all time steps 0 ≤ n ≤ N:(4.4) ∥en
+
+> ϕ
+
+∥W1,∞(Ω0) ≤ min 
+
+(
+
+1, 12Cϕ
+
+)
+
+, || enu|| W1,∞(Ωnh) ≤ 1, || enp|| W1,∞(Ωnh) ≤ 1, ∥enw∥W 1,∞(Ωnh) ≤ 1,
+
+where Cϕ := ∥(∇ϕ)−1∥L∞(0 ,T ;L∞(D)) . Together with the smoothness of the exact solution and (4.4), the triangle inequality yields the bounds: 
+
+∥ϕnh∥W1,∞(Ω0) ≤ ∥ en
+
+> ϕ
+
+∥W1,∞(Ω0) + ∥ϕn∥W1,∞(Ω0) ≤ 1 + ∥ϕ∥L∞(0 ,T ;W1,∞(Ω0)) ,(4.5a) 
+
+> 9
+
+∥unh∥W1,∞(Ωnh) ≤ ∥ enu∥W1,∞(Ωnh) + ∥ˆun∥W1,∞(Ωnh)
+
+≤ ∥ enu∥W1,∞(Ωnh) + ∥ˆun − un∥W1,∞(Ωnh) + ∥un∥W1,∞(Ωnh)(4.5b) 
+
+≤ 1 + Ch + ∥u∥L∞(0 ,T ;W1,∞(D)) ≤ 2 + ∥u∥L∞(0 ,T ;W1,∞(D)) ,
+
+∥pnh∥W1,∞(Ωnh) ≤ ∥ enp∥W1,∞(Ωnh) + ∥ ˆpn∥W1,∞(Ωnh) ≤ 2 + ∥p∥L∞(0 ,T ;W1,∞(D)) ,(4.5c) 
+
+∥wnh ∥W 1,∞(Ωnh) ≤ ∥ enw∥W 1,∞(Ωnh) + ∥ ˆwn∥W 1,∞(Ωnh) ≤ 2 + ∥w∥L∞(0 ,T ;W 1,∞(D)) .(4.5d) We establish (4.4) by mathematical inductions and briefly outline the proof strategy as follows. Sup-pose that for some 0 ≤ n0 < N, the estimates in (4.4) hold for all 0 ≤ n ≤ n0. We then demonstrate that the error bound (4.3) holds at time level n = n0 + 1, which in turn implies that (4.4) is valid for 
+
+n = n0 + 1. Consequently, if (4.4) is satisfied for the initial step n = 0, the desired result follows for all n ≤ N by induction. The complete inductive argument is presented in detail in the following. First, if n = 0, we know that both ϕ0 
+
+> h
+
+and ϕ0 are identity functions, so that || e0
+
+> ϕ
+
+|| W1,∞(Ω0) = 0. Meanwhile, using (3.9) we know that (4.6) C∥e0
+
+> u
+
+∥2 
+
+> H1(Ω0
+> h)
+
+≤ A 0 
+
+> h
+
+(e0
+
+> u
+
+, e0
+
+> u
+
+) = A 0 
+
+> h
+
+(e0
+
+> u
+
+, u0 
+
+> h
+
+− u0 + u0 − ˆu0) = A 0 
+
+> h
+
+(e0
+
+> u
+
+, u0 − ˆu0) + A 0 
+
+> h
+
+(e0
+
+> u
+
+, u0 
+
+> h
+
+− u0).
+
+Since u is su ffi ciently smooth, we have J 0 
+
+> h
+
+(u0, e0
+
+> u
+
+) = 0. Given that Ω0 is prescribed, the domains of integration in (3.5) and (2.7) coincide. By subtracting (3.5) from (2.7) and choosing e0 
+
+> u
+
+as the test function, the term A 0 
+
+> h
+
+(e0
+
+> u
+
+, u0 
+
+> h
+
+− u0) vanishes. Now, (4.6) becomes 
+
+C∥e0
+
+> u
+
+∥2 
+
+> H1(Ω0
+> h)
+
+≤ A 0 
+
+> h
+
+(e0
+
+> u
+
+, u0 − ˆu0) ≤ ∥ e0
+
+> u
+
+∥H1(Ω0
+
+> h)
+
+∥u0 − ˆu0∥H1(Ω0 
+
+> h)
+
++ Ch k∥e0
+
+> u
+
+∥H1(Ω0
+
+> h)
+
+,
+
+which yields 
+
+∥e0
+
+> u
+
+∥W1,∞(Ω0 
+
+> h)
+
+≤ Ch −1∥e0
+
+> u
+
+∥H1(Ω0 
+
+> h)
+
+≤ Ch −1∥u0 − ˆu0∥H1(Ω0 
+
+> h)
+
++ Ch k−1.
+
+When we take k ≥ 2 and h small enough, we have 
+
+∥e0
+
+> u
+
+∥W1,∞(Ω0 
+
+> h)
+
+≤ Ch k−1 ≤ Ch ≤ 1.
+
+Therefore, e0 
+
+> p
+
+and e0 
+
+> w
+
+can be estimated in a similar way. Then for any 1 ≤ m ≤ N, we assume that the property (4.4) holds for all 0 ≤ n ≤ m − 1. Next, we consider the case n = m and show that, under this circumstance, the error estimate (4.3) holds for 
+
+n = m.4.1. Estimate for e n 
+
+> ϕ
+
+under the property (4.4) .Lemma 4.3. If the time step size τ is su ffi ciently small, then the discrete flow map ϕnh defined in (3.11) is invertible for all 0 ≤ n ≤ m with a uniform bound independent of n. Proof. By definition, for any 0 ≤ n ≤ m we have 
+
+∇ϕnh =  I + τ∇w n−1 
+
+> h
+
+◦ ϕ n−1
+
+> h
+
+ ∇ϕ n−1 
+
+> h
+
+=
+
+> n−1
+
+Y
+
+> j=0
+
+ I + τ∇w jh ◦ ϕ jh
+
+.
+
+Let Cw := ∥w∥L∞(0 ,T ;W1,∞(D)) and assume that the time step τ is su ffi ciently small such that (2 + Cw)τ < 
+
+1/4. Then according to (4.5a) and (4.5d), ϕnh : Ω0 → Ωn is bijective and its Jacobian matrix ∇ϕnh(x)is invertible for all x ∈ Ω0 and 0 ≤ n ≤ m. Moreover, the inverse Jacobian is uniformly bounded: 
+
+∥(∇ϕnh)−1∥L∞(Ωn) ≤ 11 − (2 + Cw)τ
+
+!n
+
+.
+
+> 10
+
+Since n ≤ N = T/τ , it follows that lim 
+
+> τ→0+
+
+11 − (2 + Cw)τ
+
+!T/τ 
+
+= e(2 +Cw)T ,
+
+hence, ∥(∇ϕnh)−1∥L∞(Ωn) remains uniformly bounded independent of n for 0 ≤ n ≤ m. □
+
+Lemma 4.4. Under the assumptions of Theorem 4.1 and the property (4.4) , for any 1 ≤ n ≤ m it holds that 
+
+∥en
+
+> ϕ
+
+∥H1(Ω0) ≤ C
+
+τ + τ
+
+> n
+
+X
+
+> l=1
+
+∥el−1 
+
+> w
+
+∥H1(Ωl−1  
+
+> h)
+
++ τ
+
+> n
+
+X
+
+> l=1
+
+∥el−1 
+
+> ϕ
+
+∥H1(Ω0) + hk
+
+ ,
+
+where C > 0 is independent of τ and h, but may depend on T and the norms of the exact solution. Proof. By the definition of ϕnh and a Taylor expansion of the exact flow map, for all x ∈ Ω0,
+
+ϕnh(x) = ϕn−1 
+
+> h
+
+(x) + τ wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+(x),
+
+ϕn(x) = ϕn−1(x) + τ wn−1 ◦ ϕn−1(x) + O(τ2).
+
+Subtracting the two relations and using en 
+
+> ϕ
+
+= ϕnh − ϕn yields 
+
+∥en
+
+> ϕ
+
+∥L2(Ω0) ≤ ∥ en−1 
+
+> ϕ
+
+∥L2(Ω0) + Cτ2 + τ∥wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+− wn−1 ◦ ϕ n−1∥L2(Ω0).
+
+We divide the last term by inserting ˆw n−1:
+
+∥wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+− wn−1 ◦ ϕ n−1∥L2(Ω0)
+
+≤ ∥ en−1 
+
+> w
+
+◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) + ∥( ˆ w n−1 − wn−1) ◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) + C∥wn−1∥W 1,∞(D)∥en−1 
+
+> ϕ
+
+∥L2(Ω0).
+
+By a change of variables x = ϕn−1 
+
+> h
+
+(x0), x0 ∈ Ω0 and Lemma 4.3, 
+
+∥en−1 
+
+> w
+
+◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) ≤ C∥en−1 
+
+> w
+
+∥L2(Ωn−1 
+
+> h)
+
+, ∥( ˆ w n−1 − wn−1) ◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) ≤ C∥ ˆw n−1 − wn−1∥L2(Ωn−1 
+
+> h)
+
+.
+
+Using the interpolation error estimate, we obtain ∥ ˆw n−1 − wn−1∥L2(Ωn−1  
+
+> h)
+
+≤ Ch k+1, and thus 
+
+∥en
+
+> ϕ
+
+∥L2(Ω0) ≤ ∥ en−1 
+
+> ϕ
+
+∥L2(Ω0) + Cτ2 + Cτ∥en−1 
+
+> w
+
+∥L2(Ωn−1  
+
+> h)
+
++ Cτ∥en−1 
+
+> ϕ
+
+∥L2(Ω0) + Cτhk+1.
+
+Next, di ff erentiating and applying the chain rule gives 
+
+|en
+
+> ϕ
+
+|H1(Ω0) ≤ | en−1 
+
+> ϕ
+
+|H1(Ω0) + Cτ2 + τ∥∇ (wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+) − ∇ (wn−1 ◦ ϕ n−1)∥L2(Ω0).
+
+We estimate the gradient term by inserting ˆw n−1 and applying the chain rule: 
+
+∥∇ (wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+) − ∇ (wn−1 ◦ ϕ n−1)∥L2(Ω0)
+
+=∥(( ∇wn−1 
+
+> h
+
+) ◦ ϕn−1 
+
+> h
+
+) ∇ϕn−1 
+
+> h
+
+− (( ∇wn−1) ◦ ϕ n−1) ∇ϕ n−1∥L2(Ω0)
+
+≤∥ (( ∇wn−1 
+
+> h
+
+− ∇ ˆw n−1) ◦ ϕn−1 
+
+> h
+
+) ∇ϕn−1 
+
+> h
+
+∥L2(Ω0)
+
++ ∥(( ∇ ˆw n−1 − ∇ wn−1) ◦ ϕn−1 
+
+> h
+
+) ∇ϕn−1 
+
+> h
+
+∥L2(Ω0)
+
++ ∥(( ∇wn−1) ◦ ϕn−1 
+
+> h
+
+) ∇ϕn−1 
+
+> h
+
+− (( ∇wn−1) ◦ ϕ n−1) ∇ϕ n−1∥L2(Ω0).
+
+Using the boundedness of ∇ϕn−1 
+
+> h
+
+from Lemma 4.3, the change of variables x = ϕn−1 
+
+> h
+
+(x0), x0 ∈ Ω0,and the Lipschitz continuity of ∇wn−1, we obtain 
+
+∥∇ (wn−1 
+
+> h
+
+◦ ϕn−1 
+
+> h
+
+) − ∇ (wn−1 ◦ ϕ n−1)∥L2(Ω0)
+
+≤ C∥∇ en−1 
+
+> w
+
+◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) + C∥∇ ( ˆ w n−1 − wn−1) ◦ ϕn−1 
+
+> h
+
+∥L2(Ω0) + C∥wn−1∥W 2,∞(D)∥en−1 
+
+> ϕ
+
+∥H1(Ω0)
+
+11 ≤ C∥en−1 
+
+> w
+
+∥H1(Ωn−1  
+
+> h)
+
++ Ch k + C∥en−1 
+
+> ϕ
+
+∥H1(Ω0).
+
+Combining the above bounds yields, for 1 ≤ n ≤ m,
+
+∥en
+
+> ϕ
+
+∥H1(Ω0) ≤ ∥ en−1 
+
+> ϕ
+
+∥H1(Ω0) + Cτ2 + Cτ∥en−1 
+
+> w
+
+∥H1(Ωn−1  
+
+> h)
+
++ Cτ∥en−1 
+
+> ϕ
+
+∥H1(Ω0) + Cτhk.
+
+Summing from l = 1 to n and using nτ ≤ T gives 
+
+∥en
+
+> ϕ
+
+∥H1(Ω0) ≤ Cτ + Cτ
+
+> n
+
+X
+
+> l=1
+
+∥el−1 
+
+> w
+
+∥H1(Ωl−1  
+
+> h)
+
++ Cτ
+
+> n
+
+X
+
+> l=1
+
+∥el−1 
+
+> ϕ
+
+∥H1(Ω0) + Ch k,
+
+which completes the proof. □
+
+4.2. Construction and estimation of the auxiliary map. To estimate the defects induced by the mismatch between the discrete and exact domains, we introduce an auxiliary map that measures the distance between the two domains 
+
+Ωn := ϕnh(Ω0) and Ω(tn) = ϕn(Ω0).
+
+By Lemma 4.3, the following definition is well posed 
+
+env (x) : = ϕn ◦ (ϕnh)−1(x) − x, ∀ x ∈ Ωn.
+
+A key identity follows immediately from (4.2): for any x0 ∈ Ω0,(4.7) env
+
+ ϕnh(x0) = ϕn(x0) − ϕnh(x0) = − en
+
+> ϕ
+
+(x0), hence env = − en 
+
+> ϕ
+
+◦ (ϕnh)−1 in Ωn.
+
+Lemma 4.5. Under the assumptions of Theorem 4.1 and the property (4.4) , for any 0 ≤ n ≤ m − 1 it holds that 
+
+(4.8) ∥env ∥H1(Ωnh) ≤ C ∥en
+
+> ϕ
+
+∥H1(Ω0),
+
+where C > 0 is independent of h , τ , and n. Proof. By (4.7) and the change of variables x = ϕnh(x0), 
+
+∥env ∥2 
+
+> L2(Ωn)
+
+=
+
+Z
+
+> Ωn
+
+|env (x)|2 dx =
+
+Z
+
+> Ω0
+
+env (ϕnh(x0)) 2 | det ∇ϕnh(x0)| dx
+
+=
+
+Z
+
+> Ω0
+
+|en
+
+> ϕ
+
+(x0)|2 | det ∇ϕnh(x0)| dx ≤ C ∥en
+
+> ϕ
+
+∥2
+
+> L2(Ω0)
+
+,
+
+where we used the uniform bound on | det ∇ϕnh| from Lemma 4.3. Moreover, di ff erentiating (4.7) gives, for x = ϕnh(x0), 
+
+∇env (x) ∇ϕnh(x0) = − ∇ en
+
+> ϕ
+
+(x0), thus ∇env (x) = − ∇ en
+
+> ϕ
+
+(x0) ( ∇ϕnh(x0)) −1.
+
+Hence, using again the change of variables and Lemma 4.3, 
+
+|env |2 
+
+> H1(Ωn)
+
+=
+
+Z
+
+> Ωn
+
+|∇ env (x)|2 dx
+
+=
+
+Z
+
+> Ω0
+
+∇en
+
+> ϕ
+
+(x0) ( ∇ϕnh(x0)) −1 2
+
+| det ∇ϕnh(x0)| dx ≤ C |en
+
+> ϕ
+
+|2
+
+> H1(Ω0)
+
+.
+
+Combining the estimates under L2 norm and H1 semi-norm yields (4.8). □
+
+> 12
+
+With the auxiliary map env , we define a one-parameter family of transformations (4.9) T n 
+
+> θ
+
+(x) : = x + θ env (x), x ∈ Ωn, θ ∈ [0 , 1] ,
+
+and the associated deformed domains 
+
+Ωn 
+
+> θ
+
+:= T n 
+
+> θ
+
+(Ωn), Ωn 
+
+> 0
+
+= Ω n, Ωn 
+
+> 1
+
+= Ω (tn).
+
+Lemma 4.6. Under the assumptions of Theorem 4.1 and property (4.4) , the mapping T n 
+
+> θ
+
+: Ωn → Ωn
+
+> θ
+
+is invertible for every 0 ≤ n ≤ m − 1 and θ ∈ [0 , 1] . Moreover, T n 
+
+> θ
+
+is bi-Lipschitz on Ωn, and its Jacobian matrix Jn 
+
+> θ
+
+:= ∇T n 
+
+> θ
+
+exists a.e. in Ωn with the uniform bounds 
+
+∥Jn 
+
+> θ
+
+∥L∞(Ωn) + ∥(Jn 
+
+> θ
+
+)−1∥L∞(Ωn) ≤ C,
+
+where C > 0 is independent of n and θ.Proof. Fix x ∈ Ωn and set x0 := (ϕnh)−1(x) ∈ Ω0. By (4.9) and (4.7), we have 
+
+T n 
+
+> θ
+
+(x) = x − θ en
+
+> ϕ
+
+(x0), Jn 
+
+> θ
+
+(x) = ∇T n 
+
+> θ
+
+(x) = I − θ ∇en
+
+> ϕ
+
+(x0) ( ∇ϕnh(x0)) −1 a.e. in Ωn.
+
+Using ∇ϕnh = ∇ϕn + ∇en
+
+> ϕ
+
+, we factorize 
+
+∇ϕnh = (I + Aθ)∇ϕn, Aθ := ∇en
+
+> ϕ
+
+(∇ϕn)−1.
+
+Hence, whenever I + Aθ is invertible, (∇ϕnh)−1 = (∇ϕn)−1(I + Aθ)−1.
+
+By (4.4) and the definition of Cϕ, ∥Aθ∥L∞(Ω0) ≤ 12 , hence ( I + Aθ)−1 exists and ∥(I + Aθ)−1∥L∞(Ω0) ≤ 2. Therefore, 
+
+∥∇ en
+
+> ϕ
+
+(∇ϕnh)−1∥L∞(Ω0) = ∥Aθ(I + Aθ)−1∥L∞(Ω0) ≤ ∥Aθ∥L∞(Ω0)
+
+1 − ∥ Aθ∥L∞(Ω0)
+
+≤ 1.
+
+Consequently, for θ ∈ [0 , 1), 
+
+∥Jn 
+
+> θ
+
+− I∥L∞(Ωn) = θ ∥∇ en
+
+> ϕ
+
+(∇ϕnh)−1∥L∞(Ω0) ≤ θ < 1,
+
+which implies that Jn 
+
+> θ
+
+is invertible a.e. and ∥(Jn 
+
+> θ
+
+)−1∥L∞(Ωn) ≤ (1 − θ)−1. Moreover, for any x1, x2 ∈ Ωn,(1 − θ)|x1 − x2| ≤ | T n 
+
+> θ
+
+(x1) − T n 
+
+> θ
+
+(x2)| ≤ (1 + θ)|x1 − x2|,
+
+so T n 
+
+> θ
+
+is bi-Lipschitz and hence globally invertible. For θ = 1, we have T n 
+
+> 1
+
+= ϕn ◦ (ϕnh)−1, which is bi-Lipschitz according to Lemma 4.3 and the regularity of ϕn. The stated uniform bounds follow. □
+
+For any y ∈ Ωn 
+
+> θ
+
+, let x = (T n 
+
+> θ
+
+)−1(y) and define the associated velocity field (4.10) env,θ (y) : = ddθ T n 
+
+> θ
+
+(x) = env (x) = env ◦ (T n 
+
+> θ
+
+)−1(y), y ∈ Ωn 
+
+> θ
+
+.
+
+By the change of variables and Lemma 4.6, we obtain (4.11) 
+
+∥env,θ ∥2  
+
+> L2(Ωn
+> θ)
+
+=
+
+Z
+
+> Ωn
+
+|env (x)|2 | det( Jn 
+
+> θ
+
+(x)) | dx ≤ C ∥env ∥2
+
+> L2(Ωn)
+
+,
+
+|env,θ |2  
+
+> H1(Ωn
+> θ)
+
+=
+
+Z
+
+> Ωn
+
+∇env (x) ( Jn 
+
+> θ
+
+(x)) −1 2 | det( Jn 
+
+> θ
+
+(x)) | dx ≤ C |env |2
+
+> H1(Ωn)
+
+.
+
+> 13
+
+4.3. Consistency estimate. To define ˆ un 
+
+> θ
+
+∈ H1(Ωn 
+
+> θ
+
+), let ˆ un 
+
+> 0
+
+:= ˆun, i.e., the interpolation of the exact solution un, and define ˆun 
+
+> θ
+
+(y) : = unh(y) −  unh ◦ (T n 
+
+> θ
+
+)−1(y) − ˆun 
+
+> 0
+
+◦ (T n 
+
+> θ
+
+)−1(y) = unh(y) −  unh(x) − ˆun
+
+> 0
+
+(x) y ∈ Ωn 
+
+> θ
+
+.
+
+The error between unh and ˆ un 
+
+> θ
+
+is given by 
+
+enu,θ (y) : = unh(y) − ˆun 
+
+> θ
+
+(y) = unh(x) − ˆun
+
+> 0
+
+(x) = enu,0(x) = enu(x) y ∈ Ωn 
+
+> θ
+
+,
+
+implying its material derivative vanishes. Specifically, at y = T n 
+
+> θ
+
+(x) ∈ Ωn 
+
+> θ
+
+, we have 
+
+∂•enu,θ (y) = lim 
+
+> α→0+
+
+enu,θ (x + (θ + α)env (x)) − enu,θ (x + θenv (x)) 
+
+α = 0.
+
+Moreover, the material derivative of the gradient satisfies (4.12) ∂•∇enu,θ = ∇∂•enu,θ − (∇env,θ )⊤∇enu,θ = −(∇env,θ )⊤∇enu,θ .
+
+4.3.1. Estimate for d nu . Recall that enu,0(x) = enu(x) ∈ V(k, T nh ) and enu,θ (y) ∈ H1(Ωn 
+
+> θ
+
+). The weak formulation of the exact solution is to find un ∈ H1(Ω(tn)) such that (4.13) 
+
+Z
+
+> Ω(tn)
+
+∇un · ∇ χu + unχudx =
+
+Z
+
+> Ω(tn)
+
+f χudx ∀χu ∈ H1(Ω(tn)) .
+
+Assuming that un is smooth enough, we have J nh (un, enu,0) = 0. Since enu,1 ∈ H1(Ω(tn)), taking χu = enu,1
+
+in (4.13), it follows from (4.1a) that (4.14) 
+
+Z
+
+> Ωn
+> η
+
+dnu enu,0dx =
+
+Z
+
+> Ωn
+> η
+
+∇ˆun · ∇ enu,0 + ˆunenu,0 − f e nu,0
+
+ dx + J nh (ˆ un, enu,0)
+
+=
+
+ Z 
+
+> Ωn
+> η
+
+∇ˆun · ∇ enu,0dx −
+
+Z
+
+> Ω(tn)
+
+∇un · ∇ enu,1dx
+
+| {z }
+
+> Iu
+
++
+
+ Z 
+
+> Ωn
+> η
+
+ˆunenu,0dx −
+
+Z
+
+> Ω(tn)
+
+unenu,1dx
+
+| {z }
+
+> II u
+
++
+
+ Z 
+
+> Ω(tn)
+
+f e nu,1dx −
+
+Z
+
+> Ωn
+> η
+
+f e nu,0dx
+
+| {z }
+
+> III u
+
++
+
+
+
+J nh (ˆ un, enu,0) − J nh (un, enu,0)
+
+| {z }
+
+> IV u
+
+.
+
+Estimate of Iu. We decompose (4.15) Iu =  Z
+
+> Ωn
+> η
+
+∇ˆun · ∇ enu,0 dx −
+
+Z
+
+> Ωn
+
+∇ˆun · ∇ enu,0 dx| {z }
+
+> Iu
+> 1
+
++
+
+Z
+
+> Ωn
+
+∇(ˆ un − un) · ∇ enu,0 dx
+
+| {z }
+
+> Iu
+> 2
+
++  Z
+
+> Ωn
+
+∇un · ∇ enu,0 dx −
+
+Z
+
+> Ω(tn)
+
+∇un · ∇ enu,1 dx| {z }
+
+> Iu
+> 3
+
+.
+
+By the interpolation estimate, ∥∇ (ˆ un − un)∥L2(Ωn) ≤ Ch k, hence 
+
+|Iu
+
+> 2
+
+| ≤ Ch k ∥enu,0∥H1(Ωnh).
+
+To bound I u
+
+> 1
+
+, we use the following geometric strip estimate. 
+
+> 14
+
+Lemma 4.7. For any v h ∈ V(k, T nh ) and v ∈ H1(D), there holds 
+
+(4.16) ∥vh∥2 
+
+> L2(Ωn
+> η\Ωn)
+
++ ∥vh∥2 
+
+> L2(Ωn\Ωn
+> η)
+
+≤ Ch −1η ∥vh∥2
+
+> L2(Ωnh)
+
+, ∥v∥2 
+
+> L2(Ωn
+> η\Ωn)
+
++ ∥v∥2 
+
+> L2(Ωn\Ωn
+> η)
+
+≤ Cη ∥v∥2
+
+> H1(D)
+
+.
+
+Proof. From the definition in (3.11), it follows that ∂Ωn = ϕnh(Γ0) coincides with the control points 
+
+{pnj } of Ωn
+
+> η
+
+, where Ωn and Ωn 
+
+> η
+
+intersect. Since ∂Ωn 
+
+> η
+
+can be viewed as a cubic spline interpolation of 
+
+∂Ωn, the standard estimate implies that dist( ϕnh(x), ∂ Ωn
+
+> η
+
+) ≤ Cη∥ϕnh∥W1,∞(Γ0) ∀x ∈ Γ0,
+
+where C > 0 is independent of η. Using the condition (4.4), by the inverse estimate and the extension of finite element function defined before, we have 
+
+∥vh∥2 
+
+> L2(Ωn
+> η\Ωn)
+
+≤ C
+
+X
+
+> K∩(Ωn
+> η\Ωn),∅
+
+hη ∥vh∥2 
+
+> L∞(K)
+
+≤ Ch −1η ∥vh∥2 
+
+> L2(Ωnh)
+
+.
+
+The estimate for ∥vh∥L2(Ωn\Ωn 
+
+> η)
+
+is similar. The second inequality is a direct consequence of [27, Eq. (17) in Lemma 10]. □
+
+According to Lemma 4.7, we have 
+
+Z
+
+> Ωn
+> η\Ωn
+
+∇ˆun · ∇ enu,0dx =
+
+Z
+
+> Ωn
+> η\Ωn
+
+(∇ˆun − ∇ un) · ∇ enu,0dx +
+
+Z
+
+> Ωn
+> η\Ωn
+
+∇un · ∇ enu,0dx
+
+≤ Ch k− 12 η12 enu,0 H1(Ωnh) + Ch − 12 η enu,0 H1(Ωnh) ,
+
+which yields Iu 
+
+> 1
+
+=
+
+Z
+
+> Ωn
+> η\Ωn
+
+∇ˆun · ∇ enu,0dx −
+
+Z
+
+> Ωn\Ωn
+> η
+
+∇ˆun · ∇ enu,0dx ≤ Chk− 12 η12 + h− 12 η enu,0 H1(Ωnh) .
+
+To estimate I u
+
+> 3
+
+, we use the deformation T n 
+
+> θ
+
+and the transport error enu,θ . Since un is independent of θ
+
+and ∂•enu,θ = 0, combining (4.10) and (4.12) yields (4.17) Iu 
+
+> 3
+
+= −
+
+Z 10
+
+ddθ
+
+Z
+
+> Ωn
+> θ
+
+∇un · ∇ enu,θ dx dθ
+
+= −
+
+Z 10
+
+Z
+
+> Ωn
+> θ
+
+(∇ · env,θ ) ∇un · ∇ enu,θ + (∇2un env,θ ) · ∇ enu,θ − (∇env,θ )⊤∇enu,θ · ∇ un dx dθ
+
+≤ C
+
+Z 10
+
+∥env,θ ∥H1(Ωn  
+
+> θ)
+
+∥enu,θ ∥H1(Ωn  
+
+> θ)
+
+dθ ≤ C∥env ∥H1(Ωn) ∥enu,0∥H1(Ωnh),
+
+where in the last step, we used Lemma 4.6 and (4.11) to obtain 
+
+∥enu,θ ∥2  
+
+> L2(Ωn
+> θ)
+
+=
+
+Z
+
+> Ωn
+
+|enu,0(x)|2 | det( Jn 
+
+> θ
+
+)| dx ≤ C ∥enu,0∥2 
+
+> L2(Ωn)
+
+≤ C || enu,0|| 2
+
+> L2(Ωnh)
+
+,
+
+|enu,θ |2  
+
+> H1(Ωn
+> θ)
+
+=
+
+Z
+
+> Ωn
+
+∇enu,0(x) ( Jn 
+
+> θ
+
+(x)) −1 2 | det( Jn 
+
+> θ
+
+)| dx ≤ C |enu,0|2 
+
+> H1(Ωn)
+
+≤ C |enu,0|2
+
+> H1(Ωnh)
+
+.
+
+Collecting (4.15)–(4.17) and setting Eh := hk + hk− 12 η12 + h− 12 η, 
+
+15 we arrive at (4.18) |Iu| ≤ CEh + ∥env ∥H1(Ωn)
+
+ ∥enu,0∥H1(Ωnh).
+
+Estimate of II u. Proceeding analogously, we write II u =  Z
+
+> Ωn
+> η
+
+ˆunenu,0 dx −
+
+Z
+
+> Ωn
+
+ˆunenu,0 dx +
+
+Z
+
+> Ωn
+
+(ˆ un − un)enu,0 dx +  Z
+
+> Ωn
+
+unenu,0 dx −
+
+Z
+
+> Ω(tn)
+
+unenu,1 dx,
+
+and obtain (4.19) |II u| ≤ Chk+ 12 η12 + h− 12 η∥enu,0∥H1(Ωnh) + Ch k∥enu,0∥L2(Ωnh) + C∥env ∥H1(Ωn)∥enu,0∥L2(Ωnh).
+
+Estimate of III u. Using the same transport argument as in (4.17), we have (4.20) 
+
+|III u| =  Z
+
+> Ω(tn)
+
+f e nu,1 dx −
+
+Z
+
+> Ωn
+
+f e nu,0 dx +  Z
+
+> Ωn
+
+f e nu,0 dx −
+
+Z
+
+> Ωn
+> η
+
+f e nu,0 dx
+
+≤
+
+Z 10
+
+ddθ
+
+ Z
+
+> Ωn
+> θ
+
+f e nu,θ dx dθ + Ch − 12 η∥enu,0∥L2(Ωnh) ≤ C∥env ∥H1(Ωn) + h− 12 η ∥enu,0∥L2(Ωnh).
+
+Estimate of IV u. Before estimating the last term, we first recall the trace inequality. For any v ∈
+
+H1(K), it holds that 
+
+∥v∥2 
+
+> L2(E)
+
+≤ Ch−1∥v∥2 
+
+> L2(K)
+
++ h|v|2
+
+> H1(K)
+
+.
+
+By the definition of the jump, we have 
+
+∥⟦∂s
+
+> n
+
+v⟧∥2 
+
+> L2(E)
+
+≤ C∥∂s
+
+> n
+
+v∥2 
+
+> L2(E∩K1)
+
++ ∥∂s
+
+> n
+
+v∥2
+
+> L2(E∩K2)
+
+.
+
+Thus, it su ffi ces to estimate the higher-order normal derivatives on the face E in terms of the quantities defined on the neighboring elements. Applying the trace inequality with v = ∇senu,0 and v = ∇s(ˆ un −un)yields (4.21) ∥∂s
+
+> n
+
+(ˆ un − un)∥2 
+
+> L2(E)
+
+≤ ∥∇ s(ˆ un − un)∥2 
+
+> L2(E)
+
+≤ Ch−1∥∇ s(ˆ un − un)∥2 
+
+> L2(K)
+
++ h |∇ s(ˆ un − un)|2
+
+> H1(K)
+
+,
+
+∥∂s
+
+> n
+
+enu,0∥2 
+
+> L2(E)
+
+≤ ∥∇ senu,0∥2 
+
+> L2(E)
+
+≤ Ch−1∥∇ senu,0∥2 
+
+> L2(K)
+
++ h |∇ senu,0|2
+
+> H1(K)
+
+.
+
+Since enu,0 is a finite element function, the following inverse inequalities hold: 
+
+∥∇ senu,0∥L2(K) ≤ Ch 1−s|enu,0|H1(K), |∇ senu,0|H1(K) ≤ Ch −s|enu,0|H1(K).
+
+Combining standard interpolation error estimates with (4.21), we obtain 
+
+∥∂s
+
+> n
+
+(ˆ un − un)∥2 
+
+> L2(E)
+
+≤ Ch−1h2( k+1−s) + h · h2( k−s)|un|2 
+
+> Hk+1(K)
+
+≤ Ch 2k−2s+1|un|2
+
+> Hk+1(K)
+
+,
+
+∥∂s
+
+> n
+
+enu,0∥2 
+
+> L2(E)
+
+≤ Ch−1h2(1 −s) + h · h−2s|enu,0|2 
+
+> H1(K)
+
+≤ Ch 1−2s|enu,0|2
+
+> H1(K)
+
+.
+
+Multiplying by the weight h2s−1 and applying the Cauchy-Schwarz inequality, we deduce that 
+
+h2s−1
+
+Z
+
+> E
+
+⟦∂s
+
+> n
+
+(ˆ un − un)⟧⟦ ∂s
+
+> n
+
+enu,0⟧ ds ≤ C(h4s−2h2k−2s+1h1−2s)1/2|enu,0|H1(K) ≤ Ch k|enu,0|H1(K).
+
+Summing over all elements K, we conclude that (4.22) |IV u| = J nh (ˆ un − un, enu,0) ≤ Ch k ∥enu,0∥H1(Ωnh).
+
+16 Conclusion of (4.14) . Combining (4.18)–(4.22) and using (4.8), we finally obtain 
+
+Z
+
+> Ωn
+> η
+
+dnu enu,0 dx ≤ CEh + ∥en
+
+> ϕ
+
+∥H1(Ω0)
+
+ ∥enu,0∥H1(Ωnh).
+
+4.3.2. Estimate for d np. Subtracting (2.7b) from (4.1b), after taking χp = enp = enp,0 ∈ V(k, T nh ) in (4.1b) and χp = enp,1 ∈ H1(Ω(tn)) in (2.7b), we obtain 
+
+Z
+
+> Ωn
+> η
+
+dnpenp,0dx =
+
+Z
+
+> Ωn
+> η
+
+∇ ˆpn · ∇ enp,0 + ˆpnenp,0 − (ˆ un − ud)enp,0dx + J nh ( ˆ pn, enp,0)
+
+=
+
+ Z 
+
+> Ωn
+> η
+
+∇ ˆpn · ∇ enp,0dx −
+
+Z
+
+> Ω(tn)
+
+∇pn · ∇ enp,1dx
+
+| {z }
+
+> Ip
+
++
+
+ Z 
+
+> Ωn
+> η
+
+ˆpnenp,0dx −
+
+Z
+
+> Ω(tn)
+
+pnenp,1dx
+
+| {z }
+
+> II p
+
++
+
+ Z 
+
+> Ωn
+> η
+
+udenp,0dx −
+
+Z
+
+> Ω(tn)
+
+udenp,1dx
+
+| {z }
+
+> III p
+
++
+
+
+
+J nh ( ˆ pn, enp,0) − J nh (pn, enp,0)
+
+| {z }
+
+> IV p
+
++
+
+ Z 
+
+> Ω(tn)
+
+unenp,1dx −
+
+Z
+
+> Ωn
+> η
+
+ˆunenp,0dx
+
+| {z }
+
+> Vp
+
+.
+
+The estimates for I p − Vp are similar to I u − IV u. Thus, we obtain the following consistency error of the adjoint state 
+
+Z
+
+> Ωn
+> η
+
+dnpenp,0dx ≤ CEh + en 
+
+> ϕH1(Ω0)
+
+ enp,0 H1(Ωnh) .
+
+4.3.3. Estimate for dnw. Using (4.1c) and (2.7c), and taking the test functions χw = enw,0 = enw ∈
+
+V (k, T nh ) in (4.1c) and χw = enw,1 ∈ H1(Ω(tn)) in (2.7c), we obtain (4.23) 
+
+Z
+
+> Ωn
+> η
+
+dnw · enw,0 dx =
+
+Z
+
+> Ωn
+> η
+
+∇ ˆwn : ∇enw,0 + ˆwn · enw,0dx + J nh ( ˆ wn, enw,0) + dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw,0
+
+
+
+=
+
+ Z 
+
+> Ωn
+> η
+
+∇ ˆwn : ∇enw,0dx −
+
+Z
+
+> Ω(tn)
+
+∇wn : ∇enw,1dx
+
+| {z }
+
+> Iw
+
++
+
+ Z 
+
+> Ωn
+> η
+
+ˆwn · enw,0dx −
+
+Z
+
+> Ω(tn)
+
+wn · enw,1dx
+
+| {z }
+
+> II w
+
++
+
+
+
+dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw,0
+
+ − dJ Γ(tn), un, pn; enw,1
+
+  | {z }
+
+> III w
+
++
+
+
+
+J nh ( ˆ wn, enw,0) − J nh (wn, enw,0)
+
+| {z }
+
+> IV w
+
+.
+
+The terms I w, II w and IV w can be estimated in the same way as in subsections 4.3.1–4.3.2, which gives 
+
+|Iw| + |II w| + |IV w| ≤ CEh + ∥env ∥H1(Ωn)
+
+ ∥enw,0∥H1(Ωnh).
+
+It remains to bound the shape derivative term III w.
+
+17 Estimate of III w. Using (2.4), we decompose III w into terms of the form III w =
+
+ Z 
+
+> Ωn
+> η
+
+2∇ˆun · D(enw,0)∇ ˆpndx −
+
+Z
+
+> Ω(tn)
+
+2∇un · D(enw,1)∇pndx)
+
+| {z }
+
+> III w
+> 1
+
++
+
+Z
+
+> Ωn
+> η
+
+ˆpn∇ f · enw,0dx −
+
+Z
+
+> Ω(tn)
+
+pn∇ f · enw,1dx
+
++
+
+Z
+
+> Ωn
+> η
+
+12|ˆun − ud|2 − ∇ ˆun · ∇ ˆpn − ˆun ˆpn + f ˆpn∇ · enw,0dx −
+
+Z
+
+> Ωn
+> η
+
+(ˆ un − ud)∇ud · enw,0dx
+
+−
+
+Z
+
+> Ω(tn)
+
+12|un − ud|2 − ∇ un · ∇ pn − un pn + f p n∇ · enw,1dx +
+
+Z
+
+> Ω(tn)
+
+(un − ud)∇ud · enw,1dx.
+
+In fact, taking the first term as an example and using the interpolation error estimate, we have III w 
+
+> 1
+
+=
+
+Z
+
+> Ωn
+> η
+
+2∇(ˆ un − un) · D(enw,0)∇ ˆpndx
+
+| {z }
+
+> III w
+> 1,1
+
++
+
+Z
+
+> Ωn
+> η
+
+2∇un · D(enw,0)∇ ˆpndx −
+
+Z
+
+> Ωn
+
+2∇un · D(enw,0)∇ ˆpndx
+
+| {z }
+
+> III w
+> 1,2
+
++
+
+Z
+
+> Ωn
+
+2∇un · D(enw,0)∇( ˆ pn − pn)d x
+
+| {z }
+
+> III w
+> 1,3
+
++
+
+Z
+
+> Ωn
+
+2∇un · D(enw,0)∇pndx −
+
+Z
+
+> Ω(tn)
+
+2∇un · D(enw,1)∇pndx
+
+| {z }
+
+> III w
+> 1,4
+
+≤ Ch k enw,0 H1(Ωnh) + III w 
+
+> 1,2
+
++ III w
+
+> 1,4
+
+.
+
+The second term III w 
+
+> 1,2
+
+in this formula can be estimated by H¨ older’s inequality and Lemma 4.7 as (4.24) Z
+
+> Ωn
+> η\Ωn
+
+2∇un · D(enw,0)∇ ˆpndx =
+
+Z
+
+> Ωn
+> η\Ωn
+
+2∇un · D(enw,0)( ∇ ˆpn − ∇ pn)d x +
+
+Z
+
+> Ωn
+> η\Ωn
+
+2∇un · D(enw,0)∇pndx
+
+≤C||∇ un|| L∞(D)|| D(enw,0)|| L2(Ωn
+
+> η\Ωn)
+
+||∇ ˆpn − ∇ pn|| L2(Ωn 
+
+> η\Ωn)
+
++ ||∇ pn|| L2(Ωn
+
+> η\Ωn)
+
+
+
+≤Chk− 12 η12 + h− 12 η enw,0 H1(Ωnh) .
+
+The other part follows by a similar argument. For the last bracket in III w 
+
+> 1,4
+
+, we employ the domain deformation T n 
+
+> θ
+
+and define enw,θ by transport, i.e., enw,θ ◦T n 
+
+> θ
+
+= enw,0. In particular, ∂•enw,θ = 0. Then, using the transport formula and the identities ∂•(∇un) = ∇2un env,θ , ∂•(∇pn) = ∇2 pn env,θ , and ∂•(∇enw,θ ) =
+
+−(∇env,θ )⊤∇enw,θ , we obtain (4.25) III w 
+
+> 1,4
+
+= −
+
+Z 10
+
+ddθ
+
+Z
+
+> Ωn
+> θ
+
+2∇un · D(enw,θ )∇pn dxdθ
+
+= − 2
+
+Z 10
+
+Z
+
+> Ωn
+> θ
+
+(∇ · env,θ )∇un · D(enw,θ )∇pn + ∂•(∇un) · D(enw,θ )∇pn
+
++ ∇un · ∂•D(enw,θ )∇pn + ∇un · D(enw,θ )∂•(∇pn)d xdθ
+
+≤C∥env ∥H1(Ωn) ∥enw,0∥H1(Ωnh).
+
+18 Combining (4.24)–(4.25) yields 
+
+|III w 
+
+> 1
+
+| ≤ CEh + ∥env ∥H1(Ωn)
+
+ ∥enw,0∥H1(Ωnh).
+
+All the remaining contributions in III w can be treated analogously, and we conclude that (4.26) |III w| ≤ CEh + ∥env ∥H1(Ωn)
+
+ ∥enw,0∥H1(Ωnh).
+
+Conclusion of (4.23) . Thus, we can obtain the consistency error for the velocity variable from (4.8): 
+
+Z
+
+> Ωn
+> η
+
+dnwenw,0dx ≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enw,0 H1(Ωnh) .
+
+Lemma 4.8. Under the assumption of Theorem 4.1 and the property (4.4) , we denote E h = hk +
+
+hk− 12 η12 + h− 12 η. The consistency estimates satisfy 
+
+Z
+
+> Ωn
+> η
+
+dnu enudx ≤ C Eh + ∥en
+
+> ϕ
+
+∥H1(Ω0)
+
+ enu H1(Ωnh) ,
+
+Z
+
+> Ωn
+> η
+
+dnpenpdx ≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enp H1(Ωnh) ,
+
+Z
+
+> Ωn
+> η
+
+dnwenwdx ≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enw H1(Ωnh) ,
+
+where en
+
+> ϕ
+
+, e nu, e np and enw are defined in (4.2) . Here C > 0 is independent of τ, h and n. 
+
+4.4. Stability estimate. In this subsection, our aim is to derive bounds for enu, enp and enw based on the consistency estimates. Subtracting (4.1) from (3.5), we arrive at the following equalities: 0 =
+
+Z
+
+> Ωn
+> η
+
+∇enu · ∇ enu + enuenu + dnu enu
+
+dx + Jh(enu, enu),
+
+0 =
+
+Z
+
+> Ωn
+> η
+
+∇enp · ∇ enp + enpenp + dnpenp
+
+ dx + Jh(enp, enp) −
+
+Z
+
+> Ωn
+> η
+
+j′
+
+> u
+
+ x, unh
+
+ enpdx +
+
+Z
+
+> Ωn
+> η
+
+j′ 
+
+> u
+
+(x, ˆun) enpdx,
+
+0 =
+
+Z
+
+> Ωn
+> η
+
+∇enw : ∇enw + enw · enw + dnw · enw
+
+dx + Jh(enw, enw) + dJ Γn
+
+> η
+
+, unh, pnh; enw
+
+ − dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw
+
+ .
+
+Then using (3.8a) and (3.8b), we can obtain the following stability results 
+
+C|| enu|| 2 
+
+> H1(Ωnh)
+
+≤
+
+Z
+
+> Ωn
+> η
+
+∇enu · ∇ enu + enuenu
+
+dx + Jh(enu, enu) ≤
+
+Z
+
+> Ωn
+> η
+
+dnu enudx ,
+
+C|| enp|| 2 
+
+> H1(Ωnh)
+
+≤
+
+Z
+
+> Ωn
+> η
+
+ j′
+
+> u
+
+ x, unh
+
+ enp − j′ 
+
+> u
+
+(x, ˆun) enp
+
+ dx −
+
+Z
+
+> Ωn
+> η
+
+dnpenpdx ≤
+
+Z
+
+> Ωn
+> η
+
+dnpenpdx + enu L2(Ωn 
+
+> η)
+
+enp L2(Ωn 
+
+> η)
+
+,
+
+C|| enw|| 2 
+
+> H1(Ωnh)
+
+≤ dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw
+
+ − dJ Γn
+
+> η
+
+, unh, pnh; enw
+
+ −
+
+Z
+
+> Ωn
+> η
+
+dnwenwdx.
+
+19 Observing the formulation of the Eulerian derivative in (2.4), we have dJ Γn
+
+> η
+
+, unh, pnh; enw
+
+ − dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw
+
+
+
+=
+
+Z
+
+> Ωn
+> η
+
+2∇unh · D(enw)∇(pnh − ˆpn)d x +
+
+Z
+
+> Ωn
+> η
+
+2∇(unh − ˆun) · D(enw)∇ ˆpndx +
+
+Z
+
+> Ωn
+> η
+
+enp∇ f · enwdx
+
++
+
+Z
+
+> Ωn
+> η
+
+12(unh + ˆun)( unh − ˆun) − (unh − ˆun)ud − ∇ unh · ∇ (pnh − ˆpn) − ∇ (unh − ˆun) · ∇ ˆpn∇ · enwdx
+
++
+
+Z
+
+> Ωn
+> η
+
+ − unh(pnh − ˆpn) − (unh − ˆun) ˆ pn + f e np
+
+∇ · enwdx −
+
+Z
+
+> Ωn
+> η
+
+enu∇ud · enwdx
+
+=
+
+Z
+
+> Ωn
+> η
+
+2∇unh · D(enw)∇enpdx +
+
+Z
+
+> Ωn
+> η
+
+2∇enu · D(enw)∇ ˆpndx +
+
+Z
+
+> Ωn
+> η
+
+enp∇ f · enwdx −
+
+Z
+
+> Ωn
+> η
+
+enu∇ud · enwdx
+
++
+
+Z
+
+> Ωn
+> η
+
+12(unh + ˆun)enu − enuud − ∇ unh · ∇ enp − ∇ enu · ∇ ˆpn − unhenp − enu ˆpn + f e np
+
+∇ · enwdx.
+
+Using condition (4.5b), the velocity error can be transformed as 
+
+enw 
+
+> 2
+> H1(Ωnh)
+
+≤ C
+
+dJ Γn
+
+> η
+
+, ˆun, ˆpn; enw
+
+ − dJ Γn
+
+> η
+
+, unh, pnh; enw
+
+ −
+
+Z
+
+> Ωn
+> η
+
+dnwenwdx
+
+
+
+≤ C
+
+
+
+enu H1(Ωn 
+
+> η)
+
++ enp H1(Ωn
+
+> η)
+
+
+
+enw H1(Ωn 
+
+> η)
+
++
+
+Z
+
+> Ωn
+> η
+
+dnwenwdx
+
+ .
+
+Based on the above discussion, we obtain the following stability estimates. 
+
+Lemma 4.9. Under the assumptions in Theorem 4.1, for any 0 ≤ n ≤ N, the stability estimates of u and p satisfy 
+
+enu 
+
+> 2
+> H1(Ωnh)
+
+≤ C
+
+Z
+
+> Ωn
+> η
+
+dnu enudx ,
+
+enp 
+
+> 2
+> H1(Ωnh)
+
+≤ C
+
+ enu L2(Ωn 
+
+> η)
+
+enp L2(Ωn 
+
+> η)
+
++
+
+Z
+
+> Ωn
+> η
+
+dnpenpdx
+
+ .
+
+Additionally, with (4.5b) , for 0 ≤ n ≤ m − 1 the stability estimate of w satisfies 
+
+enw 
+
+> 2
+> H1(Ωnh)
+
+≤ C
+
+
+
+enu H1(Ωn 
+
+> η)
+
++ enp H1(Ωn
+
+> η)
+
+
+
+enw H1(Ωn 
+
+> η)
+
++
+
+Z
+
+> Ωn
+> η
+
+dnwenwdx
+
+ ,
+
+where C > 0 is independent of τ, h and n. 
+
+4.5. Proof of Theorem 4.1. Recall that the spatial error is defined as E h = hk + hk− 12 η12 + h− 12 η. By combining the results of Lemmas 4.8 and 4.9, we derive the following estimates: 
+
+enu 
+
+> 2
+> H1(Ωnh)
+
+≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enu H1(Ωnh) ,
+
+enp 
+
+> 2
+> H1(Ωnh)
+
+≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enp H1(Ωnh) ,
+
+enw 
+
+> 2
+> H1(Ωnh)
+
+≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+ enw H1(Ωnh) .
+
+20 The last inequality immediately implies 
+
+enw H1(Ωnh) ≤ C Eh + en 
+
+> ϕH1(Ω0)
+
+
+
+for 0 ≤ n ≤ m − 1. Recalling the estimate for en 
+
+> ϕ
+
+from Lemma 4.4, we obtain 
+
+en  
+
+> ϕH1(Ω0)
+
+≤ Cτ + CEh + Cτ
+
+> n
+
+X
+
+> l=1
+
+el−1  
+
+> ϕH1(Ω0)
+
+.
+
+Applying a discrete Gronwall’s inequality yields 
+
+en  
+
+> ϕH1(Ω0)
+
+≤ C (τ + Eh)for n = m. Substituting this into the previous estimates gives the following 
+
+enu H1(Ωnh) ≤C(τ + Eh), enp H1(Ωnh) ≤ C(τ + Eh), enw H1(Ωnh) ≤ C(τ + Eh)for 0 ≤ n ≤ m. Since k ≥ 2, there exists h0 > 0, we may choose τ = o(h) and η = o(h32 ) with 0 < h ≤ h0, such that 
+
+en  
+
+> ϕW1,∞(Ω0)
+
+≤ Ch −1 en  
+
+> ϕH1(Ω0)
+
+≤ Ch −1(τ + Eh) ≤ min 
+
+(
+
+1, 12Cϕ
+
+)
+
+,
+
+enu W1,∞(Ωnh) ≤ Ch −1 enu H1(Ωnh) ≤ Ch −1(τ + Eh) ≤ 1,
+
+enp W1,∞(Ωnh) ≤ Ch −1 enp H1(Ωnh) ≤ Ch −1(τ + Eh) ≤ 1,
+
+enw W 1,∞(Ωnh) ≤ Ch −1 enw H1(Ωnh) ≤ Ch −1(τ + Eh) ≤ 1,
+
+which completes the proof. 5. N umerical Experiments 
+
+In this section, we report some numerical experiments to validate the theoretical results established in this work. The unfitted finite element method is implemented in MATLAB on a regular mesh. In all computations, the parameter in the ghost-penalty stabilization term (3.6) is set to α = 1. The corresponding shape optimization algorithm is described below. 
+
+Algorithm 5.1. Shape steepest descent algorithm 
+
+(1) Require : f , u d, ϕ0
+
+(2) t ← 0
+
+(3) repeat 
+
+(4) solve the state and adjoint equations (3.5a) and (3.5b). (5) compute the descent direction by solving the Hilbertian regularization equation (3.5c). (6) update the control points via (3.4) to obtain the corresponding cubic spline. (7) t ← t + τ
+
+(8) until t = T
+
+We demonstrate the convergence of the proposed method and its robustness in simulating the evolu-tion of deformed boundaries. In numerical experiments, we set the computational domain D = (0 , 3) 2
+
+centered at c = (1 .5, 1.5). 21 Example 5.2. The source function and shape density are set as f (x) = (( x1 − c1)2 + (x2 − c2)2)2 − 18(( x1 − c1)2 + (x2 − c2)2) + 9,
+
+j(·, u) = 12|u − ud|2 with u d = (1 − (x1 − c1)2 − (x2 − c2)2)2.
+
+Then the optimal domain is the unit circle {(x1, x2) : ( x1 − c1)2 + (x2 − c2)2 < 1}. The initial domain is chosen as an ellipse with semi-major axis 1.3 and semi-minor axis 0.85. 
+
+According to the assumptions in Theorem 4.1, we choose τ = O(hk) and η = O(hk+ 12 ). In numerical experiments, the final time is set to T = 40. Figure 2 illustrates the evolution of the domain at t = 0and t = 40. To evaluate the convergence rates, we employ a sequence of mesh sizes and time steps defined by 
+
+hi = 323+i , τi = T
+
+625 × 4i , i = 0, 1, 2, 3, 4.
+
+The term en 
+
+> ϕ
+
+is evaluated using the geometric error defined as follows: 
+
+X
+
+> K∈T h
+
+area( Ω(T ) ∩ K) − area( ΩN 
+
+> η
+
+∩ K) .
+
+Here, Ω(T ) denotes the optimal domain and ΩN 
+
+> η
+
+represents the cubic spline reconstruction of the discrete solution. Using the numerical solution at h = 3128 as a reference, the convergence results for 
+
+k = 2 are presented in Table 1.        
+
+> (a) initial domain at t=0(b) optimal domain at t=40
+
+Figure 2. Evolution of the domain for Example 5.2. 
+
+Example 5.3. In this example the boundary of the initial domain is described by the following para-metric equations for θ ∈ [0 , 2π]
+
+x1(θ) = c1 + 1.2 2. 
+
+8 + 6 sin  3θ + 3π
+
+36 
+
+! 1/6
+
+cos θ; x2(θ) = c2 + 1.2 2. 
+
+8 + 6 sin  3θ + 3π
+
+36 
+
+! 1/6
+
+sin θ. 
+
+All other settings remain the same as in Example 5.2. 
+
+> 22
+
+h order of ϕ order of u order of p order of w
+
+1/8 - - - -1/16 3.9905 2.0207 3.7859 3.8351 1/32 0.9245 2.3419 3.0753 2.3673 1/64 1.7174 2.2618 1.5532 1.6211 Table 1. Convergence orders of di ff erent variables for Example 5.2.        
+
+> (a) initial domain at T=0(b) optimal domain at T=40
+
+Figure 3. Evolution of the domain for Example 5.3. 
+
+h order of ϕ order of u order of p order of w
+
+1/8 - - - -1/16 2.0425 2.0045 3.6323 3.3478 1/32 1.7642 2.2168 2.1056 1.9336 1/64 1.8626 2.0312 1.9120 1.9990 Table 2. Convergence orders of di ff erent variables for Example 5.3. Figure 3 shows the evolution of the domain, while the specific convergence orders are detailed in Table 2. We observe that although the convergence order may deviate from the theoretical result in coarser meshes, it approaches the expected rate of 2 as the mesh size h decreases. Furthermore, the results in Example 5.3 surpass those of Example 5.2. Although adopting a smaller time step might improve accuracy, the constraint τ = O(h2) would drastically increase the computational cost as h vanishes. Consequently, we maintain the current settings for our simulations. However, for 
+
+> 23
+
+highly deformed shapes, performance may degrade because the current analysis is confined to short-time behavior. To enhance accuracy, adaptive refinement, such as dynamic insertion and removal of control points, may be required during simulation. 6. C onclusion 
+
+In this paper, we proposed an unfitted finite element framework for PDE-constrained shape opti-mization based on the H1 shape gradient flow. The method combines three key ingredients: a shape gradient flow formulation with the state, adjoint, velocity, and flow map equations; a cubic spline rep-resentation for boundary evolution; and a CutFEM discretization with ghost penalty stabilization on unfitted meshes. This approach avoids the remeshing procedure during optimization while preserving a clear variational structure for both theoretical analysis and numerical implementation. From a theoretical point of view, we established finite error estimates for the flow map, state, adjoint, and velocity variables under suitable regularity assumptions. In particular, for k ≥ 2, τ =
+
+O(hk), and η = O(hk+ 12 ), we proved the bound 
+
+en  
+
+> ϕH1(Ω0)
+
++ enu H1(Ωnh) + enp H1(Ωnh) + enw H1(Ωnh) ≤ C(τ + hk),
+
+which quantifies the coupling e ff ects of the temporal, spatial, and geometric discretization errors. Numerical experiments confirmed the theoretical findings: the method is robust for di ff erent ini-tial shapes, and the observed convergence rates approach the expected order behavior as the mesh is refined. The results also indicate that coarse meshes may exhibit pre-asymptotic e ff ects, as the relationship between the error and mesh size is inherently nonlinear. Since the current analysis may not extend naturally to long term simulations or large deformation cases, future work will focus on adaptive strategies for control point redistribution and mesh refinement. Additionally, we plan to extend this framework to more complex PDE constraints and three dimensional shape optimization problems. References 
+
+[1] G. Allaire, C. Dapogny and F. Jouve. Shape and Topology Optimization, in Geometric Partial Di ff erential Equations, Part II. A. Bonito and R. Nochetto, eds., Handb. Numer. Anal. 22, Elsevier, Amsterdam, 2021, pp. 1–132. [2] T. Belytschko and T. Black, Elastic crack growth in finite elements with minimal remeshing. Inter. J. Numer. Methods Engrg. , 45(1999), No. 5, pp. 601-620. [3] A. Bernland, E. Wadbro and M. Berggren, Acoustic shape optimization using cut finite elements. Int. J. Numer. Methods Engrg. , 113(2018), pp. 432-449. [4] E. Burman, D. Elfverson, P. Hansbo, M. G. Larson and K. Larsson, A cut finite element method for the Bernoulli free boundary value problem. Comput. Methods Appl. Mech. Engrg. , 317(2017), pp. 598–618. [5] E. Burman, D. Elfverson, P. Hansbo, M. G. Larson and K. Larsson, Shape optimization using the cut finite element method. Comput. Methods Appl. Mech. Engrg. , 328(2018), pp. 242–261. [6] E. Burman, P. Hansbo and M. G. Larson, Cutfem based on extended finite element spaces. Numer. Math. , 152(2022), No. 2, pp. 331–369. [7] E. Burman, C. He and M. G. Larson, Comparison of shape derivatives using CutFEM for ill-posed Bernoulli free boundary problem. J. Sci. Comput. , 88(2021), No. 2, Paper No. 35, 28 pp. [8] D. Chenais and E. Zuazua. Finite-element approximation of 2D elliptic optimal design. J. Math. Pures Appl. ,85(2006), pp. 225–249. [9] K. Deckelnick, P. J. Herbert and M. Hinze. Convergence of a steepest descent algorithm in shape optimisation using 
+
+W1,∞ functions. ESAIM Math. Model. Numer. Anal. , 59(2025), 1505-1529. [10] M. C. Delfour and J. P. Zol´ esio. Shapes and Geometries: Metrics, Analysis, Di ff erential Calculus, and Optimization ,2nd edn., SIAM, Philadelphia, 2011. 
+
+> 24
+
+[11] G. Dziuk and C. M. Elliott. Finite elements on evolving surfaces. IMA J. Numer. Anal. , 27(2007), pp. 262–292. [12] D. Edelmann. Finite element analysis for a di ff usion equation on a harmonically evolving domain. IMA J. Numer. Anal. , 42(2022), pp. 1866–1901. [13] C. M. Elliott and T. Ranner. A unified theory for continuous-in-time evolving finite element space approximations to partial di ff erential equations in evolving domains. IMA J. Numer. Anal. , 41(2021), No. 3, pp. 1696–1845. [14] C. M. Elliott and V. Styles. An arbitrary Lagrangian–Eulerian ESFEM for solving PDEs on evolving surfaces. Milan J. Math. , 80(2012), pp. 469–501. [15] K. Eppler, H. Harbrecht and R. Schneider. On convergence in elliptic shape optimization. SIAM J. Control Optim. ,46(2007), No. 1, pp. 61–83. [16] I. Fumagalli, N. Parolini and M. Verani. Shape optimization for Stokes flows: a finite element convergence analysis. 
+
+ESAIM Math. Model. Numer. Anal. , 49(2015), No. 4, pp. 921–951. [17] W. Gong, B. Li and Q. Rao. Convergent evolving finite element approximations of boundary evolution under shape gradient flow. IMA J. Numer. Anal. , 44(2024), No. 5, 2667–2697. [18] W. Gong, J. Li and S. Zhu. Improved discrete boundary type shape gradients for PDE-constrained shape optimiza-tion. SIAM J. Sci. Comput. , 44(2022), pp. A2464–A2505. [19] A. Hansbo and P. Hansbo. An unfitted finite element method, based on Nitsche’s method, for elliptic interface problems. Comput. Methods Appl. Mech. Engrg. , 191(2002), No. 47-48, pp. 5537–5552. [20] P. Hansbo, M.G. Larson, K. Larsson. Cut finite element methods for linear elasticity problems. Geometrically Un-fitted Finite Element Methods and Applications, 25-63, Lect. Notes Comput. Sci. Eng., 121, Springer, Cham, 2017. [21] R. Hiptmair, A. Paganini and S. Sargheini. Comparison of approximate shape gradients. BIT Numer. Math. , 55(2015), pp. 459–485. [22] P. Huang, H. Wu and Y. Xiao. An unfitted interface penalty finite element method for elliptic interface problems. 
+
+Comput. Methods Appl. Mech. Engrg., 323(2017), pp. 439-460. [23] B. Kiniger and B. Vexler. A priori error estimates for finite element discretizations of a shape optimization problem. 
+
+ESAIM Math. Model. Numer. Anal. , 47(2013), pp. 1733–1763. [24] B. Kov´ acs, B. Li and C. Lubich. Convergence of finite elements on an evolving surface driven by di ff usion on the surface. Numer. Math., 137(2017), pp. 643–689. [25] C. Ma, Q. Zhang and W. Zheng. A fourth-order unfitted characteristic FEM for solving the advection-di ff usion equation on time-varying domains. SIAM J. Numer. Anal. , 60(2022), pp. 2203–2224. [26] N. Mo¨ es, J. Dolbow, and T. Belytschko. A finite element method for crack growth without remeshing. Inter. J. Numer. Methods Engrg. , 46(1999), No. 1, pp. 131–150. [27] S. Nicaise and S. Sauter. E ffi cient numerical solution of Neumann problems on complicated domains. Calcolo ,43(2006), No. 2, pp. 95–120. [28] S. Osher and J. A. Sethian. Fronts propagating with curvature-dependent speed: Algorithms based on Hamilton-Jacobi formulations. J. Comput. Phys. , 79(1988), No. 1, pp. 12-49. [29] C. S. Peskin. Flow patterns around heart valves: A numerical method. J. Comput. Phys. , 10(1972), No. 2, pp. 252– 271. [30] V. Schulz and M. Siebenborn. Computational comparison of surface metrics for PDE constrained shape optimization. 
+
+Comput. Methods Appl. Math., 16(2016), pp. 485–496. [31] V. Schulz, M. Siebenborn and K. Welker. E ffi cient PDE constrained shape optimization based on Steklov-Poincar´ e-type metrics. SIAM J. Optim., 26(2016), pp. 2800–2819. [32] J. Sokolowski and J.P. Zol´ esio. Introduction to Shape Optimization: Shape Sensitivity Analysis. Springer , Heidel-berg, 1992.
