@@ -1,0 +1,499 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-18T20:19:30.306944+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 17,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.11625v1",
+      "source": "arxiv",
+      "title": "SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving",
+      "abstract": "Neural operators have emerged as powerful surrogates for partial differential equation (PDE) solvers, yet they are typically trained as monolithic models for individual PDEs, require energy-intensive GPU hardware, and must be retrained from scratch when new physics emerge. We introduce the Spiking Compositional Neural Operator (SCNO), a modular architecture combining spiking and conventional components that addresses all three limitations. SCNO maintains a library of small spiking neural operator blocks, each trained on a single elementary differential operator (convection, diffusion, reaction), and composes them through a lightweight input-conditioned aggregator to solve coupled PDEs not seen during block training. A small correction network learns cross-coupling residuals while keeping all blocks and the aggregator frozen, preserving zero-forgetting modular expansion by construction. We evaluate SCNO on eight PDE families including five coupled systems and a nuclear-relevant 1-group neutron diffusion equation. SCNO with correction achieves the lowest relative $L^2$ error on four of five coupled PDEs, outperforming both a monolithic spiking DeepONet (by up to 62%, mean over 3 seeds) and a standard ANN DeepONet (by up to 65%), while requiring only 95K trainable parameters versus 462K for the monolithic baseline. To our knowledge, this is the first compositional spiking neural operator and the first proof-of-concept for modular neuromorphic PDE solving with built-in forgetting-free expansion.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Rizwan-uddin",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-13T15:36:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11625v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Neural operators for solving coupled PDEs with modular spiking components",
+      "llm_evidence_cn": "用于求解耦合偏微分方程的模块化脉冲神经算子",
+      "llm_evidence": "用于求解耦合偏微分方程的模块化脉冲神经算子",
+      "canonical_evidence": "用于求解耦合偏微分方程的模块化脉冲神经算子",
+      "llm_tldr_en": "Introduces a modular spiking neural operator for solving elementary and coupled partial differential equations.",
+      "llm_tldr_cn": "引入了一种模块化脉冲神经算子，用于求解基础及耦合偏微分方程。",
+      "llm_tldr": "引入了一种模块化脉冲神经算子，用于求解基础及耦合偏微分方程。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.13316v1",
+      "source": "arxiv",
+      "title": "Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators",
+      "abstract": "Neural operators have emerged as fast surrogate models for physics simulations, yet they remain acutely vulnerable to adversarial perturbations, a critical liability for safety-critical digital twin deployments. We present a synergistic defense that combines active learning-based data generation with an input denoising architecture. The active learning component adaptively probes model weaknesses using differential evolution attacks, then generates targeted training data at discovered vulnerability locations while an adaptive smooth-ratio safeguard preserves baseline accuracy. The input denoising component augments the operator architecture with a learnable bottleneck that filters adversarial noise while retaining physics-relevant features. On the viscous Burgers' equation benchmark, the combined approach achieves a 2.04% combined error (1.21% baseline + 0.83% robustness), representing an 87% reduction relative to standard training (15.42% combined) and outperforming both active learning alone (3.42%) and input denoising alone (5.22%). More broadly, our results, combined with cross-architecture vulnerability analysis from prior work, suggest that optimal training data for neural operators is architecture-dependent: because different architectures concentrate sensitivity in distinct input subspaces, uniform sampling cannot adequately cover the vulnerability landscape of all models. These findings have potential implications for the deployment of neural operators in safety-critical energy systems including nuclear reactor monitoring.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-14T21:43:09+00:00",
+      "link": "https://arxiv.org/pdf/2604.13316v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "robust neural operators for physics simulations",
+      "llm_evidence_cn": "用于物理模拟的鲁棒神经算子",
+      "llm_evidence": "用于物理模拟的鲁棒神经算子",
+      "canonical_evidence": "用于物理模拟的鲁棒神经算子",
+      "llm_tldr_en": "Enhances neural operator robustness against adversarial perturbations using active learning and denoising.",
+      "llm_tldr_cn": "利用主动学习和去噪技术增强神经算子对抗对抗性扰动的鲁棒性。",
+      "llm_tldr": "利用主动学习和去噪技术增强神经算子对抗对抗性扰动的鲁棒性。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.09434v1",
+      "source": "arxiv",
+      "title": "Physics-guided surrogate learning enables zero-shot control of turbulent wings",
+      "abstract": "Turbulent boundary layers over aerodynamic surfaces are a major source of aircraft drag, yet their control remains challenging due to multiscale dynamics and spatial variability, particularly under adverse pressure gradients. Reinforcement learning has outperformed state-of-the-art strategies in canonical flows, but its application to realistic geometries is limited by computational cost and transferability. Here we show that these limitations can be overcome by exploiting local structures of wall-bounded turbulence. Policies are trained in turbulent channel flows matched to wing boundary-layer statistics and deployed directly onto a NACA4412 wing at $Re_c=2\\times10^5$ without further training, being the so-called zero-shot control. This achieves a 28.7\\% reduction in skin-friction drag and a 10.7\\% reduction in total drag, outperforming the state-of-the-art opposition control by 40\\% in friction drag reduction and 5\\% in total drag. Training cost is reduced by four orders of magnitude relative to on-wing training, enabling scalable flow control.",
+      "authors": [
+        "Yuning Wang",
+        "Pol Suarez",
+        "Mathis Bode",
+        "Ricardo Vinuesa"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn",
+        "cs.AI"
+      ],
+      "published": "2026-04-10T15:50:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.09434v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Physics-guided surrogate learning for flow control and PDE-based dynamics",
+      "llm_evidence_cn": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "llm_evidence": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "canonical_evidence": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "llm_tldr_en": "Demonstrates zero-shot control of turbulent flows using physics-guided surrogate models and reinforcement learning.",
+      "llm_tldr_cn": "展示了利用物理引导代理模型和强化学习对湍流进行零样本控制的方法。",
+      "llm_tldr": "展示了利用物理引导代理模型和强化学习对湍流进行零样本控制的方法。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.09058v1",
+      "source": "arxiv",
+      "title": "PDE-regularized Dynamics-informed Diffusion with Uncertainty-aware Filtering for Long-Horizon Dynamics",
+      "abstract": "Long-horizon spatiotemporal prediction remains a challenging problem due to cumulative errors, noise amplification, and the lack of physical consistency in existing models. While diffusion models provide a probabilistic framework for modeling uncertainty, conventional approaches often rely on mean squared error objectives and fail to capture the underlying dynamics governed by physical laws. In this work, we propose PDYffusion, a dynamics-informed diffusion framework that integrates PDE-based regularization and uncertainty-aware forecasting for stable long-term prediction. The proposed method consists of two key components: a PDE-regularized interpolator and a UKF-based forecaster. The interpolator incorporates a differential operator to enforce physically consistent intermediate states, while the forecaster leverages the Unscented Kalman Filter to explicitly model uncertainty and mitigate error accumulation during iterative prediction. We provide theoretical analyses showing that the proposed interpolator satisfies PDE-constrained smoothness properties, and that the forecaster converges under the proposed loss formulation. Extensive experiments on multiple dynamical datasets demonstrate that PDYffusion achieves superior performance in terms of CRPS and MSE, while maintaining stable uncertainty behavior measured by SSR. We further analyze the inherent trade-off between prediction accuracy and uncertainty, showing that our method provides a balanced and robust solution for long-horizon forecasting.",
+      "authors": [
+        "Min Young Baeg",
+        "Yoon-Yeong Kim"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-10T07:37:38+00:00",
+      "link": "https://arxiv.org/pdf/2604.09058v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "PDE-regularized diffusion for spatiotemporal prediction",
+      "llm_evidence_cn": "用于时空预测的PDE正则化扩散",
+      "llm_evidence": "用于时空预测的PDE正则化扩散",
+      "canonical_evidence": "用于时空预测的PDE正则化扩散",
+      "llm_tldr_en": "Proposes a dynamics-informed diffusion framework with PDE regularization for stable long-term prediction.",
+      "llm_tldr_cn": "提出了一种具有PDE正则化的动力学知情扩散框架，用于稳定的长期预测。",
+      "llm_tldr": "提出了一种具有PDE正则化的动力学知情扩散框架，用于稳定的长期预测。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.09434v2",
+      "source": "arxiv",
+      "title": "Physics-guided surrogate learning enables zero-shot control of turbulent wings",
+      "abstract": "Turbulent boundary layers over aerodynamic surfaces are a major source of aircraft drag, yet their control remains challenging due to multiscale dynamics and spatial variability, particularly under adverse pressure gradients. Reinforcement learning has outperformed state-of-the-art strategies in canonical flows, but its application to realistic geometries is limited by computational cost and transferability. Here we show that these limitations can be overcome by exploiting local structures of wall-bounded turbulence. Policies are trained in turbulent channel flows matched to wing boundary-layer statistics and deployed directly onto a NACA4412 wing at $Re_c=2\\times10^5$ without further training, being the so-called zero-shot control. This achieves a 28.7% reduction in skin-friction drag and a 10.7% reduction in total drag, outperforming the state-of-the-art opposition control by 40% in friction drag reduction and 5% in total drag. Training cost is reduced by four orders of magnitude relative to on-wing training, enabling scalable flow control.",
+      "authors": [
+        "Yuning Wang",
+        "Pol Suarez",
+        "Mathis Bode",
+        "Ricardo Vinuesa"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn",
+        "cs.AI"
+      ],
+      "published": "2026-04-10T15:50:44+00:00",
+      "link": "https://arxiv.org/pdf/2604.09434v2",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Physics-guided surrogate learning for flow control and PDE-based dynamics",
+      "llm_evidence_cn": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "llm_evidence": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "canonical_evidence": "物理引导的代理学习用于流控制和基于PDE的动力学",
+      "llm_tldr_en": "Demonstrates zero-shot control of turbulent flows using physics-guided surrogate models and reinforcement learning.",
+      "llm_tldr_cn": "展示了利用物理引导代理模型和强化学习对湍流进行零样本控制的方法。",
+      "llm_tldr": "展示了利用物理引导代理模型和强化学习对湍流进行零样本控制的方法。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.09289v1",
+      "source": "arxiv",
+      "title": "Meta-Learned Basis Adaptation for Parametric Linear PDEs",
+      "abstract": "We propose a hybrid physics-informed framework for solving families of parametric linear partial differential equations (PDEs) by combining a meta-learned predictor with a least-squares corrector. The predictor, termed \\textbf{KAPI} (Kernel-Adaptive Physics-Informed meta-learner), is a shallow task-conditioned model that maps query coordinates and PDE parameters to solution values while internally generating an interpretable, task-adaptive Gaussian basis geometry. A lightweight meta-network maps PDE parameters to basis centers, widths, and activity patterns, thereby learning how the approximation space should adapt across the parametric family. This predictor-generated geometry is transferred to a second-stage corrector, which augments it with a background basis and computes the final solution through a one-shot physics-informed Extreme Learning Machine (PIELM)-style least-squares solve. We evaluate the method on four linear PDE families spanning diffusion, transport, mixed advection--diffusion, and variable-speed transport. Across these cases, the predictor captures meaningful physics through localized and transport-aligned basis placement, while the corrector further improves accuracy, often by one or more orders of magnitude. Comparisons with parametric PINNs, physics-informed DeepONet, and uniform-grid PIELM correctors highlight the value of predictor-guided basis adaptation as an interpretable and efficient strategy for parametric PDE solving.",
+      "authors": [
+        "Vikas Dwivedi",
+        "Monica Sigovan",
+        "Bruno Sixou"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-10T13:00:03+00:00",
+      "link": "https://arxiv.org/pdf/2604.09289v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "physics-informed framework for parametric linear PDEs",
+      "llm_evidence_cn": "参数化线性PDE的物理知情框架",
+      "llm_evidence": "参数化线性PDE的物理知情框架",
+      "canonical_evidence": "参数化线性PDE的物理知情框架",
+      "llm_tldr_en": "Combines meta-learning with physics-informed constraints to solve families of parametric linear PDEs.",
+      "llm_tldr_cn": "结合元学习与物理知情约束，求解参数化线性PDE族。",
+      "llm_tldr": "结合元学习与物理知情约束，求解参数化线性PDE族。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.10993v1",
+      "source": "arxiv",
+      "title": "On Switched Event-triggered Full State-constrained Formation Control for Multi-vehicle Systems",
+      "abstract": "Vehicular formation control is an important component of intelligent transportation systems (ITSs). In practical implementations, the controller design needs to satisfy multiple state constraints, including inter-vehicle spacing and vehicle speed. When system states approach the constraint boundaries, control singularity and excessive control effort may arise, which limits the practical applicability of existing methods. To address this problem, this paper investigates a class of nonlinear vehicular formation systems for autonomous vehicles (AVs) with uncertain dynamics and develops a switched event-triggered control framework. A smooth nonlinear mapping is first introduced to transform the constrained state space into an unconstrained one, thereby avoiding singularity near the constraint boundaries. A radial basis function neural network (RBFNN) is then employed to approximate the unknown nonlinear dynamics online, based on which an adaptive controller is constructed via the backstepping technique. In addition, a switched event-triggered mechanism (SETM) is designed to increase the control update frequency during the transient stage and reduce the communication burden during the steady-state stage. Lyapunov-based analysis proves that all signals in the closed-loop system remain uniformly bounded and that Zeno behavior is excluded. Simulation results verify that the proposed method achieves stable platoon formation under prescribed state constraints while significantly reducing communication updates.",
+      "authors": [
+        "Zihan Li",
+        "Ziming Wang",
+        "Xin Wang"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-13T04:49:36+00:00",
+      "link": "https://arxiv.org/pdf/2604.10993v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Vehicular formation control in intelligent transportation systems",
+      "llm_evidence_cn": "智能交通系统中的车辆编队控制",
+      "llm_evidence": "智能交通系统中的车辆编队控制",
+      "canonical_evidence": "智能交通系统中的车辆编队控制",
+      "llm_tldr_en": "Develops a switched event-triggered control framework for state-constrained autonomous vehicle formation.",
+      "llm_tldr_cn": "为状态受限的自动驾驶车辆编队开发了一种切换事件触发控制框架。",
+      "llm_tldr": "为状态受限的自动驾驶车辆编队开发了一种切换事件触发控制框架。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.09374v1",
+      "source": "arxiv",
+      "title": "Variational Quantum Physics-Informed Neural Networks for Hydrological PDE-Constrained Learning with Inherent Uncertainty Quantification",
+      "abstract": "We propose a Hybrid Quantum-Classical Physics-Informed Neural Network (HQC-PINN) that integrates parameterized variational quantum circuits into the PINN framework for hydrological PDE-constrained learning. Our architecture encodes multi-source remote sensing features into quantum states via trainable angle encoding, processes them through a hardware-efficient variational ansatz with entangling layers, and constrains the output using the Saint-Venant shallow water equations and Manning's flow equation as differentiable physics loss terms. The inherent stochasticity of quantum measurement provides a natural mechanism for uncertainty quantification without requiring explicit Bayesian inference machinery. We further introduce a quantum transfer learning protocol that pre-trains on multi-hazard disaster data before fine-tuning on flood-specific events. Numerical simulations on multi-modal satellite and meteorological data from the Kalu River basin, Sri Lanka, show that the HQC-PINN achieves convergence in ~3x fewer training epochs and uses ~44% fewer trainable parameters compared to an equivalent classical PINN, while maintaining competitive classification accuracy. Theoretical analysis indicates that hydrological physics constraints narrow the effective optimization landscape, providing a natural mitigation against barren plateaus in variational quantum circuits. This work establishes the first application of quantum-enhanced physics-informed learning to hydrological prediction and demonstrates a viable path toward quantum advantage in environmental science.",
+      "authors": [
+        "Prasad Nimantha Madusanka Ukwatta Hewage",
+        "Midhun Chakkravarthy",
+        "Ruvan Kumara Abeysekara"
+      ],
+      "primary_category": "quant-ph",
+      "categories": [
+        "quant-ph",
+        "cs.LG"
+      ],
+      "published": "2026-04-10T14:45:38+00:00",
+      "link": "https://arxiv.org/pdf/2604.09374v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "PDE-constrained learning with flow equations",
+      "llm_evidence_cn": "受流方程约束的PDE学习",
+      "llm_evidence": "受流方程约束的PDE学习",
+      "canonical_evidence": "受流方程约束的PDE学习",
+      "llm_tldr_en": "Integrates quantum circuits into PINNs for hydrological PDE-constrained learning and uncertainty quantification.",
+      "llm_tldr_cn": "将量子电路集成到PINN中，用于水文学PDE约束学习和不确定性量化。",
+      "llm_tldr": "将量子电路集成到PINN中，用于水文学PDE约束学习和不确定性量化。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.11031v1",
+      "source": "arxiv",
+      "title": "A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings",
+      "abstract": "We study the input-to-state stability (ISS) of boundary control systems allowing for infinitely many boundary couplings. Using semigroup perturbation theory and the theory of positive linear operators on Banach lattices, we derive a spectral small-gain condition ensuring exponential ISS. We further investigate linear Boltzmann-type equations on an infinite network of intersecting circles, incorporating delays, scattering, and disturbances acting at the junction. For this class of systems, we prove that a spectral small-gain condition on the transmission operator matrix guarantees exponential ISS with respect to disturbances propagating through the network. Moreover, we derive explicit ISS estimates for {certain} classes of dynamical processes. Finally, we demonstrate the practical applicability of our results by considering two important classes of time-delayed transmission conditions.",
+      "authors": [
+        "Yassine El Gantouh",
+        "Jun Zheng",
+        "Guchuan Zhu",
+        "Dingshi Li"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-04-13T05:56:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.11031v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "boundary control systems and network stability",
+      "llm_evidence_cn": "边界控制系统与网络稳定性",
+      "llm_evidence": "边界控制系统与网络稳定性",
+      "canonical_evidence": "边界控制系统与网络稳定性",
+      "llm_tldr_en": "Analyzes stability in boundary control systems with infinite couplings using spectral small-gain conditions.",
+      "llm_tldr_cn": "利用谱小增益条件分析具有无限耦合的边界控制系统的稳定性。",
+      "llm_tldr": "利用谱小增益条件分析具有无限耦合的边界控制系统的稳定性。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.10955v1",
+      "source": "arxiv",
+      "title": "Hypergraph Neural Diffusion: A PDE-Inspired Framework for Hypergraph Message Passing",
+      "abstract": "Hypergraph neural networks (HGNNs) have shown remarkable potential in modeling high-order relationships that naturally arise in many real-world data domains. However, existing HGNNs often suffer from shallow propagation, oversmoothing, and limited adaptability to complex hypergraph structures. In this paper, we propose Hypergraph Neural Diffusion (HND), a novel framework that unifies nonlinear diffusion equations with neural message passing on hypergraphs. HND is grounded in a continuous-time hypergraph diffusion equation, formulated via hypergraph gradient and divergence operators, and modulated by a learnable, structure-aware coefficient matrix over hyperedge-node pairs. This partial differential equation (PDE) based formulation provides a physically interpretable view of hypergraph learning, where feature propagation is understood as an anisotropic diffusion process governed by local inconsistency and adaptive diffusion coefficient. From this perspective, neural message passing becomes a discretized gradient flow that progressively minimizes a diffusion energy functional. We derive rigorous theoretical guarantees, including energy dissipation, solution boundedness via a discrete maximum principle, and stability under explicit and implicit numerical schemes. The HND framework supports a variety of integration strategies such as non-adaptive-step (like Runge-Kutta) and adaptive-step solvers, enabling the construction of deep, stable, and interpretable architectures. Extensive experiments on benchmark datasets demonstrate that HND achieves competitive performance. Our results highlight the power of PDE-inspired design in enhancing the stability, expressivity, and interpretability of hypergraph learning.",
+      "authors": [
+        "Zhiheng Zhou",
+        "Mengyao Zhou",
+        "Xixun Lin",
+        "Xingqin Qi",
+        "Guiying Yan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-13T03:52:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.10955v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "PDE-inspired framework using gradient and divergence operators",
+      "llm_evidence_cn": "受PDE启发的框架，使用梯度和散度算子",
+      "llm_evidence": "受PDE启发的框架，使用梯度和散度算子",
+      "canonical_evidence": "受PDE启发的框架，使用梯度和散度算子",
+      "llm_tldr_en": "Proposes a hypergraph neural diffusion framework grounded in continuous-time partial differential equations.",
+      "llm_tldr_cn": "提出了一种基于连续时间偏微分方程的超图神经扩散框架。",
+      "llm_tldr": "提出了一种基于连续时间偏微分方程的超图神经扩散框架。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.11375v1",
+      "source": "arxiv",
+      "title": "DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems",
+      "abstract": "Diffusion models have emerged as powerful generative priors for solving PDE-constrained inverse problems. Compared to end-to-end approaches relying on massive paired datasets, explicitly decoupling the prior distribution of physical parameters from the forward physical model, a paradigm often formalized as Plug-and-Play (PnP) priors, offers enhanced flexibility and generalization. To accelerate inference within such decoupled frameworks, fast neural operators are employed as surrogate solvers. However, directly integrating them into standard diffusion sampling introduces a critical bottleneck: evaluating neural surrogates on partially denoised, non-physical intermediate states forces them into out-of-distribution (OOD) regimes. To eliminate this, the physical surrogate must be evaluated exclusively on the fully denoised parameter, a principle we formalize as the Manifold Consistency Requirement. To satisfy this requirement, we present Diffusion Latent Optimization (DiLO), which transforms the stochastic sampling process into a deterministic latent trajectory, enabling stable backpropagation of measurement gradients to the initial latent state. By keeping the trajectory on the physical manifold, it ensures physically valid updates and improves reconstruction accuracy. We provide theoretical guarantees for the convergence of this optimization trajectory. Extensive experiments across Electrical Impedance Tomography, Inverse Scattering, and Inverse Navier-Stokes problems demonstrate DiLO's accuracy, efficiency, and robustness to noise.",
+      "authors": [
+        "Haibo Liu",
+        "Guang Lin"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA"
+      ],
+      "published": "2026-04-13T12:15:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11375v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "neural operators as surrogate solvers for inverse problems",
+      "llm_evidence_cn": "神经算子作为反问题的代理求解器",
+      "llm_evidence": "神经算子作为反问题的代理求解器",
+      "canonical_evidence": "神经算子作为反问题的代理求解器",
+      "llm_tldr_en": "Decouples generative priors and neural operators to accelerate inference in PDE-constrained inverse problems.",
+      "llm_tldr_cn": "解耦生成先验和神经算子，以加速PDE约束反问题的推理。",
+      "llm_tldr": "解耦生成先验和神经算子，以加速PDE约束反问题的推理。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.11825v1",
+      "source": "arxiv",
+      "title": "Quantum algorithms for Young measures: applications to nonlinear partial differential equations",
+      "abstract": "Many nonlinear PDEs have singular or oscillatory solutions or may exhibit physical instabilities or uncertainties. This requires a suitable concept of physically relevant generalized solutions. Dissipative measure-valued solutions have been an effective analytical tool to characterize PDE behavior in such singular regimes. They have also been used to characterize limits of standard numerical schemes on classical computers. The measure-valued formulation of a nonlinear PDE yields an optimization problem with a linear cost functional and linear constraints, which can be formulated as a linear programming problem. However, this linear programming problem can suffer from the curse of dimensionality. In this article, we propose solving it using quantum linear programming (QLP) algorithms and discuss whether this approach can reduce costs compared to classical algorithms. We show that some QLP algorithms, such as the quantum central path algorithm, have up to polynomial advantage over the classical interior point method. For problems where one is interested in the dissipative weak solution, namely the expected values of the Young measure, we show that the QLP algorithms offer no advantage over direct classical solvers. Moreover, for random PDEs, there can be up to polynomial advantage in obtaining the Young measure over direct classical PDE solvers. This is a significant advantage over standard PDE solvers, since the Young measure provides a more detailed description of the solution. We also propose some open questions for future development in this direction.",
+      "authors": [
+        "Shi Jin",
+        "Nana Liu",
+        "Maria Lukacova-Medvidova",
+        "Yuhuan Yuan"
+      ],
+      "primary_category": "quant-ph",
+      "categories": [
+        "quant-ph",
+        "math-ph"
+      ],
+      "published": "2026-04-11T11:37:24+00:00",
+      "link": "https://arxiv.org/pdf/2604.11825v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Quantum algorithms for solving nonlinear partial differential equations",
+      "llm_evidence_cn": "求解非线性偏微分方程的量子算法",
+      "llm_evidence": "求解非线性偏微分方程的量子算法",
+      "canonical_evidence": "求解非线性偏微分方程的量子算法",
+      "llm_tldr_en": "Proposes quantum algorithms for Young measures to solve high-dimensional nonlinear PDEs efficiently.",
+      "llm_tldr_cn": "提出了用于 Young 测度的量子算法，以高效求解高维非线性偏微分方程。",
+      "llm_tldr": "提出了用于 Young 测度的量子算法，以高效求解高维非线性偏微分方程。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.12794v1",
+      "source": "arxiv",
+      "title": "Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator",
+      "abstract": "Neural operators have been increasingly used as data-driven surrogates for time-marching predictions of turbulent flows. However, long-horizon autoregressive prediction is sensitive to error accumulation and the choice of prediction interval. Excessively small time increments may increase temporal redundancy and lengthen rollouts, which can degrade the stability of neural operators in turbulence forecasting. This work pursues a unified objective: stable long-horizon autoregressive prediction at fine temporal resolution for three-dimensional turbulence. We propose a multi-stepsize mixture-of-experts (Ms-MoE) neural operator built on an implicit factorized Transformer (IFactFormer) backbone. The model conditions on a requested relative stride and uses a time-step router to activate scale-specific routed experts together with a shared expert, yielding a single architecture that represents a family of stride-parameterized time-advancement operators. We evaluate the approach on forced homogeneous isotropic turbulence (HIT) and turbulent channel flow using filtered direct numerical simulation datasets. Relative to sampling intervals used in previous studies, we construct training datasets with up to 20 times finer temporal resolution and report long-horizon autoregressive rollouts using qualitative time-slice comparisons and long-time-averaged statistics. Ms-MoE-IFactFormer yields more stable long-horizon rollouts and improved agreement with long-time-averaged statistics on both HIT and turbulent channel flow, suggesting potential for stable time-marching at fine temporal resolution in more complex turbulent flows.",
+      "authors": [
+        "Guanyu Pan",
+        "Huiyu Yang",
+        "Yunpeng Wang",
+        "Zikun Xu",
+        "Jianchun Wang",
+        "Nianyu Yi"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-14T14:26:58+00:00",
+      "link": "https://arxiv.org/pdf/2604.12794v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Neural operator for long-horizon prediction of turbulent flows",
+      "llm_evidence_cn": "用于湍流长时预测的神经算子",
+      "llm_evidence": "用于湍流长时预测的神经算子",
+      "canonical_evidence": "用于湍流长时预测的神经算子",
+      "llm_tldr_en": "Develops a multi-stepsize mixture-of-experts neural operator for stable long-term turbulence forecasting.",
+      "llm_tldr_cn": "开发了一种多步长混合专家神经算子，用于稳定的长期湍流预测。",
+      "llm_tldr": "开发了一种多步长混合专家神经算子，用于稳定的长期湍流预测。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}
