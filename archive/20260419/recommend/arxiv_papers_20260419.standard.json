@@ -1,0 +1,572 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-19T19:55:08.916820+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 5,
+    "deep_cap": 6,
+    "deep_selected": 5,
+    "quick_candidates": 10,
+    "quick_skim_target": 11,
+    "quick_selected": 10
+  },
+  "deep_dive": [
+    {
+      "id": "2604.11375v1",
+      "source": "arxiv",
+      "title": "DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems",
+      "abstract": "Diffusion models have emerged as powerful generative priors for solving PDE-constrained inverse problems. Compared to end-to-end approaches relying on massive paired datasets, explicitly decoupling the prior distribution of physical parameters from the forward physical model, a paradigm often formalized as Plug-and-Play (PnP) priors, offers enhanced flexibility and generalization. To accelerate inference within such decoupled frameworks, fast neural operators are employed as surrogate solvers. However, directly integrating them into standard diffusion sampling introduces a critical bottleneck: evaluating neural surrogates on partially denoised, non-physical intermediate states forces them into out-of-distribution (OOD) regimes. To eliminate this, the physical surrogate must be evaluated exclusively on the fully denoised parameter, a principle we formalize as the Manifold Consistency Requirement. To satisfy this requirement, we present Diffusion Latent Optimization (DiLO), which transforms the stochastic sampling process into a deterministic latent trajectory, enabling stable backpropagation of measurement gradients to the initial latent state. By keeping the trajectory on the physical manifold, it ensures physically valid updates and improves reconstruction accuracy. We provide theoretical guarantees for the convergence of this optimization trajectory. Extensive experiments across Electrical Impedance Tomography, Inverse Scattering, and Inverse Navier-Stokes problems demonstrate DiLO's accuracy, efficiency, and robustness to noise.",
+      "authors": [
+        "Haibo Liu",
+        "Guang Lin"
+      ],
+      "primary_category": "math.NA",
+      "categories": [
+        "math.NA"
+      ],
+      "published": "2026-04-13T12:15:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11375v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Neural operators as surrogate solvers for PDE-constrained inverse problems",
+      "llm_evidence_cn": "神经算子作为PDE约束反演问题的代理求解器",
+      "llm_evidence": "神经算子作为PDE约束反演问题的代理求解器",
+      "canonical_evidence": "神经算子作为PDE约束反演问题的代理求解器",
+      "llm_tldr_en": "Decouples generative priors and neural operators to solve PDE-constrained inverse problems efficiently.",
+      "llm_tldr_cn": "通过解耦生成先验和神经算子，高效解决受PDE约束的反演问题。",
+      "llm_tldr": "通过解耦生成先验和神经算子，高效解决受PDE约束的反演问题。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.11625v1",
+      "source": "arxiv",
+      "title": "SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving",
+      "abstract": "Neural operators have emerged as powerful surrogates for partial differential equation (PDE) solvers, yet they are typically trained as monolithic models for individual PDEs, require energy-intensive GPU hardware, and must be retrained from scratch when new physics emerge. We introduce the Spiking Compositional Neural Operator (SCNO), a modular architecture combining spiking and conventional components that addresses all three limitations. SCNO maintains a library of small spiking neural operator blocks, each trained on a single elementary differential operator (convection, diffusion, reaction), and composes them through a lightweight input-conditioned aggregator to solve coupled PDEs not seen during block training. A small correction network learns cross-coupling residuals while keeping all blocks and the aggregator frozen, preserving zero-forgetting modular expansion by construction. We evaluate SCNO on eight PDE families including five coupled systems and a nuclear-relevant 1-group neutron diffusion equation. SCNO with correction achieves the lowest relative $L^2$ error on four of five coupled PDEs, outperforming both a monolithic spiking DeepONet (by up to 62%, mean over 3 seeds) and a standard ANN DeepONet (by up to 65%), while requiring only 95K trainable parameters versus 462K for the monolithic baseline. To our knowledge, this is the first compositional spiking neural operator and the first proof-of-concept for modular neuromorphic PDE solving with built-in forgetting-free expansion.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Rizwan-uddin",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-13T15:36:48+00:00",
+      "link": "https://arxiv.org/pdf/2604.11625v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Neural operator architecture for solving elementary differential operators in PDEs",
+      "llm_evidence_cn": "用于求解PDE中基本微分算子的神经算子架构",
+      "llm_evidence": "用于求解PDE中基本微分算子的神经算子架构",
+      "canonical_evidence": "用于求解PDE中基本微分算子的神经算子架构",
+      "llm_tldr_en": "Proposes a spiking compositional neural operator for modular and efficient PDE solving.",
+      "llm_tldr_cn": "提出一种脉冲组合神经算子，用于模块化且高效地求解偏微分方程。",
+      "llm_tldr": "提出一种脉冲组合神经算子，用于模块化且高效地求解偏微分方程。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.12794v1",
+      "source": "arxiv",
+      "title": "Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator",
+      "abstract": "Neural operators have been increasingly used as data-driven surrogates for time-marching predictions of turbulent flows. However, long-horizon autoregressive prediction is sensitive to error accumulation and the choice of prediction interval. Excessively small time increments may increase temporal redundancy and lengthen rollouts, which can degrade the stability of neural operators in turbulence forecasting. This work pursues a unified objective: stable long-horizon autoregressive prediction at fine temporal resolution for three-dimensional turbulence. We propose a multi-stepsize mixture-of-experts (Ms-MoE) neural operator built on an implicit factorized Transformer (IFactFormer) backbone. The model conditions on a requested relative stride and uses a time-step router to activate scale-specific routed experts together with a shared expert, yielding a single architecture that represents a family of stride-parameterized time-advancement operators. We evaluate the approach on forced homogeneous isotropic turbulence (HIT) and turbulent channel flow using filtered direct numerical simulation datasets. Relative to sampling intervals used in previous studies, we construct training datasets with up to 20 times finer temporal resolution and report long-horizon autoregressive rollouts using qualitative time-slice comparisons and long-time-averaged statistics. Ms-MoE-IFactFormer yields more stable long-horizon rollouts and improved agreement with long-time-averaged statistics on both HIT and turbulent channel flow, suggesting potential for stable time-marching at fine temporal resolution in more complex turbulent flows.",
+      "authors": [
+        "Guanyu Pan",
+        "Huiyu Yang",
+        "Yunpeng Wang",
+        "Zikun Xu",
+        "Jianchun Wang",
+        "Nianyu Yi"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-14T14:26:58+00:00",
+      "link": "https://arxiv.org/pdf/2604.12794v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Neural operators for time-marching predictions of flows",
+      "llm_evidence_cn": "用于流体时间推进预测的神经算子",
+      "llm_evidence": "用于流体时间推进预测的神经算子",
+      "canonical_evidence": "用于流体时间推进预测的神经算子",
+      "llm_tldr_en": "Proposes a multi-stepsize neural operator for stable long-horizon turbulence prediction.",
+      "llm_tldr_cn": "提出一种多步长混合专家神经算子，用于稳定的长时湍流预测。",
+      "llm_tldr": "提出一种多步长混合专家神经算子，用于稳定的长时湍流预测。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.13316v1",
+      "source": "arxiv",
+      "title": "Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators",
+      "abstract": "Neural operators have emerged as fast surrogate models for physics simulations, yet they remain acutely vulnerable to adversarial perturbations, a critical liability for safety-critical digital twin deployments. We present a synergistic defense that combines active learning-based data generation with an input denoising architecture. The active learning component adaptively probes model weaknesses using differential evolution attacks, then generates targeted training data at discovered vulnerability locations while an adaptive smooth-ratio safeguard preserves baseline accuracy. The input denoising component augments the operator architecture with a learnable bottleneck that filters adversarial noise while retaining physics-relevant features. On the viscous Burgers' equation benchmark, the combined approach achieves a 2.04% combined error (1.21% baseline + 0.83% robustness), representing an 87% reduction relative to standard training (15.42% combined) and outperforming both active learning alone (3.42%) and input denoising alone (5.22%). More broadly, our results, combined with cross-architecture vulnerability analysis from prior work, suggest that optimal training data for neural operators is architecture-dependent: because different architectures concentrate sensitivity in distinct input subspaces, uniform sampling cannot adequately cover the vulnerability landscape of all models. These findings have potential implications for the deployment of neural operators in safety-critical energy systems including nuclear reactor monitoring.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-14T21:43:09+00:00",
+      "link": "https://arxiv.org/pdf/2604.13316v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Robust neural operators for physics simulations",
+      "llm_evidence_cn": "用于物理模拟的鲁棒神经算子",
+      "llm_evidence": "用于物理模拟的鲁棒神经算子",
+      "canonical_evidence": "用于物理模拟的鲁棒神经算子",
+      "llm_tldr_en": "Enhances neural operator robustness against adversarial perturbations using active learning and denoising.",
+      "llm_tldr_cn": "结合主动学习和去噪架构，增强神经算子在物理模拟中的鲁棒性。",
+      "llm_tldr": "结合主动学习和去噪架构，增强神经算子在物理模拟中的鲁棒性。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.13919v1",
+      "source": "arxiv",
+      "title": "Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires",
+      "abstract": "Computational fluid dynamics (CFD) has become an essential tool for predicting fire behavior, yet maintaining both efficiency and accuracy remains challenging. A major source of computational cost in fire simulations is the modeling of radiation transfer, which is usually the dominant heat transfer mechanism in fires. Solving the high-dimensional radiative transfer equation (RTE) with traditional numerical methods can be a performance bottleneck. Here, we present a machine learning framework based on Fourier-enhanced multiple-input neural operators (Fourier-MIONet) as an efficient alternative to direct numerical integration of the RTE. We first investigate the performance of neural operator architectures for a small-scale 2D pool fire and find that Fourier-MIONet provides the most accurate radiative solution predictions. The approach is then extended to 3D CFD fire simulations, where the computational mesh is locally refined across multiple levels. In these high-resolution settings, monolithic surrogate models for direct field-to-field mapping become difficult to train and computationally inefficient. To address this issue, a nested Fourier-MIONet is proposed to predict radiation solutions across multiple mesh-refinement levels. We validate the approach on 3D McCaffrey pool fires simulated with FireFOAM, including fixed fire sizes and a unified model trained over a continuous range of heat release rates (HRRs). The proposed method achieves global relative errors of 2-4% for 3D varying-HRR scenarios while providing faster inference than the estimated cost of one finite-volume radiation solve in FireFOAM for the 16-solid-angle case. With fast and accurate inference, the surrogate makes higher-fidelity radiation treatments practical and enables the incorporation of more spectrally resolved radiation models into CFD fire simulations for engineering applications.",
+      "authors": [
+        "Anran Jiao",
+        "Wengyao Jiang",
+        "Xiaoyi Lu",
+        "Yi Wang",
+        "Lu Lu"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn",
+        "cs.LG",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-15T14:29:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.13919v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "Fourier-enhanced neural operator for modeling transfer equations",
+      "llm_evidence_cn": "傅里叶增强神经算子用于传输方程建模",
+      "llm_evidence": "傅里叶增强神经算子用于传输方程建模",
+      "canonical_evidence": "傅里叶增强神经算子用于传输方程建模",
+      "llm_tldr_en": "Uses Fourier-enhanced neural operators to efficiently solve radiative transfer equations in fire simulations.",
+      "llm_tldr_cn": "利用傅里叶增强神经算子高效求解火灾模拟中的辐射传输方程。",
+      "llm_tldr": "利用傅里叶增强神经算子高效求解火灾模拟中的辐射传输方程。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.10750v1",
+      "source": "arxiv",
+      "title": "Motion planning and approximate controllability of a moving cantilever beam with a tip-mass",
+      "abstract": "Consider a non-uniform Euler-Bernoulli beam with a tip-mass at one end and a cantilever joint at the other end. The cantilever joint is not fixed and can itself be moved along an axis perpendicular to the beam. The position of the cantilever joint is the control input to the beam. The dynamics of the beam is governed by a coupled PDE-ODE model with boundary input. On a natural state-space, there exists a unique state trajectory for this beam model for every initial state and each twice continuously differentiable control input which is compatible with the initial state. In this paper, we study the motion planning problem of transferring the beam model from an initial state to a final state over a prescribed time-interval and then employ the results obtained to establish the approximate controllability of this model. We address these problems by extending and applying the generating functions approach to flatness-based control to the beam model. We prove that the transfer described above is feasible if the initial and final states belong to a certain set, which also contains the steady-states of the beam model. We then establish that this set contains all the eigenfunctions of the beam model, which form a Riesz basis for the state-space, and thereby conclude the approximate controllability of the beam model over all time intervals. We illustrate our theoretical results on motion planning using simulations and experiments.",
+      "authors": [
+        "Soham Chatterjee",
+        "Aman Batra",
+        "Vivek Natarajan"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-12T17:45:09+00:00",
+      "link": "https://arxiv.org/pdf/2604.10750v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "PDE-ODE model with boundary input and motion planning",
+      "llm_evidence_cn": "具有边界输入的PDE-ODE模型及运动规划",
+      "llm_evidence": "具有边界输入的PDE-ODE模型及运动规划",
+      "canonical_evidence": "具有边界输入的PDE-ODE模型及运动规划",
+      "llm_tldr_en": "Studies motion planning and controllability for a beam model using coupled PDE-ODE with boundary control.",
+      "llm_tldr_cn": "研究了具有边界控制的耦合PDE-ODE梁模型的运动规划和近似可控性。",
+      "llm_tldr": "研究了具有边界控制的耦合PDE-ODE梁模型的运动规划和近似可控性。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.10955v1",
+      "source": "arxiv",
+      "title": "Hypergraph Neural Diffusion: A PDE-Inspired Framework for Hypergraph Message Passing",
+      "abstract": "Hypergraph neural networks (HGNNs) have shown remarkable potential in modeling high-order relationships that naturally arise in many real-world data domains. However, existing HGNNs often suffer from shallow propagation, oversmoothing, and limited adaptability to complex hypergraph structures. In this paper, we propose Hypergraph Neural Diffusion (HND), a novel framework that unifies nonlinear diffusion equations with neural message passing on hypergraphs. HND is grounded in a continuous-time hypergraph diffusion equation, formulated via hypergraph gradient and divergence operators, and modulated by a learnable, structure-aware coefficient matrix over hyperedge-node pairs. This partial differential equation (PDE) based formulation provides a physically interpretable view of hypergraph learning, where feature propagation is understood as an anisotropic diffusion process governed by local inconsistency and adaptive diffusion coefficient. From this perspective, neural message passing becomes a discretized gradient flow that progressively minimizes a diffusion energy functional. We derive rigorous theoretical guarantees, including energy dissipation, solution boundedness via a discrete maximum principle, and stability under explicit and implicit numerical schemes. The HND framework supports a variety of integration strategies such as non-adaptive-step (like Runge-Kutta) and adaptive-step solvers, enabling the construction of deep, stable, and interpretable architectures. Extensive experiments on benchmark datasets demonstrate that HND achieves competitive performance. Our results highlight the power of PDE-inspired design in enhancing the stability, expressivity, and interpretability of hypergraph learning.",
+      "authors": [
+        "Zhiheng Zhou",
+        "Mengyao Zhou",
+        "Xixun Lin",
+        "Xingqin Qi",
+        "Guiying Yan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-13T03:52:01+00:00",
+      "link": "https://arxiv.org/pdf/2604.10955v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "PDE-inspired framework using neural diffusion and gradient/divergence operators",
+      "llm_evidence_cn": "受PDE启发的神经扩散框架，使用梯度和散度算子",
+      "llm_evidence": "受PDE启发的神经扩散框架，使用梯度和散度算子",
+      "canonical_evidence": "受PDE启发的神经扩散框架，使用梯度和散度算子",
+      "llm_tldr_en": "Develops a hypergraph neural diffusion framework grounded in continuous-time PDE formulations.",
+      "llm_tldr_cn": "开发了一个基于连续时间偏微分方程公式的超图神经扩散框架。",
+      "llm_tldr": "开发了一个基于连续时间偏微分方程公式的超图神经扩散框架。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.10993v1",
+      "source": "arxiv",
+      "title": "On Switched Event-triggered Full State-constrained Formation Control for Multi-vehicle Systems",
+      "abstract": "Vehicular formation control is an important component of intelligent transportation systems (ITSs). In practical implementations, the controller design needs to satisfy multiple state constraints, including inter-vehicle spacing and vehicle speed. When system states approach the constraint boundaries, control singularity and excessive control effort may arise, which limits the practical applicability of existing methods. To address this problem, this paper investigates a class of nonlinear vehicular formation systems for autonomous vehicles (AVs) with uncertain dynamics and develops a switched event-triggered control framework. A smooth nonlinear mapping is first introduced to transform the constrained state space into an unconstrained one, thereby avoiding singularity near the constraint boundaries. A radial basis function neural network (RBFNN) is then employed to approximate the unknown nonlinear dynamics online, based on which an adaptive controller is constructed via the backstepping technique. In addition, a switched event-triggered mechanism (SETM) is designed to increase the control update frequency during the transient stage and reduce the communication burden during the steady-state stage. Lyapunov-based analysis proves that all signals in the closed-loop system remain uniformly bounded and that Zeno behavior is excluded. Simulation results verify that the proposed method achieves stable platoon formation under prescribed state constraints while significantly reducing communication updates.",
+      "authors": [
+        "Zihan Li",
+        "Ziming Wang",
+        "Xin Wang"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-13T04:49:36+00:00",
+      "link": "https://arxiv.org/pdf/2604.10993v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Vehicular formation control in intelligent transportation systems",
+      "llm_evidence_cn": "智能交通系统中的车辆编队控制",
+      "llm_evidence": "智能交通系统中的车辆编队控制",
+      "canonical_evidence": "智能交通系统中的车辆编队控制",
+      "llm_tldr_en": "Investigates event-triggered formation control for autonomous vehicles with state constraints.",
+      "llm_tldr_cn": "研究了具有状态约束的自动驾驶车辆编队控制及事件触发框架。",
+      "llm_tldr": "研究了具有状态约束的自动驾驶车辆编队控制及事件触发框架。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.12463v1",
+      "source": "arxiv",
+      "title": "Euler-inspired Decoupling Neural Operator for Efficient Pansharpening",
+      "abstract": "Pansharpening aims to synthesize high-resolution multispectral (HR-MS) images by fusing the spatial textures of panchromatic (PAN) images with the spectral information of low-resolution multispectral (LR-MS) images. While recent deep learning paradigms, especially diffusion-based operators, have pushed the performance boundaries, they often encounter spectral-spatial blurring and prohibitive computational costs due to their stochastic nature and iterative sampling. In this paper, we propose the Euler-inspired Decoupling Neural Operator (EDNO), a physics-inspired framework that redefines pansharpening as a continuous functional mapping in the frequency domain. Departing from conventional Cartesian feature processing, our EDNO leverages Euler's formula to transform features into a polar coordinate system, enabling a novel explicit-implicit interaction mechanism. Specifically, we develop the Euler Feature Interaction Layer (EFIL), which decouples the fusion task into two specialized modules: 1) Explicit Feature Interaction Module, utilizing a linear weighting scheme to simulate phase rotation for adaptive geometric alignment; and 2) Implicit Feature Interaction Module, employing a feed-forward network to model spectral distributions for superior color consistency. By operating in the frequency domain, EDNO inherently captures global receptive fields while maintaining discretization-invariance. Experimental results on the three datasets demonstrate that EDNO offers a superior efficiency-performance balance compared to heavyweight architectures.",
+      "authors": [
+        "Anqi Zhu",
+        "Mengting Ma",
+        "Yizhen Jiang",
+        "Xiangdong Li",
+        "Kai Zheng",
+        "Jiaxin Li",
+        "Wei Zhang"
+      ],
+      "primary_category": "cs.CV",
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-04-14T08:49:10+00:00",
+      "link": "https://arxiv.org/pdf/2604.12463v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Physics-inspired neural operator for continuous functional mapping",
+      "llm_evidence_cn": "受物理启发的神经算子，用于连续泛函映射",
+      "llm_evidence": "受物理启发的神经算子，用于连续泛函映射",
+      "canonical_evidence": "受物理启发的神经算子，用于连续泛函映射",
+      "llm_tldr_en": "Proposes a decoupling neural operator for image fusion based on continuous functional mapping.",
+      "llm_tldr_cn": "提出了一种基于连续泛函映射的解耦神经算子，用于图像融合。",
+      "llm_tldr": "提出了一种基于连续泛函映射的解耦神经算子，用于图像融合。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找与神经算子及宏观交通流建模和控制相关的研究论文, especially work that connects or combines: B; N; L; A; P; 神经算子在交通流建模与控制中的研究进展; 用于交通系统优化的端到端神经算子框架.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.11031v1",
+      "source": "arxiv",
+      "title": "A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings",
+      "abstract": "We study the input-to-state stability (ISS) of boundary control systems allowing for infinitely many boundary couplings. Using semigroup perturbation theory and the theory of positive linear operators on Banach lattices, we derive a spectral small-gain condition ensuring exponential ISS. We further investigate linear Boltzmann-type equations on an infinite network of intersecting circles, incorporating delays, scattering, and disturbances acting at the junction. For this class of systems, we prove that a spectral small-gain condition on the transmission operator matrix guarantees exponential ISS with respect to disturbances propagating through the network. Moreover, we derive explicit ISS estimates for {certain} classes of dynamical processes. Finally, we demonstrate the practical applicability of our results by considering two important classes of time-delayed transmission conditions.",
+      "authors": [
+        "Yassine El Gantouh",
+        "Jun Zheng",
+        "Guchuan Zhu",
+        "Dingshi Li"
+      ],
+      "primary_category": "math.OC",
+      "categories": [
+        "math.OC"
+      ],
+      "published": "2026-04-13T05:56:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.11031v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Boundary control systems and stability on networks",
+      "llm_evidence_cn": "边界控制系统及网络稳定性",
+      "llm_evidence": "边界控制系统及网络稳定性",
+      "canonical_evidence": "边界控制系统及网络稳定性",
+      "llm_tldr_en": "Derives stability conditions for boundary control systems with infinite couplings on networks.",
+      "llm_tldr_cn": "推导了具有无限耦合的边界控制系统在网络上的稳定性条件。",
+      "llm_tldr": "推导了具有无限耦合的边界控制系统在网络上的稳定性条件。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.13204v1",
+      "source": "arxiv",
+      "title": "Weakly-supervised Learning for Physics-informed Neural Motion Planning via Sparse Roadmap",
+      "abstract": "The motion planning problem requires finding a collision-free path between start and goal configurations in high-dimensional, cluttered spaces. Recent learning-based methods offer promising solutions, with self-supervised physics-informed approaches such as Neural Time Fields (NTFields) solving the Eikonal equation to learn value functions without expert demonstrations. However, existing physics-informed methods struggle to scale in complex, multi-room environments, where simply increasing the number of samples cannot resolve local minima or guarantee global consistency. We propose Hierarchical Neural Time Fields (H-NTFields), a weakly-supervised framework that combines weak supervision from sparse roadmaps with physics-informed PDE regularization. The roadmap provides global topological anchors through upper and lower bounds on travel times, while PDE losses enforce local geometric fidelity and obstacle-aware propagation. Experiments on 18 Gibson environments and real robotic platforms show that H-NTFields substantially improves robustness over prior physics-informed methods, while enabling fast amortized inference through a continuous value representation.",
+      "authors": [
+        "Ruiqi Ni",
+        "Yuchen Liu",
+        "Ahmed H. Qureshi"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-04-14T18:26:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.13204v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Physics-informed PDE solving for motion planning and control",
+      "llm_evidence_cn": "用于运动规划与控制的物理信息PDE求解",
+      "llm_evidence": "用于运动规划与控制的物理信息PDE求解",
+      "canonical_evidence": "用于运动规划与控制的物理信息PDE求解",
+      "llm_tldr_en": "Combines sparse roadmaps with physics-informed PDE solving for complex motion planning tasks.",
+      "llm_tldr_cn": "将稀疏路线图与物理信息PDE求解相结合，用于复杂的运动规划任务。",
+      "llm_tldr": "将稀疏路线图与物理信息PDE求解相结合，用于复杂的运动规划任务。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13369v1",
+      "source": "arxiv",
+      "title": "AeTHERON: Autoregressive Topology-aware Heterogeneous Graph Operator Network for Fluid-Structure Interaction",
+      "abstract": "Surrogate modeling of body-driven fluid flows where immersed moving boundaries couple structural dynamics to chaotic, unsteady fluid phenomena remains a fundamental challenge for both computational physics and machine learning. We present AeTHERON, a heterogeneous graph neural operator whose architecture directly mirrors the structure of the sharp-interface immersed boundary method (IBM): a dual-graph representation separating fluid and structural domains, coupled through sparse cross-attention that reflects the compact support of IBM interpolation stencils. This physics-informed inductive bias enables AeTHERON to learn nonlinear fluid-structure coupling in a shared high-dimensional latent space, with continuous sinusoidal time embeddings providing temporal generalization across lead times. We evaluate AeTHERON on direct numerical simulations of a flapping flexible caudal fin, a canonical FSI benchmark featuring leading-edge vortex formation, large membrane deformation, and chaotic wake shedding across a 4x5 parameter grid of membrane thickness (h* = 0.01-0.04) and Strouhal number (St = 0.30-0.50). As a proof-of-concept, we train on the first 150 timesteps of a representative case using a 70/30 train/validation split and evaluate on the fully unseen extrapolation window t=150-200. AeTHERON captures large-scale vortex topology and wake structure with qualitative fidelity, achieving a mean extrapolation MAE of 0.168 without retraining, with error peaking near flapping half-cycle transitions where flow reorganization is most rapid -- a physically interpretable pattern consistent with the nonlinear fluid-membrane coupling. Inference requires milliseconds per timestep on a single GPU versus hours for equivalent DNS computation. This is a continuously developing preprint; results and figures will be updated in subsequent versions.",
+      "authors": [
+        "Sushrut Kumar"
+      ],
+      "primary_category": "physics.comp-ph",
+      "categories": [
+        "physics.comp-ph",
+        "cs.LG",
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-15T00:31:20+00:00",
+      "link": "https://arxiv.org/pdf/2604.13369v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Heterogeneous graph neural operator for fluid-structure interaction and boundary coupling",
+      "llm_evidence_cn": "用于流固耦合和边界耦合的异构图神经算子",
+      "llm_evidence": "用于流固耦合和边界耦合的异构图神经算子",
+      "canonical_evidence": "用于流固耦合和边界耦合的异构图神经算子",
+      "llm_tldr_en": "Introduces a graph neural operator for fluid-structure interaction, mirroring immersed boundary methods.",
+      "llm_tldr_cn": "引入了一种模拟浸没边界法的图神经算子，用于解决流固耦合问题。",
+      "llm_tldr": "引入了一种模拟浸没边界法的图神经算子，用于解决流固耦合问题。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.13338v1",
+      "source": "arxiv",
+      "title": "The Ladyzhenskaya-Prodi-Serrin Conditions and the Search for Extreme Behavior in 3D Navier-Stokes Flows",
+      "abstract": "In this investigation, we conduct a systematic computational search for potential singularities in 3D Navier-Stokes flows on a periodic domain $Ω$ based on the Ladyzhenskaya-Prodi-Serrin conditions. They assert that for a solution $\\mathbf{u}(t)$ of the Navier-Stokes system to be regular on an interval $[0,T]$, the integral $\\int_{0}^T \\|\\mathbf{u}(t)\\|_{L^q}^p\\,dt$, where $2/p+3/q=1,\\;q>3$, and the expression $\\sup_{t \\in [0,T]} \\|\\mathbf{u}(t)\\|_{L^3}$ must be bounded. Flows which might become singular and violate these conditions are sought by solving a family of variational PDE optimization problems where we identify initial conditions $\\mathbf{u}_{0}$ with the corresponding flows $\\mathbf{u}(t)$ locally maximizing the integral $\\int_{0}^T \\|\\mathbf{u}(t)\\|_{L^q}^p\\,dt$ for a range of different values of $q$ and $p$ or the norm $\\|\\mathbf{u}(T)\\|_{L^3}$ for different time windows $T$ and increasing sizes $\\| \\mathbf{u}_0 \\|_{L^q}$ of the initial data. We consider two formulations where these expressions are maximized over appropriate Lebesgue spaces $L^q(Ω)$ or the largest Hilbert-Sobolev spaces $H^s(Ω)$ embedded in them. The lack of Hilbert-space structure in the first case necessitates development of a novel computational approach to solve the problem. While no evidence of unbounded growth of the quantities of interest, and hence also for singularity formation, was detected, we were able to quantify how \"close\" the flows realizing such worst-case scenarios come to forming a singularity. A comparison of these results with estimates on the rate of growth of the norms $||\\mathbf{u}(t)||_{L^q}$ and of the enstrophy $\\mathcal{E}(t)$ indicates that the extreme flows do enter a regime where these quantities are amplified at a rate consistent with singularity formation in finite time, but this growth is not sustained long enough for singularities to form.",
+      "authors": [
+        "Elkin Ramírez",
+        "Bartosz Protas"
+      ],
+      "primary_category": "math.AP",
+      "categories": [
+        "math.AP",
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-14T23:01:06+00:00",
+      "link": "https://arxiv.org/pdf/2604.13338v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "Variational PDE optimization for 3D Navier-Stokes fluid flows",
+      "llm_evidence_cn": "针对3D纳维-斯托克斯流体的变分PDE优化",
+      "llm_evidence": "针对3D纳维-斯托克斯流体的变分PDE优化",
+      "canonical_evidence": "针对3D纳维-斯托克斯流体的变分PDE优化",
+      "llm_tldr_en": "Uses variational PDE optimization to search for singularities in 3D Navier-Stokes fluid flows.",
+      "llm_tldr_cn": "利用变分PDE优化方法研究3D纳维-斯托克斯流体中的奇异性。",
+      "llm_tldr": "利用变分PDE优化方法研究3D纳维-斯托克斯流体中的奇异性。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13723v1",
+      "source": "arxiv",
+      "title": "Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs",
+      "abstract": "Physics-Informed Neural Networks (PINNs) recast PDE solving as an optimisation problem in function space by minimising a residual-based objective, yet many applications require additional derivative-based relations that are just as fundamental as the governing equations. In this paper, we present Derivative-Constrained PINNs (DC-PINNs), a general framework that treats constrained PDE solving as an optimisation guided by a minimum objective function criterion where the physics resides in the minimum principle. DC-PINNs embed general nonlinear constraints on states and derivatives, e.g., bounds, monotonicity, convexity, incompressibility, computed efficiently via automatic differentiation, and they employ self-adaptive loss balancing to tune the influence of each objective, reducing reliance on manual hyperparameters and problem-specific architectures. DC-PINNs consistently reduce constraint violations and improve physical fidelity versus baseline PINN variants, representative hard-constraint formulations on benchmarks, including heat diffusion with bounds, financial volatilities with arbitrage-free, and fluid flow with vortices shed. Explicitly encoding derivative constraints stabilises training and steers optimisation toward physically admissible minima even when the PDE residual alone is small, providing reliable solutions of constrained PDEs grounded in energy minimum principles.",
+      "authors": [
+        "Kentaro Hoshisashi",
+        "Carolyn E Phelan",
+        "Paolo Barucca"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-15T10:57:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.13723v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Physics-Informed Neural Networks for solving constrained PDEs",
+      "llm_evidence_cn": "用于求解受约束偏微分方程的物理信息神经网络",
+      "llm_evidence": "用于求解受约束偏微分方程的物理信息神经网络",
+      "canonical_evidence": "用于求解受约束偏微分方程的物理信息神经网络",
+      "llm_tldr_en": "Introduces DC-PINNs to solve PDEs with nonlinear derivative constraints using optimization and automatic differentiation.",
+      "llm_tldr_cn": "提出DC-PINNs框架，通过优化和自动微分求解具有非线性导数约束的偏微分方程。",
+      "llm_tldr": "提出DC-PINNs框架，通过优化和自动微分求解具有非线性导数约束的偏微分方程。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.14472v1",
+      "source": "arxiv",
+      "title": "Auxiliary Finite-Difference Residual-Gradient Regularization for PINNs",
+      "abstract": "Physics-informed neural networks (PINNs) are often selected by a single scalar loss even when the quantity of interest is more specific. We study a hybrid design in which the governing PDE residual remains automatic-differentiation (AD) based, while finite differences (FD) appear only in a weak auxiliary term that penalizes gradients of the sampled residual field. The FD term regularizes the residual field without replacing the PDE residual itself.   We examine this idea in two stages. Stage 1 is a controlled Poisson benchmark comparing a baseline PINN, the FD residual-gradient regularizer, and a matched AD residual-gradient baseline. Stage 2 transfers the same logic to a three-dimensional annular heat-conduction benchmark (PINN3D), where baseline errors concentrate near a wavy outer wall and the auxiliary grid is implemented as a body-fitted shell adjacent to the wall.   In Stage 1, the FD regularizer reproduces the main effect of residual-gradient control while exposing a trade-off between field accuracy and residual cleanliness. In Stage 2, the shell regularizer improves the application-facing quantities, namely outer-wall flux and boundary-condition behavior. Across seeds 0-5 and 100k epochs, the most reliable tested configuration is a fixed shell weight of 5e-4 under the Kourkoutas-beta optimizer regime: relative to a matched run without the shell term, it reduces the mean outer-wall BC RMSE from 1.22e-2 to 9.29e-4 and the mean wall-flux RMSE from 9.21e-3 to 9.63e-4. Adam with beta2=0.999 becomes usable when the initial learning rate is reduced to 1e-3, although its shell benefit is less robust than under Kourkoutas-beta. Overall, the results support a targeted view of hybrid PINNs: an auxiliary-only FD regularizer is most valuable when it is aligned with the physical quantity of interest, here the outer-wall flux.",
+      "authors": [
+        "Stavros Kassinos"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "cs.CE",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-15T23:09:19+00:00",
+      "link": "https://arxiv.org/pdf/2604.14472v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Physics-informed neural networks for solving governing PDE residuals",
+      "llm_evidence_cn": "用于求解控制偏微分方程残差的物理信息神经网络",
+      "llm_evidence": "用于求解控制偏微分方程残差的物理信息神经网络",
+      "canonical_evidence": "用于求解控制偏微分方程残差的物理信息神经网络",
+      "llm_tldr_en": "Introduces a finite-difference regularization for PINNs to improve PDE residual field accuracy.",
+      "llm_tldr_cn": "为PINN引入有限差分正则化，以提高偏微分方程残差场的求解精度。",
+      "llm_tldr": "为PINN引入有限差分正则化，以提高偏微分方程残差场的求解精度。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

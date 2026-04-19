@@ -1,0 +1,2174 @@
+Title: The Ladyzhenskaya-Prodi-Serrin Conditions and the Search for Extreme Behavior in 3D Navier-Stokes Flows
+
+URL Source: https://arxiv.org/pdf/2604.13338v1
+
+Published Time: Thu, 16 Apr 2026 00:21:42 GMT
+
+Number of Pages: 43
+
+Markdown Content:
+# The Ladyzhenskaya-Prodi-Serrin Conditions and the Search for Extreme Behavior in 3D Navier-Stokes Flows 
+
+## Elkin Ram´ ırez 1 and Bartosz Protas 1* 
+
+1Department of Mathematics and Statistics, McMaster University, 1280 Main Street West, Hamilton, L8S 4L8, Ontario, Canada. *Corresponding author(s). E-mail(s): bprotas@mcmaster.ca; 
+
+Abstract 
+
+In this investigation, we conduct a systematic computational search for poten-tial singularities in 3D Navier-Stokes flows on a periodic domain Ω based on the Ladyzhenskaya-Prodi-Serrin conditions. They assert that for a solu-tion u(t) of the Navier-Stokes system to be regular on an interval [0 , T ], the integral R T 
+
+> 0
+
+∥u(t)∥pLq dt , where 2 /p + 3 /q = 1, q > 3, and the expression sup t∈[0 ,T ] ∥u(t)∥L3 must be bounded. Flows which might become singular and violate these conditions are sought by solving a family of variational PDE opti-mization problems where we identify initial conditions u0 with the corresponding flows u(t) locally maximizing the integral R T 
+
+> 0
+
+∥u(t)∥pLq dt for a range of differ-ent values of q and p or the norm ∥u(T )∥L3 for different time windows T and increasing sizes ∥u0∥Lq of the initial data. We consider two formulations where these expressions are maximized over appropriate Lebesgue spaces Lq (Ω) or the largest Hilbert-Sobolev spaces Hs(Ω) embedded in them. The lack of Hilbert-space structure in the first case necessitates development of a novel computational approach to solve the problem. While no evidence of unbounded growth of the quantities of interest, and hence also for singularity formation, was detected, we were able to quantify how “close” the flows realizing such worst-case scenarios come to forming a singularity. A comparison of these results with estimates on the rate of growth of the norms || u(t)|| Lq and of the enstrophy E(t) indicates that the extreme flows do enter a regime where these quantities are amplified at a rate consistent with singularity formation in finite time, but this growth is not sustained long enough for singularities to form. This transient nonlinear amplification is also found to increase with q.
+
+Keywords: Navier-Stokes flows; singularity formation; Ladyzhenskaya-Prodi-Serrin conditions; Riemannian optimization. 
+
+1
+
+> arXiv:2604.13338v1 [math.AP] 14 Apr 2026
+
+# 1 Introduction 
+
+We consider the incompressible Navier-Stokes system defined on the three-dimensional (3D) torus Ω = T3 := R3/Z3, where “:=” means “equal to by definition”, and equipped with periodic boundary conditions 
+
+∂tu + ( u · ∇x) u + ∇x p − ν∆u = 0 in Ω × (0 , T ], (1a) 
+
+∇x · u = 0 in [0 , T ] × Ω, (1b) 
+
+u(0) = u0, (1c) where u = u(t, x) = [ u1, u 2, u 3]T is the velocity field, p the pressure, ν > 0 the coefficient of kinematic viscosity, ∇x denotes the gradient with respect to the space variable x = [ x1, x 2, x 3]T (this notation is needed to distinguish it from another notion of a gradient that will be introduced later) and u0 is the initial condition. The velocity gradient ∇x u is a tensor with components [ ∇x u]ij = ∂j ui, i, j = 1 , 2, 3. For simplicity when there is no risk of confusion we will denote u(t) = u(t, ·). The study of the existence, uniqueness and regularity of solutions of the Navier-Stokes system (1) dates back to the beginning of the 20th century. Despite this long effort, the question about the global-in-time existence of classical solutions of (1) corresponding to smooth initial data u0 still remains open and has been recognized as one of its “Millennium Problems” by the Clay Mathematics Institute [1] (this problem involves flows either on the unbounded or periodic domain, R3 or T3). On the other hand, classical solutions of (1) are known to exist globally in time in two dimensions (2D) [2]. We add that the question of the global existence of classical solutions of the inviscid Euler system, obtained by setting ν = 0 in (1), and corresponding to smooth initial data u0 is also open in 3D [3, 4]. Major progress concerning the existence of weak solutions on R3 was made by Leray in 1934 [5]. Later, in 1951, Hopf [6] established global existence of weak solutions, albeit without uniqueness, on bounded domains. The question of the uniqueness of Leray-Hopf weak solutions remains open and in 2022, Albitron, Bru´ e & Colombo [7] constructed nonunique Leray-Hopf weak solutions with a time-dependent force and borderline regularity. Classical solutions may cease to exist as a result of a spontaneous formation of a singularity, such that system (1) may no longer be satisfied in a pointwise sense. One approach to study the existence of classical solutions relies on the so-called “conditional regularity results”. These are global conditions that need to be satisfied by the weak Leray-Hopf solutions of (1) in order for these solutions to also satisfy this system in the classical sense. The best known results of this type are the enstrophy conditions [8] and the family of the Ladyzhenskaya-Prodi-Serrin conditions [9–12], both of this will be considered in this study. While the question about singularity formation in the Navier-Stokes and Euler flows is one in the mathematical analysis of partial differential equations (PDEs), efforts to shed light on this possibility based on numerical computations have had a long history [4, 13–26]. While most of these investigations were rather inconclu-sive, the studies [27–29] stand out providing strong evidence for finite-time singularity formation in Euler flows on 3D bounded axisymmetric domains. In the context of 2Navier-Stokes flow we highlight [30] which also suggested singularity formation in a flow in the same geometry. All of these studies relied on ad-hoc, although motivated by careful physical arguments, or numerical experiments, choice of the initial data u0
+
+that could lead to singularity formation. There is thus a need to find initial data that could trigger potential singularity formation in a systematic manner. In the present investigation we follow a fundamentally different approach, initiated in the seminar study [31], where extreme, possibly singular flows are sought methodi-cally as solutions of suitable variational optimization problems. More specifically, this allows one to find initial data such that the resulting flows maximize the growth of a chosen quantity measuring the regularity of the solution related to one of the con-ditional regularity results and whose unbounded growth in finite time would signal singularity formation. Our earlier investigations based on this idea focused on maxi-mizing the quantities involved in the enstrophy condition and in one member of the Ladyzhenskaya-Prodi-Serrin family of conditional regularity results [32, 33]. These studies provided no evidence for an unbounded growth of these quantities which, how-ever, did show significant transient growth exhibiting certain universal behavior. In the present study we extend the results from [33] by considering a wide range of the Ladyzhenskaya-Prodi-Serrin conditions while also overcoming some technical lim-itations that were encountered in [33]. This optimization-based framework has also proven useful in the study of globally well-posed systems, such as the one-dimensional (1D) viscous Burgers and the 2D Navier-Stokes systems [34–37], where rigorous a pri-ori bounds are available on the growth of various energy-type quantities. By finding flows extremizing the growth of these quantities it is possible to verify the sharpness of these a priori estimates. In the context of 1D viscous Burgers flows, the results from [34] inspired efforts to find improved rigorous upper bounds on the growth of enstro-phy and the gap was closed only recently [38]. A survey of this research program is offered in the review paper [39]. The main contribution of the present study is to construct, by numerically solving suitable optimization problems, families of initial conditions such that the resulting Navier-Stokes flows locally maximize the quantities in the different Ladyzhenskaya-Prodi-Serrin regularity criteria. Although we find no evidence for singularity forma-tion, by recalling known estimates on the rate of growth of the corresponding solution norms, we are able to assess how “close” these extreme flows come to producing a sin-gularity. The structure of the paper is as follows: after introducing key definitions in Section 2, in Section 3 we recall the enstrophy and the Ladyzhenskaya-Prodi-Serrin conditions together with the associated inequalities; in Section 4 we state the optimiza-tion problems and the solution approach is described in Section 5; the computational results are presented in Section 6 whereas final conclusions are deferred to Section 7. Some more technical results are collected in three appendices. 
+
+# 2 Definitions of Key Quantities 
+
+In this section we collect definitions of the key quantities. While they are quite standard, they are given here for completeness. 3Definition 1 (Lebesgue space) We denote 
+
+Lq (Ω) := 
+
+n
+
+f : Ω → R3 : f is measurable and ∥f ∥Lq < ∞
+
+o
+
+where q ∈ [1 , ∞] and the norm is defined as 
+
+∥f ∥Lq := 
+
+Z 
+
+> Ω
+
+|f (x)|q dx
+
+ 1
+
+> q
+
+, 1 ≤ q < ∞, (2a) 
+
+∥f ∥Lq := ess sup x∈Ω |f (x)|
+
+= inf {a ∈ R : μ ({x ∈ Ω : |f (x)| ≥ a}) = 0 } , q = ∞ (2b) in which μ denotes the Lebesgue measure. 
+
+Definition 2 For s ≥ 0, the Sobolev space Hs(Ω) is defined as 
+
+Hs (Ω) := 
+
+n
+
+f ∈ L2 (Ω) : ∥f ∥2 
+
+> Hs
+
+< ∞
+
+o
+
+,
+
+where the norm is defined in terms of the Fourier series of f with the Fourier coefficients 
+
+bfk := 
+
+Z
+
+> Ω
+
+e−2πi k·x f (x) dx (3) as 
+
+∥f ∥2 
+
+> Hs
+
+:= X
+
+> k∈Z3
+
+h
+
+1 + (2 πk )2is
+
+|bfk|2, (4) where k := |k|. The corresponding inner product is denoted ⟨· , ·⟩ Hs , such that ⟨f , f ⟩Hs =
+
+∥f ∥2 
+
+> Hs
+
+.
+
+Definition 3 The kinetic energy of a velocity field flow u(t) is defined as 
+
+K(u(t)) := 12
+
+Z
+
+> Ω
+
+|u(t, x)|2 dx = 12 ∥u(t)∥2 
+
+> L2
+
+. (5) 
+
+Definition 4 The enstrophy 1 of a divergence-free velocity field u(t) is defined as 
+
+E(u(t)) := 12
+
+Z
+
+> Ω
+
+|ω(t, x)|2 dx = 12 ∥ω(t)∥L2 = 12 ∥∇x u(t)∥L2 , (6) where ω(t, x) := ∇x × u(t, x) is the vorticity of u and the last equality is a consequence of the incompressibility of the field u(t) and the periodic boundary conditions [2]. 
+
+For simplicity we will denote K(t) := K(u(t)) and E(t) := E(u(t)) for t > 0, and 
+
+K0 := K(u(0)) and E0 := E(u(0)). We also add that for smooth solutions of the Navier-Stokes system K(t) and E(t) are related via the energy equation 
+
+dK
+
+dt = −2νE. (7) 
+
+> 1The enstrophy is often defined without the prefactor of 1/2. However, for consistency with earlier studies belonging to this research program [32, 34, 35, 37, 40, 41], we choose to retain this factor here.
+
+43 Conditional Regularity Results 
+
+Conditional regularity results are statements about Leray-Hopf weak solutions u(t)of the Navier-Stokes system expressing verifiable conditions that need to be fulfilled by these solutions if they are to also satisfy system (1) in the classical (pointwise) sense [42]. While in general it is not known if they hold, they represent necessary and sufficient conditions for u(t) to be smooth on the time interval of interest [0 , T ]. Here we consider two such conditions, namely, the enstrophy and the family of the Ladyzhenskaya-Prodi-Serrin conditions together with associated inequalities for the rate of growth of the quantities they involve. 
+
+## 3.1 The Enstrophy Condition 
+
+Leray-Hopf weak solutions of the Navier-Stokes system (1) defined in the interval [0 , T ]satisfy the inequality, cf. (7), 
+
+Z T
+
+> 0
+
+E(u(t)) dt < ∞. (8) In order for such solutions to be strong (classical), they must also satisfy the sufficient and necessary condition [8] sup 
+
+> 0≤t≤T
+
+E(u(t)) < ∞. (9) Thus, the boundedness of enstrophy guarantees that the Navier-Stokes flow remains smooth and should a singularity form at T ∗, then necessarily lim   
+
+> t→T∗−
+
+E(u(t)) = ∞. (10) 
+
+## 3.2 Bounds on the Rate of Growth of the Enstrophy 
+
+Whether or nor blow-up (10) can occur is dictated by the maximum sustained rate at which enstrophy can be amplified in classical solutions of the Navier-Stokes system. This problem was considered in [31], where the following upper bound was obtained 
+
+dE
+
+dt ≤ 27 8π4ν3 E3. (11) An analogous estimate involving a norm of the symmetric part of the velocity gradient 
+
+∇xu was obtained in [43]. The numerical evidence provided in [31, 41] suggests that estimate (11) is in fact sharp, in the sense that there exist families of incompressible vector fields euE0 with the enstrophy E(euE0 ) = E0 such that ( d/dt )E(euE0 ) = O(E30 ) as 
+
+E0 → ∞ . Direct integration of (11) leads to 
+
+E(u(t)) ≤ E0
+
+q
+
+1 − 27 4π4ν3 E20 t, (12) 5where the right-hand side (RHS) becomes unbounded as t → T ∗ = 4 π4ν3/(27 E20 ). Thus, together with (9), relation (12) is equivalent to a local existence result. In order for a singularity to form in finite time, the enstrophy must be amplified at a sustained rate that is sufficiently rapid. Assuming that 
+
+dE
+
+dt < C Eα, C > 0, 0 < α ≤ 3 (13) (hereafter C will denote a generic positive constant whose numerical value may change from instance to instance) and using Gr¨ onwall’s lemma together with the energy equality (7) in an integrated form 
+
+Z t
+
+> 0
+
+E(s) ds = 12ν [K0 − K (u(t))] ≤ 12ν K0, (14) yields the upper bound E(t) ≤ E 0 exp  K0
+
+> 2ν
+
+ valid when α ∈ (0 , 2] in (13). Therefore, in order for a singularity to form the enstrophy of the flow must be amplified at a sustained rate proportional to Eα with α ∈ (2 , 3]. This observation offers a convenient way to assess how close various extreme flows come to producing a singularity. We add that when the states euE0 saturating the upper bound in (11) are used as the initial data u0 in (1), the growth of enstrophy is immediately depleted in the resulting Navier-Stokes flows [41]. 
+
+## 3.3 Ladyzhenskaya-Prodi-Serrin Conditions 
+
+Another well-known conditional regularity result is given by the family of the Ladyzhenskaya-Prodi-Serrin (LPS) conditions [9–11]. They assert that u(t) is a smooth classical solution of the Navier-Stokes system (1) on the time interval [0 , T ] if and only if 
+
+u ∈ Lp([0 , T ]; Lq (Ω)) , 2/p + 3 /q ≤ 1, q > 3, (15) 
+
+u ∈ L∞([0 , T ]; L3(Ω)) , (16) with the latter condition corresponding to the limiting case with q = 3 [12]. Another blow-up criterion related to (16) was recently established in [44]. As regards the values of the indices p and q in (15), we are interested in the borderline (equality) case with 
+
+p = 2 q/ (q − 3). This condition implies that if a singularity is formed in a classical solution u(t) of the Navier-Stokes system (1) at the time T ∗ ∈ (0 , ∞), then necessarily lim  
+
+> t→T∗
+
+Z t
+
+> 0
+
+∥u(τ )∥pLq dτ = ∞, 2/p + 3 /q = 1 , q > 3. (17) Leray-Hopf weak solutions are known to satisfy the following estimates [33, 45] 
+
+Z T
+
+> 0
+
+∥u(t)∥ 
+
+> 4q
+> 3( q−2)
+> Lq
+
+dt ≤ CK 
+
+> 2q
+> 3( q−2)
+> 0
+
+, 2 ≤ q ≤ 6, (18a) 6Z T
+
+> 0
+
+∥u(t)∥ 
+
+> qq−3
+> Lq
+
+dt ≤ CK30, q > 6. (18b) with exponents in the integrant expressions smaller than p = 2 q/ (q − 3) in (15). Thus, if a singularity is to form in a Navier-Stokes flow, the norm ∥u(t)∥Lq must grow at such a rate that the integral in (17) becomes unbounded as t → T ∗ while the integrals in (18a)–(18b) remain finite. This issue is considered in more detail in the subsection below. A preliminary attempt to search for singular Navier-Stokes flows that would realize (17) based on an optimization formulation was conducted in [33] where the values 
+
+q = 4 and p = 8 were used. The goal of the present investigation is to complete this program by considering a wider range of parameters q and p in addition to overcoming certain technical limitations encountered in [33]. 
+
+## 3.4 A Priori Bounds on ddt ∥u( t)∥Lq
+
+Here we analyze conditions on the rate of growth of ∥u(t)∥Lq necessary for blow-up (17). A well-known upper bound on the rate of growth of this quantity is [46] 
+
+ddt ∥u(t)∥Lq ≤ C∥u(t)∥ 
+
+> 3( q−1)
+> q−3
+> Lq
+
+= C∥u(t)∥p+1  
+
+> Lq
+
+, q > 3, (19) where C = C(q) > 0. By integrating this inequality with respect to time, we obtain 
+
+∥u(t)∥Lq ≤ 1
+
+ ∥u0∥−pLq − p C t 1/p (20) which becomes unbounded as t → T ∗ = 1 /(p C ∥u0∥pLq ). Together with (15), this relation thus represents a statement of a local existence result for smooth solutions, akin to (12). To the best of our knowledge, estimates analogous to (19) are not available in the limiting case with q = 3 where the “best” upper bound is [42] 13
+
+ddt ∥u(t)∥3 
+
+> L3
+
+≤ C∥u(t)∥2 
+
+> L3
+
+∥u(t)∥3 
+
+> L9
+
+, (21) which however does not have the form ddt Y ≤ CY α. The question of the sharpness of bounds (19) was considered in [47] where numerical evidence is provided suggesting these estimates are indeed sharp (up to prefactors) for q > 3. Estimates (18a)–(18b) can be used in conjunction with Gr¨ onwall’s lemma to deter-mine the largest rate of growth of the norm ∥u(t)∥Lq ensuring there is no blow-up in finite time, which gives 
+
+ddt ∥u(t)∥Lq ≤
+
+
+
+C∥u(t)∥ 
+
+> 7q−63( q−2)
+> Lq
+
+, 2 ≤ q ≤ 6,C∥u(t)∥ 
+
+> 2q−3
+> q−3
+> Lq
+
+, q > 6.
+
+(22) 7To show this, let us first consider the case with 2 ≤ q ≤ 6, where 
+
+ddt ∥u(t)∥Lq ≤ C∥u(t)∥ 
+
+> 7q−63( q−2)
+> Lq
+
+= C∥u(t)∥Lq ∥u(t)∥ 
+
+> 4q
+> 3( q−2)
+> Lq
+
+.
+
+By Gr¨ onwall’s lemma, we can then bound ∥u(t)∥Lq on any interval [0 , T ], T > 0, by 
+
+∥u(t)∥Lq ≤ ∥ u0∥Lq exp C
+
+Z T
+
+> 0
+
+∥u(t)∥ 
+
+> 4q
+> 3( q−2)
+> Lq
+
+dt 
+
+!
+
+≤ ∥ u0∥Lq exp 
+
+
+
+CK
+
+> 2q
+> 3( q−2)
+> 0
+
+
+
+< ∞.
+
+Similarly, for q > 6, we have 
+
+ddt ∥u(t)∥Lq ≤ C∥u(t)∥ 
+
+> 2q−3
+> q−3
+> Lq
+
+= C∥u(t)∥Lq ∥u(t)∥ 
+
+> qq−3
+> Lq
+
+.
+
+Again, by Gr¨ onwall’s lemma, we can obtain a bound on ∥u(t)∥Lq on any interval [0 , T ]
+
+∥u(t)∥Lq ≤ ∥ u0∥Lq exp C
+
+Z T
+
+> 0
+
+∥u(t)∥ 
+
+> qq−3
+> Lq
+
+dt 
+
+!
+
+≤ ∥ u0∥Lq exp  CK30
+
+ < ∞.
+
+On the other hand, assuming there is a blow-up at t = T ∗, we can suppose that 
+
+∥u(t)∥Lq = C/ (T ∗ − t)α, α > 0. Plugging this ansatz in expression (17), we then have that ( α p ) ≥ 1 and 
+
+ddt ∥u(t)∥Lq = C
+
+(T ∗ − t)1+ α = C
+
+ 1(T ∗ − t)α
+
+ 1+ αα
+
+= C∥u(t)∥βLq , (23) where β = (1 + α)/α ≤ p + 1 = 3( q − 1) /(q − 3), cf. (19). We therefore conclude that, somewhat counter-intuitively, for a blow-up to occur in Navier-Stokes flows,  
+
+> ddt
+
+∥u(t)∥Lq cannot be arbitrarily large. In fact, it must be at most proportional to 
+
+∥u(t)∥3( q−1) /(q−3)  
+
+> Lq
+
+as otherwise the integrand expression in (17) would blow-up before the integral becomes unbounded. In other words, if blow-up is to occur in a Navier-Stokes flow where the norm ∥u(t)∥Lq grows following relation (23), then the exponent 
+
+β must lie within a q-dependent range with the bottom bracket given by the exponents in (22) and the upper bracket given by the exponent in (19). These relations are illustrated in Figure 1. Needless to say, for blow-up to occur, the growth rate in (23) must be sustained sufficiently long and this time grows without bound as the exponent 
+
+β drops towards the bottom bracket in (22). These diagnostics will be helpful in assessing how “close” the extreme flows constructed in the present study come to becoming singular. 8246810    
+
+> 3459
+> 7q−6
+> 3( q−2) , 2q−3
+> q−3 , 3( q−1)
+> q−3
+
+qFig. 1 Dependence of the exponents in the upper bounds in inequalities (19) (solid line) and (22) (dashed line) on q. The symbols represent the values of parameter q considered in the present study. 
+
+# 4 Optimization Formulations 
+
+In this section we formulate a number of optimization problems we consider in this study. They are motivated by the conditional regularity results discussed in Section 3 and aim at finding optimal initial conditions u0 that will produce “extreme” flows, in the sense of maximizing the different regularity indicators involved in the condi-tional regularity results. The goal is to see whether a singularity might occur in such flows. With the domain Ω and the viscosity ν fixed, each problem is defined by three parameters, namely, the function space where the initial data is sought, the size of the optimal initial data and the length of the time window. The perspective adopted here is that for a given size of the initial data we begin with a time window [0 , T ] that is assumed sufficiently short such that classical solutions exist. The maximization is then performed on time windows with gradually increasing length T to see whether the quantities controlling the regularity of the solution might reveal an unbounded growth that would signal approach to a singularity, cf. (10) and (17), as T becomes longer than the interval of local existence. Thus, one has to work with smooth classical solutions only which facilitates numerical computations (cf. Appendix B). To provide context for the present investigation, we first recall the optimiza-tion problem motivated by the enstrophy condition (9) that was investigated in [32], where initial conditions eu0; E0,T with a fixed enstrophy E(eu0; E0,T ) = E0 were sought to maximize the enstrophy at prescribed times T
+
+Problem 0 Given E0, T ∈ R+, find 
+
+eu0; E0,T = arg max 
+
+> u0∈Q E0
+
+E (u(T ); u0) , where 
+
+QE0 := 
+
+n
+
+u0 ∈ H1(Ω) : ∇ · u0 = 0 , E(u0) = E0
+
+o
+
+.
+
+A key element of the statement of this and subsequent optimization problems is the definition of the constraint manifold, here QE0 . While no evidence of unbounded growth of enstrophy (10) was detected [32], the main finding from that study was the 9observation that the maximum transient growth of enstrophy scales as max 
+
+> u0
+
+max  
+
+> t> 0
+
+E(u(t; u0)) = O
+
+
+
+E(u0)3/2
+
+as E(u0) → ∞ . (24) Motivated by the Ladyzhenskaya-Prodi-Serrin conditions (15)–(16), we define the following two objective functionals ΦqT (u0) := 1
+
+T
+
+Z T
+
+> 0
+
+∥u(τ )∥pLq dτ, p = 2qq − 3 , q > 3, (25) ΨT (u0) := ∥u(T )∥3 
+
+> L3
+
+(26) for a given T > 0. The first one coincides with the integral in (17), except for the prefactor T −1 which ensures expression (25) remains bounded even if the integral grows without bound when T tends to infinity. The values of the exponent p are shown as a function of q in Figure 2(a). The definition (26) is motivated by the observation that the norm ∥ · ∥ L∞(Ω) is not a differentiable function of its argument, cf. (2b), hence its use in the objective functional would result in a non-smooth optimization problem that would be much harder to solve [48]. This difficulty is circumvented by considering 
+
+∥u(t)∥L3 at a fixed time t = T , rather than over the interval [0 , T ], in the objective functional (26). An important aspect is the definition of the constraint manifold over which the objective functionals are to be maximized. The form of the functionals (25)–(26) involving Lebesgue norms ∥u(t)∥Lq , q ≥ 3, suggests that optimization should be per-formed over these spaces. However, the difficulty is that these spaces are not endowed with the Hilbert structure which, as will be discussed in the next section, is the pre-ferred setting for the formulation of optimization algorithms. The reason is that an inner product is required for the usual definition of the gradient of the objective func-tional. Therefore, for each of the two objective functionals (25)–(26) we will consider two distinct formulations of the optimization problem: 
+
+• in the first, optimization is performed in the largest Sobolev space with the Hilbert structure Hs(Ω) embedded in the given Lebesgue space Lq (Ω), which will lend itself to solution using standard methods of numerical PDE optimization, 
+
+• in the second, maximization is performed directly in the Lebesgue space Lq (Ω) leading to variational optimization problems with a nonstandard structure; in par-ticular, in the absence of an inner product, this will necessitate the construction of a different notion of the gradient of the objective functional, namely, the metric gradient [49]. In regard to the first formulation, the relevant Hilbert-Sobolev space Hs(Ω) is determined based on the Sobolev embedding theorem in 3D [50] 
+
+Hs(Ω) ,→ Lq (Ω) , if s ≥ 32 − 3
+
+q . (27) 10 8532   
+
+> 3459
+> p
+
+q(a) 3 4 5 9
+
+> 1
+> 23
+> 49
+> 10 7
+> 63
+> 2
+> s
+
+q (b) 
+
+Fig. 2 Dependence of (a) p in (25) and (b) s in (27) on the index q with solid symbols representing the values considered in the present study. The dashed horizontal lines correspond to the limiting values of p and s obtained when q → ∞ .
+
+In other words, Hs(Ω) with s = 3 /2 − 3/q is the largest Sobolev space embedded in 
+
+Lq (Ω) and hence will serve as a proxy for the letter in the first formulation. The values of the index s in (27) are shown as function of q in Figure 2(b). This thus leads to the following four optimization problems: 
+
+Problem 1 Given B, T ∈ R+, q > 3, s = 3 /2 − 3/q and the objective functional Φ qT (u0)from (25), find 
+
+eu0; B,T = arg max 
+
+> u0∈M B
+
+ΦqT (u0), where (28) 
+
+MB := 
+
+
+
+u0 ∈ Hs(Ω) : ∇x · u0 = 0 ,
+
+Z
+
+> Ω
+
+u0 dx = 0 , ∥u0∥Lq = B
+
+
+
+. (29) 
+
+Problem 2 Given B, T ∈ R+, q > 3 and the objective functional Φ qT (u0) from (25), find 
+
+eu0; B,T = arg max 
+
+> u0∈L B
+
+ΦqT (u0), where (30) 
+
+LB := 
+
+
+
+u0 ∈ Lq : ∇x · u0 = 0 ,
+
+Z
+
+> Ω
+
+u0 dx = 0 , ∥u0∥Lq = B
+
+
+
+. (31) 
+
+Problem 3 Given B, T ∈ R+ and the objective functional Ψ T (u0) from (26), find 
+
+eu0; B,T = arg max 
+
+> u0∈N B
+
+ΨT (u0), where (32) 
+
+NB := 
+
+
+
+u0 ∈ H1/2(Ω) : ∇x · u0 = 0 ,
+
+Z
+
+> Ω
+
+u0 dx = 0 , ∥u0∥L3 = B
+
+
+
+. (33) 
+
+Problem 4 Given B, T ∈ R+ and the objective functional Ψ T (u0) from (26), find 
+
+eu0; B,T = arg max 
+
+> u0∈S B
+
+ΨT (u0), where (34) 
+
+11 SB :=             
+
+> 
+> u0∈L3(Ω) : ∇x·u0= 0 ,
+> Z
+> Ω
+> u0dx= 0 ,∥u0∥L3=B
+> 
+> .(35)
+
+Problems 1 and 3 represent the first formulation mentioned above, whereas Problems 2 and 4 represent the second. In an earlier work [33], Problem 1 was studied for a single set only of parameters 
+
+q = 4 , p = 8, and in the present investigation we consider Problems 1 and 2 for 
+
+q = 4 , 5, 9, in addition to studying Problems 3 and 4 (which correspond to q = 3, cf. (26)). The reason we focus on these particular values is because these are the only cases where both q and p are integers, which facilitates interpretation of the results. These values of q are marked together with the corresponding values of p and s in Figures 2(a) and 2(b), respectively. Computational approaches to find families of local maximizers of Problems 1–4 are presented next. 
+
+# 5 Solution Approach 
+
+First, we describe the Riemannian gradient method used to solve constrained opti-mization problems. A key element of this approach is evaluation of the gradient of the objective functional (25)–(26) with respect to the control variable which is the initial condition u0 in (1). This needs to be done in a suitable topology and is described below. Finally, we introduce additional tools needed to implement the Riemannian gradient approach. We follow the “optimize-then-discretize” strategy where the optimization approach is first formulated in the infinite-dimensional (continuous) setting and only then the resulting equations and expressions are discretized for the purpose of numerical solu-tion [51]. Some details of the numerical implementation are presented in Appendix B. While the general approach is essentially the same as used in [33], the main novelty is that here we also compute Lebesgue gradients, i.e, gradients of the objective func-tional (25)–(26) defined in Lebesgue spaces Lq (Ω), q ≥ 3, without Hilbert structure, which are needed to solve Problems 2 and 4. As will be evident below, this is tech-nically more complicated than in Hilbert spaces [49, 52]. To focus attention, we first describe solution of Problems 1 and 2, and then mention adaptations needed to solve Problems 3 and 4 which have a similar structure. 
+
+## 5.1 Riemannian Gradient Method 
+
+Problem 1 is Riemannian in the sense that local maximizers eu0; B,T belong to a con-straint manifold MB [53]. To locally characterize this manifold, we define the tangent space TzMB at a point z ∈ M B . To do so, the fixed-norm constraint can be expressed in terms of the function Gq : Hs(Ω) → R+, where Gq (z) := ∥z∥qLq . Computing the Gˆ ateaux differential of Gq (z) = B and using the Riesz representation theorem [54], we obtain 
+
+∀z′ ∈ Hs(Ω) G′q (z; z′) := ddϵ Gq (z + ϵz′) ϵ=0 = ⟨∇Gq (z), z′⟩Hs = 0 , (36) 12 where ∇Gq (z) ∈ Hs(Ω) is the gradient of the function Gq at z ∈ M B and can be interpreted as an element orthogonal to the subspace TzMB in Hs(Ω). Thus, the tangent subspace is given by 
+
+TzMB := 
+
+
+
+v ∈ Hs(Ω) : ∇x · v = 0 ,
+
+Z
+
+> Ω
+
+v dx = 0, ⟨∇Gq (z), v⟩Hs = 0 
+
+
+
+. (37) A local maximizer eu0; B,T will then be found by constructing a sequence of divergence-free zero-mean vector fields with a fixed Lq (Ω) norm, 
+
+n
+
+u(n)0; B,T 
+
+o
+
+> n∈N
+
+, such that 
+
+eu0; B,T = lim  
+
+> n→∞
+
+u(n)0; B,T . (38) This sequence is defined using the following iterative procedure representing adiscretization of a gradient flow projected onto the manifold MB
+
+u(n+1) 0; B,T = RMB
+
+
+
+u(n)0; B,T + τn PTnMB ∇Hs
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+  
+
+,
+
+u(1) 0; B,T = u0,
+
+(39) where u0 is an initial guess, PTnMB : Lq (Ω) → T nMB := Tu(n)0; B,T 
+
+MB is an operator representing projection onto the tangent subspace (37) at the nth iteration, τn is the step size, ∇Hs
+
+ΦqT is the gradient of the functional Φ qT in the Sobolev space Hs(Ω), whereas RMB : TnMB → M B is a retraction from the tangent subspace to the constraint manifold [53]. Precise definitions of PTnMB , τn and RMB will be given in Section 5.3 while computation of the gradient ∇Hs
+
+ΦqT will be described in Section 5.2. As regards solution of Problem 2, the approach is quite similar to that in Problem 1, with the difference that now we solve the optimization problem in the Banach space 
+
+Lq (Ω) which lacks Hilbert structure. The maximizer eu0; B,T belongs to the constraint manifold LB and to locally characterize this manifold, we define the tangent subspace 
+
+TzLB at a point z ∈ L B . As above, the fixed-norm constraint is expressed in terms of the function Fq : Lq (Ω) → R+, Fq (z) := ∥z∥qLq which is now defined on the Lebesgue space Lq (Ω). Computing the Gˆ ateaux differential of Fq (z) = B, we obtain 
+
+∀z′ ∈ Lq (Ω) F ′q (z; z′) := ddϵ Fq (z + ϵz′) ϵ=0 = ⟨∇Fq (z), z′⟩(Lq )∗×Lq = 0 , (40) where ⟨· , ·⟩ (Lq )∗×Lq is the duality pairing between the Lebesgue space Lq (Ω) and its dual ( Lq (Ω)) ∗ which can be identified with the space Lp(Ω) where 1 /p + 1 /q = 1 [50]. Thus, the subspace is defined as 
+
+TzLB := 
+
+
+
+v ∈ Lq (Ω) : ∇x · v = 0 ,
+
+Z
+
+> Ω
+
+v dx = 0, ⟨∇Fq (z), v⟩(Lq )∗×Lq = 0 
+
+
+
+, (41) which is a natural extension of (37) to the case of a general Banach space with the inner product replaced by a duality pairing to define the tangency condition. 13 Thus, local maximizers eu0; B,T in Problem 2 are found as in (38)–(39), except that the Sobolev gradient ∇Hs
+
+ΦqT of the objective functional needs to be replaced with the Lebesgue gradient ∇Lq
+
+ΦqT , whereas the projection and retraction operators have to be defined as PTnLB : Lq (Ω) → T nLB := Tu(n)0; B,T 
+
+LB and RLB : TnLB → L B , such that now the discretized gradient flow on the manifold LB takes the form 
+
+u(n+1) 0; B,T = RLB
+
+
+
+u(n)0; B,T + τn PTnLB ∇Lq
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+  
+
+,
+
+u(1) 0; B,T = u0.
+
+(42) 
+
+## 5.2 Evaluation of the Gradient 
+
+A key element of the iterative procedure (39) is evaluation of the gradients ∇Hs
+
+ΦqT
+
+and ∇Lq
+
+ΦqT of the objective functional Φ qT , cf. (25). The first step in determining these gradients is to find the gradient of (25) with respect to the L2 topology. We begin by considering the Gˆ ateaux differential of the objective functional (25) (Φ qT )′(u0; u′
+
+> 0
+
+) := lim  
+
+> ϵ→0
+
+ϵ−1 [Φ qT (u0 + ϵu′
+
+> 0
+
+) − ΦqT ] (43) which with u0 fixed is a bounded linear functional of its second argument in L2(Ω). Then, invoking the Riesz representation theorem [54], we have (Φ qT )′(u0; u′
+
+> 0
+
+) = 
+
+D
+
+∇L2
+
+ΦqT (u0), u′
+
+> 0
+
+E 
+
+> L2
+
+. (44) As shown in Appendix A, an expression for the Gˆ ateaux differential can be conve-niently obtained by solving the following adjoint system 
+
+L∗
+
+u∗
+
+p∗
+
+
+
+:= 
+
+"
+
+−∂tu∗ −
+
+h
+
+∇x u∗ + ( ∇x u∗)T i
+
+u − ∇x p∗ − ν∆u∗
+
+−∇x · u∗
+
+#
+
+=
+
+f
+
+0
+
+
+
+, (45a) 
+
+f (t, x) := 2q
+
+(q − 3) T ∥u(t)∥ 
+
+> q(5 −q)
+> q−3
+> Lq
+
+|u(t, x)|q−2u(t, x), x ∈ Ω, t ∈ [0 , T ], (45b) 
+
+u∗(T ) = 0 (45c) subject to periodic boundary conditions, where u∗ : [0 , T ] × Ω → R3 and p∗ : [0 , T ] ×
+
+Ω → R are the adjoint states associated to the velocity field u and the pressure p,respectively, in (1). The L2 gradient is then obtained from (44) as 
+
+∇L2
+
+ΦqT = u∗(0) . (46) We note that the adjoint system (45) is a linear terminal-value problem and hence needs to be integrated backwards in time. The coefficients in (45a) and the source term (45b) are determined by the state u = u(t, x) corresponding to the initial condition 
+
+u0 around which linearization is performed. When Problems 3 and 4 are solved, the 14 L2 gradient of the objective functional (26) is given by an expression analogous to (46), namely 
+
+∇L2
+
+ΨqT = u∗(0) (47) where u∗ is the solution of the adjoint problem (45a) with 
+
+f (t, x) = 0, t ∈ [0 , T ], x ∈ Ω, (48a) 
+
+u∗(T, x) = 3 |u(T, x)|u(T, x). (48b) The difference between the structure of the source term and the terminal condition in (45b)–(45c) and in (48a)–(48b) reflects the difference in the form of the objective functionals (25) and (26) defined, respectively, as an integral over [0 , T ] and an expres-sion evaluated at t = T . Once the L2 gradient is found as in (46)–(47), it is possible to construct the Sobolev and Lebesgue gradients ∇Hs
+
+ΦqT and ∇Lq
+
+ΦqT as described in the following subsections. 
+
+5.2.1 Gradient in the Sobolev Space Hs
+
+The Sobolev gradient is obtained by reinterpreting the Gˆ ateaux differential (44), viewed as a function of its second argument with u0 fixed, as a bounded linear func-tional on the Sobolev space Hs(Ω) [55, 56]. Therefore, the differential also admits the Riesz representation (Φ qT )′(u0; u′
+
+> 0
+
+) = 
+
+D
+
+∇Hs
+
+ΦqT (u0), u′
+
+> 0
+
+E 
+
+> Hs
+
+. (49) Motivated by computational consideration mentioned below, here we use an equivalent form of the inner product in Hs(Ω), namely, f , g Hs := R 
+
+> Ω
+
+f · g dx + ℓ2s R 
+
+> Ω
+
+∆s/ 2f ·
+
+∆s/ 2g dx, where 0 < ℓ < ∞ is an adjustable parameter. Identifying the two Riesz representations (44) and (49) of the Gˆ ateaux differential, using (46) together with this definition of the inner product, performing integration by parts and noting the arbitrariness of the perturbation u′
+
+> 0
+
+, we obtain the elliptic boundary-value problem [56] Id − ℓ2s∆s ∇Hs
+
+ΦqT = ∇L2
+
+ΦqT in Ω , (50) subject to periodic boundary conditions which allows us to determine the Sobolev gradient ∇Hs
+
+ΦqT when the L2 gradient is available from (46)–(47). Clearly, (50) pre-serves the divergence-free property of the L2 gradient. Transforming equation (50) to the Fourier space, where 
+
+hbf
+
+i
+
+> k
+
+∈ C3 represents the Fourier coefficient of the vector field 
+
+f with wavenumber k, we obtain 
+
+ \∇Hs
+
+ΦqT
+
+
+
+> k
+
+=
+
+> F(k)
+
+z }| {
+
+11 + ℓ2s|k|s
+
+h
+
+∇L2
+
+ΦqT
+
+i
+
+> k
+
+, k ∈ Z3 \ { 0}, (51a) 
+
+ \∇Hs
+
+ΦqT
+
+
+
+> 0
+
+= 0, (51b) 15 where k = |k|. This demonstrates that the computation of the Sobolev gradient 
+
+∇Hs
+
+ΦqT can be regarded as application of the low-pass filter F(k), which is a smooth-ing operation, to the L2 gradient (46)–(47) with the cut-off wavenumber given by ℓ−1
+
+[56]. While problems with different values of ℓ ∈ (0 , ∞) are mathematically equiva-lent, adjusting the value of this parameter can in practice have a significant effect on the rate of convergence of iterations (39). 
+
+5.2.2 Gradient in the Lebesgue Space Lq
+
+Determination of the gradient in the Lebesgue space Lq (Ω), q ≥ 3, needed in Problems 2 and 4 is more involved as we do not have an inner product in this space and hence there is no Riesz identity. We thus need to invoke the concept of a metric gradient [49], which is a generalization of the notion of the gradient to normed spaces. It relies on the observation that the gradient is the element maximizing the directional derivative of the objective functional under certain constraints. We can thus define the gradient of the objective functional (25) variationally as a solution of the following optimization subproblem subject to the suitable constraints [52, 55] 
+
+∇Lq ΦqT = arg max   
+
+> ∥Θ∥Lq=1 ,∇x·Θ=0
+
+
+
+(Φ qT )′(u0; u′
+
+> 0
+
+) = 
+
+D
+
+∇L2
+
+ΦqT , Θ
+
+E 
+
+> (Lq)∗×Lq
+
+
+
+. (52) Optimization problem (52) can be converted to an unconstrained form by introducing the Lagrange multipliers μ ∈ R and η ∈ Lq (Ω) associated with each of these two constraints 
+
+∇Lq
+
+ΦqT = arg min  
+
+> μ∈R, η ∈Lq(Ω)
+
+arg max  
+
+> Θ∈Lq(Ω)
+
+D
+
+∇L2
+
+ΦqT , Θ
+
+E  
+
+> (Lq)∗×Lq
+
+++ μq (∥Θ∥qLq − 1) + 
+
+Z
+
+> Ω
+
+η (∇x · Θ) dx
+
+
+
+, (53) where the expression in the bracket can be interpreted as the Lagrangian corresponding to the right-hand side of (52). After performing integration by parts, we arrive at 
+
+∇Lq
+
+ΦqT = arg min  
+
+> μ∈R, η ∈Lq(Ω)
+
+arg max  
+
+> Θ∈Lq(Ω)
+
+Z
+
+> Ω
+
+
+
+u∗(0) · Θ + μq |Θ|q − μq|Ω| − Θ · ∇x η
+
+
+
+dx. (54) Now, using the optimality conditions requiring the vanishing of the Gˆ ateaux differ-entials of the integral expression in (54) with respect to Θ, μ and η, we obtain the following expressions 
+
+Z
+
+> Ω
+
+
+
+u∗(0) + μ∇Lq
+
+ΦqT |∇Lq
+
+ΦqT |q−2 − ∇x η
+
+
+
+· Θ′ dx = 0 , ∀ Θ′ ∈ Lq (Ω) , (55a) 
+
+Z
+
+> Ω
+
+|Θ|q dx = 1 , ∀ Θ ∈ Lq (Ω) , (55b) 16 Z
+
+> Ω
+
+(∇x · Θ) η d x = 0 , ∀ η ∈ Lq (Ω) . (55c) Conditions (55b) and (55c) trivially say that solutions of the optimization problem (52) have a unit Lq (Ω) norm and are divergence-free. Since Θ′ is arbitrary, condition (55a) is equivalent to the following relation 
+
+∇Lq
+
+ΦqT |∇Lq
+
+ΦqT |q−2 = 1
+
+μ (−u∗(0) + ∇x η) , x ∈ Ω. (56) As observed in [52], the RHS in expression (56) represents the Helmholtz-Weyl decom-position of a vector field in Lq (Ω) [42], where such a vector field is written as the sum of a divergence-free vector field and the gradient of a certain scalar potential. Then, applying the divergence operator to (56) and noticing that both u∗(0) and ∇Lq
+
+ΦqT
+
+are divergence-free, we obtain an elliptic boundary-value problem which can be used to determine η
+
+∆η = μ
+
+
+
+∇x |∇Lq
+
+ΦqT |q−2
+
+· ∇Lq
+
+ΦqT , x ∈ Ω (57) Therefore, to determine the metric gradient in the space Lq (Ω) , it is necessary to solve the following non-linear system subject to periodic boundary conditions 
+
+∇Lq
+
+ΦqT |∇Lq
+
+ΦqT |q−2 = 1
+
+μ (−u∗(0) + ∇x η) , x ∈ Ω, (58a) ∆η = μ
+
+
+
+∇x |∇Lq
+
+ΦqT |q−2
+
+· ∇Lq
+
+ΦqT , x ∈ Ω, (58b) 
+
+∥∇Lq
+
+ΦqT ∥Lq = 1 . (58c) We emphasize that, in contrast to the Hilbert-space setting where the map between the L2 gradient and the corresponding Sobolev gradient ∇Hs
+
+ΦqT is linear , cf. (50), in the present case of Lebesgue spaces this relation is nonlinear. We note that in the special case with q = 2, system (58) becomes linear and the normalization condition (58c) can be dropped, so that we have 
+
+∇L2
+
+ΦqT = 1
+
+μ (−u∗(0) + ∇x η) , x ∈ Ω (59a) ∆η = 0 , x ∈ Ω. (59b) Since in this case η is harmonic and equal to a constant, equation (59a) becomes 
+
+∇L2
+
+ΦqT = −(1 /μ )u∗(0) which, up to normalization, is the same as (46). Finally, we add that a rigorous demonstration of the existence and possible uniqueness of solutions of system (58) remains an open problem. 
+
+## 5.3 Projection, Retraction and Arc-Maximization 
+
+In Problems 1 and 3 the condition characterizing the subspaces tangent to the mani-folds MB and NB has the form ⟨∇Gq (z), z′⟩Hs = q |z|q−2z, z′ ˙Hs for all z′ ∈ Hs(Ω). 17 cf. (36). We note that given the nonlinearity of the term |z|q−2z, the element ∇Gq (z)does not, in general, satisfy the divergence-free and zero-mean conditions, even if they are satisfied by z. Therefore, the projection operator PTnMB : Hs(Ω) → T nMB in iterations (39) is defined as [33, 53] 
+
+PTnMB z := z −
+
+D
+
+z, ∇Gq
+
+
+
+u(n)0; B,T 
+
+E 
+
+> Hs
+
+
+
+∇Fq
+
+
+
+u(n)0; B,T 
+
+
+
+, ∇Gq
+
+
+
+u(n)0; B,T 
+
+
+
+> Hs
+
+∇Gq
+
+
+
+u(n)0; B,T 
+
+
+
+, (60) where v := v − ∇∆−1(∇ · v) −
+
+Z
+
+> Ω
+
+v dx
+
+and likewise for the projection operator PTnNB : H1/2(Ω) → T nNB , which ensures the divergence-free and zero-mean properties are satisfied by construction. In Problems 2 and 4 the tangency condition has the form (40) such that the projection operator 
+
+PTnLB : Lq (Ω) → T nLB is 
+
+PTnLB z := z −
+
+D
+
+∇Fq
+
+
+
+u(n)0; B,T 
+
+
+
+, z
+
+E 
+
+> (Lq)∗×Lq
+
+R 
+
+> Ω
+
+∇Fq
+
+
+
+u(n)0; B,T 
+
+
+
+· ∇Fq
+
+
+
+u(n)0; B,T 
+
+
+
+dx
+
+∇Fq
+
+
+
+u(n)0; B,T 
+
+
+
+(61) and likewise for the projection operator PTnSB : L3(Ω) → T nSB . We observe that in this case, inner products have been replaced by duality parings due to the lack of Hilbert structure in Lebesgue spaces. The retraction operator RMB : TnMB → MB in (39) is defined as the normalization [33, 53] 
+
+RMB (z) := B
+
+∥z∥Lq
+
+z for all z ∈ T nMB (62) and likewise for the retraction operators in the solution of Problems 2, 3 and 4. The step size τn in the iterative algorithms (39) and (42) is found by solving the arc-search problems 
+
+τn = arg max 
+
+> τ>0
+
+ΦqT
+
+h
+
+RMB
+
+
+
+u(n)0; S,T + τ PTnMB ∇Hs
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+ i 
+
+(63) and 
+
+τn = arg max 
+
+> τ>0
+
+ΦqT
+
+h
+
+RLB
+
+
+
+u(n)0; S,T + τ PTnLB ∇Lq
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+ i 
+
+, (64) respectively. Analogous formulations are employed when solving Problems 3 and 4. These problems can be regarded as a generalization of the standard line-search problem with maximization performed following an arc (a geodesic in the limit of infinitesimal step sizes) lying on the constraint manifold MB and LB , rather than along a straight line. Computations involved in the discrete gradient flow applied to solve Problem 2 are summarized as Algorithm 1 and illustrated schematically in Figure 3. We have 18 TnLB
+
+∇ΦqT
+
+PTnLB ∇ΦqT
+
+PTnLB
+
+RLB
+
+LB
+
+u(n+1) 0; B,T 
+
+u(n)0; B,T Fig. 3 Schematic representation of the operations performed at each iteration of Algorithm 1 with projection PTnLB : Lq (Ω) → T nLB and retraction RLB : TnLB → L B [33]. 
+
+also implemented the Riemannian conjugate-gradient method [53], but since it did not lead to appreciable improvements in terms of convergence, we do not use it here (we add that development of this approach for problems defined on Lebesgue spaces not endowed with an inner product leads to some interesting theoretical questions [57, 58]). 19 Algorithm 1 Solution of Problem 2 for fixed T and B.
+
+Input: 
+
+B — size of the initial data 
+
+T — length of the time window 
+
+u0 — initial guess 
+
+ϵ — tolerance in the termination condition for iterations (42) 
+
+Nmax — maximum number of iterations 
+
+Output: 
+
+Optimal initial data eu0; B,T ∈ L B .
+
+u(0) 0; B,T = u0
+
+Compute Φ qT (u0)
+
+n = 0 
+
+repeat 
+
+{————————– Optimization Iterations (39) ——————————– }
+
+Solve the Navier-Stokes system with initial condition u(n)0; B,T , see equation (1) Solve the adjoint system to obtain u∗ and p∗, see equation (45) Compute the L2 gradient ∇L2 ΦqT
+
+
+
+u(n)0; B,T 
+
+
+
+, see equation (46) Compute the Lebesgue gradient ∇Lq
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+
+
+, see system (58) Compute the optimal step size τn, see equation (64) Set u(n+1) 0; B,T = RLB
+
+
+
+u(n)0; B,T + τnPTnLB ∇Lq
+
+ΦqT
+
+
+
+u(n)0; B,T 
+
+  
+
+Evaluate the termination condition relative change = ΦqT
+
+> 
+> u(n+1) 0; B,T
+> 
+> −ΦqT
+> 
+> u(n)0; B,T
+> 
+> ΦqT
+> 
+> u(n)0; B,T
+> 
+
+Set n = n + 1 
+
+until relative change < ϵ or n > N max 
+
+eu0; B,T = u(n+1) 0; B,T 
+
+# 6 Numerical Results 
+
+In this section, we solve Problems 1, 2, 3 and 4 for different values of q, B, T and using different initial guesses u0, cf. Algorithm 1. These problems were tackled using the two variants of the gradient descent method introduced in Section 5, namely, (39) and (42). Our analysis focuses on all integer values of ( q, p ) ∈ { (4 , 8) , (5 , 5) , (9 , 3) } in addition to q = 3, cf. Figure 2, whereas the parameter s in Problems 1 and 3 depends on q via the Sobolev embedding (27). This represents a large number of parameters, and while we have explored their many different combinations, detailed analysis will be provided for the extreme values q = 3 and q = 9 in subsections 6.1 and 6.2 below with a summary information for all considered values of q collected in Section 6.3. We note that the case q = 4 was extensively investigated, albeit in the context of Problem 1 only, in [33]. Without loss of generality, we set ν = 1 in (1) and, unless stated otherwise, the numerical resolution used in computations in Algorithm 1 is N 3 = 256 3. All compu-tations reported below are well resolved which was verified by carefully examining the 20 energy spectra at different flow stages (details are provided in [58]). We employed a variety of initial guesses u0, including the (suitably rescaled) optimal initial conditions found for q = 4 in [33] and various states with a random structure. The constraint manifolds in Problems 1–4 are defined in terms of the parameter B fixing the “size” of the initial data u0 measured in the Lq norm. When solving each of Problems 1–4 we consider three distinct values of the parameter B and in order for these values to be consistent across different q = 3 , 4, 5, 9, they are chosen such that the values of the Taylor-scale Reynolds number [59] characterizing the corresponding initial conditions 
+
+Re := 
+
+s
+
+10 3 |Ω|K(u0)
+
+νpE(u0) (65) are approximately the same for the smallest, intermediate and largest values of B.This ensures that solutions of Problems 1–4 obtained with different values of q and 
+
+B selected in this way are characterized by a similar balance of linear viscous and nonlinear advection effects at t = 0. We add that since the values of K
+
+
+
+u(n)0; B,T 
+
+
+
+and E
+
+
+
+u(n)0; B,T 
+
+
+
+change during iterations (39) and (42), the Reynolds numbers (65) characterizing the optimal initial conditions eu0; B,T found for different q and B are only approximately equal. Finally, we state that in our solutions of Problems 1–4 we have found no evidence for an unbounded growth of quantities (25)–(26) that would signal an incipient singularity. However, as documented below, these quantities were found to exhibit a significant transient growth. 
+
+## 6.1 Extremal Flows in L3(Ω) 
+
+In this section we consider the limiting case with q = 3 and solve Problems 3 and 4 for three values of the constraint parameter B = 376 .06 , 562 .34 , 707 .10 and several time windows T chosen empirically to produce the largest growth of || u(T )|| L3 . The time evolution of the norm || u(t)|| L3 and of the normalized enstrophy E(u(t)) /E(0) in the Navier-Stokes flows corresponding to the initial conditions eu0; B,T found in this way is shown in Figures 4a,c,e and 4b,d,f, respectively, for three representative values of 
+
+T , including the one which gives approximately the largest value of Ψ T (eu0; B,T ) for a given value of B (in some panels certain curves nearly overlap making the impression that some datasets may be missing). We see that the norm || u(t)|| L3 exhibits growth at least at some stage in all considered cases. However, this growth is rather weak and in relative terms is smaller than the growth of the enstrophy E(t) or the norm 
+
+|| u(t)|| L4 achieved in the extreme flows constructed in [32] and [33], respectively. This is consistent with the observations made in [30] that, in comparison to other quantities characterizing the regularity of solutions, the norm || u(t)|| L3 tends to be a slowly growing quantity. Even though we maximize the norm at the final time t = T , cf. (26), in some cases the maximum of || u(t)|| L3 is achieved at intermediate times 0 < t < T .We also note that the flows obtained by solving Problem 3 generally lead to a larger growth of the norm || u(t)|| L3 than the flows obtained by solving Problem 4. In all cases the evolution of the normalized enstrophy reveals an initial decay followed by some growth. 21 379.75 387.5 395.25 403.0     
+
+> 5e-06 0.00015 0.0003 0.00044 0.0006
+> || u(t)|| L3
+
+t(a) 0.7 0.8 0.9 1.0     
+
+> 5e-06 0.00015 0.0003 0.00045 0.0006
+> E(t)/E0
+
+t (b) 560 580 600 620     
+
+> 5e-06 0.0001 0.0002 0.0003 0.0004
+> || u(t)|| L3
+
+t
+
+(c) 0.7 0.8 0.9 1.0 1.1     
+
+> 5e-06 0.0001 0.0002 0.0003 0.0004
+> E(t)/E0
+
+t (d) 516.25 590.0 663.75 737.5   
+
+> 5e-06 0.0001 0.0002
+> || u(t)|| L3
+
+t
+
+(e) 0.5 0.75 1.0 1.25   
+
+> 5e-06 0.0001 0.0002
+> E(t)/E0
+
+t (f) 
+
+Fig. 4 [q = 3] Time evolution of (a,c,e) the norm || u(t)|| L3 and (b,d,f) the normalized enstrophy 
+
+E(u(t)) /E(0) in the Navier-Stokes flows with optimal initial conditions obtained by solving Problem 3 (blue) and Problem 4 (red). The values of the constraint parameter are (a), (b) B = 376 .06, (c), (d) B = 562 .34 and (e), (f) B = 707 .10. Solutions are computed over the time window [0 , T ] where 
+
+T takes three representative values, including the one which gives approximately the largest value of Ψ T (eu0; B,T ) for a given value of B. The solid symbols in (c) and (e) mark the time instances at which the flows are visualized in Figures 7–8. 
+
+22 10 8    
+
+> 10 9
+> 0.0 0.00015 0.0003 0.00045 0.0006
+> ΨT (˜u0; B,T  )
+
+T 
+
+> B(a) 10 8
+> 10 9
+> 10 810 9
+> max T ΨT (˜u0; B,T  )
+
+B3 (b)                
+
+> Fig. 5 [q= 3] (a) Dependence of the local maxima of the objective functional (26) on the length T
+> of the optimization window in Problems 3 (blue) and 4 (red) for different values of the constraint B=376 .06 ,562 .34 ,707 .10 with the arrow indicating the trend with the increase of B. (b) Dependence of max TΨT
+>  eu0; B,T
+> on B3=|| eu0; B,T || 3
+> L3with solid lines representing the power-law fits (66a)–(66b).
+
+6.1.1 Branches of Local Maximizers 
+
+We define a “branch” as a family of local maximizers parametrized by the length of the time window T and obtained by solving Problem 1, 2, 3 or 4 with the parameter 
+
+B fixed. The branches found by solving Problem 3 and Problem 4 are illustrated by plotting the objective functional Ψ T (eu0; B,T ) as a function of T for different B in Figure 5(a). We note that the dependence of Ψ T (eu0; B,T ) on T is rather weak, although a well-defined maximum is evident on each branch and shifts towards smaller values of T as 
+
+B increases. The evolutions of || u(t)|| L3 and E(u(t)) /E(0) in the flows corresponding to these maxima are also included in Figure 4. Figure 5(a) confirms that the values of 
+
+|| u(T )|| L3 in the flows obtained by solving Problem 3, with optimization performed in the space H1/2(Ω), are generally larger than in the flows obtained by solving Problem 4, where optimization is performed in the space L3(Ω). It is interesting to quantify how the maximum values of Ψ T (eu0; B,T ) attained on different branches scale with the constraint parameter B and this relation is shown in Figure 5(b) for flows obtained by solving Problems 3 and 4. We see that in both cases there is a clear power-law relation whose parameters, the exponent and the prefactor, can be determined via a least-squares fit to give Problem 3: max  
+
+> T
+
+ΨT (eu0; B,T ) ∼ 0.31  B31.07 , (66a) Problem 4: max  
+
+> T
+
+ΨT (eu0; B,T ) ∼ 0.22  B31.09 . (66b) We note that in both cases the exponents are only slightly larger than one, meaning that of the increase of Ψ T (eu0; B,T ) comes primarily from the increase of the constraint parameter B rather than from the nonlinear amplification. In order to assess how “close” the extreme flows studied in Figure 4 come to forming a singularity, we plot this data using the coordinates || u(t)|| L3 , ddt || u(t)|| L3
+
+23 10 4                      
+
+> 10 5
+> 10 6
+> 10 7
+> 10 3
+> d
+> dt || u(t)|| L3
+> || u(t)|| L3
+> B(a) 10 9
+> 10 10
+> 10 11
+> 10 12
+> 10 13
+> 10 8
+> d
+> dt E(t)
+> E(t)(b)
+> Fig. 6 [q= 3] Navier-Stokes flows corresponding to the optimal initial conditions found by solving Problem 3 and 4 for different Band Tshown using the coordinates (a)
+> n
+> || u(t)|| L3,ddt || u(t)|| L3
+> o
+> and (b) {E (t), d E(t)/dt }. In (b) the black solid line shows the upper bound dE/dt ∼ E 3on the rate of change of enstrophy, cf. (11). The dashed lines show the relations (a) ddt || u(t)|| L3∼ || u(t)|| 5
+> L3from (22) and (b) dE/dt ∼ E 2. Trajectories marked in blue and red correspond to solutions of Problems 3 and 4, respectively. The intensity of the color is related to the length of the time window with darker colors corresponding to solutions obtained on longer time windows T.
+
+and {E (t), d E(t)/dt } in Figures 6(a) and 6(b), respectively. This makes it possible to compare the observed behavior with the a priori bounds on the rate of growth of 
+
+|| u(t)|| L3 and E(t) from Sections 3.2 and 3.4. We note that since an upper bound on the rate of growth of the norm || u(t)|| L3 is not available, here we can only consider the “lower” bound (22) with q = 3. The three clusters of trajectories evident in Figures 6(a) and 6(b) correspond to the three values of the constraint parameter B we use when solving Problems 3 and 4. The results in these figures indicate that while in some of the flows considered here the norm || u(t)|| L3 and the enstrophy E(t) are for some time amplified at a rate consistent with singularity formation, this growth is not sustained long enough for such singularities to actually form. 
+
+6.1.2 Structure of the Extremal Flows 
+
+Finally, we discuss the structure of the extremal flows belonging to the different branches shown in Figure 5(a). We do this by visualizing the vorticity magnitude 
+
+|ω(ti, x)| and the quantity |u(ti, x)|3 in space at different time instances ti, i = 0 , ..., 3, defined as follows: 
+
+• t0 is the initial time, i.e., t0 = 0 ,
+
+• t1 ≈ argmax t∈[0 ,T ] ddt ∥u(t)∥Lq ,
+
+• t2 ≈ argmax t∈[0 ,T ] ∥u(t)∥Lq ,
+
+• t3 is the final time, i.e., t3 = T. 
+
+These plots are shown in Figures 7 and 8 for flows obtained with the optimal initial conditions eu0; B,T found by solving Problems 3 and 4 with different values of the constraint parameter B and T corresponding to the maxima over the branches shown in Figure 5(a). We note that here t2 ≈ t3, so the flow state at t = t3 is not separately 24 (a) t0 = 0 (b) t1 = 6 × 10 −6                 
+
+> (c) t2= 5 ×10 −5
+> Fig. 7 [q= 3, Problem 3, B= 562 .34 and T= 5 ×10 −5] Snapshots of the magnitude of the vorticity
+> |ω(tix)|(red color scale) in the solution of the Navier-Stokes system (1) along with vortex lines (red) and the quantity |u(ti,x)|3(blue color scale) shown at the times t0, ..., t 2. These time instances are marked with solid black symbols in Figure 4(c).
+
+visualized (however, this will be done for the flows corresponding to q = 9 in Section 6.2.2). We observe that the flow structures corresponding to solutions of Problems 3 and 4 are distinct and are both strongly localized, in contrast to what was found when solving Problem 0 in [32]. They resemble the flow structures found by solving Problem 3 with q = 4 in [33] and involve bent vortex rings which undergo deformation as time goes on. The maxima of |u(T, x)|3, which is what contributes the most to the value of the functional Ψ T (eu0; B,T ), occur inside the opening in the vortex ring as it is stretched. 25 (a) t0 = 0 (b) t1 = 3 × 10 −5                  
+
+> (c) t2= 5 ×10 −5
+> Fig. 8 [q= 3, Problem 4, B= 707 .10 and T= 5 ×10 −5] Snapshots of the magnitude of the vorticity
+> |ω(ti,x)|(red color scale) in the solution of the Navier-Stokes system (1) along with vortex lines (red) and the quantity |u(ti,x)|3(blue color scale) shown at the times t0, ..., t 2. These time instances are marked with solid green symbols in Figure 4(e).
+
+## 6.2 Extremal Flows in L9(Ω) 
+
+In this section we consider the case with q = 9 and solve Problems 1 and 2 for three values of the constraint parameter B = 500 , 800 , 1200 and several time windows T
+
+chosen empirically to produce the largest optimized values of the objective functional Φ9 
+
+> T
+
+(eu0; B,T ), cf. (25). The time evolution of the norm || u(t)|| L9 and of the normalized enstrophy E(u(t)) /E(0) in the Navier-Stokes flows corresponding to the initial con-ditions eu0; B,T found in this way is shown in Figures 9a,c,e and 9b,d,f, respectively, for three representative values of T , including the one which gives approximately the largest value of Φ 9 
+
+> T
+
+(eu0; B,T ) for a given value of B. In contrast to the results obtained by solving Problems 3 and 4, cf. Figure 4, now the norm || u(t)|| L9 reveals a much larger relative growth in time which is comparable in flows obtained by solving the two optimization problems. On the other hand, the growth of the enstrophy E(t) is weaker, and even entirely absent in the case of the smallest value of B (cf. Figure 9(b)), as compared to the flows obtained by solving Problems 3 and 4. 26 510 595 680 765     
+
+> 0.0 0.00015 0.0003 0.00045 0.0006
+> || u(t)|| L9
+
+t(a) 0.5 0.625 0.75 0.875 1.0     
+
+> 0.0 0.00015 0.0003 0.00045 0.0006
+> E(t)/E0
+
+t (b) 750.0 937.5 1125.0 1312.5 1500.0     
+
+> 0.0 0.0001 0.0002 0.0003 0.0004
+> || u(t)|| L9
+
+t
+
+(c) 0.6 0.7 0.8 0.9 1.0     
+
+> 0.0 0.0001 0.0002 0.0003 0.0004
+> E(t)/E0
+
+t (d) 1050 1400 1750 2100     
+
+> 0.0 0.00005 0.0001 0.00015 0.0002
+> || u(t)|| L9
+
+t
+
+(e) 0.8 0.9 1.0 1.1     
+
+> 0.0 0.00005 0.0001 0.00015 0.0002
+> E(t)/E0
+
+t (f) 
+
+Fig. 9 [q = 9] Time evolution of (a,c,e) the norm || u(t)|| L9 and (b,d,f) the normalized enstrophy 
+
+E(u(t)) /E(0) in the Navier-Stokes flows with optimal initial conditions obtained by solving Problem 1 (blue) and Problem 2 (red). The values of the constraint parameter are (a), (b) B = 500, (c) , (d) B = 800 and (e), (f) B = 1200. Solutions are computed over the time window [0 , T ] where T
+
+takes three representative values, including the one which gives approximately the largest value of Φ9 
+
+> T
+
+(eu0; B,T ) for a given value of B. The solid symbols in (c) mark the time instances at which the flows are visualized in Figures 12–13 
+
+.27 10 9   
+
+> 0.0 0.0002 0.0004 0.0006
+> Φ9
+> T (˜u0; B,T  )
+
+T  
+
+> B(a) 10 9
+> 10 10
+> 10 810 910 10
+> max T Φ9
+> T (˜u0; B,T  )
+
+B3 (b)                   
+
+> Fig. 10 [q= 9] (a) Dependence of the local maxima of the objective functional Φ 9
+> T(eu0; B,T ) on the length Tof the optimization window in Problems 1 (blue) and 2 (red) for different values of the constraint B= 500 ,800 ,1200 with the arrow indicating the trend with the increase of B. (b) Dependence of max TΦ9
+> T
+>  eu0; B,T
+> on B3=|| eu0; B,T || 3
+> L9with solid lines representing the power-law fits (67a)–(67b).
+
+6.2.1 Branches of Local Maximizers 
+
+The branches of local maximizers found by solving Problems 1 and 2 are illustrated by plotting the objective functional Φ 9 
+
+> T
+
+(eu0; B,T ) as a function of T for different B in Figure 10(a). In contrast to the results obtained for q = 3, cf. Figure 5(a), now the dependence of Φ 9 
+
+> T
+
+(eu0; B,T ) on T is more pronounced and we still observe a well-defined global maximum on each branch. The values of the objective functional Φ 9 
+
+> T
+
+(eu0; B,T )corresponding to these maxima are comparable for the extreme flows obtained by solving Problems 1 and 2. Figure 10(b) shows that the dependence of the maximum values of Ψ T (eu0; B,T ) attained on different branches on the constraint parameter B
+
+has the form of power laws of the following form determined via least-squares fits Problem 1: max  
+
+> T
+
+Φ9 
+
+> T
+
+(eu0; B,T ) ∼ 0.09  B31.18 , (67a) Problem 2: max  
+
+> T
+
+Φ9 
+
+> T
+
+(eu0; B,T ) ∼ 0.07  B31.19 . (67b) The quantity B3 was chosen as the independent variable in these fits recognizing the fact that with q = 9 the objective functional (25) scales with the 3rd power of the velocity. We observe that as compared to the fits obtained for q = 3, cf. Figure 5(b) and relations (66a)–(66b), now the exponents are noticeably larger reflecting stronger effects of nonlinear amplification. In order to assess how “close” the extreme flows studied in Figure 9 come to forming a singularity, we plot this data using the coordinates || u(t)|| L9 , ddt || u(t)|| L9
+
+and {E (t), d E(t)/dt } in Figures 11(a) and 11(b), respectively. This makes it possible to compare the observed behavior with the a priori bounds on the rate of growth of 
+
+|| u(t)|| L9 and E(t) from Sections 3.2 and 3.4. Since the enstrophy E(t) is a decaying function of time for all flows corresponding to the smallest value of the constraint parameter B = 500, cf. Figure 9(b), there are only two clusters of trajectories in 28 10 5 
+
+> 10 6
+> 10 7
+> 10 8
+> 10 3
+> d
+> dt || u(t)|| L9
+> || u(t)|| L9(a) 10 10
+> 10 11
+> 10 12
+> 10 8
+> d
+> dt E(t)
+> E(t)(b)
+
+Fig. 11 [q = 9] Navier-Stokes flows corresponding to the optimal initial conditions found by solving Problem 1 and 2 for different B and T shown using the coordinates (a) 
+
+n
+
+|| u(t)|| L9 , ddt || u(t)|| L9
+
+o
+
+and (b) {E (t), d E(t)/dt }. The black solid lines represent the upper bounds (a) ddt || u(t)|| L9 ∼ || u(t)|| 4
+
+> L9
+
+from (19) and (b) dE/dt ∼ E 3 from (11). The dashed lines show the relations (a) ddt || u(t)|| L9 ∼|| u(t)|| 5/2 
+
+> L9
+
+from (22) and (b) dE/dt ∼ E 2. Trajectories marked in blue and red correspond to solutions of Problems 1 and 2, respectively. The intensity of the color is related to the length of the time window with darker colors corresponding to solutions obtained on longer time windows T .
+
+Figure 11(b). Figure 11(a) shows that in the flows found by solving Problems 1 and 2 the the norm || u(t)|| L9 is amplified at a rate consistent with singularity formation for a longer time than was the case for the norm || u(t)|| L3 in the flows found by solving Problems 3 and 4, cf. Figure 6(a). However, this process is again not sustained nearly long enough for a singularity to form. 
+
+6.2.2 Structure of the Extremal Flows 
+
+Finally, we discuss the structure of the extremal flows belonging to the different branches shown in Figure 10(a). We do this by visualizing the vorticity magnitude 
+
+|ω(ti, x)| and the quantity |u(ti, x)|9 in space at the time instances ti, i = 0 , ..., 3, defined in Section 6.1.2. These plots are shown in Figures 12 and 13 for flows obtained with the optimal initial conditions eu0; B,T found by solving Problems 1 and 2 with the constraint parameter B = 800 and T corresponding to the maxima over the branches shown in Figure 10(a). We observe that the flow structures corresponding to solutions of Problems 1 and 2 are quite similar, and they both feature flattened and bent vortex rings that stretch as the flows evolve. There are also similarities to the flow structures obtained for q = 3 in Section 6.1, cf. Figures 7 and 8. 29 (a) t0 = 0 (b) t1 = 1 .1 × 10 −4         
+
+> (c) t2= 1 .5×10 −4(d) t3= 2 ×10 −4
+
+Fig. 12 [q = 9, Problem 1, B = 800 and T = 2 × 10 −4] Snapshots of the magnitude of the vorticity 
+
+|ω(ti, x)| (red color scale) in the solution of the Navier-Stokes system (1) along with vortex lines (red) and the quantity |u(ti, x)|9 (blue color scale) shown at the times t0, ..., t 3. These time instances are marked with solid black symbols in Figure 9(c). 
+
+30 (a) t0 = 0 (b) t1 = 1 .2 × 10 −4                       
+
+> (c) t2= 1 .5×10 −4(d) t3= 2 ×10 −4
+> Fig. 13 [q= 9, Problem 2, B= 800 and T= 2 ×10 −4] Snapshots of the magnitude of the vorticity
+> |ω(ti,x)|(red color scale) in the solution of the Navier-Stokes system (1) along with vortex lines (red) and the quantity |u(ti,x)|9(blue color scale) shown at the times t0, ..., t 3. These time instances are marked with solid green symbols in Figure 9(c).
+
+## 6.3 Comparison of the Extreme Flows Obtained for Different Values of q
+
+In this section we consolidate the results concerning the extreme flows obtained for different values of q in order to identify certain general trends. In addition to the results for q = 3 and q = 9 already discussed above, we also include the data for q = 4 and 
+
+q = 5 which was obtained in a similar manner and for brevity is not presented here (see [58] for all details). First, by comparing the plots in the left columns of Figures 4 and 9, we observe that the relative, with respect to the constraint parameter B, growth of the norm || u(t)|| Lq is more pronounced for larger q (this trend is also supported by the results for q = 4 , 5 [58]). Another observation is that while for q = 3 , 4 solutions of optimization problems defined on the Sobolev spaces Hs(Ω) (Problems 1 and 3) generally give rise to a larger growth of || u(t)|| Lq than solutions of problems defined on the Lebesgue spaces Lq (Ω) (Problems 2 and 4), this growth is comparable in the two cases for larger values of q. For a fixed q this growth is quantified by the exponent 
+
+γ in the empirical relation, cf. (66a)–(66b) and (67a)–(67b), max  
+
+> T
+
+ΨT (eu0; B,T ) ∼  B3γ , max  
+
+> T
+
+ΦqT (eu0; B,T ) ∼ (Bp)γ for q > 3. (68) 31 10 -1    
+
+> 3459
+> γ − 1
+
+q(a) 10 4 
+
+> 10 5
+> 10 6
+> 10 7
+> 10 8
+> 10 710 8
+> ∆E
+
+Emin (b)                     
+
+> Fig. 14 (a) Dependence of the exponent γin expressions (68) on qfor flows with optimal initial conditions found by solving (blue) Problems 1 and 3 and (red) Problems 2 and 4. (b) Dependence of ∆ E, cf. (69), on the minimum enstrophy Emin in flows with the optimal initial conditions found by solving (blue) Problems 1 and 3, and (red) Problems 2 and 4. In (b), each symbol corresponds to a different value of q: (squares) q= 3, (circles) q= 4, (triangles) q= 5 and (diamonds) q= 9. The solid blue line represents the relation ∆ E ∼ CE3/2min for some C > 0.
+
+The dependence of the exponent γ on q is shown in Figure 14(a) where we plot ( γ − 1) versus q to highlight the part of the growth of || u(t)|| Lq that can be attributed to the nonlinear amplification rather than merely to the increase of the constraint parameter 
+
+B. We see that, interestingly, in solutions of Problems 2 and 4, ( γ − 1) is an increasing function of q. In solutions of Problems 1 and 3 the general trend is similar, but the increase with q is not monotonic. The change of the trend at q = 5 could possibly be attributed to the solutions of Problem 1 at this value of q being only suboptimal local maximizers. We now turn to the behavior of the enstrophy in the extreme flows. Since in the flows considered here the enstrophy tends to initially decrease, cf. Figures 4 and 9 (right columns), we define the quantity ∆E := max 
+
+> t∈
+
+[argmin s∈[0 ,T ] E(s),T ] E(t) − E min , where Emin := min   
+
+> t∈[0 ,T ]
+
+E(t). (69) measuring the total increase of the enstrophy relative to its minimum Emin which may be attained at an intermediate time (rather than at the initial time t = 0). It is plotted as a function of Emin for all extreme flows found by solving Problems 1, 2, 3 and 4 with q = 3 , 4, 5, 9 and three distinct values of B in each case in Figure 14(b). The scatter evident in this plot is due to the fact that enstrophy is not directly controlled in these problems, hence may in principle take arbitrary values. Despite this, we see that the envelope of all the data points exhibits a well-defined power-law relation ∆ E = O
+
+
+
+E3/2min 
+
+
+
+consistent with what was already observed in [32] when solving Problem 0, cf. (24), and in [33] when solving Problem 1 for q = 4. 32 7 Discussion and Conclusions 
+
+Here we summarize the main findings of this study and draw some conclusions. Build-ing on a body of earlier work [32, 34, 35, 37, 40, 41] surveyed in [39], this investigation considers what is arguably the most fundamental family of conditional regularity results, the Ladyzhenskaya-Prodi-Serrin conditions (15)–(16). Singularity formation in a classical solution of the Navier-Stokes system (1) is signalled by the norm || u(t)|| L3
+
+and the integral in (17) becoming unbounded as the singularity time is approached. We systematically searched for initial data u0 that might lead to such a behavior by solving different PDE-constrained optimization problems for a broad range of param-eters. While no evidence of unbounded growth of the quantities of interest, and hence also for singularity formation, was detected, we were able to quantify the transient behavior arising in such worst-case scenarios. This observation does not rule out the possibility of blow-up, since Problems 1–4 are nonconvex and therefore solutions found in Section 6 may only be (possibly nonunique) suboptimal local maximizers. In other words, it is possible there may be other, local or global, maximizers producing larger, possibly unbounded, growth of the quantities in question. Another possibility is that the values of the constraint parameter B we used were too low such that the resulting flows would have been in the “small-data” regime where global existence of classical solutions can be asserted a priori. In this context we note that an analogous approach based on solution of variational optimization problems was recently applied to search for singularities in 3D inviscid Euler flows producing flows consistent with a finite-time blow-up [60]. A key methodological innovation of the present study is an approach to solve PDE optimization problems defined on general Banach spaces without Hilbert structure. Introduced in Section 5.2.2, it made it possible to solve Problems 2 and 4 where the optimal initial data eu0; B,T was sought in the Lebesgue spaces Lq (Ω), q ≥ 3. Solutions of optimization problems defined on these spaces and on Hilbert-Sobolev spaces Hs(Ω) embedded in them, cf. (27), are distinct which can be attributed to the different topologies these spaces are endowed with. In this regard, we found that local maximizers of Problems 1 and 3 are also local maximizers of Problems 2 and 4, respectively. However, the converse is not true. This observation can be rigorously justified as the following theorem                        
+
+> Theorem 1 Consider the following optimization problems defined on the Banach spaces X
+> and Y
+> max
+> z∈Xφ(z)and (P1) max
+> z∈Yφ(z),(P2)
+> where Xis densely embedded in Yand φ(z)is a Fr´ echet differentiable objective functional defined on both Xand Y. If z0is a local solution of (P1) , then z0is also a local solution of
+> (P2) .
+
+33 Although Problems 1–4 are constrained, they can be converted to an unconstrained form using Lagrange multipliers such that one can invoke Theorem 1. The proof of this theorem is given in Appendix C. While for smaller values of q solutions of Problems 1 and 3 defined on the Sobolev spaces generally yield larger values of the objective functional than solution of Prob-lems 2 and 4 defined on Lebesgue spaces, these values are comparable for q = 9. The first observation is counterintuitive since Lebesgue spaces can be viewed as “larger” than the Sobolev spaces embedded in them. In regard to the transient behavior observed in the extreme flows, Figures 6 and 11 together with the estimates on the maximum rate of growth of the norms || u(t)|| Lq
+
+and of the enstrophy E(t) from Sections 3.2 and 3.4 indicate that the extreme flows do enter a regime where these quantities are amplified at a rate consistent with singularity formation in finite time, but this growth is not sustained long enough for singularities to form due to depletion of nonlinearity. In the absence of singularities, quantities (26)– (25) appear bounded for all values of B and T , and were found to scale in proportion to ( Bp)γ , where γ is an increasing function of q, cf. Figure 14(a). On the other hand, the maximum enstrophy in the extreme flows scales as O
+
+
+
+E3/2min 
+
+
+
+, cf. Figure 14(b), which is the same behavior as was obtained in [32] by solving Problem 0. The fact that the extreme flows obtained by solving Problem 0 and Problems 1–4 exhibit the same scaling of the maximum enstrophy is intriguing since this quantity is not directly controlled in the latter case and this growth is realized through entirely different physical mechanisms. We add that the same bound is now rigorously established for the growth of enstrophy in 1D viscous Burgers flows [34, 38]. Perhaps, if one day the 3D Navier-Stokes system (1) is shown to be globally well posed, the a priori bound on the maximum growth of enstrophy might have this form. A comparison of the results from Sections 6.1–6.2 and Figure 14(a) indicates that solutions of Problems 1 and 2 obtained for increasing values of q lead to a more “extreme” behavior. Therefore, an interesting open question that we intend to consider in the future is what happens for larger values of q > 9. As regards the numerical approach, cf. Appendix B, while pseudo-spectral meth-ods provide excellent accuracy in approximating PDEs with smooth solutions, their main shortcoming is that they do not allow for local mesh refinement necessary to resolve very fine flow structures underlying extreme flow behaviors. Overcoming this limitation is necessary in order to be able to solve Problems 0–4 for larger values of the constraint parameter B or, equivalently, larger values of the Reynolds number (65) where other amplification mechanisms may become active. To address this prob-lem, in the future we will employ discretization techniques, such as finite-difference or finite-element methods, which do allow for local mesh refinement, especially adaptive mesh refinement. 
+
+# Acknowledgements 
+
+The authors thank Fabian Bleitner, Alexey Cheskidov, Mimi Dai, Roman Shvydkoy and Xinyu Zhao for many enlightening and enjoyable discussions. Partial funding for 34 this research was provided through an NSERC (Canada) Discovery Grant RGPIN-2020-05710. Computational resources were provided by the Digital Research Alliance of Canada under its Resource Allocation Competition . 
+
+# Appendix A Evaluation of the Gradient in L2
+
+When viewed as a function of its second argument, the Gˆ ateaux differential (Φ qT )′(u0; ·)is a bounded linear functional on L2(Ω) which allows us to use the Riesz identity (44) to extract the L2 gradient from it, cf. (46). We can use its definition (43) to evaluate the Gˆ ateaux differential of the objective functional (25) as (Φ qT )′(u0; u′
+
+> 0
+
+) = 2q
+
+(q − 3) T
+
+Z T
+
+> 0
+
+
+
+∥u(t)∥
+
+> q(5 −q)
+> q−3
+> Lq
+
+Z
+
+> Ω
+
+|u(t, x)|q−2u(t, x) · u′(t, x)dx
+
+
+
+dt, 
+
+(A1) where the perturbation field u′ = u′(t, x) is a solution of the Navier-Stokes system linearized around the trajectory u corresponding to the initial data u0 [51], i.e., 
+
+L
+
+u′
+
+p′
+
+
+
+:= 
+
+∂tu′ + u′ · ∇x u + u · ∇x u′ + ∇x p′ − ν∆u′
+
+∇x · u′
+
+
+
+=
+
+0
+
+0
+
+
+
+, (A2a) 
+
+u′(0) = u′ 
+
+> 0
+
+(A2b) which is subject to the periodic boundary conditions and where p′ is the perturbation to the pressure. We note that expression (A1) for the Gˆ ateaux differential is not yet in the Riesz form (44), because the perturbation u′ 
+
+> 0
+
+of the initial data does not enter in it explicitly as a factor, but instead appears in the initial condition (A2b) of the perturbation system. In order to transform the Gˆ ateaux differential to the required Riesz form (44), we introduce the adjoint states u∗ : [0 , T ] × Ω → R3 and 
+
+p∗ : [0 , T ] × Ω → R, and the following duality-pairing relation 
+
+
+
+L
+
+u′
+
+p′
+
+
+
+,
+
+u∗
+
+p∗
+
+ 
+
+:= 
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+L
+
+u′
+
+p′
+
+
+
+·
+
+u∗
+
+p∗
+
+
+
+dx dt = 
+
+> (Φ qT)′(u0;u′
+> 0)
+
+z }| { u′
+
+p′
+
+
+
+, L∗
+
+u∗
+
+p∗
+
+ 
+
++
+
+Z
+
+> Ω
+
+u′(t, x) · u∗(T, x) dx −
+
+Z
+
+> Ω
+
+u′(0 , x) · u∗(0 , x) dx = 0 ,
+
+(A3) where “ ·” in the first integrand expression denotes the Euclidean dot product evaluated at ( t, x). Using (A2), performing integration by parts with respect to both space and time (where all boundary terms resulting from integration by parts with respect to space vanish due to periodicity) and defining the adjoint system as in (45) with a judicious choice of the source term f and the terminal condition u∗(T ) leaves us with the identity (Φ qT )′(u0; u′
+
+> 0
+
+) = 
+
+Z
+
+> Ω
+
+u′
+
+> 0
+
+(x) · u∗(0 , x) dx =
+
+D
+
+u∗(0) , u′
+
+> 0
+
+E 
+
+> L2
+
+(A4) 35 which is a Riesz representation of the Gˆ ateaux differential. Noting that the perturba-tion u′ 
+
+> 0
+
+is arbitrary, expression (46) for the L2 gradient is finally obtained. 
+
+# Appendix B Numerical Implementation 
+
+Here we provide some information about the numerical approaches used to implement different elements of Algorithm 1. First, we describe the techniques employed to dis-cretize the the governing and adjoint system (1) and (45), followed by a discussion of the computation of the Lebesgue gradients and solution of the arc-search problem (63). We refer the reader to [58] for additional details and validation tests. 
+
+## B.1 Discretization of PDE Problems (1) and (45) 
+
+Discretization of systems (1) and (45) in space is based on the standard pseudospectral Fourier-Galerkin method with dealiasing [61, 62]. Suppose u : [0 , T ] × Ω → R3 is a vector field and consider the set WN = k ∈ Z3 : k ≤ N where N ∈ N+ is the spatial resolution. The Galerkin approximation of u(t, x) is defined as 
+
+uN (t, x) := X
+
+> k∈W N
+
+buk(t)e2πi k·x, (B5) where buk(t) ∈ C3 are the Fourier coefficients. For uN to be an approximate solution of (1), its Fourier coefficients must satisfy the following finite-dimensional system of ordinary differential equations (ODEs) obtained by performing a Galerkin projection of system (1) onto the subspace spanned by the Fourier modes with wavenumbers lying in WN
+
+dbuk(t)
+
+dt + A buk(t) + r(buk)( t) = 0, (B6a) 
+
+buk(t) · k = 0 , for all k ∈ W N , t ∈ (0 , T ), (B6b) 
+
+buk(0) = [ cu0]k , (B6c) where the linear and the nonlinear operators A and r are defined as 
+
+A buk(t) := (2 π)2 k2 buk(t), (B7) 
+
+r(buk)( t) := 
+
+h \(u · ∇x) u
+
+i
+
+> k
+
+− 2π i k bpk, (B8) respectively. The Fourier coefficients of the nonlinear term 
+
+h \(u · ∇x) u
+
+i
+
+> k
+
+are evaluated by first computing the product ( u · ∇x) u in the physical space and then calculating its Fourier transform with dealiasing. The Fourier coefficients of the pressure term, 
+
+bpk, are computed by solving the Poisson equation ∆ p = −∇x · (( u · ∇x) u) subject to periodic boundary conditions, which is also performed in the Fourier space as 
+
+bpk = k
+
+k2 ·
+
+h \(u · ∇x) u
+
+i
+
+> k
+
+. (B9) 36 For the discretization of the adjoint system (45), the Fourier coefficients of the solution satisfy the following system of ODEs 
+
+dbu∗
+
+> k
+
+(t)
+
+dt + S bu∗
+
+> k
+
+(t) + R bu∗
+
+> k
+
+(t) = 0, (B10a) 
+
+bu∗
+
+> k
+
+(t) · k = 0 , for all k ∈ W N , t ∈ (0 , T ), (B10b) 
+
+bu∗
+
+> k
+
+(T ) = 0 (B10c) where the linear operators S and R are defined as 
+
+S bu∗
+
+> k
+
+(t) := (2 π)2 k bu∗
+
+> k
+
+(t), (B11) 
+
+R buk(t) := 
+
+h \(∇x u∗) u
+
+i
+
+> k
+
+(t) + 
+
+h \(∇x u∗)T u
+
+i
+
+> k
+
+(t) − bfk(t) (B12) and bfk(t) are the Fourier coefficients of the source term f (t, x) in (45b). The terms 
+
+\(∇x u∗) u and \(∇x u∗)T u are first evaluated in physical space as in (B8), and then transformed (with dealiasing) to the Fourier space. Unlike system (B6), system (B10) is a terminal-value problem and needs to be integrated backwards in time. The coeffi-cients and the source term in the adjoint system (45) are given in terms of the solution 
+
+u = u(t, x) of the Navier-Stokes system (1) around which linearization is performed at each iteration is Algorithm 1. This solution therefore needs to be saved at all time steps discretizing the time interval [0 , T ]. The ODE systems (B6) and (B10) are integrated in time using a hybrid approach combining a second-order implicit Crank–Nicolson method applied to the linear terms and a third-order explicit Runge-Kutta method applied to the nonlinear terms [63], which offers an optimal trade-off between accuracy, stability and the computational cost. The incompressibility conditions (B6b) and (B10b) are applied at each sub-step in the process. The implementation is massively parallel and relies in on the Message-Passing Interface (MPI) and the library FFTW to perform parallel Fast Fourier Transforms [64]. 
+
+## B.2 Computation of the Lebesgue Gradients 
+
+To find a solution of system (58), we employ an iterative splitting method proposed in [56], where at each iteration we first apply Newton’s method with globalization to equation solve (58a) with η fixed and then we apply a standard Poisson solver to equation (58b) to update η.
+
+## B.3 Solution of Arc-Search Problems 
+
+The arc-search problems (63)–(64) are solved using a variant of derivative-free Brent’s algorithm combining the golden-section search with inverse quadratic interpolation [65, 66]. 37 Appendix C Proof of Theorem 1 
+
+In this appendix we prove Theorem 1. Suppose that z0 ∈ X is a local solution of (P1). Therefore, it satisfies the optimality condition 
+
+φ′(z0, w′) = lim 
+
+> ϵ→0
+
+φ(z0 + ϵw′) − φ(z0)
+
+ϵ = 0 , for all w′ ∈ X. (C13) We wish to verify that the following optimality condition holds as well 
+
+φ′(z0, z′) = lim 
+
+> ϵ→0
+
+φ(z0 + ϵz′) − φ(z0)
+
+ϵ = 0 , for all z′ ∈ Y. (C14) Given that X is dense in Y , every z′∈ Y can be approximated with a sequence of elements in X, i.e., there exists a sequence {z′
+
+> n
+
+}n∈N ∈ X such that lim  
+
+> n→∞
+
+z′ 
+
+> n
+
+= z′.
+
+In particular, we have that for any n ∈ N expression (C13) implies 0 = lim  
+
+> n→∞
+
+lim 
+
+> ϵ→0
+
+φ(z0 + ϵz′
+
+> n
+
+) − φ(z0)
+
+ϵ
+
+= lim  
+
+> ϵ→0
+
+lim 
+
+> n→∞
+
+φ(z0 + ϵz′
+
+> n
+
+) − φ(z0)
+
+ϵ
+
+= lim 
+
+> ϵ→0
+
+φ(z0 + ϵ lim n→∞ z′
+
+> n
+
+) − φ(z0)
+
+ϵ (By the continuity of φ)= lim 
+
+> ϵ→0
+
+φ(z0 + ϵz′) − φ(z0)
+
+ϵ
+
+=φ′(z0, z′).
+
+Hence, z0 is also a local solution of Problem (P2). 
+
+□
+
+Declaration of Interests. The authors report no conflict of interest. 
+
+Data Availability. Data from the paper will be made available upon request. 
+
+# References 
+
+[1] Fefferman, C.L.: Existence and Smoothness of the Navier-Stokes Equation. avail-able at http://www.claymath.org/sites/default/files/navierstokes.pdf .Clay Millennium Prize Problem Description (2000) [2] Doering, C.R., Gibbon, J.D.: Applied Analysis of the Navier-Stokes Equations. Cambridge University Press, Cambridge (1995) 38 [3] Majda, A.J., Bertozzi, A.L.: Vorticity and Incompressible Flow. Cambridge University Press, Cambridge (2002) [4] Gibbon, J.D., Bustamante, M., Kerr, R.M.: The three–dimensional Euler equations: singular or non–singular? Nonlinearity 21 , 123–129 (2008) [5] Leray, J.: Sur le mouvement d’un liquide visqueux emplissant l’espace. Acta Mathematica 63 (1), 193–248 (1934) [6] Hopf, E.: ¨ uber die aufgangswertaufgave f¨ ur die hydrodynamischen grundliechun-gen. Mathematische Nachrichten (4), 213–231 (1951) [7] Albritton, D., Bru´ e, E., Colombo, M.: Non-uniqueness of Leray solutions of the forced Navier-Stokes equations. Annals of Mathematics 196 (1), 415–455 (2022) https://doi.org/10.4007/annals.2022.196.1.3 [8] Foias, C., Temam, R.: Gevrey class regularity for the solutions of the Navier– Stokes equations. Journal of Functional Analysis 87 , 359–369 (1989) [9] Kiselev, A.A., Ladyzhenskaya, O.A.: On the existence and uniqueness of the solu-tion of the nonstationary problem for a viscous, incompressible fluid. Izv. Akad. Nauk SSSR Ser. Mat 21 (5), 655–680 (1957) [10] Prodi, G.: Un teorema di unicit` a per le equazioni di Navier-Stokes. Annali di Matematica Pura ed Applicata 48 (1), 173–182 (1959) https://doi.org/10.1007/ BF02410664 [11] Serrin, J.: On the interior regularity of weak solutions of the Navier-Stokes equations. Archive for Rational Mechanics and Analysis 9(1), 187–195 (1962) https://doi.org/10.1007/BF00253344 [12] Escauriaza, L., Seregin, G.A., Sverak, V.: L3, ∞-solutions of the Navier-Stokes equations and backward uniqueness. Russian Mathematical Surveys 58 (2), 211– 250 (2003) https://doi.org/10.1070/rm2003v058n02abeh000609 [13] Brachet, M.E., Meiron, D.I., Orszag, S.A., Nickel, B.G., Morf, R.H., Frisch, U.: Small-scale structure of the Taylor-Green vortex. Journal of Fluid Mechanics 130 ,411–452 (1983) [14] Pumir, A., Siggia, E.: Collapsing solutions to the 3D Euler equations. Phys. Fluids A 2, 220–241 (1990) [15] Brachet, M.E.: Direct simulation of three-dimensional turbulence in the Taylor-Green vortex. Fluid Dynamics Research 8, 1–8 (1991) [16] Kerr, R.M.: Evidence for a singularity of the three-dimensional, incompressible Euler equations. Phys. Fluids A 5, 1725–1746 (1993) 39 [17] Pelz, R.B.: Symmetry and the hydrodynamic blow-up problem. Journal of Fluid Mechanics 444 , 299–320 (2001) [18] Bustamante, M.D., Kerr, R.M.: 3D Euler about a 2D symmetry plane. Physica D 237 , 1912–1920 (2008) [19] Ohkitani, K., Constantin, P.: Numerical study of the Eulerian–Lagrangian analysis of the Navier-Stokes turbulence. Phys. Fluids 20 , 1–11 (2008) [20] Grafke, T., Homann, H., Dreher, J., Grauer, R.: Numerical simulations of possi-ble finite-time singularities in the incompressible Euler equations: comparison of numerical methods. Physica D 237 , 1932–1936 (2008) [21] Hou, T.Y.: Blow-up or no blow-up? a unified computational and analytic approach to 3D incompressible Euler and Navier–Stokes equations. Acta Numerica, 277–346 (2009) [22] Orlandi, P., Pirozzoli, S., Carnevale, G.F.: Vortex events in Euler and Navier-Stokes simulations with smooth initial conditions. Journal of Fluid Mechanics 
+
+690 , 288–320 (2012) [23] Bustamante, M.D., Brachet, M.: Interplay between the Beale-Kato-Majda theorem and the analyticity-strip method to investigate numerically the incom-pressible Euler singularity problem. Phys. Rev. E 86 , 066302 (2012) [24] Kerr, R.M.: Swirling, turbulent vortex rings formed from a chain reaction of reconnection events. Physics of Fluids 25 , 065101 (2013) [25] Orlandi, P., Pirozzoli, S., Bernardini, M., Carnevale, G.F.: A minimal flow unit for the study of turbulence with passive scalars. Journal of Turbulence 15 , 731–751 (2014) [26] Campolina, C.S., Mailybaev, A.A.: Chaotic blowup in the 3D incompressible Euler equations on a logarithmic lattice. Phys. Rev. Lett. 121 , 064501 (2018) https://doi.org/10.1103/PhysRevLett.121.064501 [27] Luo, G., Hou, T.Y.: Potentially singular solutions of the 3D axisymmetric Euler equations. Proceedings of the National Academy of Sciences 111 (36), 12968– 12973 (2014) [28] Luo, G., Hou, T.Y.: Toward the finite-time blowup of the 3D incompressible Euler equations: a numerical investigation. SIAM: Multiscale Modeling and Simulation 
+
+12 (4), 1722–1776 (2014) [29] Hou, T.Y.: Potential singularity of the 3D Euler equations in the interior domain. Foundations of Computational Mathematics, 1–47 (2022) 40 [30] Hou, T.: Potentially singular behavior of the 3D Navier–Stokes equations. Foun-dations of Computational Mathematics 23 , 2251–2299 (2022) https://doi.org/10. 1007/s10208-022-09578-4 [31] Lu, L., Doering, C.R.: Limits on enstrophy growth for solutions of the three-dimensional Navier–Stokes equations. Indiana University Mathematics Journal 
+
+57 , 2693–2727 (2008) [32] Kang, D., Yun, D., Protas, B.: Maximum amplification of enstrophy in three-dimensional Navier-Stokes flows. Journal of Fluid Mechanics 893 , 22 (2020) https: //doi.org/10.1017/jfm.2020.204 [33] Kang, D., Protas, B.: Searching for singularities in Navier–Stokes flows based on the Ladyzhenskaya–Prodi–Serrin conditions. Journal of Nonlinear Science 32 (6), 81 (2022) https://doi.org/10.1007/s00332-022-09832-7 [34] Ayala, D., Protas, B.: On maximum enstrophy growth in a hydrodynamic system. Physica D 240 , 1553–1563 (2011) [35] Ayala, D., Protas, B.: Maximum palinstrophy growth in 2D incompressible flows. Journal of Fluid Mechanics 742 , 340–367 (2014) [36] Ayala, D., Doering, C.R., Simon, T.M.: Maximum palinstrophy amplification in the two-dimensional Navier-Stokes equations. Journal of Fluid Mechanics 837 ,839–857 (2018) https://doi.org/10.1017/jfm.2017.874 [37] Yun, D., Protas, B.: Maximum rate of growth of enstrophy in solutions of the fractional Burgers equation. Journal of Nonlinear Science 28 (1), 395–422 (2018) https://doi.org/10.1007/s00332-017-9412-3 [38] Albritton, D., Nitti, N.D.: Sharp bounds on enstrophy growth for viscous scalar conservation laws. Nonlinearity 36 (12), 7142 (2023) https://doi.org/10.1088/ 1361-6544/ad073f [39] Protas, B.: Systematic search for extreme and singular behaviour in some funda-mental models of fluid mechanics. Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences 380 (2225), 20210035 (2022) https://doi.org/10.1098/rsta.2021.0035 [40] Ayala, D., Protas, B.: Vortices, maximum growth and the problem of finite-time singularity formation. Fluid Dynamics Research 46 (3), 031404 (2014) [41] Ayala, D., Protas, B.: Extreme vortex states and the growth of enstrophy in 3D incompressible flows. Journal of Fluid Mechanics 818 , 772–806 (2017) [42] Robinson, J.C., Rodrigo, J.L., Sadowski, W.: The Three-Dimensional Navier-Stokes Equations: Classical Theory. Cambridge University Press, Cambridge 41 (2016). https://doi.org/10.1017/CBO9781139095143 [43] Miller, E.: A regularity criterion for the Navier-Stokes equation involving only the middle eigenvalue of the strain tensor. Arch Rational Mech Anal 235 , 99–139 (2020) [44] Tao, T.: Quantitative bounds for critically bounded solutions to the Navier-Stokes equations. arXiv:1908.04958 (2020) [45] Constantin, P.: Remarks on the Navier-Stokes equations. In: Sirovich, L. (ed.) New Perspectives in Turbulence, pp. 229–261. Springer, Berlin (1991) [46] Robinson, J.C., Sadowski, W.: A local smoothness criterion for solutions of the 3d navier-stokes equations. Rendiconti del Seminario Matematico della Universit` a di Padova 131 , 159–178 (2014) [47] Bleitner, F., Protas, B.: On the sharpness of bounds on the rate of growth of Lebesgue norms of the velocity in Navier-Stokes flows. (in preparation) (2026) [48] Ruszczy´ nski, A.: Nonlinear Optimization. Princeton University Press, Princeton (2006) [49] Golomb, M., Tampia, R.: The metric gradient in normed linear spaces. Numerische Mathematik 20 , 115–124 (1972) [50] Adams, R.A., Fournier, J.F.: Sobolev Spaces. Elsevier, Amsterdam (2005) [51] Gunzburger, M.D.: Perspectives in Flow Control and Optimization. SIAM, Philadelphia (2003) [52] Protas, B.: Adjoint-based optimization of PDE systems with alternative gradi-ents. Journal of Computational Physics 227 , 6490–6510 (2008) [53] Absil, P.-A., Mahony, R., Sepulchre, R.: Optimization Algorithms on Matrix Manifolds. Princeton University Press, Princeton (2008) [54] Berger, M.S.: Nonlinearity and Functional Analysis. Academic Press, New York (1977) [55] Neuberger, J.: Sobolev Gradients and Differential Equations. Springer, Berlin, Heidelberg (2010). https://doi.org/10.1007/978-3-642-04041-2 [56] Protas, B., Bewley, T., Hagen, G.: A Comprehensive Framework for the Regu-larization of Adjoint Analysis in Multiscale PDE Systems. J. Comp. Phys. 195 ,49–89 (2004) [57] Stein, I.: Conjugate gradient methods in Banach spaces. Nonlinear Analysis 63 ,2621–2628 (2005) 42 [58] Ram´ ırez, E.: Systematic search for extreme behavior in 3d Navier-Stokes flows based on the Ladyzhenskaya-Prodi-Serrin conditions. PhD thesis, McMaster University (2025) [59] Frisch, U.: Turbulence, p. 296. Cambridge University Press, Cambridge (1995). https://doi.org/10.1017/CBO9781139170666 . The legacy of A. N. Kolmogorov [60] Zhao, X., Protas, B.: Systematic search for singularities in 3D Euler flows. Journal of Nonlinear Science 33 (6), 120 (2023) [61] Canuto, C., Quarteroni, A., Hussaini, Y., Zang, T.A.: Spectral Methods. Scientific Computation. Springer, Berlin (2006) [62] Boyd, J.P.: Chebyshev and Fourier Spectral Methods, 2nd edn., p. 668. Dover Publications, Inc., Mineola, NY (2001) [63] Bewley, T.R.: Numerical Renaissance, Renaissance Press (2009) [64] Frigo, M., Johnson, S.G.: FFTW User’s Manual. Massachusetts Institute of Technology, (2003). Massachusetts Institute of Technology [65] Nocedal, J., Wright, S.J.: Numerical Optimization. Springer, New York (1999) [66] Press, W.H., Teukolsky, S.A., Vetterling, W.T., Flannery, B.P.: Numerical Recipes, 3rd edn., p. 1235. Cambridge University Press, Cambridge (2007). The art of scientific computing 43

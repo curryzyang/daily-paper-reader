@@ -1,0 +1,959 @@
+Title: Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires
+
+URL Source: https://arxiv.org/pdf/2604.13919v1
+
+Published Time: Thu, 16 Apr 2026 01:17:06 GMT
+
+Number of Pages: 28
+
+Markdown Content:
+# Nested Fourier-enhanced neural operator for e ffi cient modeling of radiation transfer in fires 
+
+Anran Jiao a, Wengyao Jiang b, Xiaoyi Lu c,1 , Yi Wang c, Lu Lu a,d,2 
+
+> aDepartment of Statistics and Data Science, Yale University, New Haven, CT 06511, USA
+> bDepartment of Biostatistics, Yale University, New Haven, CT 06511, USA
+> cFM, Research Division, Norwood, MA 02062, USA
+> dDepartment of Chemical and Environmental Engineering, Yale University, New Haven, CT 06511, USA
+
+Abstract 
+
+Computational fluid dynamics (CFD) has become an essential tool for predicting fire behavior, yet maintaining both e ffi ciency and accuracy remains challenging. A major source of computational cost in fire simulations is the modeling of radiation transfer, which is usually the dominant heat transfer mechanism in fires. Solving the high-dimensional governing radiative transfer equation (RTE) with traditional numerical methods can be a performance bottleneck. Here, we present a machine learning framework based on Fourier-enhanced multiple-input neural oper-ators (Fourier-MIONet) as an e ffi cient alternative to direct numerical integration of the RTE. We first investigate the performance of neural operator architectures for a small-scale 2D pool fire and find that Fourier-MIONet provides the most accurate radiative solution predictions. The approach is then extended to 3D CFD fire simulations, where the computational mesh is locally refined across multiple levels. In these high-resolution settings, monolithic surrogate models for direct field-to-field mapping become di ffi cult to train and computationally ine ffi cient. This lack of scal-ability makes the use of such neural surrogates impractical for engineering CFD applications. To address this issue, a nested Fourier-MIONet is proposed to train and infer radiation solutions across multiple mesh-refinement levels. Validation of the approach is conducted on 3D McCa ff rey pool fires simulated using the CFD solver, FireFOAM, in-cluding fixed fire sizes (characterized by heat release rate, HRR) and a single unified model trained to generalize across a continuous range of fire sizes. The proposed method achieves global relative errors of 2–4% for 3D varying-HRR scenarios while providing faster inference than the estimated cost of one finite-volume radiation solve in FireFOAM for the 16-solid-angle case considered here. With fast and accurate inference, the surrogate makes higher-fidelity radiation treatments practical and enables the incorporation of more spectrally resolved radiation models into CFD fire simulations for engineering applications. 
+
+Keywords: Computational fluid dynamics, Fire simulation, Radiative heat transfer, 3D McCa ff rey pool fire, Fourier-enhanced multiple-input neural operator 
+
+1. Introduction 
+
+Fire is a leading driver of property loss and business interruption across industrial and commercial occupancies. Fire risk resilience requires both an understanding of fire dynamics and predictive tools to evaluate potential fire scenarios. Computational fire dynamics modeling, typically based on large-eddy simulation (LES) coupled with submodels for combustion, turbulence, and heat transfer, is increasingly used to support this e ff ort and complement physical fire tests [1, 2]. In fire scenarios, thermal radiation often dominates heat transfer from flames and hot, sooty plumes to the surroundings [3]. Modeling radiative heat transfer is therefore essential for reliable hazard assessment and for applying computational fluid dynamics (CFD) to develop and evaluate fire protection strategies. The radiative transfer equation (RTE) governs the propagation of thermal radiation in participating media, ac-counting for emission, absorption, and scattering. Traditional numerical methods for solving the RTE include the   
+
+> ∗Corresponding author. E-mail address : xiaoyi.lu@fm.com
+> ∗∗ Corresponding author. E-mail address : lu.lu@yale.edu
+> arXiv:2604.13919v1 [physics.flu-dyn] 15 Apr 2026
+
+finite volume method (FVM) [4] and the discrete ordinates method (DOM) [5], which are widely used in fire CFD codes like FireFOAM [1] and Fire Dynamics Simulator (FDS) [2]. These methods solve the integro-di ff erential equa-tion by discretizing the angular domain into a finite set of solid angles. While readily coupled with CFD solvers, these methods are prone to ray e ff ects unless a high-resolution angular discretization is employed, which imposes high computational and memory costs. Alternatively, the P n (e.g., P1 model) approximation reduces the RTE to a set of simplified elliptic partial di ff erential equations by expanding the intensity into lowest-order spherical harmonics. Although computationally e ffi cient, the P1 model assumes a nearly isotropic radiation field, leading to substantial in-accuracies in optically thin media and regions with severe directional gradients. Monte Carlo ray tracing (MCRT) [6] avoids angular discretization errors but su ff ers from slow statistical convergence, making it impractical for large-scale transient simulations. Thus, there remains a need for e ffi cient and accurate RTE solution procedures. Recent advances in neural network-based surrogate modeling have expanded viable options for computational radiation modeling. Physics-informed neural networks (PINNs) provide a framework for solving partial di ff erential equations (PDEs) by embedding the residual directly into the loss function [7, 8, 9, 10, 11, 12, 13, 14, 15], and have been successfully applied to solving forward as well as inverse problems of PDEs across various fields [16, 17, 18, 19, 20]. Mishra and Molinaro [21] used this methodology to solve the RTE by employing a neural network that takes spatial coordinates, time, angular directions, and frequencies as inputs to predict the radiative intensity. They demonstrated that PINNs can approximate the intensity field and handle inverse problems, such as identifying unknown absorption coe ffi cients from incident radiation measurements. While this approach shows the potential of PINNs for radiative transfer, these models typically solve for a single PDE instance for a specific set of configuration parameters. In transient CFD simulations, the parameters and input functions of governing PDEs evolve at every time step. Therefore, a neural surrogate solver must generalize across varying input fields, which PINNs fall short of without retraining. Deep neural operators such as deep operator networks (DeepONets) [22, 23, 24, 25] address this limitation by learning nonlinear operator mappings between function spaces. By incorporating physics-informed losses [26, 27], the physics-informed DeepONet (PI-DeepONet) can be developed to learn solution operators across varying input pa-rameters. Lu and Wang [28] applied a physics-informed version of the multiple-input operator network (MIONet) [29] to the RTE by treating absorption and emission fields as separate input functions. This framework successfully pre-dicts radiative source terms in non-gray gas problems and has been extended to complex pool fire scenarios [30]. However, a significant challenge arises when scaling these operators to 3D engineering applications where radiation is resolved on high-resolution, locally refined meshes. In this study, we pursue a data-driven framework to resolve these scaling issues and develop models that are both accurate and computationally e ffi cient for practical 2D and 3D pool fire simulations. The input fields defined on CFD meshes comprise hundreds of thousands of nodal or cell values in our 3D cases, creating a high-dimensional input space that is di ffi cult to process. We address this by employing principal component analysis (PCA) to project high-dimensional fields onto their principal components, e ff ectively reducing the parameter space while preserving the critical physical features of the plume. Also, fires are often turbulent and exhibit multi-scale features, making it di ffi -cult for conventional multi-layer perceptrons (MLPs) to learn fine-scale features as they tend to capture low-frequency, smooth components more easily than high-frequency details. We thus explore the integration of Kolmogorov-Arnold networks (KAN) [31] and Fourier-enhanced layers [32, 33]. These architectures, which we refer to as PCA-MIONet-KAN and Fourier-MIONet, improve approximation capabilities for radiation in turbulent fires. Furthermore, practical fire simulations often utilize meshes with multiple levels of local refinement to resolve turbulent fire dynamics. This results in a complex data structure where the mesh is locally structured within each refinement level but globally non-aligned. A single Fourier-MIONet cannot e ffi ciently process this heterogeneity in the mesh. The nested Fourier-DeepONet [34, 35] has been proposed to produce predictions at di ff erent refinement levels using a hierarchy of DeepONets for a geological carbon sequestration application. We adopt a similar nested Fourier-MIONet architecture in this study. We present a Fourier-MIONet framework for learning the solution operators of the RTE in 2D and 3D fire sce-narios. The objective is to provide an e ffi cient and accurate surrogate for radiative transfer across di ff erent fires. We develop models for both constant heat release rate (HRR) cases and a single unified model that generalizes across a range of fire sizes by treating HRR as a variable parameter. The main contributions of this study are as follows. 1. We apply a data-driven Fourier-MIONet surrogate model that learns the solution operator of the RTE, mapping 2the absorption coe ffi cient and temperature fields to the corresponding radiative intensity field. 2. We extend this framework to a complex 3D McCa ff rey fire scenario using a nested Fourier-MIONet that operates across multiple mesh-refinement levels on constant-HRR datasets. 3. We further demonstrate the broader applicability of our method by training a single unified model that han-dles variable HRR fires. To support di ff erent accuracy and speed requirements, we consider four models with di ff erent sizes that o ff er flexible trade-o ff s between inference time and predictive accuracy. The paper is organized as follows. In Section 2, we introduce the computational radiation modeling and the goal of developing a neural operator surrogate for radiation. In Section 3, we state the problem setup of RTE, present the MIONet, Fourier-MIONet and the nested Fourier-MIONet methods, and introduce the data generation. In Section 4, we demonstrate the accuracy and e ffi ciency of Fourier-MIONet on a 2D pool fire and a 3D McCa ff rey fire case. 
+
+2. Computational radiation modeling 
+
+In the computational fluid dynamics framework, radiation is coupled to the energy conservation equation. Compu-tationally, this coupling appears as a volumetric source (or sink) term, representing the divergence of the total radiative heat flux vector, ∇ · qr. The energy equation for a reacting flow (neglecting viscous heating and external work) can be expressed in terms of sensible enthalpy hs as 
+
+∂(ρhs)
+
+∂t + ∇ · (ρuhs) = ∇ · (α∇hs) + ˙ωT − ∇ · qr,
+
+where ρ is the density, u is the velocity vector, α is the thermal di ff usivity, and ˙ ωT represents the heat release rate from combustion. This formulation is widely adopted and implemented in open-source CFD fire simulation tools, including FireFOAM (based on OpenFOAM) [1] and the FDS [2]. The radiative source term or the divergence of the radiative flux qr(r) is the spectral integral of the di ff erence between emission and absorption 
+
+−∇ · qr =
+
+Z ∞
+
+> 0
+
+κη(r) hGη(r) − 4πIb,η (r)i dη, and Gη(r) =
+
+Z
+
+> 4π
+
+Iη(r, s) dΩ, (1) where κη is the spectral absorption coe ffi cient, Ib,η is the spectral blackbody intensity given by Planck’s law, and Gη(r)is the spectral incident radiation. To determine these radiative field variables, one must solve the RTE. The RTE describes the conservation of radiant energy along a direction s for a specific wavenumber η. For a non-scattering, absorbing-emitting medium, the spectral RTE is given by 
+
+dI η(r, s)
+
+ds = κη(r) hIb,η (r) − Iη(r, s)i . (2) For opaque solid surfaces, the spectral intensity leaving the wall Iη(rw, s) into the fluid domain ( s · nw > 0) is the sum of emitted and reflected radiation 
+
+Iη(rw, s) = εw,η Ib,η (Tw) + 1 − εw,η 
+
+π
+
+Z
+
+> s′·nw<0
+
+Iη(rw, s′)|s′ · nw| dΩ′,
+
+where nw is the unit normal vector pointing into the domain and εw,η is the spectral wall emissivity. For open bound-aries, radiation is allowed to escape freely, and incoming rays are defined by the ambient spectral blackbody intensity 
+
+Iη(rb, s) = Ib,η (T∞) for s · nb < 0.
+
+The primary challenge in fire simulation is the highly non-linear spectral dependence of combustion gases (e.g., CO 2, H 2O) and soot. The absorption coe ffi cient κη varies. While line-by-line (LBL) methods [36] solve Eq. (2) explicitly for all η, they are prohibitively expensive for CFD. In practical fire simulations, explicitly solving Eq. (2) for millions of wavenumbers (LBL integration) is computationally prohibitive. Therefore, two primary strategies are employed to simplify the problem. The first is the fixed radiant fraction model, where participating-medium 3absorption and emission are not resolved explicitly, and a constant fraction of the local heat release rate is prescribed as a radiative loss term. While e ffi cient, this model is valid only in optically thin limits. The second involves modeling the spectral dependence of κη. Popular approaches include the weighted sum of gray gases (WSGG) model and the full-spectrum k-distribution (FSK) method. These methods approximate the spectral integration by solving a weighted summation of a few gray-gas RTEs. Alternatively, the simplest approximation is the Planck-mean model, which treats the medium as a single “gray gas” with an averaged absorption coe ffi cient κ, assuming properties are independent of wavenumber. In this limit, Eq. (2) reduces to a single integro-di ff erential equation for the total intensity I. By defining the e ff ective intensity I = R Iηdη and the Planck-mean absorption coe ffi cient κP = (R κη Ib,η dη)/(σT 4/π ), we recover the reduced gray gas form: dI (r, s)
+
+ds = κP(r) [ Ib(r) − I(r, s)] . (3) The second major challenge lies in the numerical solution of the integro-di ff erential RTE of Eq. (3). Standard numerical methods include the Monte Carlo ray tracing (MCRT) method and deterministic methods such as the DOM and the P1 approximation. While MCRT can handle arbitrary geometric complexity, it su ff ers from statistical noise and slow convergence. DOM (commonly used in FireFOAM) discretizes the angular space into a finite set of directions. The RTE is then solved along each discrete direction, and the angular integral is approximated using numerical quadrature, converting the original integro-di ff erential RTE into a coupled system of linear di ff erential equations. DOM is computationally expensive, as it requires iterative solutions over spatial meshes and angular discretizations at every CFD time step. From the perspective of mathematical operators, the solution of the RTE can be formalized as a mapping between physical property fields and the radiative state. The input functions to the RTE are the spatially varying absorption coe ffi cient, κ(r), and the thermodynamic temperature field T (r), which determines the emission field via Ib. The output function sought is the radiation intensity, I(r, s). Derived quantities such as the incident radiation G(r) and the radiative heat flux divergence are subsequently evaluated through numerical integration over the unit sphere. The primary goal of this work is to validate neural operator architectures for accelerated fire modeling. By integrating these surrogates into CFD workflows, we replace the direct numerical integration of the RTE with surrogate inference. 
+
+3. Methods 
+
+We begin by presenting the operator-learning problem setup, which formulates the RTE solution as a mapping between physical fields and the radiative state. We then introduce the multiple-input neural operators, followed by the nested Fourier-MIONet architecture and the datasets used for training and evaluation. 
+
+3.1. Problem setup 
+
+We formulate the solution of the RTE as a supervised operator learning problem. The task is to approximate the nonlinear operator G : U → V that maps the input fields (absorption and emission properties) to the output radiative intensity field. The input function space U contains the spatial distributions of the Planck-mean absorption coe ffi cient 
+
+κ(r) and the blackbody emission source Ib(r) (derived from gas temperature T ). The output function space V contains the angular radiation intensity I(r, s). The operator is defined as 
+
+G : [ κ(r), T (r)] 7 → I(r, s).
+
+Our objective is to learn a parametric neural operator, Gθ, where θ denotes the trainable parameters, such that Gθ ≈ G .Since the radiative intensity depends on multiple inputs (e.g., absorption coe ffi cient and temperature), we adopt the multiple-input operator-learning architecture. 
+
+3.2. Multiple-input neural operators 
+
+Since the solution depends on multiple functional inputs, we employ MIONet [29] as a baseline architecture, which has been proposed to learn nonlinear operators with multiple input Banach spaces. We denote U1 and U2
+
+as the Banach spaces for the absorption coe ffi cient κ(r) and the temperature T (r), respectively, defined on a domain 
+
+D ⊂ Rd. We aim to learn the operator G : U1 × U 2 → V , which maps the inputs ( κ, T ) 7 → I, where V is the space of 4radiative intensity I(r, s). The input functions κ ∈ U 1 and T ∈ U 2 are discretized at a fixed set of m sensor locations 
+
+{ri}mi=1 ⊂ D, yielding the vectors κ = [κ(r1), . . . , κ (rm)] ⊤ ∈ Rm and T = [T (r1), . . . , T (rm)] ⊤ ∈ Rm. We use two neural networks (called “branch net”) to encode the discretized inputs ( κ, T ) and one neural network (called “trunk net”) for (r, s). The output radiative intensity I(r, s) = G(κ, T )( r, s) is computed as 
+
+Gθ(κ, T )( r, s) =
+
+> p
+
+X
+
+> k=1
+
+bk(κ(r1), κ (r2), . . . , κ (rm)) 
+
+| {z }
+
+> branch 1
+
+× ck(T (r1), T (r2), . . . , T (rm)) 
+
+| {z }
+
+> branch 2
+
+× tk(r, s)
+
+| {z }
+
+> trunk
+
++b0,
+
+where b0 ∈ R is a trainable bias, {b1, b2, . . . , bp} and {c1, c2, . . . , cp} are the p outputs of the branch nets, and 
+
+{t1, t2, . . . , tp} are the p outputs of the trunk net. Here, Gθ denotes the MIONet approximation of G, where θ denotes the trainable parameters of the network. Note that prior to training, the inputs are scaled to ensure stable convergence. Vanilla MIONet architectures can face practical challenges due to the increasing complexity of data required to accurately represent the high-dimensional solution space. First, the discretized input fields contain tens to hundreds of thousands of data points, leading to high-dimensional branch inputs. We therefore employ PCA for dimension re-duction and a low-dimensional representation of the functional inputs. Second, solution fields exhibit high-frequency features and sharp gradients, primarily due to the spectral bias of conventional MLPs. We replace the MLP trunk net with KAN [31], which uses learnable activation functions on edges, o ff ering superior approximation capabilities for complex functions. Respectively, we propose two extensions to the MIONet: (1) PCA-MIONet processes inputs κ and 
+
+T for the branch network by projecting them onto their first Npc principal components; (2) PCA-MIONet-KAN further enhances PCA-MIONet by replacing the standard feed-forward layers of the trunk network with KAN layers [31, 37] to better capture the sharp gradients in the solution’s spatial and angular dependence. The mathematical formulations for these extensions are detailed in Appendix A. To further enhance prediction accuracy, we consider applying Fourier-MIONet [32, 33] inspired by Fourier neu-ral operator (FNO) [38] (Fig. 1). By integrating fast Fourier transforms into its architecture, Fourier-MIONet o ff ers (1) higher prediction accuracy than MIONet, especially for non-smooth solutions, and (2) greater memory and com-putational e ffi ciency compared to FNO [33]. Specifically, we add L Fourier layers after the branch-trunk merger operation (Fig. 1B). Unlike the MIONet, we do not include the spatial coordinates in the trunk net, but instead they are stacked with the branch net inputs. The output of branch-trunk merger operation is lifted to a high-dimensional space and processed by a sequence of L Fourier layers. The output of the ( j + 1)th Fourier layer is computed by 
+
+v j+1 = ϕ F −1 R j · F (v j) + W j · v j + b j
+
+, where ϕ is a nonlinear activation function and b j is a bias. For the output of the j-th Fourier layer v j, we compute the transform using the 3D fast Fourier transform (FFT) F and inverse 3D FFT 
+
+F −1(R j · F (v j)) , where R j is a learnable weight matrix. A residual connection with a weight matrix W j is used. In the end, a local linear transformation Q is applied by employing a shallow neural network to obtain the output I(r, s). …                                  
+
+> 𝑡 !
+> …
+> 𝑡 "
+> 𝑡 #
+> 𝒢 $(𝜅 ,𝑇 )(𝐫 ,𝐬 )
+> 𝜅 (𝐫 )
+> 𝐬
+> …
+> 𝑇 (𝐫 !)
+> 𝑇 (𝐫 ")
+> …
+> 𝑇 (𝐫 %)
+> 𝑇 (𝐫 )
+> 𝑏 #
+> 𝑏 "
+> 𝑐 !
+> 𝑐 "
+> 𝑐 #
+> 𝑏 !𝜅 (𝐫 !)
+> 𝜅 (𝐫 ")
+> …
+> 𝜅 (𝐫 %)
+> Fourier layer 𝑙 &Fourier layer 𝑙 '𝑄
+> Fourier layer
+> Branch net 1
+> Branch net 2
+> Trunk net
+> ×
+> ×…
+> AB
+> Figure 1: Fourier-MIONet architecture. (A) Two independent branch nets take the discretized functions κ(r) and T(r) as inputs and output
+> {bk}pk=1and {ck}pk=1, respectively. The trunk net takes sand outputs {tk}pk=1. ( B) The branch and trunk outputs are merged by element-wise products and then passed into LFourier layers. Each Fourier layer maps vjto vj+1by applying a 3D FFT F, multiplying by learnable weights Rjin the Fourier space, and transforming back with F−1. A residual connection with a weight matrix Wjis added.
+
+53.3. Nested Fourier-MIONet 
+
+In CFD simulations, it is standard practice to employ meshes with refinements, where regions exhibiting complex dynamics are assigned finer cells while less critical areas remain coarser. For the 3D McCa ff rey fire simulations, fine mesh resolution is concentrated within and around the flame /plume region to adequately resolve the entrained airflow. Consequently, a refined mesh with four levels is generated following Wang et al. (2011) [1] and applied to each HRR case (see mesh refinements in Figs. 2A and B). The global domain Ω is decomposed into a hierarchy of four nested subdomains {Ωi}4
+
+> i=1
+
+, where the index i denotes the refinement level i ∈ { 1, 2, 3, 4}. Level 4 ( Ω4) represents the coarsest resolution, while Level 1 ( Ω1) represents the finest. Correspondingly, we use a nested Fourier-MIONet with four di ff erent Fourier-MIONet models {N i}4
+
+> i=1
+
+, where each network Ni approximates the radiative intensity Ii on the subdomain Ωi.y= 0.0125 y= 0.025                              
+
+> Level 3 ( Ω!)
+> Grid: 24×40 ×24
+> Box: 1.2×2×1.2m
+> Level 2 ( Ω")
+> Grid: 40 ×40 ×40
+> Box: 1×1×1m
+> Level 1 ( Ω#)
+> Grid: 48 ×80 ×48
+> Box: 0.6×1×0.6m
+> C
+> Ax-z view, y= 0.00625 ±0.05 x-y view, z= 0.00625 ±0.05
+> y= 0.00625 y= 0.05
+> Level 4 ( Ω$)
+> Grid: 30 ×30 ×30
+> Box: 3×3×3m
+> B
+> 𝐬
+> 𝜅 $(𝐫 )
+> 𝑇 $(𝐫 )𝜅 !(𝐫 )
+> 𝑇 !(𝐫 )
+> 𝜅 "(𝐫 )
+> 𝑇 "(𝐫 )
+> 𝜅 #(𝐫 )
+> 𝑇 #(𝐫 )
+> 𝐼 (𝐫 ,𝐬 )
+> Fourier -
+> MIONet
+> 𝒩 $
+> Fourier -
+> MIONet
+> 𝒩 !
+> Fourier -
+> MIONet
+> 𝒩 "
+> Fourier -
+> MIONet
+> 𝒩 #
+> 𝐼 $(𝐫 ,𝐬 )𝐼 !(𝐫 ,𝐬 )𝐼 "(𝐫 ,𝐬 )𝐼 #(𝐫 ,𝐬 )
+> Deconv .Deconv .Deconv .
+
+Figure 2: Mesh refinements and nested Fourier-MIONet architecture. (A) 2D and 3D visualizations of the mesh refinements for one example of the temperature field T . ( B) 2D visualizations of level 4, 3, 2, and 1 refinement boxes above the burner surface with the grid resolutions and box sizes after linear interpolation. ( C) Nested pipeline for predicting radiative intensity for four levels with gradually increasing resolution. Each level, starting from level 4, uses outputs from the previous coarser level on top of the absorption coe ffi cient, temperature, and spatial directions (black arrows). The dashed arrows represent the deconvolution layers. The final global solution I(r, s) for the entire domain is assembled from the individual predictions by selecting the finest available resolution for each spatial node. 
+
+Training the nested Fourier-MIONets. For a standard, non-nested Fourier-MIONet, training is performed on a single mesh with fixed resolution using inputs ( κ, T ), and inference requires only a single pass. In contrast, our nested architecture must handle multiple resolutions, with prediction at each finer level conditioned on outputs from the immediately coarser level. Accordingly, each Fourier-MIONet is trained independently at each level. The network N4
+
+is trained on Ω4 using properly normalized inputs κ4, T4 as described in Section 3.2. For the subsequent finer levels 
+
+i ∈ { 3, 2, 1}, the network Ni is trained using its inputs κi, Ti as well as the ground-truth solution Ii+1 from the coarser level i + 1. A deconvolution (upsampling) layer is used for Ii+1 to match the resolution of Ωi. To match the resolution 6of Ωi for Ii+1, we upsample Ii+1 using a learnable operator Ui+1, implemented as a deconvolution operation composed of 3D convolutional layers. 
+
+Inference with nested prediction. During inference, we make a coarse-to-fine nested prediction starting from level 4 to level 1 (Fig. 2C). First, N4 generates the prediction ˆ I4 = N4(κ4, T4). This prediction ˆ I4 is then upsampled via a deconvolution layer and fed as an input to N3 to generate ˆ I3. This process proceeds progressively in a coarse-to-fine manner, with the prediction ˆ Ii+1 from level i + 1 being used as input for Ni. The prediction is defined recursively as ˆ Ii = Ni
+
+κi, Ti, Ui+1( ˆ Ii+1). The final global solution I(r, s) for the entire domain is assembled from the individual predictions { ˆIi}4 
+
+> i=1
+
+by selecting the finest available resolution for each spatial node: I(r, s) = ˆIk(r, s), where k = min { j |
+
+r ∈ Ω j}.
+
+3.4. Data generation 
+
+We utilize a data-driven methodology based on CFD simulations. The CFD solver generates reference data for training and validation. FireFOAM (an OpenFOAM-based solver) is used in this work to simulate representative buoyant di ff usion flames. As mentioned in Section 2, the radiative properties are treated using the gray gas approx-imation (Planck-mean absorption coe ffi cient), and the standard finite volume discrete ordinates method (fvDOM) is employed to resolve the RTE. The computational domain is defined as a rectangular enclosure. Boundary conditions are assumed to be open on all lateral and top sides to represent the ambient environment. The bottom boundary is maintained at a fixed temperature of 300 K and features a central circular burner (0 .3 × 0.3 m 2) injecting gaseous methane. We generate datasets comprising the temperature field T (r), the Planck-mean absorption coe ffi cient field 
+
+κ(r), the radiative intensity I(r, s), and the incident radiation G(r). Note that our primary goal is to demonstrate MIONet as a viable surrogate model for RTE. Therefore, the chosen radiation models and numerical methods are used for this purpose rather than to provide the most physically detailed representation of the McCa ff rey pool fire. Angular discretization is performed using 16 solid angles to capture the angular dependence of radiative intensity while minimizing computational overhead. Specifically, we generate three distinct datasets. 
+
+2D pool fire. This dataset is derived from the standard OpenFOAM tutorial case smallPoolFire2D , discretized into a uniform grid of 151 × 151 data points. Data snapshots are collected during the developed phase from t = 35s to 60s, generating a total of 5,000 input-output pairs. It benchmarks the performance of di ff erent neural network architectures and hyperparameter configurations at a lower computational cost. 
+
+McCa ff rey pool fire of fixed fire size. We generated five separate datasets corresponding to distinct, constant heat release rates (HRRs) ranging from 14 kW to 58 kW, sampling at 100 Hz to capture steady-periodic pu ffi ng dynamics over the time interval t = 20s to 60s. CFD simulations follow the McCa ff rey fire configuration [1] using a mesh of 272,580 cells. These datasets are employed to verify if the operator learning approach is viable for complex, turbulent 3D flames. 
+
+McCa ff rey pool fire of variable fire size. A practical limitation of standard methods is that a model trained on a specific fire size typically fails if the fire grows to a new, unseen size. We generated a dataset where the fire ramps continuously from approximately 10 kW to 60 kW. We aim to build a robust, unified model using this variable dataset to demonstrate that a single surrogate can accurately predict radiative fields for any arbitrary fire size within the operating range. The original simulation utilizes a finite volume mesh with four levels of static local refinement, consisting of 272580 data points of cell centers (Fig. 2A). Because FVM defines cell-averaged values at the cell centers, the cell centers of one resolution level do not coincide with the subdivided cells of another resolution level, a direct transfer of values is not feasible. We therefore map the simulation results onto four structured grid levels through interpolation, providing a consistent data structure for the nested neural operator framework. To perform the interpolation e ffi ciently, we employ linear barycentric interpolation. A Delaunay triangulation is constructed from the source mesh points, and barycentric coordinates are calculated for each target grid point within the corresponding simplex. This provides accurate interpolation for points lying inside the convex hull of the source data. For target points outside the convex hull where barycentric interpolation is undefined, we apply nearest-neighbor interpolation. The resulting datasets span four nested domains of increasing resolution, ranging from a coarse grid of 30 3 points over [ −1.5, 1.5] × [−1.5, 1.5] ×
+
+7[0 , 3] to a finest grid of 48 × 80 × 48 points over [ −0.3, 0.3] × [−0.3, 0.3] × [0 , 1] (Fig. 2B). A detailed discussion of the e ff ects of data preprocessing is provided in Appendix B, where we show that nearest-neighbor interpolation is an effi cient alternative with acceptable performance. 
+
+3.5. Evaluation 
+
+Model performance is assessed using the mean L2 relative error and structural similarity index (SSIM) [39] for both the predicted radiative intensity and incident radiation, along with the total radiative heat loss, the radiation fraction, and energy conservation of practical importance in fire dynamics. The mean L2 relative errors for radiative intensity I and incident radiation G are defined as 
+
+εI = ∥ ˆI − I∥2
+
+∥I∥2
+
+, εG = ∥ ˆG − G∥2
+
+∥G∥2
+
+.
+
+The SSIMs are defined as SSIM I = (2 μˆI μI + C1)(2 σˆII + C2)(μ2ˆI + μ2 
+
+> I
+
++ C1)( σ2ˆI + σ2 
+
+> I
+
++ C2) , SSIM G = (2 μ ˆGμG + C1)(2 σ ˆGG + C2)(μ2ˆG + μ2 
+
+> G
+
++ C1)( σ2ˆG + σ2 
+
+> G
+
++ C2) ,
+
+where μ and σ2 denote mean and variance, σˆII and σ ˆGG are covariances, and C1, C2 are stabilization constants. We use the 2D and 3D SSIM as a perceptual metric of the similarity between two objects. Two objects are more similar when SSIM is closer to 1. For nested Fourier-MIONets described in Section 3.3, we first evaluate the performance of each of the four Fourier-MIONets on the test data corresponding to its specific refinement level using the mean L2 relative errors for radiative intensity and incident radiation and SSIMs. Once the four Fourier-MIONets are trained, global predictions are made sequentially from level 4 to level 1, where the output of one level serves as the input for the next one with convolution and deconvolution layers being used, culminating in the final global prediction. The individual error of the global predictions of each level is denoted as εlevel  
+
+> I
+
+. The overall global accuracy is evaluated using relative L2 errors that aggregate across all levels and test cases. For radiative intensity, 
+
+εglobal  
+
+> I
+
+= 1
+
+Ntest NsNsX
+
+> s=1
+> Ntest
+
+X
+
+> n=1
+
+qPi | ˆIs,n,i − Is,n,i|2dV i
+
+pP i |Is,n,i|2dV i
+
+,
+
+and similarly, for incident radiation, 
+
+εglobal  
+
+> G
+
+= 1
+
+Ntest 
+
+> Ntest
+
+X
+
+> n=1
+
+qPi | ˆGn,i − Gn,i|2dV i
+
+pP i |Gn,i|2dV i
+
+,
+
+where ˆ Is,n,i and Is,n,i denote predicted and reference radiative intensities for solid angle s, test case n, and spatial element i, while ˆ Gn,i and Gn,i denote predicted and reference incident radiation. Here dV i represents the volume of the 
+
+ith element, Ns the number of solid angles, and Ntest the number of test cases. While a low L2 relative error indicates that the model predicts radiation intensity accurately at individual data points, it does not guarantee that the global physics of the fire are preserved. Therefore, in addition to these error metrics, we also evaluate model performance by evaluating the relative errors of the total radiative heat loss, radiation fraction, and energy conservation. These quantities provide physically interpretable measures of energy exchange and serve as additional checks on the model’s accuracy. The detailed derivation and implementation are in Appendix C. The total radiative heat loss ˙ Qout quantifies the net radiative flux leaving the computational domain ˙Qout =
+
+Z
+
+> V
+
+(∇ · qrad )dV =
+
+I
+
+> S
+
+qndS =
+
+I
+
+> S
+
+(qrad · ˆn)dS .
+
+Accurately predicting this integral is crucial for assessing the thermal impact of the fire on surrounding structures and for setting correct boundary conditions in coupled simulations. The radiation fraction is the ratio of the radiative loss to the chemical reaction rate: 
+
+χR = ˙Qems − ˙Qabs 
+
+˙Qchem 
+
+,
+
+8where ˙ Qems = R 
+
+> V
+
+4πκ IbdV , and ˙ Qabs = R 
+
+> V
+
+κ R  
+
+> 4π
+
+Id Ω dV . The energy conservation is 
+
+I
+
+> S
+
+(qrad · ˆn)dS 
+
+| {z }
+
+> Net radiative heat loss
+
+=
+
+Z
+
+> V
+
+(∇ · qrad )dV 
+
+| {z }
+
+> Net radiative power source
+
+.
+
+We define the absolute energy conservation residual to be RE = H 
+
+> S
+
+(qrad · ˆn)dS − R 
+
+> V
+
+(∇ · qrad )dV . To assess energy conservation of the predictions, we report both the ground truth Rre f E and the predicted Rpred E absolute energy conserva-tion residual. We also report the relative errors of total radiative heat loss ε ˙Qout and radiation fraction εχR with respect to the ground truth data, which serve as global, physically interpretable diagnostics by assessing the net radiative energy leaving the domain and the predicted radiative share of the total heat release. 
+
+4. Results 
+
+In this section, we demonstrate the capabilities of our approaches using a 2D pool fire problem (Section 4.1) and a 3D McCa ff rey fire problem with fixed or variable HRRs (Section 4.2 and Section 4.3). For all experiments, we use the Adam optimizer for neural network training. The initial learning rate is set to 10 −3, with inverse time learning rate decay employed. The inputs are appropriately pre-processed to ensure they are on a similar scale. To enforce the non-negativity of the output radiative intensity, we apply a transformation by squaring the network output. To ensure a fair comparison, we choose model configurations with a similar number of trainable parameters. For the baseline PCA-MIONet, the two branch networks use ReLU activations [40] with three hidden layers of width 256, while the trunk network uses the Swish activation function [41] with three hidden layers of width 256. In addition, we employ an output-merger network with 2 hidden layers after combining the branch and trunk outputs. The PCA-MIONet-KAN replaces the MLP trunk with 3 KAN layers. The Fourier-MIONet uses four Fourier layers with 8 modes, and uses MLPs with a width of 32. The network architectures of nested Fourier-MIONets for all levels mentioned in Section 3.3 are shown in Appendix D (Table D.6). The Python library DeepXDE [12] is utilized to implement the neural networks with the PyTorch backend. All the codes and data will be available on GitHub at https: // github.com /lu-group /fourier-mionet-rte. 
+
+4.1. 2D pool fire problem 
+
+We consider the smallPoolFire2D case (Section 3.4). The dataset consists of 4500 samples for training and 500 for testing. We discretize the angular space into 16 directions s on the 2D plane. The azimuthal angles ϕ ∈ [0 , 2π)are ϕi = (2 i+1) ∆ϕ 
+
+> 2
+
+, i = 0, . . . , 15. This 2D case features periodic fire pu ffi ng cycles, containing regions of both smooth variation and sharp gradients in the radiative intensity fields. Our goal is to systematically identify an accurate neural operator architecture for radiative transfer at a low computational cost.  
+
+> Table 1: Comparison of PCA-MIONet, PCA-MIONet-KAN, MIONet-KAN, and Fourier-MIONet on the 2D pool fire problem.
+
+ϵI SSIM I ϵG SSIM G #Params PCA-MIONet 7.86% 0.930 4.73% 0.978 1586178 PCA-MIONet-KAN 6.71% 0.950 4.16% 0.983 1576564 MIONet-KAN 7.56% 0.939 4.61% 0.979 1587232 Fourier-MIONet 3.70% 0.982 1.93% 0.996 1583649 We first apply PCA-MIONet (Section 3.2), where the input field dimensionality is reduced from approximately 23K to 1.6K using PCA with 41 principal components. While this method achieves acceptable results, the error remains relatively high due to challenges in accurately capturing complex vortices and non-smooth regions in the solution fields (Table 1). To address this, we extend the model to PCA-MIONet-KAN by incorporating KAN layers into the trunk nets, which improves accuracy and reduces error rates. We additionally evaluate MIONet-KAN without PCA. 9Fourier-MIONet significantly outperforms these baselines by e ff ectively capturing the fine-scale dynamics in the field. This approach achieves an L2 relative error of 3.70% for I and L2 relative error of 1.93% for G, with an SSIM of 0.996 for G. Across the fire pu ff cycle (Fig. 3A), the Fourier-MIONet provides high-fidelity predictions of the intensity field I and G (see one example in Fig. 3B). To show whether the performance improvements are from PCA-based dimensionality reduction or from the network architecture itself, we additionally evaluate MIONet-KAN without PCA. The results show that the performance improvements mainly come from the Fourier layers. Overall, Fourier-MIONet results are significantly better than those obtained with methods without Fourier layers with a similar number of hyperparameters. This is because Fourier layers provide an explicit representation of high-frequency components, mitigating spectral bias in MLPs and making it easier to fit sharp gradients and multi-scale structures in radiative fields [42, 43]. Based on this 2D study, we adopt Fourier-MIONet as the backbone architecture for subsequent experiments on more complex settings. A                                                                     
+
+> B𝐼 (𝐬 =s!)𝐼 (𝐬 =s")𝐼 (𝐬 =s!! )𝐼 (𝐬 =s!# )𝐺
+> 𝜅
+> 𝑇
+> 57.81 57.82 57.83 57.84 57.85 57.86 57.87 57.88 57.89 57.9 057.91 57.92 57.93 57.94 𝑡 (s)
+> Figure 3: Results of Fourier-MIONet for the 2D pool fire problem in Section 4.1. (A) Example of κand Tfrom the test data across half of a fire pu ff cycle. The red box highlights a specific example corresponding to that in (B). ( B) One example of reference, prediction, and the absolute error of Iand Gon 4 di ff erent solid angles: s1=(sin π
+> 16 ,cos π
+> 16 ), s6=(sin 11 π
+> 16 ,cos 11 π
+> 16 ), s11 =(sin 21 π
+> 16 ,cos 21 π
+> 16 ), and s15 =(sin 29 π
+> 16 ,cos 29 π
+> 16 ).
+
+4.2. 3D McCa ff rey fire with fixed heat release rate 
+
+Building on the previous result, where Fourier-MIONet demonstrated superior accuracy, we now address the challenge of scaling to 3D CFD fire simulations in which the computational mesh is locally refined across multiple levels. We employ the nested Fourier-MIONet in a 3D McCa ff rey fire scenario with fixed HRRs, demonstrating its ability to handle moderately large-scale problems. Following McCa ff rey’s experiments [44], we consider fires with fixed HRR values of 14, 22, 33, 45, and 58 kW. Our goal is to accurately predict the radiative intensity I and relevant radiative quantities while reducing computational cost using the nested Fourier-MIONet. For each fixed-HRR fire case, we train the nested Fourier-MIONet on its dataset described in Section 3.4 and evaluate it on the same dataset using a test split ratio of 0.03. We sample the directions s using a grid in the polar and azimuthal angles ( θ, ϕ ) on a unit sphere. Here θ ∈ [0 , π ] is sampled with ∆θ = π/ 2, producing two points 
+
+θi = (2 i+1) ∆θ 
+
+> 2
+
+, i = 0, 1, and ϕ ∈ [0 , 2π) is sampled with ∆ϕ = π/ 4 and results in points ϕ j = (2 j+1) ∆ϕ 
+
+> 2
+
+, j = 0, . . . , 7.
+
+Each pair ( θi, ϕ j) defines one solid-angle direction si j =  sin θi sin ϕ j, sin θi cos ϕ j, cos θi
+
+, yielding 2 × 8 = 16 solid 10 angles in total. To understand the trade-o ff between accuracy and e ffi ciency, we train four distinct models for each HRR case: Tiny, Small, Medium, and Large, which di ff er in network width, the number of retained Fourier modes, and the depth of Fourier layers (Section 3.3 and Table E.7). Because fires with higher HRR tend to be more turbulent and exhibit more complex flow structures that emit and absorb energy, the prediction becomes more challenging as HRR increases. To show representative examples, we focus on the lowest and highest HRR cases and report the global testing performance of the nested Fourier-MIONet for fires with 58 kW and 14 kW HRR. Results for other HRRs (22, 33, and 45 kW) are detailed in Appendix E (Table E.8). The per-level L2 relative errors and SSIM values for radiative intensity I and incident radiation G during training are reported in Tables E.9. As expected, we observe that the errors of 58 kW fires are generally larger than those of 14 kW fires (Table 2), but the nested Fourier-MIONet consistently captures these complex radiative structures. Second, increasing model capacity from tiny to large reduces prediction errors across all levels, with the large model achieving level one errors of only 2 .11% for 58 kW case and 1 .87% for 14 kW case for I and global inference errors around 1% for both cases. The SSIM values mostly achieve above 0.99, indicating high structural similarity to the reference solutions. We also note that as error accumulates through the refinement levels during global inference, the L2 relative error of each level is slightly higher than that in the individual testing (Fig. 4). These results illustrate a clear trade-o ff between accuracy and e ffi ciency. The tiny model is the most computationally e ffi cient one, while the large model, which contains the highest number of parameters, achieves the best accuracy.                                                                                          
+
+> Table 2: The global testing performance of the nested Fourier-MIONet for the 3D McCa ff rey 58 kW and 14 kW fire. We report the individual per-level errors and the global errors obtained during nested inference. The reference radiative fractions χRare 21.26% and 17.83% for the 58 kW and 14 kW fires, respectively.
+> Fire Model Individual error εlevel
+> Iεglobal
+> Iεglobal
+> Gε˙Qout εχRRpred ERre f E
+> Level 4 Level 3 Level 2 Level 1 58 kW Tiny 10.50% 15.80% 9.95% 9.77% 5.82% 2.81% 0.15% 0.15% 0.14 kW 0.01 kW Small 7.68% 10.54% 5.78% 6.03% 3.89% 2.00% 0.04% 0.03% 0.11 kW Medium 5.39% 6.45% 3.73% 2.79% 2.82% 1.55% 0.02% 0.02% 0.00 kW Large 2.63% 2.57% 2.22% 2.11% 1.38% 0.55% 0.05% 0.06% 0.01 kW 14 kW Tiny 3.69% 7.47% 6.20% 6.16% 2.19% 0.87% 0.19% 0.19% 0.35 kW 0.45 kW Small 3.00% 6.12% 4.74% 4.07% 1.37% 0.73% 0.09% 0.09% 0.41 kW Medium 2.50% 4.94% 3.71% 2.48% 1.07% 0.60% 0.05% 0.06% 0.42 kW Large 1.66% 2.12% 1.94% 1.87% 0.80% 0.47% 0.07% 0.08% 0.42 kW
+
+Fig. 5 shows predictions, references, and absolute errors for the 14 kW and 58 kW fires using the medium model, with the combined global solutions shown in the middle column. In the 3D CFD simulations, we sample 16 directions 
+
+s using a grid in the polar and azimuthal angles ( θ, ϕ ) on the unit sphere, and we present 4 representative directions (Fig. 5C). The 14 kW case is smoother and has smaller errors. Hotter regions near the base of the plume produce the strongest emission, resulting in larger values of emission 4 πIb and correspondingly higher absorption κG (Eq. 1) in these lower locations (Fig. 6). Moreover, the total radiative heat loss and radiation fraction are predicted with small relative errors, and the predicted energy conservation residual remains consistent with the ground truth. The nested Fourier-MIONet captures these patterns with low absolute error, indicating that the surrogate models reliably represent the radiative heat-loss behavior needed for CFD energy calculations. 
+
+4.3. 3D McCa ff rey fire with variable heat release rates 
+
+In practical fire scenarios, the heat release rate of fire is rarely constant, as the fuel mass flow rate changes over time. While fixed-HRR models trained from a single, fixed HRR dataset can perform well, the HRR is not a prescribed input parameter in CFD solvers like FireFOAM. This makes it infeasible to train a simple surrogate model for one fixed HRR. Moreover, a model trained on a specific fire size often fails when the fire grows to an unseen intensity. To overcome this, we develop a variable-HRR model that can accurately predict radiative transfer across a range of fire intensities without explicit knowledge of the HRR. To achieve this, we train the nested Fourier-MIONets on the entire dataset of the growing fire described in Sec-tion 3.4, which spans from 10 kW to 60 kW. This setting is significantly more challenging than the fixed cases, as 11 A
+
+B
+
+58 kW 14 kW Figure 4: Model accuracy across refinement levels and HRRs for the nested Fourier-MIONet. (A) Per-level L2 relative errors for I and G for the 58 kW (left) and 14 kW (right) McCa ff rey fires. Solid bars denote the individual per-level error εI and εG , and hatched bars denote the global inference error εlevel  
+
+> I
+
+and εlevel  
+
+> G
+
+. ( B) The L2 relative errors of the radiative intensity I (left) and incident radiation G (right) versus the model size for 14, 22, 33, 45, and 58 kW cases during global inference. 
+
+12 B  
+
+> Level 4
+> Level 3
+> Level 2 Level 1
+> C
+> Level 4
+> Level 3
+> Level 2 Level 1
+> A
+
+Figure 5: Results of McCa ff rey fire with HRR 58 kW and 14 kW in Section 4.2 using the fixed-HRR medium model. Examples of predictions, references, and the corresponding absolute errors of level 4, level 3, level 2, and level 1 of fire ( A) 58 kW and ( B) 14 kW. The predictions are combined to obtain the final global prediction I(s = s1) in the middle column. (C) Schematic of four representative directions from the 16 directions we sampled on the unit sphere. They are defined by the corresponding polar and azimuthal angles sk = (θi, ϕ j), with k = 8i + j, where 
+
+θi = (2 i+1) ∆θ 
+
+> 2
+
+, i = 0, 1, and ϕ j = (2 j+1) ∆ϕ 
+
+> 2
+
+, j = 0, . . . , 7. 
+
+13 A
+
+BFigure 6: Emission, absorption, and the radiative heat loss ∇ · qrad fields of the McCa ff rey fire predicted from the fixed-HRR medium model. Examples of x–z views of predictions, references, and the corresponding absolute errors for fire with HRR ( A) 58 kW, and ( B) 14 kW at y
+
+= 0.00625. 
+
+14 the model needs to learn to generalize across the varying radiative behaviors. As HRR increases, the fire exhibits periodic pu ffi ng but with larger flame heights, more variable plume structures, and more complex radiation intensity fields (Fig. 7). 𝐼 (𝐬  = s!) 𝑇  𝜅                   
+
+> HRR
+> 14kW 15kW 22kW 29 kW 37kW 42kW 48 kW 55 kW 58 kW
+> Figure 7: Input fields with variable HRRs for the McCa ff rey fires dataset in Section 4.3.
+
+Again, we train Tiny, Small, Medium, and Large models on this dataset, and we test these models on the same fixed-HRR datasets (14, 22, 33, 45, and 58 kW) from Section 4.2. Note that these fixed-HRR datasets are not included in the variable-HRR training dataset. Similarly, error increases with HRR as higher-complexity fires remain more di ffi cult to predict. Increasing model capacity reduces prediction errors (Table 3, Table E.10, and Fig. 8). For the 58 kW fire, the large model achieves global inference errors of 3 .91% for I and 2 .47% for G. While this is higher than the 58 kW fixed-HRR model’s error, the relatively small increase is highly encouraging. It demonstrates that a single model can successfully learn across a wide range of fire behaviors.       
+
+> Figure 8: Errors of McCa ff rey fire models trained on the variable-HRR dataset and tested on fixed-HRR cases. The global inference errors of I(left) and G(right) for di ff erent model sizes evaluated across fixed HRRs from 14 kW to 58 kW. Darker colors indicate larger errors.
+
+The model exhibits robust adaptability, and captures both the smoother, less complex fields of the 14 kW case while simultaneously resolving the sharp gradients of the 58 kW fire (Fig. 9). Furthermore, the model preserves physical fidelity, correctly capturing the underlying physical structures of emission, absorption, and radiative heat loss 15 Table 3: 3D McCa ff rey fire trained on variable HRRs and tested on fixed HRR fires. We summarize the individual per-level errors and the global errors obtained during nested inference for each HRR. 
+
+Model HRR Individual error εlevel  
+
+> I
+
+εglobal  
+
+> I
+
+εglobal  
+
+> G
+
+ε ˙Qout εχR Rpred E Rre f E
+
+Level 4 Level 3 Level 2 Level 1 Tiny 14 kW 4.55% 6.88% 8.85% 8.70% 3.06% 1.63% 1.80% 1.80% 0.42 kW 0.45 kW 22 kW 5.69% 8.04% 7.58% 7.32% 3.10% 1.55% 0.38% 0.38% 0.63 kW 0.45 kW 33 kW 7.80% 9.48% 8.38% 8.88% 4.06% 2.24% 1.19% 1.19% 0.77 kW 0.37 kW 45 kW 9.29% 10.67% 9.61% 10.27% 5.00% 2.77% 1.15% 1.15% 0.59 kW 0.15 kW 58 kW 10.40% 11.63% 10.56% 11.53% 5.92% 3.28% 0.93% 0.92% 0.31 kW 0.01 kW Small 14 kW 3.48% 5.35% 4.46% 5.70% 1.90% 1.18% 1.86% 1.86% 0.31 kW 0.45 kW 22 kW 4.96% 6.45% 4.29% 4.55% 2.12% 1.23% 0.35% 0.35% 0.47 kW 0.45 kW 33 kW 7.21% 7.32% 4.67% 4.71% 2.79% 1.60% 0.21% 0.21% 0.51 kW 0.37 kW 45 kW 9.06% 8.42% 5.41% 5.22% 3.52% 1.96% 0.38% 0.38% 0.31 kW 0.15 kW 58 kW 10.39% 9.69% 6.34% 5.83% 4.20% 2.35% 0.57% 0.58% 0.24 kW 0.01 kW Medium 14 kW 3.48% 7.10% 5.62% 3.33% 1.78% 1.05% 1.02% 1.01% 0.39 kW 0.45 kW 22 kW 4.76% 9.44% 5.91% 2.99% 2.07% 1.17% 0.04% 0.04% 0.49 kW 0.45 kW 33 kW 6.47% 11.76% 6.56% 3.76% 2.84% 1.62% 0.55% 0.55% 0.55 kW 0.37 kW 45 kW 7.85% 13.12% 7.20% 4.68% 3.60% 2.03% 1.00% 1.00% 0.49 kW 0.15 kW 58 kW 8.93% 14.16% 8.03% 5.76% 4.34% 2.57% 1.43% 1.43% 0.62 kW 0.01 kW Large 14 kW 3.70% 6.50% 5.28% 2.68% 2.07% 1.62% 1.33% 1.33% 0.35 kW 0.45 kW 22 kW 4.78% 8.30% 4.50% 1.37% 2.08% 1.43% 0.20% 0.20% 0.49 kW 0.45 kW 33 kW 6.39% 10.14% 5.18% 2.08% 2.67% 1.76% 0.70% 0.70% 0.48 kW 0.37 kW 45 kW 7.73% 11.22% 5.48% 2.92% 3.33% 2.10% 1.07% 1.07% 0.41 kW 0.15 kW 58 kW 8.59% 12.07% 6.28% 4.16% 3.91% 2.47% 1.51% 1.52% 0.60 kW 0.01 kW 
+
+with low absolute error (Fig. 10). These results indicate that when selecting a model, the large model should be used when higher accuracy is preferred, whereas the small model o ff ers a more computationally e ffi cient option. More importantly, a single model can be applied to predict radiative transfer across fires of varying sizes, reducing the need for retraining and supporting practical use in CFD fire simulations. 
+
+4.3.1. Discussion on the inference time 
+
+Our primary motivation for developing these models is to accelerate the radiative transfer calculation, which is often the most computationally expensive component in CFD fire simulations. To quantify this acceleration, we measure the inference time for obtaining a single intensity solution across all spatial grid points and 16 solid angles using the nested Fourier-MIONet on a single NVIDIA H200 GPU. The per-level and total inference times scale with model size. The Tiny model requires only about 0.012 seconds, while even the Large model evaluates the full multi-level solution in 0.044 seconds (Table 4). For comparison, we estimate the cost of one fvDOM solve by running the same case for three iterations in FireFOAM with and without radiation. By calculating the average di ff erence in runtime per iteration, we obtain the runtime of approximately 0.24 s, 0.14 s, and 0.10 s per fvDOM solve on 16, 32, and 48 CPU cores, respectively. While this is not a direct comparison as fvDOM is currently optimized for CPUs rather than GPUs, it highlights the potential for substantial speedups. We anticipate GPU-accelerated fvDOM implementations in FireFOAM in future work, at which point a more direct comparison will be possible. In addition, integrating the proposed surrogate models directly into the solver will be an important direction for future development. 
+
+5. Conclusions 
+
+In this study, we employ Fourier-MIONets to model radiative heat transfer for both 2D and 3D fire scenarios, specifically the small pool fire and McCa ff rey fire cases. The integration of PCA for dimensionality reduction and KAN layers for capturing non-smooth features enhanced the performance of MIONets, while Fourier-MIONets further 16 Level 4   
+
+> Level 3
+> Level 2 Level 1
+> Level 4
+> Level 3
+> Level 2 Level 1
+> A
+> B
+
+Figure 9: Results of the McCa ff rey fire using the variable-HRR medium model. Examples of predictions, references, and the corresponding absolute errors of level 4, level 3, level 2, and level 1 of fire ( A) 58 kW and ( B) 14 kW. The predictions are combined to obtain the final global prediction I(s = s1) in the middle column. 
+
+17 A
+
+BFigure 10: Emission, absorption, and the radiative heat loss ∇ · qrad fields of the McCa ff rey fire predicted from the medium variable-HRR model. Examples of predictions, references, and the corresponding absolute errors for fire with HRR ( A) 58 kW, and ( B) 14 kW. Table 4: Inference time (s) of the nested Fourier-MIONet on the 3D McCa ff rey fire with variable HRRs, compared with fvDOM CPU runtime. 
+
+Model Individual inference time Total inference time fvDOM runtime (CPU, 48 cores) 
+
+Level 4 Level 3 Level 2 Level 1 Tiny 0.0027 0.0034 0.0023 0.0073 0.0157 0.10 Small 0.0038 0.0021 0.0040 0.0120 0.0219 Medium 0.0039 0.0025 0.0050 0.0147 0.0261 Large 0.0043 0.0047 0.0094 0.0259 0.0443 
+
+18 improved accuracy. The nested Fourier-MIONets enabled accurate global predictions by sequentially combining re-sults from di ff erent refinement levels. Our experiments demonstrate the e ff ectiveness of Fourier-MIONets approaches in learning the solution operator of RTE, capturing complex features such as vortices and non-smooth regions in ra-diative fields. We further extend the method to generalize across McCa ff rey fires with varying HRRs, and provide four models of di ff erent sizes that o ff er flexible trade-o ff s between accuracy and inference speed. These results establish a high-accuracy surrogate modeling framework that paves the way for a machine learning-based radiation model as a replacement for traditional radiation solvers in FireFOAM, with the goal of accelerating fully coupled radiation CFD simulations. Future work will move beyond proof-of-concept fire cases and apply these surrogates to complex, industrial-scale scenarios, such as 16-ft parallel panel tests and rack storage fires. In standard fire tests, fire sizes, boundary conditions, and radiative characteristics can di ff er substantially from one test to another. We will develop models that generalize robustly across a range of HRRs and investigate transfer learning strategies across materials and scales, aiming to provide a powerful tool for evaluating sprinkler performance and fire risk in complex storage environments. 
+
+Acknowledgements 
+
+This work was supported by the FM fire modeling strategic research program and the U.S. Department of Energy Offi ce of Advanced Scientific Computing Research under Grants No. DE-SC0025593 and No. DE-SC0025592. This research used resources of the National Energy Research Scientific Computing Center (NERSC), a Department of Energy User Facility (project m4946). 
+
+Declaration of competing interest 
+
+The authors declare that they have no competing financial interests or personal relationships that could have appeared to influence the work reported in this paper. 
+
+A. PCA-MIONet and PCA-MIONet-KAN 
+
+We detail the mathematical formulations for the two proposed extensions to the baseline MIONet, PCA-MIONet and PCA-MIONet-KAN, as described in Section 3.2. 
+
+PCA for dimensionality reduction of the inputs. Let {ri}mi=1 ⊂ D be fixed sensor locations, and let κ = [κ(r1), . . . , κ (rm)] ⊤ ∈
+
+Rm and T = [T (r1), . . . , T (rm)] ⊤ ∈ Rm denote the high-dimensional input vectors for the absorption coe ffi cient and temperature, respectively. To reduce the computational cost due to high-dimensional inputs, we employ principal component analysis (PCA) to project the inputs onto a lower-dimensional linear subspace. Here, we describe the PCA process for κ, and the procedure for T is the same. Given a training dataset of N samples Dκ = {κ(n)}Nn=1,we first compute the empirical mean ¯ κ = 1
+
+> N
+
+PNn=1 κ(n) ∈ Rm. We then construct the centered data matrix Xκ =
+
+[κ(1) − ¯κ, . . . , κ(N) − ¯κ] ∈ Rm×N . The empirical covariance matrix Σκ ∈ Rm×m is given by Σκ = 1 
+
+> N−1
+
+XκX⊤ 
+
+> κ
+
+. We then compute the eigenvectors {ψ j}mj=1 of Σκ corresponding to the sorted eigenvalues λ1 ≥ λ2 ≥ · · · ≥ λm ≥ 0. To reduce dimensionality, we keep the first Npc ≪ m eigenvectors corresponding to the largest eigenvalues. We define the projec-tion matrix Φκ = [ψ1, ψ2, . . . , ψNpc ] ∈ Rm×Npc . For any new input κ, the reduced feature vector is ˜ κ = Φ⊤ 
+
+> κ
+
+(κ − ¯κ) ∈ RNpc .Applying the same procedure to T, we have ˜ T ∈ RNpc . The PCA-MIONet is then constructed by feeding these reduced representations into the branch networks: GPCA −MIONet  
+
+> θ
+
+(κ, T )( r, s) = Ppk=1 bk(˜ κ) ck
+
+ ˜T tk(r, s) + b0, where {bk(·)}pk=1 and 
+
+{ck(·)}pk=1 are the outputs of the two branch networks, {tk(r, s)}pk=1 are the trunk outputs, and b0 ∈ R is a bias term. 
+
+PCA-MIONet-KAN enhances the trunk network with e ffi cient KAN layers. To better capture sharp gradients and high-frequency features in the radiative intensity, we use PCA-MIONet-KAN. This architecture retains the PCA-reduced branch inputs ˜ κ and ˜ T but replaces the standard MLP trunk with a Kolmogorov-Arnold network (KAN) [31]. We adopt the e ffi cient FastKAN [37], which approximates the original B-spline basis using Gaussian radial basis functions. We use an L-layer FastKAN as the trunk net to encode the inputs z(0) = (r, s). For layer l + 1, the output of the j-th node is 
+
+z(l+1)  
+
+> j
+
+= Pnl 
+
+> i=1
+
+ϕl,i, j(z(l) 
+
+> i
+
+) + b(l+1)  
+
+> j
+
+, j = 1, . . . , nl+1, where nl is the width of layer l, and b(l+1)  
+
+> j
+
+is a bias term. The learnable 19 activation function ϕl,i, j(x) is defined as ϕ(x) = wbase SiLU( x) + PQq=1 wq exp 
+
+
+
+−  x−μq
+
+> h
+
+2
+
+. Here, SiLU( x) is a global base activation, and the latter term captures local variations using Gaussian RBFs centered at μq with bandwidth h. In this work, to ensure a comparable number of parameters with the other baseline architectures, we set the trunk depth to L = 3, the hidden layer widths to n1 = n2 = 18, the output width to n3 = 256, and the number of grid points to 
+
+Q = 50. The PCA-MIONet-KAN approximation is GPCA −MIONet −KAN  
+
+> θ
+
+(κ, T )( r, s) = Ppk=1 bk(˜ κ) ck
+
+ ˜T tKAN  
+
+> k
+
+(r, s) + b0,
+
+where {bk(·)}pk=1 and {ck(·)}pk=1 are the outputs of the two branch networks, {tKAN  
+
+> k
+
+(r, s)}pk=1 are the outputs of the KAN trunk network, and b0 ∈ R is a bias term. 
+
+B. Discussion on data preprocessing 
+
+As mentioned in Section 3.4, the raw FireFOAM simulation data need to be interpolated onto four structured, nested grid levels. Our primary results employ linear interpolation, which provides smoother fields and higher accu-racy (Fig. B.11A bottom path). To facilitate easier integration into numerical solvers and reduce the computational overhead, we introduce nearest-neighbor interpolation as a simpler, faster alternative (Fig. B.11 top path). This method eliminates the need for triangulation or barycentric weighting and requires only e ffi cient spatial point filtering. To assess the impact of these preprocessing choices, we trained and tested models on the 58 kW fire using datasets generated from both interpolation methods (Table B.5). We observe that linear interpolation results in relatively higher accuracy (Fig. B.11B). Nevertheless, the performance of nearest-neighbor interpolation is also acceptable for lower computational time. These experiments demonstrate that the model remains robust even under this coarser preprocessing approximation, making nearest-neighbor interpolation a practical and e ffi cient option for coupling the surrogate models with CFD solvers such as FireFOAM.          
+
+> Table B.5: Comparison of linear versus nearest-neighbor interpolation on 3D McCa ff rey 58 kW fire with per-level testing performance.
+> The top panel reports per-level L2relative errors and SSIM values for radiative intensity Iand incident radiation Gduring training of the medium model. The lower panel summarizes the individual per-level errors and the global errors obtained during nested inference.
+
+Interpolation Level I G
+
+εI SSIM I εG SSIM G
+
+Linear 4 5.39% 0.995 2.24% 0.991 3 4.02% 0.997 1.54% 0.998 2 3.15% 0.997 1.36% 0.999 1 2.39% 0.994 0.99% 0.999 Nearest neighbor 4 5.51% 0.995 2.30% 0.990 3 4.64% 0.996 1.69% 0.998 2 4.66% 0.934 1.89% 0.998 1 2.39% 0.994 0.99% 0.999 
+
+Interpolation Individual error εlevel  
+
+> I
+
+εglobal  
+
+> I
+
+εglobal  
+
+> G
+
+ε ˙Qout εχR Rpred E Rre f E
+
+Level 4 Level 3 Level 2 Level 1 Linear 5.39% 6.45% 3.73% 2.79% 2.82% 1.55% 0.02% 0.02% 0.00 kW 0.01 kW Nearest neighbor 5.51% 7.31% 5.97% 3.39% 3.09% 1.70% 0.39% 0.40% 0.18 kW 0.01 kW 
+
+C. Radiative quantities 
+
+Total radiative heat loss. The total radiative heat loss ˙ Qout quantifies the net radiative flux leaving the computational domain. It is the integration over all the surface elements with surface normal ˆn:˙Qout =
+
+Z
+
+> V
+
+(∇ · qrad )dV =
+
+I
+
+> S
+
+qndS =
+
+I
+
+> S
+
+(qrad · ˆn)dS ≈
+
+X 
+
+> f∈all faces
+
+˙Qout , f ,
+
+20 Barycentric weighting via 
+
+> Delaunay triangulation
+> A
+> B
+> Nearest neighbor
+> Linear interpolation
+> Fast
+> Accurate
+
+Figure B.11: Illustration and comparison of data preprocessing approaches. (A) Comparison of the nearest neighbor interpolation approach (top path) and the linear interpolation approach (bottom path) on the raw mesh with a T example at level 2. The nearest neighbor interpolation approach performs a direct point lookup based on minimal Euclidean distance and assigns the corresponding values to the target grid locations. The linear interpolation approach utilizes barycentric weighting via Delaunay triangulation and produces smoother and more accurate fields. ( B)Reference, global predictions, and absolute errors of I(s = s1) obtained using the two preprocessing approaches for direct comparison. 
+
+21 where ˙Qout , f represents face f out of the six boundary faces of the cubic domain in the 3D McCa ff rey case. This is further approximated by summing the flux over all N f discrete surface elements on that face, each with area ∆S j:˙Qout , f ≈ PN f 
+
+> j
+
+qn, j∆S j, where N f denotes the total number of surface elements. Here, the radiative heat flux on a surface element with a surface normal ˆn is 
+
+qn, j = qrad , j · ˆnj =
+
+Z
+
+> 4π
+
+I j ˆnj · ˆsdΩ ≈
+
+> Ns
+
+X
+
+> k=1
+
+I j,k( ˆnj · ˆsk)∆Ω k.
+
+To provide a more accurate estimate of the true integral for ˙Qout , f , we employ the 2D trapezoidal rule, given by the formula ˙Qout , f ≈ ∆S
+
+> 4
+
+PMi=1
+
+PNj=1 wi, j qn,i, j. The formula’s double summation iterates over the M × N grid on the face, where qn,i, j is the local normal heat flux and wi, j is the trapezoidal weight determined by a point’s location: 1 for corners, 2 for edges, and 4 for all interior points. As mentioned in Section 3.4, we have Ns = 16 solid angles. For the 3D McCa ff rey case, the step sizes for the azimuthal angle ϕ and polar angle θ are ∆ϕ = π 
+
+> 2nϕ
+
+and ∆θ = π 
+
+> nθ
+
+. Then the angles are ( θn = (2 n+1) ∆θ 
+
+> 2
+
+, ϕm = 
+
+> (2 m+1) ∆ϕ
+> 2
+
+), where m = 0, 1, . . . , 4nϕ − 1, n = 0, 1, . . . , nθ − 1, and 4 nϕnθ = Ns. The unit direction vectors are given by 
+
+ˆsn, m = (sin θn sin ϕm, sin θn cos ϕm, cos θn), and the discrete solid angle is ∆Ω n, m = sin( θn)∆θ∆ϕ. The dot product 
+
+ˆnf · ˆsn, m depends on the orientation of the boundary face. By substituting the discrete approximation of qn, j, we have ˙Qout , f ≈ P j = 1N f
+
+P nθ −1
+
+> n=0
+
+P4nϕ−1 
+
+> m=0
+
+I j,n,m( ˆn f · ˆsn, m)∆Ω n,m
+
+ ∆S j.
+
+Radiation fraction. The radiation fraction is the ratio of the radiative loss to the chemical reaction rate. It is an integral quantity that measures the percentage of energy released from the combustion process lost via radiation: 
+
+χR = ˙Qems − ˙Qabs 
+
+˙Qchem 
+
+,
+
+where ˙ Qems = R 
+
+> V
+
+4πκ IbdV , and ˙ Qabs = R 
+
+> V
+
+κ R  
+
+> 4π
+
+Id Ω dV .
+
+Energy conservation. The divergence of the radiative heat flux is 
+
+∇ · qrad = ∇ · 
+
+Z
+
+4πI ˆsdΩ = 
+
+Z
+
+> 4π
+
+ˆs · ∇ Id Ω=
+
+Z
+
+> 4π
+
+(κIb − κI) dΩ= 4πκ Ib
+
+|{z} 
+
+> Emission
+
+− κ
+
+Z
+
+4πId Ω
+
+| {z }
+
+> Absorption
+
+= κ(4 πIb − G),
+
+where G = R 4πId Ω is the incident radiation. Based on the divergence theorem, the energy conservation should be 
+
+I
+
+> S
+
+(qrad · ˆn)dS 
+
+| {z }
+
+> Net radiative heat loss
+
+=
+
+Z
+
+> V
+
+(∇ · qrad )dV 
+
+| {z }
+
+> Net radiative power source
+
+.
+
+D. Fourier-MIONet architectures 
+
+The network architectures of nested Fourier-MIONets for all levels in Section 3.3 are summarized in Table D.6. The trunk net activation is Swish (SiLU). 22 Table D.6: Architecture of the nested Fourier-MIONet across all four levels. C denotes the batch size, W the network width, and N the number of Fourier layers. Level Operation Output Shape Level 4 Branch net 1 Linear(4, W), Permute (C, W, 30, 30, 30) Branch net 2 Linear(4, W), Permute (C, W, 30, 30, 30) Trunk net FNN [2, W, W, W] (16, W)Branch merger Point-wise addition (C, W, 30, 30, 30) Branch-trunk merger Point-wise multiplication (C, 16, W, 30, 30, 30) Merge net 
+
+N Fourier layers (C × 16, W, 30, 30, 30) Linear( W, W × 4), ReLU (C × 16, 30, 30, 30, W × 4) Linear( W × 4, 1) (C × 16, 30, 30, 30, 1) Reshape Reshape, Output transform (C, 16 × 30 × 30 × 30) Level 3 Branch net 1 CNN (C, W, 24, 24, 40) Branch net 2 Linear(5, W), Permute (C, W, 24, 24, 40) Trunk net FNN [2, W, W, W] (16, W)Branch merger Point-wise multiplication (C, W, 24, 24, 40) Branch-trunk merger Point-wise multiplication (C, 16, W, 24, 24, 40) Merge net 
+
+N Fourier layers (C × 16, W, 24, 24, 40) Linear( W, W × 4), ReLU (C × 16, 24, 24, 40, W × 4) Linear( W × 4, 1) (C × 16, 24, 24, 40, 1) Reshape Reshape, Output transform (C, 16 × 24 × 24 × 40) Level 2 Branch net 1 CNN (C, W, 40, 40, 40) Branch net 2 Linear(5, W), Permute (C, W, 40, 40, 40) Trunk net FNN [2, W, W, W] (16, W)Branch merger Point-wise multiplication (C, W, 40, 40, 40) Branch-trunk merger Point-wise multiplication (C, 16, W, 40, 40, 40) Merge net 
+
+N Fourier layers (C × 16, W, 40, 40, 40) Linear( W, W × 4), ReLU (C × 16, 40, 40, 40, W × 4) Linear( W × 4, 1) (C × 16, 40, 40, 40, 1) Reshape Reshape, Output transform (C, 16 × 40 × 40 × 40) Level 1 Branch net 1 CNN (C, W, 48, 48, 80) Branch net 2 Linear(5, W), Permute (C, W, 48, 48, 80) Trunk net FNN [2, W, W, W] (16, W)Branch merger Point-wise multiplication (C, W, 48, 48, 80) Branch-trunk merger Point-wise multiplication (C, 16, W, 48, 48, 80) Merge net 
+
+N Fourier layers (C × 16, W, 48, 48, 80) Linear( W, W × 4), ReLU (C × 16, 48, 48, 80, W × 4) Linear( W × 4, 1) (C × 16, 48, 48, 80, 1) Reshape Reshape, Output transform (C, 16 × 48 × 48 × 80) 
+
+23 E. Additional results on 3D McCa ff rey fires 
+
+In Section 4.2, we train the nested Fourier-MIONet on five McCa ff rey fires with fixed HRRs of 14, 22, 33, 45, and 58 kW using four model sizes: Tiny, Small, Medium, and Large, which di ff er in network width, the number of retained Fourier modes, and the depth of Fourier layers (Table E.7). We show the additional global testing results of fire with HRR 22, 33, and 45 kW in Table E.8. The per-level L2 relative errors and SSIM values for radiative intensity 
+
+I and incident radiation G during training are reported in Table E.9. For both the radiative intensity I and the incident radiation G, the global relative errors decrease as the model size increases from Tiny to Large, indicating improved global accuracy with increasing capacity. At a fixed model size, higher-HRR cases tend to be more challenging and yield larger errors. 
+
+Table E.7: Model and per-level configuration of the nested Fourier-MIONet used for the 3D McCa ff rey fires. Four model sizes are considered: Tiny, Small, Medium, and Large, which di ff er in the network width (“Width”) of the branch, trunk, and Fourier decoder networks, the number of retained Fourier modes (“Modes”) in the three spatial dimensions, and the number of Fourier layers. The architecture and hyperparameters are shared across all sizes of fire (14–58 kW). 
+
+Model Level Width Modes # Fourier layers # Params 
+
+1&2 3Tiny 4 16 4 4 1 67713 3 16 4 4 1 176326 2 16 4 4 1 127211 1 16 4 4 1 131182 Small 4 24 8 4 2 1184857 3 24 8 4 2 1293598 2 24 8 4 2 1244483 1 24 8 4 2 1248454 Medium 4 32 8 8 2 4203297 3 32 8 8 2 4312166 2 32 8 8 2 4263051 1 32 8 8 2 4267022 Large 4 48 12 8 3 31872481 3 48 12 8 3 31981606 2 48 12 8 3 31932491 1 48 12 8 3 31936462 Table E.8: Per-level and global testing performance of the nested Fourier-MIONet for the 3D McCa ff rey 22, 33, and 45 kW fires. We report the individual per-level errors and the global errors obtained during nested inference. The reference radiative fractions χR are 19.40%, 20.91%, and 21.76% for the 22, 33, and 45 kW fires, respectively. 
+
+Fire Model Individual error εlevel  
+
+> I
+
+εglobal  
+
+> I
+
+εglobal  
+
+> G
+
+ε ˙Qout εχR Rpred E Rre f E
+
+Level 4 Level 3 Level 2 Level 1 22 kW Tiny 5.52% 10.74% 7.26% 6.85% 2.99% 1.35% 0.19% 0.19% 0.38 kW 0.45 kW Small 4.26% 8.28% 4.95% 4.86% 2.03% 1.14% 0.15% 0.15% 0.42 kW Medium 3.69% 6.15% 3.91% 2.81% 1.64% 0.98% 0.13% 0.13% 0.44 kW Large 2.43% 2.94% 2.25% 1.43% 1.04% 0.60% 0.03% 0.04% 0.44 kW 33 kW Tiny 7.93% 13.93% 8.78% 8.40% 4.28% 2.02% 0.16% 0.16% 0.20 kW 0.37 kW Small 6.14% 9.66% 5.31% 5.12% 2.89% 1.60% 0.13% 0.13% 0.36 kW Medium 4.92% 6.51% 4.11% 3.05% 2.26% 1.31% 0.21% 0.21% 0.40 kW Large 3.77% 4.67% 3.05% 1.98% 1.53% 0.76% 0.04% 0.04% 0.38 kW 45 kW Tiny 9.76% 15.19% 10.16% 9.44% 5.42% 2.66% 0.13% 0.13% 0.15 kW 0.15 kW Small 7.04% 10.16% 5.65% 5.60% 3.51% 1.81% 0.12% 0.12% 0.13 kW Medium 4.89% 5.78% 3.63% 2.59% 2.48% 1.39% 0.14% 0.13% 0.18 kW Large 2.67% 2.73% 2.17% 1.58% 1.15% 0.44% 0.00% 0.00% 0.14 kW 
+
+In Section 4.3, we train the nested Fourier-MIONet using four model sizes (Tiny, Small, Medium, and Large) on McCa ff rey fires with variable HRRs, and we report the individual per-level errors and the global errors obtained 24 Table E.9: Per-level testing L2 relative errors and SSIM values for radiative intensity I and incident radiation G during training on McCaf-frey fires of 14, 22, 33, 45, and 58 kW. The upper block reports results for I, and the lower block reports results for G. Model configurations are provided in Table E.7. Radiative intensity I
+
+Model Level 14 kW 22 kW 33 kW 45 kW 58 kW 
+
+εI SSIM I εI SSIM I εI SSIM I εI SSIM I εI SSIM I
+
+Tiny 4 3.69% 0.996 5.52% 0.994 8.76% 0.921 9.75% 0.928 10.50% 0.986 3 5.08% 0.995 6.28% 0.994 9.01% 0.898 9.54% 0.908 10.32% 0.983 2 5.24% 0.993 5.24% 0.993 8.41% 0.816 9.88% 0.795 9.48% 0.972 1 5.52% 0.986 6.16% 0.981 7.53% 0.966 8.60% 0.953 9.05% 0.949 Small 4 3.00% 0.998 4.26% 0.997 5.90% 0.973 7.07% 0.957 7.68% 0.993 3 3.21% 0.998 4.53% 0.997 5.54% 0.957 6.66% 0.954 6.82% 0.994 2 3.08% 0.998 3.53% 0.997 4.34% 0.893 5.13% 0.890 4.73% 0.993 1 2.71% 0.996 3.54% 0.993 4.25% 0.988 5.03% 0.983 5.11% 0.984 Medium 4 2.50% 0.999 3.69% 0.997 3.95% 0.982 4.92% 0.973 5.39% 0.995 3 2.11% 0.999 2.97% 0.999 3.45% 0.971 4.25% 0.968 4.02% 0.997 2 2.42% 0.999 2.72% 0.998 2.91% 0.930 3.17% 0.931 3.15% 0.997 1 1.72% 0.998 1.82% 0.997 2.30% 0.995 2.25% 0.995 2.39% 0.994 Large 4 1.66% 0.999 2.43% 0.999 2.19% 0.992 2.71% 0.992 2.63% 0.999 3 1.54% 1.000 1.82% 0.999 2.00% 0.989 2.39% 0.989 2.28% 0.999 2 1.65% 0.999 1.90% 0.999 1.98% 0.944 2.11% 0.968 2.12% 0.999 1 1.67% 0.997 1.32% 0.998 1.32% 0.998 1.52% 0.998 2.02% 0.995 Incident radiation G
+
+Model Level 14 kW 22 kW 33 kW 45 kW 58 kW 
+
+εG SSIM G εG SSIM G εG SSIM G εG SSIM G εG SSIM G
+
+Tiny 4 1.37% 0.997 2.21% 0.992 3.51% 0.972 4.11% 0.970 4.32% 0.976 3 1.69% 0.998 2.02% 0.997 3.05% 0.949 3.42% 0.960 3.58% 0.991 2 1.96% 0.998 1.96% 0.998 3.28% 0.988 3.95% 0.985 3.76% 0.991 1 1.99% 0.995 2.28% 0.994 2.94% 0.990 3.44% 0.988 3.54% 0.988 Small 4 1.19% 0.997 1.78% 0.994 2.53% 0.985 2.90% 0.978 3.07% 0.988 3 1.09% 0.999 1.50% 0.999 1.97% 0.976 2.43% 0.975 2.55% 0.996 2 1.25% 0.999 1.46% 0.999 1.82% 0.996 2.16% 0.996 2.00% 0.998 1 1.02% 0.999 1.38% 0.998 1.70% 0.996 2.04% 0.996 2.08% 0.996 Medium 4 0.97% 0.998 1.54% 0.995 1.82% 0.989 2.09% 0.983 2.24% 0.991 3 0.75% 1.000 1.06% 0.999 1.25% 0.987 1.55% 0.986 1.54% 0.998 2 0.99% 1.000 1.14% 0.999 1.24% 0.998 1.34% 0.998 1.36% 0.999 1 0.67% 0.999 0.71% 0.999 0.93% 0.999 0.91% 0.999 0.99% 0.999 Large 4 0.71% 0.998 0.99% 1.000 0.80% 0.995 0.93% 0.995 0.94% 0.999 3 0.55% 1.000 0.69% 1.000 0.77% 0.995 0.94% 0.994 0.94% 0.999 2 0.67% 1.000 0.84% 1.000 0.74% 0.998 0.96% 0.999 0.98% 0.999 1 0.69% 0.999 0.55% 1.000 0.54% 0.999 0.64% 1.000 0.90% 0.999 
+
+25 during nested inference for each HRR. Here, the per-level L2 relative errors and SSIM values for radiative intensity I
+
+and incident radiation G during training are detailed in Table E.10.                                                                              
+
+> Table E.10: Per-level testing L2relative errors and SSIM values for radiative intensity Iand incident radiation Gwhen training the entire nested Fourier-MIONet on variable HRRs. Model Level IG
+> εISSIM IεGSSIM G
+> Tiny 48.16% 0.989 3.54% 0.974 39.59% 0.986 3.95% 0.988 28.94% 0.970 4.01% 0.986 18.12% 0.925 4.33% 0.962 Small 47.66% 0.993 3.17% 0.985 37.55% 0.987 3.77% 0.977 24.37% 0.994 2.01% 0.997 14.55% 0.981 2.47% 0.984 Medium 46.80% 0.994 2.91% 0.985 34.63% 0.994 2.09% 0.991 23.25% 0.994 1.84% 0.994 13.85% 0.968 3.25% 0.964 Large 46.72% 0.994 3.00% 0.986 35.61% 0.996 2.52% 0.995 22.68% 0.997 1.60% 0.997 13.65% 0.984 3.07% 0.983
+
+References 
+
+[1] Yi Wang, Prateep Chatterjee, and John L de Ris. Large eddy simulation of fire plumes. Proc. Combust. Inst. ,33(2):2473–2480, 2011. [2] Kevin McGrattan, Bryan Klein, Simo Hostikka, and Jason Floyd. Fire dynamics simulator (version 5), user’s guide. NIST special publication , 1019(5):1–186, 2010. [3] Gaurav Agarwal, Yi Wang, and Sergey Dorofeev. Fire performance evaluation of cladding wall assemblies using the 16-ft high parallel panel test method of ansi /fm 4880. Fire and Materials , 45(5):609–623, 2021. [4] George D Raithby and Eddy H Chui. A finite-volume method for predicting a radiant heat transfer in enclosures with participating media. 1990. [5] Stefan T Thynell. Discrete-ordinates method in radiative heat transfer. International journal of engineering science , 36(12-14):1651–1675, 1998. [6] J Robert Mahan. The Monte Carlo ray-trace method in radiation heat transfer and applied optics . John Wiley & Sons, 2018. [7] MWM Gamini Dissanayake and Nhan Phan-Thien. Neural-network-based approximations for solving partial di ff erential equations. communications in Numerical Methods in Engineering , 10(3):195–201, 1994. [8] Isaac E Lagaris, Aristidis Likas, and Dimitrios I Fotiadis. Artificial neural networks for solving ordinary and partial di ff erential equations. IEEE transactions on neural networks , 9(5):987–1000, 1998. [9] M. Raissi, P. Perdikaris, and G.E. Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial di ff erential equations. Journal of Compu-tational Physics , 378:686–707, 2019. 26 [10] Guofei Pang, Lu Lu, and George Em Karniadakis. fPINNs: Fractional physics-informed neural networks. SIAM Journal on Scientific Computing , 41(4):A2603–A2626, 2019. [11] George Em Karniadakis, Ioannis G Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, and Liu Yang. Physics-informed machine learning. Nature Reviews Physics , 3(6):422–440, 2021. [12] Lu Lu, Xuhui Meng, Zhiping Mao, and George Em Karniadakis. DeepXDE: A deep learning library for solving di ff erential equations. SIAM Rev. , 63(1):208–228, 2021. [13] Lu Lu, Raphael Pestourie, Wenjie Yao, Zhicheng Wang, Francesc Verdugo, and Steven G Johnson. Physics-informed neural networks with hard constraints for inverse design. SIAM J. Sci. Comput. , 43(6):B1105–B1132, 2021. [14] Jeremy Yu, Lu Lu, Xuhui Meng, and George Em Karniadakis. Gradient-enhanced physics-informed neural networks for forward and inverse pde problems. Computer Methods in Applied Mechanics and Engineering ,393:114823, 2022. [15] Chenxi Wu, Min Zhu, Qinyang Tan, Yadhu Kartha, and Lu Lu. A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks. Computer Methods in Applied Me-chanics and Engineering , 403:115671, 2023. [16] Yuyao Chen, Lu Lu, George Em Karniadakis, and Luca Dal Negro. Physics-informed neural networks for inverse problems in nano-optics and metamaterials. Optics Express , 28(8):11618–11633, 2020. [17] Alireza Yazdani, Lu Lu, Maziar Raissi, and George Em Karniadakis. Systems biology informed deep learning for inferring parameters and hidden dynamics. PLoS computational biology , 16(11):e1007575, 2020. [18] Mitchell Daneker, Zhen Zhang, George Em Karniadakis, and Lu Lu. Systems biology: Identifiability analysis and parameter identification via systems-biology-informed neural networks. In Computational Modeling of Signaling Networks , pages 87–105. Springer, 2023. [19] Benjamin Fan, Edward Qiao, Anran Jiao, Zhouzhou Gu, Wenhao Li, and Lu Lu. Deep learning for solving and estimating dynamic macro-finance models. Computational Economics , 65:3885–3921, 2025. [20] Mitchell Daneker, Shengze Cai, Ying Qian, Eric Myzelev, Arsh Kumbhat, He Li, and Lu Lu. Transfer learning on physics-informed neural networks for tracking the hemodynamics in the evolving false lumen of dissected aorta. Nexus , 2024. [21] Siddhartha Mishra and Roberto Molinaro. Physics informed neural networks for simulating radiative transfer. J. Quant. Spectrosc. Radiat. Transf. , 270:107705, 2021. [22] Lu Lu, Pengzhan Jin, Guofei Pang, Handy Zang, and George Karniadakis. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nat. Mach. Intell. , 3:218–229, 03 2021. [23] Lu Lu, Xuhui Meng, Shengze Cai, Zhiping Mao, Somdatta Goswami, Zhongqiang Zhang, and George Em Karniadakis. A comprehensive and fair comparison of two neural operators (with practical extensions) based on fair data. Comput. Methods Appl. Mech. Eng. , 393:114778, 2022. [24] Lu Lu, Raphaël Pestourie, Steven G Johnson, and Giuseppe Romano. Multifidelity deep neural operators for ef-ficient learning of partial di ff erential equations with application to fast inverse design of nanoscale heat transport. 
+
+Phys. Rev. Res. , 4(2):023210, 2022. [25] Min Zhu, Handi Zhang, Anran Jiao, George Em Karniadakis, and Lu Lu. Reliable extrapolation of deep neural operators informed by physics or sparse observations. Computer Methods in Applied Mechanics and Engineer-ing , 412:116064, 2023. [26] Sifan Wang, Hanwen Wang, and Paris Perdikaris. Learning the solution operator of parametric partial di ff erential equations with physics-informed deeponets. Sci. Adv. , 7(40), 2021. 27 [27] Anran Jiao, Qile Yan, John Harlim, and Lu Lu. Solving forward and inverse PDE problems on unknown mani-folds via physics-informed neural operators. arXiv preprint arXiv:2407.05477 , 2024. [28] Xiaoyi Lu and Yi Wang. Surrogate modeling for radiative heat transfer using physics-informed deep neural operator networks. Proc. Combust. Inst. , 40(1-4):105282, 2024. [29] Pengzhan Jin, Shuai Meng, and Lu Lu. Mionet: Learning multiple-input operators via tensor product. SIAM J. Sci. Comput. , 44(6):A3490–A3514, 2022. [30] Aleksei Sorokin, Xiaoyi Lu, and Yi Wang. A neural surrogate solver for radiation transfer. In NeurIPS 2024 Workshop on Data-driven and Di ff erentiable Simulations, Surrogates, and Solvers , 2024. [31] Ziming Liu, Yixuan Wang, Sachin Vaidya, Fabian Ruehle, James Halverson, Marin Soljaˇ ci´ c, Thomas Y Hou, and Max Tegmark. Kan: Kolmogorov-arnold networks. 2024. [32] Min Zhu, Shihang Feng, Youzuo Lin, and Lu Lu. Fourier-deeponet: Fourier-enhanced deep operator networks for full waveform inversion with improved accuracy, generalizability, and robustness. Comput. Methods Appl. Mech. Eng. , 416:116300, 2023. [33] Zhongyi Jiang, Min Zhu, and Lu Lu. Fourier-mionet: Fourier-enhanced multiple-input neural operators for multiphase modeling of geological carbon sequestration. Reliab. Eng. Syst. Saf. , 251:110392, 2024. [34] Gege Wen, Zongyi Li, Qirui Long, Kamyar Azizzadenesheli, Anima Anandkumar, and Sally M Benson. Real-time high-resolution co 2 geological storage prediction using nested fourier neural operators. Energy & Envi-ronmental Science , 16(4):1732–1741, 2023. [35] Jonathan E Lee, Min Zhu, Ziqiao Xi, Kun Wang, Yanhua O Yuan, and Lu Lu. Effi cient and generalizable nested fourier-deeponet for three-dimensional geological carbon sequestration. Eng. Appl. Comput. Fluid Mech. ,18(1):2435457, 2024. [36] Michael F Modest and Sandip Mazumder. Radiative heat transfer . Academic press, 2021. [37] Ziyao Li. Kolmogorov-arnold networks are radial basis function networks. 2024. [38] Zongyi Li, Daniel Zhengyu Huang, Burigede Liu, and Anima Anandkumar. Fourier neural operator with learned deformations for pdes on general geometries. J. Mach. Learn. Res. , 24(388):1–26, 2023. [39] Zhou Wang, Alan C Bovik, Hamid R Sheikh, and Eero P Simoncelli. Image quality assessment: from error visibility to structural similarity. IEEE Transactions on Image Processing , 13(4):600–612, 2004. [40] Vinod Nair and Geo ff rey E Hinton. Rectified linear units improve restricted Boltzmann machines. In ICML ,2010. [41] Prajit Ramachandran, Barret Zoph, and Quoc V. Le. Swish: a self-gated activation function. 2017. [42] Nasim Rahaman, Aristide Baratin, Devansh Arpit, Felix Draxler, Min Lin, Fred Hamprecht, Yoshua Bengio, and Aaron Courville. On the spectral bias of neural networks. In International conference on machine learning ,pages 5301–5310. PMLR, 2019. [43] Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial di ff erential equations. In International Conference on Learning Representations , 2020. [44] Bernard J McCa ff rey. Purely buoyant di ff usion flames: Some experimental results. NBSIR 79-1910, NIST , 1979. 28
