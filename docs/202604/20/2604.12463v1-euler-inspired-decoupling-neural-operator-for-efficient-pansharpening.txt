@@ -1,0 +1,254 @@
+Title: Euler-inspired Decoupling Neural Operator for Efficient Pansharpening
+
+URL Source: https://arxiv.org/pdf/2604.12463v1
+
+Published Time: Wed, 15 Apr 2026 01:00:03 GMT
+
+Number of Pages: 10
+
+Markdown Content:
+# Euler-inspired Decoupling Neural Operator for Efficient Pansharpening 
+
+# Anqi Zhu 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+# Mengting Ma 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+# Yizhen Jiang 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+# Xiangdong Li 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+# Kai Zheng 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+# Jiaxin Li 
+
+School of Computer Science and Technology , Chongqing University of Post and Telecommunications Chongqing, China 
+
+# Wei Zhang 
+
+School of Software Technology, Zhejiang University Ningbo, China 
+
+## Abstract 
+
+Integrating asymmetric modalities with high-resolution structural details from panchromatic images and spectral properties from low-resolution multispectral images is a core challenge in repre-sentation learning. This is especially true in pansharpening, where the frequency difference between panchromatic (PAN) and low-resolution multispectral (LR-MS) signals often causes a severe cou-pling conflict. Standard operators in Cartesian coordinates struggle to harmonize these disparate features because the combined update of real and imaginary parts leads to phase drift and spectral blur-ring. To resolve this contradiction, we propose the Eulerian Neural Operator. This physics-inspired framework redefines asymmetric feature fusion as a continuous functional mapping on polar man-ifolds. Departing from standard convolutions, our approach uses Euler’s formula to decouple feature representations into magnitude and phase components. Specifically, we develop an Eulerian interac-tion mechanism that splits the fusion process into two specialized paths. In the first path, explicit phase rotation ensures geomet-ric consistency through linear evolution in the circular domain. In the second path, implicit magnitude mapping calibrates spec-tral distributions via neural manifold approximation. Operating in the frequency domain allows our model to capture global re-ceptive fields and exhibit a resolution-invariant property, enabling zero-shot generalization across varying spatial scales. Extensive ex-periments demonstrate that this lightweight architecture achieves a superior balance between physical interpretability, computational efficiency, and reconstruction quality. 
+
+## Keywords 
+
+Pansharpening, Neural Operator, Euler Decoupling. 
+
+## 1 Introduction 
+
+Pansharpening is a fundamental task in remote sensing image pro-cessing. Conceptually, due to physical constraints, satellite sensors cannot simultaneously capture images with both high spatial reso-lution and rich spectral information [ 22 , 53 ]. Instead, they provide image pairs consisting of a low-resolution multispectral (LR-MS) image ("colorful but blurry") and a high-resolution panchromatic (PAN) image ("black-and-white but sharp") [ 13 , 36 ]. The goal of pansharpening is to fuse these two images to synthesize a high-resolution multispectral (HR-MS) image that is both colorful and sharp. In recent years, deep learning, particularly Convolutional Neu-ral Networks (CNNs), has significantly advanced this domain [ 10 ,38 , 44 ]. However, two challenges remain unaddressed. First is the "trade-off" dilemma caused by spectral-spatial entanglement [ 54 ]. Since spatial details and spectral information are deeply coupled in the pixel domain, traditional CNNs and Transformer-based ar-chitectures [ 5, 15 , 34 ] often struggle to optimize both modalities si-multaneously. Specifically, while Transformers excel at long-range dependency modeling, their aggressive spatial attention mecha-nisms often prioritize structural reconstruction at the expense of spectral integrity, leading to severe color distortion or spatial blur-ring [ 55 , 57 ]. Second is the "heavy computation" bottleneck. In cutting-edge paradigms such as Transformer-based and Diffusion-based models [ 7, 18 , 33 ], the pursuit of global receptive fields in the spatial domain leads to prohibitive quadratic complexity or iterative latency. These limitations stem from the rigid grid-based processing paradigm, which fails to leverage the underlying functional conti-nuity of remote sensing scenes and the intrinsic frequency-domain sparsity of image structures. To overcome this, several studies have recently shifted toward the Neural Operators, which aim to learn a mapping between infinite-dimensional function spaces rather than discrete pixel grids. For instance, pioneering Physics-Informed Neu-ral Operators (PINO) [ 28 ] attempt to bridge this gap by simulating the radiance field integration process. However, such operators en-counter the dependency-complexity dilemma, i.e, they heavily rely on explicit sensor priors and incur extreme computational costs 
+
+> arXiv:2604.12463v1 [cs.CV] 14 Apr 2026 Anqi Zhu, Mengting Ma, Yizhen Jiang, Xiangdong Li, Kai Zheng, Jiaxin Li, and Wei Zhang
+
+Figure 1: The motivation and performance of EDNO. (Top left) Conventional pixel-domain interactions are computationally expensive and prone to edge ghosting. (Bottom left) Our method utilizes Fast Fourier Transform (FFT) to interact in Euler space, enabling efficient global modeling of geometric structures and spectral energy. (Right) Performance benchmarking shows that EDNO (red star) dominates the upper-left corner of both PSNR-vs-Params and PSNR-vs-FLOPs charts, demonstrating superior efficiency and reconstruction quality. 
+
+due to their intricate physical kernels, which limits their flexibility and efficiency in general remote sensing applications. To break through the bottleneck, we shift our perspective from computationally intensive spatial-domain integral kernels to an elegant mathematical decoupling within the neural operator frame-work. As illustrated in Fig. 1 (Left), while traditional pixel-domain interactions suffer from prohibitive complexity, we argue that the complex-valued frequency domain provides a more principled space for the integral kernels of a neural operator, where image struc-tures and spectral distributions are naturally disentangled [ 30 ].To formulate this disentanglement, we represent frequency compo-nents in polar coordinates where phase encodes geometric shapes while magnitude determines spectral intensity. This conceptual shift leads to our proposed Euler-inspired Decoupling Neural Operator (EDNO) , which leverages Euler’s formula [ 1 , 37 ] to map cross-modality coupling into Euler Space. Such a coordinate shift effectively linearizes the fusion task by resolving structural mis-alignments to deterministic phase rotations and modulating spec-tral variations through magnitude scaling. Consequently, EDNO achieves global Euler interaction via point-wise complex multiplica-tion [ 14 , 19 ], capturing global receptive fields with 𝑂 (1) parameter complexity without requiring any sensor-specific priors. The technical backbone of our approach is the Euler Feature Inter-action Layer (EFIL), which independently refines geometric textures and spectral energy within this complex manifold. Specifically, an Explicit Feature Interaction module simulates the aforementioned phase rotations via linear weighting to align spatial features, while an Implicit Feature Interaction module employs a feed-forward network to calibrate spectral distributions. By leveraging the in-tegral kernel properties of neural operators [ 25 ], EFIL captures global receptive fields directly in the Fourier domain [ 14 , 19 ], thus achieving superior parameter efficiency compared to redundant spatial convolutions [ 2 ]. As demonstrated in Fig. 1 (right), EDNO (indicated by the red star) establishes a superior Pareto frontier between fidelity and efficiency. It achieves a state-of-the-art PSNR exceeding 41 dB while drastically compressing the parameter count to merely 246 .9 K. This "lightweight yet accurate" architecture al-lows EDNO to reconstruct sharper boundaries and more faithful colors, effectively bypassing the spatial artifacts and heavy com-putational overhead common in traditional black-box models.The main contributions of this paper are summarized as follows: 
+
+• Novel Framework : We propose EDNO, a lightweight and efficient frequency-domain neural operator for pansharpen-ing, marking the first integration of Euler-inspired operator learning into this cross-modal task. 
+
+• Decoupled Interaction : We develop the Euler Feature In-teraction Layer (EFIL), which employs an explicit-implicit strategy to decouple the reconstruction of phase (texture) Euler-inspired Decoupling Neural Operator for Efficient Pansharpening 
+
+Figure 2: Overall Architecture of the proposed Euler-inspired Decoupling Neural Operator (EDNO). The EDNO framework follows a structured three-stage pipeline to achieve resolution-agnostic pansharpening. Starting with the Lifting Stage, a dual-mapping operator 𝐿 = (𝐿 1, 𝐿 2) transforms the input PAN and LR-MS images into a unified, high-dimensional continuous-feature manifold 𝑧 0 (𝑥 ) by combining a feature encoder 𝐸 𝜓 with implicit coordinate-based sampling. Subsequently, these latent representations undergo the Iterative Kernel Integral Stage, where 𝑇 iterations of kernel operations ( K) progressively refine cross-modal features to resolve spectral-spatial coupling. Finally, in the Projection and Fusion Stage, the refined features are mapped back to the target output space through a projection operator and integrated with a global residual bypass to ensure maximum spectral fidelity in the reconstructed HR-MS output. The Lifting Detail and Sampling Detail (bottom) further elucidate the coordinate-aware mechanism, where neighboring grid features 𝑎 𝑙 are aggregated via spatial weights 𝑠 𝑙 and subsequently concatenated with fractional coordinate offsets 𝛿 𝑙 , to maintain consistency across continuous function spaces [43]. 
+
+and magnitude (spectrum). This physics-aware design effec-tively mitigates the spectral-spatial entanglement inherent in traditional pixel-wise mapping paradigms. 
+
+• Superior Efficiency : By replacing redundant spatial con-volutions with frequency-domain linear combinations, our method achieves a superior efficiency-performance bal-ance, providing a highly scalable solution for resource-constrained satellite imaging systems. 
+
+## 2 Related Works 2.1 Deep Learning for Pansharpening 
+
+Pansharpening has transitioned from component substitution to deep learning-based paradigms [ 6 , 9, 21 , 31 , 41 ]. Early CNN meth-ods like PNN [ 32 ] and PanNet [ 48 ] utilized residual learning to capture spatial details. Recently, Transformer-based models such as PanFormer [ 58 ] and generative approaches like NODiff [ 18 ] have pushed performance boundaries by leveraging long-range depen-dencies and iterative refinement. However, these models primarily operate in the Cartesian pixel domain, where spatial and spec-tral features are deeply coupled. This requires massive parameter counts [ 58 ] to resolve modal conflicts, leading to a high compu-tational overhead. In contrast to these black-box pixel-mapping approaches, our EDNO introduces an Euler-inspired decoupling mechanism within the Neural Operator framework. This interac-tion allows for high-fidelity pansharpening while maintaining an ultra-lightweight overhead. 
+
+## 2.2 Frequency-domain Fusion Strategies 
+
+Frequency-domain learning offers global receptive fields via point-wise multiplications, providing a more efficient alternative to lo-cal convolutions [ 23 , 60 ]. Recent works like FFPN [ 8] utilizes the Fourier Transform to process image components. However, these methods typically treat real and imaginary parts as independent channels in a standard CNN, a "black-box" approach that ignores the inherent physical properties of the complex spectrum. In con-trast, our EDNO treats the frequency domain as a complex-valued polar space. By explicitly utilizing Euler’s formula, we decouple geometric morphology (phase) from spectral energy (magnitude), achieving a more principled and lightweight solution than existing Cartesian-based frequency methods [17]. Anqi Zhu, Mengting Ma, Yizhen Jiang, Xiangdong Li, Kai Zheng, Jiaxin Li, and Wei Zhang 
+
+Figure 3: The detailed architecture of the Euler Feature Interaction Layer (EFIL). The input modalities are first projected onto a complex-valued frequency manifold via FFT. Within each EFIL, the Explicit Phase Interaction Module (EFIM) aligns geometric structures through phase-shifting, while the Implicit Magnitude Interaction Module (IFIM) adaptively enhances spectral energy. These decoupled components are progressively refined through 𝑇 iterations and finally reconstructed into the fused feature 𝐹 𝑇 
+
+via IFFT. 
+
+## 2.3 Neural Operators 
+
+Neural Operators, such as the Fourier Neural Operator (FNO) [ 25 ]and AFNO [ 14 ], learn mappings between function spaces to en-sure discretization-invariance. While NODiff [ 18 ] integrates oper-ator learning as a denoising backbone within a diffusion loop, it still relies on costly iterative processes to synthesize textures. A very recent advancement, PINO [ 28 ], incorporates sensor imag-ing physics into the neural operator to model continuous radiance fields. However, PINO’s reliance on explicit sensor priors (e.g., spec-tral responsivity) and the computational intensity of its band-wise integration limit its generalizability and efficiency. Our work de-parts from these paradigms by leveraging the EulerNet concept [ 37 ]to linearize non-linear interactions into simple rotations and scal-ing. By bridging Euler-inspired operators with pansharpening, we achieve a "one-step" high-performance fusion without requiring sensor-specific parameters. With only 246 .9 K parameters, EDNO represents a significant efficiency leap over both physics-heavy operators like PINO. 
+
+## 3 Methodology 3.1 Overall Framework: A Three-Stage Pipeline 
+
+As illustrated in Fig. 2, the proposed Euler-inspired Decoupling Neural Operator (EDNO) follows a structured three-stage pipeline consisting of lifting, iterative kernel integral, and projection opera-tions. The process begins with the lifting operation, which maps the PAN and LR-MS images from their pixel space into a high-dimensional continuous-feature manifold. These latent features then undergo 𝑇 iterations of kernel integral layers, which serve as the core for cross-modal feature interaction and progressive re-finement. Subsequently, the projection operation transforms these fused representations back into the target output space. To main-tain spectral fidelity and ensure stable training, we incorporate a global residual connection by adding the upsampled LR-MS image to the projected features. The architectural innovation lies in the kernel integral layer, which we reformulate as the Euler feature interaction layer. 
+
+## 3.2 Continuous-Space Neural Operator in Frequency Domain 
+
+Standard CNN-based pansharpening methods are often limited by local receptive fields, as their fixed-pixel kernels struggle to align structures across varying scales [ 29 , 45 , 50 ]. To overcome this, we leverage the continuous-space nature of neural operators [ 25 ]. Unlike traditional networks that operate on discrete grids, EDNO learns to map between continuous function spaces. This ensures that the fusion process remains consistent regardless of the under-lying discretization, which is a critical advantage for preserving sub-pixel structural details in remote sensing imagery.Specifically, we approximate the ideal fusion mapping using a neural network 𝐺 𝜃 .By shifting the computation to the frequency domain, we transform spatial convolutions into element-wise operations. This allows the model to perceive the image as a continuous spectrum rather than a collection of isolated pixels, enabling an infinite receptive field to capture long-range structural dependencies with minimal compu-tational cost. We approximate the neural operator 𝐺 by training a network 𝐺 𝜃 : 𝐴 → 𝑈 where 𝐴 is defined on a bounded domain 𝐷 
+
+and the inputs are vector-valued functions. The iterative structure of 𝐺 is defined as follows: Euler-inspired Decoupling Neural Operator for Efficient Pansharpening 
+
+𝑧 0 (𝑥 ) = 𝐿 (𝑥, 𝑎 (𝑥 )) = C( 𝐿 1 (𝑎 (𝑥 )) , 𝐿 2 (𝑥 )) , (1) 
+
+𝑧 𝑡 +1 (𝑥 ) = 𝜎 (𝑊 𝑡 𝑧 𝑡 (𝑥 ) + ( 𝐾 𝑡 (𝑧 𝑡 ;𝛷 ))( 𝑥 )) , (2) 
+
+𝑢 (𝑥 ) = 𝑃 (𝑧 𝑇 (𝑥 )) , (3) where 𝐿 is the lifting operator, 𝐶 is the concatenation operation, 
+
+𝑊 𝑡 is a point-wise linear transformation, 𝐾 𝑡 is the kernel integral operator, and 𝑃 is the projection operator. Inspired by the lifting scheme proposed in SRNO [ 43 ], we address the inherent complexity of remote sensing images by applying this approach to lift the LR-MS input.The lifting operator 𝐿 = (𝐿 1, 𝐿 2) facilitates the transition to continuous space: 𝐿 1 serves as a feature encoder to extract latent spectral-spatial representations from the raw pixel intensity 𝑎 (𝑥 ),while 𝐿 2 acts as a coordinate-based embedding that incorporates the continuous spatial query 𝑥 . By applying this hybrid lifting scheme, the LR-MS features are effectively projected onto a unified, high-dimensional continuous manifold 𝑧 0 (𝑥 ).For the sampling of PAN feature maps, we employ bilinear interpolation. However, processing the continuous manifold 𝑧 𝑡 (𝑥 ) directly in the spatial domain is computationally expensive for capturing global structures. To solve this, we shift the kernel integral K to the frequency domain, where features are naturally represented as complex numbers. This frequency view provides a simple but pow-erful way to separate spatial and spectral information: the phase component represents the image’s geometric shapes and textures, while the magnitude component controls the color and spectral intensity. Based on this physical intuition, we propose the Eu-ler Feature Interaction Layer (EFIL) in the following section. The EFIL explicitly decouples these two components to resolve the long-standing conflict between spatial detail and spectral accuracy. 
+
+## 3.3 Euler Feature Interaction Layer (EFIL) 
+
+3.3.1 Motivation: Why Polar Decoupling in Continuous Space? In conventional Cartesian representations involving real and imagi-nary components, spatial structures and spectral intensities are cou-pled, making direct fusion prone to spectral bleeding or blurred tex-tures. We argue that the complex-valued polar domain ( A, P) offers a more physics-aligned manifold for continuous-space interaction. Grounded in Fourier theory, the phase ( P) captures spatial texture while the magnitude ( A) governs spectral distributions [ 26 , 56 ]. By adopting Euler’s formula [ 35 ], the pansharpening task can be decomposed into two operations, i.e., structural alignment through deterministic phase rotations and spectral calibration via magni-tude scaling [ 37 ]. Such a polar decoupling linearizes the fusion manifold, effectively bypassing the feature entanglement inherent in pixel-domain models. 
+
+3.3.2 Overview of EFIL layer. The EFIL serves as the computational core of our framework, translating the aforementioned physical intuition into a dual-stream interaction paradigm. As illustrated in Fig. 2, the process begins by projecting spatial features into the frequency domain via the Fast Fourier Transform (FFT) applied to the latent representations of both PAN and LR-MS. To resolve the decoupled components within the Euler space, we design two specialized modules: the Explicit Feature Interaction Module (EFIM) and the Implicit Feature Interaction Module (IFIM). Leveraging the fact that spatial displacements manifest as deterministic rotations within the phase manifold, the EFIM resolves structural misalign-ments through point-wise phase-shifting, while the IFIM adaptively learns the spectral mapping and magnitude scaling via a deep neu-ral network to accommodate highly non-linear, sensor-dependent spectral energy transfers [ 40 ]. By refining spatial details and spec-tral fidelity independently through this dual-path design, the EFIL offers a more generalized and efficient solution than traditional architectures that rely on stacking local spatial convolutions. 
+
+3.3.3 Explicit Feature Interaction Module (EFIM). The EFIM is de-signed to resolve structural morphology by manipulating phase components. Based on the Fourier Shift Theorem, spatial displace-ment Δx is equivalent to a linear phase shift in the frequency do-main. To calibrate these offsets, the EFIM extracts the phase maps 
+
+P ( 𝐹 𝑝 ) and P ( 𝐹 𝑚𝑠 ) and learns a pixel-wise phase-shifting field. Specifically, as shown in Fig. 3, we employ a 1 × 1 convolution to perform a weighted summation of the concatenated phases, fol-lowed by a Sigmoid activation 𝜎 (·) to normalize the fused phase distribution: 
+
+P𝑓 𝑢𝑠𝑒𝑑 = 𝜎  Conv 1×1
+
+ Cat P ( 𝐹 𝑝 ), P ( 𝐹 𝑚𝑠 )  . (4) By transforming spatial alignments into deterministic phase rota-tions, this module bypasses the translation-invariance limitations of spatial convolutions, achieving superior geometric consistency with minimal parameters. 
+
+3.3.4 Implicit Feature Interaction Module(IFIM). The IFIM adap-tively calibrates the magnitude components A ( 𝐹 𝑝 ) and A ( 𝐹 𝑚𝑠 )
+
+to ensure spectral fidelity. Given that spectral energy transfer is inherently non-linear and sensor-dependent, we treat this process as an adaptive amplitude scaling problem. To eliminate scale dis-crepancies between modalities, as shown in Fig. 3, the IFIM first utilizes Instance Normalization (IN) on the mixed magnitude fea-tures. Subsequently, a 3 × 3 depth-wise convolution ( 𝑊 𝑑𝑤 ) acts as a learnable spectral filter to suppress high-frequency noise while modulating the energy distribution: 
+
+A𝑓 𝑢𝑠𝑒𝑑 = 𝑊 𝑝𝑟𝑜 𝑗 ×𝛿  𝑊 𝑑𝑤 × 𝛿  𝐼 𝑁  𝑊 𝑚𝑖𝑥 × Cat A ( 𝐹 𝑝 ), A ( 𝐹 𝑚𝑠 )  ,
+
+(5) where 𝛿 denotes the ReLU activation. This design ensures that the model preserves the intrinsic spectral energy of LR-MS bands while precisely integrating high-frequency intensity details injected from the PAN. 
+
+3.3.5 Iterative Refinement and Final Reconstruction. After the de-coupling and interaction in the frequency domain, the updated phase and magnitude are recombined, and the Inverse Fast Fourier Transform (IFFT) maps the features back to the spatial domain. Through 𝑇 iterations, the model progressively refines the cross-modal features, distilling sharp textures into the spectral backbone. For the final layer, the fused frequency representation is directly inverted to yield the high-fidelity output: 
+
+𝐹 𝑜𝑢𝑡 = F −1  A𝑓 𝑢𝑠𝑒𝑑 , P𝑓 𝑢𝑠𝑒𝑑 
+
+ . (6) This iterative refinement, empowered by Euler decoupling, ensures that EDNO achieves state-of-the-art fidelity while remaining sig-nificantly more lightweight than Transformer-based counterparts. Anqi Zhu, Mengting Ma, Yizhen Jiang, Xiangdong Li, Kai Zheng, Jiaxin Li, and Wei Zhang 
+
+Table 1: Evaluation indexes of different methods on WorldView-2 (WV-2) dataset. 
+
+Reduced-Resolution Full-Resolution Method Params (K) FLOPs (G) PSNR ↑ SSIM ↑ 𝑄 4 ↑ SAM ↓ ERGAS ↓ 𝐷 𝜆 ↓ 𝐷 𝑠 ↓ QNR ↑
+
+SFIM [27] - - 32.6334 0.8728 0.5159 0.0597 3.1919 0.0737 0.0899 0.8439 Wavelet [20] - - 32.1992 0.8500 0.4577 0.0638 3.3799 0.0968 0.1020 0.8126 IHS [11] - - 32.8250 0.8775 0.5305 0.0637 3.0585 0.0874 0.1187 0.8053 GPPNN [47] 119.8 11.2 40.5086 0.9698 0.8009 0.0275 1.2060 0.0670 0.0785 0.8607 CTINN [59] 378.2 13.3 41.2019 0.9735 0.8149 0.0246 1.0879 0.0658 0.0776 0.8632 PANFormer [58] 1530.3 12.0 41.3495 0.9731 0.8237 0.0242 1.0621 0.0628 0.0844 0.8590 MSCSCFormer [49] 1950.7 582.4 40.5338 0.9691 0.7963 0.0270 1.2016 0.0654 0.0772 0.8634 FusionMamba [46] 730.0 31.0 33.9160 0.9013 0.6182 0.0558 2.2484 0.1191 0.0916 0.8014 UGCC [52] 233.2 307.5 35.8744 0.9296 0.6827 0.0460 1.9253 0.0887 0.0872 0.8327 NODiff [18] 2132.9 77.8 42.1081 0.9730 0.8245 0.0246 0.9970 0.0644 0.0771 0.8639 
+
+Ours 264.9 2.4 41.6488 0.9747 0.8262 0.0236 1.0259 0.0647 0.0768 0.8642 
+
+## 3.4 Loss Function 
+
+To achieve high-fidelity reconstruction with spatial-spectral consis-tency, we define a hybrid objective function L𝑡𝑜𝑡𝑎𝑙 :
+
+L𝑡𝑜𝑡𝑎𝑙 = L𝑠𝑝𝑎 + 𝜆 L𝑓 𝑟𝑒𝑞 , (7) where L𝑠𝑝𝑎 and L𝑓 𝑟𝑒𝑞 denote spatial and frequency constraints, respectively. We empirically set 𝜆 = 0.1.
+
+Spatial-Domain Loss. We employ the ℓ1 norm to minimize the pixel-level discrepancy between the fused output H and the ground truth G, promoting sharper edges and reducing artifacts: 
+
+L𝑠𝑝𝑎 = |G − H|1 . (8) 
+
+Frequency-Domain Consistency Loss. Although L𝑠𝑝𝑎 ensures in-tensity alignment, it often results in over-smoothed textures. Given that EDNO explicitly decouples phase and magnitude, we introduce 
+
+L𝑓 𝑟𝑒𝑞 to provide direct supervision in the frequency domain. By transforming both H and G via the Fast Fourier Transform (FFT), we compute the Mean Absolute Error (MAE): 
+
+L𝑓 𝑟𝑒𝑞 = |F ( H) − F ( G)| 1 . (9) By penalizing spectral residuals, L𝑓 𝑟𝑒𝑞 constrains the network to preserve the intrinsic spectral distribution and structural morphol-ogy of remote sensing scenes. 
+
+## 4 Experiments 4.1 Experimental settings 
+
+4.1.1 Datasets. To validate our proposed approach, we conduct experiments on the publicly available dataset [ 24 ], which comprises data from the WorldView-3 (WV-3), WorldView-2 (WV-2), and GaoFen-2 (GF-2) satellites. For each satellite sensor, the relevant low-resolution dataset is generated by downsampling according to the Wald protocol [ 39 ]. Our experiments are performed in both reduced-and full-resolution settings. 
+
+4.1.2 Implementation Details. EDNO is trained for 1050 epochs on a single NVIDIA RTX A 5000 GPU. For optimization, we employ the Adam optimizer with a base learning rate of 10 −4 and momentum parameters set to (𝛽 1, 𝛽 2) = (0.9, 0.999 ). The stability constant 𝜀 is set to 10 −8, and the batch size is maintained at 8 throughout the training process. Due to page limitations, experimental results on the WV-3 dataset are presented in the Supplementary material .
+
+4.1.3 Evaluation Metrics. We select five reference metrics to evalu-ate reduced-resolution performance, including PSNR [ 16 ], SSIM [ 42 ], 
+
+𝑄 4/𝑄 8 [ 12 ], SAM [ 51 ], and ERGAS [ 4]. For full-scale performance evaluation, we use three non-reference metrics, including 𝐷 𝜆 , 𝐷 𝑠 ,and QNR [3]. 
+
+## 4.2 Comparison With SOTA Methods 
+
+4.2.1 Benchmark. To evaluate the performance of the proposed method, we compare our model with 10 state-of-the-art pansharpen-ing methods. These encompass 3 traditional approaches: SFIM [ 27 ], Wavelet [ 20 ] and IHS [ 11 ]; as well as 7 deep learning-based models: GPPNN [ 47 ], CTINN [ 59 ], PANFormer [ 58 ], MSCSCFormer [ 49 ], FusionMamba [ 46 ], UGCC [ 52 ] and NODiff [ 18 ]. Note that while Physics-Informed Neural Operator (PINO) [ 28 ] is a related work, it is excluded from our quantitative comparison primarily because it requires explicit sensor-specific priors, such as spectral responsivity 
+
+𝑅 𝑏 (𝜆 ), to model the radiance field. Since our EDNO is designed as a sensor-agnostic, data-driven framework that does not rely on such internal physical parameters, a direct comparison is precluded. Furthermore, the lack of an official open-source implementation for PINO prevents a fair and reproducible benchmark. 
+
+4.2.2 Quantitative Comparison. Tab. 1 and Tab. 2 report the quan-titative results across the WorldView-2 and GaoFen-2 datasets, highlighting the superior efficiency and fidelity of EDNO. Com-pared to state-of-the-art models, our method achieves a remarkable balance between reconstruction accuracy and computational cost. Euler-inspired Decoupling Neural Operator for Efficient Pansharpening 
+
+Table 2: Evaluation indexes of different methods on GaoFen-2 (GF-2) dataset. 
+
+Reduced-Resolution Full-Resolution Method Params (K) FLOPs (G) PSNR ↑ SSIM ↑ 𝑄 4 ↑ SAM ↓ ERGAS ↓ 𝐷 𝜆 ↓ 𝐷 𝑠 ↓ QNR ↑
+
+SFIM [27] - - 34.7715 0.8572 0.4584 0.0657 4.2073 0.0737 0.0899 0.8439 Wavelet [20] - - 33.9208 0.8197 0.4033 0.0695 4.6445 0.0968 0.1020 0.8126 IHS [11] - - 35.2315 0.8837 0.5217 0.0661 3.9912 0.0874 0.1187 0.8053 GPPNN [47] 119.8 11.2 43.5980 0.9764 0.8663 0.0326 1.5218 0.0670 0.0785 0.8607 CTINN [59] 378.2 13.3 44.3181 0.9788 0.8719 0.0291 1.4050 0.0699 0.1561 0.7841 PANFormer [58] 1530.3 12.0 44.8501 0.9805 0.8865 0.0271 1.3337 0.0670 0.1806 0.7639 MSCSCFormer [49] 1950.7 582.4 42.6871 0.9696 0.8350 0.0360 1.7149 0.0654 0.0772 0.8634 FusionMamba [46] 730.0 31.0 39.3506 0.9442 0.7644 0.0576 2.3823 0.1191 0.0916 0.8014 UGCC [52] 233.2 307.5 40.5620 0.9586 0.7803 0.0448 2.1717 0.0887 0.0872 0.8327 NODiff [18] 2132.9 77.8 45.7187 0.9789 0.8804 0.0279 1.3071 0.0645 0.0755 0.8711 Ours 264.9 2.4 45.1281 0.9812 0.8812 0.0270 1.2915 0.0676 0.0738 0.8648 
+
+Figure 4: Visual comparison between our model and other methods on WorldView-2 (WV-2) example. The top line represent the reconstructed results, and the bottom line represents the corresponding MAE maps. 
+
+Figure 5: Visual comparison on WorldView-2 (WV-2) example at full resolution. 
+
+Specifically, on the WorldView-2 dataset, EDNO achieves a PSNR of 41 .6488 dB, which is significantly higher than traditional CNN-based models like GPPNN ( 40 .5086 dB) and even outperforms com-plex architectures such as MSCSCFormer ( 40 .5338 dB). While the diffusion-based model NODiff yields the highest PSNR ( 42 .1081 dB), it requires a prohibitive 2132 .9 K parameters and 77 .8 G FLOPs. Sim-ilar trends are observed on the GaoFen-2 dataset, where EDNO out-performs heavy-weight competitors like FusionMamba and UGCC in terms of both spectral and spatial consistency. Most impres-sively, EDNO’s FLOPs ( 2.4 G) remain the lowest among all deep learning-based methods, being only 1/5 of GPPNN and 1/40 of NODiff. These results systematically demonstrate that our Euler-inspired decoupling paradigm allows for an exceptional Pareto trade-off, delivering high-fidelity pansharpening results with an ultra-lightweight architectural overhead. 
+
+4.2.3 Visual Comparison. Fig.4 and Fig.5 illustrate the qualitative results of EDNO against state-of-the-art methods on WorldView-2. In the reduced-resolution evaluation (Fig.4), the Mean Absolute Error (MAE) maps reveal that conventional approaches and even deep models like GPPNN or PanFormer exhibit significant residuals (brighter regions) at structural boundaries. In sharp contrast, by decoupling phase and magnitude on the frequency manifold, EDNO Anqi Zhu, Mengting Ma, Yizhen Jiang, Xiangdong Li, Kai Zheng, Jiaxin Li, and Wei Zhang 
+
+Table 3: Performance analysis of EDNO with varying itera-tion numbers 𝑇 of the Euler Feature Interaction Layer. 
+
+𝑇 PSNR ↑ SSIM ↑ 𝑄 4 ↑ ERGAS ↓ 𝐷 𝑠 ↓
+
+2 41.1870 0.9724 0.8157 1.0925 0.0771 3 41.4968 0.9738 0.8218 1.0472 0.0775 4 41.6488 0.9747 0.8262 1.0259 0.0768 
+
+5 41.4173 0.9733 0.8217 1.0527 0.0790 
+
+Table 4: Ablation study of different architectural configura-tions and internal components of EDNO. 
+
+Config PSNR ↑ SSIM ↑ 𝑄 4 ↑ ERGAS ↓ 𝐷 𝑠 ↓
+
+(I) 38.7992 0.9552 0.7607 1.4415 0.0810 (II) 38.9401 0.9551 0.7580 1.4080 0.0822 (III) 37.4784 0.9434 0.7145 1.6593 0.0874 (IV) 41.2360 0.9724 0.8150 1.0785 0.0789 
+
+ours 41.6488 0.9747 0.8262 1.0259 0.0768 
+
+yields the darkest and most uniform MAE maps, demonstrating superior spatial-spectral consistency with the ground truth. Further-more, as shown in the full-resolution results (Fig.5), while methods like FusionMamba or MSCSCFormer possess much larger parame-ter counts, EDNO achieves highly competitive visual fidelity, effec-tively suppressing spectral bleeding. These observations confirm that our Euler-inspired interaction mechanism preserves natural color distributions while integrating sharp panchromatic textures more effectively than computationally heavier counterparts. 
+
+## 4.3 Ablation Study 
+
+All ablation experiments are conducted on the WorldView-2 dataset to systematically evaluate the contribution of our EDNO. 
+
+4.3.1 The Number of 𝑇 . Tab.3 illustrates the impact of the iteration number 𝑇 on the performance of EDNO. As 𝑇 increases from 2 to 
+
+4, the PSNR significantly improves from 41 .1870 dB to 41 .6488 dB. This trend suggests that progressive refinement in the frequency manifold yields superior pansharpening performance. However, fur-ther increasing the depth to 𝑇 = 5 results in a performance decline, with the spatial distortion index 𝐷 𝑠 rising from 0.0768 to 0.0790 .We attribute this to an over-smoothing effect where excessive itera-tions dilute fine-grained spectral features and introduce structural misalignments due to the high sensitivity of phase information. Consequently, EDNO employs 𝑇 = 4 to achieve an optimal balance between pansharpening fidelity and computational efficiency. 
+
+4.3.2 Effectiveness of EFIL and its Components. Tab.4 evaluates the contribution of different configurations to the overall performance. Replacing our EFIL with a vanilla Fourier Neural Operator (Config 
+
+Figure 6: Zero-shot scale generalization from ×2 to ×10 reso-lution. 
+
+I) leads to a drastic PSNR drop from 41 .6488 dB to 38 .7992 dB, prov-ing that direct complex weight multiplication is insufficient for the intricate spatial-spectral mapping required in pansharpening. The ablation of individual interaction modules further reveals their dis-tinct roles, i.e., Config II (phase-only) and Config III (amplitude-only) both suffer from substantial performance degradation, confirming the indispensability of both phase and amplitude reconstructions for superior pansharpening. Specifically, the severe drop in Config III highlights that omitting phase interaction leads to a loss of geo-metric fidelity. Furthermore, Config IV demonstrates that removing the 3 × 3 depth-wise convolution within the IFIM compromises the model’s ability to capture local frequency correlations, resulting in inferior metrics. These results validate that the synergistic integra-tion of EFIM and IFIM within the EFIL framework is essential for achieving high-fidelity pansharpening. 
+
+4.3.3 Continuous Scale Generalization. To evaluate the resolution-agnostic nature of the proposed operator, we conduct a zero-shot generalization experiment across a resolution continuum from ×2
+
+to ×10 . As illustrated by the performance curves in Fig. 4, con-ventional discrete CNNs suffer from dramatic PSNR collapses at unseen non-integer scales (e.g., ×3, ×6) due to the spatial rigidity of fixed-grid convolutional kernels. In sharp contrast, EDNO main-tains a monotonic and graceful performance decay, demonstrating seamless adaptability to arbitrary spatial sampling densities. 
+
+4.3.4 Robustness to Resolution Perturbations. To evaluate EDNO under such geometric uncertainty, we introduce a 5% scale jitter during inference and visualize the absolute error maps in Fig.7. Conventional discrete CNNs and rigid physical priors exhibit sig-nificant performance collapse, manifesting as red high-error zones and jagged artifacts at structural boundaries due to the rigidity of convolutional kernels. In sharp contrast, EDNO maintains a re-markably clean error map with minimal residual magnitude. This robustness stems from the EFIM, which explicitly modulates the complex-valued frequency manifold to compensate for coordinate drifts.These results demonstrate that our Euler-inspired decoupling mechanism effectively captures the intrinsic geometric morphology rather than over-fitting to a fixed discrete grid. 
+
+For the more comprehensive analysis, additional experiments in-cluding cross-sensor ablation studies are provided in the Supplemen-tary Material to further demonstrate the model’s robustness. Euler-inspired Decoupling Neural Operator for Efficient Pansharpening 
+
+Figure 7: Qualitative comparison and absolute error maps under 5% input scale perturbation. 
+
+## 5 Conclusion 
+
+In this paper, we propose EDNO, a lightweight and principled frame-work for remote sensing pansharpening. By shifting the fusion task into a continuous frequency domain, we successfully decouple multimodal features into phase (geometric shapes) and magnitude (spectral intensity) via Euler’s formula. This mathematical simplifi-cation allows EDNO to resolve spatial-spectral conflicts through simple rotations and scaling. With only 246 .9 K parameters, EDNO achieves state-of-the-art performance and demonstrates a unique resolution-agnostic capability, enabling high-fidelity fusion across unseen scales. 
+
+## References 
+
+[1] Maruf Ahmad, Lei Zhang, and Muhammad EH Chowdhury. 2024. Fpga im-plementation of complex-valued neural network for polar-represented image classification. Sensors 24, 3 (2024), 897. [2] Basem Al-Qadasi and Umair Bin Waheed. 2026. Fourier neural operator for moonquake detection. Earth and Space Science 13, 3 (2026), e2025EA004792. [3] Luciano Alparone, Bruno Aiazzi, Stefano Baronti, Andrea Garzelli, Filippo Nencini, and Massimo Selva. 2008. Multispectral and panchromatic data fu-sion assessment without reference. Photogrammetric Engineering and Remote Sensing 74 (2008), 193–200. [4] Luciano Alparone, Lucien Wald, Jocelyn Chanussot, Claire Thomas, Paolo Gamba, and Lori Mann Bruce. 2007. Comparison of Pansharpening Algorithms: Outcome of the 2006 GRS-S Data-Fusion Contest. IEEE Transactions on Geoscience and Remote Sensing 45, 10 (2007), 3012–3021. [5] Wele Gedara Chaminda Bandara and Vishal M. Patel. 2022. HyperTransformer: A Textural and Spectral Feature Fusion Transformer for Pansharpening. In 2022 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) . 1757– 1767. [6] Qi Cao, Liang-Jian Deng, Wu Wang, Junming Hou, and Gemine Vivone. 2024. Zero-shot semi-supervised learning for pansharpening. Information Fusion 101 (2024), 102001. [7] Zihan Cao, Shiqi Cao, Liang-Jian Deng, Xiao Wu, Junming Hou, and Gemine Vivone. 2024. Diffusion model with disentangled modulations for sharpening multispectral and hyperspectral images. Information Fusion 104 (2024), 102158. [8] Chaoyu Chen, Xin Yang, Rusi Chen, Junxuan Yu, Liwei Du, Jian Wang, Xindi Hu, Yan Cao, Yingying Liu, and Dong Ni. 2023. FFPN: Fourier Feature Pyramid Network for Ultrasound Image Segmentation . 166–175. [9] Jaewan Choi, Kiyun Yu, and Yongil Kim. 2010. A new adaptive component-substitution-based satellite image fusion by using partial replacement. IEEE transactions on geoscience and remote sensing 49, 1 (2010), 295–309. [10] Liang-Jian Deng, Gemine Vivone, Mercedes E Paoletti, Giuseppe Scarpa, Jiang He, Yongjun Zhang, Jocelyn Chanussot, and Antonio Plaza. 2022. Machine learning in pansharpening: A benchmark, from shallow to deep networks. IEEE Geoscience and Remote Sensing Magazine 10, 3 (2022), 279–315. [11] Osama S. Faragallah. 2018. Enhancing multispectral imagery spatial resolution using optimized adaptive PCA and high-pass modulation. International Journal of Remote Sensing 39, 20 (2018), 6572–6586. doi:10.1080/01431161.2018.1463112 [12] Andrea Garzelli and Filippo Nencini. 2009. Hypercomplex Quality Assessment of Multi/Hyperspectral Images. IEEE Geoscience and Remote Sensing Letters 6, 4 (2009), 662–665. [13] Hassan Ghassemian. 2016. A review of remote sensing image fusion methods. 
+
+Information Fusion 32 (2016), 75–89. [14] John Guibas, Morteza Mardani, Zong-Yi Li, Andrew Tao, Anima Anandkumar, and Bryan Catanzaro. 2021. Adaptive Fourier Neural Operators: Efficient Token Mixers for Transformers. ArXiv abs/2111.13587 (2021). [15] Lin He, Jiawei Zhu, Jun Li, Antonio Plaza, Jocelyn Chanussot, and Zhuliang Yu. 2021. CNN-based hyperspectral pansharpening with arbitrary resolution. IEEE Transactions on Geoscience and Remote Sensing 60 (2021), 1–21. [16] Alain Horé and Djemel Ziou. 2010. Image Quality Metrics: PSNR vs. SSIM. In 
+
+2010 20th International Conference on Pattern Recognition . 2366–2369. [17] Junming Hou, Qi Cao, Ran Ran, Che Liu, Junling Li, and Liang-jian Deng. 2023. Bidomain Modeling Paradigm for Pansharpening. In Proceedings of the 31st ACM International Conference on Multimedia (Ottawa ON, Canada) (MM ’23) .Association for Computing Machinery, New York, NY, USA, 347–357. [18] J. Hou, R. Ran, S. Chen, Z. Chen, X. Cong, J. Li, and L.-J. Deng. 2026. NODiff: Neural Operator Diffusion for Multispectral Image Fusion. Proceedings of the AAAI Conference on Artificial Intelligence 40, 6 (2026), 4753–4761. doi:10.1609/ aaai.v40i6.42477 [19] Ali Kashefi and Tapan Mukerji. 2024. A novel Fourier neural operator framework for classification of multi-sized images: Application to three dimensional digital porous media. Physics of Fluids 36, 5 (2024). [20] R.L. King and Jianwen Wang. 2001. A wavelet based algorithm for pan sharpening Landsat 7 imagery. In IGARSS 2001. Scanning the Present and Resolving the Future. Proceedings. IEEE 2001 International Geoscience and Remote Sensing Symposium (Cat. No.01CH37217) , Vol. 2. 849–851 vol.2. [21] Jiaxin Li, Ke Zheng, Lianru Gao, Li Ni, Min Huang, and Jocelyn Chanussot. 2024. Model-informed multistage unsupervised network for hyperspectral image super-resolution. IEEE Transactions on Geoscience and Remote Sensing 62 (2024), 1–17. [22] Jiaxin Li, Ke Zheng, Zhi Li, Lianru Gao, and Xiuping Jia. 2023. X-shaped in-teractive autoencoders with cross-modality mutual learning for unsupervised hyperspectral image super-resolution. IEEE transactions on geoscience and remote sensing 61 (2023), 1–17. [23] Mingsong Li, Yikun Liu, Tao Xiao, Yuwen Huang, and Gongping Yang. 2023. Local-Global Transformer Enhanced Unfolding Network for Pan-sharpening. In Proceedings of the Thirty-Second International Joint Conference on Artificial Intelligence, IJCAI-23 , Edith Elkind (Ed.). International Joint Conferences on Artificial Intelligence Organization, 1071–1079. Main Track. [24] Mingsong Li, Yikun Liu, Tao Xiao, Yuwen Huang, and Gongping Yang. 2023. Local-global transformer enhanced unfolding network for pan-sharpening. In 
+
+Proceedings of the Thirty-Second International Joint Conference on Artificial Intel-ligence . 1071–1079. [25] Zong-Yi Li, Nikola B. Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew M. Stuart, and Anima Anandkumar. 2020. Fourier Neural Operator for Parametric Partial Differential Equations. ArXiv abs/2010.08895 (2020). https://api.semanticscholar.org/CorpusID:224705257 [26] Kenghong Lin, Baoquan Zhang, Demin Yu, Wenzhi Feng, Shidong Chen, Feifan Gao, Xutao Li, and Yunming Ye. 2025. AlphaPre: Amplitude-phase disentangle-ment model for precipitation nowcasting. In Proceedings of the Computer Vision and Pattern Recognition Conference . 17841–17850. [27] J. G. Liu. 2000. Smoothing Filter-based Intensity Modulation: A spectral preserve image fusion technique for improving spatial details. International Journal of Remote Sensing 21, 18 (2000), 3461–3472. [28] Xinyang Liu, Junming Hou, Chenxu Wu, Xiaofeng Cong, Zihao Chen, Shangqi Deng, Junling Li, Liang-Jian Deng, and Bo Liu. 2025. Physics-informed Neural Operator for Pansharpening. In The Thirty-ninth Annual Conference on Neural Information Processing Systems . https://openreview.net/forum?id=tPI9Sw04sZ [29] Xiangyu Liu, Qingjie Liu, and Yunhong Wang. 2020. Remote sensing image fusion based on two-stream fusion network. Information Fusion 55 (2020), 1–15. [30] Chunhui Luo, Dong Li, Xiaoliang Ma, Xin Lu, Zhiyuan Wang, Jiangtong Tan, and Xueyang Fu. 2025. PanComplex: leveraging complex-valued neural networks for enhanced pansharpening. In Proceedings of the Thirty-Fourth International Joint Conference on Artificial Intelligence . 1702–1710. [31] Giuseppe Masi, Davide Cozzolino, Luisa Verdoliva, and Giuseppe Scarpa. 2016. Pansharpening by convolutional neural networks. Remote Sensing 8, 7 (2016), 594. [32] Giuseppe Masi, Davide Cozzolino, Luisa Verdoliva, and Giuseppe Scarpa. 2016. Pansharpening by Convolutional Neural Networks. Remote Sensing 8, 7 (2016). [33] Qingyan Meng, Wenxu Shi, Sijia Li, and Linlin Zhang. 2023. PanDiff: A novel pansharpening method based on denoising diffusion probabilistic model. IEEE Transactions on Geoscience and Remote Sensing 61 (2023), 1–17. [34] Xiangchao Meng, Nan Wang, Feng Shao, and Shutao Li. 2022. Vision transformer for pansharpening. IEEE Transactions on Geoscience and Remote Sensing 60 (2022), 1–11. Anqi Zhu, Mengting Ma, Yizhen Jiang, Xiangdong Li, Kai Zheng, Jiaxin Li, and Wei Zhang 
+
+[35] Aniruddh Sikdar, Sumanth Udupa, Suresh Sundaram, and Narasimhan Sundarara-jan. 2022. Fully complex-valued fully convolutional multi-feature fusion network (fc 2 mfn) for building segmentation of insar images. In 2022 IEEE Symposium Series on Computational Intelligence (SSCI) . IEEE, 581–587. [36] Claire Thomas, Thierry Ranchin, Lucien Wald, and Jocelyn Chanussot. 2008. Synthesis of multispectral images to high spatial resolution: A critical review of fusion methods based on remote sensing physics. IEEE Transactions on Geoscience and Remote Sensing 46, 5 (2008), 1301–1312. [37] Zhen Tian, Ting Bai, Wayne Xin Zhao, Ji-Rong Wen, and Zhao Cao. 2023. Eu-lerNet: Adaptive Feature Interaction Learning via Euler’s Formula for CTR Pre-diction (SIGIR ’23) . Association for Computing Machinery, New York, NY, USA, 1376–1385. doi:10.1145/3539618.3591681 [38] Gemine Vivone, Liang-Jian Deng, Shangqi Deng, Danfeng Hong, Menghui Jiang, Chenyu Li, Wei Li, Huanfeng Shen, Xiao Wu, Jin-Liang Xiao, et al . 2024. Deep learning in remote sensing image fusion: Methods, protocols, data, and future perspectives. IEEE geoscience and remote sensing magazine 13, 1 (2024), 269–310. [39] Lucien Wald, Thierry Ranchin, and Marc Mangolini. 1997. Fusion of satellite images of different spatial resolutions: Assessing the quality of resulting images. 
+
+Photogrammetric engineering and remote sensing 63, 6 (1997), 691–699. [40] Hebaixu Wang, Hao Zhang, Xin Tian, and Jiayi Ma. 2024. Zero-sharpen: A universal pansharpening method across satellites for reducing scale-variance gap via zero-shot variation. Information Fusion 101 (2024), 102003. [41] Wu Wang, Liang-Jian Deng, Ran Ran, and Gemine Vivone. 2024. A general paradigm with detail-preserving conditional invertible network for image fusion. 
+
+International Journal of Computer Vision 132, 4 (2024), 1029–1054. [42] Zhou Wang, A.C. Bovik, H.R. Sheikh, and E.P. Simoncelli. 2004. Image quality assessment: from error visibility to structural similarity. IEEE Transactions on Image Processing 13, 4 (2004), 600–612. [43] Min Wei and Xuesong Zhang. 2023. Super-resolution neural operator. In Pro-ceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition .18247–18256. [44] Xiao Wu, Ting-Zhu Huang, Liang-Jian Deng, and Tian-Jing Zhang. 2021. Dy-namic cross feature fusion for remote sensing pansharpening. In Proceedings of the IEEE/CVF International Conference on Computer Vision . 14687–14696. [45] Zeyu Xia, Chenxi Sun, Tianyu Xin, Yubo Zeng, Haoyu Chen, and Liang-Jian Deng. 2026. Swift: A general sensitive weight identification framework for fast sensor-transfer pansharpening. In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 40. 10960–10968. [46] Xinyu Xie, Yawen Cui, Tao Tan, Xubin Zheng, and Zitong Yu. 2024. FusionMamba: dynamic feature enhancement for multimodal image fusion with Mamba. Visual Intelligence 2 (2024). https://api.semanticscholar.org/CorpusID:269148750 [47] Shuang Xu, Jiangshe Zhang, Zixiang Zhao, Kai Sun, Junmin Liu, and Chunxia Zhang. 2021. Deep Gradient Projection Networks for Pan-sharpening. In 2021 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) . 1366– 1375. [48] Junfeng Yang, Xueyang Fu, Yuwen Hu, Yue Huang, Xinghao Ding, and John Paisley. 2017. PanNet: A Deep Network Architecture for Pan-Sharpening. In 
+
+2017 IEEE International Conference on Computer Vision (ICCV) . 1753–1761. [49] Yongxu Ye, Tingting Wang, Faming Fang, and Guixu Zhang. 2024. MSCSCformer: Multiscale Convolutional Sparse Coding-Based Transformer for Pansharpening. 
+
+IEEE Transactions on Geoscience and Remote Sensing 62 (2024), 1–12. [50] Junru Yin, Zhiheng Huang, Qiqiang Chen, Wei Huang, Le Sun, Qinggang Wu, and Ruixia Hou. 2025. Cascaded Local–Nonlocal Pansharpening with Adaptive Channel-Kernel Convolution and Multi-Scale Large-Kernel Attention. Remote Sensing 18, 1 (2025), 97. [51] Roberta H. Yuhas, Alexander F. H. Goetz, and Joseph W. Boardman. 1992. Dis-crimination among semi-arid landscape endmembers using the Spectral Angle Mapper (SAM) algorithm. In JPL, Summaries of the Third Annual JPL Airborne Geoscience Workshop. Volume 1: AVIRIS Workshop . 147–149. [52] Haoying Zeng, Xiaoyuan Yang, Kangqing Shen, Yixiao Li, Jin Jiang, and Fangyi Li. 2025. Cross-Modal Contrastive Pansharpening via Uncertainty Guidance. 
+
+IEEE Transactions on Geoscience and Remote Sensing 63 (2025), 1–14. [53] Bing Zhang, Yuanfeng Wu, Boya Zhao, Jocelyn Chanussot, Danfeng Hong, Jing Yao, and Lianru Gao. 2022. Progress and challenges in intelligent remote sensing satellite systems. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing 15 (2022), 1814–1822. [54] Haoyu Zhang, Junhan Luo, Yugang Cao, Jie Huang, et al . 2025. S2WMamba: A Spectral-Spatial Wavelet Mamba for Pansharpening. arXiv preprint arXiv:2512.06330 (2025). [55] Ran Zhang, Xuanhua He, Li Xueheng, Ke Cao, Liu Liu, Wenbo Xu, Fang Jiabin, Yang Qize, and Jie Zhang. 2025. Rethinking Pan-sharpening: Principled Design, Unified Training, and a Universal Loss Surpass Brute-Force Scaling. arXiv e-prints 
+
+(2025), arXiv–2507. [56] Tongshun Zhang, Pingping Liu, Ming Zhao, and Haotian Lv. 2024. Dmfourllie: Dual-stage and multi-branch fourier network for low-light image enhancement. In Proceedings of the 32nd ACM international conference on multimedia . 7434– 7443. [57] Kaiwen Zheng, Jie Huang, Man Zhou, Danfeng Hong, and Feng Zhao. 2023. Deep adaptive pansharpening via uncertainty-aware image fusion. IEEE Transactions on Geoscience and Remote Sensing 61 (2023), 1–15. [58] Huanyu Zhou, Qingjie Liu, and Yunhong Wang. 2022. PanFormer: A Trans-former Based Model for Pan-Sharpening. In 2022 IEEE International Conference on Multimedia and Expo (ICME) . 1–6. [59] Man Zhou, Jie Huang, Yanchi Fang, Xueyang Fu, and Aiping Liu. 2022. Pan-Sharpening with Customized Transformer and Invertible Neural Network. Pro-ceedings of the AAAI Conference on Artificial Intelligence 36 (06 2022), 3553–3561. [60] Man Zhou, Jie Huang, Keyu Yan, Hu Yu, Xueyang Fu, Aiping Liu, Xian Wei, and Feng Zhao. 2022. Spatial-Frequency Domain Information Integration for Pan-Sharpening. In Computer Vision - ECCV 2022 - 17th European Conference, Tel Aviv, Israel, October 23-27, 2022, Proceedings, Part XVIII (Lecture Notes in Computer Science) . Springer, 274–291.

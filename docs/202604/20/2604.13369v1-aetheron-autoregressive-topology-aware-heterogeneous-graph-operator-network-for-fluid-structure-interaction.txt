@@ -1,0 +1,449 @@
+Title: AeTHERON: Autoregressive Topology-aware Heterogeneous Graph Operator Network for Fluid-Structure Interaction
+
+URL Source: https://arxiv.org/pdf/2604.13369v1
+
+Published Time: Thu, 16 Apr 2026 00:23:33 GMT
+
+Number of Pages: 16
+
+Markdown Content:
+# AeTHERON: Autoregressive Topology-aware Heterogeneous Graph Operator Network for Fluid-Structure Interaction 
+
+Sushrut Kumar ∗
+
+Department of Mechanical Engineering Johns Hopkins University Baltimore, MD 21218 
+
+# Abstract 
+
+Surrogate modeling of body-driven fluid flows where immersed moving bound-aries couple structural dynamics to chaotic, unsteady fluid phenomena remains a fundamental challenge for both computational physics and machine learning. We present AeTHERON, a heterogeneous graph neural operator whose archi-tecture directly mirrors the structure of the sharp-interface immersed boundary method (IBM): a dual-graph representation separating fluid and structural domains, coupled through sparse cross-attention that reflects the compact support of IBM interpolation stencils. This physics-informed inductive bias enables AeTHERON to learn nonlinear fluid-structure coupling in a shared high-dimensional latent space, with continuous sinusoidal time embeddings providing temporal generalization across lead times. We evaluate AeTHERON on direct numerical simulations of a flapping flexible caudal fin — a canonical FSI benchmark featuring leading-edge vortex formation, large membrane deformation, and chaotic wake shedding across a 4 × 5 parameter grid of membrane thickness ( h∗ ∈ { 0.01 –0.04 }) and Strouhal number ( St ∈ { 0.30 –0.50 }). As a proof-of-concept, we train on the first 150 timesteps of a representative case using a 70/30 train/validation split and evaluate on the fully unseen extrapolation window t = 150 –200 . AeTHERON captures large-scale vortex topology and wake structure with qualitative fidelity, achieving a mean extrapolation MAE of 0.168 without retraining, with error peaking near flapping half-cycle transitions where flow reorganization is most rapid. This is a continuously developing preprint; results and figures will be updated in subsequent versions. 
+
+# 1 Introduction 
+
+Accurate and efficient simulation of body-driven flows such as in fluid-structure interactions (FSI) remains one of the most challenging problems in computational physics and engineering. Appli-cations ranging from biological locomotion and bio-inspired propulsion systems to autonomous underwater vehicles, flexible airfoils, and morphing wing designs require high-fidelity models capa-ble of capturing complex, unsteady, and strongly nonlinear phenomena governed by coupled partial differential equations (PDEs) and evolving boundary geometries. Traditional numerical approaches such as the immersed boundary methods provides really high accuracy but often demand prohibitive computational resources, especially for repeated simulation, design optimization, uncertainty quan-tification, and real-time control applications Mittal and Iaccarino [2005], Griffith and Luo [2012], Peskin [2002]. 
+
+> ∗
+
+skumar94@jhu.edu Preprint. Continuously Developing Project. 
+
+> arXiv:2604.13369v1 [physics.comp-ph] 15 Apr 2026
+
+The immersed boundary method (IBM), first introduced by Peskin Peskin [2002], were developed to handle the moving body CFD simulations and has been extended by numerous researchers Mittal et al. [2008, 2025], Griffith and Luo [2012]. It has emerged as a particularly powerful framework for simulating flows with complex, moving, and deforming boundaries such as the flow within human heart Viola et al. [2023a,b], blood vessels Bailoor et al. [2021], animal locomotion Kumar et al. [2025], Seo et al. [2026], Zhou et al. [2024, 2025a,b], incompressible Menon et al. [2022] and compressible aerodynamics Turner et al. [2024]. These class of methods avoid the need for body-conforming grids and enable robust handling of large deformations Kumar et al. [2025] along with multi-body interactions Verzicco and Querzoli [2021]. The computational cost of high-fidelity IBM simulations remains substantial, particularly when exploring parameter spaces or conducting design studies involving hundreds or thousands of geometric and kinematic configurations — a bottleneck that is especially acute in bio-inspired propulsion studies where the coupling between membrane flexibility and flow topology must be resolved across a wide range of kinematic parameters Kumar et al. [2026a,b]. Data-driven surrogate models have attracted significant attention to address the computational expense of running high-fidelity calculation. Although, the solutions aren’t always guaranteed to be perfect Taira et al. [2025], McGreivy and Hakim [2024] but can provide good estimates of fluid flow solutions for variety of engineering applications Nabian and Choudhry [2025], Ranade et al. [2025], Mousavi et al. [2025]. Machine learning techniques such as convolutional neural networks (CNNs) Guo et al. [2016], physics-informed neural networks (PINNs) Raissi et al. [2019], and most recently, neural operators Li et al. [2021], Lu et al. [2021], Kovachki et al. [2023] and graph neural networks (GNNs) Franco et al. [2023], Gao et al. [2024], are now being developed to approximate the underlying solution manifold and dynamical evolution of physical systems. Neural operator frameworks—including the Fourier Neural Operator (FNO) Li et al. [2021], Deep Operator Network (DeepONet) Lu et al. [2021], and state-space neural operator architectures Nguyen et al. [2024]—have demonstrated mesh-independent parameterization of solution maps in elasticity, fluid dynamics, and phase-field evolution, offering the promise of resolution-invariant surrogate modeling. Early work applying regression-based machine learning to extract physical quantities from experimental fluid data Basu et al. [2020] established the feasibility of data-driven approaches for flow field reconstruction, motivating the more expressive architectures explored here. While global operator networks offer flexibility and rapid inference, recent studies highlight their fundamental limitations in generalization and stability when training data is scarce or when dynamics are governed by strongly local physical coupling. These limitations are particularly pronounced in scenarios involving sharp gradients, discontinuities, or multiscale phenomena—characteristics that are ubiquitous in body-driven flows with boundary layer separation, vortex shedding, and wake interactions. To address these deficits, graph neural simulators (GNS) and related GNN-based surrogates have emerged as effective alternatives, leveraging locality and message-passing inductive biases to mirror classical numerical stencils and support robust, long-horizon rollouts Sanchez-Gonzalez et al. [2020], Pfaff et al. [2021], Fortunato et al. [2022]. This approach has shown particular promise in time-dependent systems where explicit time-stepping schemes can provide superior stability compared to direct operator mappings Nayak et al. [2025]. Despite this progress, surrogate modeling for body-movement-driven flows—with explicit geometric coupling and immersed boundaries—remains relatively underexplored. Existing GNN frameworks often focus on homogeneous domains with fixed topologies, limited emphasis on mesh adaptation, or simplified treatment of interfacial coupling. More critically, conventional approaches typically handle fluid-structure interactions through direct feature concatenation or simple edge-based coupling, failing to capture the rich, nonlinear interdependencies that characterize these multiphysics systems. The challenge is compounded by the computational cost of generating sufficient high-fidelity training data, which demands GPU-accelerated solvers capable of operating at extreme scales Kumar et al. [2026b]. A key insight driving this work is that fluid-structure interactions in immersed boundary systems are fundamentally mediated through complex, nonlocal relationships that are best represented and learned in abstract latent spaces rather than through direct geometric coupling. In biological systems, for instance, the motion of a fish’s caudal fin drives flow through intricate pressure-velocity coupling mechanisms that extend far beyond immediate geometric neighborhoods Gao et al. [2020]. Passive membrane deformation — where the fin’s flexibility modulates the leading-edge vortex dynamics and wake structure to enhance propulsive efficiency — creates a feedback loop between structural 2compliance and fluid forcing that is both physically rich and computationally expensive to resolve Kumar et al. [2026a]. Similarly, in engineering applications, the deformation of flexible structures induces flow modifications that propagate through multiple length scales and time scales, creating feedback loops that are difficult to capture with purely local message-passing schemes. This work presents AeTHERON, a novel heterogeneous graph neural operator that addresses these challenges through an innovative latent space interaction paradigm. Our approach recognizes that effective fluid-structure coupling requires learning abstract representations of both domains that can interact through cross-attention mechanisms, enabling the model to discover and exploit hidden correlations that govern the coupled dynamics. Specifically, we propose that the motion of immersed boundaries drives fluid evolution most naturally when both fluid and structural states are elevated to a shared high-dimensional latent space where their interactions can be learned and modeled through attention-based mechanisms Vaswani et al. [2017], Wang et al. [2019], Jaegle et al. [2021]. Our test case involves a flapping membrane fin immersed in a viscous flow, spanning regimes with strong transient behavior, nonlinear dynamics, and complex wake-shedding phenomena. This configuration captures many of the challenging aspects of biological and bio-inspired propulsion systems, including leading-edge vortex formation, boundary layer separation, and unsteady force generation mechanisms. The high-fidelity training data is generated using a GPU-accelerated sharp-interface IBM solver Kumar et al. [2026b] capable of resolving these dynamics at the scale required for surrogate training. The methodological advances and computational tools developed herein are readily extensible to broader classes of multiphysics problems and offer a foundation for next-generation AI-accelerated simulation, design, and control with physics-driven constraints.cs-driven constraints. 
+
+# 2 Problem Formulation and Model Description 
+
+We address the challenge of developing a neural operator to estimate the fluid flow solution governed by the incompressible Navier-Stokes equation by combining graph-based neural networks with immersed boundary methods (IBMs). Operator learning requires that the underlying network structure be agnostic to the computational grid and that the inference transferability be achieved with a single trained instance of the model. We achieve this task by representing the problem using two heterogeneous graphs akin to immersed boundary methods, implemented using the heterogeneous graph learning suite within the PyTorch Geometric library. Here, we make use of two graph structures: the fluid graph Gf = ( Vf , Ef →f ) and the membrane graph Gm = ( Vm, Em→m). Vf is the set of fluid nodes with features xfi (t) ∈ Rdf (e.g., velocity), and Ef →f contains edges (i, j ) with attributes efi,j ∈ Rde,f . Similarly, Vm is the set of membrane nodes with features xmp (t) ∈ Rdm (e.g., displacement), and Em→m contains edges (p, q ) with attributes emp,q ∈ Rde,m . Interaction between the two domains is modeled through cross-graph edges 
+
+Em→f ⊆ V m × V f , with edges (p, i ) and attributes em→fp,i ∈ Rde,mf . This iteration focuses on modeling the expensive CFD component; the structural solve is orders of magnitude cheaper and the FSI-generated membrane shapes are used to prescribe the body motion for the surrogate. The goal is to obtain a finite-dimensional approximation of the neural operator Nθ to obtain the evolved fluid flow state at lead time τ :
+
+Nθ : Fin (t) → F out (t + τ ) (1) 
+
+xf (t + τ ) = Nθ (xf (t), xm(t), τ ) = Ψ f ◦ (Ml ◦ · · · ◦ M 1) ◦ Φf (x(t), τ ) (2) The operator uses three components: encoder ( Φ), processor ( Ml), and decoder ( Ψ), illustrated in Figure 1. 
+
+2.1 Encoder 
+
+The input features of the membrane and the flow can lie in vector spaces of different dimensions. Therefore, we design an encoder stage to project the input features from the physical domains into a shared high-dimensional latent space. This enables us to model the complex nonlinear interactions between fluid flow and membrane motion within a shared space. Moreover, this lifting enriches the 3Figure 1: AeTHERON problem formulation and physical motivation. Left: The FSI surrogate is cast as a neural operator Nθ : F(t) → F (t + τ ) operating on a heterogeneous graph pair — a fluid graph Gf = ( Vf , Ef →f ) with 4-dimensional node features and 14-dimensional edge attributes, and a solid graph Gs = ( Vs, Es→s) with 10-dimensional node features and 7-dimensional edge attributes — coupled through cross-graph edges Em→f ⊆ V f × V m. Given current fluid state xfi (t) and membrane state at lead time xsj (t + τ ), the operator predicts the evolved fluid state xfi (t + τ ). Right: Physical motivation for the heterogeneous graph design. The body motion drives coupled evolution of flow structures (vortex isosurfaces, colored by spanwise vorticity) and surface pressure distribution at time 
+
+t (top) and t + τ (bottom). The bidirectional flow-structure feedback is encoded in AeTHERON through the cross-graph sparse attention mechanism, mirroring the sharp-interface IBM interpolation stencil at the numerical level. input feature vector in the high-dimensional space, enabling the model to learn interactions more effectively. Therefore, with this approach, the latent representation of the membrane feature drives the latent fluid-flow feature, consistent with our physical intuition that the motion of the immersed body drives the evolution of the flow in the physical domain. An important point is that the dataset’s features lack the temporal information required for time forecasting. Incorporating this information is critical, as time-scales vary across datasets due to different flapping frequencies. This work makes use of the sinusoidal time embeddings, e(τ ) ∈ Rdt
+
+and concatenated to the physical features of both membrane and fluid flow. It is shown by [·, ·] in equation 3. 
+
+e(τ ) = 
+
+h
+
+sin 
+
+
+
+2πτ / 10 k/ (dt/2) 
+
+, cos 
+
+
+
+2πτ / 10 k/ (dt/2) i dt/2−1
+
+> k=0
+
+. (3) This formulation is inspired by the EGNO work Xu et al. [2024] and Fourier features to provide a continuous and bounded encoding of the lead time τ .For a membrane node p ∈ V m with features xmp (t) ∈ Rdm and lead-time τ ∈ R, the encoder computes 
+
+ξmp = Φ m
+
+ [xmp (t + τ ), e(τ )]  , Φm : Rdm+dt → Rdh , (4) Here Φf is a feedforward neural network consisting of fully connected layers with SiLU activations 
+
+σ(x) = x/ (1 + ex) such that ξm ∈ Rdh . [xmp (t + τ ), e(τ )] is a concatenation of membrane features at lead time with time embeddings. We use the membrane feature at lead-time to inform the model of the membrane deformation state and let it learn the evolution of flow features. This is analogous to explicit time-stepping in numerical solvers. For fluid nodes i ∈ V f , the input features xv ∈ Rdf and time τ ∈ R are processed as: 
+
+ξfi = Φ f
+
+
+
+[xfi (t), e(τ )] 
+
+
+
+, Φf : Rdf +dt → Rdh . (5) 4where Φf is a feedforward neural network such that ξf ∈ Rdh . By projecting both domains into a shared latent space of dimension dh ≫ df , d m, the encoders facilitate the alignment of fluid and membrane representations, modeling the physical coupling where membrane motion drives fluid evolution. 
+
+2.2 Processor 
+
+Next, we define the processor which comprises a stack of L evolution layers. It is used to model the evolution of fluid flow ( ξfi ) under the influence of the prescribed membrane features ( ξsi ). Each evolution layer draws inspiration from Graph Neural Operator framework by Anandkumar et al. Anandkumar et al. [2020], where the model is based upon the iterative update as defined by equation 6. 
+
+ξl+1 (x) = σ
+
+
+
+W ξ l(x) + 
+
+Z
+
+> D
+
+κ x, y, a (x), a (y)ξl(y)dy 
+
+
+
+, (6) Equation 6 can be written using the Monte Carlo sum with a message passing neural network and has been successfully applied in various studies Xu et al. [2025], including MAGNO, GKN, etc. In practice, the integral is estimated using a Monte Carlo approximation. Moreover, the presence of an immersed body should be taken into account. This is done by decomposing the discrete approximation into two aggregation operations, as shown in equation 10. 
+
+ξf,l +1  
+
+> i
+
+= σ
+
+
+
+Wnξf,l i + Ai + Ac
+
+
+
+(7) where σ is SiLU, and Wl is a learnable matrix capturing local linear transformations. The two message aggregation operations are referred as intra-message passing ( Ai) and cross-message passing (Ac). These operations will then involve neighborhood sets of solid and fluid points, Ns(i) and 
+
+Nf (i) respectively, around the fluid point i where | · | is the cardinality of the set. The operation for intra-message passing within the fluid domain models self-interactions akin to diffusion or advection terms in the Navier-Stokes PDE. The implementation for intra-message passing was adapted from Anandkumar et al.Anandkumar et al. [2020] and is written as 
+
+Ai = 1
+
+|Nf (i)|
+
+X 
+
+> j∈Nf(i)
+
+κf →f (efi,j )ξf,l j , (8) where κf →f : Rde,f → Rdh×dh is a parameterized kernel function that learns a matrix-valued kernel from edge attributes, efi,j . Next, the cross-message passing captures the influence of the prescribed membrane motion on the fluid flow (e.g., no-slip conditions), can be written as 
+
+Ac = 1
+
+|Ns(i)|
+
+X
+
+> k∈Ns
+
+κs→f
+
+ ξf,l i , ξ s,l k
+
+ξs,l k , (9) where κs→f is kernel function to model the interaction between flow features and solid features. The combined update can then be written as 
+
+ξf,l +1  
+
+> i
+
+= σ
+
+"
+
+Wnξf,l i + 1
+
+|Nf (i)|
+
+X
+
+> j∈Nf
+
+κf →f
+
+ efi,j 
+
+ξf,l j
+
+| {z }
+
+> Inter message passing ,A i
+
++ 1
+
+|Ns(i)|
+
+X
+
+> k∈Ns
+
+κs→f
+
+ ξf,l i , ξ s,l k
+
+ξs,l k
+
+| {z }
+
+> Cross message passing ,A c
+
+#
+
+(10) To enhance cross-domain interaction, we parameterize the cross-message passing by drawing inspira-tion from the attention mechanism proposed by Vaswani et al. Vaswani et al. [2017]. Specifically, we employ sparse attention due to the localized interactions. This sparsity, enforced by neighborhood 
+
+Nm(i), reduces computational complexity from O(|V f | · |V m|) to O(|E m→f |), where |E m→f | is typically much smaller due to local connectivity. This mirrors the compact support of regularized delta functions in diffuse IBMs Peskin [2002] or interpolation stencils in sharp IBMs Mittal et al. [2008], ensuring that only proximate membrane nodes influence each fluid node. This is done numerical by reinterpreting the Ac using equation 11 
+
+Ac = 1
+
+|Ns|
+
+X
+
+> k∈Ns
+
+αi,k V (11) 5Here, αi,k ∈ R is the attention score. The attention scores allow learning the pairwise influences between fluid queries and solid keys. It then assists in weighted message passing using the value vector V , which is the attention-modulated version of solid features ξs,l k. For each fluid point i and solid neighbor k ∈ Ns(i), we define query Qi, key Kk, and value Vk as 
+
+Qi = WQ(ξf,l i), Kk = WK (ξs,l k), Vk = WV (ξs,l k), (12) Here WQ, W K , W V : Rdh → RdA are feedforward neural networks that project features into the attention space of dimension dA. The scaled similarity between Qi and each Kk is 
+
+Si,k = QTi Kj
+
+√dA
+
+, S ∈ R (13) The similarity is converted to score αi,k using a softmax function, αi,k = softmax (Si,k ). Hence, the final update to latent fluid feature can be written using equation 14. 
+
+ξf,l +1  
+
+> i
+
+= σ
+
+"
+
+Wnξf,l i + 1
+
+|(Nf (i)|
+
+X
+
+> j∈Nf
+
+κf →f
+
+ efi,j 
+
+ξf,l j
+
+| {z }
+
+> Inter message passing ,A i
+
++ 1
+
+|Ns(i)|
+
+X
+
+> k∈Ns
+
+αi,k Vk
+
+| {z }
+
+> Cross message passing ,A c
+
+#
+
+(14) After the message aggregation, a time-conditioning is performed by scaling and shifting the latent flow feature vector using a parameterized representation of the lead time 15. 
+
+ξf,t +1  
+
+> i
+
+= (1 + τ γ (τ )) ⊙ LayerNorm (ξf,l +1  
+
+> i
+
+) + τ λ (τ ) (15) where γ(τ ), λ (τ ) : R → Rdh are neural networks with SiLU activations. 
+
+2.3 Decoder 
+
+The decoder stage reconstructs the physical fluid state from the final latent representation. The decoder design can be used either to obtain the fluid flow state at lead time or to get an incremental update, similar to a time-marching scheme, such as the Euler method. We utilize a time-marching update in our autoregressive predictions. The decoder update can be written as: 
+
+xf,t +1  
+
+> i
+
+= xf,t i + τ ψ f (ξf,t +1  
+
+> i
+
+) (16) where ψf : Rdh → Rdf is a feedforward neural network. 
+
+2.4 Training Data and Procedure 
+
+There are numerous examples of fluid-structure interaction, and we have chosen a thin membrane-based caudal fin model flapping in a flow with an incoming velocity vector as an application problem for this work. The problem has several complexities, such as large membrane deformation, chaotic flow structures interacting with the body, and varying flow physics with flapping frequency. The details regarding the caudal fin CFD model are presented in Appendix A. The full training dataset spans 20 direct numerical simulations covering a 4 × 5 parameter grid: four membrane thickness values ( h∗ ∈ { 0.01 , 0.02 , 0.03 , 0.04 }) and five Strouhal numbers (St ∈ { 0.300 , 0.325 , 0.350 , 0.450 , 0.500 }), covering both low-frequency and high-frequency flap-ping regimes. Each simulation provides 200 timesteps of quasi-periodic coupled fluid-membrane data sampled at case-specific intervals after the flow reaches statistical stationarity. For the proof-of-concept results reported here, we train on a single representative case ( h∗ = 0 .02 ,
+
+St = 0 .40 ). The 200 timesteps are split into a training window ( t = 0 –149 , using a 70/30 random train/validation split) and a held-out extrapolation window ( t = 150 –200 ) that is never seen during training. Results across the complete 4 × 5 parameter grid will be reported in a subsequent version. Each simulation is represented as a heterogeneous graph pair: a fluid graph with |V f | nodes carrying 4-dimensional velocity features, and a membrane graph with |V m| = 1 ,757 nodes carrying 10-dimensional displacement and kinematic features. Graph edges are constructed using a neighborhood 6radius of r = 0 .04 for all three edge types, consistent with the sharp-interface IBM interpolation stencil width. The 14-dimensional fluid edge attributes encode relative positions, distances, and local geometric quantities; the 7-dimensional membrane edge attributes encode structural connectivity and stiffness information. Training is performed using the Adam optimizer with an initial learning rate of 2 × 10 −3, decayed by a factor of 0.5 every 100 epochs over 200 epochs total. The loss function is a weighted combination of MAE on the fluid velocity field (weight 0.6) and membrane displacement field (weight 0.4). Batches of size 2 consist of (t, τ ) pairs drawn uniformly from the training cycles. All training was performed on NVIDIA A100 and L40s GPUs at the ARCH HPC facility, Johns Hopkins University (Rockfish cluster). 
+
+# 3 Results 
+
+3.1 Learning Dynamics 
+
+Figure 2: Full simulation timeline showing the train/validation split and extrapolation performance of AeTHERON ( h∗ = 0 .02 , St = 0 .40 ). The sine wave (blue) represents the prescribed flapping cycle over 200 timesteps covering two full periods. Blue and red markers indicate training ( ≈70%) and validation ( ≈30%) indices within the training window t = 0 –149 . The model is then evaluated on the fully unseen extrapolation window t = 150 –200 (orange region), where the MAE (green, right axis) ranges from 0.091 to 0.186 with a mean of 0.168 .We evaluate AeTHERON on a single representative caudal fin FSI case ( h∗ = 0 .02 , St = 0 .40 ) as a proof-of-concept demonstration. The full dataset spanning the 4 × 5 parameter grid described in Appendix A.4 is available for training; results across the complete parameter space will be reported in a subsequent version of this work. The training window ( t = 0 –149 ) covers two flapping cycles split 70/30 into training and validation sets using random sampling (Figure 2). The first flapping cycle ( t = 0 –≈ 100 ) captures the transient startup phase as the flow develops from rest; the second cycle ( t ≈ 100 –149 ) provides fully-developed, quasi-periodic flow states. After training, the model is evaluated on the held-out extrapolation window 
+
+t = 150 –200 , which was never seen during training. The MAE curve in Figure 2 reveals physically interpretable behavior. The error rises from 0.118 at 
+
+t = 150 as the model begins predicting beyond its training horizon, peaks at 0.186 near t = 170 —corresponding to the flapping half-cycle transition where leading-edge vortex formation and wake shedding drive rapid topological changes — and then decreases to a minimum of 0.091 at t = 200 
+
+as the flow returns to a more quiescent phase. This phase-correlated error pattern is consistent with the physical intuition that AeTHERON faces its greatest challenge when coupled fluid-membrane dynamics are most strongly nonlinear. The mean extrapolation MAE of 0.168 is achieved without any retraining or fine-tuning on the prediction window. 7Figure 3: Qualitative comparison of AeTHERON predictions (orange) against ground truth DNS (blue) at six representative timesteps in the extrapolation window ( t = 150 –200 ). Left two columns: 
+
+3D isosurface visualizations of the vorticity magnitude showing large-scale vortex structures and wake topology. Right two columns: 2D cross-sectional slices of the vorticity magnitude in the mid-span plane; ground truth (left of each pair) vs. AeTHERON prediction (right). Rows progress from early ( t ≈ 150 ) to late ( t ≈ 200 ) in the extrapolation window, capturing multiple phases of the flapping cycle. 
+
+3.2 Prediction Results 
+
+Qualitative prediction results are presented in Figure 3, showing 3D isosurface visualizations and 2D cross-sectional vorticity slices at six representative timesteps across the extrapolation window. AeTHERON successfully captures the large-scale vortex topology throughout the extrapolation window. The characteristic arch and horseshoe vortex structures that dominate the near-wake of the flapping fin are reproduced with qualitative fidelity across all six timesteps. The 2D cross-sectional slices demonstrate particularly strong agreement — the predicted vorticity field closely matches the ground truth in both the shape of the leading-edge vortex and the downstream wake structure, including the roll-up and shedding of vortex pairs. The most visible discrepancies appear in the fragmentation of fine-scale vortex filaments at the tips and trailing edges, particularly in the upper rows where the flow undergoes rapid reorganization. These regions correspond to the high-MAE phase near t = 170 in Figure 2, confirming that the primary limitation of AeTHERON lies in resolving sharp, localized flow features during topological transitions rather than in capturing global flow structure. The 2D slices show that even in these challenging phases, the predicted large-scale vorticity patterns remain physically plausible and structurally coherent. 8Despite operating entirely outside its training distribution, AeTHERON maintains qualitative fidelity across the full extrapolation window. Each forward pass completes in milliseconds on GPUs, compared to hours of wall-clock time for the equivalent DNS computation, demonstrating the practical utility of the surrogate for rapid flow field estimation. 
+
+# 4 Conclusion 
+
+We presented AeTHERON, a heterogeneous graph neural operator for surrogate modeling of body-driven fluid flows governed by the immersed boundary method. The key contribution is an architecture whose graph topology and message-passing structure directly mirror the numerical discretization of the IBM — a dual-graph representation separating fluid and membrane domains, connected through sparse cross-attention that reflects the compact support of sharp-interface interpolation stencils. This physics-informed architectural inductive bias distinguishes AeTHERON from generic GNN surrogates that apply standard message passing to FSI problems without accounting for the underlying numerical structure. The sparse cross-attention mechanism reduces the fluid-structure coupling complexity from O(|V f | · |V m|) to O(|E m→f |), enabling scalable inference on realistic IBM grids. The continuous sinusoidal time embedding enables temporal generalization. A proof-of-concept evaluation on the caudal fin FSI benchmark demonstrates qualitative fidelity in capturing vortex topology and wake dynamics across an unseen extrapolation window, with mean extrapolation MAE of 0.168 and inference speeds orders of magnitude faster than the DNS solver. 
+
+Limitations and future work. The primary limitation is rollout stability during topological vortex events. Future work will address this through multiscale message passing for sharp-gradient regions near the immersed boundary, and physics-constrained loss terms enforcing no-slip and no-penetration conditions explicitly. Extension to fully coupled FSI — jointly predicting membrane deformation and flow field — is a natural next step, as is application to cardiovascular FSI including heart valve dynamics and aortic hemodynamics for patient-specific surgical planning. 
+
+Broader impact. AeTHERON provides a foundation for AI-accelerated simulation in bio-inspired engineering, cardiovascular medicine, and fluid-structure interaction design. Fast surrogate models for IBM-based FSI have direct applications in surgical planning, device optimization, and real-time digital twin systems. 
+
+# Acknowledgments and Disclosure of Funding 
+
+The author thanks Prof. Rajat Mittal and Dr. Jung-Hee Seo (Johns Hopkins University, Flow Physics and Computation Laboratory) for guidance, the FSI simulation framework, and the high-fidelity training data generated as part of ongoing research in the laboratory. Computational resources were provided by the ARCH High Performance Computing facility at Johns Hopkins University (Rockfish cluster, GPU partition). The author acknowledges Josh Romero and Massimiliano Fatica (NVIDIA HPC) for collaboration on GPU-accelerated simulation methods that informed the data generation pipeline for this work. The author is grateful to Dr. Kamyar Azizzadenesheli for early discussions and to Dr. Charlelie Laurent (NVIDIA PhysicsNeMo) for valuable discussions on autoregressive rollout stabilization strategies that shaped the decoder design. 
+
+# References 
+
+Anima Anandkumar, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Nikola Kovachki, Zongyi Li, Burigede Liu, and Andrew Stuart. Neural operator: Graph kernel network for partial differential equations. In ICLR 2020 workshop on integration of deep neural models and differential equations ,2020. Shantanu Bailoor, Jung-Hee Seo, Lakshmi Prasad Dasi, Stefano Schena, and Rajat Mittal. Acomputational study of the hemodynamics of bioprosthetic aortic valves with reduced leaflet motion. Journal of biomechanics , 120:110350, 2021. Manan Basu, Sushrut Kumar, Priyam Gupta, and Raj Kumar Singh. A quantitative analysis of machine learning based regressors for pressure reconstruction in particle image velocimetry applications. 9In Fluids Engineering Division Summer Meeting , volume 83716, page V001T02A016. American Society of Mechanical Engineers, 2020. Meire Fortunato, Tobias Pfaff, Peter Wirnsberger, Alexander Pritzel, and Peter Battaglia. Multiscale meshgraphnets. arXiv preprint arXiv:2210.00612 , 2022. Nicola Rares Franco, Stefania Fresca, Federico Tombari, and Andrea Manzoni. Deep learning-based surrogate models for parametrized pdes: Handling geometric variability through graph neural networks. arXiv preprint arXiv:2308.01602 , 2023. Rui Gao, Zijie Cheng, and Rajeev K Jaiman. Data-driven modeling of fluid flow around rotating structures with graph neural networks. arXiv preprint arXiv:2503.22252 , 2024. Yu Gao, Xiaodong Liu, and Hao Chen. Predicting fluid–structure interaction with graph neural networks. Procedia Computer Science , 179:89–96, 2020. Boyce E Griffith and Xiaoyu Luo. Immersed boundary method for fluid–structure interaction. Journal of Computational Physics , 250:151–169, 2012. Xiaoxiao Guo, Wei Li, and Francesco Iorio. Convolutional neural networks for steady flow ap-proximation. In Proceedings of the 22nd ACM SIGKDD international conference on knowledge discovery and data mining , pages 481–490, 2016. Andrew Jaegle, Felix Gimeno, Andrew Brock, Oriol Vinyals, Andrew Zisserman, and Joao Carreira. Perceiver: General perception with iterative attention. In International conference on machine learning , pages 4651–4664. PMLR, 2021. Nikola Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Neural operator: Learning maps between function spaces with applications to pdes. Journal of Machine Learning Research , 24(89):1–97, 2023. Sushrut Kumar, Jung-Hee Seo, and Rajat Mittal. Computational modelling and analysis of the coupled aero-structural dynamics in bat-inspired wings. Journal of Fluid Mechanics , 1010:A53, 2025. Sushrut Kumar, Matthew J McHenry, Jung-Hee Seo, and Rajat Mittal. Flow-induced dorso-ventral deformation enhances propulsive efficiency in flexible caudal fins. Bioinspiration & Biomimetics ,21(1):016027, 2026a. Sushrut Kumar, Joshua Romero, Jung-Hee Seo, Massimiliano Fatica, and Rajat Mittal. A gpu-accelerated sharp interface immersed boundary solver for large scale flow simulations. In AIAA SCITECH 2026 Forum , page 0705, 2026b. Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. In International Conference on Learning Representations , 2021. Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear operators via deeponet based on the universal approximation theorem of operators. 
+
+Nature Machine Intelligence , 3(3):218–229, 2021. Nick McGreivy and Ammar Hakim. Weak baselines and reporting biases lead to overoptimism in machine learning for fluid-related partial differential equations. Nature machine intelligence , 6 (10):1256–1269, 2024. Karthik Menon, Sushrut Kumar, and Rajat Mittal. Contribution of spanwise and cross-span vortices to the lift generation of low-aspect-ratio wings: Insights from force partitioning. Physical Review Fluids , 7(11):114102, 2022. Rajat Mittal and Gianluca Iaccarino. Immersed boundary methods. Annual Review of Fluid Mechanics ,37:239–261, 2005. Rajat Mittal and Jung Hee Seo. Origin and evolution of immersed boundary methods in computational fluid dynamics. Physical review fluids , 8(10):100501, 2023. 10 Rajat Mittal, Haibo Dong, Meliha Bozkurttas, FM Najjar, Abel Vargas, and Alfred Von Loebbecke. A versatile sharp interface immersed boundary method for incompressible flows with complex boundaries. Journal of computational physics , 227(10):4825–4852, 2008. Rajat Mittal, Jung-Hee Seo, Jacob Turner, Sushrut Kumar, Suryansh Prakhar, and Ji Zhou. Freeman scholar lecture (2021)—sharp-interface immersed boundary methods in fluid dynamics. Journal of Fluids Engineering , 147(3):030801, 2025. Sepehr Mousavi, Shizheng Wen, Levi Lingsch, Maximilian Herde, Bogdan Raoni´ c, and Siddhartha Mishra. Rigno: A graph-based framework for robust and accurate operator learning for pdes on arbitrary domains. arXiv preprint arXiv:2501.19205 , 2025. Mohammad Amin Nabian and Sanjay Choudhry. A mixture of experts gating network for enhanced surrogate modeling in external aerodynamics. arXiv preprint arXiv:2508.21249 , 2025. Dibyajyoti Nayak, Qingwen Zhang, Tamer A Yousif, Liang Zhang, and Peyman Givi. Data-efficient time-dependent pde surrogates: Graph neural simulators vs. neural operators. arXiv preprint arXiv:2509.06154 , 2025. Levi Nguyen, Matthew Wellborn, and Benjamin Peherstorfer. State space neural operator. arXiv preprint arXiv:2507.23428 , 2024. Charles S Peskin. The immersed boundary method. Acta Numerica , 11:479–517, 2002. Tobias Pfaff, Meire Fortunato, Alvaro Sanchez-Gonzalez, and Peter W Battaglia. Learning mesh-based simulation with graph networks. In International Conference on Learning Representations ,2021. Maziar Raissi, Paris Perdikaris, and George Em Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Computational Physics , 378:686–707, 2019. Rishikesh Ranade, Mohammad Amin Nabian, Kaustubh Tangsali, Alexey Kamenev, Oliver Hennigh, Ram Cherukuri, and Sanjay Choudhry. Domino: A decomposable multi-scale iterative neural operator for modeling large scale engineering simulations. arXiv preprint arXiv:2501.13350 , 2025. Alvaro Sanchez-Gonzalez, Jonathan Godwin, Tobias Pfaff, Rex Ying, Jure Leskovec, and Peter Battaglia. Learning to simulate complex physics with graph networks. In International Conference on Machine Learning , pages 8459–8468. PMLR, 2020. Jung-Hee Seo, Ji Zhou, and Rajat Mittal. Scaling laws for caudal fin swimmers incorporating hydrodynamics, kinematics, morphology and scale effects. Journal of Fluid Mechanics , 1030:A25, 2026. Kunihiko Taira, Georgios Rigas, and Kai Fukami. Machine learning in fluid dynamics: A critical assessment. Physical Review Fluids , 10(9):090701, 2025. Jacob M Turner, Jung Hee Seo, and Rajat Mittal. A high-order sharp-interface immersed boundary solver for high-speed flows. Journal of Computational Physics , 500:112748, 2024. Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N Gomez, Łukasz Kaiser, and Illia Polosukhin. Attention is all you need. Advances in neural information processing systems , 30, 2017. R Verzicco and G Querzoli. On the collision of a rigid sphere with a deformable membrane in a viscous fluid. Journal of fluid mechanics , 914:A19, 2021. Francesco Viola, Giulio Del Corso, Ruggero De Paulis, and Roberto Verzicco. Gpu accelerated digital twins of the human heart open new routes for cardiovascular research. Scientific reports , 13 (1):8230, 2023a. Francesco Viola, Giulio Del Corso, and Roberto Verzicco. High-fidelity model of the human heart: an immersed boundary implementation. Physical Review Fluids , 8(10):100502, 2023b. 11 Xiao Wang, Houye Ji, Chuan Shi, Bai Wang, Yanfang Ye, Peng Cui, and Philip S Yu. Heterogeneous graph attention network. In The World Wide Web Conference , pages 2022–2032, 2019. Minkai Xu, Jiaqi Han, Aaron Lou, Jean Kossaifi, Arvind Ramanathan, Kamyar Azizzadenesheli, Jure Leskovec, Stefano Ermon, and Anima Anandkumar. Equivariant graph neural operator for modeling 3d dynamics. arXiv preprint arXiv:2401.11037 , 2024. Wenzhuo Xu, Christopher McComb, and Noelia Grande Gutierrez. Taylor series error correction network for super-resolution of discretized partial differential equation solutions. Journal of Computational Physics , 521:113569, 2025. Ji Zhou, Jung-Hee Seo, and Rajat Mittal. Effect of schooling on flow generated sounds from carangiform swimmers. Bioinspiration & Biomimetics , 19(3):036015, apr 2024. doi: 10.1088/ 1748-3190/ad3a4e. URL https://doi.org/10.1088/1748-3190/ad3a4e .Ji Zhou, Jung-Hee Seo, and Rajat Mittal. Effect of hydrodynamic wakes in dynamical models of large-scale fish schools. Physics of Fluids , 37(1), 2025a. Ji Zhou, Jung-Hee Seo, and Rajat Mittal. Hydrodynamically beneficial school configurations in carangiform swimmers: insights from a flow-physics informed model. Journal of Fluid Mechanics ,1014:A32, 2025b. doi: 10.1017/jfm.2025.10303. 
+
+# A Details of Numerical Simulations for Data Generation 
+
+A.1 Caudal Fin Model 
+
+Caudal fin refers to the propulsion elements used by fishes, where the organism flaps the fin through undulation of the body. This undulating motion generates vortex structures that induce pressure force vectors that provide thrust to the fish. The flow physics involved in this case find many similarities with problems such as propellers, heart valves, parachutes, and many more. This makes it a perfect case for applying the deep learning model and building a surrogate. In the current model, we assume the fin shape is a trapezoid with rigid leading, dorsal, and ventral margins. The prescribed motion at these rigid regions of the fin drives the entire fin. The fin then interacts with the incoming flow and deforms, which is governed by a membrane deformation model. This work focuses on surrogate modeling of the expensive fluid flow simulation; the structural solve is orders of magnitude faster and the FSI-generated membrane shapes prescribe the body motion. 
+
+A.2 Numerical Methods 
+
+High-quality data is generated by direct numerical simulation of the incompressible fluid flow governed by the Navier-Stokes equations: 
+
+∂u i
+
+∂x i
+
+= 0; ∂u i
+
+∂t + ∂u j ui
+
+∂x j
+
+= − ∂p ∂x i
+
++ 1
+
+Re 
+
+∂2ui
+
+∂x j ∂x j
+
+. (17) Equation 17 is split into an advection-diffusion equation and a pressure-Poisson equation using the fractional step method. The presence of a zero-thickness membrane introduces a Dirac-delta discontinuity. We use the sharp-interface ghost-cell IBM Mittal et al. [2008], which exactly enforces no-slip and no-penetration boundary conditions, preserving correct flow structure near the body Mittal and Seo [2023]. GPU-accelerated solver details are in Kumar et al. Kumar et al. [2026b]. Membrane deformation is governed by: 
+
+M d2X(t)
+
+dt 2 = Fhydro − Felas − ζ dX(t)
+
+dt , (18) where M ∈ RN ×N is the diagonal nodal mass matrix, X(t) ∈ RN ×3 are node positions, Fhydro and 
+
+Felas ∈ RN ×3 are hydrodynamic and elastic forces, and ζ is the structural damping coefficient. The complete procedure is detailed in Kumar et al. Kumar et al. [2026a]. 12 (a) (b) 
+
+Figure 4: Schematics of computational setup. (a) Rectilinear mesh of the flow domain, (b) Un-structured mesh of the membrane surface along with leading-edge kinematics, placement of spring network, and alignment of cell centroid normals. 
+
+A.3 Added-Mass Stabilization 
+
+A fundamental challenge arises when ρs/ρ f ≈ 1, as in biological locomotion. The added-mass effect becomes the dominant coupling force, and standard explicit FSI schemes treating it explicitly lead to unconditional numerical instability. The total fluid force decomposes as: 
+
+Fhydro = FQ + Fκ, Fκ = −Ma
+
+dV
+
+dt , (19) where Ma ∈ R3×3 is the added-mass tensor with entries: 
+
+Mij = ρf
+
+Z
+
+> V
+
+∇ϕi · ∇ ϕj dv, (20) computed from an auxiliary harmonic potential ϕ with Neumann boundary conditions. We apply semi-implicit diagonal stabilization treating only the dominant Mii terms implicitly: 
+
+(m + Mii ) V n+1  
+
+> i
+
+− V ni
+
+∆t = F ni + Mii 
+
+V ni − V n−1
+
+> i
+
+∆t . (21) This requires no sub-iterations and adds negligible cost while restoring unconditional stability, essential for generating high-fidelity training data at biologically relevant density ratios. 
+
+A.4 Dataset Statistics 
+
+The full training dataset spans 20 direct numerical simulations covering four membrane thickness val-ues ( h∗ ∈ { 0.01 , 0.02 , 0.03 , 0.04 }) and five Strouhal numbers ( St ∈ { 0.30 , 0.325 , 0.35 , 0.45 , 0.50 }), yielding a 4 × 5 parameter grid. Each simulation provides 200 timesteps of coupled fluid-membrane data. The graph neighborhood radius for all three edge types is r = 0 .04 , consistent with the sharp-interface IBM stencil width. 
+
+A.5 Model Hyperparameters 
+
+AeTHERON uses separate encoder networks for the fluid and membrane domains before lifting both into a shared latent space of dimension dh = 32 . The processor comprises L = 10 heterogeneous message-passing layers with cross-domain sparse attention of dimension dA = 32 and sinusoidal time-conditioning (Equation 15). The decoder maps the 32-dimensional latent fluid representation back to the 4-dimensional physical velocity field. 13 Table 1: Dataset summary for caudal fin FSI simulations used to train and evaluate AeTHERON. Property Value Number of simulations 20 Membrane thickness ( h∗) {0.01 , 0.02 , 0.03 , 0.04 }
+
+Strouhal number ( St ) {0.300 , 0.325 , 0.350 , 0.450 , 0.500 }
+
+Membrane nodes ( |V m|) 1,757 Membrane triangular elements 3,355 Fluid nodes ( |V f |) 24,000,000 Timesteps per simulation 200 Graph neighborhood radius ( r) 0.04 Training window t = 0 –149 (70/30 random split) Extrapolation window t = 150 –200 (held out) Flow / membrane loss weight 0.6 / 0.4 Total dataset size 906 GB Table 2: AeTHERON model architecture and training hyperparameters. Hyperparameter Value 
+
+Architecture 
+
+Latent dimension ( dh) 32 Attention dimension ( dA) 32 Time embedding dimension ( dt) 16 Processor layers ( L) 10 Fluid encoder: input node features 4Membrane encoder: input node features 10 Fluid kernel width ( kw) 4Membrane kernel width ( kw) 8Fluid edge features 14 Membrane edge features 7Total parameters ≈0.6M 
+
+Training 
+
+Optimizer Adam Learning rate 2 × 10 −3
+
+LR scheduler Step decay ( ×0.5 every 100 epochs) Training epochs 200 Batch size 2Flow loss weight 0.6 Membrane loss weight 0.4 Freeze threshold 10 −3
+
+Training hardware NVIDIA A100 / L40s, Rockfish (JHU ARCH) Training time 144 hours 
+
+A.6 Summary of Flow Results 
+
+To provide physical context for the training data, we summarize key flow features and hydrodynamic performance trends across three representative fin configurations: highly flexible (Fin-HF, h∗ = 0 .02 ), intermediately flexible (Fin-IF, h∗ = 0 .04 ), and rigid (Fin-R). All results are for St ∈ [0 .3, 0.5] ,corresponding to efficient biological locomotion. Figure 5 shows Q-criterion isosurfaces at Q = 5 , colored by spanwise vorticity ωz C/U ∞, at four flapping phases. All configurations exhibit the canonical leading-edge vortex (LEV) formation and shedding sequence. Fin-HF exhibits a more coherent and attached LEV with delayed shedding; Fin-R produces earlier and more energetic vortex roll-up; Fin-IF shows characteristics of both. These qualitative differences in vortex dynamics represent the richness AeTHERON must learn to reproduce. 14 Figure 5: Isosurface of Q at Q = 5 colored by ωz C/U ∞ for three representative cases: highly flexible (Fin-HF, h∗ = 0 .02 ), intermediately flexible (Fin-IF, h∗ = 0 .04 ), and rigid (Fin-R). Top and bottom rows show two viewing angles. The flapping cycle progresses left to right, illustrating leading-edge vortex formation, mid-stroke shedding, and wake evolution. Figure 6 quantifies performance. Thrust CT increases monotonically with St for all configurations, with Fin-R generating the highest raw thrust. However, CP tells a different story: Fin-R requires dramatically higher power, reaching CP ≈ 10 at St = 0 .5 — more than 4× the cost of Fin-HF. Propulsive efficiency η plotted against CT reveals the decisive advantage of flexibility: Fin-HF achieves peak η ≈ 0.38 –0.39 across a broad thrust range, while Fin-R saturates at η ≈ 0.22 –0.23 .This hierarchy motivates the choice of h∗ and St as the primary parametric axes of the training dataset. 15 0.3 0.4 0.5
+
+> St
+> 0.51.01.52.0
+> CT
+> Fin-HF Fin-IF Fin-R
+
+(a) 0.3 0.4 0.5 
+
+> St
+> 246810
+> CP
+> Fin-HF Fin-IF Fin-R
+
+(b) 0.5 1.0 1.5 2.0 
+
+> CT
+> 0.15 0.20 0.25 0.30 0.35 0.40
+> η
+> Fin-HF Fin-IF Fin-R
+
+(c) 
+
+Figure 6: Hydrodynamic performance across fin flexibility and Strouhal number. (a) Thrust coefficient 
+
+CT vs. St , (b) Power coefficient CP vs. St , (c) Propulsive efficiency η vs. CT for Fin-HF ( h∗ = 0 .02 ), Fin-IF ( h∗ = 0 .04 ), and Fin-R (rigid). Results shown for St ∈ [0 .3, 0.5] . The full AeTHERON training dataset spans a broader parameter space; these three configurations illustrate the physical diversity captured by the simulator. 16

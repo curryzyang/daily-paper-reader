@@ -1,0 +1,963 @@
+Title: Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs
+
+URL Source: https://arxiv.org/pdf/2604.13723v1
+
+Published Time: Thu, 16 Apr 2026 00:48:31 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs 
+
+Kentaro Hoshisashi, 1, ∗ Carolyn E. Phelan, 1 and Paolo Barucca 1
+
+> 1
+
+Department of Computer Science, University College London, Gower Street, London WC1E 6BT, UK 
+
+(Dated: April 16, 2026) Physics-Informed Neural Networks (PINNs) recast PDE solving as an optimisation problem in function space by minimising a residual-based objective, yet many applications require additional derivative-based relations that are just as fundamental as the governing equations. In this paper, we present Derivative-Constrained PINNs (DC-PINNs), a general framework that treats constrained PDE solving as an optimisation guided by a minimum objective function criterion where the physics resides in the minimum principle. DC-PINNs embed general nonlinear constraints on states and derivatives, e.g., bounds, monotonicity, convexity, incompressibility, computed efficiently via auto-matic differentiation, and they employ self-adaptive loss balancing to tune the influence of each objective, reducing reliance on manual hyperparameters and problem-specific architectures. DC-PINNs consistently reduce constraint violations and improve physical fidelity versus baseline PINN variants, representative hard-constraint formulations on benchmarks, including heat diffusion with bounds, financial volatilities with arbitrage-free, and fluid flow with vortices shed. Explicitly en-coding derivative constraints stabilises training and steers optimisation toward physically admissible minima even when the PDE residual alone is small, providing reliable solutions of constrained PDEs grounded in energy minimum principles. 
+
+I. INTRODUCTION 
+
+Physics-informed neural networks (PINNs) [1] have re-cently emerged as a powerful deep learning framework to solve partial differential equations (PDEs). By embed-ding PDE residuals directly into the loss function of a neural network, PINNs recast the task of solving PDEs as an optimisation problem in the function space, thus shifting the focus from discrete numerical schemes to a variational viewpoint that naturally connects to broader physical principles [2, 3]. Unlike finite-difference and finite-element solvers, which remain highly effective but can become costly in many-query settings such as inverse problems, parameter inference, and uncertainty quantifi-cation, as well as on complex or evolving geometries that require repeated remeshing, PINNs provide a flexible for-mulation that can incorporate additional physical struc-ture. This reformulation represents a theoretical shift from viewing the PDE as a forward operator to interpreting it as the condition that the system minimises a variational or energy principle [4]. The physics is encoded not only in the PDE but in the fact that the admissible solution minimises an appropriate functional [5], leveraging a min-imum objective function criterion. This perspective has been discussed in a broader scientific context, from min-imum dissipation principles in fluid dynamics [6, 7], to energy-based formulations in statistical mechanics and quantum systems [8], and to physics-guided optimisa-tion principles in complex systems [9]. In this perspec-tive, PINNs and their extensions provide a computational  
+
+> ∗Contact author: k.hoshisashi@ucl.ac.uk
+
+framework that leverages this minimum principle by em-bedding the governing equations and constraints into a single objective, and training the network corresponds to searching for the physical extremum. Such constraints can be as fundamental to physics as the PDE itself, and neglecting them risks producing solutions that are math-ematically feasible but physically implausible [8]. However, despite their empirical successes, PINNs still face challenges in the presence of additional equality or inequality constraints beyond the PDE itself, as pi-oneered in [10–13]. Such constrained PDEs are ubiq-uitous in real-world applications, e.g., bounds, mono-tonicity, convexity, incompressibility, to name a few. For instance, incompressible flow models rely on deriva-tive consistency to link pressure gradients and velocity fields, and violations can lead to non-physical wake dy-namics. In quantitative finance, no-arbitrage require-ments translate into derivative inequalities (e.g., mono-tonicity and convexity) that render a calibrated sur-face unusable if violated. Even when derivative con-straints are not explicitly imposed, the adaptive bal-ancing component introduced here is designed to re-duce sensitivity to manual loss-weight tuning, although we only validate it in the derivative-constrained set-ting in this manuscript. Naive techniques for embed-ding constraints can lead to unstable training, slow con-vergence, and violation of constraints [14]. Although more sophisticated approaches have been proposed to better handle constraints in PINNs, conservative PINNs, and enforce equality constraints, while augmented La-grangian approaches and theory-guided neural networks show stronger performance in PDEs constrained by in-equality [15–20]. However, a persistent difficulty lies in balancing competing error terms, the residual PDE, boundary conditions, and constraint penalties, which of-
+
+> arXiv:2604.13723v1 [cs.LG] 15 Apr 2026
+
+2ten differ in magnitude and sensitivity. As a result, these methods remain highly dependent on delicate hy-perparameter tuning and problem-specific architectural choices. In this study, we propose Derivative-Constrained PINNs (DC-PINNs), a general and robust framework for solving derivative-constrained PDEs using deep learning. Our approach seamlessly integrates the constraints into the learning process, ensuring that the solution satisfies the prescribed conditions while maintaining the benefits of PINNs. The key contributions of this study include: 
+
+• A flexible constraint-aware loss function that ad-mits general nonlinear constraints and seamlessly incorporates them into the PDE residual objective. 
+
+• Self-adaptive loss balancing techniques that au-tomatically tune the weightings of the objective terms, including derivatives obtained through au-tomatic differentiation, stabilising training across diverse problem settings. 
+
+• Demonstration of the approximation ability of DC-PINNs on benchmark PDEs from simple to com-plex, including the heat equations, structural mod-elling of finance, and fluid dynamics problems, showcasing improvements over PINNs approaches. The study aims to highlight the importance of ex-plicit constraint handling in PINNs, as relying solely on the PDE residual term may lead to solutions that vio-late critical physical principles. The extended approach can explore an application to several key areas: 1. Basic PDE problems with added physical insights 2. Prob-lems requiring multiple derivative constraints to avoid system failure 3. Complex problems with diverse in-ternal dynamics that typically resist convergence. We present applications including heat equations, volatility surface models in finance, and incompressible flows in fluid dynamics, comparing our framework with existing approaches. Recasting derivative-constrained PDE solv-ing as a multi-objective optimisation problem opens up the possibility of efficiently solving a wider range of phys-ically constrained systems with improved accuracy and reliability. 
+
+Baselines and fairness. Standard PINNs do not en-code derivative inequalities. We therefore include (i) PINNs+ineq(fixed) which adds derivative inequal-ity attentions with fixed global weights, and (ii) hard-constraint baselines ( hPINNs (pen.) , hPINNs (AL) , AL-PINNs ) in which inequalities are treated by homotopy or augmented Lagrangians. Compared to these, DC-PINNs uses one-sided penalties on derivative constraints but learns both category-level coefficients and sample-level scalings, which we ablate to disentangle the benefit of constraints vs. adaptivity.   
+
+> II. PROBLEM FORMULATION A. Derivative-Constrained PDE Problem
+
+We seek a mapping u : Ω ⊂ Rn → Rd that is approxi-mated by a neural network uθ ≡ ϕθ (x). Let D denote the set of differential operators applied to uθ , including the zeroth-order identity. Training is posed as a constrained optimisation problem. ˆθ = arg min  
+
+> θ
+
+L x, Duθ
+
+ s.t. 
+
+
+
+f  x, Duθ
+
+ = 0 x ∈ Ω,b x, Duθ
+
+ = 0 x ∈ ∂Ω,h x, Dhuθ
+
+ ≤ 0 x ∈ Ω,
+
+(1) where L is the training objective, f represents PDE residuals in the domain, b represents boundary opera-tor and h represents derivative inequality constraints. Here, Dh ⊆ D specifies the derivatives that appear in the inequalities. A problem is called derivative-constrained 
+
+when it includes inequality conditions on derivatives of u.Typical examples are monotonicity constraints ( ∇u ≥ 0), directional convexity constraints (diag( ∇2u) ≥ 0), or slope bounds ( ∥∇ u∥ ≤ L). This notion refers to con-straints on derivatives and not to the order of the PDE itself, and reflects physical phenomena that cannot be fully expressed by the PDE alone. For discretisation, we employ supervised data D0 =
+
+{(x0, u 0)} = {(x(0)  
+
+> i
+
+, u (0)  
+
+> i
+
+)}N0
+
+> i=1
+
+, boundary points xb =
+
+{x(b) 
+
+> i
+
+}Nb
+
+> i=1
+
+, interior collocation points xf = {x(f ) 
+
+> i
+
+}Nf
+
+> i=1
+
+, and inequality-enforcement points xh = {x(h) 
+
+> i
+
+}Nh
+
+> i=1
+
+.This work focusses on inequality constraints involv-ing derivatives and adopts a discretise, then optimise strategy with gradient-based training of artificial neu-ral networks (ANNs). The continuous problem is first discretised into a finite-dimensional nonlinear problem. The derivatives with respect to the inputs are evaluated by automatic differentiation (AD) through the typical ANN, that is, the multilayer perceptron (MLP). To en-sure that all required partial derivatives exist and are well defined, the activation function must be sufficiently smooth with respect to the inputs. For PDEs that involve derivatives up to order k, the network output must be at least Ck continuous. Because training employs gradient-based optimisation through these derivatives, the activa-tion should in practice be Ck+1 , which is satisfied, for ex-ample, by the hyperbolic tangent (tanh) activation func-tion.  
+
+> B. Physics-Informed Neural Networks (PINNs)
+
+Physics-Informed Neural Networks (PINNs), intro-duced in [1], are artificial neural networks that integrate physical laws directly into the training objective via par-tial differential equations (PDEs). This paradigm offers a data-efficient class of universal function approximators 3in which the governing PDE residuals and boundary or initial conditions are treated as components of the loss function. We consider a parametrised PDE system of the form 
+
+(f  x, Duθ (x) = 0 , x ∈ Ω,b x, Duθ (x) = 0 , x ∈ ∂Ω, (2) where uθ ≡ ϕθ (x) denotes the neural network approxi-mation of the true solution u. Here, D denotes the set of differential operators obtained by automatic differen-tiation (AD) of the neural network with respect to its inputs. The training problem is formulated as the uncon-strained minimisation of a total loss functional, 
+
+L := L0 + Lf + Lb, (3) where the three terms correspond to supervised data loss, residual PDE loss in the domain, and loss of the boundary or initial condition, respectively. Explicitly, one has 
+
+L0 := 1 
+
+> N0
+
+uθ (x0) − u0 
+
+> 22
+
+,
+
+Lf := 1 
+
+> Nf
+
+f  xf , Duθ (xf ) 22
+
+,
+
+Lb := 1 
+
+> Nb
+
+b xb, Duθ (xb) 22
+
+.
+
+(4) Here, N0, N f , N b denote the cardinalities of the su-pervised dataset, the set of interior collocation points, and the set of boundary collocation points, respectively. Norms are evaluated over the entire vector of residuals at the respective collocation points. The observed targets 
+
+u0 contribute only to L0, while Lf and Lb depend solely on the PDE operator f and the boundary operator b. 
+
+> C. Derivative-Constrained PINNs (DC-PINNs)
+
+We now extend the preceding framework to the case of derivative-constrained PDEs, as formulated in (1). Specifically, we consider inequality constraints on deriva-tives of the form 
+
+h x, Dhuθ (x) ≤ 0, x ∈ Ω, (5) where Dh ⊆ D denotes the subset of derivatives that appear in the inequality conditions. In order to enforce such inequality constraints within a gradient-based training scheme, we formulate a one-sided penalty functional. For each inequality operator h,we define the violation loss as 
+
+Lh := 1 
+
+> Nh
+
+[ h xh, Dhuθ (xh)]+
+
+> 22
+
+, (6) where [ ·]+ := max {0, ·} denotes the standard hinge op-erator. It yields zero gradients inside the feasible region and a linear signal once violations occur, which we found to be numerically stable when combined with AD on in-put derivatives. Near h = 0 we smooth the derivative at the origin (C 1) to avoid optimiser jitter. We also tested smooth hinges softplus δ (h) = δ log(1 + eh/δ ) and squared hinges; while comparable in accuracy, they re-quired tighter tuning of global weights to prevent slow drift along nearly-feasible manifolds. The hinge thus strikes a balance between strictness and simplicity for derivative inequalities. The total loss in the DC-PINN framework generalises the standard PINN loss by incorporating both inequality constraints and weighting coefficients: 
+
+L := λ0 ˆL0 + λf ˆLf + λb ˆLb + λh ˆLh, (7) where λ0, λ f , λ b, λ h ≥ 0 are the scalar coefficients that balance the relative importance of each category of con-straints. The modified (hatted) loss terms are defined as ˆL0 := 1 
+
+> N0
+
+m0
+
+ uθ (x0) − u0
+
+ 22
+
+,
+
+ˆLf := 1 
+
+> Nf
+
+mf f  xf , Duθ (xf ) 22
+
+,
+
+ˆLb := 1 
+
+> Nb
+
+mbb xb, Duθ (xb) 22
+
+,
+
+ˆLh := 1 
+
+> Nh
+
+mh [ h xh, Dhuθ (xh)]+
+
+> 22
+
+.
+
+(8) Factors m0, m f , m b, m h are the weights of diagonal ma-trices applied to each residual component before com-puting the Euclidean norm. Their role is to provide ap-propriate scaling to residuals corresponding to different physical quantities, thereby preventing imbalance due to differing magnitudes, and to allow selective emphasis on certain state variables or differential operators in multi-output neural networks. In contrast, the coefficients λ
+
+in (7) operate at the categorical level, balancing super-vised data, PDE residuals, boundary conditions, and in-equality constraints as a whole. Often, we face several conditions for inequality con-straints simultaneously. In that case, we introduce addi-tional terms of the form λh ˆLh for each constraint, lead-ing to a collection of penalties corresponding to multiple inequalities. The set of all such Kh conditions can be denoted as 
+
+Huθ := { hk
+
+ xhk , Dhk uθ (xhk )}Kh
+
+> k=1
+
+, x ∈ Ω, (9) which may involve multiple, possibly derivative-based, inequality constraints. DC-PINNs generalise standard PINNs by simultane-ously enforcing PDE dynamics, boundary or initial con-ditions, and derivative inequality constraints. The frame-work allows solutions that are consistent with both the governing PDE system and additional derivative-based structural conditions that reflect physical or financial principles, but also introduces additional difficulty as it effectively becomes a multi-objective optimisation prob-lem where the different categories of losses must be bal-anced to reach a feasible and accurate solution. 4 
+
+> D. Multi-Objective Optimisation
+
+Selecting weights and constraints-sensitive losses is del-icate because large penalties improve constraint satisfac-tion but can make optimisation ill-conditioned [18]. To improve robustness, we employ two automated balanc-ing schemes inspired by [21, 22]. The first amplifies the gradients per category to strengthen the derivative-based inequality constraints. The second mitigates multiscale imbalance across the categorised losses in (8), stabilis-ing the magnitudes of the gradient over epochs given the sparsity induced by (6). 
+
+a. Individual Loss Balancing. Following a self-adaptive weighting strategy, we attach trainable multi-plicative weights m to each categorised loss and update them via gradient ascent in tandem with the network parameters θ:
+
+m(j) 
+
+> χ
+
+(k+1) = m(j) 
+
+> χ
+
+(k) + ηm ∇m(j)
+
+> χ
+
+ˆLχ(k), χ ∈ { 0, b, f, h }.
+
+(10) This update increases the influence of losses with larger violations. 
+
+b. Categorised Loss Balancing. In parallel, we up-date the weights per category λ using the mean absolute gradient magnitude with respect to θ:
+
+λχ(k+1) = 
+
+
+
+1, if |∇ θ ˆLχ(k)| = 0 ,λχ(k) + P   
+
+> χ′|∇ θˆLχ′(k)|
+
+/|∇ θ ˆLχ(k)|, otherwise, (11) where |·| denotes the mean absolute value in the element. We use absolute values, rather than squared ones, to re-tain sensitivity to rare but severe inequality violations, since most of the elements of ∇θ Lh are typically zero. Both mechanisms adjust weights at user-specified in-tervals based on relative gradient scales, promoting bal-anced contributions of all loss terms, including unstable inequality losses, during training [21, 22]. The sensitivity to ηm and pm is reported in Appendix C  
+
+> E. Hard-Constraint Formulations for Derivative-Constrained PDEs
+
+We next consider an alternative strategy to DC-PINNs for handling additional constraints, namely a hard-constraint approach. Several practically relevant reali-sations are based on the augmented Lagrangian method-ology [18, 23] and the classical constrained optimisation theory [24, 25]. We treat these approaches as fair base-lines because they represent the three most standard fam-ilies of constrained optimisation in the PINN literature: (i) exact (architectural) enforcement when a closed-form transform exists, (ii) penalty continuation, and (iii) (aug-mented) Lagrangian updates with dual variables. All tar-get the same feasibility objective as DC-PINNs but dif-fer in how they manage optimisation stiffness and weight selection, which complements the multi-objective discus-sion in Sec. II D. 
+
+a. Architectural approach (hPINN). Pointwise box constraints for boundary conditions ( b) can be enforced exactly by output transforms in hPINN formulations [18], 
+
+ψ(hard ) 
+
+> θ
+
+= umin + ( umax − umin )ψ(x). (12) This approach is effective for variables whose admissible range is known a priori . However, it is generally imprac-tical for derivative-based inequalities such as ux ≤ U . We include this baseline to represent the strongest form of hard enforcement available when admissible transforms exist, and to make explicit its limited applicability to derivative inequalities. 
+
+b. Penalty method (pen.). We penalise violations of derivative inequalities via [ hθ ]+ and employ an outer loop that monotonically increases the weight λ > 0 by scaling it by a factor β > 1 at outer iteration i:
+
+L(pen .) = L0 + λ(i)Lf + λ(i)Lh,λ(i+1) = βλ (i) (β > 1) . (13) This is the hard-constraint analogue of a soft hinge penalty, hardened by outer iterations. This baseline is widely used because it is simple to implement, but it can introduce stiff optimisation dynamics as λ(i) grows, making comparisons with adaptive weighting particularly informative. 
+
+c. Augmented Lagrangian method (AL). Derivative inequalities can also be handled via an augmented La-grangian loop. The augmented objective with multipliers 
+
+μf ∈ RNf , μh ∈ RNh and μh ≥ 0 is 
+
+L(AL) = L0 + μ⊤ 
+
+> f
+
+fθ + λ(i)Lf + μ⊤ 
+
+> h
+
+[hθ ]+ + λ(i)Lh,λ(i+1) = β λ (i) (β > 1) . (14) with projected dual-ascent updates and a multiplicatively increased penalty parameter, 
+
+μ(i+1)  
+
+> f
+
+= μ(i) 
+
+> f
+
++ λ(i)f (i+1)  
+
+> θ
+
+,μ(i+1)  
+
+> h
+
+= μ(i) 
+
+> h
+
++ λ(i)[h(i+1)  
+
+> θ
+
+]+.
+
+(15) Thus, hPINNs can extend by augmenting the treatment of inequalities while retaining hard architectural enforce-ment (hPINN (AL)). In addition, all constraints can be unified into a single AL loop (AL-PINNs). We use AL-based baselines because they are a principled alternative to fixed penalty weights and are commonly adopted in constrained PINNs; however, their outer-loop updates can be sensitive to stopping criteria and can prioritise feasibility at the expense of data-fit under a fixed com-pute budget. To our knowledge, no prior PINN study has focused on a fully unified hard-constraints formulation that si-multaneously addresses multiple equality and inequality constraints. Beyond prior work on equality constraints [18, 23], our formulation integrates multiple inequalities, 5tightening feasibility coupling, but also increasing the ill-conditioning of the optimisation landscape and, conse-quently, the risk of convergence difficulties.   
+
+> III. EXPERIMENTAL DESIGN A. Neural Network Setting and Training Configuration
+
+In the experiments, the network architecture ψ is a fully connected feedforward neural network with hyper-bolic tangent activation functions to ensure smooth dif-ferentiability. The network parameters are initialised using the Glorot scheme [26], and the optimisation is performed using Adam [27] with regularisation of the weight decay, following previous work [1, 22]. Training data consist of uniformly sampled points for initial and boundary conditions, while square mesh grids are used for PDE residuals and derivative inequality constraints. The accuracy of the model is evaluated by computing the errors between predictions and reference solutions on dense mesh grids. Detailed analytical formulations, net-work architectures, and training settings for each prob-lem are provided in Appendix D, Appendix E 2, and Ap-pendix F 2.  
+
+> B. Baselines and fairness
+
+Standard PINNs [1] do not encode derivative-based inequality constraints. We therefore add PINNs-Ineq. ,which augments PINNs with a hinge penalty Lh while fixing additional weights ( λχ ≡ 1, mχ ≡ I). DC-PINNs 
+
+generalise this learning per component coefficients λχ and per sample scale mχ (Section II C). We also report abla-tions: no λ (λχ = 1), no m (mχ = I), and static (both initialized then frozen). For hard-constraint baselines (Section II E): hPINN (pen.) embeds boundary condi-tions (hard-b) and enforces inequalities through a penalty homotopy; hPINN (AL) again uses hard-b with an aug-mented Lagrangian for inequalities; AL-PINNs applies an augmented Lagrangian to both equalities and inequal-ities without hard-b. All baselines follow the effective hy-perparameters of the original paper [18]. The explored ranges and final settings appear in the Appendix C. 
+
+a. Metrics. Accuracy is measured by root mean square error (RMSE). For each component χ ∈ { 0, b, f, h }
+
+on the dense validation grid {xi}N val  
+
+> χ
+> i=1
+
+with task-specific error eχ(xi) (data, boundary, PDE residual, or derivative error), we report Eχ = RMSE χ =
+
+ 
+
+> 1
+> Nval
+> χ
+
+ΣN val  
+
+> χ
+> i=1
+
+eχ(xi)2
+
+1/2
+
+. (16) 
+
+b. Environment. All models involving differentiable operators were implemented using JAX and Flax [28, 29], which enable efficient and exact computation of deriva-tives via automatic differentiation. Training was carried out in Google Colab [30] using TPUs (v6e-1) with XLA compilation and 173 GB of high-bandwidth memory. On average, each training run required approximately 5 (Heat) to 100 (Navie-Stokes) seconds for runtime and 2-3 minutes for compiling on a TPU v6e-1 instance, with peak memory usage close to 120 GB during the largest experiments.  
+
+> IV. NUMERICAL EXPERIMENTS
+
+To demonstrate the effectiveness of the proposed framework, we performed numerical experiments on benchmark problems in heat diffusion, volatility-surface calibration in quantitative finance, and incompressible flow with complex geometries and non-linear constraints. We compare our approach with existing PINN-based methods and include derivative profile comparisons of trained networks.  
+
+> A. One-dimensional Heat Equation in Thermodynamics
+
+The heat equation is a classic parabolic PDE [31] and a standard testbed to evaluate the robustness of PINNs. Consider an infinitesimally thin steel beam heated at its centre. The heat in the centre spreads along the beam while the ends are held at zero temperature, so the tem-perature decays to zero as t → ∞ . The problem in 
+
+x = ( x, t ) is 
+
+f (x, t ) = ∂u ∂t − λ ∂2u∂x 2 , (17) s.t. u(x, 0) = sin( πx ), u(0 , t ) = u(1 , t ) = 0 ,∂2u∂x 2 ≤ 0, ∂u ∂t ≤ 0, (18) for x, t ∈ [0 , 1]. The analytical solution is u(x, t ) =
+
+e−λπ 2t sin( πx ). The derivative constraints in (18) reflect that the second spatial derivative and the time deriva-tive are non-positive throughout the domain: the initially peaked profile remains concave in space while decaying in time, and set λ = 0 .1. Fig. 1 shows that DC-PINNs reproduce the smooth diffusive profile of the analytical solution with minimal artefacts. Standard PINNs exhibit noisy oscillations and boundary bias, and adding fixed inequality terms only partly suppresses them. hPINN and AL-PINNs appear over-smoothed, losing temporal variation through ex-cessive constraint enforcement. In contrast, DC-PINNs maintain both spatial smoothness and temporal decay, yielding a near-zero residual map that confirms faithful satisfaction of ∂tu = ∂xx u across the domain. 6TABLE I: Validation (RMSE: bold is best) for the heat equation.                                                       
+
+> Conditions Accuracy Model Ineq. Hard-bAL EuEfEbEhxx Eht
+> PINNs –––0.013 0.032 0.027 0.677 0.068 PINNs+Ineq. ✓––0.010 0.035 0.010 0.522 0.037 hPINN (pen.) ✓✓–0.144 0.010 0.000 1.433 0.142 hPINN (AL) ✓✓✓0.131 0.010 0.000 1.310 0.129 AL-PINNs ✓–✓0.463 0.008 0.004 4.572 0.454 DC-PINNs ✓––0.002 0.006 0.003 0.091 0.009
+
+FIG. 1: Predicted solutions for the one-dimensional heat equation. Left: ground-truth magnitude. Right: model–ground-truth difference with a diverging scale. Table I indicates that DC-PINNs achieve the best RMSE under the initial condition, the residual interior PDE, and the boundary (except for the hard-boundary treatments), while simultaneously attaining lower deriva-tive RMSEs ( Ehxx , Eht ). By contrast, AL-based vari-ants drive inequality-violation metrics to zero but ex-hibit larger derivative errors, showing that exact feasibil-ity alone does not guarantee accurate curvature or tem-poral dynamics. The qualitative second-derivative pro-files in Fig. 2 corroborate this: DC-PINNs track the an-alytic curvature closely across space–time without spuri-ous boundary oscillations. In general, DC-PINNs balance feasibility and accuracy, whereas purely hard treatments tend to over-constrain the solution away from the data and PDE signals. 
+
+FIG. 2: Second-derivative profiles with respect to x at multiple time snapshots. Dashed: analytical solution. To further examine the influence of inequality con-straints in DC-PINNs, Fig. 2 compares the learnt sec-ond derivative profiles with the analytical curves over time. Standard PINNs deviate markedly near the bound-aries, including sign reversals that violate uxx ≤ 0. Fixed-inequality PINNs stabilise the profiles but retain magnitude bias, indicating that static penalties cannot guarantee global compliance. AL- and hPINNs produce smoother, yet overly flattened curvature, suppressing temporal evolution. AL-PINNs almost collapse to zero curvature. In contrast, DC-PINNs preserve the parabolic shape and maintain non-positivity of uxx everywhere, confirming that embedding derivative inequalities in the loss is essential for both physical realism and temporal coherence.  
+
+> B. Quantitative Analysis and Ablation
+
+We analyse the impact of the enforcement of in-equality and adaptive balancing through controlled ab-lations. The hyperparameter sensitivity to ηm ∈{10 −4, 10 −3, 10 −2} and pm, p λ ∈ { 10 , 100 , 1000 } is sum-marised in Tables VII–IX in Appendix C. The results consistently favour ηm ≈ 10 −3-10 −2 and moderate up-date intervals, indicating robustness to tuning. The ablation in Table II clarifies the contributions of inequality enforcement ( Lh) and adaptive balance ( λ, m ). Introducing Lh alone improves the satisfaction of the con-straint and reduces RMSE relative to the unconstrained baseline, indicating that inequality enforcement directly improves physical fidelity. The greatest gains occur when the balance between components ( λ) and sample-wise (m) balance is active, producing up to an order of magni-tude reduction in RMSE and constraint errors. Remov-ing either element degrades performance, particularly in 
+
+Eht , suggesting that temporal derivatives are sensitive to unbalanced weighting. Static weights do not maintain consistent constraint satisfaction, underscoring the value of dynamic adaptation.  
+
+> C. Volatility Surface Calibration in Finance
+
+The volatility-surface calibration problem is an inverse PDE setting in quantitative finance, where the objective is to recover all the option price data from the observed 7TABLE II: Ablation on validation (RMSE: bold is best) and adaptive balancing in the heat equation. λ:component-wise; m: sample-wise.                                              
+
+> Conditions Accuracy Model Ineq. λ m E0EfEbEhxx Eht
+> PINNs –––0.013 0.032 0.027 0.678 0.068 PINNs-Ineq (fixed) ✓––0.010 0.036 0.010 0.524 0.037 DC-PINNs (no λ)✓–✓0.012 0.056 0.020 0.501 0.050 DC-PINNs (no m)✓✓–0.004 0.008 0.006 0.160 0.016 DC-PINNs (full) ✓✓ ✓ 0.002 0.006 0.003 0.091 0.009
+
+data [32]. The model satisfies 
+
+f (x, t ) = ∂u ∂t − 12 σ(x, t ) x2 ∂2u∂x 2 + r x ∂u ∂x ,σ(x, t ) = σA + Ax + Bt, 
+
+(19) s.t. ut=0 = ( s0 − x)+, u x=0 = st,∂u ∂x ≤ 0, ∂2u∂x 2 ≥ 0, ∂u ∂t ≥ 0, (20) where u is the European call option price. Synthetic data are generated from the analytical σ(·) with σA = 0 .2, 
+
+A = 0 .1, B = 0 .2 [33, 34]. The domain is x ∈ [0 , 2], 
+
+t ∈ [0 , 1] with s0 = 1 .0, r = 0 .05, and Gaussian noise added to Monte Carlo prices (Appendix E). During training, u := ψθ (x, t ). The no-arbitrage inequalities 
+
+∂xu ≤ 0, ∂xx u ≥ 0, and ∂tu ≥ 0 ensure economically valid surfaces. Embedding these constraints in the ob-jective enables DC-PINNs to produce PDE-consistent, arbitrage-free surfaces. 
+
+FIG. 3: Predicted solutions for the volatility-surface calibration. Left: ground-truth magnitude. Right: model–ground-truth difference with a diverging scale. FIG. 3 shows reconstructed surfaces. DC-PINNs yield smooth, monotonic profiles consistent with the ground truth, whereas unconstrained and fixed-penalty PINNs exhibit locally irregular curvature near strike extremes. Table III summarises the calibration performance. DC-PINNs achieve the lowest overall RMSE, particularly in the initial and boundary conditions, while maintain-ing RMSEs of zero or near zero constraints for ∂xu, ∂xx u,and ∂tu. Fixed-penalty PINNs moderately improve over the unconstrained baseline, yet still violate constraints near maturity boundaries. AL- and hPINNs enforce hard constraints, but show optimisation instability and poorer fits. Adaptive balancing in DC-PINNs ensures stable convergence and joint enforcement of derivative constraints, improving both data fidelity and physical ad-missibility. 
+
+FIG. 4: Spatial derivative ∂u/∂x at multiple time snapshots. Dashed: numerical reference. FIG. 4 shows ∂u/∂x over time. Standard PINNs and fixed-inequality variants capture the overall trend but deviate near the strike boundaries. DC-PINNs remain closer to the reference in the outer regions, consistent with the lower Ehx in Table III. AL- and hPINNs in-troduce discontinuities around x ≈ 1, producing piece-wise or over-smoothed gradients that break the expected monotonicity. AL-PINNs recover the general trend but underestimate slopes in the interior, indicating excessive penalisation of higher-order terms. 
+
+FIG. 5: Inequality-violation maps for learned local volatilities; dashed lines indicate exact references. As in the other experiments, derivative profile anal-8TABLE III: Validation (RMSE: bold is best) for the volatility surface calibration.                                                            
+
+> Conditions Accuracy Model Ineq. Hard-bAL E0EbEfEhxEhxx Eht
+> PINNs –––0.002 0.002 0.002 0.154 0.065 0.000
+> PINNs+Ineq. (fixed) ✓––0.002 0.003 0.004 0.098 0.019 0.029 hPINN (pen.) ✓✓–0.477 0.007 0.878 0.533 0.423 0.000
+> hPINN (AL) ✓✓✓0.477 0.007 0.878 0.533 0.419 0.000
+> AL-PINNs ✓–✓0.002 0.003 0.002 0.057 0.005 0.032 DC-PINNs ✓––0.001 0.002 0.002 0.053 0.095 0.000
+
+yses (Fig. 5) show that DC-PINNs capture the solution while satisfying nonlinear constraints, outperforming tra-ditional PINNs. The framework is versatile and applies to data-driven calibration of PDE parameters.  
+
+> D. Navier–Stokes Equations in Fluid Dynamics
+
+We now consider the incompressible Navier–Stokes equations, a challenging benchmark in fluid dynamics [1]. The flow past a 2D circular cylinder (von K´ arm´ an vortex street) is modelled. The governing equations in convec-tive form are 
+
+
+
+f u = ∂u ∂t + μ1
+
+
+
+u ∂u ∂x + v ∂u ∂y 
+
+
+
++ ∂p ∂x − μ2
+
+ ∂2u∂x 2 + ∂2u∂y 2
+
+
+
+= 0 
+
+f v = ∂v ∂t + μ1
+
+
+
+u ∂v ∂x + v ∂v ∂y 
+
+
+
++ ∂p ∂y − μ2
+
+ ∂2v∂x 2 + ∂2v∂y 2
+
+
+
+= 0 (21) s.t. (u, v ) x=−15 = ( u, v ) y=−8,8 = (1 , 0) ,∂u ∂x , ∂v ∂x x=25 
+
+= p|x=−15 = 0 ,u = v = 0 on the cylinder surface ,
+
+(22) 
+
+∇ · V = ∂u ∂x + ∂v ∂y = 0 , |∇ p| ≤ 12 ρU 2 (23) where V = ( u, v ), p is pressure, and μ1 = 1, μ2 = 1 /Re with Re the Reynolds number. We treat this as PDE dis-covery, estimating μ = ( μ1, μ 2) from the data. The flow past a cylinder of diameter D = 1 at Re = 100 is simu-lated. Training samples of V are drawn at 5,000 random points in x ∈ [1 , 8], y ∈ [−2, 2] (cylinder centred at the origin), and t ∈ [0 , 20] in periodic steady flow. Incom-pressibility ( ∇ · V = 0) enforces mass conservation [35]; the bound of the pressure gradient follows the Bernoulli scale with ρ = U = 1 [36]. Reference solutions are com-puted with the Nektar++ spectral / hp element code [37] (Appendix F). For the two-dimensional cylinder wake, Table IV shows that the relative ordering depends on which objective is prioritised. AL-PINNs attain the lowest pressure-constraint error Eh∇p and the lowest E0u , while the hPINN (pen.) baseline yields the lowest E0v and the smallest PDE residuals ( Efu , E fv ). DC-PINNs reduce 
+
+Eh∇p relative to unconstrained PINNs and recover μ2
+
+close to its reference value, but they do not improve E0 or 
+
+Ef over the best-performing baselines in this benchmark. We therefore interpret the Navier–Stokes results primar-ily as evidence of improved constraint handling, with an explicit accuracy–feasibility trade-off under a fixed train-ing budget. A systematic study of the dependence on network capacity and training time is left for future work. Across hyperparameter sweeps (Table IX), the recovered viscosity consistently converges to μ2 ≈ 0.01 for ν = 10 −2
+
+(Re = 100), confirming accurate inference of the under-lying physics (Appendix C). 
+
+FIG. 6: Predicted pressure p(x, y, t ) (mean-adjusted) at 
+
+t = 10 for the Navier–Stokes case. Left: ground-truth magnitude. Right: model–ground-truth difference with a diverging scale. FIG. 6 compares reconstructed pressure fields in a rep-resentative phase of the shedding cycle. Most methods reproduce the gross wake symmetry, and the snapshot-level differences are subtle; consequently, we use the fig-ure as qualitative context and rely on Table IV for quan-titative assessment. As discussed above, these results re-inforce the central trade-off in this benchmark: improved feasibility of the derivative constraint does not necessar-ily coincide with the lowest data error or residual.   
+
+> V. DISCUSSIONS A. Computational complexity
+
+We report wall-clock training times for all methods on the three benchmark problems using identical multilayer 9TABLE IV: Validation (RMSE: bold is best) for Navier–Stokes equations.                                                     
+
+> Conditions Accuracy μ
+> Model Ineq. AL E0uE0vEfuEfvEh∇pμ1μ2
+> PINNs ––0.395 0.395 0.018 0.019 0.159 0.977 0.010
+> PINNs+Ineq. (fixed) ✓–0.395 0.391 0.020 0.019 0.154 0.977 0.011 hPINN (pen.) ✓–0.350 0.304 0.004 0.004 0.165 0.758 0.020 AL-PINNs ✓✓0.343 0.350 0.004 0.005 0.142 0.875 0.012 DC-PINNs ✓–0.395 0.391 0.018 0.016 0.153 0.977 0.010
+
+TABLE V: Wall-clock training time (s) across benchmark problems.                    
+
+> Method Heat Problem Volatlity Surface Navier –Stokes PINNs 2.16 3.93 58.52 PINNs+Ineq 2.19 4.05 82.14 hPINNs (pen.) 2.82 3.85 42.55 hPINNs (AL) 2.88 4.36 52.68 AL-PINNs 2.02 3.51 —
+> DC-PINNs 4.41 6.17 97.10
+
+perceptron (MLP) architectures and data pipelines as in the accuracy experiments. For the heat equation, the network consists of two hidden layers with 100 neurones each, trained on grids of 31 × 31 interior points, 1001 ini-tial points and 2 × 1001 boundary points. The volatility surface problem employs a fully connected network with four hidden layers of 50 neurones each, using an interior grid of 50 ×50, 1000 observed prices, and 2 ×1001 bound-ary points. For the two-dimensional Navier-Stokes case, we used eight hidden layers with 20 neurones per layer and Nχ = 5000 collocation samples. Table V summarises the training times per run, measured in seconds until the reported evaluation, under identical JIT compilation and data loading settings. Across all experiments, DC-PINNs incur roughly a 1.5–2 × training-time overhead relative to unconstrained PINNs, but this cost yields systematic gains in phys-ical consistency and, in most cases, accuracy. For the Heat problem, second derivative violations ( uxx ≥
+
+0, u t ≥ 0) are markedly reduced; in the case of the volatlity surface, boundary and derivative errors decline, producing price surfaces consistent with Dupire’s con-straints; and in Navier–Stokes, velocity and pressure er-rors remain comparable while divergence and momen-tum residuals tighten, improving stability. Overall, the results show that DC-PINNs are most beneficial when derivative constraints dominate the ill-posedness (as in Heat and Volatility), whereas for coupled multi-field sys-tems (Navier–Stokes) they primarily enhance consistency rather than headline accuracy, with AL- or hPINN vari-ants offering faster but occasionally less stable alterna-tives. 
+
+FIG. 7: Percentage improvement with respect to PINNs on a symmetric logarithmic scale. Positive values indicate improvement relative to the baseline.  
+
+> B. Evaluations
+
+We evaluated four main aspects of performance, namely accuracy, stability, efficiency, and violation. Ac-curacy refers to the final validation error obtained at the end of training. Stability is measured through the normalised total variation of the validation error trajec-tory, which captures oscillations during optimisation. Ef-ficiency is assessed by the time required for the error to fall to half of its initial value, together with the area un-der the improvement curve, both measured with respect to wall clock time. The violation metric quantifies the degree to which physical or structural constraints remain unsatisfied at the end of the training. Let e = [e1, . . . , e n] denote the validation errors recorded at times t = [ t1, . . . , t n] with emin = min i ei,
+
+emax = max i ei, and a small positive constant ε. The final accuracy is given by efinal = en. The stability mea-sure is expressed as TVN = 
+
+Pn−1 
+
+> i=1
+
+|ei+1 − ei|
+
+emax − emin + ε , (24) while efficiency is expressed as nAUC = 1
+
+tn − t1 + ε
+
+Z tn
+
+> t1
+
+emax − e(t)
+
+emax − emin + ε dt. (25) This definition rewards models that sustain low error values over time. The violation score is calculated as the average magnitude of the constraint residuals on the validation grid. Improvements are reported as percent-age changes relative to PINNs. For metrics to be min-imised: 100 ( mPINNs −m)/ max( mPINNs , ε ); for metrics to be maximised: 100 ( m − mPINNs )/ max( mPINNs , ε ). The 10 methods are ranked per metric and the overall perfor-mance is the Borda sum of ranks. The aggregated results highlight a consistent pattern across tasks: DC-PINNs reduce constraint violations and damp oscillatory training behaviour, but they do so with a measurable cost in computational efficiency. In partic-ular, DC-PINNs typically require additional derivative evaluations and longer wall-clock time, which is reflected in a lower efficiency score even when the final accuracy is comparable. Moreover, accuracy improvements are task-dependent: in Navier–Stokes, for example, AL- and hPINN baselines achieve lower data error and residual metrics. We therefore present DC-PINNs as a method that prioritises feasibility and stability, rather than a uni-formly dominating replacement for existing approaches. 
+
+FIG. 8: Aggregate ranks across all metrics. Left Heat-PDE, centre Volatility Surface PDE, right Navier–Stokes PDE. Lower ranks indicate stronger overall performance. DC-PINNs rank highly on violation- and stability-related metrics, with overall rank depending on how accuracy and feasibility are weighted. Aggregates confirm the trend: DC-PINNs most con-sistently cut violations and oscillations while preserving accuracy. Training time rises by roughly 1 .5–2 × versus PINNs, reflecting constraint enforcement, but the added cost is offset by improved stability and reliability when derivatives govern the physics.  
+
+> C. Scalability to Higher-Dimensional DC-PDEs
+
+DC-PINNs scale to higher spatial dimensions without architectural changes: as d grows, the loss still combines PDE residuals with derivative equality/inequality con-straints, and automatic differentiation provides all re-quired mixed derivatives. 
+
+a. Multi-Dimensional Heat Equation. To illustrate this property, consider the d-dimensional heat equation defined on the unit hypercube Ω = (0 , 1) d with zero Dirichlet boundary conditions. The governing equation in variables x = ( x1, . . . , x d, t ) is 
+
+f (x, t ) = ∂u ∂t − λ
+
+> d
+
+X
+
+> i=1
+
+∂2u∂x 2
+
+> i
+
+, (26) s.t. u (x, 0) = 
+
+> d
+
+Y
+
+> i=1
+
+sin( πx i), u (x, t ) = 0 for x ∈ ∂Ω,∂u ∂t ≤ 0, ∂2u∂x 2
+
+> i
+
+≤ 0 for all i = 1 , . . . , d, 
+
+(27) The analytical solution u(x, t ) = e−λπ 2d t Qdi=1 sin( πx i)decays monotonically and satisfies the derivative signs. We set λ = 0 .1 and test d ∈ { 1, 2, 8, 32 , 128 }; other set-tings follow Appendix D. TABLE VI: Wall-clock training time (s) for the 
+
+d-dimensional heat equation with collocation size Nχ:Fixed ( Nχ = 100), Root ( Nχ = ⌊100 √d⌋), Linear (Nχ = 100 d), Power-1.5 ( Nχ = 100 d1.5).                       
+
+> dFixed Root Linear Power-1.5 11.86 1.78 1.73 1.88 21.92 2.06 2.17 2.44 82.52 3.76 5.28 5.63 32 5.76 6.78 9.58 30.72 128 8.64 6.81 45.01 –aaout-of-GPU-memory.
+
+Table VI shows that the training cost increases with dimension because denser sampling is required to ap-proximate higher-dimensional solution manifolds. In this experiment, the practical limitation at large d is GPU memory rather than numerical instability. However, we emphasise that this is a linear heat-equation benchmark used as a controlled stress test; these timings and stabil-ity observations do not, on their own, establish scalability for complex non-linear PDE systems. Moving to three dimensions and beyond mainly re-quires two adjustments. First, the neural network must have enough capacity to represent more complex fields. Second, the collocation points must be chosen carefully so that they adequately cover the larger domain. Methods such as Latin hypercube sampling [38] or adaptive re-finement [39, 40] are often effective for this purpose. Soft enforcement of constraints with adaptive weighting also avoids the numerical stiffness that often appears in hard-constraint approaches. On the computational side, DC-PINNs are well suited for data parallel training on mod-ern accelerators like [41] and can incorporate techniques developed for large-scale PINNs, such as domain decom-position in XPINNs [42], which splits high-dimensional domains into parallel subproblems [42, 43], and adaptive sampling.  
+
+> VI. CONCLUSION AND FUTURE WORK
+
+We cast the problem of solving PDEs with derivative-based equality and inequality constraints into a uni-fied derivative-constrained optimisation framework, and proposed Derivative-Constrained Physics-Informed Neu-ral Networks (DC-PINNs) to realise this framework. 11 DC-PINNs combine constraint-aware losses with self-adaptive balancing to prioritise feasibility while main-taining competitive accuracy. Across the test problems considered, DC-PINNs consistently reduce violation-related metrics and stabilise training trajectories, at the cost of additional derivative evaluations and in-creased wall-clock time. Accuracy outcomes are problem-dependent: for Navier–Stokes, AL- and hPINNs base-lines achieve lower data and residual errors under the same training budget, whereas DC-PINNs primarily im-prove constraint-related measures. Finally, our higher-dimensional study is based on a linear heat-equation benchmark and should be interpreted as a controlled scal-ability stress test rather than a proof of tractability for complex non-linear systems. Future extensions include exploring adaptive learning rates for constraint parameters, alternative penalty for-mulations near inequality boundaries, and coupling with multifidelity or operator-learning architectures to fur-ther improve tractability. These directions aim to ex-tend the applicability of DC-PINNs to broader classes of PDE-constrained systems while preserving the balance between accuracy, stability, and physical consistency. 
+
+> ACKNOWLEDGMENTS
+
+We gratefully acknowledge anonymous reviewers for their insightful comments and constructive suggestions that have substantially improved the quality of this manuscript. We also thank the participants of the ICML 2024 AI for Science Workshop for their stim-ulating discussions and valuable feedback. The au-thors also acknowledge the Department of Computer Science at University College London for providing the high-performance computing resources that enabled this study. This work also benefited from complimentary access to cloud TPUs through Google’s TPU Research Cloud (TRC) programme, whose support is sincerely ac-knowledged herein. 
+
+Code and Data Availability. All scripts to reproduce All Tables and FIGs are available in the repository in 
+
+> https://anonymous.4open.science/r/dcpinns-ef12704/
+
+.
+
+> Appendix A: The Multilayer Perceptron (MLP)
+
+This appendix summarises the multilayer perceptron (MLP) used as the parametric map uθ ≡ ϕθ throughout the paper and highlights how its structure supports the computation of partial derivatives with respect to inputs via automatic differentiation (AD). Let L ≥ 2 denote the number of affine layers. The network has input dimen-sion d0 = n and output dimension dL = d (with d ≥ 1), so that ϕθ : Rn → Rd. The model is written as a compo-sition. 
+
+ϕθ (x) = AL ◦ fL−1 ◦ AL−1 ◦ · · · ◦ f1 ◦ A1(x), (A1) where, for l = 1 , . . . , L , each Al : Rdl−1 → Rdl is an affine map of the form 
+
+Al(xl−1) = Wl xl−1 + bl, Wl ∈ Rdl×dl−1 , bl ∈ Rdl ,
+
+(A2) and, for l = 1 , . . . , L − 1, the activation fl : Rdl → Rdl
+
+acts component-wise. With the conventions x0 = x and 
+
+xl = fl(zl) for l = 1 , . . . , L − 1, the forward relations are 
+
+zl = Wl xl−1 + bl, xl = fl(zl), l = 1 , . . . , L − 1,ϕθ (x) = AL(xL−1) = WL xL−1 + bL.
+
+(A3) The trainable parameters are θ := {(Wl, bl)}Ll=1 . Given a data set D0 = {(x(0)  
+
+> i
+
+, u (0)  
+
+> i
+
+)}N0 
+
+> i=1
+
+and a prescribed empirical risk or objective informed by physics (as defined in the main text), the parameters are obtained by minimising the loss chosen with respect to θ.For derivative-constrained formulations, derivatives of 
+
+ϕθ with respect to inputs are obtained efficiently by AD through the computational graph. Denote by Dl(zl) := diag  f ′ 
+
+> l
+
+(zl) ∈ Rdl×dl the diagonal matrix of the first derivatives of fl, evaluated at zl. The Jacobian of ϕθ
+
+with respect to x admits the compact representation. 
+
+Jϕθ (x) = ∂ϕ θ
+
+∂x (x)= WL DL−1(zL−1) WL−1 · · · D1(z1) W1 ∈ Rd×n,
+
+(A4) which reduces to a row vector in the scalar output case 
+
+d = 1. Higher-order derivatives, for example Hessians, can be computed via AD using compositions of Jacobian vector and vector-Jacobian products without explicitly forming dense higher-order tensors. This is standard in modern AD frameworks and suffices for the operators D
+
+and Dh used in the main text. To ensure that all deriva-tives appearing in the training objective are well defined, the activation functions should possess the appropriate smoothness: if derivatives of the order k of uθ enter the loss, it is sufficient to choose fl ∈ Ck for l = 1 , . . . , L − 1, for example, tanh satisfies C∞ smoothness. A formal treatment of training with input derivatives in neural networks can be found in [16]. 
+
+> Appendix B: Algorithms
+
+This section introduces the DC-PINNs algorithm for multi-objective problems, which controls the inequality loss of the partial derivatives of a neural network func-tion with respect to its input features and applies the combination of loss balancing techniques for both cate-gorised and individual losses. 12 
+
+Algorithm 1: DC-PINNs with Balanc-ing Processes 
+
+Input: Dataset D0, xb, xf , xh, η, ηm,
+
+pm, pλ, kmax 
+
+Output: Neural network parameters θ
+
+Consider a deep NN φθ (x) with parameters θ, and the loss 
+
+L := X
+
+> χ
+
+λχ ˆLχ
+
+ mχ, x χ
+
+ ,
+
+where ˆLχ denotes the categorised loss with χ ∈ { 0, b, f, h }, mχ = 1 are soft-weighting vectors for individual losses, and λχ = 1 are dynamic multipliers. 
+
+for k ← 1 to kmax do 
+
+Compute ∇θ ˆLχ(k) by automatic differentiation. 
+
+if k ≡ 0 (mod pm) then 
+
+Update mχ by 
+
+m(j) 
+
+> χ
+
+(k+1) = m(j) 
+
+> χ
+
+(k)+ ηm∇m(j)
+
+> χ
+
+ˆLχ(k),
+
+where mχ(k) and ˆLχ(k) denote values at the k-th iteration. 
+
+if k ≡ 0 (mod pλ) then 
+
+Update λχ by 
+
+λχ(k+1) = 
+
+
+
+1, if α = 0 ,λχ(k) + 
+
+P 
+
+> χ
+
+αχ
+
+αχ
+
+, otherwise ,
+
+where αχ = |∇ θ ˆLχ(k)|.Update the parameters θ via gradient descent, e.g. 
+
+θ(k + 1) = θ(k) − η∇θ L(k).
+
+return θ
+
+The algorithm 1 exhibits DC-PINNs characteristics that separate it from conventional learning methods. First, the calculation points x{f,h } for the MLP deriva-tives do not correspond with the points of the training dataset x0. The algorithm adjusts the derivatives to fit wide mesh grids in the defined space, thus captur-ing derivative data across a wide array of input features. Secondly, the objective function L does not depend only on the MLP’s direct output but also on its derivatives as specified in Eq.(8), all of which depend on identical network parameters. DC-PINNs facilitate the balance among the categorised losses in addition to the enhanced individual losses, which consist of PDE residuals and var-ious scaled losses resulting from the violation of inequal-ity constraints. 
+
+> Appendix C: Sensitivity Analysis of Adaptive Parameters
+
+We investigate the sensitivity of DC-PINNs to the adaptive parameters ηm ∈ {10 −4, 10 −3, 10 −2} and 
+
+pm, p λ ∈ { 10 , 100 , 1000 } across Heat, volatility calibra-tion, and Navier–Stokes on dense grids with log–RMSE. On Heat case, ηm is decisive: 10 −4 underenforces con-straints and destabilises the inequality term, 10 −3 sta-bilises all losses, and 10 −2 produces the lowest overall errors, especially for L0 and Lb. Moderate penalties (pm ∈ 10 , 100, pλ ∈ 100 , 1000) give the most consistent gains; extremes occasionally induce stiffness and degrade derivative terms. Runtimes remain flat, so improvements reflect optimisation rather than extra computation. In volatility calibration, the addition of Lb clarifies the fit–constraint trade-off, with the best joint min-ima concentrated at ν = 10 −3 and pm, pλ ∈ 100 , 1000. At ν = 10 −4 performance is stable but shallower; at 
+
+ν = 10 −2 results become bimodal, with strong penalties sometimes overstiffening derivatives. For Navier–Stokes, 
+
+L0 varies little, Lf improves with larger penalties (but not extreme), and Lh is stable; the learnt viscosity aligns with scaling, recovering μ2 ≈ 10 −2. 
+
+> Appendix D: One-dimensional Heat Equation: Implementation and Experimental Details 1. Network, Training, and Sampling
+
+PDE and domain. ut − λ u xx = 0 on ( x, t ) ∈ [0 , 1] ×
+
+[0 , 1] with u(x, 0) = sin( πx ) and u(0 , t ) = u(1 , t ) = 0; constraints of inequality uxx ≤ 0 and ut ≤ 0 in the domain. Network. MLP ( x, t ) 7 → u with two hidden layers of width 100 and an absolute–value output activa-tion. Optimiser and schedule. The Adam optimiser is used with an exponentially decaying learning rate ini-tialised at 10 −3, where the transition step is 2000 and the decay rate is 0 .9. The training runs for 10 ,000 epochs in the main comparisons. Sampling. Interior collocation: 31 × 31 uniform grid; validation: 101 × 101; boundaries: dense grid in t (1001 points) at x ∈ { 0, 1} and the ini-tial line at t = 0. Evaluation Metrics and Grids. We compute log–RMSE on the initial line (RMSE 0), the inte-rior (RMSE f ) and the boundary (RMSE b); log–violation rates for uxx ≤ 0 and ut ≤ 0 (“ −∞ ” indicates no viola-tions); and log–RMSE of uxx and ut against the analytic solution on a 101 × 101 validation mesh. Loss Func-tion. For the heat equation, the total loss is defined as 
+
+L = λ0 ˆL0 + λf ˆLf + λb ˆLb + λhxx 
+
+ˆLhxx + λht
+
+ˆLht , where ˆL0
+
+represents the data mismatch, ˆLf the residual of the heat equation f = ∂tu − λ∂ 2
+
+> x
+
+u, and ˆLb the boundary loss. The 13 TABLE VII: Sensitivity of DC-PINNs on the Heat problem. Reported values are RMSE in log-scale, given as (L0, Lf , Lb, L(h1+ h2) ) in dense evaluation grids. Bold entries indicate the overall top-4 choices (by the sum of the four metrics; more negative is better). 
+
+ηm pm\pλ 10 100 1000 10 −4
+
+10 (-1.47,-2.78,-0.77,0.38) (-1.52,-2.92,-0.83,0.30) (-1.51,-2.89,-0.82,0.31) 100 (-1.40,-2.51,-0.69,0.52) (-1.41,-2.52,-0.70,0.50) (-1.40,-2.53,-0.69,0.51) 1000 (-1.33,-3.00,-0.63,0.63) (-1.32,-2.99,-0.63,0.63) (-1.32,-2.99,-0.62,0.63) 10 −3
+
+10 (-4.98,-4.11,-4.50,-4.54) (-5.20,-4.25,-4.61,-4.97) (-5.28,-4.20,-4.69,-5.10) 100 (-5.12,-4.31,-4.55,-4.93) (-5.00,-4.40,-4.47,-4.77) (-5.23,-4.43,-4.71,-5.15) 1000 (-4.99,-4.15,-4.44,-4.57) (-4.84,-4.15,-4.29,-4.33) (-5.20,-4.36,-4.62,-5.06) 10 −2
+
+10 (-5.61,-4.86,-5.19,-5.77) (-6.21,-5.25,-6.16,-7.75) (-6.01,-5.10,-5.80,-6.77) 
+
+100 (-5.08,-4.62,-4.45,-4.93) (-6.03,-5.10,-5.86,-7.11) (-6.19,-5.28,-6.20,-7.97) 
+
+1000 (-5.10,-4.56,-4.46,-4.89) (-5.24,-4.54,-4.56,-5.18) (-5.90,-5.06,-5.45,-6.60) 
+
+TABLE VIII: Sensitivity of DC-PINNs on the volatility surface calibration. The reported values are RMSE on the logarithmic scale, given as ( L0, Lb, Lf, Lh(x + xx + t)) on dense evaluation grids. The bold entries indicate the overall top-4 configurations, and the lower values correspond to better performance. 
+
+ν pm\pλ 10 100 1000 10 −4
+
+10 (-4.88,-5.30,-4.16,-3.82) (-4.86,-5.34,-4.26,-3.97) (-4.98,-5.34,-4.33,-4.02) 100 (-4.97,-5.03,-4.66,-4.40) (-5.02,-4.99,-4.69,-4.41) (-5.00,-5.05,-4.73,-4.50) 1000 (-4.89,-4.90,-4.79,-4.50) (-4.96,-4.94,-4.80,-4.52) (-4.99,-4.95,-4.87,-4.51) 10 −3
+
+10 (-6.76,-6.24,-6.07,-5.65) (-6.82,-6.40,-5.69,-5.93) (-6.87,-6.35,-5.68,-5.64) 
+
+100 (-6.13,-5.47,-6.13,-5.05) (-6.57,-6.18,-6.16,-5.86) (-6.34,-6.00,-6.17,-5.93) 1000 (-6.51,-6.11,-6.11,-5.71) (-6.59,-6.20,-6.24,-5.67) (-6.55,-6.10,-6.25,-5.74) 10 −2
+
+10 (-1.26,-0.48,-∞,-∞) (-5.27,-5.06,-4.78,-3.93) (-6.44,-6.20,-6.26,-5.49) 100 (-6.54,-6.09,-5.05,-4.54) (-5.78,-5.60,-5.35,-4.95) (-4.26,-4.29,-4.59,-3.13) 1000 (-3.82,-3.97,-4.27,-3.20) (-5.53,-5.45,-5.17,-4.88) (-3.87,-4.36,-4.09,-5.90) 
+
+additional components ˆLhx , ˆLhxx , and ˆLht measure vio-lations of derivative-based smoothness and monotonicity conditions. The coefficients λ are adaptively balanced during training to ensure stable convergence. 
+
+Appendix E: Local Volatility Model: Methodology and Implementation Details 1. Methodology 
+
+a. Black–Scholes Pricing and Equivalence to the Heat Equation 
+
+We work on a complete filtered probability space  Ω, F, (Ft)t∈[0 ,T ], Q under the risk–neutral measure Q.The (non-dividend-paying) asset price St follows the ge-ometric Brownian motion 
+
+dS t = r S t dt + σ S t dW t, σ > 0, (E1) where r is the risk-free rate and Wt is a standard Q-Brownian motion. The time-t price of a European call with strike K and maturity T is 
+
+C(St, K, τ ) = e−rτ EQ(ST − K)+ | F t
+
+ , τ := T − t. 
+
+(E2) By the Feynman–Kac theorem, C solves the Black–Scholes (BS) PDE 
+
+∂C ∂τ = 12 σ2S2 ∂2C∂S 2 + rS ∂C ∂S − rC, C(S, 0) = ( S − K)+, lim  
+
+> S→0
+
+C = 0 , lim 
+
+> S→∞
+
+CS = 1 .
+
+(E3) When market quotes are expressed through implied volatility σimp (K, τ ), the corresponding BS price is the closed form 
+
+CBS
+
+ σimp 
+
+ = St N (d+) − Ke −rτ N (d−),d± =ln( St/K ) + 
+
+
+
+r ± 12 σ2imp 
+
+
+
+τσimp 
+
+√τ ,
+
+(E4) where N (·) denotes the standard normal CDF and d− =
+
+d+ − σimp 
+
+√τ .
+
+a. Equivalence to the Heat Equation (main text). 
+
+The BS pricing problem is mathematically equivalent to the one-dimensional heat equation used in the main text, cf. (17). In fact, set 
+
+x = ln( S/K ), θ = σ2 
+
+> 2
+
+τ, ˜C(x, τ ) = erτ 
+
+K C(S, t ), (E5) and define u(x, θ ) = eαx +βθ ˜C(x, τ ) with 
+
+α = 12 − rσ2 , β = − (2 r − σ2)2
+
+8σ2 . (E6) 14 TABLE IX: Sensitivity of DC-PINNs on the Navier–Stokes equation. Reported values are RMSE in logarithmic scale, evaluated on dense grids and expressed as ( L0, Lf , Lh, μ 1/μ 2), where L0 = max {L 0u , L0v , L0p },
+
+Lf = max {L fu , Lfv }, and Lh = Lh∇p . Bold entries indicate the overall top-4 configurations, with lower values corresponding to better accuracy.                              
+
+> νpm\pλ10 100 1000 10 −4
+> 10 (-1.00,-3.67,-1.31; 0.0483/-0.0020) (-1.00,-3.42,-1.31; 0.0442/-0.0046) (-1.00,-2.65,-1.31; 0.0461/-0.0084) 100 (-1.01,-3.97,-1.31; 0.0432/0.0002) (-1.01,-3.96,-1.31; 0.0405/0.0004) (-1.01,-3.83,-1.31; 0.0430/-0.0008) 1000 (-1.01,-4.28,-1.32; 0.0430/0.0012) (-1.01,-4.27,-1.32; 0.0405/0.0013) (-1.01,-4.12,-1.32; 0.0435/0.0010) 10 −3
+> 10 (-0.94,-2.73,-1.12; 0.7695/0.0134) (-0.94,-2.61,-1.09; 0.7109/0.0073) (-0.94,-2.63,-1.09; 0.6992/0.0070) 100 (-0.94,-2.79,-1.14; 0.7852/0.0160) (-0.95,-2.78,-1.11; 0.7383/0.0095) (-0.95,-2.98,-1.11; 0.7812/0.0117) 1000 (-0.96,-2.99,-1.15; 0.8008/0.0165) (-0.95,-2.90,-1.12; 0.7578/0.0118) (-0.96,-2.92,-1.12; 0.7500/0.0099) 10 −2
+> 10 (-0.93,-4.10,-1.07; 0.9805/0.0098) (-0.93,-4.17,-1.07; 0.9805/0.0104) (-0.92,-4.12,-1.06; 0.9844/0.0102) 100 (-0.93,-3.99,-1.08; 0.9766/0.0115) (-0.94,-4.00,-1.08; 0.9766/0.0099) (-0.94,-4.12,-1.07; 0.9805/0.0104) 1000 (-0.94,-4.14,-1.08; 0.9805/0.0112) (-0.94,-4.16,-1.07; 0.9805/0.0106) (-0.93,-4.06,-1.07; 0.9844/0.0103)
+
+A direct computation yields the constant-coefficient heat equation. 
+
+∂u ∂θ = ∂2u∂x 2 , (E7) with the initial condition induced by the transformed payoff. Thus, the BS model and the thermodynamic heat problem are equivalent after an affine change of variables and time rescaling, resulting in the same lin-ear parabolic PDE. In particular, the PINN/DC-PINN machinery, residual structure, and inequality handling developed for (17) apply verbatim to the BS setting. 
+
+b. Local Volatility as an Extension of Black–Scholes 
+
+The implied volatility surface (IVS) is the map (K, τ ) 7 → σimp (K, τ ) obtained by inverting the Black–Scholes formula (E4) on the observed prices of European options. The Local Volatility model of [32] extends BS by replacing the constant volatility with a 
+
+deterministic function of state and time. In the spot-time representation, one writes 
+
+dS t = r S t dt + σLV (St, t ) St dW t, (E8) which reduces to BS when σLV (S, t ) ≡ σ is constant. In the strike-maturity coordinates ( K, τ ), the European call prices C(K, τ ) satisfy the Dupire PDE 
+
+r K ∂C ∂K − 12 σ2LV (K, τ ) K2 ∂2C∂K 2 + ∂C ∂τ = 0 , (E9) with boundary/initial conditions 
+
+C(K, 0) = ( St − K)+, lim  
+
+> K→∞
+
+C = 0 , lim  
+
+> K→0
+
+C = St.
+
+(E10) Hence, relative to BS, LV is (i) a state- and time-inhomogeneous diffusion, which is spatially varying dif-fusivity in the heat-equation analogy, and (ii) rich enough to fit the entire IVS while remaining Markov and arbitrage-free at the level of European options. Practically, one often calibrates σLV from a sufficiently smooth σimp (K, τ ) by substituting BS prices in (E4) into Dupire’s equation (E9), which yields the conversion 
+
+σ2LV (K, τ )= σ2imp +2 σimp τ        
+
+> ∂σ imp
+> ∂τ +rK ∂σ imp
+> ∂K
+> 
+> 1+2 d+K√τ∂σ imp
+> ∂K +K2τd+d−
+> ∂σ imp
+> ∂K
+> 2
+> +σimp
+> ∂2σimp
+> ∂K 2
+> !
+
+.
+
+(E11) where d± are the BS quantities defined below (E4). Equation (E11) makes explicit that LV is an extension 
+
+of BS: if σimp is constant in ( K, τ ), then σLV ≡ σimp and (E9) collapses in the BS case. 
+
+c. No-Arbitrage Constraints for European Options 
+
+The option prices should obey the restrictions im-posed by no-arbitrage conditions, which are essential fi-nancial principles that posit that market prices prevent guaranteed returns above the risk-free rate. This study considers the necessary and sufficient conditions for no-arbitrage presented in [44]. This allows us to express the call option price as a two-dimensional surface ap-propriately. The necessary and sufficient conditions for no-arbitrage are represented as non-strict inequalities for several first and second derivatives, 
+
+−e−rτ ≤ ∂C ∂K ≤ 0, ∂2C∂K 2 ≥ 0, ∂C ∂τ ≥ 0. (E12) From the above, the no-arbitrage conditions require these derivatives to have a specific sign. The standard archi-tecture does not automatically satisfy these conditions when calibrating with a loss function simply based on the mean squared error (MSE) of the prices. 
+
+2. Network, Training, and Sampling 
+
+Problem and domain. We learn a price surface 
+
+C(K, T ) under a synthetic local volatility model with 15 spot s0 = 1, rate r = 0 .05 and maturity T ∈ (0 , 1], enforc-ing monotonicity/convexity in K and temporal smooth-ness through hx, hxx and ht. Interior and validation grids. Interior collocation uses a 50 × 50 uniform ( K, T )grid with K ∈ [0 .1, 2.0] and T ∈ [0 .01 , 1.0]; validation uses a 100 × 100 grid over the same ranges. Bound-ary/initial observations. The data set provides price observations on (i) the T =0 line and (ii) selected bound-ary slices, which are used as supervised anchors alongside the PDE residual. Network. An MLP with four hid-den layers of width 50 and a Softplus output activation maps ( K, T ) 7 → C. Optimiser and schedule. Adam optimiser is used with an exponentially decaying learn-ing rate initialised at 10 −3, where the transition step is 2000 and the decay rate is 0 .9. The training runs for 10 ,000 epochs in the main comparisons. Sampling. The spot follows the diffusion of local volatility under the risk-neutral measure d St = rS t dt + σLV (St, t ) St dWt,σLV (S, t ) = σA + AS + Bt, (E13) where the parameters are fixed as σA = 0 .2, A = 0 .1, and B = 0 .2, following the setup in [33, 34]. The sim-ulation domain is S ∈ [0 .1S0, 2S0] and t ∈ [0 , 1]. Euro-pean call prices are computed by Monte Carlo using a log Euler discretisation with uniform time steps Nsteps 
+
+∆t = T /N steps . The update rule 
+
+St+∆ t = St exp 
+
+
+
+(r − q − 12 σ2)∆ t + σ√∆t Z 
+
+
+
+,Z ∼ N (0 , 1) ,
+
+preserves positivity and evaluates σLV (St, t ) pathwise at each step. Antithetic sampling is applied by pairing Z
+
+with −Z to reduce variance. The discounted Monte Carlo estimator for a call with strike K is 
+
+CMC (S0, K, T ) = e−rT 1
+
+Npaths 
+
+> Npaths
+
+X
+
+> i=1
+
+max  S(i) 
+
+> T
+
+− K, 0.
+
+Prices are generated on a grid of maturities and log-arithmic moneyness values, with T ∈ [0 , 1] and y =log( K/S 0) ∈ [−2, 2]. We set S0 = 1 and r = 0 .05. The scheme is first-order accurate in ∆ t, with Monte Carlo standard error O(N −1/2paths ). The lower bound S ≥ 0.1S0
+
+keeps the A/S term finite, while antithetic sampling im-proves stability for short maturities. The computed call prices ui,j were then polluted by a relative noise unoisy =
+
+u (1 + 0 .05 η) with η drawn from the standard normal distribution N (0 , 1). Observed prices are sampled as 
+
+x ∼ TruncNorm([ −1, 1]) and t ∼ TruncNorm([0 .1, 2.0]), thus covering the relevant ranges of moneyness and matu-rity. We use N0 = 1 ,000 observed option prices, a 51 × 51 collocation grid for the interior residual, and Nh = 5 ,000 inequality-enforcement points. Loss Function. The to-tal loss is defined as L = λ0 ˆL0 + λf ˆLf + λb ˆLb + λhx
+
+ˆLhx +
+
+λhxx 
+
+ˆLhxx + λht
+
+ˆLht , where ˆL0 denotes the data-mismatch term, ˆLf the PDE residual, and ˆLb the boundary loss. The additional terms ˆLhx , ˆLhxx , and ˆLht quantify vio-lations of the derivative-based no-arbitrage conditions. The coefficients λ are adaptively balanced during train-ing to stabilise the optimisation dynamics.  
+
+> Appendix F: Incompressible Flow Dynamics: Methodology and Implementation Details 1. Reference Simulation and Data Extraction
+
+High-fidelity reference data were obtained using the spectral/hp element method implemented in Nek-tar++ [37]. An unstructured triangular mesh refined around the cylinder resolves the near-wall shear and the downstream vortex street. The governing equations are the two-dimensional incompressible Navier–Stokes equa-tions in a velocity–pressure formulation, advanced by the velocity-correction (i.e. projection) scheme with a Galerkin projection. Advection was discretised in con-vective form and diffusion was treated implicitly. Time progression was used with a second order IMEX scheme with a fixed step ∆ t = 0 .025. Unless otherwise stated, the nominal Reynolds num-ber was Re = 100 (kinematic viscosity ν = 1 /Re), with spectral/hp dealiasing enabled to control aliasing errors introduced by non-linear advection. To further attenu-ate spurious energy in the highest-resolved modes, spec-tral vanishing viscosity with a DG kernel and cutoff ratio 0.5 was applied. Global systems arising from the pres-sure Poisson and elliptic subproblems were solved using direct static condensation. Boundary conditions follow the standard flow cylinder configuration: no-slip velocity on the surface of the cylinder (wall), a uniform inflow (u, v ) = (1 , 0) at the inlet, traction-free conditions at the outlet and weak Dirichlet far field conditions elsewhere. Polynomial expansions used for ( u, v, p ). The calculation was integrated until a statistically steady periodic shedding regime was established at t ≈
+
+800. After discarding the initial transient, flow field snap-shots ( u, v, p ) were sampled in every 0 .1 time unit to form the reference data set. In addition to volumetric fields, we recorded the aerodynamic force coefficients on the cylin-der wall, a probe time series at a fixed monitoring loca-tion in the wake, and per-mode kinetic energies. These diagnostics were used to verify convergence to the limit cycle (through the lift coefficient and probe spectra) and to compute the Strouhal number. All volumetric outputs were written in VTU format and post-processed in ParaView [45]. A reproducible Python script accompanying the data colours the scene by the stream-wise velocity, applies an arrow-glyph over-lay for velocity vectors, and stores camera state and screenshots used for figures in this paper. 16  
+
+> 2. Network, Training, and Sampling
+
+Problem. Two-dimensional incompressible flow past a circular cylinder; we use the precomputed wake dataset provided with the codebase. The computational do-main and boundary conditions are as stated in the main text. Network. An eight–layer MLP of width 20 maps (x, y, t ) 7 → (ϕ, p ); inputs are linearly rescaled to [ −1, 1] before the final layer. Parameters are initialised by Glo-rot initialisation. Optimiser and schedule. Adam optimiser is used with an exponentially decaying learn-ing rate initialised at 10 −3, where the transition step is 2000 and the decay rate is 0 .9. The training runs for 10 ,000 epochs in the main comparisons. Physics and constraints. To preserve physical admissibility, we enforce incompressibility, ∇ · V = 0, and bound the pressure gradient by |∇ p| ≤ 12 ρU 2, which limits ex-cessive shear and ensures numerically stable flow fields, where ρ = 1 and U = 1 in the dimensionless frame-work based on the diameter of the cylinder and the flow speed. The viscosity coefficients ( μ1, μ 2) are learnt to-gether with the network; throughout the sweeps, μ2 con-verged to ≈ 0.01. Regularisation. Let U denote the reference velocity scales, as non-dimensionalisation, with diameter D and inflow U∞, ˜x = x/D , ˜ t = t U ∞/D ,(u, v ) = U∞(˜ u, ˜v), and viscosity ν, so that μ1 = 1 and 
+
+μ2 = ν/ (U∞D) = 1/Re. All losses and constraints are computed in non-dimensional variables. Sampling. 
+
+From these simulations, we extract velocity samples 5 ,000 in the near-wake grids ( x ∈ [1 , 8] , y ∈ [−2, 2]) and the lo-cation grids for PDE residuals and constraints, as fol-lows [1]. Loss Function. The total loss is L := 
+
+λ0u
+
+ˆL0u + λ0v
+
+ˆL0v + λf u ˆLf u + λf v ˆLf v + λh∇p
+
+ˆLh∇p , where ˆL0u/0v are the data mismatch, ˆLfu/f v are PDE residu-als, ˆLh∇p enforces the upper bound following Bernoulli’s principle. The coefficients λ are adaptively balanced dur-ing training.  
+
+> 3. Comparative Analysis
+
+We compare DC-PINNs with standard PINNs and the Nektar++ reference FEM solver. The metrics include RMSE of ( u, v, p ), divergence error, violation rates of in-equality constraints, and running time efficiency. The results show that DC-PINNs maintain incompressibility, reduce shear violations, and achieve pressure/velocity er-rors comparable to those of FEM while outperforming baseline PINNs in stability and physical consistency. The results are compared with those obtained using a spectral/hp element method implemented in the open source software Nektar++ [37], as illustrated in FIG. 9. In training, velocity and pressure fields are defined (ϕ, p ) := ψθ (x, y, t ) , (u, v ) =  ∂ϕ/∂y, −∂ϕ/∂x , follow-ing the architecture in [1]. In the experiment, we con-sider the divergence-free field and vortices shed in the wake having a characteristic size comparable to the di-ameter of the cylinder as derivative constraints, inspired by [46], in (23). 
+
+FIG. 9: Flow past a circular cylinder at Re = 100. Shown are the spatio–temporal fields u(x, y, t ), p(x, y, t )(average adjusted), and vy (x, y, t ). The top row provides the FEM reference and the bottom row shows DC-PINNs. The slabs indicate several time instants along the t-axis. In FIG. 9, DC-PINNs closely reproduces the FEM ref-erence across all three fields. The large-scale vortex-shedding patterns align in phase and wavelength in u,the pressure field p exhibits comparable low-amplitude structures without spurious oscillations, and the cross-stream velocity vy matches the alternating streaks in the wake. Relative to FEM, DC-PINNs shows mild smooth-ing of sharp extrema near the shear layers, yet the coher-ent structures and their temporal evolution remain con-sistent, indicating a faithful reconstruction of the wake dynamics on the evaluation grids. 
+
+FIG. 10: Evolution of trained coefficients ( μ1/2) by epochs. To evaluate the performance of DC-PINNs, FIG. 10 presents the learning of system identification, or data-driven discovery of PDEs, showing how the parameters 
+
+μ = ( μ1, μ 2) describe the observed data. DC-PINNs ef-fectively converge to the reference values for the parame-ters μ during the training process. The results show that DC-PINNs can accurately capture complex flow features, including the von K´ arm´ an vortex street in the cylinder wake. The additional physical constraints enforced by DC-PINNs help maintain solution stability and prevent nonphysical artefacts that may arise in unconstrained neural network approaches. 17 
+
+[1] M. Raissi, P. Perdikaris, and G. E. Karniadakis, Journal of Computational physics 378 , 686 (2019). [2] J. Sirignano and K. Spiliopoulos, Journal of computa-tional physics 375 , 1339 (2018). [3] J. Berg and K. Nystr¨ om, Neurocomputing 317 , 28 (2018). [4] B. Yu et al. , Communications in Mathematics and Statis-tics 6, 1 (2018). [5] E. Kharazmi, Z. Zhang, and G. E. Karniadakis, Com-puter Methods in Applied Mechanics and Engineering 
+
+374 , 113547 (2021). [6] L. Onsager, Physical review 37 , 405 (1931). [7] Y. Patel, V. Mons, O. Marquet, and G. Rigas, Physical Review Fluids 9, 034605 (2024). [8] G. E. Karniadakis, I. G. Kevrekidis, L. Lu, P. Perdikaris, S. Wang, and L. Yang, Nature Reviews Physics 3, 422 (2021). [9] Z. Chen, Y. Liu, and H. Sun, Nature communications 12 ,6136 (2021). [10] I. E. Lagaris, A. Likas, and D. I. Fotiadis, IEEE transac-tions on neural networks 9, 987 (1998). [11] A. Krishnapriyan, A. Gholami, S. Zhe, R. Kirby, and M. W. Mahoney, Advances in neural information pro-cessing systems 34 , 26548 (2021). [12] S. Cuomo, V. S. Di Cola, F. Giampaolo, G. Rozza, M. Raissi, and F. Piccialli, Journal of Scientific Com-puting 92 , 88 (2022). [13] S. Wang, S. Sankaran, and P. Perdikaris, arXiv preprint arXiv:2203.07404 (2022). [14] S. Wang, X. Yu, and P. Perdikaris, Journal of Computa-tional Physics 449 , 110768 (2022). [15] A. D. Jagtap, E. Kharazmi, and G. E. Karniadakis, Com-puter Methods in Applied Mechanics and Engineering 
+
+365 , 113028 (2020). [16] K. Lo and D. Huang, arXiv preprint arXiv:2310.01649 (2023). [17] N. Sukumar and A. Srivastava, Computer Methods in Applied Mechanics and Engineering 389 , 114333 (2022). [18] L. Lu, R. Pestourie, W. Yao, Z. Wang, F. Verdugo, and S. G. Johnson, SIAM Journal on Scientific Computing 
+
+43 , B1105 (2021). [19] Y. Chen, D. Huang, D. Zhang, J. Zeng, N. Wang, H. Zhang, and J. Yan, Journal of Computational Physics 
+
+445 , 110624 (2021). [20] T. Beucler, M. Pritchard, S. Rasp, J. Ott, P. Baldi, and P. Gentine, Physical review letters 126 , 098302 (2021). [21] L. D. McClenny and U. M. Braga-Neto, Journal of Com-putational Physics 474 , 111722 (2023). [22] S. Wang, S. Sankaran, H. Wang, and P. Perdikaris, arXiv preprint arXiv:2308.08468 (2023). [23] H. Son, S. W. Cho, and H. J. Hwang, Neurocomputing 
+
+548 , 126424 (2023). [24] J. Nocedal and S. J. Wright, Numerical optimization 
+
+(Springer, 2006). [25] D. P. Bertsekas, Constrained optimization and Lagrange multiplier methods (Academic press, 2014). [26] X. Glorot and Y. Bengio, in Proceedings of the thir-teenth international conference on artificial intelligence and statistics (JMLR Workshop and Conference Pro-ceedings, 2010) pp. 249–256. [27] D. P. Kingma and J. Ba, arXiv preprint arXiv:1412.6980 (2014). [28] J. Bradbury, R. Frostig, P. Hawkins, M. J. Johnson, C. Leary, D. Maclaurin, G. Necula, A. Paszke, J. Van-derPlas, S. Wanderman-Milne, and Q. Zhang, JAX: com-posable transformations of Python+NumPy programs (2018). [29] J. Heek, A. Levskaya, A. Oliver, M. Ritter, B. Ronde-pierre, A. Steiner, and M. van Zee, Flax: A neural net-work library and ecosystem for JAX (2023). [30] Google, https://research.google.com/colaboratory/faq.html (accessed on 25th Sep 2025) (2025). [31] J. R. Cannon, The one-dimensional heat equation , 23 (Cambridge University Press, 1984). [32] B. Dupire et al. , Risk 7, 18 (1994). [33] S. Kim, H. Han, H. Jang, D. Jeong, C. Lee, W. Lee, and J. Kim, Journal of Computational Science 51 , 101341 (2021). [34] P. P. Boyle and D. Thangaraj, Decisions in Economics and Finance 23 , 31 (2000). [35] R. Peyret and T. D. Taylor, Computational methods for fluid flow (Springer Science & Business Media, 2012). [36] G. K. Batchelor, An introduction to fluid dynamics 
+
+(Cambridge university press, 2000). [37] D. Moxey, C. D. Cantwell, Y. Bao, A. Cassinelli, G. Cas-tiglioni, S. Chun, E. Juda, E. Kazemi, K. Lackhove, J. Marcon, et al. , Computer Physics Communications 
+
+249 , 107110 (2020). [38] M. D. McKay, R. J. Beckman, and W. J. Conover, Tech-nometrics 42 , 55 (2000). [39] Z. Gao, L. Yan, and T. Zhou, SIAM Journal on Scientific Computing 45 , A1971 (2023). [40] L. Lu, X. Meng, Z. Mao, and G. E. Karniadakis, SIAM review 63 , 208 (2021). [41] R. Frostig, M. J. Johnson, and C. Leary, in SysML con-ference 2018 (2019). [42] A. D. Jagtap and G. E. Karniadakis, Communications in Computational Physics 28 (2020). [43] B. Moseley, A. Markham, and T. Nissen-Meyer, Ad-vances in Computational Mathematics 49 , 62 (2023). [44] P. Carr and D. B. Madan, Finance Research Letters 2,125 (2005). [45] U. Ayachit, The paraview guide: a parallel visualization application (Kitware, Inc., 2015). [46] S. Singh and S. Mittal, Journal of fluids and structures 
+
+20 , 1085 (2005).

@@ -1,0 +1,599 @@
+Title: On Switched Event-triggered Full State-constrained Formation Control for Multi-vehicle Systems
+
+URL Source: https://arxiv.org/pdf/2604.10993v1
+
+Published Time: Tue, 14 Apr 2026 01:43:38 GMT
+
+Number of Pages: 6
+
+Markdown Content:
+# On Switched Event-triggered Full State-constrained Formation Control for Multi-vehicle Systems 
+
+Zihan Li 1, Ziming Wang 2,3, Xin Wang 1*
+
+1. Southwest University, Chongqing, 400715, China. E-mail: xinwangswu@163.com 2. The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, 511453, China. 3. Tsinghua University, Beijing, 100084, China. 
+
+Abstract: Vehicular formation control is an important component of intelligent transportation systems (ITSs). In practical implementations, the controller design needs to satisfy multiple state constraints, including inter-vehicle spacing and vehicle speed. When system states approach the constraint boundaries, control singularity and excessive control effort may arise, which limits the practical applicability of existing methods. To address this problem, this paper investigates a class of nonlinear vehicular formation systems for autonomous vehicles (AVs) with uncertain dynamics and develops a switched event-triggered control framework. A smooth nonlinear mapping is first introduced to transform the constrained state space into an unconstrained one, thereby avoiding singularity near the constraint boundaries. A radial basis function neural network (RBFNN) is then employed to approximate the unknown nonlinear dynamics online, based on which an adaptive controller is constructed via the backstepping technique. In addition, a switched event-triggered mechanism (SETM) is designed to increase the control update frequency during the transient stage and reduce the communication burden during the steady-state stage. Lyapunov-based analysis proves that all signals in the closed-loop system remain uniformly bounded and that Zeno behavior is excluded. Simulation results verify that the proposed method achieves stable platoon formation under prescribed state constraints while significantly reducing communication updates. 
+
+Key Words: Formation control, State constrained system, Event-triggered control (ETC), Autonomous vehicles (AVs) 
+
+1 Introduction 
+
+For decades, formation control in multi-agent systems (MASs) has attracted widespread attention due to its appli-cations in autonomous vehicles (AVs), collaborative robots, and intelligent transport systems [1, 2]. In these scenarios, vehicle platooning is regarded as a key technology capable of improving traffic efficiency and reducing energy consump-tion [3], while also enhancing road safety [4, 5]. During convoy operation, each vehicle must not only track the tar-get position but also maintain a safe following distance and comply with speed limits. If these constraints are violated, collisions or convoy instability may occur. Therefore, strict adherence to state constraints is essential for the practical application of autonomous convoy systems [6, 7]. However, the barrier Lyapunov function (BLF) method [8–10] often faces structural singularity issues near con-straint boundaries. When states approach these boundaries, penalty terms can increase sharply, leading to excessive con-trol inputs or numerical sensitivity [11]. In dynamic sce-narios such as fleet reorganization, this may cause actuator saturation and degrade performance [12]. Consequently, en-suring safety constraints while avoiding control singularities remains a significant research challenge [13–18]. Constraint transformation methods have recently received increasing attention [19, 20]. By mapping constrained phys-ical states into an unconstrained space, they can avoid the singularity of conventional barrier functions [21]. Control design in the transformed space also reduces numerical dif-ficulty and simplifies stability analysis [22, 23]. Motivated by this idea, this paper uses a smooth nonlinear mapping to handle spacing and velocity constraints [24]. In addition to safety constraints, communication effi-ciency is also a key issue in distributed fleet control [25]. Conventional methods typically rely on periodic sampling and continuous communication, which can easily lead to the transmission of large amounts of redundant data [26]. Event-triggered control (ETC) updates control signals only when trigger conditions are met, thereby significantly reducing the communication burden [27–31]. Most ETC schemes use a fixed triggering threshold [25, 27, 30]. For nonlinear vehicular platoons with full-state con-straints, this may cause a trade-off between transient perfor-mance and communication efficiency: a small threshold in-creases updates, whereas a large one slows the response. The problem becomes more pronounced when state constraints, model uncertainty, and stage-dependent errors are consid-ered together [29, 32]. To address this issue, this paper in-troduces a switched event-triggered mechanism that adjusts the threshold according to the current error magnitude. Existing studies mainly emphasize either communication efficiency or constrained control [3, 9, 10, 12]. For vehi-cle formations with full-state constraints and uncertain dy-namics, it is still difficult to develop a unified framework that balances constraint satisfaction, tracking performance, robustness, and communication efficiency [14, 20]. To address this issue, this paper proposes a robust adaptive ETC scheme for nonlinear vehicle formations with full-state constraints. A smooth nonlinear mapping transforms con-strained states into unconstrained coordinates, avoiding con-trol singularities. An RBFNN approximates unknown dy-namics, and a switched event-triggered mechanism (SETM) adjusts the update frequency. The main contributions are as follows:  
+
+> •
+
+We develop a smooth diffeomorphism-based mapping that transforms constrained states into an unconstrained domain, ensuring velocity and spacing constraints with-out control singularities.  
+
+> arXiv:2604.10993v1 [eess.SY] 13 Apr 2026 •
+
+We develop an adaptive controller combining mapping gains and RBFNNs to compensate for uncertainties, and prove that all closed-loop signals are uniformly ul-timately bounded (UUB).  
+
+> •
+
+We design a SETM that adjusts update thresholds to re-duce communication load and actuator wear while ex-cluding Zeno behavior. Section 2 introduces graph theory, vehicle models, state constraints and control objectives. Section 3 details an adap-tive control framework that includes the full-state constraint mapping, the neural network, and the SETM. Section 4 proves the system’s stability using Lyapunov theory. Section 5 verifies the algorithm’s effectiveness through a simulation. Finally, Section 6 summarizes the paper. 
+
+2 Preliminaries and Problem Formulation 
+
+2.1 Graph theory and square formation 
+
+Consider a MAS consisting of N AVs. The communica-tion topology is described by a connected undirected graph 
+
+G = ( V, E, A), where V = {1, . . . , N } is the node set, E
+
+is the edge set, and A = [ aij ] is the adjacency matrix. If vehicles i and j exchange information, then aij = aji > 0;otherwise aij = 0 . The neighbor set of vehicle i is defined as Ni = {j ∈ V | aij > 0}. The Laplacian matrix is given by L = D − A , where D = diag( d1, . . . , d N ) with 
+
+di = PNj=1 aij .Let pi = [ xi, y i]T and vi = [ vxi , v yi ]T denote the posi-tion and velocity of vehicle i, respectively. Each vehicle is assigned a desired relative coordinate pdi = [ xdi , y di ]T . For a four-vehicle square formation, the desired positions are cho-sen as pd 
+
+> 1
+
+= (0 , 0) , pd 
+
+> 2
+
+= ( d, 0) , pd 
+
+> 3
+
+= ( d, d ), and pd 
+
+> 4
+
+= (0 , d ).The formation tracking error based on neighbor information is defined as 
+
+z1i = X
+
+> j∈N i
+
+aij 
+
+(pi − pj ) − (pdi − pdj ) . (1) where z1i = 0 for all i ∈ V , and pi −pj = pdi −pdj , indicating that the desired square formation is achieved. 
+
+2.2 Vehicle dynamics 
+
+Consider the second-order nonlinear dynamics of the ith AV. Let pi = [xi, y i]T and vi = [vxi , v yi ]T denote the position and velocity, respectively. Define the state vector 
+
+xi = [ pi, v i]T . The vehicle dynamics are described by the following equations: 
+
+(
+
+˙pi = vi
+
+˙vi = fi(xi) + gi(xi)ui + di(t) (2) where ui is the control input, fi(xi) and gi(xi) are unknown smooth nonlinear functions, and di(t) represents a bounded external disturbance. To approximate the unknown nonlinear terms fi(xi), a RBFNN is employed 
+
+fi(xi) = W Ti ϕi(xi) + εi (3) where Wi is the ideal weight matrix, ϕi(xi) is a Gaussian vector, and εi represents the approximation error. Suppose the error upper bound as ∥εi∥ ≤ ¯εi, where ¯εi is a constant. 
+
+2.3 State constraints 
+
+Each vehicle is subject to spacing and speed constraints. Let di = pi−1 − pi denote the longitudinal spacing, and vi
+
+denote the speed. The safety constraints are dmin < d i <dmax , vmin < v i < v max . To incorporate the speed con-straints into the controller design, we introduce a smooth diffeomorphism that maps the constrained speed vi to the unconstrained variable sv,i , then we have 
+
+sv,i = ln 
+
+ vi − vmin 
+
+vmax − vi
+
+
+
+(4) The logarithmic mapping is valid for vmin < v i < v max .Under feasible initial conditions, the inverse mapping and Lyapunov analysis keep the closed-loop trajectories inside the admissible set. In practice, a projection or saturation op-erator can be used before evaluating the mapping to avoid numerical failure, such that 
+
+vi ∈ [vmin + η, v max − η] (5) where η > 0 is a small margin. Based on the formation tracking error z1i defined in Equa-tion 1, the second-order error is constructed as follows: 
+
+z2i = sv,i − αi (6) where αi represents the virtual control input. 
+
+2.4 Control Objectives 
+
+The objective is to design a controller ui and an associ-ated SETM for each vehicle so that the MAS achieves the desired square formation under all state constraints. A non-linear mapping enforces distance and velocity constraints, an RBFNN compensates for unknown dynamics and distur-bances, and the SETM reduces communication load while preserving control performance. Lyapunov analysis guaran-tees UUB of all closed-loop signals and excludes Zeno be-havior. 
+
+Assumption 1. The fleet communication topology G is an undirected connected network, i.e., for any vehicles i and j,there exists at least one communication path between them. 
+
+Assumption 2. Both the external disturbance di(t) and the RBFNN approximation error εi(xi) are bounded. Specifi-cally, there exist constants ¯di and ¯εi such that 
+
+∥di(t)∥ ≤ ¯di, ∥εi(xi)∥ ≤ ¯εi, ∀t ≥ 0. (7) 
+
+Assumption 3. The control input gain matrix gi(xi) in Equation (1) is nonsingular and invertible for all xi ∈ Rn.Furthermore, there exist constants gmin and gmax such that 
+
+0 < g min ≤ ∥ gi(xi)∥ ≤ gmax . (8) 
+
+3 Main Results 
+
+3.1 Transformed system dynamics 
+
+This subsection derives the unconstrained dynamics in the transformed coordinates. Based on the distance di =∥pi−1 − pi∥ and its derivative ˙di = (pi−1−pi)T 
+
+> di
+
+(vi−1 − vi),we apply the chain rule to the spacing mapping sd,i =ln(( di − dmin )/(dmax − di)) . The transformed spacing dy-namics are obtained as: 
+
+˙sd,i = Γ d,i 
+
+(pi−1 − pi)T
+
+di
+
+(vi−1 − vi) (9) where Γd,i = ( di − dmin )−1 + ( dmax − di)−1 is the trans-formation gain. Similarly, for the longitudinal velocity vi, the mapped state is sv,i = ln(( vi − vmin )/(vmax − vi)) . Differentiat-ing sv,i and substituting the vehicle dynamics ˙vi = fi(xi) + 
+
+gi(xi)ui + di(t), the transformed velocity dynamics is de-rived as: 
+
+˙sv,i = Γ v,i [fi(xi) + gi(xi)ui + di(t)] (10) where Γv,i = ( vi − vmin )−1 + ( vmax − vi)−1. Consequently, the original constrained formation problem is converted into an unconstrained stabilization task. Both Γd,i and Γv,i increase as the states approach the con-straint boundaries. This strengthens the repulsive effect of the transformation but also increases numerical sensitivity. Therefore, the analysis is established under admissible ini-tial conditions, and a small safety margin is used in practice to avoid excessive amplification. 
+
+3.2 Adaptive controller design 
+
+An adaptive backstepping controller is developed to drive formation errors to zero while satisfying state con-straints. For the position layer, the error derivative is ˙z1i =P 
+
+> j∈N i
+
+aij (vi − vj ). To achieve consensus, we consider the Lyapunov function V1 = 12
+
+PNi=1 zT
+
+> 1i
+
+z1i and design the vir-tual control law as: 
+
+αi = −K1iz1i (11) where K1i is a positive gain matrix. Define the transformed velocity-layer tracking error as z2i = sv,i − αi. The velocity layer dynamics then becomes: 
+
+˙z2i = Γ v,i 
+
+fi(xi) + gi(xi)ui + di(t) − ˙αi. (12) The unknown dynamics are approximated by the RBFNN such that fi(xi) = W Ti ϕi(xi) + εi. To ensure stabil-ity, we construct the composite Lyapunov function V =PNi=1 (V1i + 12 zT
+
+> 2i
+
+z2i + 12 ˜W Ti Γ−1 
+
+> i
+
+˜Wi). The adaptive update law and the final control law are synthesized as: 
+
+˙ˆWi = Γ iϕi(xi)zT 
+
+> 2i
+
+− σw,i ˆWi, σw,i > 0 (13) 
+
+ui = g−1 
+
+> i
+
+(xi)[ −K2iz2i − ˆW Ti ϕi(xi) + ˙ αi] (14) where K2i is a positive gain matrix. Here, σw,i > 0 is a leakage coefficient that suppresses parameter drift caused by bounded disturbances and approximation errors. The modi-fied adaptive law compensates the terms associated with ˜Wi
+
+and improves robustness. As a result, all closed-loop signals are UUB, and the formation errors converge to a neighbor-hood of the origin while satisfying the constraints. 
+
+3.3 Switched event-triggered mechanism 
+
+A SETM is introduced to reduce communication updates. The control input is updated only at discrete triggering in-stants. Let {tik}∞ 
+
+> k=0
+
+denote the discrete trigger sequence for vehicle i. Within the interval t ∈ [tik, t ik+1 ), the control input applied to the vehicle is maintained constant via a sample-and-hold process: 
+
+ui(t) = ui(tik) (15) The measurement error is defined as: 
+
+ei(t) = z2i(tik) − z2i(t) (16) where z2i is the velocity-layer error defined in (6). At the trigger instant tik, it is evident that ei(tik) = 0 .The triggering function is defined as: 
+
+Ψi = ∥ei(t)∥2 − σi(t)∥z2i(t)∥2 (17) In (17), σi(t) is a dynamic switching parameter designed to adapt to different error magnitudes, defined by: 
+
+σi(t) = 
+
+(
+
+δ1, ∥z2i(t)∥ ≥ ϵδ2, ∥z2i(t)∥ < ϵ (18) where the design parameters satisfy 0 < δ 1 < δ 2 < 1, and 
+
+ϵ > 0 represent a preset threshold. The next trigger time 
+
+tik+1 is determined by: 
+
+tik+1 = inf t > t ik | Ψi(t) ≥ 0 (19) By this mechanism, a smaller threshold δ1 is adopted when the tracking error is large to ensure frequent updates, whereas δ2 is used near the origin to enlarge the transmis-sion intervals and reduce communication load without com-promising stability. Since all closed-loop signals are bounded, and ϕi(xi), εi,
+
+di(t), ˜Wi, and Γv,i are all bounded, the closed-loop dynam-ics in (21) imply that there exists a constant L > 0 such that 
+
+∥ ˙z2i∥ ≤ L. Hence, ∥ei(t)∥ ≤ L(t − tik).
+
+3.4 Parameter selection and tuning procedure 
+
+For practical implementation, the selection principles of the controller gains and triggering parameters are summa-rized as follows. The key parameters are selected hierarchically. First, 
+
+K1i ensures convergence of the position-layer error. Then, 
+
+K2i is chosen to satisfy Theorem 1, i.e., k2,i > 12 + σ
+
+> 2
+
+with σ = max {δ1, δ 2}. The triggering parameters satisfy 
+
+0 < δ 1 < δ 2 < 1: a smaller δ1 improves transient re-sponse, whereas a larger δ2 reduces communication near steady state. The threshold ϵ separates the two regimes and is chosen by balancing convergence and noise sensitivity. 
+
+4 Stability Analysis 
+
+Theorem 1. Consider the MASs (2) under the proposed control scheme. If k1 > 0 and k2 > 12 + σ 
+
+> 2
+
+with σ =max {δ1, δ 2}, all closed-loop signals are UUB. Moreover, the leakage term guarantees bounded adaptive weights un-der bounded disturbances. The tracking errors converge to a compact set around the origin, and the state constraints are strictly preserved. Furthermore, Zeno behavior is excluded. Proof. In the backstepping design, define z1i as the position error. Due to the SETM in Section 3.3, the control input is updated only at triggering instants and held constant within 
+
+t ∈ [tk, t k+1 ). This introduces the measurement error: 
+
+ei(t) = z2i(tk) − z2i(t). (20) Using the RBFNN approximation fi(xi) = W Ti ϕi + εi,the closed-loop second-layer error dynamics are: 
+
+˙z2i = Γ v,i 
+
+h ˜W Ti ϕi − k2z2i + ei + εi + di
+
+i
+
+(21) where ˜Wi = Wi − ˆWi denotes the weight estimation error. With the leakage term, the weight estimation error remains bounded under bounded disturbances.Consider the follow-ing global Lyapunov function candidate: 
+
+V =
+
+> N
+
+X
+
+> i=1
+
+ 12 zT
+
+> 1i
+
+z1i + 12 zT
+
+> 2i
+
+z2i + 12 ˜W Ti Γ−1 
+
+> i
+
+˜Wi
+
+
+
+(22) Taking the time derivative of (22) and substituting the closed-loop dynamics, we have: 
+
+˙V =
+
+> N
+
+X
+
+> i=1
+
+h
+
+zT 
+
+> 1i
+
+˙z1i + zT
+
+> 2i
+
+Γv,i 
+
+ ˜W Ti ϕi − k2z2i + ei + εi + di
+
+
+
+− ˜W Ti Γ−1
+
+> i
+
+˙ˆWi
+
+i
+
+(23) Substituting the modified adaptive law into (23), the cross terms associated with the neural-network approximation are compensated. The additional leakage-related term can be upper bounded via Young’s inequality and absorbed into the bounded residual term, while simultaneously preventing un-bounded drift of the adaptive weights. Applying Young’s inequality and the SETM triggering condition ∥ei∥2 ≤
+
+σi∥z2i∥2, (23) can be upper-bounded as: 
+
+˙V ≤
+
+> N
+
+X
+
+> i=1
+
+h
+
+− k1Γd,i ∥z1i∥2
+
+− Γv,i 
+
+
+
+k2 − 12 − σi
+
+2
+
+
+
+∥z2i∥2 + Ci
+
+i (24) where Ci is a positive constant collecting the bounds of the approximation errors, disturbances, and leakage terms. If the controller gain satisfies k2 > 12 + σ 
+
+> 2
+
+with σ = max {σi}, then (24) implies: ˙V ≤ − λV + C (25) where λ > 0 and C > 0 are design-dependent constants. Solving the inequality (25) yields: 
+
+0 ≤ V (t) ≤ Cλ +
+
+
+
+V (0) − Cλ
+
+
+
+e−λt (26) This result guarantees that all closed-loop signals, in-cluding z1i, z2i, and ˜Wi, are uniformly ultimately bounded (UUB). Thus, the leakage term preserves the UUB prop-erty and guarantees bounded adaptive weights. Furthermore, since the transformed states z1i and z2i are bounded, the properties of the inverse logarithmic mapping ensure that the Table 1: Control signal update statistics.           
+
+> Vehicle Total Triggers Reduction (%) AV1 212 99.58 AV2 301 99.40 AV3 306 99.39 AV4 678 98.64
+
+physical spacing and velocity remain strictly within the pre-scribed admissible sets. Since all closed-loop signals are bounded, there exists a constant L > 0 such that ∥ ˙z2i∥ ≤ L, and hence ∥ei(t)∥ ≤ 
+
+L(t − tik). If ∥z2i∥ ≥ ϵ, then ∥ei∥ ≥ √δ1ϵ and thus tik+1 −
+
+tik ≥ √δ1ϵ/L . If ∥z2i∥ < ϵ , similarly, tik+1 − tik ≥ √δ2ϵ/L .Therefore, 
+
+Tmin = min {√δ1, √δ2}ϵL > 0, (27) which excludes Zeno behavior. 
+
+5 Simulation 
+
+5.1 Simulation setup 
+
+Simulations are conducted in MATLAB to evaluate the proposed adaptive switched ETC scheme. The formation consists of one leader and three followers, with vehicle masses mi set as 1800 kg, 1700 kg, 1750 kg and 1850 kg for i = 1 , . . . , 4, respectively. The longitudinal dynamics are given by ˙vxi = ( uxi + fxi + dxi )/m i, where the un-known term fxi is approximated by an RBFNN. The simu-lation lasts 50 s with a sampling period of 0.001 s. The target is a two-lane square formation with a longitu-dinal gap of 12 m. The leader maintains 12 m/s for t < 25 
+
+s, decelerates to 6 m/s between 25 s and 35 s, and remains stable thereafter. 
+
+5.2 Results analysis 
+
+Figures 1a and 1b illustrate the longitudinal and lateral tracking performance. Despite initial positional deviations, the vehicles achieved the preset following distance of 12 me-tres within approximately 4 seconds. When the lead vehicle decelerated, the convoy remained stable, indicating accurate tracking performance. Figure 1c illustrates the trend in inter-vehicle distances. Throughout the simulation, all inter-vehicle distances re-mained above the safety threshold, confirming that the col-lision avoidance function and the formation topology were maintained. Figures 2a and 2b show the longitudinal and lateral veloc-ity responses, respectively. Throughout the simulation, both the actual and observed velocities remained within the pre-defined constraints. Even during the deceleration phase of the lead vehicle, the velocity trajectories remained within the permitted range, confirming that the proposed diffeomorphic mapping is effective in enforcing the velocity constraints. Figure 3 shows the trigger intervals generated by SETM. During the transient phase, these intervals become shorter; during steady-state operation, they become longer. Table 1 lists the total number of trigger events for each vehicle. Compared to periodic control, the communication load is reduced by more than 98%. Furthermore, all trig-ger intervals are strictly maintained within the positive range, Time (s)      
+
+> 010 20 30 40 50
+> Long. Position (m)
+> 0
+> 100
+> 200
+> 300
+> 400
+> 500
+> 600
+
+AV1 
+
+AV2 
+
+AV3 
+
+AV4    
+
+> 0246
+> 20
+> 40
+> 60
+> 80
+> 100
+
+(a) Longitudinal tracking Time (s)      
+
+> 010 20 30 40 50
+> Lat. Position (m)
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> 7
+> 8
+> 9
+
+AV1 
+
+AV2 
+
+AV3 
+
+AV4 (b) Lateral tracking Time (s)                          
+
+> 010 20 30 40 50
+> Distances (m)
+> 0
+> 10
+> 20
+> 30 AV1
+> Distance with AV2
+> Distance with AV3
+> Distance with AV4
+> Time (s)
+> 010 20 30 40 50
+> 0
+> 10
+> 20
+> 30 AV2
+> Distance with AV1
+> Distance with AV3
+> Distance with AV4
+> Time (s)
+> 010 20 30 40 50
+> Distances (m)
+> 0
+> 10
+> 20
+> 30 AV3
+> Distance with AV1
+> Distance with AV2
+> Distance with AV4
+> Time (s)
+> 010 20 30 40 50
+> 0
+> 10
+> 20
+> 30 AV4
+> Distance with AV1
+> Distance with AV2
+> Distance with AV3
+
+(c) Safe distances 
+
+Fig. 1: Longitudinal and lateral tracking performance of the vehicle formation control and safe distances in control process. 0 10 20 30 40 50                    
+
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25 AV1
+> Actual
+> Observed
+> 010 20 30 40 50
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25 AV2
+> Actual
+> Observed
+> 010 20 30 40 50
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25 AV3
+> Actual
+> Observed
+> 010 20 30 40 50
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25 AV4
+> Actual
+> Observed
+
+(a) Longitudinal velocity 0 10 20 30 40 50                 
+
+> -2
+> -1
+> 0
+> 1
+> 2
+> AV1
+> Observed
+> Actual
+> 010 20 30 40 50
+> -2
+> -1
+> 0
+> 1
+> 2
+> AV2
+> Observed
+> Actual
+> 010 20 30 40 50
+> -2
+> -1
+> 0
+> 1
+> 2
+> AV3
+> Observed
+> Actual
+> 010 20 30 40 50
+> -2
+> -1
+> 0
+> 1
+> 2
+> AV4
+> Observed
+> Actual
+
+(b) Lateral velocity 
+
+Fig. 2: Safety admissibility audit for longitudinal and lateral velocities of the AV formation. which is consistent with the results of the theoretical analysis of the no-Zeno phenomenon. 
+
+Remark 1. Compare with [23], the proposed framework ex-plicitly incorporates state-constraint conditions by imposing limits on vehicle speed, thereby replicating realistic scenar-ios where speed restrictions apply to moving vehicles. This imposes higher demands on the control process. 
+
+6 Conclusion 
+
+This paper studies vehicular formation control with full-state constraints. A smooth nonlinear mapping is introduced to transform constrained states into unconstrained coordi-nates, thereby avoiding control singularities near the con-straint boundaries. Based on this, an adaptive backstep-ping controller with an RBFNN is developed to handle un-known nonlinear dynamics, and a SETM is designed to re-duce communication updates. Theoretical analysis shows that all closed-loop signals are UUB, the adaptive weights remain bounded under bounded disturbances, and Zeno be-havior is excluded. Simulations verify the effectiveness of the proposed method in formation tracking, constraint satis-faction, and communication reduction. 
+
+References 
+
+[1] Y. Liu, X. Wang, N. Pang, and Y. Lei, “Predefined-time neural network-based consensus for constrained multiple AUV sys-tems with hysteresis,” IEEE Trans. Intell. Transp. Syst. , vol. 27, no. 3, pp. 3164-3178, Mar. 2026. [2] Y. Fei, P. Shi, Y. Liu, and L. Wang, “Critical roles of control engineering in the development of intelligent and connected vehicles,” J. Intell. Connect. Veh. , vol. 7, no. 2, pp. 79-85, Jun. 2024. [3] X. Wang, N. Pang, Y. Xu, T. Huang, and J. Kurths, “On state-constrained containment control for nonlinear multiagent sys-tems using event-triggered input,” IEEE Trans. Syst. Man Cy-bern. Syst. , vol. 54, no. 4, pp. 2530-2538, Apr. 2024. [4] S. Liu, S. Cong, and L. Yang, “Survey of research on au-tonomous driving testing with large models,” Commun. Transp. Res. , vol. 5, p. 100179, Dec. 2025. [5] Y. Liao, Y. Lei, Z. Wang, and X. Wang, “Event-triggered opti-mal consensus for discrete-time nonlinear multiagent systems with DoS attacks via reinforcement learning method,” Nonlin-ear Dyn. , vol. 114, art. no. 223, Feb. 2026. [6] X. Wang, Y. Liao, L. Tan, W. Zhang, and H. Li, “Observer-based event-triggered optimal control for nonlinear multiagent systems with input delay via reinforcement learning strategy,” 
+
+IEEE Trans. Emerg. Top. Comput. Intell. , vol. 9, no. 3, pp. Time (s)                         
+
+> 010 20 30 40 50
+> =k (s)
+> 0
+> 0.5
+> 1
+> 1.5
+> 2
+> 2.5 AV1
+> Time (s)
+> 010 20 30 40 50
+> =k (s)
+> 0
+> 0.5
+> 1
+> 1.5
+> 2
+> 2.5 AV2
+> Time (s)
+> 010 20 30 40 50
+> =k (s)
+> 0
+> 0.5
+> 1
+> 1.5
+> 2
+> 2.5 AV3
+> Time (s)
+> 010 20 30 40 50
+> =k (s)
+> 0
+> 0.5
+> 1
+> 1.5
+> 2
+> 2.5 AV4
+
+Fig. 3: The Longitudinal update time interval of SETM law for the AVs in square formation control process. 
+
+2398-2409, Jun. 2025. [7] Y. Yang, J. Zhan, Y. Liu, and Q. Wang, “Cross-city trans-fer learning: Applications and challenges for smart cities and sustainable transportation,” Commun. Transp. Res. , vol. 5, p. 100206, Dec. 2025. [8] K. Sachan and R. Padhi, “Barrier Lyapunov function based state-constrained control for a class of nonlinear systems,” 
+
+IFAC-PapersOnLine , vol. 51, no. 1, pp. 7-12, Jun. 2018. [9] Y. J. Liu, S. Lu, S. Tong, X. Chen, C. L. P. Chen, and D. J. Li, “Adaptive control-based Barrier Lyapunov Functions for a class of stochastic nonlinear systems with full state con-straints,” Automatica , vol. 87, pp. 83-93, Jan. 2018. [10] Z. Wang, “Hybrid Event-triggered Control of Nonlinear Sys-tem with Full State Constraints and Disturbance,” in Proc. 36th Chin. Control Decis. Conf. (CCDC) , pp. 2122-2127, May 2024. [11] C. Dong, Y. Liu, and Q. Wang, “Barrier Lyapunov function based adaptive finite-time control for hypersonic flight vehicles with state constraints,” ISA Trans. , vol. 96, pp. 163-176, Jan. 2020. [12] Z. Wang, X. Wang, and N. Pang, “Adaptive Fixed-Time Con-trol for Full State-Constrained Nonlinear Systems: Switched-Self-Triggered Case,” IEEE Trans. Circuits Syst. II, Exp. Briefs , vol. 71, no. 2, pp. 752-756, Feb. 2024. [13] L. T. Xing, C. Y. Wen, Z. T. Liu, H. Y. Su, and J. P. Cai, “Event-Triggered Adaptive Control for a Class of Uncertain Nonlinear Systems,” IEEE Trans. Autom. Control , vol. 62, no. 4, pp. 2071-2076, Apr. 2017. [14] X. Wang, S. Zhang, H. Li, W. Zhang, H. Li, and T. Huang, “Neuroadaptive containment control for nonlinear multiagent systems with input saturation: An event-triggered communica-tion approach,” IEEE Trans. Syst. Man Cybern. Syst. , vol. 55, no. 5, pp. 3163-3173, May 2025. [15] C. Gong, Z. Wang, G. Jiang, X. Wang, and Y. Ji, “Effective fixed-time control for constrained nonlinear system,” in Proc. 11th Int. Conf. Control Decis. Inf. Technol. (CoDIT) , pp. 3000-3005, Jul. 2025. [16] L. Meng, X. Wang, and Z. Wang, “Event-triggered opti-mized control for nonlinear multiagent systems via reinforce-ment learning strategy,” Cogn. Comput. , vol. 17, no. 5, art. no. 145, Sep. 2025. [17] X. Wang, Z. Yin, Y. Lei, T. Huang, and J. Kurths, “Secure consensus for switched multiagent systems under DoS attacks: Hybrid event-triggered and impulsive control approach,” IEEE Trans. Cybern. , vol. 55, no. 5, pp. 2400-2410, May 2025. [18] Z. Li, Z. Wang, C. Liu, and X. Wang, “Neural-network-based self-triggered observed platoon control for autonomous vehi-cles,” arXiv preprint arXiv:2601.01335 , Jan. 2026. [19] X. Liang, D. Bao, and S. S. Ge, “Practical adaptive control of state constrained system via zone barrier Lyapunov function,” 
+
+Syst. Control Lett. , vol. 208, art. no. 106333, Jan. 2026. [20] Y. Liu, N. Pang, Z. Wang, and X. Wang, “Approximation-free full-state error constrained distributed formation control with unified preset-time performance,” Commun. Nonlinear Sci. Nu-mer. Simul. , vol. 157, art. no. 109727, Jun. 2026. [21] Y. Qiao, X. Huang, B. Yang, F. Geng, B. Wang, M. Hao, and S. Li, “Formation tracking control for multi-agent sys-tems with collision avoidance and connectivity maintenance,” 
+
+Drones , vol. 6, no. 12, art. no. 419, Dec. 2022. [22] Z. Wang, S. Piao, Y. Ji, X. Wang, and F. Tsung, “An efficient dual-observer method for leader-following consensus control of multiagent systems,” in 2025 IEEE 21st Int. Conf. Autom. Sci. Eng. (CASE) , pp. 3468-3473, Aug. 2025. [23] Z. Wang, Y. Zhang, C. Zhao, and H. Yu, “Adaptive event-triggered formation control of autonomous vehicles,” arXiv preprint arXiv:2506.06746 , Jun. 2025. [24] M. Zhang, Y. Sun, H. Liu, X. Yi, and D. Ding, “Event-triggered formation-containment control for multi-agent sys-tems based on sliding mode control approaches,” Neurocom-puting , vol. 562, art. no. 126905, Dec. 2023. [25] S. Wen, G. Guo, B. Chen, and X. Gao, “Event-triggered co-operative control of vehicle platoons in vehicular ad hoc net-works,” Inf. Sci. , vol. 459, pp. 341-353, Aug. 2018. [26] T. Wu, J. Wang, and B. Tian, “Periodic event-triggered forma-tion control for multi-UAV systems with collision avoidance,” 
+
+Chin. J. Aeronaut. , vol. 35, no. 8, pp. 193-203, Aug. 2022. [27] A. T. Nguyen, T. B. Nguyen, and S. K. Hong, “Dynamic event-triggered time-varying formation control of second-order dynamic agents: Application to multiple quadcopters systems,” 
+
+Appl. Sci. , vol. 10, no. 8, art. no. 2814, Apr. 2020. [28] G. Jiang, S. Yang, Y. Wang, and P. Hui, “When trust collides: Exploring human-LLM cooperation intention through the pris-oner’s dilemma,” Int. J. Hum.-Comput. Stud. , vol. 209, art. no. 103740, Feb. 2026. [29] Y. Xue, C. Wang, C. Ding, B. Yu, and S. Cui, “Observer-based event-triggered adaptive platooning control for autonomous ve-hicles with motion uncertainties,” Transp. Res. Part C Emerg. Technol. , vol. 159, art. no. 104462, Feb. 2024. [30] W. Wang, C. Wang, Z. Wang, B. Han, C. He, J. Cheng, X. Luo, M. Yuan, and J. Kurths, “Nonlinear consensus-based au-tonomous vehicle platoon control under event-triggered strat-egy in the presence of time delays,” Appl. Math. Comput. , vol. 404, art. no. 126246, Sep. 2021. [31] Z. Wang, Y. Gao, A. I. Rikos, N. Pang, and Y. Ji, “Fixed-relative-switched threshold strategies for consensus tracking control of nonlinear multiagent systems,” in Proc. IEEE 19th Int. Conf. Control Autom. (ICCA) , pp. 899-905, Jun. 2025. [32] Y. Xu, Y. Liu, N. Zhao, and K. Mathiyalagan, “Observer-based event-triggered formation control for connected vehicles under DoS attacks,” Math. Comput. Simul. , vol. 240, pp. 920-937, Feb. 2026.
