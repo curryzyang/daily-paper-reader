@@ -1,0 +1,2529 @@
+Title: 2604.17922v1.pdf
+
+URL Source: https://arxiv.org/pdf/2604.17922v1
+
+Published Time: Tue, 21 Apr 2026 02:48:12 GMT
+
+Number of Pages: 30
+
+Markdown Content:
+# Optimal Linear Interpolation under Differential Information: application to the prediction of perfect flows 
+
+## Soumyodeep Mukhopadhyay 1,2,3 Didier Rulli` ere 1,2 Rodolphe Le Riche 2,1
+
+## Xavier Bay 1,2 Laurent Genest 3 David Gaudrie 31 Mines Saint- ´Etienne 2 CNRS, UMR 6158 LIMOS, FR 
+
+3 Stellantis, FR 
+
+Abstract 
+
+Approximation of functions satisfying partial differential equations (PDEs) is paramount for simulation of physical fluid flows and other problems in physics. Recently, physics-informed machine learning approaches have proven useful as a data-driven complement to numerical models for partial differential equations, bringing faster responses and allowing us to capitalize on past observations. However, their efficiency and convergence depend on the availability of vast training datasets. For sparse observations, Gaussian process regression or Kriging has emerged as a powerful interpolation model, offering principled estimates and uncertainty quantification. Several attempts have been made to condition Gaussian processes on linear PDEs via artificial or collocation observations and kernel design.These methods suffer from scalability issues in higher dimensions and limited generalizability. The aim of this study is to explore the extension of the Kriging predictor in the presence of linear PDE information at a finite number of collocation points. Two approaches are proposed: 1) A collocated co-Kriging [54] with primary observations of the physical field and auxiliary differential observations; 2) A constrained Kriging optimization problem strongly satisfying linear PDE constraints at the points of prediction through a Lagrangian formulation. Numerical experiments are given for ordinary differential equations, 2D harmonic PDEs and an application to perfect flows around a cylinder. This work highlights a trade-off between the computational efficiency of the Lagrange multipliers approach and the strict interpolation of observations. 
+
+Keywords : Physics-informed Machine Learning, Co-Kriging, Constrained Best Linear Unbiased Predictor 
+
+1
+
+> arXiv:2604.17922v1 [math.NA] 20 Apr 2026
+
+# Contents 
+
+1 Introduction 22 Background 4
+
+2.1 Kriging as the Best Linear Unbiased Predictor . . . . . . . . . . . . . . . . . . . . . . . . . . 42.2 Linear differential operator equations . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 52.3 Extended design space . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+
+3 Methodology 6
+
+3.1 Collocated co-Kriging . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 73.2 Linear Lagrangian Kriging . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 93.3 Comparing the two methods . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11 3.4 Calibrating covariance parameters . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 12 3.5 Uncertainty Quantification . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13 
+
+4 Results 14 
+
+4.1 Synthetic ODE . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14 4.2 2D scalar functions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 17 4.3 Potential flow problem . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 18 
+
+5 Conclusion 23 A Appendix 27 
+
+A.1 Proofs . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 27 A.2 Kernel derivative expressions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 29 A.3 Lagrangian Kriging working example. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 30 
+
+# 1 Introduction 
+
+Predicting fields governed by partial differential equations (PDEs) is of relevance in a wide range of scientific and industrial processes. Due to the lack of analytical resolutions, numerical methods are instrumental in practice. The existing literature on numerical approaches is extensive and focuses on stitching together solutions on spatial-temporal discretizations. Finite elements, finite volume and spectral methods are some of the most widely used numerical solvers. [6] presents a detailed review on this subject. A general differential operator A [see 24] is typically defined as, 
+
+A [f ] ( x) := g
+
+
+
+DMf, x
+
+
+
+, (1) where f : X → R is a smooth functional and DM represents mixed derivative orders, m, that belong to a set of multi-indices M, i.e., DM := 
+
+n ∂|m| 
+
+> ∂xm11...∂ xmdd
+
+: m ∈ M 
+
+o
+
+. The PDEs are linear if A is linear. For the purposes of this paper 1, we limit ourselves to the boundary value problem formulation of PDEs, 
+
+(
+
+A [f ] ( x) = v(x) x ∈ Ω ,
+
+B [f ] ( x) = h(x) x ∈ ∂Ω ,
+
+where A and B are differential operators applied on a compact domain Ω and its boundary ∂Ω. Since they are based on a discretization, high-fidelity computational simulations are often expensive. Repeated computations over varying A or B quickly become impossible. Yet, it is a common task: for example, the design of an aerospace vehicle involves repeated calculations of the flow around it because the effect of some boundary conditions parameters is investigated [2, 21]. Data-driven approaches serve as surrogates to traditional numerical models that aim at faster computations. The forward problem of estimating f
+
+given governing PDEs alongside true observations of f or its derivatives, have garnered considerable interest recently. We present a brief review of such methods classified on the basis of the learning models used. 
+
+Physics-informed neural networks (PINNs). The article [42] demonstrated that the data-driven approach using neural networks is viable for a variety of non-linear PDEs including the Burgers’s equation and the 2D Navier-Stokes. The physical laws are injected as regularization terms for the neural network loss function. These additional terms depend on the residuals A [f ] − v and B [f ] − h computed at specific design points commonly referred to as collocation points. The authors first coined the term “Physics-informed Neural Network” (PINN) and, since then, data-driven approaches addressing PDEs and physical problems are referred to as physics-informed machine learning. There has been rapid advancement since the conception of PINNs in terms of neural network architectures, convolutional neural networks [25], generative adversarial     
+
+> 1We will ignore the temporal aspect in our methodology but note that it is easily extendable using an anisotropic kernel [44,
+> §4.2], where the time t∈R+is an extra dimension in the input space and comes with additional cross-covariance requirements
+
+2networks [60], Bayesian neural networks [59] among others. Other developments include neural operators such as [33], a Fourier neural operator based on the fast Fourier transform [34] and DeepONet [37], all of which focus on learning an operator mapping the forcing term and PDE parameters to the the PDE solutions. Some detailed reviews and benchmarks on the PINNs include [17, 31, 52, 53, 61]. Despite its efficacy, the reliance on large training datasets is a challenge for PINNs. A direction taken in this regard is physics constrained neural networks as described in [35, 50] which use no or little labeled training data. The novelty is in the handling of initial and boundary conditions as hard constraints via special, output-layer encodings instead of the usual soft enforcement as regularization terms. Another direction, specifically aimed towards better uncertainty quantification, is to consider a Bayesian prior over unknown or noisy terms in a PDE presented as a PINN-type learning problem via Bayesian neural networks [59]. To study convergence guarantees of PINNs, [55] neural tangent kernel representation of neural networks attribute inaccuracy to spectral biases. 
+
+Physics-informed conditional Gaussian processes. In the same spirit, there is a body of liter-ature that uses Gaussian process (GP) priors [44] conditioned on PDE information at specific collocation points. GPs are well-established interpolation models and extensively used as surrogate models for black-box functions and they offer two major advantages over PINNs: 1) they perform better when observations are scarce; 2) by construction, they provide uncertainty estimates for their predictions. This motivated our choice of learning model. The application of GPs to approximating PDE solutions is made possible by the fact that GPs are closed under linear transformations. Hence, one can find closed form expressions for GPs under the action of linear differential operators. This inspired some of the early work in physics informed machine learning such as [48] for ordinary differential equations (ODEs). [49] used this in the context of dynamical systems. [26] presented possible applications to both ODEs and PDEs. Extensions such as [46] and latent force models [4] and [42] demonstrate the versatility of GPs. There is also extensive research on constrained GPs [18, 38] which have considered constraints involving higher-order derivatives. These works involve conditioning the Gaussian process with linear observations or bounds of derivatives at collocation points. We adopt similar ideas as derivative observations or artificial observations or virtual observations as termed by [30]. Naturally, this drives up the computational cost given the O(n3) cost of dense matrix inversion, where n is the number of observations. However, in [19] the Gram matrix structure of the covari-ance matrix is exploited to drive down this cost significantly. Despite ongoing efforts, computational cost remains a substantial challenge and merits further investigation. 
+
+Physics-informed kernel design. Another line of work is about designing matrix-valued covariance kernels that can satisfy PDEs. For example, the divergence free kernel proposed in [40] was applied to fluid dynamics in [57], and a curl-free kernel is described in [47]. A review article on multi-output kernels provided a unified view on such kernels [5, §5]. More recently, [30] proposed linearly constrained GPs and reduced it to computing the inverse of a linear differential operator. [16] developed a physics-informed covariance kernel for applications in structural dynamics specifically addressing the forced linear oscillator equation. As shown in [27], if a kernel satisfies a specific linear PDE, it induces a second order random field, i.e. a Gaussian process, whose trajectories satisfy this PDE almost surely. This result was later applied to the 3D-wave equation [28]. Although it is of course preferable to build a model from adapted components, constructing kernels that satisfy PDEs is problem specific. Furthermore, such kernels are applicable to linear PDEs only. A possible path towards more general model constructions was proposed in [56] as learning kernel functions via deep learning. Building on the idea of physics-informed conditional Gaussian processes, we make use of the optimiza-tion perspective offered by best linear unbiased prediction (BLUP), commonly referred to as Kriging [54]. The general contribution of this work is to extend best linear predictors to make surrogates of PDE solutions. We first demonstrate the extension of collocated co-Kriging [54] to pass differential information as secondary observations. [12, §5.5] briefly hints at the possibility of such a model. Second, we formulate a constrained Kriging predictor considering differential constraints at points of prediction. The utility and limitations of these two BLUP approaches are compared through the prediction quality and the computational cost incurred. This paper begins, in Section 2.1, with an overview of Kriging as BLUP and a modified form of ordi-nary Kriging relevant to our application. It moves on to a brief description of linear differential operators and associated notations in Sections 2.2 and 2.3. In particular, we introduce the extended design space that has derivative indices as an extra dimension of the original spatial domain. We describe the two proposed methodologies in Sections 3.1 and 3.2. In Section 3.3, we examine the theoretical and empirical differences between the two methods. Further numerical results on synthetic datasets and an application to the predic-tion of perfect flows in 2D are given in Section 4. A summary of the work along with perspectives, notably for nonlinear PDEs, can be found in Section 5. 
+
+32 Background 
+
+Approximating the best predictor of a quantity of interest given some data about other related quantities, lies at the heart of modern machine learning techniques. The most widely used loss function or metric to quantify the prediction quality in this context is the mean squared error (MSE). Specifically, this loss function is the expected squared error incurred by a certain predictor function of the given data. The frequentist definition of MSE is simply: 
+
+M SE (Y, ˆY ) = E 
+
+
+
+Y − ˆY
+
+2
+
+(2) where Y is a real-valued L2 random variable and ˆY is an estimator of Y . Given partial information in the form of a vector of real-valued L2 random variables X = ( X1, . . . , X n) we intend to minimize, min  
+
+> φ(X)∈L2
+
+E (Y − φ(X)) 2 (3) It is well known [10] that the conditional expectation τ (X) = E [ Y |X] is the unique minimizer of the mean squared error given X. This follows from the orthogonal projection with respect to the inner porduct 
+
+⟨φ1, φ 2⟩ := E [ φ1φ2]. In fact, the residual Y − E [ Y |X] is orthogonal to any function φ(X) ∈ L2 with respect to this inner product. Furthermore, the minimal mean squared error attained, with the conditional expectation as estimator, is the expected conditional variance E [Var [ Y |X]]. Most machine learning tasks can be interpreted as approximating the conditional expectation, for example, Neural networks parameterize the problem with τθ (X) where θ are the network parameters and optimize the empirical MSE or loss functions that scale monotonically with respect to the MSE. In this Section, we discuss standard results when restricted to the class of linear predictors based on X. We will also discuss some mathematical background to tackle differential equations in this regard. 
+
+## 2.1 Kriging as the Best Linear Unbiased Predictor 
+
+Originally developed in the field of geostatistics, Kriging [12, 54] is an interpolation model for a real-valued, second order random field ( Y (x)) x∈X , where X ⊂ Rd denotes the spatial domain or design space. It is commonly introduced as a generalization of linear regression, providing the best linear unbiased predictor (BLUP) [32, 58] assuming a known mean and by incorporating spatial correlation through a specified co-variance structure. The linear predictor for an unknown location x⋆, given n locations X = ( xi)ni=1 with observations, Y = Y (X), 
+
+bY (x⋆) := α(x⋆)⊤Y (4) where α(x⋆) ∈ Rn. An unbiased predictor, such that E 
+
+h bY (x⋆)
+
+i
+
+= E [ Y (x⋆)], should satisfy, 
+
+α(x⋆)⊤μ = μ⋆ (5) where μ = E [ Y] and μ⋆ = E [ Y (x⋆)]. The linear coefficients, α(x⋆), are estimated as the minimizer of the error variance defined below, 
+
+∆(x⋆) := E
+
+ bY (x⋆) − Y (x⋆)
+
+2
+
+, (6) allowing us to set up the final constrained optimization problem, 
+
+
+
+argmin 
+
+> α(x⋆)∈Rn
+
+∆(x⋆)subject to: α(x⋆)⊤μ = μ⋆
+
+(7) Extending to the case of predicting at multiple locations X⋆ = ( x⋆j )qj=1 , would imply a multi-objective optimization problem, equation (7) for each point. Fortunately, we can simplify the problem by considering the sum of the expected squared errors, ∆(x⋆ 
+
+> 1
+
+) + · · · + ∆(x⋆q ), as variance is non-negative. The optimization problem, in this case, writes out as, 
+
+
+
+argmin 
+
+> A∈Rn×q
+
+Pqj=1 ∆(x⋆j )
+
+
+
+subject to: A⊤μ = μ⋆ ,
+
+(8) where A =  α(x⋆ 
+
+> 1
+
+), . . . , α(x⋆q )⊤ ∈ Rn×q and μ⋆ = E [ Y (X⋆)]. To solve this optimization problem, we assume the covariance structure of Y in terms of a positive semi-definite (PSD) kernel k : X × X → R,Cov Y (x), Y (x′) = k(x, x′) (9) We can rewrite the objective function in equation (8) (see proof of proposition 1 for details) as, 
+
+
+
+argmin 
+
+> A∈Rn×q
+
+Tr A⊤KA  − 2Tr A⊤H + Tr [ K⋆]subject to: A⊤μ = μ⋆ (10) 
+
+4We solve equation (10) by introducing a vector of Lagrange multipliers λ of size 1 × q. This is similar to the computation of ordinary Kriging expressions. The final expressions are presented in the following proposition. 
+
+Proposition 1 (Ordinary Kriging without constraint) . Let A = α(x⋆ 
+
+> 1
+
+), ..., α(x⋆q ) the n × q matrix of the linear predictor’s optimal weights minimizing (10) at all prediction locations x⋆ 
+
+> 1
+
+, . . . , x⋆q , under the unbiased-ness constraint. Then 
+
+A = K−1 
+
+H + μλ ⊤
+
+, (11) 
+
+with q × 1 Lagrange multiplier λλ⊤ =
+
+
+
+μ⊤K−1μ
+
+−1 
+
+μ⋆⊤ − μ⊤K−1H
+
+
+
+,
+
+Covariance matrices are K ∈ Rn×n, with Kij = Cov [ Y (xi), Y (xj )] , i, j ∈ { 1, . . . , n }, and 
+
+H = h(x⋆ 
+
+> 1
+
+), . . . , h(x⋆q ) ∈ Rn×q , with hi(x⋆) = Cov [ Y (xi), Y (x⋆)] .
+
+See proof on page 27. In the case when the underlying process is Gaussian, the Kriging minimizer and minimum associated error correspond to the Gaussian conditional expectation and conditional variance expressions. It is one case where the best linear predictor is also the best predictor. 
+
+## 2.2 Linear differential operator equations 
+
+A linear partial differential operator L is generally expressed as, 
+
+L [f ] ( x) = X
+
+> m∈M
+
+um(x)Dmf (x) , (12) where um(x) ∈ R are real coefficients for the mixed derivatives of f and M is a set of relevant multi-indices. A linear differential operator equation enforced on a discrete set of p locations X = xi ∈ X pi=1 ,
+
+X
+
+> m∈M
+
+um(xi)Dmf (xi) = v(xi) for i = 1 , . . . , p (13) where v : X → R is some other functional, also referred to as the forcing term in the PDE literature, can be expressed as vector equations, 
+
+ui⊤DMf (xi) = v(xi) for i = 1 , . . . , p (14) where ui := {um(xi)}m∈M . Arranging the coefficient vectors ui as columns of a matrix, 
+
+U⊤vec 
+
+
+
+DMf (X)
+
+
+
+= v(X) ; U = [u1, . . . , up] , (15) where vec ( ·) is the vectorization operation [36], stacking the columns of the matrix to create a single vector, and DMf (X) = {Dmf (x); m ∈ M , x ∈ X} is a m × p; m = card DMf, p = card X, sized matrix. Each row represents a specific mixed derivative m, applied over the set of points X and each column represents all mixed derivatives applied to a specific point. The matrix U can be made to represent a variety of information such as the average estimator, multiple PDEs at several points and average of PDEs over several points. We present several examples to elucidate the construction of the U matrix. 
+
+Example 1 (One PDE satisfied over two points) . A simple example to illustrate the coding of a system of differential equations defined pointwise. Consider the linear differential equation: f (x) + f ′′ (x) = 0 . The matrix encoding accounting for this information at two spatial points x1, x2 ∈ X ,
+
+1 0 1 0 0 00 0 0 1 0 1
+
+
+
+f (x1)
+
+f ′(x1)
+
+f ′′ (x1)
+
+f (x2)
+
+f ′(x2)
+
+f ′′ (x2)
+
+
+
+= 0 , (16) 
+
+where U⊤ is the 2 × 6 left matrix, vec  DMf (X) is the 6 × 1 right matrix, and 0 is the corresponding v(X).
+
+Example 2 (Two PDEs satisfied at one point) . Alternatively, suppose that a single spatial point x ∈ X 
+
+verifies another differential equation, 2f ′(x) − f ′′ (x) = 0 , in addition to the one formerly described. The matrix representation for the system of differential equations at x would be, 
+
+1 0 10 2 −1
+
+ 
+
+f (x)
+
+f ′(x)
+
+f ′′ (x)
+
+ = 0 (17) 
+
+5Example 3 (One PDE satisfied in average) . An interesting aspect is to consider the sample average [45]. Suppose it is desirable to impose conditions on the sample mean of our predictions, possibly over several locations and consisting of mixed orders of derivatives. This is feasible with only minor modifications to the U matrix. For example, a PDE satisfied in average over a set of locations {xi : i = 1 , . . . , q } implying 
+
+> 1
+> q
+
+Pqi=1 f (xi) + f ′′ (xi) = 0 can be coded using an extension of the U⊤ in eq. (16) , replacing 1’s with 1/q and extending the matrix to q rows. Similarly, extending the vector of the function derivatives at spatial locations to 3q rows using the same arrangement as seen in eq. (16) .
+
+The description above, applies to a sufficiently differentiable random field in the mean-squared differentia-bility sense [13]. In the context of a Kriging model Y , we work towards developing the expression for the BLUP predictor given auxiliary information such as, 
+
+U⊤vec 
+
+
+
+DMY (X)
+
+
+
+= v(X) (18) This is well-defined if E [ Y ] = μ is differentiable and the variance exists for all considered derivative orders of Y .
+
+## 2.3 Extended design space 
+
+This Section explores the handling of spatial locations and orders of derivatives of the random function Y
+
+with a covariance structure made explicit by the kernel function kX : X × X → R. To formalize the spatial coordinates and the order of derivative as an integrated mathematical object, we introduce an extended design space defined as the Cartesian product S := X × M , where X denotes the original spatial domain and 
+
+M represents the set of relevant multi-indices. This offers a unique viewpoint, derivatives of Y are points in the extended design space. Consider the extended random function Z : S → R which maps, 
+
+Z : (x, m) 7 → Y (m)(x) , (19) where the vector ( x, m) ∈ S will be referred to as s henceforth. Equation (18) re-writes as a compact matrix equation, 
+
+U⊤Z = v (20) To fully model Z as random function, we need to quantify the covariance. Assuming E [ Y ] is sufficiently differentiable, we seek a modified kernel of the form kS : S × S → R to quantify the covariance between 
+
+Z(s) := Y (m)(x) and Z(s′) := Y (m′)(x′) where s = ( x, m) and s′ = ( x′, m′). The following result on covariance functions [1, 13, 44], facilitates exactly that. Cov Z(s), Z (s′) = ∂|m|
+
+∂x m1 
+
+> 1
+
+· · · ∂x md
+
+> d
+
+∂|m′|
+
+∂x ′m′ 
+
+> 1
+> 1
+
+· · · ∂x ′m′
+
+> d
+> d
+
+kX (x, x′) , (21) where we require that ∂|m|+|m′|kX (x, x′) exist for all relevant s, s′ ∈ S to ensure that all expressions that follow are well-defined. For sufficiently regular kernels, such as the squared exponential kernel (smooth), this holds true. We provide the analytical derivative expressions in the apppendix A.2. This is a special covariance relationship since it involves kernel derivatives of arbitrary order but this is well-explored in the GP literature since the GPs are closed under the action of linear differential operators [18, 26, 30, 43, 46, 49]. Notational convenience aside, the extended design space allows for the direct application of the usual Kriging formulas, such as Proposition 1, or any other covariance based prediction model, without any adaptation to derivatives. We highlight that the extended design space characterization and the unique perspective it offers, to the best of our knowledge, is an original contribution. An example of how this can prove to be a powerful tool when dealing with derivatives in presented below. 
+
+Example 4 (Kriging in the extended design space) . In a one-dimensional spatial domain, X = R, consider the following problem: predict the derivative Y ′(x⋆) from observations Y (x1) and the second-order derivative 
+
+Y ′′ (x2). The extended design space considerably simplifies the problem since we can directly apply the classical Kriging formulas (Proposition 1) given observations Z = ( Z(s1), Z (s2)) ⊤ where s1 = ( x1, 0) and s2 = ( x2, 2) 
+
+to predict Z(s⋆) at s⋆ = ( x⋆, 1) . The necessary covariance matrices, Cov [ Z(si), Z (sj )] , i, j ∈ { 1, 2} and 
+
+Cov [ Z(si), Z (s⋆)] , i ∈ { 1, 2} can be constructed using (21) .
+
+To summarize, the extended design space allows us to work with a process Z, defined on a modified design space that intrinsically handles the involved derivative operations and therefore, encode differential equations as simple linear combinations of Z.
+
+# 3 Methodology 
+
+This Section addresses the two proposed treatments of pointwise differential information. The first method, an adaptation of the collocated co-Kriging methodology and the second method presenting a Lagrangian based constraint resolution at the points of prediction. 
+
+63.1 Collocated co-Kriging 
+
+Several attempts have been made at using derivative information as observations in the context of the usual Gaussian process regression methodology. The earliest related work traces back to applications in Ordinary Differential Equations [48] and dynamical systems [49]. In the past, multiple studies have explored the use of GPs in problems involving linear differential operators, specifically [26, 46] which account for derivative information as virtual observations. This has inspired a large variety of work in the recent past for appli-cations in solving linear PDEs such as, [43] and [30, §3.1]. The latter refers to this approach as artificial observations and highlights the computational challenge in higher dimensions. Constrained GPs involving derivative, inequality constraints enforced at finite points, [18] is a prominent example. For a detailed review on this subject, the interested reader may refer to [51, §6.1]. We utilize a collocated co-Kriging [54] methodology to obtain the best linear pointwise predictor given primary observations and derivative information as secondary observations. A very similar approach has been discussed in [12, §5.5]. A notable difference is that, [12] mostly addressed the use of direct derivative observations as secondary information whereas we construct a generic co-Kriging predictor composed of any linear transformation of mixed derivatives. In our framework, co-Kriging with direct derivative observations reduces to simple or ordinary Kriging (Proposition 1) with observations in the extended design space. How-ever, [12] also proposed the use of finite differences approximation to account for linear Neumann boundary conditions via co-Kriging, the implications of which we did not explore yet. We dedicate the rest of this Sec-tion to explain the mathematical details of co-Kriging with pointwise linear PDE information as secondary variables. Suppose we are given n primary observations of Z at locations s1, . . . , sn and differential equations im-posed at p collocation points in X (similar to physics-informed neural networks [42]) consisting of c locations as part of the PDEs s+1 , . . . , s+ 
+
+> c
+
+where the superscript ‘+’ denotes collocation nature. For example, consider the differential equation ∂2
+
+> xx
+
+Y (x+) + ∂2 
+
+> yy
+
+Y (x+) = 0 along with an observation of Y at point x. Here, n = 1 (observation x), p = 1 (differential equation at one collocation point x+) and c = 2, considering points 
+
+s+1 = ( x+, ∂ 2
+
+> xx
+
+) and s+2 = ( x+, ∂ 2 
+
+> yy
+
+) in the extended design space S. Even though c does not show up in the final expressions, it necessary to define the co-Kriging predictor in eq-(22). The Kriging predictor at a point s⋆ involving both the primary observations Z = ( Z(s1), . . . , Z (sn)) ⊤ and the secondary observations 
+
+U⊤Z+ = v where Z+ =  Z(s+1 ), . . . , Z (s+ 
+
+> c
+
+)⊤, is given as, 
+
+bZCK (s⋆) =
+
+> n
+
+X
+
+> i=1
+
+αi(s⋆) Z(si) + 
+
+> p
+
+X
+
+> j=1
+
+α+ 
+
+> j
+
+(s⋆) u⊤ 
+
+> j
+
+Z+ . (22) where α+ is to distinguish coefficients related to the differential equations and uj is the jth column of U.This predictor is the same as the multicollocated ordinary co-Kriging predictor in described in [12] except that we use an arbitrary set of collocation points, leading to an optimization problem analogous to the one described in (7). Considering both the initial vector Z and the auxiliary vector U⊤Z+ as observations, for 
+
+q points of prediction, s⋆ 
+
+> 1
+
+, . . . , s⋆q we solve for all linear coefficients, A+ = α(s⋆ 
+
+> 1
+
+), . . . , α(s⋆q ) as we did in proposition 1. We can obtain zero error variance at some observation location si by setting linear coefficients 
+
+α = ei = (0 , . . . , 1, . . . , 0), and hence satisfying the interpolation property bZCK (si) = Zi. We summarize the final expressions in the following proposition. 
+
+Proposition 2 (Collocated ordinary co-Kriging) . The coefficient matrix associated with the co-Kriging linear predictor, minimizing the predicted error variance under the unbiasedness constraint (10) is given by 
+
+A+ =  K+−1 
+
+H+ + μλ ⊤
+
+, (23) 
+
+with q × 1 Lagrange multiplier 
+
+λ⊤ =
+
+
+
+μ⊤(K+)−1μ
+
+−1 
+
+μ⋆⊤ − μ⊤(K+)−1H+
+
+with μ = E Z, U⊤Z+⊤, μ⋆ = E Z⋆ and covariance matrices, 
+
+K+ := 
+
+ K11 K12 UU⊤K21 U⊤K22 U
+
+
+
+; H+ := 
+
+ Cov 
+
+h
+
+Z, Z⋆⊤i
+
+U⊤ Cov 
+
+h
+
+Z+, Z⋆⊤i ,
+
+where K11 = Cov Z, Z⊤ , K12 = Cov 
+
+h
+
+Z, Z+⊤i
+
+, K21 = Cov Z+, Z⊤ and K22 = Cov 
+
+h
+
+Z+, Z+⊤i
+
+.
+
+See proof on page 28. The final prediction is simply given as bZ⋆ 
+
+> CK
+
+= ( A+)⊤[Z, U⊤Z+]. Notice that the final expression for the optimal coefficients is exactly the same as Proposition 1 with the matrices K and 
+
+H replaced by K+ and H+. Another observation is that assuming Z as a centered process, the prediction corresponds to that of the conditional mean of a GP with observations from the transformed GPs after the action of linear differential operators. An important consideration is that the matrix inversion of K+
+
+7directly, incurs a computational cost of O  (n + p)3 which can be significantly more compared to simple Kriging since it is desirable to have p ≫ n. This is because intuitively, a sufficiently dense set of collocation ensures constraint satisfaction with higher probability. 
+
+Example 5 (Working example) . As a gentle introductory example, consider a simplistic, one dimensional problem setup where the true function, f (x) = sin x . We proceed to assess the impact of the following differential equation as auxiliary information: 
+
+f + f ′′ = 0 (24) 
+
+To limit the dimension of the problem, suppose there exist three points: a true observation at s1 = ( x1, 0) ; a point of prediction s⋆ = ( x⋆, 0) ; and another point sc = ( x⋆, 2) , part of the differential equation at the target location x⋆.
+
+Z(s⋆) + Z(sc) = 0 (25) 
+
+Furthermore, we operate under the simple Kriging assumption, which is to say that the extended process is mean zero, EZ = 0 everywhere in the extended design space. The Kriging predictor is built as a linear combination of the true observation and the differential equation at x⋆,
+
+bZCK (s⋆) = α1(s⋆) Z(s1) + α2(s⋆) ( Z(s⋆) + Z(sc)) (26) 
+
+α1(s⋆), α 2(s⋆) can be resolved as the minimizers of predictive mean square error (MSE) at s⋆,
+
+argmin  
+
+> α1, α 2∈R2
+
+E
+
+ bZCK (s⋆) − Z(s⋆)
+
+2
+
+, (27) 
+
+Setting μ, μ⋆ = 0 in (23) , the final prediction can be expressed as, 
+
+bZ(s⋆) = (H+)⊤(K+)−1Z(s1), 0⊤ , (28) 
+
+where, 
+
+K+ := 
+
+Var Z(s1) Cov Z(s1), Z (s⋆) + Z(sc)
+
+. Var [ Z(s⋆) + Z(sc)] 
+
+
+
+H+ := 
+
+ Cov Z(s1), Z (s⋆)
+
+Cov [ Z(s⋆) + Z(sc), Z (s⋆)] 
+
+
+
+For the covariance computations, we have used the isotropic squared exponential kernel as described in eq-
+
+(40) . The relevant derivative expressions are given in Section A.2. Figure 1, illustrates this example. Given that we consider only one derivative observation, there is only a minor difference between the collocated co-Kriging and the usual Kriging prediction. 0.0 0.5 1.0 1.5 2.0 2.5 3.0  
+
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Z(s1)
+> Z(sc) + Z(s*) = 0
+
+Co-Krig 
+
+Simple Krig 
+
+Figure 1: Demonstrating the difference between simple Kriging (in orange) and the prediction (in green and the blue curve) with a single collocation point (in blue). 8Remark 1. It is not necessary to separate the pure and differential equations related observations. We can incorporate the entire vector of observations using a unified U+ matrix, 
+
+(U+)T (Z)n+ci=1 = (v)n+pi=1 (29) 
+
+U+ =
+
+In×n 00 U
+
+
+
+> (n+c)×(n+p)
+
+(30) 
+
+The separation is important for compatibility of notation for the two methods we explain here. If we use the extended U+, it is worth noting that the final expressions will be relatively simpler since we won’t need the covariances between pure observations K and the cross-covariances between pure Z and PDE-related observations Z+.
+
+## 3.2 Linear Lagrangian Kriging 
+
+It is common to encounter constraints in the applications of Kriging. For example, the ordinary Kriging estimator (11) involves the unbiasedness constraint as part of its formulation [54]. Similarly, unbiasedness constraints for non-linear functionals of the Kriging estimator, was first addressed in [14]. The constrained Kriging predictor, preserves both the expectation and the variance which is sufficient to retain the same distribution as the original Gaussian field, under a non-linear transformation. This idea was furthered in [3] where they developed an estimator that preserves the all covariances. This class of estimators are aptly named as covariance matching constrained Kriging estimators. These estimators have been coded as part of an R package [29] and have found applications for the problem of coal quality estimation [23] among others. Lagrange multipliers have been used in constrained stochastic optimization [9] for constraints on long-run averages of the cost function and inequality relations. They use a derivative-based optimization algorithms on the Lagrangian. Despite a vast volume of articles on this subject, the nature of constraints is almost always limited to simple equality and inequality constraints. To the best of our knowledge, there has been no investigation on operator equations or differential operator equations as constraints. We adopt a simple Lagrange multiplier based resolution of differential constraints, similar to [3, 9, 14]. We consider Kriging predictors such that they satisfy pointwise linear PDE constraints specifically at the points of prediction. We exploit the matrix formulation as described in (20) to obtain equality constraints. A crucial difference from Section 3.1 is that the distinction between prediction points and collocation points is not clear anymore. The linear Lagrangian predictor at an unknown point s⋆ is bZLK (s⋆) = α(s⋆)⊤Z. It would be preferable to impose constraints at all prediction points. Hence we have q constraint equations and 
+
+ℓ locations Z⋆ = ( Z(s⋆ 
+
+> 1
+
+), . . . , Z (s⋆ℓ )) T involved in the constraint equations with ℓ ≥ q since each constraint equation is composed of atleast one location. 
+
+U⊤Z⋆ = v⋆ , (31) where U ∈ Rℓ×q v⋆ ∈ Rq . We will predict all ℓ points as part of our model output. The mean squared error (MSE) optimization problem in this case can be stated as, argmin 
+
+> A∈Rn×ℓ
+
+Tr 
+
+h
+
+A⊤KA 
+
+i
+
+− 2 Tr 
+
+h
+
+A⊤H
+
+i
+
++ Tr [ K⋆] (32) subject to: A⊤μ = μ⋆ , (C1) 
+
+U⊤A⊤Z = v⋆ , (C2) where C1 is the unbiasedness constraint and C2 represents the differential constraints and H ∈ Rn×ℓ.
+
+Proposition 3 (Ordinary Kriging with differential constraints) . The matrix of the linear predictor’s optimal weights minimizing the optimization program (32) under both unbiasedness and differential constraints (C1, C2) is given by 
+
+A = K−1 
+
+H + μλ ⊤ + Zλ′⊤ U⊤
+
+(33) 
+
+with Lagrange multipliers, in the case where U⊤U is invertible, γ1̸ = 0 and γ2 − γ23
+
+> γ1
+
+̸ = 0 ,
+
+
+
+λ = γ1−1  μ⋆ − H⊤K−1μ − γ3Uλ′
+
+λ′ =
+
+
+
+γ2 − γ23
+
+> γ1
+
+−1  U⊤U−1 
+
+v − U⊤H⊤K−1Z − γ3 
+
+> γ1
+
+U⊤  μ⋆ − H⊤K−1μ
+
+With scalar values γ1 = μ⊤K−1μ, γ2 = Z⊤K−1Z and γ3 = μ⊤K−1Z.
+
+See proof on page 28. Like usual Kriging, the final predictions can be written as bZ⋆ 
+
+> LK
+
+= A⊤Z. In terms of complexity, there are two matrix inversions, K−1 and the sparse matrix  U⊤U−1 with computational costs of O(n3) and O(q3) respectively. Typically, q ≫ n. This is already an improvement over Section 3.1 (complexity: O(( n + p)3)). With Lagrangian Kriging, owing to the analytical resolution via Lagrange 
+
+9multipliers, the predictions will always be consistent with the differential constraints. However, this does not imply anything about the prediction quality. For example, going back to the problem in Example 5, we might have unrealistic predictions for both f and f ′′ while satisfying ˆf + ˆf ′′ = 0 at the points of prediction. For co-Kriging, the constraint satisfaction is related to the proximity from collocation points. 
+
+Example 6 (Working example (continued)) . We borrow the same example as described in example 5, and resolve the constrained optimization problem instead. When treating the differential information as a constraint, the predictor is composed of the true observation only. Since we have no information about sc, it is to be predicted as well, 
+
+bZLK (s⋆) = α(s⋆)Z(s1) ; bZLK (sc) = α(sc)Z(s1) (34) 
+
+Additionally, we have a constraint to satisfy at the prediction location which amounts to a constrained optimization problem, 
+
+argmin  
+
+> α1, α 2∈R2
+
+E
+
+ bZLK (s⋆) − Z(s⋆)
+
+2
+
++ E 
+
+ bZLK (sc) − Z(sc)
+
+2
+
+(35) 
+
+subject to: 0 = bZLK (s⋆) + bZLK (sc)= ( α1 + α2) Z(s1)
+
+We can solve this using a Lagrangian multiplier λ and setting the gradient with respect to α1, α 2 and λ
+
+to zero (mathematical working in the appendix A.3) to obtain, 
+
+bZLK (s⋆) = Cov s1, s⋆ − Cov s1, sc
+
+2 Var s1
+
+!
+
+Z(s1) (36) 
+
+Once again, we present an accompanying visual, Figure 2, illustrating the difference between the La-grangian Kriging predictor and usual Kriging predictor for the working example. There is a noticeable difference between the two predicted curves. 0.0 0.5 1.0 1.5 2.0 2.5 3.0  
+
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Z(s1)
+> Z(sc) + Z(s*) = 0
+
+Lag. Krig 
+
+Simple Krig 
+
+Figure 2: Comparing the simple Kriging (in orange) and Lagrangian Kriging prediction (in green and the blue curve) with a single point constraint. 
+
+Remark 2 (Constraints without the primary function) . The Lagrangian Kriging predictor can only account for differential information which consists of the function of interest undifferentiated, in addition to its derivatives. If the differential information does not involve the primary function, the primary associated Kriging objective is essentially unconstrained and the predictions of the primary function would correspond to the usual Kriging predictions. This stems from the fact that the linear coefficients involved in the prediction of the primary function are independent of the linear coefficients involved in the prediction of its higher order derivatives. This being a recurrent concept, we detail this issue when predicting f : Rn → R (primary variable) under constraints involving only the Laplacian of f , i.e., ∇2f . From (32) , recall that the Kriging objective is simply Tr A⊤KA  − 2 Tr A⊤H with A ∈ Rn×ℓ. Suppose we want to predict f at q locations, in that case we can partition the matrix A of coefficients into two blocks, 
+
+A = Af , A∇2f
+
+ ,
+
+10 with Af ∈ Rn×q involved in the prediction of the primary variable and A∇2f ∈ Rn×ℓ−q involved in the prediction of the Laplacian components {∂2 
+
+> xi
+
+f : i = 1 , . . . , n }. Therefore, by separating the objective, the optimization problem can be written as two sub-problems, an unconstrained optimization problem with respect to Af
+
+argmin  
+
+> Af∈Rn×q
+
+Tr 
+
+h
+
+Af ⊤KA f
+
+i
+
+− 2 Tr 
+
+h
+
+Af ⊤H
+
+i
+
+and a constrained optimization problem, of exactly the same form as presented in (32) , with respect to A∇2f ,
+
+argmin  
+
+> A∇2f∈Rn×ℓ−q
+
+Tr 
+
+h
+
+A⊤∇2f K A ∇2f
+
+i
+
+− 2 Tr 
+
+h
+
+A⊤∇2f H
+
+i
+
+subject to: U⊤A⊤∇2f Z = v
+
+and consequently, the final predictions of f relying on Af would correspond to that of classical Kriging. 
+
+## 3.3 Comparing the two methods 
+
+We delve deeper into the question of how co-Kriging and Lagrangian Kriging are different. Since, they are based on the classical Kriging approach, we expected similar results in the beginning. However, there are some key fundamental differences which we will address in detail in this Section. This is particularly relevant for a practitioner willing to make an informed choice among the two models. 
+
+Analytical form. To explore the key mathematical difference in the two methods, we commence by reducing the expression for the collocated simple co-Kriging approach by exploiting the block structure of matrices K+ and H+. We assume that Z and Z⋆ are centered 2, i.e., μ, μ⋆ = 0. Given an observation vector of n points Z and, for a fair comparison, differential information at all q prediction points encoded by the matrix equation U⊤Z⋆ = v⋆ where v⋆ is of size q and Z⋆ of size ℓ, the 2 × 2 block inverse of K+, assuming Cov Z, Z⊤ and the Schur’s complement are invertible, 
+
+A BC D
+
+−1
+
+=
+
+A−1 + A−1B(D − CA −1B)−1CA −1 −A−1B(D − CA −1B)−1
+
+−(D − CA −1B)−1CA −1 (D − CA −1B)−1
+
+
+
+(37) where, A = K11 , B = K12 U, C = U⊤K21 and D = U⊤K22 U with the same definitions of Kij as in proposition 2 except that Z+ replaced by Z⋆ since we consider all our prediction points as collocation points. It is also useful to recognize that H+ = K12 , U⊤K22 
+
+⊤ and on replacing K11 with K and K12 , K21 
+
+with H, H⊤, where K, H are the usual Kriging covariance matrices (see proposition 1) to compute the final predictor as ( A+)⊤[Z, v⋆]⊤,
+
+bZ⋆CK = K2|1U
+
+
+
+U⊤K2|1U
+
+−1 
+
+v⋆ − U⊤H⊤K−1Z
+
+
+
++ H⊤K−1Z (38) where K2|1 = K22 − H⊤K−1H which is also the Schur’s complement K+/K and most interestingly K2|1 =Cov [ Z⋆|Z]. When comparing with the predictor in Proposition 3, under the simple Kriging assumption a lot of terms disappear, notably all terms involving λ, γ 1, γ 3 in addition to μ, μ⋆ as mentioned before, rendering a simplified final predictor, 
+
+bZ⋆LK = U
+
+
+
+U⊤U
+
+−1 
+
+v⋆ − U⊤H⊤K−1Z
+
+
+
++ H⊤K−1Z (39) where the scalar Z⊤K−1Z has been assumed to be non-zero in the calculations. A quick inspection reveals that both predictors are affine in Z and it is easy to obtain bZ⋆LK from bZ⋆CK by replacing K2|1 by the identity matrix. The K2|1 is responsible for augmenting the co-Kriging model complexity. It is also immediately obvious that Lagrangian Kriging does not account for cross-covariances among the constraint equations whereas co-Kriging does. 
+
+Remark 3 (Constraints without the primary function (contd.)) . The fact that the Lagrangian Kriging problem described in Remark 2, is consistent with (39) is briefly explained here. To reiterate what was explained in Remark 2, consider the task of predicting f : R2 → R while imposing constraints on ∇2f . The matrix H would consist of three kinds of predictions ˆf , ˆfxx and ˆfyy . Out these three, there are constraints imposed on ˆfxx and ˆfyy which will reflect in the U matrix. However, since Lagrangian Kriging does not account for any cross-covariance between f and its second order derivatives, we can safely separate out the task of predicting ˆf as unconstrained Kriging given n observations of f . This is a major fallacy since the predictions independent (even though f, f xx and fyy mathematically related) of each other unless they are explicitly involved in a constraint equation. The problem becomes evident in cases where the constraints does not explicitly involve the function of interest. 
+
+11 Table 1: Complexity (in one dimension) and the number of total covariance derivative computations. 
+
+Complexity Covariance 
+
+computations 
+
+Co-Krig. O(( n + p)2(n + p + q)) O(( n + p + q)( n + p)) Lag. Krig. O(( n + q)2) O(n(n + q)) 
+
+Computational complexity. To discuss the computational aspects, we recall that n is the number of observations in the extended design space, p is the number of collocation points, q is the number of prediction points. Table 1, summarizes the computational aspects of Co-Kriging and Lagrangian Kriging. Considering all the matrix operations, co-Kriging complexity is O(( n + p)2(n + p + q)) (with or without block inverse). On the other hand, Lagrangian Kriging complexity is O(( n + q)2). An interesting scenario is when p, q ≫ n
+
+wherein, co-Kriging would be O(p3) versus Lagrangian Kriging would only be O(q2) as it does not rely on collocation points. This is to emphasize the significant computational edge we obtain with Lagrangian Kriging. Apart from the size of the involved matrix inversions and multiplications, there are also fewer covariance computations involved in Lagrangian Kriging since the entire K22 matrix only appears in bZ⋆CK 
+
+expression and not in bZ⋆LK . This represents a significant portion of the cost since higher order kernel derivatives are computationally expensive. Lagrangian Kriging enjoys a relatively faster run time, noticeable in practical implementations as well (Table 3). Both these methods are prohibitively expensive for many observations and many prediction points. Scalability to higher dimensions d comes at a cubic cost, a d3
+
+factor, times the one-dimensional costs since each dimension of a regular observation is counted as a separate observation resulting in n × d observations. 
+
+## 3.4 Calibrating covariance parameters 
+
+The following Section discusses the crucial hyperparameter tuning aspect for kernels used in Kriging. Typ-ically, the Gaussian process prior assumption simplifies this task as it provides an analytical expression for the likelihood of observed data. Seeking covariance parameters that maximize the multivariate normal likelihood is called the maximum likelihood estimate (MLE) and has been used in physics-informed GPs [30, 43, 49]. The unconditional MLE was used in [18] for a GP under linear constraints. A constrained MLE criteria was proposed by [8]. However, we have avoided the GP prior assumption in favour of generality. Without the analytical likelihood expression, a more suitable choice is the Leave-one-out cross validation (LOOCV) based criteria [7] where they demonstrate its efficacy under model misspecification which happens to be an added benefit. LOOCV is well established in the broader GP and Kriging literature but to the best of our knowledge, has not found use in physics-informed or derivative based GP approaches. In the case of simple Kriging, the usual cross validation loss can be found using a single evaluation of the inverse covariance matrix K−1 and observations Z, thanks to the virtual cross validation loss formulas first introduced by [20]. For our experiments, we have chosen the infinitely differentiable, isotropic, squared exponential kernel (or RBF kernel), 
+
+k(x, x′|σ2, θ ) = σ2 exp 
+
+ −∥ x − x′∥22
+
+2θ2
+
+
+
+; x, x′ ∈ X ; σ2, θ ∈ R+ (40) where σ2 is the noise or variance parameter and θ is the correlation or lengthscale parameter. A noteworthy property is that the predictions are independent of the noise parameter and only depend on θ. The role of 
+
+σ2 is importance for the uncertainty quantification. Hence, the prescribed workflow is to find the optimal θ
+
+minimizing the LOOCV prediction error and then computing σ2 that satisfies a predictive variance criteria. There is a detailed description and comparison of different predictive variance criteria in [39]. For our experiments, we compute the ˆθ that minimizes the predictive LOOCV MSE and then ˆ σ2 is chosen such that the predictive LOOCV variance criterion is equal to one, as suggested by [15]. LOOMSE ( θ) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(Zi − ˆZ−i)2 (41) LOOVAR ( θ, σ 2) = 1
+
+n
+
+> n
+
+X
+
+> i=1
+
+(Zi − ˆZ−i)2
+
+σ2 Var 
+
+h ˆZ−i
+
+i 
+
+> kσ2=1 ,θ (.,. )
+
+(42) where ˆZ−i is the prediction at target location si having observed Z\Zi and Var 
+
+h ˆZ−i
+
+i
+
+= σ2 Var 
+
+h ˆZ−i
+
+i 
+
+> kσ2=1 ,θ (.,. )
+
+is the full conditional variance of the model factored into two independent components. The first of which 
+
+> 2The simple Kriging framework allows for simplified expressions since we can ignore the unbiasedness constraint
+
+12 is the noise variance σ2 and the second component is the conditional variance for a chosen lengthscale 
+
+θ assuming unit noise variance ( σ2 = 1) since it has already been accounted for in the first component, Var 
+
+h ˆZ−i
+
+i 
+
+> kσ2=1 ,θ (.,. )
+
+. Invoking the virtual cross validation loss formulas for simple Kriging from [7, prop. 3.1] we can write the LOOCV optimal parameters as, ˆθ = argmin 
+
+> θ∈R+
+
+1
+
+n
+
+ K−1Z⊤diag( K−1)−2  K−1Z  
+
+> kσ2=1 ,θ (.,. )
+
+(43) ˆσ2 = 1
+
+n
+
+ K−1Z⊤diag( K−1)−1  K−1Z   
+
+> kσ2=1 ,ˆθ(.,. )
+
+(44) where diag( .) represents the diagonal matrix for a given matrix. Adapting to our model specifics is relatively straightforward. For Lagrangian Kriging, we can use these formulas directly if there are no constraints to consider when predicting at observation locations. The model prediction coincides with simple Kriging exactly. If this is not the case, we cannot use the virtual LOOCV formulas and need to compute the LOOCV loss as in (41)-(42). In the case of simple co-Kriging, the primary observations are part of the total observations [ Z, Z+]. Hence, we use a filter matrix to retain the first n elements only, the modified expressions being, ˆθ = argmin 
+
+> θ∈R+
+
+1
+
+n
+
+
+
+(K+)−1
+
+ ZZ+
+
+ ⊤
+
+diag(( K+)−1)−2
+
+In 00 0
+
+  
+
+(K+)−1
+
+ ZZ+
+
+  
+
+> kσ2=1 ,θ (.,. )
+
+(45) ˆσ2 = 1
+
+n
+
+
+
+(K+)−1
+
+ ZZ+
+
+ ⊤
+
+diag(( K+)−1)−1
+
+In 00 0
+
+  
+
+(K+)−1
+
+ ZZ+
+
+   
+
+> kσ2=1 ,ˆθ(.,. )
+
+(46) where In is the identity matrix of size n × n with 0′s of appropriate sizes. We use the Adam optimizer to minimize the LOOCV MSE criterion in our implementations. 
+
+## 3.5 Uncertainty Quantification 
+
+Recall that the minimal attainable MSE is the expected conditional variance and for future reference we omit the term ‘expected’ and assume this implicitly. This is the case when using the conditional expectation as predictor. Assuming Z to be a Gaussian process is a very specific choice since the best linear predictor coincides with the conditional expectation and consequently the minimal MSE is the conditional variance. It is important to note that this is not always the case. The best linear predictor is, generally speaking, a sub-optimal predictor. Since, we refrain from making the Gaussian process prior assumption throughout the paper in favor of generalizability, the minimal MSE obtained with the best linear predictor is at best, an approximation to the conditional variance. To quantify the distance from conditional variance, denote the complete given data D = ( Z, U⊤Z+) (where ‘+’ = ‘ ⋆’ in the case of Lagrangian Kriging), the sub-optimal best linear predictor as τ = τ (D) and consider the definition of Var [ Z⋆|D], Var [ Z⋆|D] = E (Z⋆ − E [ Z⋆|D]) 2 | D (47) = E (Z⋆ − τ + τ − E [ Z⋆|D]) 2 | D (48) = E (Z⋆ − τ )2 + 2( Z⋆ − τ )( τ − E [ Z⋆|D]) + ( τ − E [ Z⋆|D]) 2 | D (49) where ( Z⋆ − τ )( τ − E [ Z⋆|D]) can be expanded as ( Z⋆ − E [ Z⋆|D] + E [ Z⋆|D] − τ )( τ − E [ Z⋆|D]) = ( Z⋆ −
+
+E [ Z⋆|D])( τ − E [ Z⋆|D]) − (τ − E [ Z⋆|D]) 2 and since ( τ − E [ Z⋆|D]) is a function of D, the orthogonality of the residual implies that the first term would be zero. This simplifies the expression to, Var [ Z⋆|D] = E (Z⋆ − τ )2 | D − (τ − E [ Z⋆|D]) 2 (50) where we use E (τ − E [ Z⋆|D]) 2|D = ( τ − E [ Z⋆|D]) 2 since it is a function of D. On the right hand side, the first term can be recognized as the minimal MSE (MMSE). The second term represents the distance of the best linear predictor from the conditional expectation, the best predictor. The conventional approach is to use MMSE as a close approximation to the conditional variance itself allowing the construction of confidence intervals based on the Gaussian assumption or more generally, using the Vysochanskij–Petunin inequality [12]. So far, however, there has been little discussion addressing this correction term. A possible resolution can be to use Cross-validation based approaches to quantify the MSE and use it as a measure of the correction term. We can also try a polynomial basis expansion of the conditional expectation and compute the contribution of quadratic and higher terms as a proxy for τ − E [ Z⋆|D], assuming the linear term coincides with the best linear prediction. The main takeaway here is that the MMSE overestimates the conditional variance. Using MMSE as conditional variance is a cautious choice. For our results, we assume the MMSE as the conditional variance and construct ±2σ intervals. In the case of co-Kriging, the MMSE is easy to compute since, it is the same expressions as simple or ordinary Kriging but with the extended matrices K+ and H+. For simple co-Kriging, 
+
+dVar CK [Z⋆|D] = K⋆ − (H+)⊤(K+)−1H+ (51) 
+
+13 where K⋆ is the matrix Cov [ Z⋆, Z⋆]. Similarly, in the case of Lagrangian Kriging under the simple Kriging assumption, we can solve for the MMSE, 
+
+dVar LK [Z⋆|D] = K⋆ − (H + Zλ⊤U⊤)⊤
+
+K−1(H − Zλ⊤U⊤) (52) where λ = ( Z⊤K−1Z)−1(U⊤U)−1(v − U⊤H⊤K−1Z) and the definitions of matrices K, H, U and vector 
+
+v are derived from Section 3.2. In the case of 2D flow prediction, we can compute the uncertainty in the 
+
+x − y components of velocity separately. To quantify uncertainty of the squared magnitude however, is not that straightforward. Fortunately, the potential function formulation explicitly quantifies cross-covariances between velocity components. Under the normal distribution assumption for both velocity components, the squared sum is characterized by a generalized χ2 distribution, for which we compute all parameters and from the explicit covariance relations. 
+
+# 4 Results 
+
+We present some numerical experiments to illustrate the performance on a synthetic ODE problem, and a synthetic PDE problem before addressing an application in fluid dynamics. All experiments have been imple-mented on a local machine with Intel(R) Core(TM) i7-5600U CPU @ 2.60GHz . To compute the derivatives of the covariance function we have tried two ways: automatic differentiation via pytorch [41] and analytic expressions (upto order 4). Analytic expressions are the quickest to implement but tedious to code. For the results presented below, we use the pytorch implementation in 1D and for quicker computation, we use the analytical expressions in 2D (see appendix A.2). 
+
+## 4.1 Synthetic ODE 
+
+Consider the ODE f (x) + f ′′ (x) = 0. We have also covered this as part of the working Example 5 when describing the two methods. The problem is to estimate f (x⋆) given, 
+
+f (xi) = yi for i = 1 , . . . , n f (xj ) + f ′′ (xj ) = 0 for j = n + 1 , . . . , n + p
+
+where x[1: n+p] ∈ [0 , 2π]. It is straightforward to see that all functions of the form f (x) = a cos( x) + b sin( x)with a, b ∈ R will satisfy f (x) + f ′′ (x) = 0. Imposing boundary condition, f (0) = 0 narrows it down to all functions of the form a sin( x). One extra observation in the domain would imply a unique solution. We start with the same number of collocation points p = 10 and prediction points q = 10 to allow for a fair comparison of simple Kriging, co-Kriging and Lagrangian Kriging. Additionally, we provide n = 4 random observations of the function f (x) = sin( x). 
+
+14 0 1 2 3 4 5 6      
+
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> Simple Kriging 1D: thetaopt=0.83, sigmaopt=0.610000 0123456
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> Co Kriging 1D: thetaopt=1.46, sigmaopt=0.006000
+
+(a) Simple Kriging (b) Collocated co-Kriging 0 1 2 3 4 5 6      
+
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> Lagrangian Kriging 1D: thetaopt=1.12, sigmaopt=0.610000 0123456
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> Lagrangian Kriging 1D: thetaopt=2.38, sigmaopt=3.910000
+
+(c) Lagrangian Kriging (LOOCV) (d) Lagrangian Kriging (improved interpolation) Figure 3: All figures show the exact function in black, four observations as black crosses, collocation points / the predicted f as empty circles with ±2σ confidence intervals: (a) Simple Kriging ( ˆθ = 0 .83 , ˆσ = 0 .61). (b) 
+
+Co-Kriging ( ˆθ = 1 .46 , ˆσ = 0 .006) (c) Lagrangian Kriging (LOOCV optimal parameters: ˆθ = 1 .12 , ˆσ = 0 .61.) 
+
+(d) Lagrangian Kriging (minimizer of the interpolation error: ˆθ = 2 .38 , ˆσ = 3 .91). Note that, the co-Kriging uncertainty intervals are too tiny to notice owing to the model accuracy. 
+
+From the Figure 3, derivative observations based co-Kriging is the clear winner in terms of accuracy. The Lagrangian Kriging approach has two variants. The first one, Figure 3c, uses the LOOCV optimal hyper-parameters and notably loses the interpolation property which is a distinctive property of classical Kriging. To resolve this, in the second variant, Figure 3d, we tune hyperparameters using the same criterion formulas as LOOCV (MSE and variance criterion) except that we use all observations while predicting (not leaving any out). In this scenario, the MSE in particular, corresponds to the interpolation error caused by the prediction constraints and provides a better estimate (interpolating) as is evident from Figure 3d. Both methods improve model uncertainty when compared to simple Kriging. In Table 2, we substantiate again that co-Kriging is undoubtedly the best for this particular task. Simple Kriging and Lagrangian Kriging with LOOCV parameters render a similar performance even though simple Kriging performs marginally better in this case. It is also noteworthy that Lagrangian Kriging with minimizer of the interpolation error is significantly better than the LOOCV variant. This is to stress on the fact that, nudging the parameters slightly or opting for modifying the hyperparameter tuning criterion can result in a major improvement in the Lagrangian Kriging performance with no computational overhead. 
+
+Table 2: Comparing the models based on the usual MSE mertic for the 1D prediction task. For Lagrangian Kriging, we report results for both variants, the LOOCV and the improved interpolation parameters. 
+
+Simple Krig. Co-Krig. Lag. Krig. ( θ = 1 .12) Lag. Krig. ( θ = 2 .38) 0.08 6.75 × 10 −11 0.12 1.22 × 10 −3
+
+We also present the run times, in 1D, for varying p in Table 3 to further motivate the utility of Lagrangian Kriging. The computational time is divided into two parts, the time of covariance computations to construct all covariance matrices (construction) and the time to invert and multiply the covariance matrices (inversion) to obtain the final predictions. The maximum p considered is 1000 and matrix inversions are tractable. In all cases, the major bottleneck comes from the number of covariance calculations required to fill the covariance matrices. This is most likely a consequence of the dimension. The construction time for co-Kriging is significantly higher owing to the expanded covariance matrices, K+ and H+. In comparison, Lagrangian Kriging offers a speed-up of 100x - 1000x in several instances. 
+
+15 Table 3: Computational times for varying p (without accounting for kernel hyperparameter calibration). For Lagrangian Kriging, we consider q = p.
+
+n = 4 Co-Krig. ( q = 100) Lag. Krig. 
+
+p = 100 Construction 32.04s 0.26s 
+
+Inversion 0.07s 0.09s 
+
+p = 250 Construction 179.08s 0.59s 
+
+Inversion 0.13s 0.16s 
+
+p = 500 Construction 686.12s 1.17s 
+
+Inversion 0.26s 0.20s 
+
+p = 1000 Construction 2680.72s 2.34s 
+
+Inversion 0.39s 0.56s 0 1 2 3 4 5 6        
+
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5 Lagrangian Kriging 1D: thetaopt=1.12, sigmaopt=0.610000 0123456
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5 Lagrangian Kriging 1D: thetaopt=2.38, sigmaopt=3.910000
+
+(a) LOOCV (b) Improved interpolation Figure 4: Lagrangian Kriging with the same observations but predicting at q = 1000 locations. (a) Using the optimal LOOCV parameters. (b) Using parameters minimizing the interpolation error. 
+
+Before we study exeriments in higher dimensions, we present some results specifically on Lagrangian Kriging since it loses the crucial, interpolation property. In Figure 3, we chose q = 10 as the number of prediction locations. On augmenting q, Figure 4 illustrates that the prediction does not vary but it becomes smoother since we chose a finer set of prediction locations. Turning to the effect of the number of exact observations n, Figure 5 displays that Lagrangian Kriging converges to the exact function with increasing n.This is consistent with our expectations, since Kriging has traditionally been used as an interpolation model and given sufficient exact observations, it should converge to the Kriging prediction. Note that instead of performing LOOCV or minimal interpolation error hyperparameter tuning, we used a fixed lengthscale to better assess the effect of observations in isolation. 0 1 2 3 4 5 6            
+
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00 0123456
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00 0123456
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+
+n = 2 n = 10 n = 50 Figure 5: The effect of increasing observations on Lagrangian Kriging prediction (in blue) without uncertainty for q = 100 prediction points. Fixed θ = 1. 16 4.2 2D scalar functions 
+
+In 2D, we consider two real-valued functions, f1(x, y ) = cos( x) sin( y) and a harmonic function f2(x, y ) = 
+
+ex sin( y) + 5. We consider the observations of the functions alongside two sources of differential information, 
+
+1 · ∇ fi := 
+
+ ∂∂x + ∂∂y 
+
+
+
+fi i = 1 , 2 , (53) 
+
+∇2fi := 
+
+ ∂2
+
+∂x 2 + ∂2
+
+∂y 2
+
+
+
+fi i = 1 , 2 , (54) where the latter is the well-known Laplacian operator. We compare the model performances for a fixed number of observations n = 10, 1 · ∇ f at p1 = 50 equispaced points and ∇2f at p2 = 100 equispaced points. The number of prediction points for derivative observations based collocated simple Kriging, we predict on a grid of q = 900 points. Function f2 is harmonic which means that it satisfies ∇2f2 = 0 everywhere in the domain. This is specifically chosen because we intend to apply these methods to fluid dynamics where the continuity equation translates to the Laplace’s equation. 0 1 2 3 4 5 6            
+
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Exact function
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00 0123456
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Simple Kriging 2D: thetaopt1=1.74, sigmaopt1=1.030000
+> 1.5
+> 1.2
+> 0.9
+> 0.6
+> 0.3
+> 0.0
+> 0.3
+> 0.6
+> 0.9
+> 1.2 0123456
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Co-Kriging 2D: thetaopt1=1.41, sigmaopt1=0.191016
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+
+(a) True f1(x, y ) (b) Simple Kriging, ˆθ = 1 .74 (c) Collocated simple co-Kriging, ˆθ = 1 .41 0 1 2 3 4 5 6            
+
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Exact function
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600 0123456
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Simple Kriging 2D: thetaopt2=1.05, sigmaopt2=27.550000
+> 90
+> 75
+> 60
+> 45
+> 30
+> 15
+> 0
+> 15
+> 30
+> 45 0123456
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 6
+> Co-Kriging 2D: thetaopt2=1.60, sigmaopt2=541.662514
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600
+
+(d) True f2(x, y ) (e) Simple Kriging ˆθ = 1 .05 (f) Collocated simple co-Kriging, ˆθ = 1 .60. Figure 6: Comparing the simple Kriging vs. derivatives based collocated co-Kriging with n = 10 observations (in black), gradient observations (in brown) and Laplacian observations (in red). 
+
+In Figure 6, for both f1 and f2, it is clear that co-Kriging meaningfully utilizes the linear differential information to gain a significant edge in performance over simple Kriging. The reconstruction from just a few exact observations is almost perfect. For Lagrangian Kriging, the constraints do not involve the functions f1 and f2 explicitly. This is the same situation as discussed in Remark 2 and Remark 3. The constraints are composed of the first-order derivatives of f1, f 2 or higher. Hence, the objective is independent of any C2 constraints in (32). This implies that, under the absence of the unbiasedness constraint C1 as well, we are bound to get the same results as simple Kriging and hence we reuse the simple Kriging LOOCV optimal parameters. However, predicting derivatives might be of interest in some applications, for example, if you have limited observations of a function f and you want to approximate the gradient or Hessian for iterative optimization algorithms, given that the function satisfies some differential constraints, it is possible to use the Lagrangian Kriging predictions for the higher-order derivatives involved in the constraints. 
+
+17 0                                  
+
+> 2
+> 4
+> 6
+> Actual xf1Predicted xf1
+> 0
+> 2
+> 4
+> 6
+> Actual yf1Predicted yf1
+> 0
+> 2
+> 4
+> 6
+> Actual 2
+> xx f1Predicted 2
+> xx f1
+> 0246
+> 0
+> 2
+> 4
+> 6
+> Actual 2
+> yy f1
+> 0246
+> Predicted 2
+> yy f1
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.2
+> 0.9
+> 0.6
+> 0.3
+> 0.0
+> 0.3
+> 0.6
+> 0.9
+> 1.2
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.2
+> 0.9
+> 0.6
+> 0.3
+> 0.0
+> 0.3
+> 0.6
+> 0.9
+> 1.2
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.2
+> 0.9
+> 0.6
+> 0.3
+> 0.0
+> 0.3
+> 0.6
+> 0.9
+> 1.2
+> Lagrangian Kriging 2D: thetaopt1=1.73, sigmaopt1=1.025403 0
+> 2
+> 4
+> 6
+> Actual xf2Predicted xf2
+> 0
+> 2
+> 4
+> 6
+> Actual yf2Predicted yf2
+> 0
+> 2
+> 4
+> 6
+> Actual 2
+> xx f2Predicted 2
+> xx f2
+> 0246
+> 0
+> 2
+> 4
+> 6
+> Actual 2
+> yy f2
+> 0246
+> Predicted 2
+> yy f2
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600
+> 400
+> 300
+> 200
+> 100
+> 0
+> 100
+> 200
+> 300
+> 400
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600
+> 400
+> 300
+> 200
+> 100
+> 0
+> 100
+> 200
+> 300
+> 400
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600
+> 32
+> 24
+> 16
+> 8
+> 0
+> 8
+> 16
+> 24
+> 32
+> 600
+> 450
+> 300
+> 150
+> 0
+> 150
+> 300
+> 450
+> 600
+> 32
+> 24
+> 16
+> 8
+> 0
+> 8
+> 16
+> 24
+> 32
+> Lagrangian Kriging 2D: thetaopt2=1.05, sigmaopt2=27.547846
+
+(a) f1(x, y ) partial derivatives (b) f2(x, y ) partial derivatives Figure 7: Lagrangian Kriging predictions for higher-order derivatives involved in the gradient-based and Lapla-cian operators. 
+
+Looking at Figure 7, Lagrangian Kriging produced approximations to the higher derivatives involved in the constraints. As seen before in the case of ODEs, the prediction quality may not be satisfactory especially for the second-order derivatives of f2(x, y ) in Figure 7b. The prediction quality is likely to improve with more exact observations of the function. 
+
+## 4.3 Potential flow problem 
+
+Our primary motivation is to address problems in computational fluid dynamics. As an introductory problem, we consider the steady-state flow around an obstacle that is incompressible, inviscid, with negligible external forces and we assume it satisfies a Neumann boundary condition on the obstacle boundary. These are simplifying assumptions that offers a linearized version of the Navier-Stokes equations. The potential flow formulation is frequently used to compute drag and lift coefficient of airfoils. It is described by the following equations, 
+
+ρ(v · ∇ )v = −∇ P (55) 
+
+∇ · v = 0, (56) 
+
+v · n = 0 on Γ and v = V∞, P = P∞ far from the obstacle , (57) where ρ := ρ(x, t ) is the density of the fluid, v := v(x, t ) is the velocity vector, P := P (x, t ) is the pressure field and n denotes the unit vector normal to the obstacle. Further assuming that the flow is irrotational, i.e., ∇ × v = 0, allows to have a flow that derives from a potential, v = ∇ϕ where ϕ is a scalar field. Additionally, the pressure can be deduced from the velocity through Bernoulli’s theorem, 12 ρ∥v∥2 + P = 12 ρ∥V∞∥2 + P∞
+
+With the potential function, Equations (56)-(57) become 
+
+∇2ϕ = 0 , ∇ϕ · n = 0 on Γ , ∇ϕ = V∞ at infinity (58) For future reference, we refer to all the simplifying fluid assumptions namely, incompressibile, invsicid and irrotational with negligible external forces as the hypothesis H1. We start by modeling ϕ : R2 → R as a random function with the squared exponential kernel as covariance function. We intend to use n point observations of ∇ϕ to predict the same in the rest of the domain while taking into consideration ∇2ϕ = 0 at specific collocation points in the domain and ∇ϕ · n = 0 at collocation points on the obstacle boundary. In the case of Lagrangian Kriging, there is no notion of collocation points and hence these differential equations will be treated as constraints at the prediction points. The usual 2D velocity vector field v : R2 → R2 has two component functions, vx = ∂xϕ and vy = ∂y ϕ,the projections onto the Euclidean basis. Each velocity vector observation is a tuple ( vx, v y ). The classical approach is to interpolate the flow using simple Kriging assuming there is no cross-covariance between vx
+
+and vy (independence). The potential function ( ϕ) formulation is of no use here since we assume indepen-dence. We use the same squared exponential kernel directly on the velocity components. The only exact observations are velocity vectors at infinity but this is not very useful since there is no way to account for the presence of an obstacle. Nonetheless, this is serves as a good baseline interpolation model to compare 
+
+18 with. As a first experiment (without an obstacle), we consider the task of predicting the flow based on random velocity vector observations. This is to demonstrate the difference between predictions of simple Kriging assuming independent velocity components (formerly described classical approach), simple Kriging using the cross-covariance relations arising from the potential function ϕ formulation (same as simple Kriging in the extended design space) and co-Kriging with ∇2ϕ = 0 at p = 100 points. Figure 8 reveals some interesting features. We notice a peculiar flow reversal and other sophisticated flow patterns in Figure 8b, all while retaining the interpolation property. On adding collocation points for co-Kriging, the continuity equation ensures that there is no back-flow but we observe that, the flow tends to enter or exit the domain erratically as shown in Figure 8c. To investigate the flow patterns further, we assess the impact of changing the length-scale parameter θ of the squared exponential kernel, see Figure 9. This clearly illustrates that for larger lengthscales, the peculiar flow patterns disappear and the observed velocity vectors have a stronger effect on the predictions. 
+
+(a) (b) (c) Figure 8: Prediction based on random additional observations in the domain: (a) Simple Kriging without cross covariance between velocity components, (b) Simple Kriging (using ϕ), (c) Co-Kriging with continuity. Both the color map and the arrow lengths represent the magnitude of velocity. 
+
+(a) θ = 0 .5 (b) θ = 2 (c) θ = 5 Figure 9: Simple Kriging (using ϕ) prediction based on random additional observations in the domain for varying lengthscale parameter (flow-reversal phenomena). Once again, the color and length of the arrows are proportional to the magnitude of velocity. 
+
+A possible contributor to the flow-reversal phenomena may be the negative correlations that appear when computing covariances using the differentiated kernel. This is illustrated for the squared exponential kernel in Figure 10. A significant portion of the double differentiated kernel is negative. Another possible inter-pretation is that the flow prediction is the consequence of appropriately placed fundamental potential flows (sources and sinks) such that their superposition is interpolating. The exact mechanism of how this can be facilitated by covariance relationships is unclear and beyond the scope of this paper and requires further research. For our experiments, we noticed that, spread-out observations in combination with the LOOCV hyperparameter tuning, counters this effect. 
+
+19 0 5 10 15 20 25 
+
+> x2
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> k(x, 0)
+> 2
+> xx ′k(x, 0)
+
+Figure 10: The variation of covariance with respect to the squared distance for the squared exponential kernel (θ = 1 , σ 2 = 1). 
+
+For the obstacle geometry, we consider the cylindrical shape and since we have an analytical solution for a perfect flow around cylinder, we will use it to compare the two approaches. We use n = 12 velocity vector observations, all observations are based on the analytical solution and kept relatively far from the obstacle. Using q1 = 10 collocation points around the boundary of the obstacle to enforce the Neumann boundary condition and q2 = 88 collocation points in the domain to ensure continuity. the collocation points translate to the prediction points in the case of Lagrangian Kriging, as seen before. Specifically for Lagrangian Kriging, we cannot meaningfully consider the continuity equation does not di-rectly involve the velocity vectors and we find ourselves in the situation described in Remark 2 and Remark 3. which leaves us with only one constraint involving the velocity vectors, i.e., velocity vectors must be tangential around the obstacle boundary. This restricts the velocity predictions to the obstacle boundary only. For these predictions, we compute the optimal lengthscale ˆθ as the minimizer of the virtual LOOCV criterion (43) since the observation locations are unconstrained. For the Figure 11c, we adopt a two-step strategy. Firstly, we make Lagrangian Kriging predictions along the q1 boundary collocation/prediction points (shown in blue) and secondly, we interpolate the rest of the flow assuming, the original observa-tions and the Lagrangian Kriging boundary predictions as exact observations, using simple Kriging with no cross-covariance among the two velocity components vx and vy as demonstrated in Figure 8a. We tune the lengthscale parameter separately for the second interpolation step with ˆθ = 1 .01 minimizing the LOOCV MSE. Additionally, if useful, we can make direct Lagrangian Kriging predictions for ∂2
+
+> xx
+
+ϕ and ∂2 
+
+> yy
+
+ϕ since they are part of the q2 collocation/prediction points. This was of no immediate use to us and hence we omitted any figures about it. Predictions                
+
+> 012345
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> TESTING ANALYTICAL
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6 Observations
+> Predictions
+> 012345
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> Co-Kriging: thetaopt=0.93, sigmaopt=2.4800
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6 012345
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> Interpolation: thetaopti=1.01, sigmaopti=24.5994
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 1.2
+> 1.4
+> 1.6
+
+(a) True flow under H1 (b) Co-Kriging (c) Lagrangian Kriging Figure 11: Comparing the predicted flows. Observed velocity vectors in red. The LOOCV optimal co-Kriging parameters, ˆθ = 0 .93 and ˆ σ = 2 .48. The Lagrangian Kriging predictions (optimal lengthscale parameter, ˆθ = 2 .01) are shown in blue, using which, the rest is a simple Kriging based interpolation. 
+
+The flow prediction in Figure 11b, tends to enter and exit the domain in the lack of velocity observations, which was also the case with Figure 8c. On the bright side, the co-Kriging model uncertainty is consistent with this observation. Uncertainty spikes in the vicinity of the prediction locations where the flow enters and exits the domain as shown in Figure 12b. 
+
+20 0 1 2 3 4 5      
+
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5Simple Kriging UQ: thetaopt=2.10, sigmaopt=0.7750
+> 0.000
+> 0.025
+> 0.050
+> 0.075
+> 0.100
+> 0.125
+> 0.150
+> 0.175
+> 0.200 012345
+> 0
+> 1
+> 2
+> 3
+> 4
+> 5
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+
+(a) (b) Figure 12: Uncertainty in the squared magnitude of the predicted velocity vectors: (a) Simple Kriging with LOOCV optimal parameters ˆθ = 2 .10 and ˆ σ = 0 .77, (b) Co-Kriging with LOOCV optimal parameters ˆθ = 0 .93 and ˆ σ = 2 .48. 
+
+To further explain the uncertainty Figure 12, assume the model predictions of ˆ vx and ˆ vy as two dependent normal distributions. From Section 3.5, recall that the squared sum of two dependent normal distributions is a generalized χ2 distribution. Finally, we computed the variance (and standard deviation) of this distribution to represent uncertainty in ∥v∥22 = v2 
+
+> x
+
++ v2 
+
+> y
+
+as the 2 σ value. We perform this procedure for both Simple Kriging in the extended design space and Co-kriging with differential information. From Figure 12, it is clear that co-Kriging substantially reduces the model uncertainty across the domain compared to simple Kriging which solely accounts for the observations of velocity. Moreover, the co-Kriging uncertainty aligns well with the model performance in Figure 11b, supporting its reliability in practice. We extend the same methodology to predict the potential flow around NACA airfoil geometries, particularly of interest to the aerospace engineering community and the aviation industry. We use the open source UIUC Airfoil database - https://m-selig.ae.illinois.edu/ads/coord database.html to retrieve the airfoil coordinates and solve for the potential flow problem using the Boundary elements method (source panel’s method, to be precise) [22] which is frequently used for airfoils. We modified the python script for the source panel’s method from https://github.com/jte0419/Panel Methods to apply it to custom geometries. We test our methods on two NACA airfoils: NACA 0012 and NACA 2424. We added a dense set of observations at infinity (at both + ∞ and −∞ ) alongside plenty of mid-domain observations, the velocity vectors marked in red in Figure 13, to avoid the erratic domain exit-entry behaviour as discussed before. Total number of exact observations used n = 80, number of continuity collocation points (for co-Kriging) p1 ≤ 100, number of boundary collocation points (prediction points in the case of Lagrangian Kriging) 50 ≤ p2 ≤ 30 and the number of prediction points q ≈ 900. The continuity collocation points for a uniform grid keeping in mind the scale difference between the x − y axes. The discretization on the x axis is four times the discretization on the y axis to respect the scale difference. The boundary collocation points are equispaced points along the obstacle boundary. We also report the LOOCV optimal ˆθ parameters used in each case. In the case of Lagrangian Kriging, there is a second LOOCV optimization routine for the interpolation step with ˆθ = 1 .20 and ˆθ = 1 .28 for NACA 0012 and NACA 2424 respectively. 
+
+21 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50                 
+
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Exact flow
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1 Observations
+> Predictions
+> 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Co-Kriging: thetaopt=0.27, sigmaopt=1.0000
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1 Observations
+> Predictions
+> 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Lag. Kriging (interpol.): thetaopti=1.206, sigmaopti=1.0000
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1
+
+ˆθ = 0 .27 ˆθ = 0 .25 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50                 
+
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Exact flow
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1 Observations
+> Predictions
+> 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Co-Kriging: thetaopt=0.25, sigmaopt=2.4164
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1 Observations
+> Predictions
+> 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Lag. Kriging (interpol.): thetaopti=1.277, sigmaopti=1.0000
+> 0.6
+> 0.7
+> 0.8
+> 0.9
+> 1.0
+> 1.1
+
+ˆθ = 0 .25 ˆθ = 0 .26 (a) Exact flow under H1 (b) Co-Kriging (c) Lagrangian Kriging Figure 13: The exact flow and co-Kriging and Lagrangian Kriging predictions for the airfoils NACA 0012 (top) and NACA 2424 (bottom). Observed velocity vectors marked in red. 
+
+The potential flow reconstructions in Figure 13 are quite satisfactory considering that we have used an isotropic kernel. For both the airfoils, NACA 0012 and NACA 2424, the flows are tangential close to the boundary which implies that the models are well-informed of the boundary condition via collocation points. This demonstrates that our model can be generalized to non-trivial domains quite easily but it may need more careful, problem-specific kernel design, at times. Co-Kriging once again performs better than Lagrangian Kriging but this comes at a much higher computational cost. We also observed that the nugget values used when inverting the K+ matrix had a big influence in the final flow predictions. For co-Kriging, we used a high nugget value of 1 e − 4 to avoid an ill-conditioned covariance matrix. This issue has been reported before by [11, 30]. For Lagrangian Kriging, we used nugget values varying from 1 e − 7 to 1 e − 8 for the interpolation step. We also computed the uncertainty in the squared magnitude of the velocity vectors as before and compare simple Kriging and co-Kriging in Figure 14. 
+
+22 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50         
+
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Simple Kriging UQ: thetaopt=0.248, sigmaopt=0.5647
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> Co-Kriging UQ: thetaopt=0.27, sigmaopt=21.6738
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+
+ˆσ = 0 .56 ˆσ = 21 .67 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50         
+
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Simple Kriging UQ: thetaopt=0.262, sigmaopt=0.4941
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00 0.50 0.25 0.00 0.25 0.50 0.75 1.00 1.25 1.50
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Co-Kriging UQ: thetaopt=0.25, sigmaopt=51.3044
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 1.25
+> 1.50
+> 1.75
+> 2.00
+
+ˆσ = 0 .49 ˆσ = 51 .30 (a) Simple Kriging UQ (b) Co-Kriging UQ Figure 14: Comparing the uncertainty quantification ( ±2σ) with simple Kriging vs. Co-Kriging for the airfoils NACA 0012 (top) and NACA 2424 (bottom) respectively. 
+
+From Figure 14, it is clear that the uncertainty prediction with co-Kriging is more informative than simple Kriging for both airfoils. Once again, we had to use nugget values as high as 1 e − 6 while inverting the K+
+
+matrix for reasonable ˆ σ values. The UQ, aligns well with the prediction quality. The co-Kriging model flags some locations above and below the airfoils as high uncertainty regions in all cases. The fluid flow in these regions dictates the lift force which is crucial in aerodynamic applications. Surprisingly however, the model is relatively more confident at the leading and the trailing edge of the airfoils where the prediction errors are higher as seen in Figure 13. To summarize, we have shown promising results with co-Kriging and Lagrangian Kriging for the potential flow prediction problem given minimal observations. However, we also faced some challenges namely, the flow-reversal and peculiar flow patterns which we linked with the lengthscale parameter. We also encountered the Lagrangian Kriging issue as described in Remark 2 and Remark 3 which we addressed by making boundary predictions at first, followed by simple Kriging (without cross-covariance). Overall, these models offer a flexible means of using boundary conditions (Dirichlet or Neumann) and any linear combination of mixed derivatives as additional information in the domain for physics-informed flow reconstruction in a linearized fluid dynamics settings with uncertainty quantification which, as demonstrated, corresponds to a measure of the prediction error. 
+
+# 5 Conclusion 
+
+The aim of the present research was to study extensions of the classical Kriging framework to a setting involving derivatives. In this context, we develop an extended design space in Section 2.3 to handle the spatial coordinates and derivative order as a single mathematical object. Simple and ordinary Kriging in the extended design space are already flexible tools to take into account point-wise derivative observations or predict unobserved derivatives of the function. Furthermore, we observed that we can characterize linear differential equations (discretized) as matrix equations in the extended design space. We exploit this char-acterization to develop two Kriging methods capable of operating with general linear differential equations. The first method is a collocated co-Kriging methodology to account for linear differential information at collocation points as secondary variables in the co-Kriging predictor. In the second method, we exploit the optimization framework offered by Kriging, to inject differential information as constraints at points of prediction which are later resolved via Lagrange multipliers. The resultant predictor is referred to as Lagrangian Kriging. For hyperparameter tuning, we adopt the leave-one-out cross validation strategy which is ideal when there are no explicit likelihood expressions. This allows us to operate without making any prior assumptions about the distribution of the quantity of interest. We started by testing them on a syn-thetic ODE problem where we make several important observations about both models, see Section 4.1. In summary, we observed that there is a trade-off between accuracy versus computational time. Co-Kriging offers accurate predictions, see Table 2, with little information but suffers from significantly higher run-times, owing to numerous kernel derivative computations and large matrix inversion, as is evident from Table 1 and 
+
+23 Table 3. On the contrary, Lagrangian Kriging lacks in accuracy and loses the crucial interpolation property, a defining feature of Kriging methods but is much faster to implement. We briefly discuss a possible resolution to improve interpolation of Lagrangian Kriging via kernel hyperparameters that minimize the interpolation error, offering a noticeable improvement, as shown in Figure 3d. Beyond this, these results are further reaffirmed by experiments in two dimensions. Co-Kriging is suc-cessfully able to account for point-wise linear differential equations in the case of 2D scalar functions in Section 4.2. In the case of potential flow prediction, we observed spurious flow patterns when using simple Kriging, see Figure 8, which we later attributed to the choice of lengthscale parameter in Figure 9. Fortu-nately, LOOCV based hyperparameter tuning served as quick resolution to this effect allowing us to conduct experiments on potential flow prediction in the presence of an obstacle. In this case, both co-Kriging and Lagrangian Kriging perform well, as seen in Section 4.3 where we also provide co-Kriging uncertainty esti-mates (see Figure 12). These experiments also reveal another surprising limitation of Lagrangian Kriging. In Section 4.2, we see that constraints that do not involve the function itself (the same order of derivative as the one to be predicted) are not accounted for by Lagrangian Kriging, a concise reiteration of Remark 2. We see this appear again in Section 4.3 since Lagrangian Kriging cannot account for the continuity equation and requires a two-step diagnostic procedure, predicting at the obstacle boundary followed by interpolation everywhere else. Moving on to some perspectives, it is desirable to introduce a more complete Lagrangian Kriging model that should be able to incorporate the dependence between prediction coefficients associated with different orders of derivatives of a function explicitly, by construction. To bring down the computational time of co-Kriging, [19] presents a method to exploit the Kronecker product structure of the Gram matrices pro-duced by stationary kernel derivatives, to accelerate the covariance matrix computation and its inversion. This is especially important in higher dimensions as the computational cost scales as a cubic with respect to dimension. Even though promising, the application is not entirely obvious for the co-Kriging model. An important aspect is that the scope of this work is not necessarily limited to the linear setting, unlike other related works using Gaussian processes such as [26, 43, 46]. However, we should mention that the use of Gaussian processes for solving non-linear PDEs has been investigated in recent works, such as [11] where they enforce differential constraints at prediction. Although not pursued here, this represents a compelling alternative methodology. In this regard, extending Lagrangian Kriging to non-linear differential equations is relatively straightforward but an analytical resolution via Lagrange multipliers is not always guaranteed. In such a scenario, it is possible to utilize gradient-based numerical optimization schemes instead. Co-Kriging can also be extended to the non-linear setting provided that we can compute the covariance between non-linear transformations of random functions. This is a prominent advantage of distribution-free best linear prediction interpretation over the use of Gaussian processes which are usually constrained to linear problems. We postpone the aforementioned ideas of extension to non-linear problems as future work. 
+
+Acknowledgement. This research was conducted with the support of the consortium in Applied Mathematics CIROQUO, gathering partners in technological and academia in the development of advanced methods for Computer Experiments. This research was partly funded by a CIFRE grant (convention n°2024/0423) established between the ANRT and Stellantis. We would also like to extend our gratitude to the UMR 6158, CNRS lab Laboratory of Informatics, Modelling and Optimization of the Systems (LIMOS) and Institute Fayol - ´Ecole des Mines de Saint-´Etienne for providing the necessary computational equipment. 
+
+# References 
+
+[1] Petter Abrahamsen. A Review of Gaussian Random Fields and Correlation Functions . Norwegian Computing Center, 2 edition, April 1997. [2] Dheeraj Agarwal, Christos Kapellos, Trevor Robinson, and Cecil Armstrong. Using parametric effec-tiveness for efficient CAD-based adjoint optimization. Computer-Aided Design and Applications , 16, 05 2018. [3] Jeremy Aldworth and Noel Cressie. Prediction of nonlinear spatial functionals. Journal of Statistical Planning and Inference , 112:3–41, 3 2003. [4] M. A. Alvarez, D. Luengo, and N. D. Lawrence. Linear latent force models using gaussian processes. 
+
+IEEE Transactions on Pattern Analysis and Machine Intelligence , 35:2693–2705, 11 2013. [5] Mauricio A. ´Alvarez, Lorenzo Rosasco, and Neil D. Lawrence. Kernels for vector-valued functions: A review. Foundations and Trends ®in Machine Learning , 4:195–266, 2012. [6] William F. Ames. Numerical Methods for Partial Differential Equations . Elsevier, 3, 1977. 
+
+24 [7] Fran¸ cois Bachoc. Cross validation and maximum likelihood estimations of hyper-parameters of gaussian processes with model misspecification. Computational Statistics &amp; Data Analysis , 66:55–69, 10 2013. [8] Fran¸ cois Bachoc, Agn` es Lagnoux, and Andr´ es F. L´ opez-Lopera. Maximum likelihood estimation for gaussian processes under inequality constraints. Electronic Journal of Statistics , 13, 1 2019. [9] Shalabh Bhatnagar, N. Hemachandra, and Vivek Kumar Mishra. Stochastic approximation algorithms for constrained optimization via simulation. ACM Transactions on Modeling and Computer Simulation ,21:1–22, 3 2011. [10] Joseph K. Blitzstein and Jessica Hwang. Introduction to Probability . Chapman and Hall/CRC, 7 2014. [11] Yifan Chen, Bamdad Hosseini, Houman Owhadi, and Andrew M. Stuart. Solving and learning nonlinear pdes with gaussian processes. Journal of Computational Physics , 447:110668, December 2021. [12] Jean-Paul Chil` es and Pierre Delfiner. Geostatistics: Modeling Spatial Uncertainty . Wiley, February 2012. [13] George Christakos. The Spatial Random Field Model , pages 21–106. Elsevier, 1992. [14] Noel Cressie. Aggregation in Geostatistical Problems , pages 25–36. Springer Netherlands, 1993. [15] Noel A. C. Cressie. Statistics for Spatial Data . Wiley, 9 1993. [16] Elizabeth J. Cross and Timothy J. Rogers. Physics-derived covariance functions for machine learning in structural dynamics. IFAC-PapersOnLine , 54:168–173, 2021. [17] Salvatore Cuomo, Vincenzo Schiano Di Cola, Fabio Giampaolo, Gianluigi Rozza, Maziar Raissi, and Francesco Piccialli. Scientific machine learning through physics–informed neural networks: Where we are and what’s next. Journal of Scientific Computing , 92:88–, 2022. [18] S´ ebastien Da Veiga and Amandine Marrel. Gaussian process modeling with inequality constraints. 
+
+Annales de la facult´ e des sciences de Toulouse Math´ ematiques , 21(3):529–555, 4 2012. [19] Filip de Roos, Alexandra Gessner, and Philipp Hennig. High-dimensional gaussian process inference with derivatives. 2 2021. [20] Olivier Dubrule. Cross validation of kriging in a unique neighborhood. Journal of the International Association for Mathematical Geology , 15:687–699, 12 1983. [21] Richard Eppler. Airfoil Design and Data . Springer Berlin Heidelberg, 1990. [22] Larry Erickson. Panel methods: An introduction. 1990. [23] G. Ertun¸ c, A.E. Tercan, M.A. Hindistan, B. ¨Unver, S. ¨Unal, F. Atalay, and S.Y. Kıllıo˘ glu. Geostatistical estimation of coal quality variables by using covariance matching constrained kriging. International Journal of Coal Geology , 112:14–25, 6 2013. [24] Lawrence Evans. Partial Differential Equations . American Mathematical Society, 3 2010. [25] Han Gao, Luning Sun, and Jian-Xun Wang. Phygeonet: Physics-informed geometry-adaptive convo-lutional neural networks for solving parameterized steady-state pdes on irregular domain. Journal of Computational Physics , 428:110079, 3 2021. [26] Thore Graepel. Solving noisy linear operator equations by gaussian processes: Application to ordinary and partial differential equations. volume 1, page 234 – 241, 2003. [27] Iain Henderson, Pascal Noble, and Olivier Roustant. Characterization of the second order random fields subject to linear distributional pde constraints. Bernoulli , 29(4):3396–3422, November 2023. [28] Iain Henderson, Pascal Noble, and Olivier Roustant. Covariance models and gaussian process regression for the wave equation. application to related inverse problems. Journal of Computational Physics ,494:112519, December 2023. [29] Christoph Hofer and Andreas Papritz. constrainedkriging: An r-package for customary, constrained and covariance-matching constrained point or block kriging. Computers &amp; Geosciences , 37:1562–1569, 10 2011. [30] Carl Jidling, Niklas Wahlstrom, Adrian Wills, and Thomas B. Sch¨ on. Linearly constrained gaussian pro-cesses. In Proceedings of the 31st International Conference on Neural Information Processing Systems ,NIPS’17, page 1215–1224, Red Hook, NY, USA, 2017. Curran Associates Inc. 
+
+25 [31] George Karniadakis, Yannis Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, and Liu Yang. Physics-informed machine learning. Nature Reviews Physics , pages 1–19, 05 2021. [32] Andre¨ ı Nikola¨ ıevitch Kolmogorov. Interpolation and extrapolation of stationary sequences. Izvestiia Akademii Nauk SSSR, Seriia Matematicheskaia , pages 3–14, 1941. [33] Nikola B. Kovachki, Zongyi Li, Burigede Liu, Kamyar Azizzadenesheli, Kaushik Bhattacharya, An-drew M. Stuart, and Anima Anandkumar. Neural operator: Learning maps between function spaces. 
+
+CoRR , abs/2108.08481, 2021. [34] Zongyi Li, Daniel Zhengyu Huang, Burigede Liu, and Anima Anandkumar. Fourier neural operator with learned deformations for pdes on general geometries. J. Mach. Learn. Res. , 24(1), January 2023. [35] Dehao Liu and Yan Wang. A dual-dimer method for training physics-constrained neural networks with minimax architecture. Neural Networks , 136:112–125, 4 2021. [36] Charles F.Van Loan. The ubiquitous kronecker product. Journal of Computational and Applied Math-ematics , 123:85–100, 11 2000. [37] Lu Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George Em Karniadakis. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nature Machine Intelligence , 3(3):218–229, 2021. [38] Andr´ es F. L´ opez-Lopera, Fran¸ cois Bachoc, Nicolas Durrande, and Olivier Roustant. Finite-dimensional gaussian approximation with linear inequality constraints. SIAM/ASA Journal on Uncertainty Quan-tification , 6(3):1224–1255, January 2018. [39] Amandine Marrel and Bertrand Iooss. Probabilistic surrogate modeling by gaussian process: A new esti-mation algorithm for more robust prediction. Reliability Engineering &amp; System Safety , 247:110120, 7 2024. [40] Francis J. Narcowich and Joseph D. Ward. Generalized hermite interpolation via matrix-valued condi-tionally positive definite functions. Mathematics of Computation , 63:661, 10 1994. [41] Adam Paszke, Sam Gross, Soumith Chintala, Gregory Chanan, Edward Yang, Zachary DeVito, Zeming Lin, Alban Desmaison, Luca Antiga, and Adam Lerer. Automatic differentiation in pytorch. 2017. [42] M. Raissi, P. Perdikaris, and G.E. Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. 
+
+Journal of Computational Physics , 378:686–707, February 2019. [43] Maziar Raissi, Paris Perdikaris, and George Em Karniadakis. Machine learning of linear differential equations using gaussian processes. Journal of Computational Physics , 348:683–693, November 2017. [44] Carl Edward Rasmussen and Christopher K. I. Williams. Gaussian Processes for Machine Learning .The MIT Press, nov 2005. [45] Didier Rulli` ere and Marc Grossouvre. A joint kriging model with application to constrained classifica-tion. Statistics and Computing , 35, 12 2025. [46] Simo S¨ arkk¨ a. Linear Operators and Stochastic Partial Differential Equations in Gaussian Process Regression , pages 151–158. vol 6792. Springer Berlin Heidelberg, 2011. [47] Michael Scheuerer and Martin Schlather. Covariance models for divergence-free and curl-free random vector fields. Stochastic Models , 28(3):433–451, 2012. [48] John Skilling. Bayesian Solution of Ordinary Differential Equations , page 23–37. Springer Netherlands, 1992. [49] E. Solak, R. Murray-smith, W. Leithead, D. Leith, and Carl Rasmussen. Derivative observations in gaussian process models of dynamic systems. In S. Becker, S. Thrun, and K. Obermayer, editors, 
+
+Advances in Neural Information Processing Systems , volume 15. MIT Press, 2002. [50] Luning Sun, Han Gao, Shaowu Pan, and Jian-Xun Wang. Surrogate modeling for fluid flows based on physics-constrained deep learning without simulation data. Computer Methods in Applied Mechanics and Engineering , 361:112732, 4 2020. [51] Laura P. Swiler, Mamikon Gulian, Ari L. Frankel, Cosmin Safta, and John D. Jakeman. A survey of constrained gaussian process regression: Approaches and implementation challenges. Journal of Machine Learning for Modeling and Computing , 1:119–156, 2020. 
+
+26 [52] Makoto Takamoto, Timothy Praditia, Raphael Leiteritz, Daniel MacKinlay, Francesco Alesiani, Dirk Pfl¨ uger, and Mathias Niepert. Pdebench: An extensive benchmark for scientific machine learning. 
+
+Advances in Neural Information Processing Systems , 35:1596–1611, 2022. [53] Juan Diego Toscano, Vivek Oommen, Alan John Varghese, Zongren Zou, Nazanin Ahmadi Daryakenari, Chenxi Wu, and George Em Karniadakis. From pinns to pikans: Recent advances in physics-informed machine learning. Machine Learning for Computational Science and Engineering , 1(1):1–43, 2025. [54] Hans Wackernagel. Multivariate Geostatistics . Springer Berlin Heidelberg, 2003. [55] Sifan Wang, Xinling Yu, and Paris Perdikaris. When and why pinns fail to train: A neural tangent kernel perspective. Journal of Computational Physics , 449:110768, 1 2022. [56] Zheng Wang, Wei Xing, Robert Kirby, and Shandian Zhe. Physics informed deep kernel learning. In Gustau Camps-Valls, Francisco J. R. Ruiz, and Isabel Valera, editors, Proceedings of The 25th International Conference on Artificial Intelligence and Statistics , volume 151 of Proceedings of Machine Learning Research , pages 1206–1218. PMLR, 28–30 Mar 2022. [57] Holger Wendland. Divergence-free kernel methods for approximating the stokes problem. SIAM Journal on Numerical Analysis , 47:3158–3179, 1 2009. [58] Norbert Wiener. Extrapolation, interpolation, and smoothing of stationary time series, with engineer-ing applications/ . M.I.T. paperback series ; 9. Technology Press of the Massachusetts Institute of Technology, Cambridge, Massachusetts, First M.I.T. Press paperback edition, 1949. [59] Liu Yang, Xuhui Meng, and George Em Karniadakis. B-pinns: Bayesian physics-informed neural networks for forward and inverse pde problems with noisy data. Journal of Computational Physics ,425:109913, 1 2021. [60] Liu Yang, Dongkun Zhang, and George Em Karniadakis. Physics-informed generative adversarial networks for stochastic differential equations. SIAM Journal on Scientific Computing , 42:A292–A317, 1 2020. [61] Hao Zhongkai, Jiachen Yao, Chang Su, Hang Su, Ziao Wang, Fanzhi Lu, Zeyu Xia, Yichi Zhang, Songming Liu, Lu Lu, et al. Pinnacle: A comprehensive benchmark of physics-informed neural networks for solving pdes. Advances in Neural Information Processing Systems , 37:76721–76774, 2024. 
+
+# A Appendix 
+
+## A.1 Proofs 
+
+Proof of Proposition 1. Consider a prediction location x⋆. The weights α(x⋆) are depending on x⋆, but for the sake of simplicity we write α when this single prediction location is considered. Using Equation (10), one easily shows that ∆( x⋆) = α⊤Kα − 2α⊤h(x⋆) + σ2(x⋆)where Kij = Cov [ Y (xi), Y (xj )], hi(x⋆) = Cov [ Y (xi), Y (x⋆)] , i, j ∈ { 1, . . . , n }, and σ2(x⋆) = Var [ Y (x⋆)]. The minimization under the constraints leads to minimize ∆λ(x⋆) = α⊤Kα − 2h(x⋆) − 2λ
+
+
+
+α⊤μ − μ⋆
+
+.
+
+Taking the gradient with respect to α, one gets 
+
+Kα − h(x⋆) − λμ = 0 .
+
+So that finally 
+
+α = K−1 (h(x⋆) + λμ) ,
+
+and as α⊤μ = μ⋆, one gets 
+
+λ =
+
+
+
+μ⊤K−1μ
+
+−1 
+
+μ⋆ − μ⊤K−1h(x⋆)
+
+
+
+.
+
+Hence the optimal weights α (at the specific location x⋆) for the prediction bY (x⋆) (Kriging mean), and its quadratic error ∆( x⋆) (Kriging variance). Remark that both α and λ are depending on x⋆ in the previous equations, and should have been written 
+
+α(x⋆) and λ(x⋆). One can gather predictions at q several points in a vector. This allows to do all the predictions at once by a single matrix expression for a n × q matrix of weights A:
+
+A = K−1 
+
+H + μλ ⊤
+
+, (59) where A = α(x⋆ 
+
+> 1
+
+), ..., α(x⋆q ), H = h(x⋆ 
+
+> 1
+
+), ..., h(x⋆q ), and where λ = ( λ(x⋆ 
+
+> 1
+
+), ..., λ (x⋆q )). 
+
+27 Proof of Proposition 2. For a single prediction point, the co-Kriging predictor in (22) can be re-written as (α+)⊤
+
+ Z
+
+U⊤Z+
+
+
+
+(60) We proceed similarly to the proof of Proposition 1 where we wrote the Kriging error variance in (10) as, ∆( s⋆) = α+⊤K+α+ − 2α+⊤h+(s⋆) + σ2(s⋆)note that the covariance matrices are modified based on the block structure of the observation vector [Z, U⊤Z+]⊤. More explicitly, the block covariance matrices write as, 
+
+K+ =
+
+ Cov [ Z, Z] Cov Z, Z+ UU⊤ Cov Z+, Z U⊤ Cov Z+, Z+ U
+
+
+
+and, 
+
+h+(s⋆) = 
+
+ Cov [ Z, Z (s⋆]
+
+U⊤ Cov Z+, Z (s⋆)
+
+The minimization under unbiasedness constraints leads to the same constrained minimization problem as described in the proof of Proposition 1, ∆λ(s⋆) = α+⊤K+α+ − 2h+(s⋆) − 2λ
+
+
+
+α+⊤μ − μ⋆
+
+.
+
+Since we retrieve the expressions of the same form as in the proof of Proposition 1, we can follow the exact same procedure and set the gradient equal to zero and solve for the resulting system of equations to find the Lagrange multiplier, 
+
+λ(s⋆) = 
+
+
+
+μ⊤(K+)−1μ
+
+−1 
+
+μ⋆ − μ⊤(K+)−1h+(s⋆)
+
+
+
+.
+
+and optimal matrix of weights (for multi-point at q prediction locations s⋆ 
+
+> 1
+
+, . . . , s⋆q ) as, 
+
+A+ =  K+−1 
+
+H+ + μλ ⊤
+
+, (61) where A+ = α+(s⋆ 
+
+> 1
+
+), ..., α+(s⋆q ), H+ = h+(s⋆ 
+
+> 1
+
+), ..., h+(s⋆q ) with the vector of Lagrange multipliers λ = λ(s⋆ 
+
+> 1
+
+), . . . , λ (s⋆q ).
+
+Proof of Proposition 3. The resolution is quite similar to the one in [45] where constraint of order m =(0 , . . . , 0) are considered (prescribed mean of predicted values, e.g. for adverse modelling). Here, using Lagrange multipliers 2 λ and 2 λ′, with respective sizes q × 1 and p × 1, we have to solve min 
+
+> A
+
+h
+
+∆⋆(A) − 2
+
+
+
+μ⊤A − μ⋆⊤
+
+λ − 2
+
+
+
+Z⊤AU − v⊤
+
+λ′i
+
+Using classical matrix differentiation results, using the symmetry of K, we can write: 
+
+∂∂A ∆⋆(A) = 2 KA − 2H
+
+And finally a set of necessary conditions for optimality, to be solved in A, λ⊤ and λ′⊤ 
+
+
+
+KA − H − μλ ⊤ − Zλ′⊤ U⊤ = 0
+
+μ⊤A − μ⋆⊤ = 0Z⊤AU − v⊤ = 0
+
+From the first Equation, we get 
+
+A = K−1 
+
+H + μλ ⊤ + Zλ′⊤ U⊤
+
+Then injecting this value into both constraints 
+
+
+
+μ⊤K−1
+
+
+
+H + μλ ⊤ + Zλ′⊤ U⊤
+
+
+
+= μ⋆⊤
+
+Z⊤K−1
+
+
+
+H + μλ ⊤ + Zλ′⊤ U⊤
+
+
+
+U = v⊤
+
+Denoting the scalar values γ1 = μ⊤K−1μ and γ2 = Z⊤K−1Z and γ3 = μ⊤K−1Z, we get 
+
+(
+
+μ⊤K−1H + γ1λ⊤ + γ3λ′⊤ U⊤ = μ⋆⊤
+
+Z⊤K−1HU + γ3λ⊤U + γ2λ′⊤ U⊤U = v⊤
+
+Hence ( γ1λ⊤ = μ⋆⊤ − μ⊤K−1H − γ3λ′⊤ U⊤
+
+Z⊤K−1HU + γ3
+
+> γ1
+
+
+
+μ⋆⊤ − μ⊤K−1H − γ3λ′⊤ U⊤
+
+
+
+U + γ2λ′⊤ U⊤U = v⊤
+
+28 and 
+
+λ⊤ = 1
+
+> γ1
+
+
+
+μ⋆⊤ − μ⊤K−1H − γ3λ′⊤ U⊤
+
+
+
+γ2 − γ23
+
+> γ1
+
+
+
+λ′⊤ U⊤U = v⊤ − Z⊤K−1HU − γ3
+
+> γ1
+
+
+
+μ⋆⊤ − μ⊤K−1H
+
+
+
+U
+
+and in the case where U⊤U is invertible 
+
+
+
+λ⊤ = 1
+
+> γ1
+
+
+
+μ⋆⊤ − μ⊤K−1H − γ3λ′⊤ U⊤
+
+
+
+γ2 − γ23
+
+> γ1
+
+
+
+λ′⊤ =
+
+
+
+v⊤ − Z⊤K−1HU − γ3
+
+> γ1
+
+
+
+μ⋆⊤ − μ⊤K−1H
+
+
+
+U
+
+  U⊤U−1
+
+Hence the result. Note that it corresponds to the result in [45], Proposition 3 “ Joint Kriging weights under a predicted values constraint ” with notational changes: (this paper) ↔ (cited paper), Z ↔ Y⊤, U ↔ π, v ↔ m⊤, λ′ ↔ λ′⊤ ,
+
+μ ↔ 1n, μ⋆ ↔ 1q , γ1 ↔ δ, γ3 ↔ u.
+
+## A.2 Kernel derivative expressions 
+
+Since we need to quantify the covariance between derivatives of random field, we provide some analytical expressions we used in our implementations. For the squared exponential kernel given in (40), we derive the general expression for the first four orders of derivatives. For ease of notation, we denote, k(x, x′|σ2, θ ) = 
+
+k(x, x′). We begin by stating these formulas in their full form and provide the mathematical working later. 
+
+First-order derivative 
+
+∂mi k(x, x′) = ( −1) δ′ 
+
+> mx
+
+(xi − x′
+
+> i
+
+)
+
+θ2 k(x, x′) (62) 
+
+Second-order derivative 
+
+∂2  
+
+> m1
+> im2
+> j
+
+k(x, x′) = ( −1) δ′
+
+> m1x+δ′
+> m2x
+
+
+
+hihj − 1
+
+θ2 δij 
+
+
+
+k(x, x′) (63) 
+
+Third-order derivative 
+
+∂3  
+
+> m1
+> im2
+> jm3
+> l
+
+k = ( −1) (P3 
+
+> z=1 δ′
+> mz x)
+
+ hihj hl − 1
+
+θ2 (hiδjl + hj δil + hlδij ) k(x, x′) (64) 
+
+Fourth-order derivative 
+
+∂4    
+
+> m1
+> im2
+> jm3
+> lm4
+> o
+
+k = (−1) (P4 
+
+> z=1 δ′
+> mz x)
+
+h
+
+hihj hlho
+
+− 1
+
+θ2
+
+ hihj δlo + hihlδjo + hihoδjl + hj hlδio + hj hoδil + hlhoδij 
+
+
+
++ 1
+
+θ4
+
+ δij δlo + δil δjo + δio δjl 
+
+i
+
+k(x, x′) (65) where mz ∈ { x, x ′}, i, j, l, o ∈ { 1, . . . , d }, hi := (xi−x′ 
+
+> i)
+> θ2
+
+, δ′  
+
+> mzx
+
+= 1 if mz = x and 0 otherwise and δij is the usual Kronecker-delta. We will re-explain the notation and why we need it in the mathematical working that follows. An important observation is that for the first order derivatives, there exists an eigenfunction relationship that we can exploit, 
+
+∂xi k(x, x′) = − (xi − x′
+
+> i
+
+)
+
+θ2 k(x, x′)for i ∈ { 1, . . . , d } where x, x′ ∈ Rd. If instead this was with respect to the second variable, 
+
+∂x′ 
+
+> i
+
+k(x, x′) = (xi − x′
+
+> i
+
+)
+
+θ2 k(x, x′)So, the general first-order derivative is basically, 
+
+∂mi k(x, x′) = ( −1) δ′ 
+
+> mx
+
+(xi − x′
+
+> i
+
+)
+
+θ2 k(x, x′) (66) where δ′ 
+
+> mx
+
+= 1 if m is the first variable x and δ′ 
+
+> mx
+
+= 0 otherwise, i.e., m is the second variable x′. Since the expressions are about get a lot more complicated, we introduce a shorthand hi := (xi−x′ 
+
+> i)
+> θ2
+
+. For the 
+
+second-order derivative consider, 
+
+∂m1
+
+> i
+
+∂m2 
+
+> j
+
+kk
+
+!
+
+= ∂m1
+
+> i
+
+
+
+(−1) δ′ 
+
+> m2x
+
+hj
+
+
+
+29 This can be further simplified by using the division rule, 
+
+k ∂ 2 
+
+> m1
+> im2
+> j
+
+k − ∂m2 
+
+> j
+
+k ∂ m1 
+
+> i
+
+kk2 = −δij 
+
+1
+
+θ2 (−1) δ′ 
+
+> m2x
+
+(−1) δ′
+
+> m1x
+
+∂2  
+
+> m1
+> im2
+> j
+
+k(x, x′) = ( −1) δ′
+
+> m1x+δ′
+> m2x
+
+
+
+hihj − 1
+
+θ2 δij 
+
+
+
+k(x, x′)where m1, m 2 ∈ { x, x ′} and i, j ∈ { 1, . . . , d } and we used −∂m1 
+
+> i
+
+hj = ( −1) δ′  
+
+> m1xδij
+> θ2
+
+which is straightforward to check. In the case of the third-order derivative , the expressions become more complicated. To be able to represent them meaningfully, we represent the recurring quantity ( −1) δ′ 
+
+> m1x+... +δ′
+> mix
+
+as neg ( m1 : mi). We proceed in a similar fashion, 
+
+∂m1
+
+> i
+
+ ∂2 
+
+> m2
+> jm3
+> l
+
+kk
+
+ = neg ( m2, m 3) ∂m1 
+
+> i
+
+(hj hl)
+
+k ∂ 3  
+
+> m1
+> im2
+> jm3
+> l
+
+k −
+
+
+
+∂2 
+
+> m2
+> jm3
+> l
+
+k
+
+
+
+(∂m1 
+
+> i
+
+k)
+
+k2 = neg ( m2, m 3)
+
+
+
+hl∂m1 
+
+> i
+
+hj + hj ∂m1 
+
+> i
+
+hl
+
+
+
+k ∂ 3  
+
+> m1
+> im2
+> jm3
+> l
+
+k − neg ( m1 : m3)
+
+
+
+hihj hl − hiδjl 
+
+> θ2
+
+
+
+k2
+
+k2 = −neg ( m1 : m3)
+
+ hlδij 
+
+θ2 + hj δil 
+
+θ2
+
+
+
+∂3  
+
+> m1
+> im2
+> jm3
+> l
+
+k = neg ( m1 : m3) hihj hl
+
+− 1
+
+θ2 (hiδjl + hj δil + hlδij ) k(x, x′)We can continue on like this for the fourth-order derivative as well. The expression for the fourth-order is given by, 
+
+∂4    
+
+> m1
+> im2
+> jm3
+> lm4
+> o
+
+k = neg ( m1 : m4)
+
+"
+
+hihj hlho − 1
+
+θ2
+
+X
+
+> c∈C
+
+hc1 hc2 δc3c4 + 1
+
+θ4
+
+X
+
+> p∈P
+
+δp1p2 δp3p4
+
+#
+
+k(x, x′)where the set C represents the set of distinct pairs c = {c1, c 2} (and {c3, c 4} ∈ C as cc) chosen sequen-tially, c1 ∈ { i, j, l, o } = I and c2 ∈ I − { c1} and P is the set of partitions of I into disjoint pairs, 
+
+{{ p, pc} p ∈ I , |p| = 2 } with {p1, p 2} = p and {p3, p 4} = pc. The sets are of sizes, |C| =  42
+
+ = 6 elements and |P| = 3. There are clear patterns that emerge as we evaluate higher derivatives and might allow us to evaluate the general nth order derivative. The prescribed algorithm of differentiation can also be applied to other stationary kernels such as the Mat` ern kernel and the main difference would show in the formula of hi and its derivatives. 
+
+## A.3 Lagrangian Kriging working example. 
+
+To solve the Lagrangian Kriging problem with one observation and at one prediction point as presented in Examples 6, we introduce a minor change in notation, α1 = α(s⋆), α 2 = α(sc). With this, at first, we expand the Kriging predictive error in (35), ∆( s⋆) + ∆( sc), which can be expanded using (10), 
+
+α21 Var Z(s1) − 2 Cov Z(s1), Z (s⋆) α1 + α22 Var Z(s1 − 2 Cov Z(s1), Z (sc) α2
+
+ignoring the terms not involving the Kriging coefficients, i.e., σ2(s⋆) and σ2(sc). We can solve the constrained minimization problem by constructing the Lagrangian with multiplier 2 λ ∈ R,min  
+
+> α1,α 2∈R
+
+[∆( s⋆) + ∆( sc) − 2λ (α1 + α2)] and setting the gradient equal to zero with necessary optimality conditions gives, 
+
+
+
+α1 Var Z(s1) − Cov Z(s1), Z (s⋆) − λ = 0 
+
+α2 Var Z(s1) − Cov Z(s1), Z (sc) − λ = 0 
+
+α1 + α2 = 0 solving for the coefficients α1, α 2 and the Lagrange multiplier λ is a fairly simple exercise, and on doing so we get, 
+
+λ = − Cov Z(s1), Z (s⋆) + Cov Z(s1), Z (sc)
+
+2
+
+!
+
+and consequently the prediction bZLK (s⋆) = α1Z(s1) is, 
+
+bZLK (s⋆) = Cov Z(s1), Z (s⋆) − Cov Z(s1), Z (sc)
+
+2 Var [ Z(s1)] 
+
+!
+
+Z(s1)
+
+30

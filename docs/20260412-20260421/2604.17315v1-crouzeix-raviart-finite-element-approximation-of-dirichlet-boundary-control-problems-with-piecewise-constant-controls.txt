@@ -1,0 +1,2224 @@
+Title: Crouzeix-Raviart Finite Element Approximation of Dirichlet Boundary Control Problems with Piecewise Constant Controls
+
+URL Source: https://arxiv.org/pdf/2604.17315v1
+
+Published Time: Tue, 21 Apr 2026 01:11:46 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# Crouzeix-Raviart Finite Element Approximation of Dirichlet Boundary Control Problems with Piecewise Constant Controls 
+
+Sudipto Chowdhury, Shallu ∗
+
+April 21, 2026 
+
+Abstract 
+
+This article examines the Dirichlet boundary control problem governed by the Poisson equation, where the control variables are square integrable functions defined on the boundary of a two-dimensional bounded, convex, polygonal domain. It employs an ultra-weak formulation and utilizes Crouzeix-Raviart finite elements to discretize the state variable, while employing piece-wise constants for the control variable discretization. Furthermore, it establishes an optimal order a priori error estimate for the control variable. 
+
+Keywords: Optimal control problem, Crouziex-Raviart, Finite element method, a priori error analysis, Control constraints 
+
+AMS subject classification: 65N30, 65N15, 65N12, 65K10 
+
+# 1 Introduction 
+
+We consider the control-constrained Dirichlet boundary control problem on a convex and bounded polygonal domain Ω ⊆ R2. Denote the polygonal boundary of the domain Ω by Γ := ∪kj=1 Γj ,where Γ j is a straight line segment for all 1 ≤ j ≤ k. The minimization problem seeks a pair (¯ y, ¯u) ∈ L2(Ω) × Uad such that 
+
+J(¯ y, ¯u) = min 
+
+> (y,u )∈L2(Ω) ×Uad
+
+J(y, u ), (1.1) subject to the following second-order elliptic equation: 
+
+(
+
+−∆y = 0 in Ω,y = u on Γ. (1.2) 
+
+Uad is a convex subset of L2(Γ) representing the set of admissible controls, which will be defined later. The quadratic cost functional J(·, ·) : L2(Ω) × L2(Γ) → R is defined in the following manner: 
+
+J(y, u ) := 12
+
+Z
+
+> Ω
+
+|y − yd|2 dx + α
+
+2
+
+Z
+
+> Γ
+
+|u|2 ds, (1.3) where yd ∈ L2(Ω) is the given desired state and α > 0 is known parameter which is introduced for the regularization. The state equation (1.2) under the standard weak formulation is not well posed for u ∈ L2(Γ) as the weak solution of (1.2) lie in H1(Ω) space and therefore by trace theorem [7], the first trace of it must lie in H1/2(Γ) which is not the case in this formulation. There are multiple techniques available in the literature to overcome this variational difficulty, one of which is to use 
+
+> ∗
+
+Department of Mathematics, The LNM Institute of Information Technology, Jaipur, Rajasthan- 302031, India (sudipto.choudhary@lnmiit.ac.in, 22pmt@lnmiit.ac.in) 
+
+1
+
+> arXiv:2604.17315v1 [math.OC] 19 Apr 2026
+
+the method of transposition which is also known as the ultra weak formulation [11, 25]. In brevity, we discuss the method of transposition. Define a test function space as follows: 
+
+X := {ϕ ∈ H10 (Ω) : ∆ ϕ ∈ L2(Ω) }.
+
+Now, we obtain the ultra weak formulation of the state equation (1.2). Multiplying ϕ ∈ X in both sides of (1.2) and then integrate both the sides to find 
+
+−
+
+Z
+
+> Ω
+
+∆y ϕ dx = 0 .
+
+A use of integration by parts in the above equation yields 0 = 
+
+Z
+
+> Ω
+
+∇y · ∇ ϕ dx −
+
+Z
+
+> Γ
+
+ϕ ∂y ∂n ds 
+
+=
+
+Z
+
+> Ω
+
+∇y · ∇ ϕ dx, 
+
+where we have used the fact that ϕ ∈ H10 (Ω) to get the last equality. The idea in the method of transposition is to apply the integration by parts once more. By doing so, we get 0 = −
+
+Z
+
+> Ω
+
+y ∆ϕ dx +
+
+Z
+
+> Γ
+
+y ∂ϕ ∂n ds. (1.4) Thus, the ultra weak formulation of (1.2) can be stated as: Given u ∈ L2(Γ), find y ∈ L2(Ω) such that (y, ∆ϕ) = ⟨u, ∂ϕ/∂n ⟩ ∀ ϕ ∈ X, (1.5) where ( ·, ·) and ⟨· , ·⟩ denotes the L2 inner product on the domain Ω and its boundary Γ respectively. Another approach to study second order Dirichlet boundary control problem is to transform the Dirichlet boundary condition into Robin’s type boundary condition [12]. Other method is to employ the energy space based approach in which the control is penalized in the energy space H1/2(Γ) [13, 27]. In this article the control variable is discretized with piecewise constant finite elements while the state and adjoint states are discretized using first-order non conforming Crouzeix Raviart finite elements. Finite element analysis for the Dirichlet boundary control problems addressed so far in the literature uses polynomials of same degrees to discretize the state and the control variables. In this article for the first time, to the best of our knowledge the control variables are discretized with piecewise constants whereas the first-order Crouzeix Raviart finite element functions are employed to discretize the state and adjoint state variables. Therefore the main challenge is to connect the discrete state and the control variables. But here we make an important observation that CR elements are defined by degrees of freedom at the midpoints of edges. This aligns perfectly with piecewise constant controls on the boundary, as the constant control value interacts directly with the single midpoint value of the CR element described by (3.3). This is one of the main novelties of this article. This formulation also avoids complex integration of varying polynomial profiles. The optimal control is found by projecting the normal derivative of the adjoint state onto a set of admissible controls. When the control is discretized as piecewise constant, this projection becomes purely local and element-wise. Theorem 4.1 derives an estimate for the discrete boundary lifting of a piecewise constant function in L1 norm which reveals one important behaviour of the boundary lifting namely it’s contribution concentrates near the boundary of the domain and not much in the interior of the domain. Also it’s contribution becomes smaller proportional to the smallness of the discretization parameter. Theorem 4.2, Remark 4.3 discuss the L2 norm error estimate for the CR discretization of the harmonic lifting of a piecewise constant function and establishes an almost linear rate of convergence. Theorem 4.4 and Remark 4.5 discuss the L2 norm error estimate for the CR discretization of the harmonic lifting of a H 12 (Γ) function and establishes a linear order of convergence. These results are obviously super 2convergence results and posses the theoretical importance on it’s own in the theory of the CR finite element analysis. The points discussed above constitutes some of the key novelties of this article. The outline of this article is as follows. In section 2 (1.1)-(1.2) is formulated in terms of the ultraweak formulation, the first-order optimality condition is derived and the regularity of the optimal control is derived. Section 3 contains the preliminaries of the first-order Cruzeix Raviart finite element discretization and the control space discretization. The discrete control problem is introduced in this section and the discrete optimality system is derived. This section contains an important representation of the discrete adjoint state variable in terms of the discrete control to state operator and it’s adjoint. Section 4 contains an important L1 norm estimate for the discrete boundary lifting of a piecewise constant function defined on the boundary of the domain and also contains some important auxiliary results regarding the L2 norm error estimates of the harmonic lifting of a piecewise constant and H 12 (Γ) function. An almost optimal order a priori error estimate for the optimal control with respect to the L2-norm is derived in Section 5, which is the main result of this article. Section 6 contains the numerical illustrations which justifies our theoretical findings. 
+
+# 2 Continuous Problem 
+
+In this segment, we discuss the variational setting of the investigated problem and derive the first order necessary optimality conditions. Before, we enter into the analysis part, we define the notations which are used throughout the article. The notations Hm(Ω), Hm 
+
+> 0
+
+(Ω), and W m,p (Ω) represent the standard Sobolev spaces on Ω, where m is a non negative integer. The Sobolev spaces of non integer order s, Hs(Ω) and W s,p (Ω), are defined using interpolation, as explained in [7]. On a Lipschitz domain, this definition is equivalent to the definition that uses double-integral norms, which is discussed in [7, Theorem 14.2.3]. The norms of Hs(Γ) and W s,p (Γ), 0 ≤ s ≤ 1 and 1 < p < ∞,are defined on the boundary Γ using charts, which is equivalent to using double-integral norms on Γ, according to [7, 26]. The outwards unit normal vector to Γ is denoted by n. The dual space of 
+
+H1/2(Γ) is denoted by H−1/2(Γ) equipped with the operator norm ∥ · ∥ H−1/2(Γ) defined as: 
+
+∥μ∥H−1/2(Γ) := sup  
+
+> v∈H1/2(Γ) ,v ̸=0
+
+⟨μ, v ⟩∥v∥H1/2(Γ) 
+
+, μ ∈ H−1/2(Γ) .
+
+Any generic member of R2 is denoted by x = ( x1, x 2), where x1, x2 ∈ R. In the article, C denotes a positive constant, which is generic in nature and does not depend on the solutions or the mesh-size. 
+
+Remark 2.1. When v belongs to H2(Ω) , the trace of its gradient, denoted by ∇v|Γ, lies in H1/2(Γ) 2.If Γ has a smooth boundary, the outwards unit normal vector n is continuous, allowing the definition of the normal derivative ∂nv = n · ∇ v to be well defined. Thus ∂nv ∈ H1/2(Γ) for v ∈ H2(Ω) and the following estimate holds: 
+
+∥∂nv∥H1/2(Γ) ≤ C∥v∥H2(Ω) , v ∈ H2(Ω) .
+
+However, this estimate is not applicable for polygonal boundaries Γ, which are only Lipschitz con-tinuous. Nonetheless, for v ∈ H2(Ω) , we still have ∂nv|Γj ∈ H1/2(Γ j ) for each straight component 
+
+Γj , 1 ≤ j ≤ k of Γ. To accommodate this, we introduce the space ˜H1/2(Γ) := {v ∈ L2(Γ) , v |Γj ∈
+
+H1/2(Γ j ) ∀ 1 ≤ j ≤ m}. We denote by ˜H−1/2(Γ) the completion of L2(Γ) with respect to the following dual norm on L2(Γ) 
+
+∥μ∥ ˜H−1/2(Γ) := sup 
+
+> v∈X\{ 0}
+
+⟨μ, ∂ nv⟩∥v∥H2(Ω) 
+
+≤ sup   
+
+> v∈˜H1/2(Γ) ,v ̸=0
+
+⟨μ, v ⟩∥v∥ ˜H1/2(Γ) 
+
+.
+
+Note that ˜H−1/2(Γ) is not in general the dual space of ˜H1/2(Γ) . In the case of a smooth boundary 
+
+Γ, the mapping ∂n : X → H1/2(Γ) is surjective, so ˜H−1/2(Γ) = H−1/2(Γ) .
+
+3For any u ∈ ˜H−1/2(Γ), the harmonic lifting of u is given by y ∈ L2(Ω), the solution of (1.4). The function u ∈ ˜H−1/2(Γ) is known as the ultra weak trace of yu ∈ L2(Ω) and the following trace estimate holds true: 
+
+∥u∥ ˜H−1/2(Γ) = sup 
+
+> ϕ∈X\{ 0}
+
+(yu, ∆ϕ)
+
+∥ϕ∥H2(Ω) 
+
+≲ ∥yu∥L2(Ω) .
+
+Furthermore, if u ∈ H1/2(Γ), then yu ∈ H1(Ω) becomes the standard harmonic lifting of u such that it satisfies the following equation: (∇yu, ∇ϕ) = 0 ∀ ϕ ∈ V. 
+
+In this case u ∈ H1/2(Γ) is simply the trace of yu in the sense that yu|Γ = u.
+
+2.1 Optimality System 
+
+In this section, we write the model Dirichlet boundary optimal control problem and derive the corresponding optimality system by applying the first order necessary optimality conditions. For 
+
+u ∈ L2(Γ), define y ∈ L2(Ω) to be the solutions of the following equations: (y, ∆ϕ) = ⟨u, ∂ nϕ⟩ ∀ ϕ ∈ X. (2.1) If the given data satisfy u ∈ H1/2(Γ), then we can recover the standard weak formulation, i.e. the following holds: 
+
+a(y, v ) = 0 ∀ v ∈ H10 (Ω) , (2.2) where a(·, ·) : H1(Ω) × H1(Ω) → R is a symmetric bilinear form given by: 
+
+a(v, w ) = 
+
+Z
+
+> Ω
+
+∇v · ∇ w dx ∀ v, w ∈ H1(Ω) .
+
+The bilinear form a(·, ·) defines a continuous mapping on H1(Ω) and coercive map on H10 (Ω). Set 
+
+V = H10 (Ω) and Q = H1(Ω). The subsequent lemma affirms the well-posed-ness of the boundary value problem (1.2) in its ultra weak form, and as a particular instance, it ensures the presence of the ultra weak harmonic lifting of the general boundary data u ∈ ˜H−1/2(Γ). 
+
+Lemma 2.2. For any given u ∈ ˜H−1/2(Γ) , the state equation in its ultra weak form (1.5) has a unique solution y ∈ L2(Ω) such that the following a priori estimate is satisfied: 
+
+∥y∥L2(Ω) ≤ C∥u∥ ˜H−1/2(Γ) , (2.3) 
+
+where H−2(Ω) is the dual space of X.Proof. For u ∈ H1/2(Γ), there exists a unique weak solution y ∈ H1(Ω) of (1.2) satisfying (2.2). An application of integration by parts in (2.2) yields 
+
+−(y, ∆ϕ) = −⟨ u, ∂ nϕ⟩ ∀ ϕ ∈ X, (2.4) which implies that y is the solution of (1.5). We apply duality argument to prove the a priori error estimate (2.3). Consider z ∈ V to be the weak solution of the following Poisson problem: 
+
+(
+
+−∆z = y in Ω,z = 0 on Γ.
+
+4By elliptic regularity theory, z ∈ H2(Ω) and ∥z∥H2(Ω) ≤ C∥y∥L2(Ω) . Thus, using (2.4) for ϕ = z, we get 
+
+∥y∥2 
+
+> L2(Ω)
+
+= ( y, −∆z)= −⟨ u, ∂ nz⟩,
+
+which on using Cauchy-Schwarz inequality yields (2.3). Since and H1/2(Γ) ⊆ ˜H−1/2(Γ) are dense, by density arguments, for u ∈ ˜H−1/2(Γ) the equation (1.5) possesses a unique solution y ∈ L2(Ω) satisfying the a priori error estimate (2.3). In light of the Lemma 2.2, we define the control to state map which maps the given data to the unique solution of (1.5). 
+
+Definition 2.3. For u ∈ L2(Γ) , the solution map S : L2(Γ) → L2(Ω) is defined as Su = y such that y satisfy (2.1) .
+
+Now, we define the set of admissible controls Uad as follows: 
+
+Uad := {u ∈ L2(Γ) : ua ≤ u(x) ≤ ub a.e x ∈ Γ},
+
+where ua, ub ∈ R are such that ua < 0 < u b. The model Dirichlet boundary optimal control problem reads as: find (¯ y, ¯u) ∈ L2(Ω) × Uad such that 
+
+J(¯ y, ¯u) = min 
+
+> (y,u )∈L2(Ω) ×Uad
+
+J(y, u ), (2.5) subject to the constraint y = Su , where J(·, ·) is the quadratic cost functional defined by (1.3). Next, we present the following result that addresses the well-posedness of the underlying optimal control problem (2.5) and the corresponding first-order optimality system. 
+
+Theorem 2.4. The optimal control problem (2.5) possess a unique solution (y, ¯u) ∈ L2(Ω) × Uad .Moreover the Gelfund triplet (y, p, ¯u) solves the following first order necessary optimality conditions: 
+
+(y¯u, ∆ϕ) = ⟨¯u, ∂ nϕ⟩ ∀ ϕ ∈ X, (2.6) (∇v, ∇p) = ( y − yd, v ) ∀ v ∈ V, (2.7) (α¯u − ∂p ∂n , u − ¯u) ≥ 0 ∀ u ∈ Uad . (2.8) 
+
+Proof. By utilizing the solution operator S(·, ·), we can reformulate the model optimal control problem (2.5) into a simplified form, expressed as follows: min 
+
+> u∈Uad
+
+j(u), (2.9) where j(·) : L2(Γ) → R represents the reduced cost functional defined as: 
+
+j(u) := 12 ∥Su − yd∥2 
+
+> L2(Ω)
+
++ α
+
+2 ∥u∥2
+
+> L2(Γ)
+
+.
+
+The reduced cost functional j(·) defines a strictly convex functional on the Hilbert space L2(Γ). The set of admissible controls Uad is a nonempty, closed, convex subset of L2(Γ), thus the standard theory of PDE constrained optimal control problem [28] implies that problem (2.9) has a unique solution say ¯ u ∈ Uad . Setting ¯ y = S(f, ¯u) as the corresponding state variable. By definition of S(·, ·), we find that ¯ y ∈ L2(Ω) satisfies (2.6). By applying the first order necessary optimality conditions, we get for any u ∈ Uad 
+
+0 ≤ j′(¯ u)( u − ¯u) := lim 
+
+> t↓0
+
+j(¯ u + t(u − ¯u)) − j(¯ u)
+
+t (2.10) = ( y − yd, Su − S ¯u) + α⟨¯u, u − ¯u⟩, (2.11) 5Introduce an adjoint state p ∈ V such that it satisfies (2.7) Using integration by parts and density arguments in (2.7), we get (v, ∆p) = −(y − yd, v ) ∀ v ∈ L2(Ω) . (2.12) Since p ∈ H2(Ω), it implies ∂np ∈ ˜H1/2(Γ). Choosing v = Su −S ¯u in (2.12) and applying integration by parts, the trace of Su − S ¯u on Γ implies (¯ y − yd, Su − S ¯u) = −(Su − S ¯u, ∆p)= −⟨ u − ¯u, ∂p ∂n ⟩,
+
+then (2.10) implies ¯ u ∈ Uad solves (2.8). This completes the proof. 
+
+2.2 Regularity of the Optimal Control 
+
+In this fragment, we obtain the regularity of the optimal variables namely ¯ y and ¯ u which are useful for the subsequent analysis. Then p ∈ X and by elliptic regularity theory for convex polygonal domains [20], it satisfies the following a priori estimate: 
+
+∥p∥H2(Ω) ≤ C∥¯y − yd∥L2(Ω) .
+
+For any u ∈ Uad , using (2.12) for v = yu − y¯u ∈ L2(Ω), we get where we have used (1.4) to observe the last equality. Hence, the inequality (2.8) reduces to 
+
+α⟨¯u, u − ¯u⟩ − ⟨ u − ¯u, ∂p ∂n ⟩ ≥ 0 ∀ u ∈ Uad ,
+
+which implies 
+
+⟨α¯u − ∂np, u − ¯u⟩ ≥ 0 ∀ u ∈ Uad . (2.13) It follows from (2.13) and standard arguments from [28, Chapter 2] that ¯u(x) = P[ua,u b]
+
+ 1
+
+α∂p ∂n (x)
+
+
+
+, for almost every x ∈ Γ, (2.14) where P[ua,u b](w) := min {ub, max {ua, w }} denotes the projection of R onto [ ua, u b]. Since Ω is convex, therefore it follows from (2.14) that ¯ u ∈ ˜H1/2(Γ). As p equals zero on Γ, the derivative of 
+
+θ in the tangential direction also equals zero on Γ. Therefore, at the corner points of the domain denoted as x, we have ∂p ∂n (x) = 0. Hence, it follows from (2.14) that ¯ u(x) = 0 at all the corner points x of the domain, which implies that ¯ u ∈ H1/2(Γ) from the double integral definition of the fractional derivative of H1/2(Γ). 
+
+# 3 Discretization 
+
+This section is devoted to the discretization. 
+
+3.1 Preliminaries 
+
+We introduce the following notations which are used throughout the article. 
+
+• Th is a regular triangulation of Ω into closed triangles T .
+
+• hT := diam ( T ) is the diameter of the triangle T ∈ T h.6• h := max  
+
+> T∈T h
+
+hT is the mesh parameter. 
+
+• Vih := the set of all interior vertices of Th.
+
+• Vbh := the set of all boundary vertices of Th.
+
+• Vh := Vih ∪ V bh is the set of all vertices of Th.
+
+• Eih := the set of all interior edges of Th.
+
+• Ebh := the set of all boundary edges of Th.
+
+• Eh := Eih ∪ E bh is the set of all edges of Th.
+
+• me := mid point of e ∈ E h.
+
+• Pk(T ) := the set of all polynomials of degree atmost k ∈ N ∪ { 0} over T ∈ T h.
+
+• Hk(Ω , Th) := {v ∈ L2(Ω) : v|T ∈ Hk(T ) ∀ T ∈ T h}, k ∈ N ∪ { 0}.From this point forward, the notation a ≲ b indicates the existence of a positive constant C that is not dependent on the mesh parameter h, such that a a ≤ Cb . It is assumed that the triangulation 
+
+Th is regular, meaning that any two distinct simplices in Th with non-empty intersection are either identical, or share exactly one common vertex, or one common edge. Additionally, every interior angle of any simplex is bounded from below by a universal positive constant ρ. All the generic constants hidden in the notation ≲ are solely determined by ρ > 0, thereby ensuring the triangulation is shape regular. Next, we will establish the definitions for the jump and average of functions that are scalar-valued and vector-valued. Consider an edge e ∈ E ih that is shared by two adjacent triangles T+ and T−,such that e = T+ ∩ T−. Let n+ be the unit normal of e pointing from T+ to T−, and n− = −n+. In this context, we define the jumps [[ ·]] and averages {{·} } across the edge e as follows: 
+
+• For a scalar valued function w ∈ H1(Ω , Th), define [[ w]] := w+ n+ + w− n−, {{w}} := w+ + w−
+
+2 ,
+
+where w± = w|T± .
+
+• For a vector valued function v ∈ [H1(Ω , Th)] 2, define [[ v]] := v+ · n+ + v− · n−, {{v}} := v+ + v−
+
+2 ,
+
+where v± = v|T± .To simplify the notation, we also introduce the concepts of jump and mean on the boundary Γ. Consider any edge e ∈ E bh, where it is evident that there exists a triangle T ∈ T h such that e =
+
+∂T ∩ Γ. Let ne be the unit normal of e pointing outward from T . For any w ∈ H1(Ω , Th) and any 
+
+v ∈ [H1(Ω , Th)] 2, we define the following on e ∈ E bh:[[ w]] := w n e and {{w}} = w, 
+
+[[ v]] := v · ne and {{v}} = v. 
+
+In order to approximate the state variables we define the Crouziex-Raviart finite element spaces. 
+
+Vh := {vh ∈ L2(Ω) : vh|T ∈ P1(T ) ∀ T ∈ T h and vh is continuous at me ∀ e ∈ E h},V 0 
+
+> h
+
+:= {vh ∈ Vh : vh(me) = 0 ∀ e ∈ E bh}.
+
+7The discrete bilinear form apw (·, ·) : Vh × Vh → R is defined by 
+
+apw (vh, w h) = X 
+
+> T∈T h
+
+Z
+
+> T
+
+∇vh|T · ∇ wh|T dx ∀ vh, w h ∈ Vh.
+
+The mesh dependent bilinear form apw (·, ·) defines a symmetric bilinear form which coincides with the continuous bilinear form a(·, ·) on H1(Ω) × H1(Ω). Now, we define the mesh dependent norm on Vh. For any vh ∈ Vh, define ∥ · ∥ h as follows: 
+
+∥vh∥h := 
+
+q
+
+apw (vh, v h).
+
+Note that, ∥ · ∥ h defines only a semi-norm on Vh but a norm on V 0 
+
+> h
+
+. Next, we define a Crouziex-Raviart interpolation map ICR : V ∩ C( ¯Ω) → V 0 
+
+> h
+
+as follows: 
+
+Z
+
+> e
+
+ICR v ds =
+
+Z
+
+> e
+
+v ds ∀ e ∈ E h, v ∈ V ∩ C( ¯Ω) . (3.1) By density arguments, ICR can be extended continuously and uniquely to V , and the extension is again denoted by ICR for the ease of presentation. In the next lemma, we state the approximation properties of ICR [15]. 
+
+Lemma 3.1. For v ∈ V , it holds that: 
+
+∥v − ICR v∥L2(Ω) + h∥v − ICR v∥h ≲ h|v|H1(Ω) .
+
+3.2 Discrete Control Problem 
+
+This section contains the discrete control problem and the main result of this article. The control variable is discretized with the functions from Uh. Define the discrete control problem by: 
+
+Jh(wh, u h) = 12 ∥wh − yd∥2 + α
+
+2 ∥uh∥2
+
+> L2(Γ)
+
+, (3.2) subject to, 
+
+apw (wh, v h) = 0 , ∀vh ∈ V 0 
+
+> h
+
+, and 
+
+Z
+
+> e
+
+whds =
+
+Z
+
+> e
+
+uhds, where e ∈ E bh. (3.3) Note that in order to define the discretization of (1.2) it’s enough to specify the Cruzeix Raviart degrees of freedoms of yh on the boundary edges. Define the discrete control to state operator 
+
+Sh : Uh → Vh, Sh(uh) = wh. (3.4) Then the reduced problem is min 
+
+> uh∈Uh,ad
+
+jh(uh), (3.5) where 
+
+jh(uh) = 12 ∥Shuh − yd∥2 + α
+
+2 ∥uh∥2 
+
+> L2(Γ)
+
+(3.6) The following theorem discusses the discrete optimality system and the existence and uniqueness of the discrete optimal variables for (3.2)-(3.3). 8Theorem 3.2. There exists unique (yh, p h, ¯uh) ∈ Vh × V 0 
+
+> h
+
+× Uh,ad of the discrete optimal control problem. Furthermore, it satisfy the following discrete optimality system: 
+
+apw (yh, v h) = 0 , ∀vh ∈ V 0 
+
+> h
+
+, and 
+
+Z
+
+> e
+
+yhds =
+
+Z
+
+> e
+
+uhds, where e ∈ E bh. (3.7) 
+
+apw (ph, v h) = ( yh − yd, v h) ∀ vh ∈ V 0 
+
+> h
+
+, (3.8) 
+
+⟨α¯uh − ∂nph, u h − ¯uh⟩ ≥ 0 ∀ uh ∈ Uh,ad . (3.9) In the next lemma we discuss a crucial property for Sh the discrete control to state operator. 
+
+Lemma 3.3. For the discrete control to state operator Sh : Uh → Vh the following relation holds: 
+
+Z
+
+> Γ
+
+∂q h
+
+∂n uhds = −(S∗
+
+> h
+
+(Shuh − yd), u h) + ( wh − yd, ˜wh) ∀uh ∈ Uh,
+
+where ˜wh ∈ Vh is the boundary lifting of uh ∈ Uh and qh ∈ V 0 
+
+> h
+
+satisfies: Find qh ∈ V 0 
+
+> h
+
+such that 
+
+apw (qh, v h) = ( wh − yd, v h) ∀ vh ∈ V 0 
+
+> h
+
+,
+
+where wh = Shuh.
+
+Proof. Let ˜ wh ∈ Vh be the boundary lifting of uh i. e. all the degrees interior degrees of freedoms of ˜ wh are equal to zero and . Let wh = w0 
+
+> h
+
++ ˜ wh where w0 
+
+> h
+
+∈ V 0 
+
+> h
+
+satisfies, Find w0 
+
+> h
+
+∈ V 0 
+
+> h
+
+such that 
+
+apw (w0
+
+> h
+
+, v h) = −apw ( ˜ wh, v h) ∀vh ∈ V 0 
+
+> h
+
+. (3.10) Consider, 
+
+apw (wh, q h) = apw (w0 
+
+> h
+
++ ˜ wh, q h)=( wh − yd, w 0
+
+> h
+
+) + apw (qh, ˜wh)=( wh − yd, y 0
+
+> h
+
+) + X
+
+> T
+
+(∇qh, ∇ ˜wh)=( wh − yd, y 0
+
+> h
+
+) + 
+
+"X
+
+> T
+
+−(∆ qh, ˜wh)T + ( ∂q h
+
+∂n , ˜wh)∂T 
+
+#
+
+=( wh − yd, w 0
+
+> h
+
+) + X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂q h
+
+∂n 
+
+
+
+{{ ˜wh}} ds +
+
+X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂q h
+
+∂n 
+
+
+
+[[ ˜ wh]] ds + X
+
+> e∈E bh
+
+Z
+
+> e
+
+∂q h
+
+∂n ¯uhds. (3.11) Note that 
+
+ ∂q h
+
+∂n 
+
+
+
+is constant on each edge e, also note that on an interior edge e,
+
+Z
+
+> e
+
+[[˜ yh]] ds = 0. Therefore 
+
+Z
+
+> e
+
+ ∂q h
+
+∂n 
+
+
+
+[[ ˜ wh]] ds =
+
+ ∂q h
+
+∂n 
+
+ Z 
+
+> e
+
+[[ ˜ wh]] ds = 0 (3.12) for e ∈ E ih. Also note that as ˜ wh is the boundary lifting of uh therefore the degrees of freedoms on all the interior edges which is the value of the function at the midpoints are zero. Therefore on all the interior edges e
+
+Z
+
+> e
+
+{{ ˜wh}} ds = 0 . (3.13) 9Therefore 
+
+Z
+
+> e
+
+ ∂q h
+
+∂n 
+
+
+
+{{ ˜wh}} ds =
+
+ ∂q h
+
+∂n 
+
+ Z 
+
+> e
+
+{{ ˜wh}} ds = 0 . (3.14) Also note that qh ∈ V 0 
+
+> h
+
+, therefore 
+
+apw (qh, w h) = 0 . (3.15) Therefore combining (3.11), (3.12), (3.13), (3.14) and (3.15) we obtain 
+
+Z
+
+> Γ
+
+∂q h
+
+∂n uhds = −(Shuh − yd, S huh) + ( wh − yd, ˜yh)
+
+Z
+
+> Γ
+
+∂q h
+
+∂n uhds = −(S∗
+
+> h
+
+(Shuh − yd), u h) + ( wh − yd, ˜wh) (3.16) 
+
+# 4 Auxiliary Results 
+
+This section contains some auxiliary results which play a very significant role for the rest of the analyses. We begin by deriving a stability estimate for the boundary extension ˜ wh ∈ Vh introduced in Lemma 3.3. 
+
+Theorem 4.1. For the boundary lifting ˜wh ∈ Vh the following stability estimate holds: 
+
+∥ ˜wh∥L1(Ω) ≤ Ch ∥uh∥L1(Γ) .
+
+Proof. Let {ϕe}e∈E h be the standard CR basis for Vh. Since for the boundary extension ˜ wh all the interior degrees of freedoms are zero therefore ˜wh = X
+
+> e∈E bh
+
+˜wh(me)ϕe
+
+= X
+
+> e∈E bh
+
+uh|eϕe (4.1) Note that (4.1) implies 
+
+∥ ˜wh∥L1(Ω) =
+
+Z
+
+> Ω
+
+| X
+
+> e∈E bh
+
+˜wh(me)ϕe(x)|dx 
+
+=
+
+Z
+
+> Ω
+
+| X
+
+> e∈E bh
+
+uh|eϕe(x)|dx. (4.2) Note that for e1, e 2 ∈ E bh, e1̸ = e2 implies supp( ϕe1 ) and supp( ϕe2 ) can have at most a line in common which is of measure zero with respect to the standard Lebesgue measure in R2. Therefore 10 (4.2) implies 
+
+∥ ˜wh∥L1(Ω) =
+
+Z
+
+> Ω
+
+| X
+
+> e∈E bh
+
+uh|eϕe|int Te (x)|dx 
+
+=
+
+Z
+
+> Ω
+
+X
+
+> e∈E bh
+
+|uh|eϕe|int Te (x)|dx 
+
+= X
+
+> e∈E bh
+
+Z
+
+> Ω
+
+|uh|eϕe|int Te (x)|dx 
+
+= X
+
+> e∈E bh
+
+Z
+
+> Te
+
+|uh|eϕe|int Te (x)|dx 
+
+= X
+
+> e∈E bh
+
+|uh|e|
+
+Z
+
+> Te
+
+|ϕe|int Te (x)|dx 
+
+≤ X
+
+> e∈E bh
+
+|uh|e|h2
+
+> e
+
+≤Ch X
+
+> e∈E bh
+
+|uh|e|he. (4.3) So it remains to show that X
+
+> e∈E bh
+
+|uh|e|he = ∥uh∥L1(Γ) .
+
+∥uh∥L1(Γ) =
+
+Z
+
+> Γ
+
+| X
+
+> e∈E bh
+
+uh|eλe(s)|ds (4.4) Note that for e1, e 2 ∈ E bh, supp Te1 ∩ supp Te2 is at most a point that is the common point of e1 and 
+
+e2, which has zero measure with respect to the standard Lebesgue measure on R. Therefore from (4.4) we obtain 
+
+∥uh∥L1(Γ) =
+
+Z
+
+> Γ
+
+| X
+
+> e∈E bh
+
+uh|eλe|int( e)(s)|ds 
+
+=
+
+Z
+
+> Γ
+
+X
+
+> e∈E bh
+
+|uh|eλe|int( e)(s)|ds 
+
+= X
+
+> e∈E bh
+
+Z
+
+> Γ
+
+|uh|eλe|int( e)(s)|ds 
+
+= X
+
+> e∈E bh
+
+|uh|e|int( e)λe|
+
+Z
+
+> e
+
+(s)|ds 
+
+= X
+
+> e∈E bh
+
+|uh|e|he
+
+(4.5) Therefore combining (4.3) and (4.5) we obtain the desired estimate. In the next theorem we discuss the L2 norm error estimate for the CR approximation of the solution of the state equation. We see that we are able to obtain a linear convergence rate for this which is obviously a super convergence result. 
+
+Theorem 4.2. We have |(y − yd, (S − Sh)( P0u − uh)) | ≤ Ch 1−δ for any δ > 0.
+
+11 Proof. Consider (2.7) in the strong form i. e. 
+
+−∆p = y − yd in Ω, (4.6) 
+
+p = 0 on Γ.
+
+Consider 
+
+−
+
+Z
+
+> Ω
+
+∆p(S − Sh)( P0u − uh)dx = X
+
+> T
+
+Z
+
+> T
+
+∇p · ∇ (( S − Sh)( P0u − uh)) dx −
+
+X
+
+> T
+
+Z
+
+> ∂T
+
+∂p ∂n [[( S − Sh)( P0u − uh)] ] ds 
+
+= X
+
+> T
+
+Z
+
+> T
+
+∇(p − ICR p) · ∇ (( S − Sh)( P0u − uh)) dx +
+
+X
+
+> T
+
+Z
+
+> T
+
+∇ICR p · ∇ (( S − Sh)( P0u − uh)) dx −
+
+X
+
+> e
+
+Z
+
+> e
+
+ ∂p ∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds 
+
+= X
+
+> T
+
+Z
+
+> T
+
+∇(p − ICR p) · ∇ (( S − Sh)( P0u − uh)) dx +
+
+X
+
+> T
+
+Z
+
+> T
+
+∇ICR p · ∇ (( S − Sh)( P0u − uh)) dx −
+
+X
+
+> e
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds (4.7) Therefore it remains to estimate the terms on the right hand side of (4.7). Consider the second term 
+
+X
+
+> T
+
+Z
+
+> T
+
+∇ICR p · ∇ (( S − Sh)( P0u − uh)) dx = − X
+
+> T
+
+Z
+
+> T
+
+∆S(P0u − uh)ICR pdx +
+
+X
+
+> T
+
+Z
+
+> ∂T
+
+∂S (P0u − uh)
+
+∂n ICR pds 
+
+= X
+
+> e∈E h
+
+∂S (P0u − uh)
+
+∂n [[ICR p − p]] ds (4.8) Note that since P0u − uh is piecewise constant therefore S(P0u − uh) has singularity near the the boundary points where P0u − uh has jumps. Therefore the regularity theory of the harmonic lifting implies that near a singular point, |∇ S(P0u − uh)| grows in the order of 1
+
+r if we choose polar coordinate representation in a neighborhood of the singular point with the singular point as the origin.. Therefore S(P0u − uh) /∈ H1(Ω) instead S(P0u − uh) ∈ W 1,2−ϵ(Ω) in two dimensions, for any ϵ > 0. Therefore, 
+
+X
+
+> e∈E h
+
+Z
+
+> e
+
+∂S (P0u − uh)
+
+∂n [[p − ICR p]] ds ≤[ X
+
+> e∈E h
+
+∥ ∂S (P0u − uh)
+
+∂n ∥W − 12−ϵ ,2−ϵ(e)][ X
+
+> e∈E h
+
+∥ [[p − ICR p]] ∥W 12−ϵ , 2−ϵ 
+
+> 1−ϵ(e)
+
+]
+
+≤C[ X
+
+> e∈E h
+
+h −12−ϵ 
+
+> e
+
+∥∇ S(P0u − uh)∥L2−ϵ(Te)][ X
+
+> e∈E h
+
+[h −12−ϵ 
+
+> e
+
+∥p − ICR p∥L 2−ϵ
+
+> 1−ϵ
+> (Te)
+
++
+
+h 12−ϵ 
+
+> e
+
+∥∇ (p − ICR p)∥L 2−ϵ
+
+> 1−ϵ
+> (Te)
+
+]] (4.9) 12 Then application of the interpolation error estimate and Holder’s inequality in (4.9) implies 
+
+X
+
+> e∈E h
+
+Z
+
+> e
+
+∂S (P0u − uh)
+
+∂n [[p − ICR p]] ds ≤Ch 1−δ ∥∇ S(P0u − uh)∥L2−ϵ ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+, (4.10) where δ = ϵ
+
+2 − ϵ . Therefore from (4.10) it remains to show that ∥∇ S(P0u − uh)∥L2−ϵ is uniformly bounded. Using the Poisson kernel representation of S(P0u − uh) we obtain that for any x ∈ Ω
+
+|∇ S(P0u − uh)( x)| ≤ C |(P0u − uh)( ξ0)|
+
+r , (4.11) where 
+
+• r = dist( x, Γ). 
+
+• ξ0 is the boundary point closest to x.Then using tubular coordinates x → (ξ, r ), ξ ∈ Γ, r ∈ (0 , r 0) where r0 ≤ diam(Ω), for q = 2 − ϵ we obtain 
+
+∥∇ S(P0u − uh)∥qLq (Ω) ≤
+
+Z
+
+> Γ
+
+Z r0
+
+> 0
+
+|(P0u − uh)( ξ)|q r−q · rdrdσ (ξ)=
+
+Z
+
+> Γ
+
+|(P0u − uh)( ξ)|q dσ (ξ)
+
+Z r0)0
+
+r1−q dr 
+
+≤C∥(P0u − uh)∥qLq (Γ) (4.12) Applying (4.12) we say that 
+
+∥∇ S(P0u − uh)∥Lq (Ω) ≤ C∥(P0u − uh)∥Lq (Γ) 
+
+≤ C∥(P0u − uh)∥L2(Γ) (4.13) Therefore (4.13) implies that ∥∇ S(P0u − uh)∥L2−ϵ(Ω) is uniformly bounded with respect to the mesh parameter. Therefore combining (4.9), (4.10), (4.11), (4.12), (4.13) we obtain that 
+
+X
+
+> e∈E h
+
+Z
+
+> e
+
+∂S (P0u − uh)
+
+∂n [[p − ICR p]] ds ≤ Ch 1−δ ∥P0u − uh∥∥ p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+, (4.14) where δ = ϵ
+
+2 − ϵ . From (4.7) next consider X
+
+> T
+
+Z
+
+> T
+
+∇(p − ICR p) · ∇ (( S − Sh)( P0u − uh)) dx .
+
+X
+
+> T
+
+Z
+
+> T
+
+∇(p − ICR p) · ∇ (( S − Sh)( P0u − uh)) dx ≤ X
+
+> T
+
+∥∇ (p − ICR p)∥L 2−ϵ 
+
+> 1−ϵ
+> (T)
+
+∥∇ (( S − Sh)( P0u − uh)) ∥L2−ϵ(T )
+
+≤
+
+"X
+
+> T
+
+∥∇ (p − ICR p)∥ 2−ϵ  
+
+> 1−ϵ
+> L2−ϵ
+> 1−ϵ
+> (T)
+
+# 1−ϵ
+
+> 2−ϵ
+
+"X
+
+> T
+
+∥∇ (( S − Sh)( P0u − uh)) ∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+(4.15) Next we estimate the final term of (4.15). 
+
+"X
+
+> T
+
+∥∇ (( S − Sh)( P0u − uh)) ∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+≤
+
+"X
+
+> T
+
+∥∇ S(P0u − uh)) ∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
++
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)) ∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+(4.16) 13 From (4.12) it is obvious that the first term in the right hand side of (4.16) is uniformly bounded. Consider now the second term 
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)) ∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+. We note that as Sh(P0u − uh)is the discrrete harmonic lifting of P0u − uh therefore 
+
+Sh(P0u − uh) = w0 
+
+> h
+
++ ˜ wh, (4.17) where ˜ wh ∈ Vh is the boundary lifting of P0u − uh ∈ L2(Γ), and w0 
+
+> h
+
+∈ V 0 
+
+> h
+
+satisfies the following 
+
+apw (w0
+
+> h
+
+, v h) = −apw ( ˜ wh, v h), ∀vh ∈ V 0 
+
+> h
+
+. (4.18) We know from the standard CR lifting property that 
+
+∥ ˜wh∥pw ≤ C∥P0 ¯u − uh∥L2(Γ) . (4.19) Next test (4.18) with the test function w0 
+
+> h
+
+and applying the coercivity and boundedness of apw we obtain 
+
+∥w0
+
+> h
+
+∥pw ≤ C∥P0 ¯u − uh∥L2(Γ) . (4.20) Combining (4.17), (4.19), (4.20) we obtain 
+
+∥Sh(P0u − uh)∥pw ≤ C∥P0 ¯u − uh∥L2(Γ) . (4.21) On a triangle T application of Holder’s inequality yields, 
+
+∥∇ Sh(P0u − uh)∥2−ϵL2−ϵ(T ) ≤| T |(2 −ϵ)( 12−ϵ − 12 )∥∇ Sh(P0u − uh)∥2−ϵL2(T )
+
+=|T | ϵ 
+
+> 2
+
+∥∇ Sh(P0u − uh)∥2−ϵL2(T ) (4.22) Summing over all the triangles imply 
+
+X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2−ϵL2−ϵ(T ) ≤C X
+
+> T
+
+|T | ϵ 
+
+> 2
+
+∥∇ Sh(P0u − uh)∥2−ϵL2(T )
+
+≤hϵ X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2−ϵL2(T )
+
+≤hϵ
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2 
+
+> L2(T)
+
+# 2−ϵ 
+
+> 2
+
+ 1
+
+h2
+
+ ϵ
+
+> 2
+
+≤
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2 
+
+> L2(T)
+
+# 2−ϵ
+
+> 2
+
+(4.23) Therefore from (4.21), (4.23) we obtain 
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+≤ C∥Sh(P0u − uh)∥pw ≤ C∥P0 ¯u − uh∥L2(Γ) . (4.24) Therefore 
+
+"X
+
+> T
+
+∥∇ Sh(P0u − uh)∥2−ϵL2−ϵ(T )
+
+# 12−ϵ
+
+is uniformly bounded. Therefore combining (4.15), (4.24) and standard CR interpolation error estimate we obtain 
+
+X
+
+> T
+
+Z
+
+> T
+
+∇(p − ICR p) · ∇ (( S − Sh)( P0u − uh)) dx ≤ Ch 1−ϵ∥P0 ¯u − uh∥L2(Γ) ∥p∥H2(Ω) , (4.25) 14 for any ϵ > 0. Next consider the final term on the right hand side of (4.7). 
+
+X
+
+> e
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds = X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds +
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds 
+
+(4.26) Consider the first term on the right hand side of (4.26). 
+
+X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds = − X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[Sh(P0u − uh)] ] ds 
+
+≤C X
+
+> e∈E ih
+
+h∥∇ Sh(P0u − uh)∥L2(ωe)∥p∥H2(ωe)
+
+≤Ch ∥Sh(P0u − uh)∥pw ∥p∥H2(Ω) 
+
+≤Ch ∥uh∥L2(Γ) ∥p∥H2(Ω) . (4.27) Next consider 
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds =
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+([ [( S − ICR S)( P0u − uh)] ] + [ [( ICR S − Sh)( P0u − uh)] ]) ds 
+
+(4.28) Consider the second term on the right hand side of (4.28). 
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+([ [( ICR S − Sh)( P0u − uh)] ]) ds ≤
+
+X
+
+> e∈E bh
+
+∂p ∂n − ∂I CR p∂n L 2−ϵ
+
+> 1−ϵ
+> (e)
+
+∥(ICR S − Sh)( P0u − uh)∥L2−ϵ(e) ≤
+
+ X
+
+> e∈E bh
+
+∂p ∂n − ∂I CR p∂n  
+
+> 2−ϵ
+> 1−ϵ
+> L2−ϵ
+> 1−ϵ
+> (e)
+
+ 
+
+> 1−ϵ
+> 2−ϵ
+
+ X
+
+> e∈E bh
+
+∥(ICR S − Sh)( P0u − uh)∥2−ϵL2−ϵ(e)
+
+
+
+> 12−ϵ
+
+(4.29) Standard theory for CR interpolation theory and (4.29) implies 
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds ≤ Ch 12 ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+ X
+
+> e∈E bh
+
+∥(ICR S − Sh)( P0u − uh)∥2−ϵL2−ϵ(e)
+
+
+
+> 12−ϵ
+
+≤ Ch 12 ∥p∥W 2, 2−ϵ  
+
+> 1−ϵ(Ω)
+
+∥(ICR S − Sh)( P0u − uh)∥L2−ϵ(Γ) 
+
+≤ Ch 12 ∥p∥W 2, 2−ϵ  
+
+> 1−ϵ(Ω)
+
+∥(ICR S − Sh)( P0u − uh)∥L2(Γ) 
+
+(4.30) Note that 
+
+Z
+
+> e
+
+(ICR S − Sh)( P0u − uh)ds = 0 for e ∈ E bh, therefore an application of the Poincare’s 15 inequality on the boundary edge e with appropriate scaling proves that 
+
+ X
+
+> e∈E bh
+
+∥(ICR S − Sh)( P0u − uh)∥2
+
+> L2(e)
+
+
+
+> 12
+
+≤Ch 12
+
+ X
+
+> e∈E bh
+
+∥∇ (ICR S − Sh)( P0u − uh)∥2
+
+> L2(Te)
+
+
+
+> 12
+
+≤Ch 12
+
+ X
+
+> e∈E bh
+
+∥∇ ICR S(P0u − uh)∥2
+
+> L2(Te)
+
+
+
+> 12
+
++
+
+Ch 12
+
+ X
+
+> e∈E bh
+
+∥∇ Sh(P0u − uh)∥2
+
+> L2(Te)
+
+
+
+> 12
+
+≤Ch 12 −ϵ
+
+ X
+
+> e∈E bh
+
+∥∇ ICR S(P0u − uh)∥2
+
+> L2−ϵ(Te)
+
+
+
+> 12−ϵ
+
++
+
+Ch 12
+
+ X
+
+> e∈E bh
+
+∥∇ Sh(P0u − uh)∥2
+
+> L2(Te)
+
+
+
+> 12
+
+≤Ch 12 −ϵ
+
+ X
+
+> e∈E bh
+
+∥∇ S(P0u − uh)∥2
+
+> L2−ϵ(Te)
+
+
+
+> 12−ϵ
+
++
+
+Ch 12
+
+ X
+
+> e∈E bh
+
+∥∇ Sh(P0u − uh)∥2
+
+> L2(Te)
+
+
+
+> 12
+
+≤Ch 12 −ϵe ∥P0u − uh∥L2(Γ) (4.31) Therefore combining (4.29), (4.30) and (4.31) we obtain that 
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+([ [( ICR S − Sh)( P0u − uh)] ]) ds ≤ Ch 1−ϵ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+∥P0u − uh∥L2(Γ) .
+
+(4.32) Consider the first term on the right hand side of (4.28). 
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+([ [( S − ICR S)( P0u − uh)] ]) ds ≤Ch 1+ ϵ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+∥∇ S(P0u − uh)∥L2−ϵ(Ω) 
+
+≤Ch 1+ ϵ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+∥P0u − uh∥L2(Γ) .
+
+(4.33) Combining (4.26), (4.27), (4.28), (4.29), (4.30), (4.31), (4.32), (4.33) we obtain 
+
+X
+
+> e
+
+Z
+
+> e
+
+ ∂p ∂n − ∂I CR p∂n 
+
+
+
+[[( S − Sh)( P0u − uh)] ] ds ≤ Ch 1−ϵ∥p∥W 2, 2−ϵ 
+
+> 1−ϵ(Ω)
+
+∥P0u − uh∥L2(Γ) . (4.34) Therefore combining (4.15), (4.25) and (4.34) we obtain the result. 
+
+Remark 4.3. If we look closely it is easy to see that the proof of theorem 4.2 involves duality technique. Therefore the technique of the proof of this theorem actually implies that 
+
+∥Su h − Shuh∥ ≤ Ch 1−ϵ∥uh∥L2(Γ) , (4.35) 
+
+for any ϵ > 0.
+
+16 From (2.14) we obtained that the optimal control ¯ u ∈ H 12 (Γ), therefore S ¯u ∈ H1(Ω). Therefore while estimating ∥S ¯u − Sh ¯u∥ one expects ∥S ¯u − Sh ¯u∥ ≤ Ch ∥¯u∥H 12 (Γ) . This is discussed in the next theorem and next remark. 
+
+Theorem 4.4. If S, S h denotes the continuous and discrete control to state operators respectively then the following estimate holds: 
+
+|(Sh ¯u − S ¯u, S hP0 ¯u − Sh ¯uh)| ≤ Ch ∥¯u∥H 12 (Γ) . (4.36) 
+
+Proof. We employ the duality argument to obtain the estimate. Consider 
+
+−∆ϕ = ShP0 ¯u − Sh ¯uh in Ω (4.37) 
+
+ϕ = 0 on Γ Multiply (4.37) by Sh ¯u − S ¯u and perform element-wise integration to obtain (Sh ¯u − S ¯u, S hP0 ¯u − Sh ¯uh) = X
+
+> T
+
+(∇ϕ, ∇(Sh ¯u − S ¯u)) − X
+
+> e∈E ih
+
+Z
+
+> e
+
+∂ϕ ∂n [[Sh ¯uds − S ¯u]] ds −
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+∂ϕ ∂n [[Sh ¯u − S ¯u]] ds 
+
+= X
+
+> T
+
+(∇ϕ, ∇Sh ¯u) − X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂ϕ ∂n 
+
+
+
+[[Sh ¯u]] ds − X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂ϕ ∂n 
+
+
+
+[[Sh ¯u − ¯u]] ds. 
+
+(4.38) Note that on a boundary edge e
+
+Z
+
+> e
+
+Sh ¯uds =
+
+Z
+
+> e
+
+¯uds, (4.39) Therefore combining (4.38) and (4.39) one obtains (Sh ¯u − S ¯u, S hP0 ¯u − Sh ¯uh) = X
+
+> T
+
+(∇ϕ, ∇Sh ¯u) − X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂ϕ ∂n − ∂ϕ h
+
+∂n 
+
+
+
+[[Sh ¯u]] ds −
+
+X
+
+> e∈E bh
+
+Z
+
+> e
+
+ ∂ϕ ∂n − ∂ϕ h
+
+∂n 
+
+
+
+[[Sh ¯u − ¯u]] ds. (4.40) Note that if e ∈ E bh then 
+
+Z
+
+> e
+
+(Sh ¯u − ¯u)ds =
+
+Z
+
+> e
+
+(ICR ¯u − ¯u)ds = 0 . (4.41) Therefore (4.41) implies that Sh ¯u − ¯u has zero integral mean property. Therefore on a boundary edge e we have 
+
+∥Sh ¯u − ¯u∥L2(e) ≤ Ch 12 ∥∇ S ¯u∥L2(Te). (4.42) Combining (4.40), (4.41), (4.42), trace inequality with scaling and applying the discrete Cauchy-Schwarz inequality we obtain (Sh ¯u − S ¯u, S hP0 ¯u − Sh ¯uh) ≤ X
+
+> T
+
+(∇ϕ, ∇Sh ¯u) + Ch ∥ϕ∥H2(Ω) ∥¯u∥H 12 (Γ) (4.43) 17 From (4.40) consider 
+
+X
+
+> T
+
+(∇ϕ, ∇Sh ¯u) = X
+
+> T
+
+(∇ϕ, ∇(Sh ¯u − S ¯u)) = X
+
+> T
+
+(∇(ϕ − ϕh), ∇(Sh ¯u − S ¯u)) + X
+
+> T
+
+(∇ϕh, ∇(Sh ¯u − S ¯u)) = X
+
+> T
+
+(∇(ϕ − ϕh), ∇(Sh ¯u − S ¯u)) − X
+
+> T
+
+(∇ϕh, ∇S ¯u). (4.44) Consider the final term from (4.44). 
+
+X
+
+> T
+
+(∇ϕh, ∇S ¯u) = − X
+
+> T
+
+(∆ S ¯u, ϕ h) + X
+
+> T
+
+Z
+
+> ∂T
+
+∂S ¯u∂n ϕhds 
+
+= X
+
+> e∈E ih
+
+Z
+
+> e
+
+ ∂S ¯u∂n 
+
+
+
+[[ϕh − ϕ]] ds. (4.45) Note that ¯ u ∈ H 12 (Γ) therefore S ¯u ∈ H1(Ω). As S ¯u is the harmonic lifting of ¯ u, therefore ∇S ¯u ∈
+
+H(div, Ω), therefore for any triangle T in the triangulation ∇S ¯u|T ∈ H(div, T ). Therefore applying the trace inequality with scaling for H div spaces and H1 spaces functions in (4.45) we obtain 
+
+X
+
+> T
+
+(∇ϕh, ∇S ¯u) ≤ X
+
+> e∈E ih
+
+h
+
+h− 12 
+
+> e
+
+∥∇ S ¯u∥L2(Te) + h 12 
+
+> e
+
+∥∆S ¯u∥L2(Te)
+
+i h 
+
+h− 12 
+
+> e
+
+∥ϕh − ϕ∥L2(Te) + h 12 
+
+> e
+
+∥∇ (ϕh − ϕ)∥L2(Te)
+
+i
+
+.
+
+(4.46) Hence an application of discrete Cauchy-Schwarz inequality and standard CR interpolation theory in (4.46) yields, 
+
+X
+
+> T
+
+(∇ϕh, ∇S ¯u) ≤ Ch ∥∇ S ¯u∥∥ ϕ∥H2(Ω) . (4.47) Finally combining (4.43), (4.44) and (4.47) and elliptic regularity estimate for (4.37) yields (Sh ¯u − S ¯u, S hP0 ¯u − Sh ¯uh) ≤ Ch ∥S ¯u∥H1(Ω) ∥ϕ∥H2(Ω) 
+
+≤ Ch ∥¯u∥H 12 ((Γ)) ∥ShP0 ¯u − Sh ¯uh∥ (4.48) Next it remains to show that ∥ShP0 ¯u − Sh ¯uh∥ is uniformly bounded. Infact we shall show that 
+
+∥ShP0 ¯u − Sh ¯uh∥ ≤ C ∥P0 ¯u − ¯uh∥. Let, 
+
+Sh(P0 ¯u − ¯uh) = w0 
+
+> h
+
++ ˜ wh, (4.49) where ˜ wh is the boundary lifting of P0 ¯u − ¯uh and w0 
+
+> h
+
+∈ V 0 
+
+> h
+
+satisfies: Find w0 
+
+> h
+
+∈ V 0 
+
+> h
+
+such that 
+
+apw (w0
+
+> h
+
+, v h) = −a( ˜ wh, v h), ∀vh ∈ V 0 
+
+> h
+
+. (4.50) Problem (4.50) is wellposed by Lax-Milgram lemma. By testing (4.50) with w0 
+
+> h
+
+and applying the coercivity and boundedness of apw (·,·) we obtain 
+
+w0  
+
+> hpw
+
+≤ C ∥ ˜wh∥ . (4.51) Hence the stability of the CR extension proves that 
+
+w0  
+
+> hpw
+
+≤ C ∥P0 ¯u − ¯uh∥ . (4.52) Then applying Poincare’s inequality we obtain 
+
+w0 
+
+> h
+
+≤ C ∥P0 ¯u − ¯uh∥ . (4.53) 18 Also note that as ˜ wh ∈ Vh is the boundary lifting for P0 ¯u − ¯uh therefore for any interior edge the degrees of freedoms of ˜ wh are zero. Therefore ˜ wh|T = 0 for all the triangles T which does not contain a boundary edge. Therefore the calculations similar to the ones done in Theorem 4.1 helps us to obtain 
+
+∥ ˜wh∥ ≤ C ∥P0 ¯u − ¯uh∥ . (4.54) Therefore combining (4.49), (4.53), (4.54) we obtain 
+
+∥Sh(P0 ¯u − ¯uh)∥ ≤ C ∥P0 ¯u − ¯uh∥ . (4.55) Therefore combining (4.48) and (4.55) we obtain the desired result. 
+
+Remark 4.5. If we look closely it is easy to see that the proof of theorem 4.4 involves duality technique. Therefore the technique of the proof of this theorem actually implies that 
+
+∥S ¯u − Sh ¯u∥ ≤ Ch ∥u∥H 12 (Γ) , (4.56) To begin with, we define the following spaces: 
+
+Wh := {vh ∈ H1(Ω) : vh|T ∈ P1(T ) ∀ T ∈ T h},Uh := {uh ∈ L2(Γ) : uh|e ∈ P0(e) ∀ e ∈ E bh},V1(Γ) := {vh ∈ C(Γ) : vh|e ∈ P1(e) ∀ e ∈ E bh}.
+
+# 5 Error Estimate for the Optimal Control 
+
+In this section we derive the main result of this article i. e. the L2(Γ) norm error estimate for the optimal control. 
+
+Theorem 5.1. Let ¯u denotes the solution of the problem (1.1) -(1.2) and ¯uh of (3.2) -(3.3) . Then the following estimate holds: 
+
+∥¯u − ¯uh∥L2(Γ) ≤ Ch 12 −ϵ,
+
+for any ϵ > 0.Proof. We begin by choosing ¯ uh as a test function in (2.13) to obtain 0 ≤(α¯u − ∂p ∂n , ¯uh − ¯u)0 ≤(α¯u − α¯uh + α¯uh − ∂p h
+
+∂n + ∂p h
+
+∂n − ∂p ∂n , ¯uh − ¯u)
+
+α ∥¯u − ¯uh∥2 ≤(α¯uh − ∂p h
+
+∂n + ∂p h
+
+∂n − ∂p ∂n , ¯uh − ¯u)
+
+α ∥¯u − ¯uh∥2 ≤(α¯uh − ∂p h
+
+∂n , ¯uh − P0 ¯u) + ( α¯uh − ∂p h
+
+∂n , P 0 ¯u − ¯u) + ( ∂p h
+
+∂n − ∂p ∂n , ¯uh − ¯u)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n − ∂p h
+
+∂n , ¯u − ¯uh)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n , ¯u − ¯uh) − ( ∂p h
+
+∂n , ¯u − ¯uh)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n , ¯u − P0 ¯u) + ( ∂p ∂n , P 0 ¯u − ¯uh) − ( ∂p h
+
+∂n , ¯u − P0 ¯u) − ( ∂p h
+
+∂n , P 0 ¯u − ¯uh)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n − ∂I CR p∂n , ¯u − P0 ¯u) + ( ∂p ∂n , P 0 ¯u − ¯uh) − ( ∂p h
+
+∂n , P 0 ¯u − ¯uh)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n − ∂I CR p∂n , ¯u − P0 ¯u) + ( ∂p ∂n − ∂p h
+
+∂n , P 0 ¯u − ¯uh)
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n − ∂I CR p∂n , ¯u − P0 ¯u) + ( ∂p ∂n , P 0 ¯u − ¯uh) − ( ∂p h
+
+∂n , P 0 ¯u − ¯uh). (5.1) 19 Next we analyze the terms ( ∂p ∂n , P 0 ¯u − ¯uh) and ( ∂p h
+
+∂n , P 0 ¯u − ¯uh) from (5.1). Let w denotes the harmonic lifting of P0 ¯u − ¯uh. Then from the definition 2.3 we obtain 
+
+S(P0 ¯u − ¯uh) = w (5.2) Combining (4.6) and (5.2) we obtain 
+
+Z
+
+> Γ
+
+∂p ∂n P0 ¯u − ¯uh)ds = − (y − yd, S (P0 ¯u − ¯uh)) = − (S∗(y − yd), P 0 ¯u − ¯uh). (5.3) Therefore combining Lemma 3.3, (5.1), (5.3) we obtain 
+
+α ∥¯u − ¯uh∥2 ≤( ∂p ∂n − ∂I CR p∂n , ¯u − P0 ¯u) + ( S∗
+
+> h
+
+(Sh ¯uh − yd), P 0 ¯u − ¯uh)−
+
+(S∗(S ¯uh − yd), P 0 ¯u − ¯uh) + ( yh − yd, ξ h), (5.4) where ξh ∈ Vh in (5.4) denotes the boundary lifting of P0 ¯u − ¯uh ∈ Uh. Then (5.4), Theorem 4.1 and standard CR interpolation error estimates implies 
+
+α ∥¯u − ¯uh∥2 ≤Ch 
+
+h
+
+∥p∥H2(Ω) ∥¯u∥H 12 (Γ) + ∥yh − yd∥L∞(Ω) 
+
+i
+
++ ( S∗
+
+> h
+
+(Sh ¯uh − yd), P 0 ¯u − ¯uh)−
+
+(S∗(S ¯uh − yd), P 0 ¯u − ¯uh)=Ch 
+
+h
+
+∥p∥H2(Ω) ∥¯u∥H 12 (Γ) + ∥yh − yd∥L∞(Ω) 
+
+i
+
++ ( Sh ¯uh − yd, S hP0 ¯u − Sh ¯uh)−
+
+(S ¯u − yd, SP 0 ¯u − S ¯uh) (5.5) Next we estimate the last two terms from (5.5). (Sh ¯uh − yd, S hP0 ¯u − Sh ¯uh) − (S ¯u − yd, SP 0 ¯u − S ¯uh) =( Sh ¯uh − yd, S hP0 ¯u − Sh ¯uh)−
+
+(ShP0 ¯u − yd, S hP0 ¯u − Sh ¯uh)+ (ShP0 ¯u − yd, S hP0 ¯u − Sh ¯uh)−
+
+(S ¯u − yd, SP 0 ¯u − S ¯uh)= − ∥ Sh ¯uh − ShP0 ¯u∥2 +(ShP0 ¯u − yd, S hP0 ¯u − Sh ¯uh)
+
+− (S ¯u − yd, SP 0 ¯u − S ¯uh)
+
+≤(ShP0 ¯u − yd, S hP0 ¯u − Sh ¯uh)−
+
+(Sh ¯u − yd, S hP0 ¯u − Sh ¯uh)+ (Sh ¯u − yd, S hP0 ¯u − Sh ¯uh)−
+
+(S ¯u − yd, S hP0 ¯u − Sh ¯uh)+ (S ¯u − yd, S hP0 ¯u − Sh ¯uh)−
+
+(S ¯u − yd, SP 0 ¯u − S ¯uh)=( Sh(P0 ¯u − ¯u), S h(P0 ¯u − ¯uh))+ (Sh ¯u − S ¯u, S h(P0 ¯u − ¯uh))+ (S ¯u − yd, (Sh − S)( P0 ¯u − ¯uh)) . (5.6) Next consider the first term on the right hand side of (5.6). Note that (3.4) implies that S∗ 
+
+> h
+
+: Vh →
+
+Uh. Therefore (Sh(P0 ¯u − ¯u), S h(P0 ¯u − ¯uh)) = ( P0 ¯u − ¯u, S ∗
+
+> h
+
+(Sh(P0 ¯u − ¯uh))) = 0 . (5.7) Therefore combining Theorem 4.2, Theorem 4.4, (5.5), (5.6), (5.7) we obtain the result. Next we prove the following auxiliary estimate which is important to obtain the optimal order error estimate for the optimal control. 20 References 
+
+[1] G. Acosta, R. G. Dur` an, The maximum angle condition for mixed and non conforming elements: Application to the Stokes equations, SIAM J. Numer. Anal. 37:18–36, 2000. [2] F. B. Belgacem, H. E. Fekih and H. Metoui. Singular perturbation of Dirichlet boundary control of elliptic problems. ESAIM:M2AN , 37:833–850, 2003. [3] S. C. Brenner, A nonstandard finite element interpolation estimate. Numer. Funct. Anal. Optim . 20, no. 3-4, 245–250, 1999 DOI 10.1080/01630569908816890. MR1691362 (2000b:65210) [4] S.C. Brenner. Two-level additive Schwarz preconditioners for nonconforming finite element methods. Math. Comp. , 65:897–921, 1996. MR1348039 (96j:65117). [5] S.C. Brenner. Convergence of nonconforming multigrid methods without full elliptic regularity. 
+
+Math. Comp. , 68:25–53, 1999. MR1620215 (99c:65229) [6] S.C. Brenner. Ponicar´ e-Friedrichs inequalities for piece-wise H1 functions. SIAM J. Numer. Anal. , 41:306–324, 2003. MR1974504 (2004d:65140) [7] S. C. Brenner and L. R. Scott. The Mathematical Theory of Finite Element Methods (Third Edition ). Springer-Verlag, New York, 2008. [8] Carstensen, C., Gallistl, D. and Schedensack, M. Adaptive nonconforming Crouzeix-Raviart FEM for eigenvalue problems. Math. Comp. , 84:1061-1087, 2015. [9] Carstensen, C., Feischl, M., Page, M. and Praetorius, D. Axioms of adaptivity. Comp. Math. Appl. , 67:1195-1253, 2014. [10] Carstensen, C., Gallistl, D. and Hu, J. A discrete Helmholtz decomposition with Morley finite element functions and the optimality of adaptive finite element schemes. Comp. Math. Appl. ,68:2167-2181, 2014. [11] E. Casas and J. P. Raymond. Error estimates for the numerical approximation of Dirichlet boundary control for semi linear elliptic equations. SIAM J.Control Optim. , 45:1586–1611, 2006. [12] E. Casas, M. Mateos and J. P. Raymond. Penalization of Dirichlet optimal control problems. 
+
+ESAIM Control Optim. Calc. Var. , 15:782–809, 2009. [13] S. Chowdhury, T. Gudi and A. K. Nandakumaran. Error bounds for a Dirichlet boundary control problem based on energy spaces. Math. Comp. , 86:1103–1126, 2017. [14] P. G. Ciarlet. The Finite Element Method for Elliptic Problems . North-Holland, Amsterdam, 1978. [15] M. Crouzeix and P. A. Raviart. Conforming and nonconforming finite element methods for solving the stationary Stokes equations. Revue fran¸ caise d’automatique, informatique, recherche op´ erationnelle. Analyse num´ erique . 7: 33–75, 1973. [16] K. Deckelnick, A. G¨ unther and M. Hinze. Finite element approximation of Dirichlet boundary control for elliptic PDEs on two and three dimensional curved domains. SIAM J. Control Optim. , 48:2798–2819, 2009. [17] D. Garg and K. Porwal. Mixed finite element method for a second order Dirichlet boundary control problem. Comp. Math. Appl. , 135:31–59, 2023. [18] D. Garg and K. Porwal. Unified discontinuous Galerkin finite element methods for second order Dirichlet boundary control problem. Appl. Numer. Math. , 185:336–364, 2023. 21 [19] V. Girault and P.-A. Raviart. Finite Element Methods for Navier-Stokes Equations: Theory and Algorithms. Springer Series in Computational Mathematics, Springer-Verlag, Berlin , 5: MR851383 (88b:65129), 1986. [20] P. Grisvard. Elliptic Problems in Nonsmooth Domains. Classics in Applied Mathematics, SIAM,2011 . ISBN 1611972027, 9781611972023. [21] T. Gudi and R. C. Sau. Finite element analysis of the constrained Dirichlet boundary control problem governed by the diffusion problem. ESIAM J. COCV. , 26:1–19, 2020. [22] Ipsen Ilse C. F. Numerical matrix analysis: linear systems and least squares [23] O. Karakashian and F. Pascal. A posteriori error estimates for a discontinuous Galerkin ap-proximation of second-order elliptic problems. SIAM J. Numer. Anal. , 41:2374–2399, 2003. [24] Mao, S. and Shi, Z. On the error bounds of nonconforming finite elements. . Sci. China Math. 
+
+, 53, 2917-2926. 2010. [25] S. May, R. Rannacher and B. Vexler. Error analysis for a finite element approximation of elliptic Dirichlet boundary control problems. SIAM J. Control Optim. , 51:2585–2611, 2013. [26] E. D. Nezza a, G. Palatucci, E. Valdinoci Hitchhiker’s guide to the fractional Sobolev spaces. 
+
+Bull. Sci. math. , 136, 521–573, 2012. [27] G. Of, T. X. Phan and O. Steinbach. An energy space finite element approach for elliptic Dirichlet boundary control problems. Numer. Math. , 129:723–748, 2015. [28] F. Troltzsch. Optimale Steuerung Partieller Differentialgleichungen . Vieweg, Cambridge Uni-versity Press, 2005. 22
