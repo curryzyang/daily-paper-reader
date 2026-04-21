@@ -1,0 +1,1382 @@
+Title: Late Fusion Neural Operators for Extrapolation Across Parameter Space in Partial Differential Equations
+
+URL Source: https://arxiv.org/pdf/2604.16721v1
+
+Published Time: Tue, 21 Apr 2026 00:21:31 GMT
+
+Number of Pages: 17
+
+Markdown Content:
+# Late Fusion Neural Operators for Extrapolation Across Parameter Space in Partial Differential Equations 
+
+## Eva van Tegelen 1,2,* , Taniya Kapoor 1, George A.K. van Voorn 2, Peter van Heijster 2, and Ioannis N. Athanasiadis 11Artificial Intelligence Group, Wageningen University and Research, Netherlands 
+
+> 2
+
+## Mathematical and Statistical Methods, Wageningen University and Research, Netherlands 
+
+> *
+
+## eva.vantegelen@wur.nl 
+
+## Abstract 
+
+Developing neural operators that accurately predict the behaviour of systems governed by partial differ-ential equations (PDEs) across unseen parameter regimes is crucial for robust generalization in scientific and engineering applications. In practical applications, variations in physical parameters induce distri-bution shifts between training and prediction regimes, making extrapolation a central challenge. As a result, the way parameters are incorporated into neural operator models plays a key role in their ability to generalize, particularly when state and parameter representations are entangled. In this work, we in-troduce the Late Fusion Neural Operator, an architecture that disentangles learning state dynamics from parameter effects, improving predictive performance both within and beyond the training distribution. Our approach combines neural operators for learning latent state representations with sparse regression to incorporate parameter information in a structured manner. Across four benchmark PDEs including advection, Burgers, and 1D/2D reaction–diffusion equations, the proposed method consistently outper-forms Fourier Neural Operator and CAPE-FNO. Late Fusion Neural Operators achieve consistently the best performance in all experiments, with an average RMSE reduction of 72.9% in-domain and 71.8% out-domain compared to the second-best method. These results demonstrate strong generalization across both in-domain and out-domain parameter regimes. 
+
+## 1 Introduction 
+
+Many physical systems can be described by partial differ-ential equations (PDEs) that represent their spatial and temporal evolution, including applications in fluid dynam-ics, heat transfer, and biological and chemical processes (Becker and Kuznetsov, 2015; Markowich, 2016; Gardner, 2025). These equations typically depend on underlying parameters representing quantities such as material prop-erties (Evans, 2022; Pletcher et al., 2012; Gurtin et al., 2010) and environmental conditions (Vallis, 2017; Bor-gogno et al., 2009). In practice, parameters vary across operating regimes or environments, while data are typ-ically available only for a limited subset of the param-eter space due to physical, logistical, or economic con-straints. From a machine-learning perspective, variations in physical parameters effectively change the distribution of the input data between training and prediction, a phe-nomenon commonly referred to as covariate shift, which poses a major challenge for data-driven models (Tamang et al., 2025; Bickel et al., 2009). Therefore, developing models that can accurately predict system dynamics for unseen system parameter values is crucial for robust and reliable generalization in scientific and engineering appli-cations (Li et al., 2025a). Recent advances in machine learning have intro-duced frameworks for learning mappings between function spaces from data, enabling data-driven solutions of PDEs (Luo and Qi, 2026; Azizzadenesheli et al., 2024; Kovachki et al., 2023; Fanaskov and Oseledets, 2023). Neural oper-ators, including architectures such as Fourier Neural Op-erator (FNO) (Li et al.) and DeepONet (Lu et al., 2019), learn solution operators that can generalize across varying initial conditions and spatial resolutions, while methods such as PDE-Refiner (Lippe et al., 2023) incorporate it-erative refinement strategies to improve long-term rollout accuracy. A straightforward approach to apply these methods to parameter-dependent PDEs is to provide the governing parameters as additional input channels alongside the sys-tem state. In this formulation, the operator jointly pro-cesses both the evolving state and the parameter infor-mation to predict the next system update. Several recent works have proposed more specialized conditioning strate-gies that integrate parameter information through dedi-cated architectural components rather than simple input augmentation. For example, Li et al. (2025b) combine operator mixtures with parameter-fusion to improve out-of-distribution generalization, while Kassaï Koupaï et al. (2024) introduce adaptive conditioning mechanisms that 1
+
+> arXiv:2604.16721v1 [cs.LG] 17 Apr 2026
+
+adjust the solver to unseen parameter settings through short adaptation trajectories. Other approaches incor-porate parameter dependence through dedicated archi-tectural modules, such as dual-network decompositions of spatial representations and parameter-temporal depen-dencies (Xiang et al., 2025) or parameter-guided channel attention mechanisms (Takamoto et al., 2023). Despite these advances, parameter information is still typically incorporated directly into a neural operator. While such approaches allow to learn complex interac-tions between parameter effects and state dynamics, we argue that they may hinder robust extrapolation beyond the training regime. To address this, we introduce a Late Fusion Neural Operator, inspired by classical numerical solvers (Ames, 2014), which processes parameter informa-tion separately from the evolving state and combines them only at a later stage. By maintaining this separation, the model can learn parameter dependencies in a more struc-tured manner, thus facilitating generalization to unseen parameter values. In this work, we focus on in- and out-of-distribution ex-trapolation across the parameter space in a strictly one-shot framework, where predictions are made using only the initial system state, without access to temporal his-tory or any form of model warm-up at inference time. When predicting across new parameter regimes, past tra-jectories may be limited or unavailable. While previous approaches often rely on temporal history, such as slid-ing windows with multiple time step inputs (Li et al.), or require test-time fine-tuning to adapt to new environ-ments (Kassaï Koupaï et al., 2024), here we focus on pre-dicting system dynamics solely from the initial condition and known system parameters. We furthermore assume no prior knowledge of the governing equations, including their functional form or differential operators, and model the dynamics entirely from data. Our main contributions can be summarized as follows: 
+
+• We propose a framework that couples neural op-erators with a late-fusion parameter module, using sparse regression to explicitly incorporate parameter dependencies in a structured and interpretable man-ner. 
+
+• We benchmark the proposed method on a diverse set of PDE problems, including one- and two-dimensional systems with varying boundary condi-tions, and compare against standard neural operator baselines, with particular emphasis on generalization to unseen parameter regimes. 
+
+• We perform an in-depth analysis of the model through ablation studies to quantify the contribution of individual architectural components. 
+
+• We conduct an interpretation study of the learned operator, demonstrating how it reveals relationships between system dynamics and governing parameters, highlighting the potential of the approach for dy-namic discovery. 
+
+## 2 Problem set-up 
+
+Following the notation of Brandstetter et al. (2022), we consider PDEs defined over a time interval t ∈ [0 , T ] and over D spatial dimensions x = [ x1, ..., x D ]T ∈ X ⊆ RD ,where X denotes the spatial domain. Furthermore, we introduce a parameter vector β ∈ P ⊆ RP which charac-terizes the system dynamics. In our work we focus specif-ically on a generalized class of PDEs, of which the system state u : [0 , T ] × X → RV is governed by a parameterized equation of the form: 
+
+∂tu(t, x) = F (t, x, u, ∂ xu, ∂ xx u, . . . ; β) , (1) 
+
+u(0 , x) = u0(x), x ∈ X, (2) 
+
+B[u]( t, x) = 0 , x ∈ ∂X, (3) where F (·; β) is a nonlinear differential operator param-eterized by β. Here, ∂tu is the partial derivative of the solution u with respect to time and ∂xu, ∂ xx u,... is short for partial derivatives ∂u/∂ x, ∂2u/∂ x2 and so forth. The initial condition is denoted by u0(x) and assumed to be sufficiently smooth. The boundary condition on the do-main boundary ∂X is denoted by B[u]( t, x) .We assume access to a dataset consisting of multiple (N ) solution trajectories of the parameterized PDE corre-sponding to different initial conditions u0(x) and parame-ter values β, where the parameters are assumed to remain constant over time within each trajectory. Specifically, for a finite set of parameters {β(i)}Ni=1 ⊂ P and corresponding initial conditions {u0,(i)}Ni=1 , we observe N trajectories 
+
+u(i)(t, x) ∈ RV , t ∈ [0 , T ], x ∈ X,
+
+which are discretized in time and space, yielding sequences of spatio-temporal data. The resulting dataset can thus be written as 
+
+D =
+
+{( 
+
+u0,(i), β(i), u(i)(t, x)
+
+)} Ni=1 
+
+, (4) where each sample represents a full discretized solution trajectory conditioned on its corresponding initial condi-tion and system parameters. 
+
+## 3 Late Fusion Neural Operator 
+
+For the Late Fusion Neural Operator, we were inspired by classical numerical solvers for PDEs, which typi-cally decompose time integration into two conceptual steps (Ames, 2014; Gardner, 2025). First, relevant spatial derivatives are approximated numerically from the current state of the system. Second, these numerical derivatives are combined, together with known parameters of the gov-erning equation, to approximate the temporal derivative of the state. In the present setting however, the governing 2Neural                
+
+> Operator
+> 𝒖 (𝑡 −𝛿𝑡 )ℎ0…ℎ1ℎ𝐻
+> Library construction
+> Θℎ𝑗 ,𝜷 𝜹𝒖 =Θℎ𝑗 ,𝜷 Ξ
+> ΞT=
+> Late fusion
+> Sparse multiplication 𝜹𝒖
+> 𝜷
+> 𝒖 (𝑡 )
+
++   
+
+> ℎ0𝛽 0ℎ0𝛽 0ℎ1ℎ1…e.g.
+
+Figure 1: Late Fusion Neural Operator model structure. The current state u(t − δt ) (shown here as a single system state with color indicating its value or density at each spatial location) is given as input to the neural operator, which outputs a set of hidden states hj . These hidden states are combined with the input parameters β to construct a library vector Θ. This library is then multiplied by a sparse matrix Ξ to compute the rate of change δu , which is added to the current state to obtain the next state u(t).equation is assumed to be unknown, such that neither the functional form of this update rule nor the specific spatial derivatives to be approximated are available. To address the lack of governing equations for real world systems, we propose a data-driven framework that mirrors the two-stage structure of classical PDE solvers while re-maining fully equation-agnostic. Given the current system state u(t − δt ), where δt denotes the temporal discretiza-tion step, we first apply a neural operator Nθ , parame-terized by trainable weights θ, to obtain a set of latent representations: 
+
+{hj }Hj=1 = Nθ (u(t − δt )) , (5) where the hidden states hj are learned directly from data and can be viewed as analogues of intermediate quantities that arise in classical PDE discretizations, such as spa-tial derivatives and nonlinear interaction terms, without imposing any explicit physical interpretation. In a second step, the late-fusion step, the hidden states are combined with known parameters values β via a li-brary of candidate functions Θ and a coefficient matrix Ξ
+
+that is learned from data. This approach is inspired by the Sparse Identification of Nonlinear Dynamics (SINDy) framework (Rudy et al., 2017; Brunton et al., 2016), in which governing equations are expressed as linear combi-nations of functions taken from a predefined library eval-uated on the system state. The construction of the li-brary of candidate functions Θ is highly flexible and can be adapted to the desired structure of the system. In prac-tice, the library may contain polynomial terms of varying order, trigonometric functions, exponential terms, as well as interaction terms between the hidden states and the known parameters, e.g. 
+
+Θ( h, β) = {1, h 1, β 1h2, β 2h23, β 3 sin( h4), ... } . (6) While the exact derivatives and terms of the system are unknown, this flexible library allows us to control the complexity of the candidate dynamics, such as the num-ber of hidden states, the order of polynomial terms, and the form of interactions with parameters, thereby incor-porating prior knowledge without requiring access to the true governing equations. The state increment (residual) δu is modelled using the candidate library Θ( h, β), as: 
+
+δu = Θ( h, β) Ξ , (7) where Ξ is a trainable coefficient matrix whose entries weigh the contributions of the candidate functions in the library Θ( h, β). Sparsity is encouraged through regular-ization during training, allowing the model to select a sub-set of candidate functions without imposing hard thresh-olding. The state is then advanced in time according to 
+
+u(t) = u(t − δt ) + δu . (8) The model is trained using a composite loss function that balances predictive accuracy with sparsity of the late-fusion module. The first component of the loss calculates the Mean Squared Error (MSE) between the predicted state and the observed data, and is defined as 
+
+Ldata = 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+∥∥∥u(i)pred − u(i)true 
+
+∥∥∥22
+
+, (9) where u(i)pred denotes the predicted state for sample i and 
+
+u(i)true the corresponding ground-truth observation. A sec-ond loss term enforces sparsity on the coefficient matrix 
+
+Ξ. Specifically, we employ ℓ1-regularization (Lasso (Hastie et al., 2003)), 
+
+Lsparse = ∥Ξ∥1, (10) with the aim of only a small subset of candidate functions from the library. The total training objective is then given by: 
+
+L = Ldata + λsparse Lsparse , (11) where the sparsity coefficient λsparse controls the trade-off between predictive accuracy and model simplicity. This coefficient is selected via hyperparameter tuning in a vali-ation split(see Appendix B). 3It is important to note that our approach shares the high-level idea of late parameter incorporation with re-cent work such as iMOEE (Li et al., 2025b), which also separates state dynamics from parameter effects. How-ever, iMOEE differs from our method in multiple aspects. First, it employs a mixture-of-experts operator architec-ture, whereas we use a single neural operator backbone. Second, parameter information is incorporated in iMOEE via an MLP-based fusion mechanism, while we instead use a structured sparse regression library for a more ex-plicit and interpretable parameter representation. Finally, their approach introduces additional components, includ-ing precomputed derivative features and invariance-based training objectives, whereas our framework does not rely on such additional inputs or training objectives. 
+
+## 4 Experiments 
+
+To validate the proposed approach and evaluate its in-and out-of-distribution prediction capabilities, we gen-erate synthetic datasets from a subset of representative PDEs in one and two dimensions taken from the bench-mark framework PDEBench (Takamoto et al., 2022): the 1D advection equation, the 1D Burgers equation, the 1D reaction-diffusion equation, and the 2D reaction-diffusion equation. This subset covers different dynamical be-haviours, such as shocks and spatial pattern formation, and provides a balanced trade-off between diversity and computational manageability. We use the PDEBench framework to generate all datasets; details on the numer-ical schemes can be found in the original paper. As the original PDEBench datasets are not designed for system-atic evaluation across a wide range of parameter values, we adapted the original generation scripts to sample for a wider range of parameter values and create separate train-ing and test distributions. For all datasets we sample system parameter values from a uniform distribution. Table 1 describes the ranges of the parameter values that were used to generate the training and test datasets. Since our model is trained on single-step predictions and we do not employ special-ized stabilization techniques, we restrict the parameter ranges to regimes that yield numerically stable solutions and avoid error blow-up. Visualisations of the data can be found in Appendix A. 
+
+1D advection equation 
+
+We consider the one-dimensional advection equation: 
+
+∂tu(t, x ) = −β∂ xu(t, x ), x ∈ (0 , 1) , t ∈ (0 , 0.5] , (12) 
+
+u(0 , x ) = u0(x), x ∈ (0 , 1) , (13) where β is a constant advection speed. We use the peri-odic boundary conditions and initial conditions as imple-mented in Takamoto et al. (2022): 
+
+u0(x) = 
+
+> N
+
+∑
+
+> i=1
+
+Ai sin ( kix + ϕi) , (14) where ki = 2 π{ni}/L x are the wave numbers with {ni}
+
+as integer values selected randomly from the interval 
+
+[1 , n max ], N is the number of waves to be added, and Lx
+
+is the length of the spatial domain. The amplitudes Ai
+
+are sampled from a uniform distribution (0 , 1) , and the phases ϕi are random values in (0 , 2π). We set kmax = 8 
+
+and N = 2 .We generate data for different values of the parame-ter β. For training and in-domain extrapolation, we ran-domly sample β from the uniform distribution with inter-val (0 , 0.5) . Out-domain data are generated by sampling β
+
+from the interval (0 .5, 1) . We select training and test inter-vals to assess out-of-distribution performance: the test set includes higher advection speeds than seen during train-ing. All trajectories are sampled over the time interval 
+
+[0 , 0.5] with a fixed time step of ∆t = 0 .05 . We use a spatial resolution of 128 grid points. 
+
+1D Burgers equation 
+
+We consider the one-dimensional Burgers equation: 
+
+∂tu(t, x ) = −∂x(u2(t, x )/2) + νπ∂ xx u(t, x ), (15) 
+
+x ∈ (0 , 1) , t ∈ (0 , 0.5] ,u(0 , x ) = u0(x), x ∈ (0 , 1) , (16) where ν is the diffusion coefficient, which we vary. We use periodic boundary conditions and initial conditions (Eq. 14) following the Burgers setup in Takamoto et al. (2022). For training and in-domain extrapolation, we randomly sample ν from the interval (0 .01 , 0.02) . Out-domain data are generated by sampling ν from the inter-val (0 , 0.01) , corresponding to weaker diffusion and there-fore sharper shock formation. All trajectories are sam-pled over the time interval [0 , 0.5] with a fixed time step of ∆t = 0 .005 and a spatial resolution of 128. 
+
+1D reaction-diffusion equation 
+
+Here, we consider a one-dimensional scalar reaction-diffusion equation, that combines a diffusion process and a rapid evolution from a source term, better known as the Fisher-KPP equation (Fisher, 1937): 
+
+∂tu(t, x ) = ν∂ xx u(t, x ) + ρu (1 − u), (17) 
+
+x ∈ (0 , 1) , t ∈ (0 , 0.5] ,u(0 , x ) = u0(x), x ∈ (0 , 1) , (18) where ν is the diffusion coefficient, ρ the force term coef-ficient. We use periodic boundary conditions and initial conditions (Eq. 14) following the setup in Takamoto et al. (2022). For training and in-domain extrapolation, we ran-domly sample both ν and ρ from the intervals (0 , 0.1) and 4Table 1: Libraries together with the parameter ranges for in-domain and out-domain sampling. Parameters are sampled from a uniform distribution with the specified ranges. For training and in-domain testing, 100 parameter values are sampled from the in-domain range. Out-domain testing uses samples from the out-domain range. 
+
+Equation Parameter In-domain Out-domain Library 
+
+1D advection β (0 , 0.5) (0 .5, 1) {h0β, h 1}
+
+1D Burgers ν (0 .01 , 0.02) (0 , 0.01) {h0ν, h 1}
+
+1D reaction-diffusion ρ (0 , 1) (0 , 1) {1, h 0, h 1, h 20, h 21, h 0h1,ν (0 , 0.1) (0 .1, 0.2) ρh 20, ρh 21, ρh 0h1, νh 20, νh 21, νh 0h1}
+
+2D reaction-diffusion k (0 , 0.05) (0 .05 , 0.075) {1, h 0, h 1, h 2, k, kh 0, kh 1, kh 2}
+
+(0 , 1) respectively. Out-of-domain data are generated by extrapolating in the direction of ν. We sample ν from the interval (0 .1, 0.2) , but sample the force term coefficient ρ
+
+from the same region as was used for training. 
+
+2D reaction-diffusion equation 
+
+In addition to the 1D reaction-diffusion equation, we also consider a two-dimensional extension with two nonlinearly coupled variables, with Fitzhugh-Nagumo reaction func-tions (Fitzhugh, 1961; Klaasen and Troy, 1984): 
+
+∂tu = Du∂xx u + Du∂yy u + u − u3 − k − v, ∂tv = Dv ∂xx v + Dv ∂yy v + u − v, x ∈ (−1, 1) , y ∈ (−1, 1) , t ∈ (0 , 4] ,
+
+where the diffusion coefficient are Du = 1 × 10 −3 and 
+
+Dv = 5 ×10 −3 and the parameter k is sampled from [0 , 0.5] 
+
+during training and in-domain testing and sampled from 
+
+[0 .5, 0.75] for out-domain testing. Instead of using peri-odic boundary as was done in all other test-cases, we use no-flow Neumann boundary conditions. Initial conditions follow the setup described in Takamoto et al. (2022). The 2D reaction-diffusion equation is a challenging test-case as we are dealing with two nonlinearly coupled variables of interest, an activator and inhibitor, as well as non-periodic boundary conditions. For each test case, we construct candidate libraries with varying levels of complexity, as summarized in Table 1. The design of these libraries is guided both by the com-plexity of the underlying governing equations and by the aim of evaluating the performance of the Late Fusion Neu-ral Operator framework under different levels of library complexity. For the 1D advection and Burgers equations, we employ relatively simple libraries consisting of a single parameter-dependent term and a single non-parameter-dependent term, reflecting the limited number of terms present in the governing equations. In contrast, for the 1D reaction-diffusion equation, we constructed a more com-plex library by creating a polynomial representation of both the hidden states and the system parameters, re-sulting in a relatively large set of candidate terms. This was done to demonstrate that even with more complex libraries, the late-fusion framework is capable of correctly identifying the governing dynamics. For the 2D reac-tion–diffusion equation, we again use a polynomial library, but restrict the hidden-state representation to first-order terms to balance library complexity with the increased complexity arising from the higher-dimensional system. Finally, we note that the impact of library complexity is closely tied to the sparsity regularization strength: more expressive libraries remain effective provided that appro-priate sparsity constraints are imposed. This relationship is further analysed in Sec. 5.3, where we show how perfor-mance varies with library size and the sparsity coefficient. We benchmark our method against two established neu-ral operator approaches. As a standard baseline, we use the Fourier Neural Operator (FNO) (Li et al.), where the parameter is added as an additional input channel alongside the state variables. We also compare against a method that was explicitly designed for parameter incor-poration: CAPE (Takamoto et al., 2023), which uses a channel-guided attention mechanism to inject PDE pa-rameter information into existing neural operators and solvers. All methods in this comparison use the same Fourier Neural Operator backbone to ensure a controlled and fair evaluation of parameter incorporation strategies. Additionally, we evaluate the proposed late-fusion mod-ule with an alternative neural operator backbone (CNO) in Sec. 5.4. We deliberately do not benchmark against other parameter-aware PDE learning methods that differ sub-stantially in problem formulation or introduce additional modelling components beyond parameter-fusion. In par-ticular, methods based on online adaptation trajectories (Kassaï Koupaï et al., 2024) do not align with our strict one-shot prediction setting. Likewise, the approach of Xi-ang et al. (2025) combines parameter conditioning with a physics-informed framework and does not employ a neu-ral operator backbone, making it fundamentally differ-ent from our setup. Similarly, the recent iMOOE frame-work (Li et al., 2025b) combines parameter-fusion with a mixture-of-operator-experts architecture, precomputed derivative features, and specialized invariance-based train-ing objectives, introducing multiple additional inductive biases. Including such methods would make it difficult to attribute performance differences specifically to the pa-rameter incorporation mechanism rather than to broader 5architectural or training-design changes. To ensure a fair comparison and focus specifically on how parameter information is incorporated, all methods follow the same training setup. In particular, to strictly adhere to the one-shot prediction goal, all models are trained on single-step transitions ( t → t + δt ) and applied auto-regressively during inference to generate the full tra-jectory from the initial condition. We furthermore do not use additional training strategies such as the curriculum learning procedure proposed in Takamoto et al. (2023). Further details on the training procedure and hyperpa-rameter tuning are provided in Appendix B. 
+
+## 5 Results 
+
+5.1 Quantitative and qualitative performance 
+
+We evaluate all methods on the 1D advection, 1D Burg-ers, 1D reaction-diffusion, and 2D reaction-diffusion test datasets using the root mean squared error (RMSE) as the primary performance metric. All reported results are av-eraged over five random seeds to account for training vari-ability, with standard deviations included to indicate ro-bustness. Additional evaluation metrics and correspond-ing results are provided in Table 6 in Appendix C. Table 2 summarizes the results for both in-domain and out-of-domain evaluations. The in-domain setting mea-sures predictive accuracy under conditions similar to those encountered during training, whereas the out-of-domain setting assesses each model’s ability to generalize to un-seen parameter regimes. Across all equation benchmarks and for both evaluation settings, the Late Fusion Oper-ator consistently achieves the lowest RMSE. When com-paring to the second-best baseline in each setting, this corresponds to an average RMSE reduction of 72.9% in-domain and 71.8% out-domain, highlighting the strong accuracy and generalization performance of the proposed approach. To qualitatively assess model behaviour, Figure 2 com-pares predicted trajectories for all equations in both the in-domain and out-domain setting, together with the cor-responding error maps. Across all test cases, the Late Fusion Neural Operator consistently produces predictions that more closely match the ground-truth spatio-temporal evolution than for both FNO and CAPE-FNO. This is fur-ther confirmed by the error visualisations, where the late-fusion model exhibits lower and more spatially localized errors throughout the trajectories. Examining the individual equations reveals distinct qualitative differences between the models. For the 1D advection equation, both FNO and CAPE-FNO show pro-gressively increasing error over time, indicating stronger error accumulation during rollout prediction. While CAPE-FNO remains relatively accurate in the in-domain setting, its performance degrades substantially in the out-of-domain regime. In contrast, the Late Fusion Neu-ral Operator remains considerably more consistent across Table 2: RMSE comparison for all test cases evaluated on in-domain and out-domain settings. Lower is better and best performing model is indicated in bold. Results are reported as mean ± standard deviation.                                                                           
+
+> Model In-domain Out-domain
+> 1D advection
+> FNO 4.72e-1 ±2.34e-2 7.14e-1 ±1.09e-1 CAPE-FNO 4.26e-1 ±7.69e-2 6.67e-1 ±1.21e-1 Late Fusion 4.75e-2 ±2.50e-3 1.93e-1 ±2.23e-2 1D Burgers
+> FNO 1.02e-1 ±3.18e-2 1.83e-1 ±5.95e-2 CAPE-FNO 1.09e-1 ±2.08e-2 1.50e-1 ±4.28e-2 Late Fusion 3.91e-2 ±2.02e-3 6.87e-2 ±7.40e-4 1D reaction-diffusion
+> FNO 2.77e-1 ±3.27e-2 3.90e-1 ±1.30e-1 CAPE-FNO 3.01e-1 ±1.49e-2 3.19e-1 ±5.01e-2 Late Fusion 6.29e-2 ±1.10e-2 8.98e-2 ±7.10e-2 2D reaction-diffusion
+> FNO 2.83e-2 ±8.23e-4 1.19e-1 ±1.52e-1 CAPE-FNO 6.29e-2 ±3.51e-3 9.87e-2 ±8.43e-3 Late Fusion 1.03e-2 ±5.86e-4 9.92e-3 ±4.89e-4
+
+both settings. For the 1D Burgers equation, the largest differences appear near the shock regions, where the solu-tion contains sharp gradients. Here, the late-fusion model produces noticeably lower local error, indicating that it is better able to preserve the sharpness of the evolving shock fronts. For the 1D reaction–diffusion system, the out-of-domain setting exhibits faster temporal dynamics due to stronger diffusion effects. Among the compared methods, only our method is able to accurately capture this acceler-ated behaviour, whereas the baseline models increasingly lag behind the true solution evolution. In the 2D reac-tion–diffusion case, the predicted trajectories of all meth-ods appear visually similar at first glance. However, the differences in model performance become much clearer in the corresponding error maps, which reveal substantially lower errors for the Late Fusion Neural Operator. 
+
+5.2 Performance across parameter space 
+
+Figure 3 reports the RMSE per trajectory on the y-axis as a function of the corresponding physical parameter values on the x-axis for all equation benchmarks. Results are averaged over multiple random seeds, with gray dots in-dicating variability across different seeds. By visualizing the error across the full parameter range, including both in-domain and out-of-domain regimes, Figure 3 provides a detailed view of how model performance changes as the underlying dynamics become increasingly different from those seen during training. Across all benchmarks, the Late Fusion Neural Opera-tor consistently maintains lower error throughout the pa-6-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+0
+
+1
+
+2
+
+> u
+
+0
+
+1
+
+> u
+
+2.5 
+
+0.0 
+
+2.5 
+
+> upred  utrue
+
+2
+
+0
+
+2
+
+> upred  utrue
+
+A1 A2 
+
+-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+2
+
+0
+
+> u
+
+0
+
+1
+
+> u
+
+0.5 
+
+0.0 
+
+0.5 
+
+> upred  utrue
+
+0.25 
+
+0.00 
+
+0.25 
+
+> upred  utrue
+
+B1 B2 
+
+-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+-0.00 0.25 0.50 
+
+t
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> x
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+0
+
+1
+
+> u
+
+0.5 
+
+1.0 
+
+> u
+
+0.25 
+
+0.00 
+
+0.25 
+
+> upred  utrue
+
+0.5 
+
+0.0 
+
+0.5 
+
+> upred  utrue
+
+C1 C2 
+
+0.0 0.5 1.0 
+
+x
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+> y
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+0.0 0.5 1.0 
+
+x
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+> y
+
+Ground Truth FNO CAPE-FNO Late Fusion 
+
+0.5 
+
+0.0 
+
+0.5 
+
+> u
+
+0.5 
+
+0.0 
+
+0.5 
+
+> u
+
+0.25 
+
+0.00 
+
+0.25 
+
+> upred  utrue
+
+0.5 
+
+0.0 
+
+0.5 
+
+> upred  utrue
+
+D1 D2 Figure 2: Visualisation of prediction results for (A) 1D advection equation, (B) 1D Burgers equation, (C) 1D reaction-diffusion equation, and (D) 2D reaction-diffusion equation. For each equation, the left subpanel shows an in-domain prediction and the right subpanel an out-of-domain prediction. More specifically the following parameter values correspond to panels; A1: β = 0 .11 , A2: β = 0 .97 ; B1: ν = 1 .6 × 10 −2, B2: ν = 9 .4 × 10 −3; C1: ν = 3 .8 × 10 −1, ρ =1.6 × 10 −2, C2: ν = 5 .5 × 10 −1, ρ = 1 .3 × 10 −1; D1: k = 4 .1 × 10 −3, D2: k = 6 .8 × 10 −2. For all cases, the top row shows predicted trajectories (or the predicted solution at T = 4 for the 2D reaction-diffusion case) for different model architectures, while the bottom row shows the corresponding error maps upred − utrue .70.0 0.2 0.4 0.6 0.8 1.0                                                
+
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> RMSE
+> FNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> CAPE-FNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Late Fusion
+> In-domain Out-domain
+> 0.000 0.005 0.010 0.015 0.020
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> RMSE
+> FNO
+> 0.000 0.005 0.010 0.015 0.020
+> CAPE-FNO
+> 0.000 0.005 0.010 0.015 0.020
+> Late Fusion
+> In-domain Out-domain
+> 0.00 0.05 0.10 0.15 0.20
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> RMSE
+> FNO
+> 0.00 0.05 0.10 0.15 0.20
+> CAPE-FNO
+> 0.00 0.05 0.10 0.15 0.20
+> Late Fusion
+> In-domain Out-domain
+> 0.00 0.02 0.04 0.06
+> k
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> RMSE
+> FNO
+> 0.00 0.02 0.04 0.06
+> k
+> CAPE-FNO
+> 0.00 0.02 0.04 0.06
+> k
+> Late Fusion
+> In-domain Out-domain
+
+A. 1D advection 
+
+B. 1D burgers 
+
+C. 1D reaction-diffusion 
+
+D. 2D reaction-diffusion Figure 3: RMSE per trajectory for (A) 1D advection equation, (B) 1D Burgers equation, (C) 1D reaction-diffusion equation, and (D) 2D reaction-diffusion equation. RMSE per trajectory as a function of the parameter shown sep-arately for each method. Each point corresponds to a single trajectory, with grey markers indicating results from different random seeds. The blue and green markers denote the mean RMSE across seeds for the in-domain and out-domain test sets, respectively. 8rameter range compared to both FNO and CAPE-FNO. In addition, the variability across random seeds remains comparatively small, indicating improved robustness to initialization and more stable performance across differ-ent training runs. A more detailed, equation-specific analysis further high-lights these trends. For the advection equation, the late-fusion model consistently achieves lower errors across the full parameter range, including both in-domain and out-of-domain regimes. While a gradual increase in er-ror is observed in the out-of-domain region, the perfor-mance remains notably more stable compared to the base-line models. A similar behaviour is observed for the 1D Burgers equation, where the late-fusion framework again maintains lower and more consistent errors, par-ticularly in the parameter extrapolation regime. For the 1D reaction–diffusion equation, a notable improvement of the late-fusion model is reflected in its reduced vari-ability across seeds, alongside generally lower error levels throughout the parameter space. In the challenging 2D reaction–diffusion setting, the FNO baseline exhibits rela-tively stable performance within the training domain, but its error increases substantially under out-of-domain con-ditions, whereas the late-fusion framework again demon-strates more consistent performance and robustness. 
+
+5.3 Influence of Library Complexity and Sparsity Regularization 
+
+In this section, we investigate the influence of the can-didate library complexity and the sparsity regularization coefficient on extrapolation performance. To this end, we consider a family of polynomial libraries in which we vary both the order of the state variables and the parame-ter. We consider four libraries of increasing complexity summarized in Table 3. In this instance, with increased Table 3: Libraries used to study influence of library complexity and sparsity regularization. 
+
+Number Order Order Library terms of terms states parameters 
+
+Library 1 6 1 1 {1, h 0, h 1, β, βh 0, βh 1}
+
+Library 2 9 1 2 {1, h 0, h 1, β, βh 0, βh 1, β 2, β 2h0, β 2h1}
+
+Library 3 12 2 1 {1, h 0, h 1, h 20, h 21, h 0h1, β, βh 0, βh 1, βh 20, βh 21, βh 0h1}
+
+Library 4 18 2 2 {1, h 0, h 1, h 20, h 21, h 0h1, β, βh 0, βh 1, βh 20, βh 21, βh 0h1,β2, β 2h0, β 2h1, β 2h20, β 2h21, β 2h0h1}1e-1 1e-2 1e-3 1e-4 1e-5 1e-6 1e-7                    
+
+> sparse
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> RMSE
+> Library 1 (6 terms)
+> 1e-1 1e-2 1e-3 1e-4 1e-5 1e-6 1e-7
+> sparse
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> RMSE
+> Library 2 (9 terms)
+> 1e-1 1e-2 1e-3 1e-4 1e-5 1e-6 1e-7
+> sparse
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> RMSE
+> Library 3 (12 terms)
+> 1e-1 1e-2 1e-3 1e-4 1e-5 1e-6 1e-7
+> sparse
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> RMSE
+> Library 4 (18 terms)
+> In-domain Out-domain
+
+Figure 4: RMSE as a function of the sparsity coefficient λsparse for four polynomial libraries of increasing complexity, containing 6, 9, 12, and 18 candidate terms. Standard deviations are indicated by grey error bars. 9complexity we refer to the use of higher-order polynomial terms and consequently more terms in the candidate li-brary. Figure 4 shows the RMSE as a function of the spar-sity coefficient λsparse for all four libraries. We observe that the smallest library, containing only 6 terms, yields the best overall out-of-domain performance. In addition, its performance remains relatively stable across the full range of sparsity coefficients. This limited sensitivity is likely due to the already compact nature of the library, which restricts the number of candidate terms and there-fore requires less strong regularization to generalize well. For the larger libraries, a clear dependence on the spar-sity coefficient is visible. While the in-domain perfor-mance remains relatively stable across different values of the sparsity coefficient, the out-domain RMSE shows more noticeable variation, displaying the existence of an opti-mal sparsity coefficient for extrapolation. This highlights that, for more complex libraries, the sparsity penalty plays a crucial role in selecting only the terms that meaning-fully contribute to the dynamics, while suppressing spu-rious terms that may still fit the training data but harm extrapolation. These results demonstrate that larger and more com-Table 4: RMSE comparison for advection evaluated on in-domain and out-domain settings for CNO and Late Fusion Neural Operator with CNO backbone. Lower is better and best performing model is indicated in bold. Results are reported as mean ± standard deviation.               
+
+> Model In-domain Out-domain
+> 1D Advection (CNO Study)
+> CNO 5.35e-1 ±2.30e-1 8.17e-1 ±1.77e-1 Late fusion-1.03e-1 ±1.16e-2 3.47e-1 ±3.83e-2
+> CNO
+
+plex libraries can still yield strong performance, provided that the sparsity regularization is chosen carefully. As the number of candidate terms increases, the sparsity coeffi-cient becomes increasingly important for robust extrapo-lation. In addition, we observe that the standard devia-tion across runs tends to increase with library size, indicat-ing that the results become less consistent and therefore less robust for larger libraries. 
+
+5.4 Other backbone architecture: CNO 
+
+In previous experiments, we exclusively used FNO as the backbone architecture to enable a controlled comparison and to isolate the effect of the parameter-injection strat-egy. This design choice allowed us to focus on how the sys-tem parameter is incorporated into the neural operator. To demonstrate that the proposed late-fusion parameteri-sation is not limited to FNOs, we additionally evaluate the approach using a Convolutional Neural Operator (CNO) (Raoni’c et al., 2023). The goal is to show that the late-fusion mechanism can also improve performance in other neural operator architectures. Figure 5 presents a qualitative comparison between CNO, in which the parameter is introduced as an addi-tional input channel, and the late-fusion CNO variant. Al-though the overall prediction quality remains below that of the FNO results shown in Figure 2, the visualizations clearly indicate that the late-fusion approach substantially improves the prediction accuracy compared to the naive parameter-injection strategy. This improvement is further confirmed quantitatively in Table 4, where the late-fusion CNO achieves lower RMSE values than the classic CNO in both the in-domain and out-domain settings. These re-sults show that the benefits of the late-fusion framework generalize beyond FNO and extend to other neural oper-ator families. -0.00 0.25 0.50        
+
+> t
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> x
+> Ground Truth CNO Late Fusion - CNO
+> -0.00 0.25 0.50
+> t
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> x
+> Ground Truth CNO Late Fusion - CNO
+> 0
+> 2
+> u
+> 0.5
+> 0.0
+> u
+> 2
+> 0
+> 2
+> upred  utrue
+> 2
+> 0
+> 2
+> upred  utrue
+> AB
+
+Figure 5: Visualisation of prediction results for 1D advection equation for CNO and Late-fusion CNO. The left subpanel shows an in-domain prediction ( β = 0 .11 ) and the right subpanel an out-of-domain prediction ( β = 0 .97 ). The top row shows predicted trajectories, while the bottom row shows the corresponding error maps upred − utrue .10 Library: 
+
+Θ ℎ𝑖 , 𝛽 =
+
+Late fusion 
+
+Sparse multiplication 
+
+ℎ0 ℎ1 ℎ21 𝑘ℎ 0𝑘  𝑘ℎ 1 𝑘ℎ 2 
+
+> 1
+> 𝛿𝑡
+
+𝛿𝑢 = 𝜉 0,0
+
+> 𝛿 𝑡
+
++ 𝜉 0,1ℎ0 
+
+> 𝛿𝑡
+
++ 𝜉 0,2ℎ1 
+
+> 𝛿𝑡
+
++ 𝜉 0,3ℎ2 
+
+> 𝛿𝑡
+
++ 𝑘 𝜉 0,0
+
+> 𝛿 𝑡
+
++ 𝜉 0,1ℎ0 
+
+> 𝛿𝑡
+
++ 𝜉 0,2ℎ1 
+
+> 𝛿𝑡
+
++ 𝜉 0,3ℎ2 
+
+> 𝛿𝑡
+> 1
+> 𝛿𝑡
+
+𝛿𝑣 = 𝜉 1,0
+
+> 𝛿 𝑡
+
++ 𝜉 1,1ℎ0 
+
+> 𝛿𝑡
+
++ 𝜉 1,2ℎ1 
+
+> 𝛿𝑡
+
++ 𝜉 1,3ℎ2 
+
+> 𝛿𝑡
+
++ 𝑘 𝜉 1,0
+
+> 𝛿 𝑡
+
++ 𝜉 1,1ℎ0 
+
+> 𝛿𝑡
+
++ 𝜉 1,2ℎ1 
+
+> 𝛿𝑡
+
++ 𝜉 1,3ℎ2
+
+> 𝛿𝑡
+
+FNO 
+
+𝑘 
+
+𝑢 0
+
+𝑣 0
+
+𝒉 𝟎 
+
+𝒉 𝟏 
+
+2D reaction -diffusion PDE: 
+
+𝑢 𝑡 = 𝐷 𝑢 𝑢 𝑥𝑥 + 𝐷 𝑢 𝑢 𝑦𝑦 + 𝑢 − 𝑢 3 − 𝑣 − 𝑘 
+
+𝑣 𝑡 = 𝐷 𝑣 𝑣 𝑥𝑥 + 𝐷 𝑣 𝑣 𝑦𝑦 + 𝑢 − 𝑣 
+
+𝒉 𝟐 
+
++ 𝑢 1
+
+𝑣 1
+
+𝛿𝑢 
+
+𝛿𝑣 
+
+ℎ0
+
+ℎ1
+
+𝑢 0
+
+1
+
+𝛿𝑡 𝛿𝑢 = 1
+
+𝛿𝑡 Θ ℎ𝑖 , 𝛽 Ξ
+
+= 𝜉 0
+
+𝛿𝑡 𝛽 ℎ0 + 𝜉 1
+
+𝛿𝑡 ℎ1
+
+FNO 
+
+𝛽 
+
+𝑢 𝑡 = −𝛽 𝑢 𝑥𝑥 
+
+Library: 
+
+Θ ℎ𝑖 , 𝛽 = ℎ1
+
+Late fusion 
+
+𝛽ℎ 0
+
+Sparse multiplication 
+
+Advection PDE: 
+
+𝑢 1
+
+𝛿𝑢  +
+
+Neural 
+
+Operator  Library construction 
+
+Θ ℎ𝑖 , 𝛽  𝛿𝑢 = Θ ℎ𝑖 , 𝛽 Ξ
+
+Late fusion 
+
+Sparse multiplication  𝛿𝑢  +
+
+Input 
+
+states 
+
+Hidden 
+
+states 
+
+Output 
+
+states 
+
+Parameter 
+
+A. Different stages of Late fusion neural operator 
+
+B. Visualisation of different stages 1D advection equatio n
+
+C. Visualisation of different stages for 2D reaction -diffusion Figure 6: (A) Schematic overview of the Late Fusion Neural Operator. The input field u0 is processed by the FNO, producing intermediate hidden states that are used to construct a feature library. This library is linearly combined via a learned coefficient matrix to produce the residual. (B–C) Visualisations of the hidden states generated by the network for a given input u0 for 1D advection equation and 2D reaction-diffusion equation. The blue boxes show finite-difference approximations of derivatives of u0 from the underlying PDE; these are not part of the model pipeline, but are included to highlight the correspondence between the learned features and the analytical structure of the original equation. 11 5.5 Interpretability analysis 
+
+We perform interpretability analysis for the 1D advection and 2D reaction–diffusion equations to illustrate how dif-ferent learned systems can be interpreted through their learned sparse representations. We use the same struc-ture introduced in Figure 1 to visualize the outputs of the different components of the late-fusion model in Figure 6. For the 1D advection equation, starting from an initial condition u0, we propagate the input through the model to obtain the corresponding hidden representations. These hidden states are then used to construct a predefined can-didate library consisting of two terms: one parameter-dependent term and one parameter-independent term, al-lowing us to separately analyse their contributions to the inferred dynamics. When visualizing the parameter-dependent component of the resulting sparse regression, we observe that it closely matches the structure of the advection operator, effec-tively resembling the discretized derivative term associ-ated with the underlying PDE for the given u0. In con-trast, the parameter-independent component remains ap-proximately zero across the domain, which is consistent with the absence of non-parameter-driven dynamics in the advection equation. Notably, despite the model being fully data-driven, the recovered structure clearly reflects the underlying advection PDE. Overall, this indicates that the learned equation is primarily driven by a parameter-dependent term consistent with the advection operator, suggesting that the model extracts interpretable informa-tion about how the dynamics depend on the underlying parameter. For the 2D reaction–diffusion system, we perform a sim-ilar interpretability analysis using the learned late-fusion operator. In this case, the model takes two initial states, 
+
+u0 and v0, and produces three hidden representations through the FNO backbone. Using these hidden states together with the physical parameter k, we construct a candidate library which is then combined with a learned coefficient matrix to form the resulting residual equations for both u and v. Each residual equation can be separated into a parameter-dependent and a parameter-independent component, allowing us to analyse their respective roles in the inferred dynamics. For the u-component, the parameter-independent term aligns with the non-parameter-driven part of the original reaction–diffusion PDE, while the parameter-dependent term closely matches the expected diffusion contribu-tion proportional to −k, consistent with the govern-ing equation. For the v-component, we observe that the parameter-independent term again reflects the corre-sponding reaction–diffusion structure present in the PDE, whereas the parameter-dependent contribution is negli-gible, effectively cancelling out. This indicates that the learned representation selectively attributes parameter in-fluence where it is physically relevant, while suppressing it in components where no such dependence exists. 
+
+## 6 Discussion 
+
+In this work, we addressed the problem of learning param-eterized partial differential equations in a strictly one-shot prediction setting, with particular emphasis on both in-domain and out-domain extrapolation across parameter space. Within this setting, we introduced the Late Fusion Neural Operator, a flexible framework that decouples the evolution of the state variables from the underlying sys-tem parameters. Across all experiments, our preposed late-fusion model has better performance than the baseline models in both in-domain and out-domain prediction settings. We hy-pothesize that this improvement stems from the explicit disentanglement of parameter effects and state dynamics, which may result in a more structured and potentially less nonlinear parameter dependence, thereby facilitating more robust generalization. The interpretability analysis showed that the Late Fu-sion Neural Operator exhibits a degree of structural in-terpretability. In particular, we were able to separate parameter-dependent from parameter-independent contri-butions in the learned representations, which were consis-tent with the corresponding PDEs underlying the data. However, it is important to emphasize we did not recover explicit governing equations in a symbolic form, as the model still operates through hidden state representations and is not designed for equation discovery. A more de-tailed analysis of the hidden states and their relation to derivatives or PDE terms could in the future enable the use of the late-fusion framework for equation discovery. We intentionally consider a straightforward setting without additional modelling or training components. In particular, we use a strict one-shot setup without tem-poral history, rely on a relatively small amount of data compared to common benchmarks (Takamoto et al., 2023, 2022), and do not employ specialized training strategies such as noise injection (Wikner et al., 2024) or refinement methods (Lippe et al., 2023). This design choice was made to isolate the effect of how the physical parameter is incor-porated into the model, and to clearly study its influence on performance. However, this does not imply that the Late Fusion Neural Operator is limited to this setting. On the contrary, its modular structure makes it compatible with a wide range of existing neural operator architectures and training techniques. In particular, recent approaches aimed at improving long-horizon stability, such as PDE-refiner (Lippe et al., 2023), as well as methods designed for irregular grid settings (Lingsch et al., 2024; Li et al., 2022), could be integrated into the late-fusion framework with minimal modifications, potentially extending its ap-plicability to more challenging forecasting and extrapola-tion regimes. A key takeaway from this work is that explicitly sep-arating parameter information from state dynamics via the Late Fusion Neural Operator is a simple but effective approach that improves performance while also enabling 12 a degree of structural interpretability. This opens up promising directions for extending this idea toward more complex extrapolation settings and more explicit forms of equation discovery. 
+
+Acknowledgments 
+
+The authors acknowledge Wageningen University and Re-search for their investment program Data Science and Ar-tificial Intelligence. 
+
+## Data Availability Statement 
+
+All code and data that support the findings of this study are available on Github: 
+
+https://github.com/evantegelen/LateFusionNeuralOperator. 
+
+## References 
+
+William F Ames. Numerical methods for partial differential equations . Academic press, 2014. Kamyar Azizzadenesheli, Nikola Kovachki, Zongyi Li, Miguel Liu-Schiaffini, Jean Kossaifi, and Anima Anandkumar. Neu-ral operators for accelerating scientific simulations and de-sign. Nat. Rev. Phys. , 6(5):320–328, 2024. Sid Becker and Andrey Kuznetsov, editors. Heat transfer and fluid flow in biological processes . Academic Press, San Diego, CA, 6 January 2015. Steffen Bickel, Michael Brückner, and Tobias Scheffer. Discrim-inative learning under covariate shift. Journal of Machine Learning Research , 10(9), 2009. Fabio Borgogno, P D’odorico, Francesco Laio, and Luca Ri-dolfi. Mathematical models of vegetation pattern formation in ecohydrology. Reviews of geophysics , 47(1), 2009. Johannes Brandstetter, Daniel Worrall, and Max Welling. Message passing neural pde solvers. arXiv preprint arXiv:2202.03376 , 2022. Steven L Brunton, Joshua L Proctor, and J Nathan Kutz. Discovering governing equations from data by sparse identi-fication of nonlinear dynamical systems. Proc. Natl. Acad. Sci. U. S. A. , 113(15):3932–3937, 12 April 2016. L C Evans. Partial differential equations , volume 19. American mathematical society, 2022. Vladimir Sergeevich Fanaskov and Ivan V Oseledets. Spec-tral neural operators. In Doklady Mathematics , volume 108, pages S226–S232. Springer, 2023. R A Fisher. The wave of advance of advantageous genes. Ann. Eugen. , 7(4):355–369, June 1937. R Fitzhugh. Impulses and physiological states in theoretical models of nerve membrane. Biophys. J. , 1(6):445–466, July 1961. Carl L Gardner. Applied numerical methods for partial differ-ential equations . Springer International Publishing, Cham, Switzerland, 23 October 2025. Morton E Gurtin, Eliot Fried, and Lallit Anand. The mechan-ics and thermodynamics of continua . Cambridge university press, 2010. Trevor Hastie, Robert Tibshirani, and Jerome Friedman. The elements of statistical learning: Data mining, inference, and prediction . Springer Series in Statistics. Springer, New York, NY, 1 edition, 30 July 2003. Armand Kassaï Koupaï, Jorge Mifsut Benet, Yuan Yin, Jean-Noël Vittaut, and Patrick Gallinari. Boosting generalization in parametric PDE neural solvers through adaptive condi-tioning. In Advances in Neural Information Processing Sys-tems , volume 37, pages 70659–70692, 2024. Gene A Klaasen and William C Troy. Stationary wave solu-tions of a system of reaction-diffusion equations derived from the FitzHugh–Nagumo equations. SIAM J. Appl. Math. , 44 (1):96–110, February 1984. Nikola B Kovachki, Zong-Yi Li, Burigede Liu, K Azizzade-nesheli, K Bhattacharya, A Stuart, and Anima Anandku-mar. Neural operator: Learning maps between function spaces with applications to PDEs. J. Mach. Learn. Res. ,24(89):89:1–89:97, 2023. Kangming Li, Andre Niyongabo Rubungo, Xiangyun Lei, Daniel Persaud, Kamal Choudhary, Brian DeCost, Adji Bousso Dieng, and Jason Hattrick-Simpers. Probing out-of-distribution generalization in machine learning for materials. Commun. Mater. , 6(1):9, 11 January 2025a. Siyang Li, Yize Chen, Yan Guo, Ming Huang, and Hui Xiong. Towards generalizable PDE dynamics forecast-ing via physics-guided invariant learning. arXiv preprint arXiv:2509.24332 , 2025b. Zongyi Li, Nikola Kovachki, Kamyar Azizzadenesheli, Burigede Liu, Kaushik Bhattacharya, Andrew Stuart, and Anima Anandkumar. Fourier neural operator for parametric partial differential equations. arXiv preprint arXiv:2010.08895 .Zongyi Li, Daniel Zhengyu Huang, Burigede Liu, and Anima Anandkumar. Fourier neural operator with learned defor-mations for PDEs on general geometries. arXiv preprint arXiv:2207.05209 , 2022. Levi Lingsch, Mike Y Michelis, Emmanuel de Bezenac, Sir-ani M Perera, Robert K Katzschmann, and Siddhartha Mishra. Beyond regular grids: Fourier-based neural opera-tors on arbitrary domains. arXiv preprint arXiv:2305.19663 ,2024. Phillip Lippe, Bastiaan S Veeling, Paris Perdikaris, Richard E Turner, and Johannes Brandstetter. PDE-refiner: Achiev-ing accurate long rollouts with neural PDE solvers. arXiv preprint arXiv:2308.05732 , 2023. Lu Lu, Pengzhan Jin, and George Em Karniadakis. Deep-ONet: Learning nonlinear operators for identifying differen-tial equations based on the universal approximation theorem of operators. arXiv preprint arXiv:1910.03193 , 2019. Ruiyan Luo and Xin Qi. SmooNet: Smooth operator neural network and functional differential equation. Neural Netw. ,199(108688):108688, 12 February 2026. 
+
+13 Peter Markowich. Applied partial differential equations: .Springer, Berlin, Germany, 1 November 2016. Richard H Pletcher, John C Tannehill, and Dale Anderson. 
+
+Computational fluid mechanics and heat transfer . CRC press, 2012. Bogdan Raoni’c, R Molinaro, T D Ryck, Tobias Rohner, Francesca Bartolucci, Rima Alaifari, Siddhartha Mishra, and Emmanuel de B’ezenac. Convolutional neural opera-tors for robust and accurate learning of PDEs. Neural Inf Process Syst , 36:77187–77200, 2 February 2023. Samuel H Rudy, Steven L Brunton, Joshua L Proctor, and J Nathan Kutz. Data-driven discovery of partial differential equations. Sci. Adv. , 3(4):e1602614, April 2017. M Takamoto, T Praditia, Raphael Leiteritz, Dan MacKinlay, F Alesiani, D Pflüger, and Mathias Niepert. PDEBENCH: An extensive benchmark for scientific machine learning. 
+
+Neural Inf Process Syst , abs/2210.07182:1596–1611, 13 Oc-tober 2022. M Takamoto, F Alesiani, and Mathias Niepert. Learning neu-ral PDE solvers with parameter-guided channel attention. 
+
+ICML , abs/2304.14118:33448–33467, 27 April 2023. Lakpa Tamang, Mohamed Reda Bouadjenek, Richard Daze-ley, and Sunil Aryal. Handling out-of-distribution data: A survey. IEEE Transactions on Knowledge and Data Engi-neering , 2025. Geoffrey K Vallis. Atmospheric and oceanic fluid dynamics .Cambridge University Press, 2017. Alexander Wikner, Joseph Harvey, Michelle Girvan, Brian R Hunt, Andrew Pomerance, Thomas Antonsen, and Edward Ott. Stabilizing machine learning prediction of dynam-ics: Novel noise-inspired regularization tested with reservoir computing. Neural Netw. , 170:94–110, February 2024. Zixue Xiang, Wei Peng, Wen Yao, Xu Liu, and Xiaoya Zhang. Physics-informed neural implicit flow neural network for parametric PDEs. Neural Netw. , 185(107166):107166, May 2025. 
+
+## A Data visualisation 
+
+In this section, we provide visualisations of the different datasets that were used for our experiments. Figure 7 displays the solution trajectories for different values of the parameters for 1D advection equation, 1D Burgers equation, 1D reaction-diffusion equation and 2D reaction-diffusion equation. 
+
+## B Hyperparameters and validation 
+
+For fair comparison, all models are trained using the same fixed training schedules and operator architectures, with additional hyperparameter tuning performed only where required. 
+
+Training schedules. For each test case all models are trained for 100 epochs using an initial learning rate of 10 −3,which is reduced by a factor of two halfway. 
+
+Operator architectures. FNO, CAPE-FNO and Late Fusion Neural Operator all rely on a neural operator backbone, and we employ the same underlying 4-level FNO architecture to ensure a fair and consistent comparison across methods. Specifically, we use: 
+
+• 16 Fourier modes and width 64 for the 1D test cases, 
+
+• 12 Fourier modes and width 32 for the 2D test cases. 
+
+Additional hyperparameter tuning. For the CAPE-FNO and late-fusion models, we perform additional hyperpa-rameter selection for loss-related coefficients, with tuning car-ried out separately for each equation. In the case of CAPE-FNO, the weight associated with the CAPE loss term λCAPE 
+
+is tuned. For the Late Fusion Neural Operator, the sparsity coefficient λsparse is selected using validation. We reserve 10% of the training data as a validation set for hyperparameter tuning. This validation subset is sampled uni-formly across the in-domain parameter regime, ensuring that it remains representative of the training distribution. Con-sequently, while this strategy is suitable for selecting hyper-parameters that perform well within the observed domain, it is not specifically designed to assess generalization beyond the training regime. An alternative strategy would be to construct the validation set from trajectories near the boundaries of the parameter domain, which could provide an early indication of out-of-domain generalization performance. We chose not to follow this approach, as our goal was to keep the hyperparam-eter selection process focused on in-domain performance rather than implicitly focusing on extrapolation performance. Table 5 shows the search space and the values that were selected during tuning. 
+
+## C Extra metrics 
+
+For a further analysis of the Late Fusion Neural Operator Table 6 provides additional metrics for the different equa-tions. We will show the metrics that were used. All metrics were adapted from the PDE bench framework Takamoto et al. (2022). The RMSE measures the overall average deviation be-tween predicted and true solutions: 
+
+RMSE = 
+
+√√√√ 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+∥∥∥u(i)pred − u(i)true 
+
+∥∥∥22
+
+. (19) Similarly the Boundary RMSE is the RMSE computed only taking into u at boundary points. The NRMSE provides a scale-invariant version of the RMSE by normalizing with the magnitude of the true solution: 
+
+NRMSE = 
+
+√
+
+> 1
+> N
+
+∑Ni=1 
+
+∥∥∥u(i)pred − u(i)true 
+
+∥∥∥22
+
+√
+
+> 1
+> N
+
+∑Ni=1 
+
+∥∥∥u(i)true 
+
+∥∥∥22
+
++ ε. 
+
+(20) The Max Error captures the worst-case deviation across all samples: 
+
+MaxError = max 
+
+> i
+
+∥∥∥u(i)pred − u(i)true 
+
+∥∥∥∞
+
+(21) 
+
+14 0.00 0.25 0.50 
+
+t
+
+0.25 
+
+0.50 
+
+0.75 
+
+> x
+
+=0.108 
+
+0
+
+1
+
+0.00 0.25 0.50 
+
+t
+
+=0.210 
+
+1.5 
+
+1.4 
+
+1.3 
+
+0.00 0.25 0.50 
+
+t
+
+=0.382 
+
+1
+
+0
+
+0.00 0.25 0.50 
+
+t
+
+=0.652 
+
+0.25 
+
+0.50 
+
+0.00 0.25 0.50 
+
+t
+
+=0.809 
+
+0.5 
+
+0.0 
+
+0.00 0.25 0.50 
+
+t
+
+=0.970 
+
+0
+
+1
+
+In-domain Out-of-domain 
+
+0.00 0.25 0.50 
+
+t
+
+0.25 
+
+0.50 
+
+0.75 
+
+> x
+
+=0.012 
+
+0.5 
+
+0.0 
+
+0.00 0.25 0.50 
+
+t
+
+=0.014 
+
+0
+
+1
+
+0.00 0.25 0.50 
+
+t
+
+=0.018 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 0.25 0.50 
+
+t
+
+=0.002 
+
+0.25 
+
+0.50 
+
+0.75 
+
+0.00 0.25 0.50 
+
+t
+
+=0.004 
+
+0.5 
+
+1.0 
+
+0.00 0.25 0.50 
+
+t
+
+=0.009 
+
+0
+
+1
+
+In-domain Out-of-domain 
+
+0.00 0.25 0.50 
+
+t
+
+0.25 
+
+0.50 
+
+0.75 
+
+> x
+
+=0.421 =0.043 
+
+2
+
+0
+
+0.00 0.25 0.50 
+
+t
+
+=0.379 =0.016 
+
+0
+
+1
+
+0.00 0.25 0.50 
+
+t
+
+=0.087 =0.091 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 0.25 0.50 
+
+t
+
+=0.238 =0.200 
+
+0.0 
+
+0.5 
+
+0.00 0.25 0.50 
+
+t
+
+=0.949 =0.109 
+
+1.0 
+
+1.5 
+
+0.00 0.25 0.50 
+
+t
+
+=0.565 =0.171 
+
+1
+
+0
+
+1
+
+In-domain Out-of-domain 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.004
+
+T=0.00 T=2.00 T=4.00 
+
+0.5 
+
+0.0 
+
+0.5 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.033
+
+0.5 
+
+0.0 
+
+0.5 
+
+0.25 0.50 0.75 
+
+x
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.046
+
+0.25 0.50 0.75 
+
+x
+
+0.25 0.50 0.75 
+
+x
+
+0.5 
+
+0.0 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.055
+
+T=0.00 T=2.00 T=4.00 
+
+0.5 
+
+0.0 
+
+0.5 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.068
+
+0.5 
+
+0.0 
+
+0.5 
+
+0.25 0.50 0.75 
+
+x
+
+0.25 
+
+0.50 
+
+0.75 
+
+> y
+> k=0.074
+
+0.25 0.50 0.75 
+
+x
+
+0.25 0.50 0.75 
+
+x
+
+0.5 
+
+0.0 
+
+0.5 
+
+In-domain Out-of-domain 
+
+A. 1D advection equation 
+
+B. 1D Burgers equation 
+
+C. 1D reaction-diffusion equation 
+
+D. 2D reaction-diffusion equation Figure 7: Visualisation of (A) 1D advection equation (B) 1D Burgers equation (C) 1D reaction-diffusion equation and (D) 2D reaction-diffusion equation. For the 1D equations trajectories corresponding to different parameter values are shown for in-domain and out-domain datasets. For the 2D reaction-diffusion equation, the solutions at different time points are shown for different values of k. 15 Table 5: Hyperparameter search space and selected values for CAPE-FNO and Late Fusion Neural Operator for each equation. 
+
+Model Hyperparameter Search Space advection Burgers Reaction-diff. (1D) Reaction-diff. (2D) 
+
+CAPE-FNO λCAPE {10 −4, 10 −6, 10 −8} 10 −4 10 −4 10 −4 10 −4
+
+Late Fusion λSparse {10 −2, 10 −3, 10 −4} 10 −4 10 −4 10 −4 10 −4
+
+The Conserved Error measures how well the model preserves the spatial integral of the solution: 
+
+ConservedError = 
+
+√√√√ 1
+
+N
+
+∥∥∥∥∥∑
+
+> x
+
+upred (x) −
+
+∑
+
+> x
+
+utrue (x)
+
+∥∥∥∥∥
+
+> 22
+
+(22) The Fourier RMSE evaluates the error in the spectral do-main: 
+
+FourierRMSE = 
+
+√√√√ 1
+
+N
+
+> N
+
+∑
+
+> i=1
+
+∥∥∥F
+
+(
+
+u(i)pred 
+
+)
+
+− F 
+
+(
+
+u(i)true 
+
+)∥ ∥∥22
+
+(23) Table 6 shows the performance of the Late-Fusion Neural Operator compared to FNO and CAPE-FNO. It can be seen that across all metrics the performance of the late-fusion ap-proach is better than the other benchmarks. 
+
+16 Table 6: Metrics summary for all models and domains 
+
+> In-domain  Out-domain Metric  FNO  CAPE-FNO  Late Fusion  FNO  CAPE-FNO  Late Fusion
+> 1D Advection
+> Boundary  2.62e-1  ± 2.49e-2  3.07e-1  ± 9.59e-2  3.16e-2  ± 1.30e-3  4.66e-1  ± 1.23e-1  4.46e-1  ± 2.79e-2  1.03e-1  ± 5.45e-3
+> Conserved  2.95e+1  ± 9.35e+0  2.90e+1  ± 9.67e+0  8.00e-1  ± 1.67e-1  3.65e+1  ± 6.70e+0  3.68e+1  ± 9.74e+0  8.54e+0  ± 3.79e+0
+> Fourier  5.93e+0  ± 2.01e-1  5.43e+0  ± 1.14e+0  5.38e-1  ± 2.97e-2  8.67e+0  ± 9.29e-1  8.16e+0  ± 1.53e+0  2.30e+0  ± 3.47e-1
+> Max  5.41e+0  ± 9.58e-1  2.87e+0  ± 6.19e-1  8.83e-1  ± 2.83e-2  5.00e+0  ± 4.67e-1  3.58e+0  ± 4.87e-1  3.54e+0  ± 3.61e-1
+> RMSE  4.72e-1  ± 2.34e-2  4.26e-1  ± 7.69e-2  4.75e-2  ± 2.50e-3  7.14e-1  ± 1.09e-1  6.67e-1  ± 1.21e-1  1.93e-1  ± 2.23e-2
+> nRMSE  5.73e-1  ± 2.85e-2  5.18e-1  ± 9.35e-2  5.77e-2  ± 3.04e-3  8.80e-1  ± 1.34e-1  8.22e-1  ± 1.49e-1  2.38e-1  ± 2.75e-2 1D Burgers
+> Boundary  5.41e-2  ± 2.01e-2  6.53e-2  ± 1.86e-2  2.15e-2  ± 2.06e-3  1.13e-1  ± 4.67e-2  8.55e-2  ± 2.37e-2  3.67e-2  ± 1.56e-3
+> Conserved  7.42e+0  ± 2.39e+0  6.53e+0  ± 1.44e+0  1.79e+0  ± 3.72e-1  1.62e+1  ± 7.12e+0  8.55e+0  ± 4.00e+0  1.63e+0  ± 2.87e-1
+> Fourier  1.32e+0  ± 4.08e-1  1.35e+0  ± 2.58e-1  4.67e-1  ± 2.97e-2  2.51e+0  ± 8.93e-1  1.85e+0  ± 5.80e-1  7.85e-1  ± 9.62e-3
+> Max  1.77e+0  ± 1.40e-1  1.96e+0  ± 3.53e-1  1.30e+0  ± 1.85e-1  2.46e+0  ± 3.96e-1  2.46e+0  ± 2.70e-1  1.95e+0  ± 1.53e-1
+> RMSE  1.02e-1  ± 3.18e-2  1.09e-1  ± 2.08e-2  3.91e-2  ± 2.02e-3  1.83e-1  ± 5.95e-2  1.50e-1  ± 4.28e-2  6.87e-2  ± 7.40e-4
+> nRMSE  1.55e-1  ± 4.85e-2  1.66e-1  ± 3.17e-2  5.96e-2  ± 3.08e-3  2.60e-1  ± 8.45e-2  2.13e-1  ± 6.07e-2  9.75e-2  ± 1.05e-3 1D Reaction-diffusion
+> Boundary  1.41e-1  ± 1.33e-2  1.57e-1  ± 1.24e-2  2.71e-2  ± 1.91e-3  2.37e-1  ± 8.60e-2  1.54e-1  ± 3.60e-2  2.84e-2  ± 1.03e-2
+> Conserved  2.72e+1  ± 6.39e+0  2.97e+1  ± 3.24e+0  6.11e+0  ± 1.37e+0  4.26e+1  ± 1.86e+1  3.43e+1  ± 7.55e+0  1.11e+1  ± 9.12e+0
+> Fourier  3.92e+0  ± 6.29e-1  4.27e+0  ± 2.96e-1  8.87e-1  ± 1.70e-1  5.76e+0  ± 2.16e+0  4.68e+0  ± 8.24e-1  1.40e+0  ± 1.13e+0
+> Max  1.05e+1  ± 2.21e+0  9.61e+0  ± 8.30e-1  3.84e+0  ± 1.34e+0  6.29e+0  ± 1.79e+0  5.53e+0  ± 1.14e+0  1.54e+0  ± 8.20e-1
+> RMSE  2.77e-1  ± 3.27e-2  3.01e-1  ± 1.49e-2  6.29e-2  ± 1.10e-2  3.90e-1  ± 1.30e-1  3.19e-1  ± 5.01e-2  8.98e-2  ± 7.10e-2
+> nRMSE  3.53e-1  ± 4.18e-2  3.83e-1  ± 1.90e-2  8.02e-2  ± 1.41e-2  5.00e-1  ± 1.66e-1  4.09e-1  ± 6.43e-2  1.15e-1  ± 9.12e-2 2D Reaction-diffusion
+> Boundary  2.93e-2  ± 1.79e-3  4.87e-2  ± 4.70e-3  1.92e-2  ± 1.27e-3  5.43e-2  ± 3.69e-2  7.62e-2  ± 2.57e-3  1.91e-2  ± 4.04e-4
+> Conserved  1.01e+0  ± 3.03e-2  3.30e+0  ± 1.55e-1  2.49e-1  ± 8.38e-3  7.06e+0  ± 9.93e+0  5.78e+0  ± 6.62e-1  3.02e-1  ± 1.06e-2
+> Fourier  2.55e-1  ± 6.03e-3  6.41e-1  ± 3.10e-2  8.65e-2  ± 4.67e-3  1.28e+0  ± 1.71e+0  1.05e+0  ± 1.04e-1  8.66e-2  ± 3.39e-3
+> Max  6.43e-1  ± 9.11e-2  8.01e-1  ± 6.81e-2  4.51e-1  ± 9.95e-2  1.32e+0  ± 1.16e+0  8.56e-1  ± 6.26e-2  4.86e-1  ± 1.17e-1
+> RMSE  2.83e-2  ± 8.23e-4  6.29e-2  ± 3.51e-3  1.03e-2  ± 5.86e-4  1.19e-1  ± 1.52e-1  9.87e-2  ± 8.43e-3  9.92e-3  ± 4.89e-4
+> nRMSE  1.17e-1  ± 3.41e-3  2.61e-1  ± 1.46e-2  4.25e-2  ± 2.43e-3  3.62e-1  ± 4.63e-1  2.99e-1  ± 2.56e-2  3.01e-2  ± 1.48e-3
+
+17

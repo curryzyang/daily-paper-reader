@@ -1,0 +1,2008 @@
+Title: Neural Network-Based Adaptive Event-Triggered Control for Dual-Arm Unmanned Aerial Manipulator Systems
+
+URL Source: https://arxiv.org/pdf/2604.17048v1
+
+Published Time: Tue, 21 Apr 2026 00:50:13 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+# Neural Network-Based Adaptive Event-Triggered Control for Dual-Arm Unmanned Aerial Manipulator Systems ⋆
+
+Yang Wang ∗,∗∗ Hai Yu ∗,∗∗ Wei He ∗,∗∗ Jianda Han ∗,∗∗ 
+
+Yongchun Fang ∗,∗∗ Xiao Liang ∗,∗∗ ∗ Institute of Robotics and Automatic Information System, College of Artificial Intelligence, and Tianjin Key Laboratory of Intelligent Robotics, Nankai University, Tianjin 300350, China.  
+
+> ∗∗
+
+Institute of Intelligence Technology and Robotic Systems, Shenzhen Research Institute of Nankai University, Shenzhen 518083, China. (e-mail: {wangy1893, yuhai, howei}@mail.nankai.edu.cn, {hanjianda, fangyc, liangx}@nankai.edu.cn) 
+
+Abstract: This paper investigates the control problem of dual-arm unmanned aerial manipula-tor systems (DAUAMs). Strong coupling between the dual-arm and the multirotor platform, to-gether with unmodeled dynamics and external disturbances, poses significant challenges to stable and accurate operation. An adaptive event-triggered control scheme with neural network-based approximation is proposed to address these issues while explicitly considering communication constraints. First, a dynamic model of the DAUAM system is derived, and a command-filter-based backstepping framework with error compensation is constructed. Then, a neural network is employed to approximate external frictions, and an event-triggered mechanism is designed to reduce the transmission frequency of control updates, thereby alleviating communication and energy burdens. Lyapunov-based analysis shows that all closed-loop signals remain bounded and that the tracking error converges to a neighborhood of the desired trajectory within a fixed time. Finally, experiments on a self-built DAUAM platform demonstrate that the proposed approach achieves accurate trajectory tracking. 
+
+Keywords: Dual-arm unmanned aerial manipulator systems, neural network, event-triggered, backstepping. 1. INTRODUCTION Unmanned aerial vehicles (UAVs) have revolutionized operations in three-dimensional space, offering unparal-leled maneuverability, hovering capability, and flexibility. These attributes have enabled their widespread adoption across diverse applications, including industrial inspec-tion, security surveillance, and environmental monitoring (Abuali et al. (2025); Ma et al. (2024)). Building upon these advantages, the integration of robotic manipulators has transformed UAVs into unmanned aerial manipula-tors (UAMs). This evolution empowers them to perform active physical interactions with the environment, facil-itating tasks such as scientific sampling, transportation of hazardous materials, aerial maintenance, and contact-based inspections like wall sensing or high-altitude clean-ing (Liang et al. (2022); Li et al. (2024); Ollero et al. (2021)). Driven by advancements in unmanned systems, research has progressively shifted towards dual-arm UAM configu-  
+
+> ⋆This work was supported in part by National Natural Science Foundation of China under Grant 62273187, Grant 62233011, and Grant U25A200563, and in part by the Key Technologies R & D Program of Tianjin under Grant 23YFZCSN00060. (Corresponding author: Xiao Liang)
+
+rations. These systems synergize the extensive operational workspace of dual-arm robots with the vertical take-off and landing capabilities of UAVs, demonstrating supe-rior performance over single-arm counterparts in complex, interactive domains such as search and rescue, object manipulation, and aerial assembly. Recent contributions highlight this trend: Imanberdiyev et al. (2022) develope a lightweight, low-inertia dual-arm manipulator with a center-of-gravity balancing mechanism, utilizing prismatic joints to extend the workspace and minimize stability im-pact on the UAV. Lippiello et al. (2018) introduce a novel image-based visual-impedance control scheme, enabling effective physical interaction for a DAUAM equipped with vision and force/torque sensors. Focusing on system de-sign, Yang et al. (2022) create a flexible DAUAM with a low-weight, low-inertia humanoid arm structure. Further-more, Suarez et al. (2024) establish a bilateral teleopera-tion system using a leader-follower configuration, allowing an operator to control a DAUAM intuitively, with valida-tion conducted in ground, in-flight, and cable-suspended scenarios. In a specialized application, Suarez et al. (2025) presente an aerial-deployable dual-arm system for power line maintenance, where the arms are deployed as a rolling robot to improve task accuracy and reduce line load. 
+
+> arXiv:2604.17048v1 [cs.RO] 18 Apr 2026
+
+The primary challenge associated with DAUAMs lies in the inherent coupling between the arm motions and the multirotor platform. Fast arm movements inevitably dis-turb the vehicle’s attitude and position, and these effects cannot be directly compensated because they depend on joint velocities and accelerations that are typically unmea-sured. Moreover, unmodeled dynamics and external dis-turbances in real-world environments introduce additional uncertainties and risks to the system. These factors make it nontrivial to design controllers that ensure accurate trajectory tracking and safe operation for transportation tasks. To cope with such nonlinear and uncertain dynamics, the backstepping technique has been widely employed as an effective controller-design framework, and has achieved considerable success in system analysis and control syn-thesis (Polycarpou (2002); Yu et al. (2023)). However, the repetitive differentiation of virtual control inputs in the backstepping procedure gives rise to the well-known explosion of complexity problem. To alleviate this issue, dynamic surface control was first proposed in Swaroop et al. (2002) by incorporating a first-order filter into the backstepping design. Nonetheless, the presence of filter-induced errors may still degrade system performance. In Farrell et al. (2009), a command-filter-based backstepping scheme with an explicit error-compensation mechanism is developed to mitigate these adverse effects. On the other hand, from the perspective of communication efficiency, continuously sampling and transmitting control signals to onboard actuators in real time can lead to substantial communication and energy costs. Thus, how to reduce the communication burden while preserving satisfactory control performance becomes a critical problem that must be carefully addressed. To address the abovementioned challenges, this paper proposes an adaptive event-triggered control scheme for DAUAMs with neural network (NN) approximation. The main contributions of this paper are summarized as fol-lows: (1) A novel switching-function-based command-filtered backstepping framework is constructed to handle the challenges brought by the nonlinear and strongly coupled dynamics of the DAUAMs. By appropri-ately designing the switching function, the error-compensation term is rendered continuous, so that the virtual control laws remain differentiable and the validity of the command filter is guaranteed. (2) To cope with the time-varying external frictions and limited communication resources in DAUAMs, a neu-ral network-based event-triggered mechanism is fur-ther integrated into the controller. Notably, the neu-ral network adaptively estimates the unknown exter-nal friction forces, while the event-triggered update rule reduces the communication burden. Rigorous Lyapunov analysis shows that all closed-loop signals are uniformly bounded and that the tracking error converges to a small neighborhood of the desired trajectory within a fixed finite time. The remainder of this paper is organized as follows. Sec-tion 2 introduces the system model and provides the theo-retical basis for the subsequent controller design. Section 3 presents the detailed procedure for controller synthesis, while Section 4 carries out the corresponding stability analysis. In Section 5, experiments on a self-built DAUAM platform are conducted to validate the proposed method. Finally, Section 6 concludes the paper and outlines direc-tions for future work. 2. SYSTEM MODELING AND NORMALIZATION WO   
+
+> WX
+> WY
+> WZ
+> BOBX
+> BZ
+> BY
+> 01/XZ
+> 0Z
+> 0Y
+> 1Y
+> 1X
+> 2Z
+> 2X
+> 2Y
+> 3Z
+> 3X
+> 3Y4Z
+> 4X
+> 4Y
+> 1L
+> 2L
+> 3L
+> pitch of shoulder
+> pitch of elbow
+> roll of wrist
+> claw
+
+Fig. 1. Illustration of DAUAM system. Fig. 1 illustrates the DAUAM considered in this work. Three types of coordinate frames are defined: the right-handed inertial frame FW , the multirotor body-fixed frame 
+
+FB , and the joint frames Fji (Xji -Y ji -Zji ) of the dual-arm, where i = 0 , 1, 2, 3, 4 indexes the links and j = 1 , 2 denote the right and left arm, respectively. The length of link i
+
+is represented by Li (i = 1 , 2, 3) . Each arm provides three actuated degrees of freedom: shoulder pitch, elbow pitch, and elbow roll, together with a claw mounted at the end-effector. The center of mass translational dynamics of the DAUAM is (Liang et al. (2024)) 
+
+mt ¨p + mtge3 + Fm + Ff ( ˙ p) + Fd = Uc, (1) where mt denotes the total mass of the system, p =[px, p y , p z ]⊤ ∈ R3 is the position of the multirotor with respect to FW , e3 = [0 , 0, 1] ⊤ is the unit vector along the vertical axis, Fm(t) ∈ R3 represents the force exerted on the multirotor by the dual-arm, Ff ( ˙ p) ∈ R3 denotes frictional forces, Fd(t) ∈ R3 collects general unknown nonlinear disturbances (e.g., unmodeled dynamics and parameter variations), Uc(t) = [ Ucx , U cy , U cz ]⊤ ∈ R3 is the control input generated by the multirotor. Define 
+
+u ≜ Uc/m t − ge3, (2) 
+
+∆( p, ˙p, t ) ≜ − (Fd + Fm) /m t, (3) 
+
+f ≜ −Ff ( ˙ p)/m t, (4) yielding { ˙p = v,
+
+˙v = u + ∆( p, v, t ) + f ( ˙ p), (5) and the nonlinear function f ( ˙ p) will be approximated using a neural network based on the desired velocity ˙pd
+
+in the following section. Assumption 1. There exist known bounds ¯∆ such that (Liang et al. (2024)) 
+
+∥∆( p, v, t )∥ ≤ ¯∆. (6) 
+
+Assumption 2. The unknown nonlinear function f ( ˙ p) is locally Lipschitz with respect to ˙p. That is, for any com-pact set Ω ⊂ R3 containing the closed-loop trajectories, there exists a constant Lf > 0 such that (Greene et al. (2023)) 
+
+∥∥f (ν1) − f (ν2)∥∥ ≤ Lf
+
+∥∥ν1 − ν2
+
+∥∥, ∀ ν1, ν2 ∈ Ω. (7) 
+
+Lemma 1. For s ∈ R3, p ∈ (0 .5, 1) , ϵ > 0, design the smooth switch map: 
+
+Θ( s) = 
+
+
+
+s
+
+∥s∥2(1 −p) , ∥s∥2 > ϵ, 
+
+sin 2( ∥s∥2π
+
+> 2ϵ
+
+) s
+
+∥s∥2(1 −p) , ∥s∥2 ≤ ϵ, (8) which is continuous and satisfies that if ¨s exists, then 
+
+Θ( s) is twice differentiable. In addition, there exist positive constants kΘ, c Θ, which make Θ( s) satisfy the following inequality: 
+
+∥Θ( s)∥ ≤ kΘ∥s∥ + cΘ. (9) 
+
+Lemma 2. Let q1, q 2 ∈ R and let ν1, ν 2, ν 3 > 0 be given constants, then the following inequality holds: 
+
+|q1|ν1 |q2|ν2 ≤ ν1
+
+ν1 + ν2
+
+ν3 |q1|ν1+ν2 + ν2
+
+ν1 + ν2
+
+ν− ν1 
+
+> ν2
+> 3
+
+|q2|ν1+ν2 .
+
+(10) 
+
+Lemma 3. Let 0 < q ≤ 1, vi ∈ R, and wi ≥ 0 for 
+
+i = 1 , . . . , n , then the following inequalities hold: 
+
+( n∑
+
+> i=1
+
+|vi|
+
+)q
+
+≤
+
+> n
+
+∑
+
+> i=1
+
+|vi|q ,
+
+( n∑
+
+> i=1
+
+wi
+
+)2
+
+≤ n
+
+> n
+
+∑
+
+> i=1
+
+w2 
+
+> i
+
+. (11) 3. CONTROLLER DESIGN 
+
+3.1 NN approximation 
+
+In this paper, a three-layer neural network is employed. Let fd := f ( ˙ pd) and consider the input vector xd =
+
+[ ˙p⊤ 
+
+> d
+
+, 1]⊤ ∈ RN0+1 . By exploiting the universal approx-imation property of deep neural network (Kidger and Lyons (2020)), the mapping fd(xd) and its neural-network approximation ˆfd = [ ˆfdx , ˆfdy , ˆfdz ]⊤ can be represented in the following form: 
+
+fd(xd) = V ⊤ 
+
+> 1
+
+ϕ(V ⊤ 
+
+> 0
+
+xd
+
+) + ε(xd), (12) 
+
+ˆfd(xd) = ˆV ⊤ 
+
+> 1
+
+ϕ( ˆV ⊤ 
+
+> 0
+
+xd
+
+), (13) where Vi, ˆVi ∈ R(Ni+1) ×Ni+1 , i = 0 , 1, denote the ideal constant weight matrices and their online estimates, re-spectively, N0, N1, N2 are the numbers of neurons in the input, hidden, and output layers, the vector ϕ =[ϕ1, . . . , ϕ N1 , 1] ⊤ ∈ RN1+1 collects the hidden-layer activa-tion functions, ϕj (j = 1 , . . . , N 1) is the sigmoid activation at the jth hidden neuron and the term ε(xd) ∈ RN2
+
+represents the bounded approximation error of the neural network. The ideal weight matrices are assumed to be bounded, i.e., 
+
+∥Vi∥2 
+
+> F
+
+= tr( V ⊤ 
+
+> i
+
+Vi) ≤ ¯Vi, i = 0 , 1, (14) where ∥ · ∥ F denotes the Frobenius norm of a matrix, tr( ·)
+
+denotes the trace operator, and ¯Vi is a positive constants. Note that both the input vector xd and the activation vector ϕ are augmented with an additional element 1 so that bias terms can be absorbed into the weight matrices. For notational convenience, the following shorthand ex-pressions are introduced: 
+
+ϕ = ϕ(V ⊤ 
+
+> 0
+
+xd
+
+) , ˆϕ = ϕ
+
+( ˆV ⊤ 
+
+> 0
+
+xd
+
+)
+
+. (15) In addition, the weight-estimation errors are defined as 
+
+˜Vi = Vi − ˆVi, i = 0 , 1. (16) 
+
+3.2 Dynamics of command filter 
+
+Define the following change of coordinates: 
+
+{x1 = p − pd,
+
+x2 = v − χ, (17) and the corresponding command filter is given by 
+
+
+
+˙χ = ξ,
+
+˙ξ = 1
+
+ε2
+
+[
+
+− ζ arctan (χ − α1
+
+) − ρ arctan (εξ)]
+
+,
+
+(18) with design parameters ζ > 0, ρ > 0, and ε > 0. Here 
+
+α1 serves as the input to the filter and will be specified as the virtual control and χ ∈ R3 is the filter output. The initial conditions are chosen as χ(0) = α1(0) and 
+
+ξ(0) = [0 , 0, 0] ⊤. The compensated error is introduced as 
+
+yi = xi − ιi, i = 1 , 2, (19) where ιi ∈ R3 are auxiliary compensation states. To counteract the filter-induced mismatch, the following com-pensation system is adopted: 
+
+
+
+˙ι1 = ( ι2 + χ − α1) − c1∥ι1∥2ι1 − kι1 − k1Θ( ι1),
+
+˙ι2 = −ι1 − c2∥ι2∥2ι2 − k2
+
+ι2
+
+(ι⊤ 
+
+> 2
+
+ι2
+
+)1−p + ˆfd(xd). (20) Here ci, k i, k ∈ R3×3 are positive definite diagonal matri-ces, and the exponent satisfies 12 < p < 1.
+
+Property 1. The command filter (18) is designed such that for any twice differentiable and bounded virtual control 
+
+α1, the filter tracking error is uniformly bounded (Cui et al. (2020)), i.e., there exists a positive constant vector 
+
+¯ξ = [ ξ1, ξ 2, ξ 3] ∈ R3 such that 
+
+|χ − α1| ≤ ¯ξ. (21) 
+
+Property 2. The chosen desired trajectory pd ∈ C3, and its first, second, and third derivatives are bounded. 
+
+Property 3. Based on Property 2 , one can conclude that 
+
+ε(xd) is bounded, i.e., 
+
+∥ε(xd)∥ ≤ ε0, (22) where ε0 is a positive constant. 
+
+3.3 Controller design 
+
+Based on the backstepping design philosophy, the control design is carried out in two steps. 
+
+Step 1. Using (5), (17) and (19), one obtains 
+
+˙y1 = v − ˙pd − ˙ι1
+
+= y2 + χ + ι2 − ˙pd − ˙ι1. (23) Substituting the compensation dynamics (20) into (23) yields 
+
+˙y1 = y2 − ˙pd + α1 + c1∥ι1∥2ι1 + kι1 + k1Θ( ι1). (24) Choose the Lyapunov function candidate 
+
+V1 = 12 y⊤ 
+
+> 1
+
+y1, (25) then its time derivative is, 
+
+˙V1 = y⊤
+
+> 1
+
+(y2 − ˙pd +α1 +c1∥ι1∥2ι1 +kι1 +k1Θ( ι1)) , (26) based on which, the virtual control α1 is designed as follows: 
+
+α1 = ˙ pd − c1∥ι1∥2ι1 − kι1 − k1Θ( ι1) − β1∥y1∥2y1
+
+− γ1Θ( y1), (27) where β1, γ 1 ∈ R3×3 are positive definite diagonal matri-ces. Consequently, one has 
+
+˙V1 = y⊤
+
+> 1
+
+(
+
+y2 −β1∥y1∥2y1 − γ1Θ( y1)
+
+)
+
+. (28) 
+
+Step 2. Using (5), (17), (19) and (20), one obtains 
+
+˙y2 =u + ∆ + f ( ˙ p) − ˙χ − ˙ι2
+
+=u + ∆ + f ( ˙ p) − ˙χ + ι1 + c2∥ι2∥2ι2
+
++ k2
+
+ι2
+
+(ι⊤ 
+
+> 2
+
+ι2
+
+)1−p − ˆfd(xd)=u + ∆ − ˙χ + ι1 + c2∥ι2∥2ι2 + k2
+
+ι2
+
+(ι⊤ 
+
+> 2
+
+ι2
+
+)1−p
+
++ ˜f + S( ˙ p, ˙pd), (29) where ˜f = fd − ˆfd, S( ˙ p, ˙pd) = f ( ˙ p) − f ( ˙ pd). From Assumption 2 and the definition of S( ˙ p, ˙pd), one has 
+
+∥∥S(pd, ˙pd)∥∥ = ∥∥f ( ˙ p) − f ( ˙ pd)∥∥ ≤ Lf
+
+∥∥ ˙p − ˙pd
+
+∥∥. (30) Using ˙p = v, the coordinate transformations x2 = v − χ,
+
+y2 = x2 − ι2 and (9), (21), (27), it follows that 
+
+∥ ˙p − ˙pd∥
+
+= ∥x2 + χ − ˙pd∥
+
+= ∥y2 + ι2 + ( χ − α1) + ( α1 − ˙pd)∥≤∥ y2∥ + ∥ι2∥ + ∥ ¯ξ∥ + ∥c1∥2∥ι1∥3 + ∥k + k1kΘ∥2∥ι1∥
+
++ ∥β1∥2∥y1∥3 + ∥γ1kΘ∥2∥y1∥ + ∥k1cΘ + γ1cΘ∥2
+
+=∥y2∥ + ∥ι2∥ + c1∥ι1∥3 + β1∥y1∥3 + aι1∥ι1∥
+
++ ay1∥y1∥ + cs1, (31) where aι1 = ∥k + k1kΘ∥2, a y1 = ∥γ1kΘ∥2, c s1 = ∥ ¯ξ∥ +
+
+∥k1cΘ + γ1cΘ∥2. Thus, one has 
+
+∥∥S( ˙ p, ˙pd)∥∥ ≤ Lf
+
+(∥y2∥+∥ι2∥+∥c1∥2∥ι1∥3 + ∥β1∥2∥y1∥3
+
++aι1∥ι1∥ + ay1∥y1∥ + cs1) . (32) Furthermore, one obtains 
+
+y⊤ 
+
+> 2
+
+S ≤Lf ∥y2∥ (∥y2∥ + ∥ι2∥ + ∥c1∥2∥ι1∥3 + ∥β1∥2∥y1∥3
+
++aι1∥ι1∥ + ay1∥y1∥ + cs1)=Lf ∥y2∥2 +Lf ∥y2∥∥ ι2∥+Lf ∥c1∥2∥y2∥∥ ι1∥3
+
++ Lf ∥β1∥2∥y2∥∥ y1∥3 + Lf aι1∥y2∥∥ ι1∥
+
++ Lf ay1∥y2∥∥ y1∥ + Lf cs1∥y2∥. (33) For any design constants η1, η 2, η 3, η 4 > 0, Young’s in-equality yields 
+
+Lf ∥y2∥ ∥ ι2∥ ≤ η1
+
+2 ∥y2∥2 + L2
+
+> f
+
+2η1
+
+∥ι2∥2, (34) 
+
+Lf cs1∥y2∥ ≤ η2
+
+2 ∥y2∥2 + L2 
+
+> f
+
+c2
+
+> s1
+
+2η2
+
+, (35) 
+
+Lf aι1 ∥y2∥∥ ι1∥ ≤ η3
+
+2 ∥y2∥2 + L2 
+
+> f
+
+a2
+
+> ι1
+
+2η3
+
+∥ι1∥2, (36) 
+
+Lf ay1 ∥y2∥∥ y1∥ ≤ η4
+
+2 ∥y2∥2 + L2 
+
+> f
+
+a2
+
+> y1
+
+2η4
+
+∥y1∥2, (37) 
+
+Lf ∥c1∥2∥y2∥∥ ι1∥3 ≤ σ(1) 
+
+> y2,4
+
+∥y2∥4 + σι1,4∥ι1∥4, (38) 
+
+Lf ∥β1∥2∥y2∥∥ y1∥3 ≤ σ(2) 
+
+> y2,4
+
+∥y2∥4 + σy1,4∥y1∥4, (39) where σ(1) 
+
+> y2,4
+
+, σ ι1,4, σ (2) 
+
+> y2,4
+
+, σ y1,4 are known constants obtained by Lemma 2. Substituting (34)–(39) into (33) gives 
+
+y⊤ 
+
+> 2
+
+S ≤ ¯σ1∥y2∥4 + ¯ σ2∥y1∥4 + ¯ σ3∥ι1∥4 + ¯ σ4∥y2∥2
+
++ ¯ σ5∥y1∥2 + ¯ σ6∥ι1∥2 + ¯ σ7∥ι2∥2 + cs, (40) 
+
+¯σ1 = σ(1)  
+
+> y2,4
+
++ σ(2) 
+
+> y2,4
+
+, ¯σ2 = σ(1) 
+
+> y1,4
+
+, ¯σ3 = σι1,4,
+
+¯σ4 = Lf + η1 + η2 + η3 + η4
+
+2 ,
+
+¯σ5 = L2 
+
+> f
+
+a2
+
+> y1
+
+2η4
+
+, ¯σ6 = L2 
+
+> f
+
+a2
+
+> ι1
+
+2η3
+
+, ¯σ7 = L2
+
+> f
+
+2η1
+
+, c s = L2 
+
+> f
+
+c2
+
+> s1
+
+2η2
+
+.
+
+Choose the Lyapunov function candidate 
+
+V2 = V1 + 12 y⊤ 
+
+> 2
+
+y2 + 12 tr( ˜V ⊤ 
+
+> 1
+
+Γ−11 ˜V1)+ 12 tr( ˜V ⊤ 
+
+> 0
+
+Γ−10 ˜V0), (41) then its time derivative is, 
+
+˙V2 =y⊤
+
+> 1
+
+(y2 −β1∥y1∥2y1 − γ1Θ( y1)) + y⊤ 
+
+> 2
+
+(u+∆ − ˙χ+ι1
+
++c2∥ι2∥2ι2 +k2
+
+ι2
+
+(ι⊤ 
+
+> 2
+
+ι2
+
+)1−p + ˜f +S( ˙ p, ˙pd)
+
+)
+
++ tr( ˜V ⊤ 
+
+> 1
+
+Γ−11
+
+˙˜V1) + tr( ˜V ⊤ 
+
+> 0
+
+Γ−10
+
+˙˜V0). (42) Design the auxiliary virtual control input 
+
+α2 = ˙ χ − x1 − c2∥ι2∥2ι2 − k2
+
+ι2
+
+(ι⊤ 
+
+> 2
+
+ι2
+
+)1−p − β2∥y2∥2y2
+
+− γ2
+
+y2
+
+(y⊤ 
+
+> 2
+
+y2
+
+)1−p , (43) where β2, γ 2 ∈ R3×3 are positive definite diagonal matri-ces. The neural network weight update laws are designed as 
+
+˙ˆV1 = proj 
+
+(
+
+Γ1ϕ( ˆV ⊤ 
+
+> 0
+
+xd) y⊤
+
+> 2
+
+)
+
+, (44) 
+
+˙ˆV0 = proj 
+
+(
+
+Γ0xd
+
+[ϕ′⊤ ( ˆV ⊤ 
+
+> 0
+
+xd) ˆV1y2
+
+]⊤)
+
+. (45) where Γ0 ∈ R(N0+1) ×(N0+1) , Γ1 ∈ R(N1+1) ×(N1+1) are positive definite diagonal gain matrices, ϕ′ ∈ R(N1+1) ×N1
+
+denotes the gradient of the activation function and ϕ′
+
+> i
+
+(a) =  
+
+> ∂∂b
+
+ϕ(b)∣∣b=a, ∀a ∈ RN1 , proj( ·) denotes the standard smooth projection operator (Patre et al. (2008)), which keeps the estimates ˙ˆVi bounded. By utilizing the Mean Value Theorem, there exists a vector 
+
+ζ between V ⊤ 
+
+> 0
+
+xd and ˆV ⊤ 
+
+> 0
+
+xd such that ϕ− ˆϕ = ϕ′(ζ) ˜V ⊤ 
+
+> 0
+
+xd.Furthermore, one has ˜f =fd − ˆfd
+
+=V ⊤ 
+
+> 1
+
+ϕ + ε − ˆV ⊤ 
+
+> 1
+
+ˆϕ
+
+=V ⊤ 
+
+> 1
+
+ϕ − V ⊤ 
+
+> 1
+
+ˆϕ + V ⊤ 
+
+> 1
+
+ˆϕ − ˆV ⊤ 
+
+> 1
+
+ˆϕ + ε
+
+= ˆV ⊤ 
+
+> 1
+
+ϕ′(ζ)˜V ⊤ 
+
+> 0
+
+xd + ˜V ⊤ 
+
+> 1
+
+ϕ′(ζ)˜V ⊤ 
+
+> 0
+
+xd + ˜V ⊤ 
+
+> 1
+
+ˆϕ+ε
+
+= ˆV ⊤ 
+
+> 1
+
+ϕ′( ˆV ⊤ 
+
+> 0
+
+xd) ˜V ⊤ 
+
+> 0
+
+xd + ˜V ⊤ 
+
+> 1
+
+ϕ′(ζ) ˜V ⊤ 
+
+> 0
+
+xd
+
+ˆV ⊤
+
+> 1
+
+[
+
+ϕ′(ζ) − ϕ′( ˆV ⊤ 
+
+> 0
+
+xd)
+
+] ˜V ⊤ 
+
+> 0
+
+xd + ˜V ⊤ 
+
+> 1
+
+ˆϕ+ε. (46) Substituting (44), (45), (46) into (42), one obtains 
+
+˙V2 = −∥ β1∥2
+
+(y⊤ 
+
+> 1
+
+y1
+
+)2 − ∥ γ1∥2y⊤ 
+
+> 1
+
+Θ( y1) − ∥ β2∥2
+
+(y⊤ 
+
+> 2
+
+y2
+
+)2
+
+− ∥ γ2∥2
+
+(y⊤ 
+
+> 2
+
+y2
+
+)p + y⊤ 
+
+> 2
+
+(u−α2) + y⊤ 
+
+> 2
+
+∆ + NB + y⊤ 
+
+> 2
+
+S,NB = NB1 + NB2 + NB3,NB1 = y⊤ 
+
+> 2
+
+˜V ⊤ 
+
+> 1
+
+ϕ′(ζ) ˜V ⊤ 
+
+> 0
+
+xd, N B3 = y⊤ 
+
+> 2
+
+ε,NB2 = y⊤ 
+
+> 2
+
+ˆV ⊤
+
+> 1
+
+[
+
+ϕ′(ζ)− ϕ′( ˆV ⊤ 
+
+> 0
+
+xd)
+
+] ˜V ⊤ 
+
+> 0
+
+xd, (47) and based on the boundedness of ˆV1, ˆV0, ϕ′(·), and xd,there exist known positive constants a, l1, l2, and ¯ε such that the following inequalities hold: 
+
+|NB1| ≤ a 
+
+> 2
+
+(∥ ˜V1∥2 + ∥ ˜V0∥2) + l21 
+
+> 2a
+
+∥xd∥2∥y2∥2,
+
+|NB2| ≤ a 
+
+> 2
+
+∥ ˜V0∥2 + l22 
+
+> 2a
+
+∥xd∥2∥y2∥2,
+
+|NB3| ≤ 12 ∥y2∥2 + 12 ε20. (48) As for y⊤ 
+
+> 2
+
+∆, by utilizing Hölder inequality, it can be rearranged as follows: 
+
+y⊤ 
+
+> 2
+
+∆ ≤ ∥β2∥2
+
+4 ∥y2∥4 + 34 ∥β2∥− 13 
+
+> 2
+
+¯∆ 43 . (49) Furthermore, define the event-triggered control input as 
+
+
+
+¯u(t) = α2(t) −
+
+(
+
+σ + κ(t)
+
+> δ
+
+)
+
+sgn (y2(t)),
+
+u(t) = ¯ u(ti), t ∈ [ti, t i+1 ),ti+1 = inf {t > t i
+
+∣∣κ(t) + δ(σ − | ˜ej (t)|) < 0
+
+∃ j = 1 , 2, 3} ,
+
+˙κ(t) = − κ(t) + max 
+
+> 1≤j≤3
+
+(σ − | ˜ej (t)|) ,
+
+(50) where σ > 0, δ > 0, and κ(0) ≥ 0 are design constants, 
+
+sgn( ·) acts componentwise, ˜e(t) = [˜ e1, ˜e2, ˜e3]⊤ ≜ u(t) −
+
+¯u(t) is the hold error. 4. STABILITY ANALYSIS 
+
+Theorem 1. Consider system (5), with the event-triggered implementation in (50), all closed-loop signals are bounded and p(t) tracks pd(t) within a fixed-time practical bound under the condition that ∥c1∥2 > 43 ¯σ3, ∥β1∥2 > 43 ¯σ2, ∥β2∥2
+
+> 2¯ σ1. Moreover, Zeno phenomena do not occur. 
+
+Proof 1. Exclusion of Zeno. Assume, by contradiction, that the inter-event interval ∆i = ti+1 −ti → 0. From (50), and based on the fact that α2(·) and κ(·) are continuous, one has 
+
+lim 
+
+> ∆i→0
+
+∥ ¯u(ti+1 ) − ¯u(ti)∥
+
+= lim 
+
+> ∆i→0
+
+∥∥∥∥α2(ti+1 ) − α2(ti) −
+
+(
+
+σ + κ(ti+1 )
+
+δ
+
+)
+
+sgn( y2(ti+1 )) +
+
+(
+
+σ + κ(ti)
+
+δ
+
+)
+
+sgn( y2(ti)) 
+
+∥∥∥∥
+
+= lim 
+
+> ∆i→0
+
+∥σ [sgn ( y2 (ti)) − sgn ( y2 (ti+1 ))] ∥
+
++ lim 
+
+> ∆i→0
+
+∥∥∥∥
+
+κ(ti)
+
+δ sgn( y2(ti+1 )) − κ(ti+1 )
+
+δ sgn( y2(ti+1 )) 
+
+∥∥∥∥ ,
+
++ lim 
+
+> ∆i→0
+
+∥∥∥∥
+
+κ(ti)
+
+δ sgn( y2(ti)) − κ(ti)
+
+δ sgn( y2(ti+1 )) 
+
+∥∥∥∥
+
+= lim 
+
+> ∆i→0
+
+∥σ [sgn ( y2 (ti)) − sgn ( y2 (ti+1 ))] ∥
+
++ lim 
+
+> ∆i→0
+
+∥∥∥∥
+
+κ(ti)
+
+δ sgn( y2(ti)) − κ(ti)
+
+δ sgn( y2(ti+1 )) 
+
+∥∥∥∥ . (51) If no zero crossing occurs for y2, (51) tends to zero. If a zero crossing occurs, then with sgn(0) = 0 , ∥ sgn( y2(ti+1 )) −
+
+sgn( y2(ti)) ∥ ≤ 1, and thus 
+
+lim 
+
+> ∆i→0
+
+∥ ¯u(ti+1 ) − ¯u(ti)∥ ≤ σ + κ(ti)
+
+δ . (52) Therefore, (52) always satisfies, which contradicts the triggered condition. Hence a strictly positive dwell time exists and Zeno behavior is excluded. From (50), for each inter-event interval t ∈ [ti, t i+1 ) there exists a time-varying vector τ (t) = [ τ1, τ 2, τ 3]⊤ ∈ R3 such that ∥τ (t)∥∞ ≤ 1, τj (ti) = 0 ( j = 1 , 2, 3) , and 
+
+¯u(t) = u(t) + 
+
+(
+
+σ + κ(t)
+
+δ
+
+)
+
+τ (t),
+
+where ¯u is the continuously updated control before the zero-order hold. Hence 
+
+y⊤ 
+
+> 2
+
+(u − α2) = y⊤
+
+> 2
+
+(
+
+¯u −
+
+(
+
+σ + κδ
+
+)
+
+τ − α2
+
+)
+
+= y⊤
+
+> 2
+
+(
+
+− (σ + κδ
+
+) sgn( y2) −
+
+(
+
+σ + κδ
+
+)
+
+τ
+
+)
+
+= y⊤ 
+
+> 2
+
+(− sgn( y2) − τ )
+
+(
+
+σ + κδ
+
+)
+
+≤ 0, (53) which yields 
+
+y⊤ 
+
+> 2
+
+(u − α2) ≤ 0. (54) Using (54) in the Lyapunov derivative obtained from (47), and utilizing (40), (48), (49), one can conclude that 
+
+˙V2 ≤ −∥ β1∥2(y⊤ 
+
+> 1
+
+y1)2 − ∥ γ1∥2y⊤ 
+
+> 1
+
+Θ( y1) − ∥ β2∥2(y⊤ 
+
+> 2
+
+y2)2
+
+− ∥ γ2∥2(y⊤ 
+
+> 2
+
+y2)p + ∥β2∥2
+
+4 ∥y2∥4 + 34 ∥β2∥− 13 
+
+> 2
+
+¯∆ 43
+
++ cN 1∥y2∥2 + cN 0 + ¯ σ1∥y2∥4 + ¯ σ2∥y1∥4 + ¯ σ3∥ι1∥4
+
++ ¯ σ4∥y2∥2 + ¯ σ5∥y1∥2 + ¯ σ6∥ι1∥2 + ¯ σ7∥ι2∥2 + cs,
+
+(55) where cN 0, c N 1 > 0 are constants arising from the bounds of NB1, N B2 and NB3. Rearranging terms yields 
+
+˙V2 ≤ −∥ β1∥2(y⊤ 
+
+> 1
+
+y1)2 − ∥ γ1∥2y⊤ 
+
+> 1
+
+Θ( y1) − ∥ β2∥2(y⊤ 
+
+> 2
+
+y2)2
+
+− ∥ γ2∥2(y⊤ 
+
+> 2
+
+y2)p +
+
+( ∥β2∥2
+
+4 + ¯ σ1
+
+)
+
+∥y2∥4 + ¯ σ2∥y1∥4
+
++ ¯ σ3∥ι1∥4 + ¯ cy2∥y2∥2 + ¯ σ5∥y1∥2 + ¯ σ6∥ι1∥2
+
++ ¯ σ7∥ι2∥2 + ¯ c0, (56) with ¯cy2 = cN 1 + ¯ σ4 and ¯c0 = 34 ∥β2∥− 13 
+
+> 2
+
+¯∆ 43 + cN 0 + cs. By Young’s inequality 
+
+¯cy2∥y2∥2 ≤ ∥β2∥2
+
+4 ∥y2∥4 + ¯c2
+
+> y2
+
+∥β2∥2
+
+,
+
+¯σ5∥y1∥2 ≤ ∥β1∥2
+
+4 ∥y1∥4 + ¯σ25
+
+∥β1∥2
+
+,
+
+¯σ6∥ι1∥2 ≤ ∥c1∥2
+
+4 ∥ι1∥4 + ¯σ26
+
+∥c1∥2
+
+,
+
+¯σ7∥ι2∥2 ≤ ∥c2∥2
+
+4 ∥ι2∥4 + ¯σ27
+
+∥c2∥2
+
+. (57) Then, construct the Lyapunov function candidate V as 
+
+V = V2 + 12
+
+> 2
+
+∑
+
+> i=1
+
+ι⊤ 
+
+> i
+
+ιi, (58) its time derivative is calaulated as follows 
+
+˙V = ˙V2 +
+
+> 2
+
+∑
+
+> i=1
+
+ι⊤ 
+
+> i
+
+˙ιi. (59) Using the compensator dynamics, one obtains 
+
+> 2
+
+∑
+
+> i=1
+
+ι⊤ 
+
+> i
+
+˙ιi ≤ −∥ c1∥2
+
+(ι⊤ 
+
+> 1
+
+ι1
+
+)2 −∥ h∥2ι⊤ 
+
+> 1
+
+ι1 −∥ k1∥2ι⊤ 
+
+> 1
+
+Θ( ι1)
+
+−∥ c2∥2(ι⊤ 
+
+> 2
+
+ι2)2 −∥ k2∥2(ι⊤ 
+
+> 2
+
+ι2)p +ι⊤ 
+
+> 2
+
+ˆfd(xd)+∣∣ι⊤ 
+
+> 1
+
+¯ξ∣∣ . (60) Based on the boundness of xd, ˆVi, and ϕ(·), there exists a positive constant ¯fd such that ∣∣∣ ˆfd(xd)
+
+∣∣∣ ≤ ¯fd, (61) and by Young’s inequality, 
+
+∣∣ι⊤ 
+
+> 1
+
+¯ξ∣∣ ≤ ∥ h∥2ι⊤ 
+
+> 1
+
+ι1 + 14∥h∥2
+
+¯ξ⊤ ¯ξ, (62) 
+
+∣∣∣ι⊤ 
+
+> 2
+
+ˆfd
+
+∣∣∣ ≤ ∥c2∥2
+
+2 ∥ι2∥4 + cf , (63) where cf = 34 (2 ∥c2∥2)− 13 ¯f 43 
+
+> d
+
+. Then, (60) can be further rearranged as 
+
+> 2
+
+∑
+
+> i=1
+
+ι⊤ 
+
+> i
+
+˙ιi
+
+≤ − ∥ c1∥2
+
+(ι⊤ 
+
+> 1
+
+ι1
+
+)2 − ∥ k1∥2ι⊤ 
+
+> 1
+
+Θ( ι1) − ∥c2∥2
+
+2 (ι⊤ 
+
+> 2
+
+ι2)2
+
+− ∥ k2∥2(ι⊤ 
+
+> 2
+
+ι2)p + 14∥h∥2
+
+¯ξ⊤ ¯ξ + cf . (64) Substituting (56), (57) and (64) into (59) yields 
+
+˙V ≤−∥ β1∥2
+
+(y⊤ 
+
+> 1
+
+y1
+
+)2 −∥ γ1∥2y⊤ 
+
+> 1
+
+Θ( y1)−∥ β2∥2
+
+(y⊤ 
+
+> 2
+
+y2
+
+)2
+
+−∥ γ2∥2
+
+(y⊤ 
+
+> 2
+
+y2
+
+)p+
+
+(∥β2∥2
+
+2 +¯ σ1
+
+)
+
+∥y2∥4+
+
+(∥β1∥
+
+4 +¯ σ2
+
+)
+
+∥y1∥4
+
++ ¯ σ3∥ι1∥4 + ∥c1∥2
+
+4 ∥ι1∥4 + ∥c2∥2
+
+4 ∥ι2∥4 −∥ c1∥2
+
+(ι⊤ 
+
+> 1
+
+ι1
+
+)2
+
+−∥ k1∥2ι⊤ 
+
+> 1
+
+Θ( ι1) − ∥c2∥2
+
+2 (ι⊤ 
+
+> 2
+
+ι2)2 −∥ k2∥2(ι⊤ 
+
+> 2
+
+ι2)p
+
++ ¯ξ⊤ ¯ξ
+
+4∥h∥2
+
++cf + ¯c2
+
+> y2
+
+β2
+
++ ¯σ25
+
+β1
+
++ ¯σ26
+
+c1
+
++ ¯σ27
+
+c2
+
++¯ c0. (65) Next, the following two cases should be taken into account when dealing with the switch function. 
+
+Case 1: ι⊤ 
+
+> 1
+
+ι1 > ϵ and y⊤ 
+
+> 1
+
+y1 > ϵ . In this region, 
+
+Θ( s) = s
+
+(s⊤s)1−p .
+
+Substituting Θ( ·) into the bound of ˙V gives 
+
+˙V ≤ − 
+
+> 2
+
+∑
+
+> i=1
+
+(
+
+∥βi∥2
+
+(y⊤ 
+
+> i
+
+yi
+
+)2+∥γi∥2
+
+(y⊤ 
+
+> i
+
+yi
+
+)p+∥ci∥2
+
+(ι⊤ 
+
+> i
+
+ιi
+
+)2
+
++ki
+
+(ι⊤ 
+
+> i
+
+ιi
+
+)p)
+
++
+
+(∥β2∥2
+
+2 +¯ σ1
+
+)
+
+∥y2∥4+
+
+(∥β1∥2
+
+4 +¯ σ2
+
+)
+
+∥y1∥4
+
++
+
+(∥c1∥2
+
+4 + ¯ σ3
+
+)
+
+∥ι1∥4 + 3∥c2∥2
+
+4 ∥ι2∥4 + ¯ξ⊤ ¯ξ
+
+4∥h∥2
+
++cf
+
++ ¯c2
+
+> y2
+
+β2
+
++ ¯σ25
+
+β1
+
++ ¯σ26
+
+c1
+
++ ¯σ27
+
+c2
+
++¯ c0. (66) 
+
+Case 2: ι⊤ 
+
+> 1
+
+ι1 ≤ ϵ or y⊤ 
+
+> 1
+
+y1 ≤ ϵ. Let a = 1 ( −1) represents 
+
+ι⊤ 
+
+> 1
+
+ι1 ≤ ϵ (ι⊤ 
+
+> 1
+
+ι1 > ϵ ) and b = 1 ( −1) represents y⊤ 
+
+> 1
+
+y1 ≤
+
+ϵ (y⊤ 
+
+> 1
+
+y1 > ϵ ). Use the smooth switch 
+
+Θ( s) = 
+
+
+
+s
+
+(s⊤s)1−p , s⊤s > ϵ, 
+
+s
+
+(s⊤s)1−p − cos 2( s⊤s π
+
+2ϵ
+
+) s
+
+(s⊤s)1−p , s⊤s ≤ ϵ, 
+
+so that if s⊤s ≤ ϵ then s⊤Θ( s) ≥ (s⊤s)p − ϵp, and if 
+
+s⊤s > ϵ we recover Case 1 . Hence 
+
+˙V ≤ − 
+
+> 2
+
+∑
+
+> i=1
+
+(
+
+∥βi∥2
+
+(y⊤ 
+
+> i
+
+yi
+
+)2+∥γi∥2
+
+(y⊤ 
+
+> i
+
+yi
+
+)p+∥ci∥2
+
+(ι⊤ 
+
+> i
+
+ιi
+
+)2
+
++ki
+
+(ι⊤ 
+
+> i
+
+ιi
+
+)p)
+
++
+
+(∥β2∥2
+
+2 + ¯ σ1
+
+)
+
+∥y2∥4+
+
+(∥β1∥2
+
+4 + ¯ σ2
+
+)
+
+∥y1∥4
+
++
+
+(∥c1∥2
+
+4 + ¯ σ3
+
+)
+
+∥ι1∥4 + 3∥c2∥2
+
+4 ∥ι2∥4 + ¯ξ⊤ ¯ξ
+
+4∥h∥2
+
++cf
+
++ ¯c2
+
+> y2
+
+β2
+
++ ¯σ25
+
+β1
+
++ ¯σ26
+
+c1
+
++ ¯σ27
+
+c2
+
++¯ c0 + a + 1 2 k1ϵp + b + 1 2 γ1ϵp
+
+≤ − 
+
+> 2
+
+∑
+
+> i=1
+
+(
+
+4∥βi∥2
+
+(12 y⊤ 
+
+> i
+
+yi
+
+)2
+
++2 p∥γi∥2
+
+(12 y⊤ 
+
+> i
+
+yi
+
+)p
+
++4 ∥ci∥2
+
+(12 ι⊤ 
+
+> i
+
+ιi
+
+)2
+
++2 p∥ki∥2
+
+( 12 ι⊤ 
+
+> i
+
+ιi
+
+)p)
+
++
+
+(∥β2∥2
+
+2 + ¯ σ1
+
+)
+
+∥y2∥4 +
+
+(∥β1∥2
+
+4 + ¯ σ2
+
+)
+
+∥y1∥4
+
++
+
+(∥c1∥2
+
+4 + ¯ σ3
+
+)
+
+∥ι1∥4 + 3∥c2∥2
+
+4 ∥ι2∥4 + ¯ξ⊤ ¯ξ
+
+4∥h∥2
+
++cf
+
++ ¯c2
+
+> y2
+
+∥β2∥2
+
++ ¯σ25
+
+∥β1∥2
+
++ ¯σ26
+
+∥c1∥2
+
++ ¯σ27
+
+∥c2∥2
+
++¯ c0 + ∥k1∥2ϵp
+
++ ∥γ1∥2ϵp. (67) Above all, it can be concluded that (67) always hold. From Lemma 3, one obtain that 
+
+˙V ≤ − lV p − mV 2 + n, (68) with l := min {2p∥k1∥2, 2p∥γ1∥2, 2p∥k2∥2, 2p∥γ2∥2} ,m := min 
+
+{ 3∥c1∥2
+
+4 − ¯σ3, 3∥β1∥2
+
+4 − ¯σ2, ∥c2∥2
+
+4 , ∥β2∥2
+
+2 − ¯σ1
+
+}
+
+,n := ¯ξ⊤ ¯ξ
+
+4∥h∥2
+
++cf + ¯c2
+
+> y2
+
+∥β2∥2
+
++ σ2
+
+> s2
+
+∥c2∥2
+
++¯ c0 +∥k1∥2ϵp +∥γ1∥2ϵp.
+
+(69) By Chen et al. (2020), one has 
+
+V (ς) ≤ min 
+
+{( n
+
+(1 − ω)l
+
+)1/p 
+
+,
+
+( n
+
+(1 − ω)m
+
+)1/2}
+
+, (70) with 0 < ω < 1, and the settling time T meets 
+
+T ≤ 1
+
+l
+
+1
+
+ω(1 − p) + 1
+
+ωm . (71) 5. EXPERIMENTAL RESULTS Onboard Computer  PixHawk 4     
+
+> TMotor U5
+> ESC 40A
+> TMotor
+> NS 14 ×4.8 6S Battery
+> Servo Motor Connector
+> Dual-Arm
+> UAV
+> Qualisys Motion
+> Capture System Ground
+> Station
+> DAUAM
+> System State Desired State
+> …
+
+Fig. 2. Hardware experimental platform. 
+
+5.1 Experimental platform 
+
+The hardware testbed of the DAUAM system is illustrated in Fig. 2. It consists of a multirotor platform carrying an onboard computer and a lightweight dual-arm robotic manipulator. The motion capture system is composed of 14 Qualisys cameras, which provide the multirotor’s position and translational velocity to the ground station via a LAN (Local Area Network) using a ROS (Robot Operating System)-based communication interface. A PixHawk flight controller is connected to the onboard computer through the MAVROS middleware, enabling bidirectional exchange of state and command data. The onboard NUC computer and the ground workstation operate on 64-bit Ubuntu 20.04 and 64-bit Ubuntu 18.04, respectively. The control algorithm is executed on the ground workstation with an overall update rate of 100 Hz, and the resulting control commands are sent to the onboard computer over a 5G-band WIFI link. For the dual-arm manipulator, Dynamixel AX- and XM-series actuators are employed. The dual-arm joints are directly driven by the onboard computer. The main physical parameters of the overall experimental platform are summarized as follows: 
+
+mt = 4 .85 kg , g = 9 .8 m /s2,L1 = 0 .15 m , L 2 = 0 .05 m , L 3 = 0 .17 m .
+
+In practical test, the control gains are set as follows: 
+
+c1 = diag ([1 .0, 1.0, 1.2]) , k 1 = diag ([1 .0, 1.0, 1.2]) ,β1 = diag ([1 .0, 1.0, 1.2]) , γ 1 = diag ([1 .0, 1.0, 1.2]) ,c2 = diag ([1 .0, 1.0, 1.2]) , k 2 = diag ([0 .8, 0.8, 1.2]) ,β2 = diag ([0 .6, 0.6, 0.7]) , γ 2 = diag ([1 .0, 1.0, 1.2]) ,k = diag ([3 .0, 3.0, 4.0]) , p = 0 .75 ,ϵ = 1 .0 × 10 −4, ε = 0 .3, ζ = 0 .5, ρ = 0 .1,σ = 0 .05 , δ = 0 .1, N 0 = 3 , N 1 = 4 , N 3 = 3 ,
+
+Γ0 = diag ([100 , 100 , 100 , 100]) ,
+
+Γ1 = diag ([100 , 100 , 100 , 100 , 100]) .
+
+The control gains of the baseline controller Uc = −Kpe1 −
+
+Ki
+
+∫ t 
+
+> 0
+
+e1 − Kd ˙e1 + mt ¨pd are set as follows: 
+
+Kp = diag ([8 .0, 8.0, 10 .0]) , K i = diag ([1 .5, 1.5, 8.0]) ,Kd = diag ([10 .0, 10 .0, 13 .0]) .
+
+5.2 Experimental Results Experiment 1 – Elliptic Trajectory Tracking This experi-ment evaluates the performance of the proposed controller in tracking an elliptic reference trajectory while the dual-arm is moving. The corresponding results are summarized in Fig. 3 and Table 1. Specifically, Fig. 3a depicts the multirotor position, while Fig. 3b shows the control inputs in three directions, and the NN-based approximation of the friction term is provided in Fig. 3c. The maximum and mean position errors of the multirotor, as well as the percentages of error reduction of the proposed ET-NN method compared with the baseline method in the three directions, are summarized in Table 1. It is evident that both control methods can stabilize the system near the desired trajectory, with the proposed method exhibiting noticeably better trajectory tracking accuracy. Table 1. Position Errors of Experiment 1/2                                                   
+
+> Error Method Experiment 1 Experiment 2
+> x(m) y(m) z(m) x(m) y(m) z(m)
+> Max ET-NN 0.0663 0.1672 0.1151 0.0600 0.0864 0.1437
+> Baseline 0.2383 0.2510 0.1464 0.1876 0.2690 0.2035
+> Reduced 72 .18 %33 .52 %21 .39 %68 .20 %67 .88 %29 .39 %
+> Mean ET-NN 0.0172 0.0316 0.0378 0.0190 0.0295 0.0400
+> Baseline 0.0841 0.0773 0.0430 0.0593 0.0818 0.0673
+> Reduced 79 .57 %59 .08 %12 .09 %68 .00 %63 .96 %40 .52 %
+
+Experiment 2 – Figure-Eight Trajectory Tracking To further investigate the robustness of the proposed con-troller under different reference motions, a second exper-iment is conducted in which the multirotor is required to track a figure-eight trajectory. The experimental results are provided in Fig. 4 and Table 1. As shown in Fig. 4a, the proposed method maintains accurate tracking of the figure-eight curve, whereas the baseline controller suffers from larger position deviations. The corresponding control inputs and NN outputs are presented in Fig. 4b and Fig. 4c, respectively. The illustrative video of experimental records is available at https://youtu.be/p55-FsldKbo. 6. CONCLUSION The paper address the trajectory tracking control of a DAUAM under strong arm-platform coupling, lumped uncertainties, and limited communication resources. An adaptive event-triggered controller based on command-filtered backstepping and neural network approximation 0 10 20 30 40         
+
+> -1 01
+> 010 20 30 40
+> -1 01
+> Desired
+> ET-NN
+> Baseline
+> 010 20 30 40
+> 0.5 1
+
+a. Multirotor position. 0 10 20 30 40              
+
+> -2 02
+> 5678
+> 00.5 1
+> 010 20 30 40
+> -2 024ET-NN
+> Baseline
+> 010 20 30 40
+> 45 50 55
+
+b. Force inputs. 0 10 20 30 40          
+
+> 0.82 0.84 0.86 0.88
+> 010 20 30 40
+> 0.4 0.45
+> 010 20 30 40
+> 0.42 0.44 0.46
+
+c. NN outputs. 
+
+Fig. 3. Results of Experiment 1 .0 10 20 30 40         
+
+> -1 01
+> 010 20 30 40
+> -1 01
+> Desired
+> ET-NN
+> Baseline
+> 010 20 30 40
+> 0.5 1
+
+a. Multirotor position. 0 10 20 30 40             
+
+> -2 024
+> 5678
+> 00.5 1
+> 010 20 30 40
+> -2 02
+> ET-NN
+> Baseline
+> 010 20 30 40
+> 45 50 55
+
+b. Force inputs. 0 10 20 30 40          
+
+> 0.84 0.86
+> 010 20 30 40
+> 0.41 0.42 0.43
+> 010 20 30 40
+> 0.44 0.46
+
+c. NN outputs. 
+
+Fig. 4. Results of Experiment 2 .is developed to avoid the explosion of complexity, com-pensate unknown dynamics, and reduce control-update frequency. Lyapunov-based analysis established bounded-ness of all closed-loop signals and fixed-time convergence of the tracking error to a small neighborhood of the desired trajectory, which is further corroborated by experiments on a self-built DAUAM platform. Future research direc-tions include extending the framework to contact-rich ma-nipulation tasks and cooperative multi-UAV manipulation scenarios. REFERENCES Abuali, S., Skantzikas, K., Susbielle, P., Marchand, N., and Briñón-Arranz, L. (2025). Communication-free cooperative transportation with multiple uavs. IFAC-PapersOnLine , 59(18), 187–192. Chen, Q., Xie, S., and He, X. (2020). Neural-network-based adaptive singularity-free fixed-time atti-tude tracking control for spacecrafts. IEEE Transac-tions on Cybernetics , 51(10), 5032–5045. Cui, G., Yu, J., and Wang, Q.G. (2020). Finite-time adaptive fuzzy control for mimo nonlinear systems with input saturation via improved command-filtered back-stepping. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 52(2), 980–989. Farrell, J.A., Polycarpou, M., Sharma, M., and Dong, W. (2009). Command filtered backstepping. IEEE Transactions on Automatic Control , 54(6), 1391–1395. Greene, M.L., Bell, Z.I., Nivison, S., and Dixon, W.E. (2023). Deep neural network-based approximate op-timal tracking for unknown nonlinear systems. IEEE Transactions on Automatic Control , 68(5), 3171–3177. Imanberdiyev, N., Sood, S., Kircali, D., and Kayacan, E. (2022). Design, development and experimental valida-tion of a lightweight dual-arm aerial manipulator with a cog balancing mechanism. Mechatronics , 82, 102719. Kidger, P. and Lyons, T. (2020). Universal approximation with deep narrow networks. In Conference on Learning Theory , 2306–2327. PMLR. Li, Z., Yang, Y., Yu, X., Liu, C., Kaynak, O., and Gao, H. (2024). Fixed-time control of a novel thrust-vectoring aerial manipulator via high-order fully actuated system approach. IEEE/ASME Transactions on Mechatronics ,30(2), 1084–1095. Liang, J., Chen, Y., Wu, Y., Miao, Z., Zhang, H., and Wang, Y. (2022). Adaptive prescribed performance control of unmanned aerial manipulator with distur-bances. IEEE Transactions on Automation Science and Engineering , 20(3), 1804–1814. Liang, X., Wang, Y., Yu, H., Zhang, Z., Han, J., and Fang, Y. (2024). Observer-based nonlinear control for dual-arm aerial manipulator systems suffering from uncertain center of mass. IEEE Transactions on Automation Science and Engineering , 22, 1984–1995. Lippiello, V., Fontanelli, G.A., and Ruggiero, F. (2018). Image-based visual-impedance control of a dual-arm aerial manipulator. IEEE Robotics and Automation Letters , 3(3), 1856–1863. Ma, T., Alwi, H., and Edwards, C. (2024). Fault tolerant control of a bio-inspired uav using sliding mode. IFAC-PapersOnLine , 58(4), 234–239. Ollero, A., Tognon, M., Suarez, A., Lee, D., and Franchi, A. (2021). Past, present, and future of aerial robotic manipulators. IEEE Transactions on Robotics , 38(1), 626–645. Patre, P.M., MacKunis, W., Kaiser, K., and Dixon, W.E. (2008). Asymptotic tracking for uncertain dynamic systems via a multilayer neural network feedforward and rise feedback control structure. IEEE Transactions on Automatic Control , 53(9), 2180–2185. Polycarpou, M.M. (2002). Stable adaptive neural control scheme for nonlinear systems. IEEE Transactions on Automatic control , 41(3), 447–451. Suarez, A., Caballero, A., and Ollero, A. (2025). Aerial transportation, deployment and retrieval of dexterous dual arm rolling robot for power line maintenance: Field validation. In 2025 International Conference on Unmanned Aircraft Systems (ICUAS) , 876–881. IEEE. Suarez, A., Gonzalez-Morgado, A., and Ollero, A. (2024). Lightweight and compliant bilateral teleoperation sys-tem with anthropomorphic arms for aerial and ground service operations. In 2024 IEEE International Confer-ence on Robotics and Automation (ICRA) , 15685–15691. IEEE. Swaroop, D., Hedrick, J.K., Yip, P.P., and Gerdes, J.C. (2002). Dynamic surface control for a class of nonlinear systems. IEEE Transactions on Automatic Control ,45(10), 1893–1899. Yang, P., Wang, H., Liu, Z., Dong, Z., and Zhang, L. (2022). Development of an anthropomorphic and dex-terous dual-arm system for aerial cooperative bimanual manipulation. Machines , 10(4), 273. Yu, D., Ma, S., Liu, Y.J., Wang, Z., and Chen, C.P. (2023). Finite-time adaptive fuzzy backstepping control for quadrotor uav with stochastic disturbance. IEEE Transactions on Automation Science and Engineering ,21(2), 1335–1345.

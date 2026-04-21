@@ -1,0 +1,926 @@
+Title: SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving
+
+URL Source: https://arxiv.org/pdf/2604.11625v1
+
+Published Time: Tue, 14 Apr 2026 02:32:03 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# SCNO: Spiking Compositional Neural Operator — Towards a Neuromorphic Foundation Model for Nuclear PDE Solving 
+
+## Samrendra Roy 
+
+roysam@illinois.edu University of Illinois Urbana-Champaign Department of Nuclear, Plasma & Radiological Engineering Urbana, IL, USA 
+
+## Souvik Chakraborty 
+
+Indian Institute of Technology Delhi Department of Applied Mechanics New Delhi, India 
+
+## Rizwan-uddin 
+
+University of Illinois Urbana-Champaign Department of Nuclear, Plasma & Radiological Engineering Urbana, IL, USA 
+
+## Syed Bahauddin Alam 
+
+University of Illinois Urbana-Champaign Department of Nuclear, Plasma & Radiological Engineering Urbana, IL, USA National Center for Supercomputing Applications Urbana, IL, USA 
+
+Abstract 
+
+Neural operators have emerged as powerful surrogates for partial differential equation (PDE) solvers, yet they are typically trained as monolithic models for individual PDEs, require energy-intensive GPU hardware, and must be retrained from scratch when new physics emerge. We introduce the Spiking Compositional Neural Operator (SCNO), a modular architecture combining spiking and conventional components that addresses all three limitations. SCNO maintains a library of small spiking neural operator blocks, each trained on a single elementary differential operator (convection, dif-fusion, reaction), and composes them through a lightweight input-conditioned aggregator to solve coupled PDEs not seen during block training. A small correction network learns cross-coupling residu-als while keeping all blocks and the aggregator frozen, preserving zero-forgetting modular expansion by construction. We evaluate SCNO on eight PDE families including five coupled systems and a nuclear-relevant 1-group neutron diffusion equation. SCNO with correction achieves the lowest relative 𝐿 2 error on four of five cou-pled PDEs, outperforming both a monolithic spiking DeepONet (by up to 62%, mean over 3 seeds) and a standard ANN DeepONet (by up to 65%), while requiring only 95K trainable parameters ver-sus 462K for the monolithic baseline. To our knowledge, this is the first compositional spiking neural operator and the first proof-of-concept for modular neuromorphic PDE solving with built-in forgetting-free expansion. 
+
+CCS Concepts 
+
+• Hardware → Neural systems ; • Computing methodologies 
+
+→ Neural networks ; Transfer learning .
+
+Keywords 
+
+spiking neural networks, neural operators, compositional learning, partial differential equations, neuromorphic computing, continual learning, nuclear engineering 
+
+1 Introduction 
+
+Partial differential equations (PDEs) govern virtually all physical systems of engineering interest, from fluid dynamics and heat trans-fer to neutron transport in nuclear reactors. Neural operators [ 1, 2 ]have demonstrated that mappings between function spaces can be learned directly from data, enabling real-time PDE surrogates that are orders of magnitude faster than classical solvers. However, cur-rent neural operators suffer from three interrelated limitations that hinder their deployment on resource-constrained edge hardware such as neuromorphic processors at nuclear facilities. 
+
+First , neural operators are monolithic: a separate model must be trained for each PDE, with no mechanism to reuse knowledge across related physics. When a nuclear reactor transitions between operational regimes (fresh fuel, mid-cycle, end-of-cycle), the gov-erning equations change as fission product concentrations evolve and material properties degrade, requiring the operator to be re-trained from scratch. Second , neural operators are energy-intensive: standard architectures based on Fourier neural operators (FNO) [ 2 ]or DeepONet [ 1] require GPU-class hardware for both training and inference, precluding deployment on low-power edge devices at remote nuclear sites. Third , neural operators exhibit catastrophic forgetting: when sequentially trained on multiple PDE families, per-formance on earlier tasks degrades severely, a safety-critical failure mode for reactor digital twins that must track evolving physics. Recent work has begun addressing these challenges from com-plementary directions. Compositional neural operators such as CompNO [ 3] and LegONet [ 4] build libraries of pretrained operator blocks that can be assembled for new PDEs, but use standard (non-spiking) architectures with no energy efficiency or continual learn-ing guarantees. Spiking neural operators including SPINONet [ 5]and the spiking DeepONet of Kahana et al. [ 6] bring energy-efficient event-driven computation to PDE solving, but are monolithic and must be retrained for each new system. Theilman and Aimone [ 7]demonstrated direct FEM-based PDE solving on Intel’s Loihi 2 neuromorphic platform, but were limited to static (steady-state) problems with no learning or compositional capability. No existing 
+
+> arXiv:2604.11625v1 [cs.LG] 13 Apr 2026
+
+method combines compositional operator learning with spiking neural networks. 
+
+We introduce the Spiking Compositional Neural Operator (SCNO) , a modular neuromorphic architecture that bridges this gap. SCNO maintains a library of small spiking operator blocks, each trained independently on one elementary PDE operator ( ∇,
+
+Δ, 𝑓 (𝑢 )). These blocks are composed through a lightweight input-conditioned aggregator to solve coupled PDEs not seen during block training. For strongly-coupled systems, a small correction network (95K parameters) learns the cross-coupling residual while keeping all blocks and the aggregator frozen , guaranteeing zero forgetting when new operators are added. Our contributions are: (1) The first compositional spiking neural operator for PDE solving, combining modular operator blocks with energy-efficient spike-based computation. (2) A three-stage architecture (frozen blocks → aggregator → cor-rection) that provides forgetting-free modular expansion: new blocks can be added without affecting existing ones. (3) Evaluation on eight PDE families (three elementary, five cou-pled including nonlinear Burgers and nuclear neutron diffusion), demonstrating that SCNO with correction outperforms mono-lithic baselines on four of five coupled PDEs while using 5 ×
+
+fewer trainable parameters. (4) A nuclear case study showing that 1-group neutron diffusion can be solved by composing diffusion and reaction blocks, achieving 58% lower error than the monolithic SNN baseline. 
+
+2 Related Work 
+
+DeepONet [ 1 ] learns operators via a branch-trunk architecture; FNO [ 2] operates in the spectral domain. Recent PDE foundation models [ 14 ] pretrain on diverse PDE datasets and fine-tune for downstream tasks, but rely on large transformer or Mamba back-bones. CompNO [ 3] introduces compositional operator blocks for elementary operators (convection, diffusion) with a lightweight aggregator, an idea we extend to the spiking regime. LegONet [ 4 ]adds structure-preserving constraints via Strang splitting. Neither CompNO nor LegONet uses spiking neurons or addresses continual learning. Kahana et al. [ 6 ] built the first spiking DeepONet using triangular spike encoding. SPINONet [ 5] introduced Variable Spiking Neu-rons for physics-informed operator learning with energy analysis, achieving comparable accuracy to standard DeepONet on several PDEs. Theilman and Aimone [ 7] demonstrated direct FEM imple-mentation on Loihi 2 for steady-state Poisson problems. All are monolithic: they train one network per PDE with no compositional or continual capability. EWC [ 8] and SI [ 9] use importance-weighted regularization but struggle in the spiking regime. SNN-specific methods such as HLML-SNN [ 10 ] and TACOS [ 11 ] target classification only; none addresses PDE operators. Our architectural approach (frozen blocks with additive correction) sidesteps the regularization-versus-plasticity tradeoff entirely. Kobayashi and Alam [ 12 ] demonstrated DeepONet for real-time nuclear digital twin inference; subsequent work [ 13 ] extended this to virtual sensing in pressurized water reactors. These approaches                                        
+
+> 𝑢 0(𝑥 )
+> B∇Convection
+> LIF ×3, 𝑇 𝑠 =30 , skip
+> BΔDiffusion
+> LIF ×3, 𝑇 𝑠 =20 , skip
+> B𝑓 Reaction
+> LIF ×3, 𝑇 𝑠 =20 , skip
+> Frozen Block Library
+> B𝐾 +1(new) e.g., source term
+> add & freeze
+> Aggregator
+> gated residual + input context c
+> RETRAIN
+> +ˆ𝑢 (𝑦 )
+> =ˆ𝑢 (𝑦 ) + 𝛼 · C ( 𝑢 0, 𝑦 )
+> Correction C
+> 95K params, trainable
+> 𝛼 init =0.1
+> (learnable)
+> New physics emerge?
+> 1○Train new block B𝐾 +1
+> 2○Add to library & freeze 3○Retrain aggregator + C⇒Old blocks unchanged
+> ⇒Zero forgetting
+> ˆ𝑢 (𝑦 )
+> Context c=𝑓 ctx (𝑢 0)
+> 𝛼 · C
+
+Figure 1: SCNO architecture. Frozen spiking operator blocks (B∇ , BΔ, B𝑓 ), each containing three LIF layers with skip con-nections, are composed through an input-conditioned gated aggregator. A correction network ( C, 95K params) learns cross-coupling residuals scaled by learnable 𝛼 . Blocks remain frozen, guaranteeing zero forgetting upon modular expan-sion. 
+
+use standard ANNs and require GPU hardware; SCNO targets neu-romorphic edge deployment. 
+
+3 Method 3.1 Problem Formulation 
+
+We consider families of time-dependent PDEs on a spatial domain 
+
+Ω = [0, 𝐿 ]:
+
+𝜕𝑢 𝜕𝑡 =
+
+> 𝐾
+
+∑︁ 
+
+> 𝑘 =1
+
+L𝑘 [𝑢 ], 𝑢 (𝑥, 0) = 𝑢 0 (𝑥 ), (1) where each L𝑘 is an elementary differential operator (e.g., L∇ [𝑢 ] =
+
+−𝑐 𝜕 𝑥 𝑢 for convection, LΔ [𝑢 ] = 𝜈 𝜕 𝑥𝑥 𝑢 for diffusion, L𝑓 [𝑢 ] =
+
+𝑘 𝑟 𝑢 (1 − 𝑢 ) for reaction). The operator learning task is to learn a mapping G : 𝑢 0 ↦ → 𝑢 (· ,𝑇 ) from initial conditions to the solution at time 𝑇 .
+
+3.2 SCNO Architecture 
+
+SCNO consists of three components (Fig. 1): a library of spiking operator blocks , an input-conditioned aggregator , and an optional 
+
+correction network .
+
+Spiking operator blocks. Each block B𝑘 is a spiking DeepONet that approximates the solution operator for a single elementary PDE 
+
+𝜕 𝑡 𝑢 = L𝑘 [𝑢 ]. The branch network processes the discretized input function u0 ∈ R𝑚 through a linear projection followed by 𝐿 Leaky Integrate-and-Fire (LIF) layers with residual skip connections: 
+
+s(ℓ ) = LIF (ℓ ) (x(ℓ ) ,𝑇 𝑠 ), x(ℓ+1) = (1 − 𝛾 ℓ ) s(ℓ )
+
+𝑇 𝑠 
+
++ 𝛾 ℓ x(ℓ ) , (2) where 𝑇 𝑠 is the number of LIF simulation timesteps, 𝛾 ℓ is a learnable skip-connection weight, and each LIF layer includes batch normal-ization and a learnable decay rate 𝛽 ℓ = 𝜎 (𝜃 ℓ ). The final layer applies a linear readout to produce the branch coefficient vector b ∈ R𝑝 .The trunk network is a standard MLP with tanh activations that 
+
+> 2
+
+maps query coordinates 𝑦 to basis functions t(𝑦 ) ∈ R𝑝 . The block output is: 
+
+B𝑘 (𝑢 0)( 𝑦 ) = b⊤t(𝑦 ) + 𝑏 0. (3) We train three blocks ( 𝑘 ∈ {∇ , Δ, 𝑓 }) independently on their respective elementary PDEs using mean squared error loss and sur-rogate gradient backpropagation through the LIF dynamics. Once trained, blocks are frozen and never modified again. 
+
+Input-conditioned aggregator. For a coupled PDE involving op-erators {𝑘 1, . . . , 𝑘 𝐾 }, the aggregator combines block outputs using both a nonlinear MLP path and a direct linear path: 
+
+ˆ𝑢 (𝑦 ) = 𝜍 (𝑔 ) · MLP  [B 𝑘 1 (𝑦 ), . . . , B𝑘 𝐾 (𝑦 ); c] + ( 1 − 𝜍 (𝑔 )) · w⊤o(𝑦 ),
+
+(4) where 𝑔 is a learnable gate parameter, c = 𝑓 ctx (𝑢 0) ∈ R64 is a com-pressed input context, and o(𝑦 ) = [B 𝑘 1 (𝑦 ), . . . , B𝑘 𝐾 (𝑦 )] . The input context allows the aggregator to learn spatially-varying combina-tion weights conditioned on the input function. 
+
+Correction network. For strongly-coupled PDEs where block out-puts are individually insufficient, a small correction network learns the residual: 
+
+𝐺 (𝑢 0)( 𝑦 ) = ˆ𝑢 (𝑦 ) + 𝛼 · C( 𝑢 0, 𝑦 ), (5) where C is a 3-layer MLP with GELU activations that takes com-pressed input context and query coordinate features, and 𝛼 is a learnable scaling parameter initialized to 0.1. We note that the correction network uses standard (non-spiking) neurons. A fully spiking LIF variant (71K params) increases error by 18–91%, so the non-spiking correction is currently necessary for strong coupling. Both the spiking blocks and the aggregator remain frozen during correction training; only the correction network parameters and 𝛼 
+
+are updated. This implies a hybrid deployment: spiking blocks on neuromorphic cores, correction on a co-located microcontroller. 
+
+Continual learning by construction. When a new elementary PDE operator L𝐾 +1 is encountered, SCNO adds a new spiking block 
+
+B𝐾 +1 to the library and trains only the aggregator (and optionally a correction network) for the new composition. All previously trained blocks remain frozen, providing a mathematical guarantee of zero forgetting: for any previously learned block B𝑘 , the output before and after adding B𝐾 +1 is identical. 
+
+4 Experimental Setup 
+
+We evaluate SCNO on eight PDE families: three elementary and five coupled (Table 1). Each family uses 𝑚 = 256 spatial grid points on 
+
+Ω = [0, 1] with 100 finite-difference time steps ( Δ𝑡 = 0.005 ). We gen-erate 1,500 training and 400 test samples per family using random Fourier series initial conditions with 3–7 modes. The nuclear case study uses 1-group neutron diffusion 𝜕 𝑡 𝜙 = 𝐷𝜕 𝑥𝑥 𝜙 + ( 𝜈 Σ𝑓 − Σ𝑎 )𝜙 
+
+with 𝐷 = 1.0, Σ𝑎 = 0.1, 𝜈 Σ𝑓 = 0.12 , composed from diffusion and reaction blocks. Each spiking block uses 𝐿 =3 LIF layers with hidden dimension 256, latent dimension 128, and 𝛽 init =0.85 . Convection uses 𝑇 𝑠 =30 
+
+timesteps; diffusion and reaction use 𝑇 𝑠 =20 . The aggregator has hidden dimension 256 with 3 GELU layers and 64-dimensional input context. The correction network has hidden dimension 128 with 3 GELU layers (95K parameters). Total block parameters: 462K each. 
+
+Table 1: PDE families and their compositional structure. 
+
+PDE Equation Type Blocks 
+
+Convection 𝜕 𝑡 𝑢 + 𝑐𝜕 𝑥 𝑢 = 0 Elem. ∇
+
+Diffusion 𝜕 𝑡 𝑢 = 𝜈𝜕 𝑥𝑥 𝑢 Elem. Δ
+
+Reaction 𝜕 𝑡 𝑢 = 𝑘𝑢 (1−𝑢 ) Elem. 𝑓 
+
+Conv-Diff 𝜕 𝑡 𝑢 + 𝑐𝜕 𝑥 𝑢 = 𝜈𝜕 𝑥𝑥 𝑢 Coupled ∇+ Δ
+
+React-Diff 𝜕 𝑡 𝑢 = 𝜈𝜕 𝑥𝑥 𝑢 + 𝑘𝑢 (1−𝑢 ) Coupled 𝑓 +Δ
+
+Neutron Diff 𝜕 𝑡 𝜙 = 𝐷𝜕 𝑥𝑥 𝜙 + ( 𝜈 Σ𝑓 −Σ𝑎 )𝜙 Nuclear Δ+𝑓 
+
+Burgers 𝜕 𝑡 𝑢 + 𝑢𝜕 𝑥 𝑢 = 𝜈𝜕 𝑥𝑥 𝑢 Nonlin. ∇+ Δ
+
+Adv-React 𝜕 𝑡 𝑢 + 𝑐𝜕 𝑥 𝑢 = 𝑘𝑢 (1−𝑢 ) Coupled ∇+ 𝑓 0 200 400 600 800               
+
+> Epoch
+> 10 2
+> 10 1
+> MSE
+> convection (T=30)
+> Train
+> Test
+> 0200 400 600 800
+> Epoch
+> 10 2
+> 10 1
+> MSE
+> diffusion (T=20)
+> Train
+> Test
+> 0200 400 600 800
+> Epoch
+> 10 2
+> 10 1
+> MSE
+> reaction (T=20)
+> Train
+> Test
+> Elementary Block Training
+
+Figure 2: Training convergence for elementary spiking blocks. ReduceLROnPlateau with milestone fallback enables smooth convergence over 800 epochs. 
+
+We compare against: (1) Monolithic SNN , a single spiking Deep-ONet with skip connections and learnable 𝛽 , trained end-to-end on each coupled PDE (462K params); (2) ANN DeepONet , a standard (non-spiking) DeepONet with ReLU activations and batch normal-ization (396K params). All models use AdamW with cosine/plateau scheduling and surrogate gradient training. We report relative 𝐿 2 error: 𝜖 = ∥𝑢 pred −𝑢 true ∥2/∥ 𝑢 true ∥2 averaged over the test set. We also report total spike counts per inference for energy analysis, estimating neuromorphic energy at 0.9 pJ/spike based on published Loihi 2 specifications [15]. 
+
+5 Results 
+
+The three spiking blocks achieve low individual errors after 800 epochs of training (Fig. 2): convection 8.6%, diffusion 7.1%, reaction 5.6% relative 𝐿 2 error. Representative test-set predictions are shown in Fig. 3. The convection block, which uses 𝑇 𝑠 =30 LIF timesteps (versus 20 for diffusion and reaction), captures the wave transport dynamics accurately despite the inherent smoothing tendency of LIF neurons. Skip connections and learnable decay rates were essen-tial: without them, errors were 23.6%, 21.6%, and 10.0% respectively, a 2–3 × degradation. Table 2 presents the central result. SCNO with correction achieves the lowest error on four of five coupled PDEs. On reaction-diffusion, frozen SCNO (2.1%) already outperforms the monolithic SNN (5.5%) and ANN (6.0%) by over 62%. The learned gate parameter 𝜍 (𝑔 ) ≈ 0.8 indicates the aggregator relies primarily on the nonlinear MLP path with input conditioning, suggesting that the combination weights are spatially varying and input-dependent. On convection-diffusion and Burgers, frozen SCNO performs poorly (28.1%, 19.6%) because tight coupling between transport and smoothing produces features that individual blocks cannot                                                             
+
+> 30.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> convection
+> (T=30)
+> Sample 1
+> Truth
+> Pred
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Sample 11
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> Sample 31
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> Sample 51
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> diffusion
+> (T=20)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> reaction
+> (T=20)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Elementary Block Predictions
+
+Figure 3: Representative predictions from elementary spiking blocks on held-out test samples. Each row corresponds to one block (convection 𝑇 𝑠 =30 , diffusion 𝑇 𝑠 =20 , reaction 𝑇 𝑠 =20 ). Gray dashed: initial condition 𝑢 0 (𝑥 ); blue: ground truth 𝑢 (𝑥,𝑇 ); red dashed: SCNO prediction. All blocks achieve sub-10% relative 𝐿 2 error on unseen initial conditions. Table 2: Relative 𝐿 2 error (%) on coupled PDEs. Bold: best per row. SCNO (frozen) uses only blocks + aggregator. SCNO+Corr adds the correction network. Results averaged over 3 random seeds ( ± std). Trainable params per new PDE : SCNO = aggrega-tor (231K); SCNO+Corr = correction (95K). Blocks (462K each) pretrained once, amortized. Mono SNN/ANN = full retrain per PDE. 
+
+PDE SCNO SCNO+Corr Mono SNN ANN 
+
+Conv-Diff 28.1 ±0.2 14.1 ±0.5 10.7 ±1.8 15.7 ±1.8 
+
+React-Diff 2.1 ±0.0 2.1 ±0.0 5.5 ±0.3 6.0 ±0.1 
+
+Neutron Diff 9.4 ±0.0 4.6 ±0.1 13.7 ±0.9 11.1 ±0.8 
+
+Burgers 19.6 ±0.1 11.6 ±0.3 15.3 ±1.6 16.2 ±1.0 
+
+Adv-React 16.7 ±0.1 4.1 ±0.3 6.2 ±0.6 6.2 ±0.9 
+
+# Train. params 231K 95K 462K 396K 
+
+capture. The correction network reduces these errors substantially (14.1%, 11.6%), with Burgers now beating both baselines. The learned 
+
+𝛼 values reflect coupling strength: 0.37 for convection-diffusion (substantial correction needed), 0.09 for reaction-diffusion (minimal correction), 0.39 for neutron diffusion, 0.43 for Burgers, and 0.46 for advection-reaction. Fig. 4 shows SCNO predictions for 1-group neutron diffusion, a fundamental equation in reactor physics that governs the spa-tial distribution of neutron flux 𝜙 (𝑥, 𝑡 ). In a nuclear reactor, the balance between neutron production (fission, 𝜈 Σ𝑓 𝜙 ) and loss (ab-sorption, Σ𝑎 𝜙 ) determines whether the reactor is critical. SCNO decomposes this into diffusion ( 𝐷𝜕 𝑥𝑥 𝜙 , spatial neutron transport) and reaction ( (𝜈 Σ𝑓 − Σ𝑎 )𝜙 , net neutron production), each handled by a pretrained block. The frozen composition (9.4%) already beats both monolithic baselines (13.7% SNN, 11.1% ANN). With correction, error drops to 4.6%, a 58% improvement over the monolithic SNN, demonstrating that reactor-relevant PDEs can be solved by com-posing generic operator blocks without reactor-specific training. Fig. 5 shows detailed predictions across all five coupled PDEs and four methods. Across all systems, SCNO+Corr predictions (orange dashed) closely track the ground truth, with the largest residuals ap-pearing on convection-diffusion where the tight coupling between transport and smoothing creates features absent from individual block training. Fig. 7 demonstrates forgetting-free expansion across sequential block addition. Unlike regularization-based methods (EWC, SI), SCNO achieves zero forgetting as an architectural guarantee. We add convection, diffusion, and reaction blocks one at a time, testing all available blocks after each addition. Because blocks are frozen, 
+
+40.0 0.2 0.4 0.6 0.8 1.0                                    
+
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Flux
+> Sample 1
+> True
+> SpikeCompNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Sample 6
+> True
+> SpikeCompNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Sample 16
+> True
+> SpikeCompNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> 1.00
+> 0.75
+> 0.50
+> 0.25
+> 0.00
+> 0.25
+> 0.50
+> 0.75
+> 1.00
+> Sample 31
+> True
+> SpikeCompNO
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.16
+> |Error|
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.00
+> 0.02
+> 0.04
+> 0.06
+> 0.08
+> 0.10
+> 0.12
+> 0.14
+> Nuclear: 1-Group Neutron Diffusion
+
+Figure 4: Nuclear case study: 1-group neutron diffusion 𝜕 𝑡 𝜙 = 𝐷𝜕 𝑥𝑥 𝜙 + ( 𝜈 Σ𝑓 − Σ𝑎 )𝜙 . Top: predictions vs. ground truth. Bottom: pointwise absolute error. SCNO (frozen, shown) achieves 9.4% relative 𝐿 2 error; with correction, 4.6%. 
+
+the convection block produces identical output (8.6% error) regard-less of whether it was tested after Phase 1, Phase 2, or Phase 3. This is not an empirical result but an architectural guarantee: frozen parameters cannot change. Aggregator-level independence was also verified: training a Burgers aggregator changes react-diff error by only 3.6×10 −5, confirming full isolation. Fig. 6 compares accuracy, parameter counts, and spike counts. The SCNO correction network requires only 95K trainable parame-ters versus 462K for the monolithic SNN, a 4.9 × reduction. While the full SCNO system (including frozen blocks) contains more total parameters, the trainable parameters per new coupled PDE are minimal: only the aggregator (231K) or correction (95K) must be trained. Spike count analysis shows that SCNO generates approximately 
+
+2× more spikes than the monolithic SNN per inference, because two spiking blocks are evaluated per composition. At 0.9 pJ/spike on Loihi 2, this corresponds to approximately 9 nJ per inference for SCNO versus 4 nJ for the monolithic model. However, the blocks can be distributed across separate neuromorphic cores, and only the relevant blocks for a given composition need to be active. Total system energy must also include the non-spiking correction on conventional hardware; spike estimates here are a lower bound. + Convection + Diffusion + Reaction 
+
+> Phase
+> 0.055
+> 0.060
+> 0.065
+> 0.070
+> 0.075
+> 0.080
+> 0.085
+> Relative L2 Error
+
+Forgetting-Free Modular Expansion 
+
+> Block tested on
+> convection
+> diffusion
+> reaction
+
+Figure 7: Forgetting-free modular expansion: blocks are added sequentially, and all existing blocks are tested at each phase. Errors are identical across phases—zero forgetting by construction. 
+
+50.0 0.2 0.4 0.6 0.8 1.0 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> conv-diff
+
+Sample 1 
+
+> Truth
+> SpikeCompNO
+> SCNO+Corr
+> Mono SNN
+> ANN
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+Sample 11 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+1.00 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+Sample 31 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.4 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+Sample 51 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+> react-diff
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.1 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+> neutron-diff
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+1.0 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+1.2 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+1.00 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+> burgers
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.6 
+
+0.4 
+
+0.2 
+
+0.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.75 
+
+0.50 
+
+0.25 
+
+0.00 
+
+0.25 
+
+0.50 
+
+0.75 
+
+1.00 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+> adv-react
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.4 
+
+0.6 
+
+0.8 
+
+1.0 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+0.9 
+
+0.0 0.2 0.4 0.6 0.8 1.0 
+
+0.2 
+
+0.3 
+
+0.4 
+
+0.5 
+
+0.6 
+
+0.7 
+
+0.8 
+
+Coupled PDE Predictions Figure 5: Coupled PDE predictions across all five systems and four methods. Each row is a coupled PDE; columns show different test samples. SCNO+Corr (orange dashed) closely tracks the ground truth (blue) on most systems, with the largest residuals appearing on convection-diffusion, the most tightly coupled system. 
+
+6conv-diff react-diff neutron-diff burgers adv-react         
+
+> 0.00
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> Relative L2 Error
+> Accuracy
+> CompNO (frozen)
+> SCNO+Corr
+> Mono SNN
+> ANN
+> conv-diff react-diff neutron-diff burgers adv-react
+> 10 5
+> 2 × 10 5
+> 3 × 10 5
+> 4 × 10 5
+> Parameters
+> Parameter Efficiency
+> CompNO (agg only)
+> SCNO+Corr (all)
+> Mono SNN
+> ANN
+> conv-diff react-diff neutron-diff burgers adv-react
+> 0
+> 2000
+> 4000
+> 6000
+> 8000
+> 10000
+> Spikes / Sample
+> Energy
+> CompNO
+> SCNO+Corr
+> Mono SNN
+> SCNO vs Baselines: Accuracy, Parameters, and Energy
+
+Figure 6: Comparison across five coupled PDEs: (left) relative 𝐿 2 error, (center) parameter counts on log scale, (right) spike counts per sample. “CompNO (frozen)” in the figure legend refers to SCNO without correction. SCNO+Corr achieves the best accuracy on 4/5 PDEs with 5 × fewer trainable parameters than the monolithic SNN. 
+
+6 Discussion 10 5 2 × 10 5 3 × 10 5 4 × 10 5
+
+> Parameters (log)
+> 0.05
+> 0.10
+> 0.15
+> 0.20
+> 0.25
+> Relative L2 Error
+> conv-diff
+> react-diff
+> neutron-diff
+> burgers
+> adv-react
+> Accuracy vs Efficiency
+> SpikeCompNO
+> SCNO+Corr
+> Mono SNN
+> ANN
+
+Figure 8: Accuracy–efficiency Pareto analysis. SCNO+Corr (orange squares) achieves competitive accuracy with 5 × fewer trainable parameters than both the monolithic SNN (red) and ANN (blue) baselines. 
+
+Our results reveal a clear pattern: composition excels when the cou-pled PDE’s operators are weakly interacting . In reaction-diffusion, diffusion smooths spatial gradients while reaction acts locally— these effects are approximately separable. The aggregator easily learns to combine them, and frozen SCNO (2.1%) outperforms mono-lithic training (5.5%). In contrast, convection-diffusion involves tight coupling: diffusion smooths the signal that convection transports, creating features that neither block learned in isolation. The convec-tion block’s higher base error (8.6% vs. 5.6% for reaction) compounds this: correction reduces the gap (14.1% vs. 10.7% monolithic) but does not close it, suggesting physics-informed block training [ 5]may be needed for tight transport coupling. This decomposition into weak- and strong-coupling regimes provides practitioners with guidance: for weakly-coupled physics, frozen composition suffices; for strongly-coupled physics, add a correction network. The learned 𝛼 values provide an interpretable measure of cou-pling strength. React-diff ( 𝛼 =0.09 ) requires minimal correction; conv-diff ( 𝛼 =0.37 ), neutron-diff ( 𝛼 =0.39 ), and Burgers ( 𝛼 =0.43 ) re-quire moderate-to-substantial correction; adv-react ( 𝛼 =0.46 ) shows the largest learned correction scale. This suggests 𝛼 could serve as an automatic diagnostic for identifying strongly-coupled systems in multi-physics simulations. Notably, SCNO exhibits substantially lower variance across ran-dom seeds ( ±0.0–0.5%) compared to monolithic baselines ( ±0.3– 1.8%), suggesting that frozen compositional architectures provide more stable optimization landscapes, as only the 95K correction network is subject to initialization sensitivity. SPINONet [ 5 ] achieves high accuracy on individual PDEs using physics-informed training, but cannot compose blocks for unseen PDEs. The approaches are complementary: SPINONet’s physics-informed training could improve block accuracy, while SCNO’s framework could organize multiple SPINONet blocks. SCNO’s design suggests a path toward libraries of pretrained spiking “physics primitives” composed on-demand, with learned 
+
+𝛼 values serving as automatic coupling diagnostics ( 𝛼 ≈ 0: blocks sufficient; 𝛼 > 0.3: correction essential). For a remote microreactor, spiking blocks run on a Loihi 2 chip (<1 W) versus 30–300 W for GPU digital twins. New physics blocks are added without modifying existing ones. 
+
+Limitations. The primary limitation is accuracy on strongly-coupled PDEs (conv-diff: 14.1% vs. monolithic 10.7%). The correction network improves the gap but does not fully close it. All experi-ments use 1D PDEs ( 𝑚 =256 ); extending to 2D/3D requires graph-based spiking operators, with spike counts scaling linearly in 𝑚 but quadratically in spatial dimension for dense operators. The current energy analysis uses spike-count estimates rather than hardware measurements. The correction network uses standard (non-spiking) neurons, requiring conventional compute alongside neuromorphic 
+
+> 7
+
+inference; a spiking LIF variant increases error by 18–91%. Finally, the blocks use surrogate gradient training (not on-chip learning), meaning training remains GPU-dependent even though inference is neuromorphic-compatible. We do not compare against non-spiking compositional baselines (CompNO, LegONet), which would isolate spiking from compositional contributions. Future work will address this ablation; 2D extensions using graph-based spiking operators; hardware deployment on Intel Loihi 2; integration with spatiotem-poral neural operator frameworks for sparse-sensor reactor envi-ronments [ 16 ]; and physics-informed block training following the SPINONet paradigm [5]. 
+
+7 Conclusion 
+
+We presented SCNO, the first compositional spiking neural oper-ator for PDE solving. By maintaining a library of frozen spiking blocks and composing them through an aggregator with an op-tional correction network, SCNO achieves three properties simulta-neously: (1) competitive accuracy on coupled PDEs, outperforming monolithic baselines on four of five systems; (2) zero forgetting by construction, enabling incremental expansion to new physics; and (3) spike-based computation compatible with neuromorphic edge hardware. On nuclear neutron diffusion, SCNO with correction achieves 4.6% error, 58% lower than the monolithic SNN baseline, demonstrating that reactor-relevant physics can be solved by com-posing generic operator blocks. These results point toward a broader vision of spiking founda-tion models for scientific computing : libraries of reusable, energy-efficient neural operator blocks that can be composed, extended, and deployed on neuromorphic hardware for real-time multi-physics simulation at the edge. 
+
+References 
+
+[1] L. Lu, P. Jin, G. Pang, Z. Zhang, and G. E. Karniadakis. Learning nonlinear opera-tors via DeepONet based on the universal approximation theorem of operators. 
+
+Nature Machine Intelligence , 3(3):218–229, 2021. [2] Z. Li, N. Kovachki, K. Azizzadenesheli, B. Liu, K. Bhattacharya, A. Stuart, and A. Anandkumar. Fourier neural operator for parametric partial differential equations. In Proc. ICLR , 2021. [3] H. Hmida, H.-W. Chang, and Y. Mesri. CompNO: A novel foundation model approach for solving partial differential equations. Applied Sciences , 16(2):972, 2026. [4] J. Zhang, Y. Wang, and G. Lin. LegONet: Plug-and-play structure-preserving neural operator blocks for compositional PDE learning. arXiv preprint arXiv:2603.07882 , 2026. [5] S. Garg, L. Mandl, S. Goswami, and S. Chakraborty. SPINONet: Scalable spiking physics-informed neural operator for computational mechanics applications. 
+
+arXiv preprint arXiv:2603.21674 , 2026. [6] A. Kahana, E. Turkel, R. Ranade, J. Pathak, and G. E. Karniadakis. Spiking neural operators for scientific machine learning. arXiv preprint arXiv:2205.10130 , 2022. [7] B. H. Theilman and J. B. Aimone. Solving sparse finite element problems on neuromorphic hardware. Nature Machine Intelligence , 7:1845–1857, 2025. [8] J. Kirkpatrick, R. Pascanu, N. Rabinowitz, J. Veness, et al. Overcoming catastrophic forgetting in neural networks. Proc. National Academy of Sciences , 114(13):3521– 3526, 2017. [9] F. Zenke, B. Poole, and S. Ganguli. Continual learning through synaptic intelli-gence. In Proc. ICML , pp. 3987–3995, 2017. [10] S. Shen, S. Zhao, et al. HLML-SNN: Hebbian learning meets meta-learning in spiking neural networks. In Proc. AAAI , 2025. [11] N. Soures, P. Helfer, A. Daram, T. Pandit, and D. Kudithipudi. TACOS: Task agnos-tic continual learning in spiking neural networks. arXiv preprint arXiv:2409.00021 ,2024. [12] K. Kobayashi and S. B. Alam. Deep neural operator-driven real-time inference to enable digital twin solutions for nuclear energy systems. Scientific Reports ,14:2101, 2024. [13] R. Hossain, F. Ahmed, K. Kobayashi, S. Koric, D. Abueidda, and S. B. Alam. Virtual sensing-enabled digital twin framework for real-time monitoring of nuclear systems leveraging deep neural operators. npj Materials Degradation , 9(1), 2025. DOI: 10.1038/s41529-025-00557-y. [14] S. Subramanian, P. Harrington, K. Keutzer, W. Bhimji, D. Morozov, M. W. Mahoney, and A. Gholami. Towards foundation models for scientific machine learning: Characterizing scaling and transfer behavior. In Proc. NeurIPS , 2023. [15] M. Davies, A. Wild, G. Orchard, Y. Yu, et al. Advancing neuromorphic computing with Loihi: A survey of results and outlook. Proc. IEEE , 109(5):911–934, 2021. [16] K. Kobayashi, S. Roy, S. Koric, D. Abueidda, and S. B. Alam. From proxies to fields: Spatiotemporal reconstruction of global radiation from sparse sensor sequences. 
+
+arXiv preprint arXiv:2506.12045 , 2025.
