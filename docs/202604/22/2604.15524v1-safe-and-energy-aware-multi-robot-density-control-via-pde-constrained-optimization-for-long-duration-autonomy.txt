@@ -1,0 +1,308 @@
+Title: Safe and Energy-Aware Multi-Robot Density Control via PDE-Constrained Optimization for Long-Duration Autonomy
+
+URL Source: https://arxiv.org/pdf/2604.15524v1
+
+Published Time: Mon, 20 Apr 2026 00:12:53 GMT
+
+Number of Pages: 9
+
+Markdown Content:
+Preprint submitted to the 2026 IEEE Intelligent Transportation Systems Conference (ITSC 2026). Copyright may be transferred without notice, after which this version may no longer be accessible. 
+
+> arXiv:2604.15524v1 [eess.SY] 16 Apr 2026
+
+# Safe and Energy-Aware Multi-Robot Density Control via PDE-Constrained Optimization for Long-Duration Autonomy 
+
+Longchen Niu, Andrew Nasif, and Gennaro Notomista 
+
+Abstract — This paper presents a novel density control frame-work for multi-robot systems with spatial safety and energy sustainability guarantees. Stochastic robot motion is encoded through the Fokker-Planck Partial Differential Equation (PDE) at the density level. Control Lyapunov and control barrier functions are integrated with PDEs to enforce target density tracking, obstacle region avoidance, and energy sufficiency over multi-ple charging cycles. The resulting quadratic program enables fast in-the-loop implementation that adjusts commands in real-time. Multi-robot experiment and extensive simulations were conducted to demonstrate the effectiveness of the controller under localization and motion uncertainties. 
+
+I. I NTRODUCTION 
+
+The rapid growth of autonomous transportation systems, including urban delivery drones, logistics fleets, and smart warehouses [1]–[4], demands reliable controllers that guar-antee both spatial safety (i.e., avoiding hazardous regions) and long-term sustainability (i.e., operation beyond a single battery cycle). In these applications, large teams of robots must distribute themselves across desired targets for service while respecting obstacles, no-fly zones, and energy limitations. Ensuring safety and sustainability in multi-robot teams is therefore a fundamental challenge for the next generation of smart transportation systems. Density-based control emerges as a powerful tool for coor-dinating large teams of robots. By modeling the robots’ spatial distribution as Probability Density Functions (PDFs), the team can autonomously follow a target distribution to perform transport, coverage, and monitoring tasks. Typically, the per-formance of a control strategy is evaluated by minimizing the control objective function, often in terms of control effort or travel cost. As a result, Optimal Control (OC) approaches have traditionally been employed to ensure the optimality of the system’s cost function over a, possibly infinite, time horizon. In practice, it is often critical to avoid certain regions to protect both the robotic assets and the surrounding environment. Recent advances in OC achieve spatial safety by encoding safety constraints in the design process, as seen in [5]– [7]. However, unlike the classic OC, the Optimization-Based Control (OBC) framework enables real-time adjustments to unexpected disturbances and has become increasingly popular with advances in hardware that solve optimization problems in real time. Within this framework, safety guarantees in multi-robot systems have been developed in the Ordinary Differential Equation (ODE) domain, for example, in [8]–[10].                 
+
+> The authors are with the Department of Electrical and Com-puter Engineering, University of Waterloo, Waterloo, ON, Canada
+> l3niu,andrew.nasif,gennaro.notomista@uwaterloo.ca
+
+Most safety-critical control formulations focus on spatial constraints. Although energy sufficiency has been studied in the literature, enforcing both spatial safety and energy suffi-ciency for long-duration operation remains understudied. In particular, energy-sufficiency constraints enforced via Control Barrier Function (CBF)-based OBC frameworks have been studied in task-agnostic settings, for instance, in [11]–[13]. In this paper, unlike the typical approach that estimates energy using straight-line paths over the entire workspace, energy sus-tainability is evaluated strictly along safety-compliant paths. This leads to a more realistic energy budget for practical deployments, as workspaces are rarely obstacle-free. Another important gap between control theory and applica-tion arises from uncertainty. Localization and motion noises caused by sensor and actuator imperfections can lead to unin-tentional safety violations in the ODE-level controllers. Instead of attempting to remove uncertainty with more expensive hardware, the problem can be systematically handled at the controller design level. Partial Differential Equations (PDEs), specifically the Fokker-Planck equation, can naturally incor-porate both localization and motion noise at the density level, as seen in [14]. This provides a foundation to enforce safety even with uncertainties. However, the OBC framework with CBF remains relatively underexplored in the PDE domain. In this paper, we propose a novel density-based control framework for multi-robot systems that simultaneously en-forces constraints for both spatial safety and energy-awareness with provable feasibility guarantees in the presence of local-ization and actuation noise. By embedding the CBF-based constraints into the Fokker-Planck PDE, the proposed OBC guarantees that the robots’ distribution remains within the safe space while preserving sufficient energy for sustained opera-tions. This PDE-based representation provides robustness by capturing both sensing and motion noise, while naturally scales with the number of robots, making it particularly suitable for long-term transportation systems. Finally, the effectiveness of the proposed controller is validated through both simulations and a multi-robot experiment. II. R ELATED WORKS AND CONTRIBUTIONS 
+
+Coverage control has emerged as a promising solution to the smart autonomous transport problem, as highlighted in the survey [15], due to its ability to naturally adapt to human-in-the-loop behaviors. In particular, the authors of [16] demonstrated that Voronoi-cell-based coverage control can be applied to autonomous mobility-on-demand systems, improv-ing service rate and decreasing customer wait time in large-scale urban road networks. Building on this line of work, the controller proposed in this paper further provides spatial safety and energy-awareness in addition to coverage control. These properties make the proposed framework a strong candidate solution for future smart transport applications. In recent years, traditional OC strategies have begun to incorporate state invariance as a tool for safety constraints. For instance, the work in [17] enforces state invariance by excluding unsafe areas from the computational domain and solving for the optimal control field outside these areas. While effective and straightforward to implement, this exclusion-based method is limited to static, predefined environments where zero density is enforced in the specified areas at all times. In contrast, the method proposed in [5] directly imposes state invariance over the full spatial-temporal do-main, allowing implementations of dynamic hazard regions such as moving obstacles. Although both methods provide theoretical guarantees of optimality, they may be violated in the presence of unmodeled disturbances, which are common in practice. Conversely, our proposed controller operates in real-time within the feedback loop, continuously adjusting the commands in response to disturbances as they arise. In the OBC framework, Control Lyapunov Functions (CLFs) have been applied to PDE-governed multi-robot systems for convergence guarantees, achieving formation control in [18]. However, this approach assumes perfect localization of the entire multi-robot team, making it vulnerable to measure-ment noise in practice. In contrast, our formulation directly incorporates both measurement and motion noise within the density evolution framework at the population level, enhancing robustness against operation noise for deployment. In the ODE domain, CBFs have been extensively studied over the past decade within the OBC framework to ensure safety [9]. Extension to the PDE domain emerged more recently. For example, the work in [19] applied the CLF-CBF OBC framework on a traffic flow model to maintain stability and safety through PDE-governed boundary control. In [20], the authors employed the Finite Element Method to obtain the ODE approximation to control the PDE-governed flexible robotic arms. While the authors of [21] utilized the Finite Difference Method (FDM) to formulate a CBF-based back-stepping algorithm that enforces safety for the Stefan thermal model. In our implementation, the FDM is employed to derive the ODE approximation of the Fokker-Planck PDE system due to the smoothness of the density evolution on a uniform spatial domain. However, if the application involves robots with discontinuous PDFs or irregular spatial domains, the Finite Element Method or the Finite Volume Method might be necessary for numerical stability and accuracy. Prior work on energy-sufficiency constraints in OBCs, en-forced via ODE-level CBFs, has been widely explored. More specifically, the authors of [11] introduced the persistification of robotic tasks by enforcing energy-sufficiency constraints via CBFs. Along similar lines, the work in [12] studied a task-agnostic energy-autonomy OBC framework that coordinates a single fixed charging station with multiple task robots. Finally, the authors of [13] proposed an energy-aware, task-agnostic control framework that enforces energy sufficiency via CBFs by coordinating a task robot with a mobile charging station. However, most prior works treat energy sufficiency indepen-dently of spatial constraints, neglecting obstacle avoidance or restricted areas. In our proposed framework, the path-to-charger planner explicitly integrates the safety constraint through a kinodynamic model, resulting in safety-compliant paths to charging stations, instead of the straight-line approx-imation common in prior studies. The work in [14] has provided both mathematical proofs and experimental validation of the effectiveness of incorporating uncertainties via the Fokker-Planck equation in a CLF-based OBC system to enhance robustness in applications. Building on this work, the authors of [22] introduced a decentralized CLF-CBF density controller to enforce spatial safety of a multi-robot team under noise. In this work, we further bridge the gap between theory and applications by enforcing energy constraints in the multi-robot systems for sustainable opera-tions of robotic teams in smart transportation applications. The main contributions of this work are as follows: (i) We extend PDE-based density control in the CLF-CBF OBC framework to provide energy sustainability for long-term transportation applications with multi-robot teams (ii) We provide a density-based safety-aware path planner that computes the required energy to reach a charger under noise and spatial safety constraints, while ensuring the feasibility of the optimization problem required to evaluate the robot control inputs (iii) We illustrate the implementation process of the proposed controller on a real multi-robot system III. D ESIGN AND IMPLEMENTATION 
+
+In this section, we first introduce the mathematical formu-lations leading to the proposed controller, beginning with the robot density and energy models, followed by the statement of control objectives and constraints. Then, we present the dis-cretized ODE model suitable for real-world implementations. 
+
+A. System Models 
+
+This subsection defines the models used throughout the paper: a Fokker-Planck-based density model that describes the evolution of the spatial distribution of the multi-robot team, and a battery consumption model representing energy usage during operations. 
+
+1) Density Model: To design a safe density-based con-troller for a robotic team, we start with a continuous-time Itˆ ostochastic differential equation that captures motion noise with a single robot, as seen in [23]: 
+
+dX t = b(Xt, t ; u) dt + σ(Xt, t ) dW t, Xt0 = X0, (1) where the state Xt ∈ R2 denotes the robot position, the drift term b(Xt, t ; u) models deterministic control input, and 
+
+σ(Xt, t ) represents stochastic perturbations proportional to a Wiener process Wt ∈ Rm with independent increments. While equation (1) provides a framework to create micro-scopic, agent-level controllers accounting for motion noise, such as the work in [24], population-level density control requires a macroscopic representation of the spatial robot density. Specifically, to encode localization noise in appli-cations, we define the belief-weighted physical probability mass for each robot at position r and time t as ρi(r, t ) = exp  − 12 (r − xi)T Σi(r − xi). This Gaussian kernel repre-sents a probabilistic belief (up to normalization) of robot 
+
+i’s true position based on the measurement xi, with the measurement confidence characterized by the precision matrix 
+
+Σi. In this work, we assume identical localization uncertainty for all robots, Σ = Σ i ∀i ∈ N , to reflect identical sensing hardware. Therefore, the multi-robot team density ρ(r, t ) can be represented by a sum over N individual robots: 
+
+ρ(r, t ) = 
+
+> N
+
+X
+
+> i=1
+
+ρi =
+
+> N
+
+X
+
+> i=1
+
+exp 
+
+
+
+− 12 (r − xi)T Σ( r − xi)
+
+
+
+. (2) This equation represents the collective belief-weighted spatial probability distribution of the multi-robot system, where the contribution from individual robots is spread according to their sensor uncertainties. By combining the belief-based density formulation in (2) with the stochastic motion model in (1), and leveraging the averaging technique from [23], [25] with Itˆ o calculus, we de-rive the Fokker-Planck PDE governing the density dynamics: 
+
+∂ρ (r, t )
+
+∂t = X
+
+> i∈N
+
+
+
+− ∇ i(ui ρi(r, t )) + T ∆iρi(r, t )
+
+
+
+, (3) where the subscript i denotes the robot ID, the diffusion coefficient T is derived from the stochastic motion noise 
+
+σ(Xt, t )dW t in (1) [14], [22], ui ∈ R2 is the velocity control input for robot i, with the admissible set U := {v ∈ R2 :
+
+∥v∥ ≤ umax }, bounded by the maximum speed umax .
+
+Remark 1. The diffusion coefficient T in (3) models bounded actuation noise with maximum magnitude cu max , the maxi-mum speed scaled by c. We use a constant T = 0.32 
+
+> 2
+
+cu max =0.045 cu max , corresponding to a zero-mean Gaussian with 
+
+99% of its mass within [−cu max , cu max ], reflecting hardware limits. This Gaussian bound is a conservative modeling choice to ensure the well-posedness of the PDE, as motion beyond 
+
+cu max is not physically realizable. Therefore, it is not a statistical safety guarantee but rather a conservative modeling choice. A variable T (ui) could be used, but a constant upper bound is adopted for computational efficiency and to capture other forces such as inertia. 
+
+Under this interpretation, the Fokker-Planck equation (3) describes the evolution of the collective belief distribution over the robots’ position measurements, where uncertainty arises from localization sensor statistics and motion noise is captured through diffusion. Importantly, equation (3) is deterministic, as it governs the evolution of this belief-weighted density at the population level, rather than tracking individual stochastic trajectories in (1) by assuming perfect localization. 
+
+2) Energy Model: In order for the team to be deployed in real-world applications, one critical consideration is the energy-awareness of the team. Some energy models have been studied in [12], [26]. While the exact battery dynamics depend on specific robots, a commonly employed general model is: 
+
+˙Ei = −c1∥ui∥ − c2, (4) where Ei ∈ [0 , 1] denotes the battery level of robot i,
+
+c1∥ui∥ represents the motion-induced energy consumption proportional to the control magnitude with coefficient c1, and a constant operation cost c2 that is motion independent. In this paper, we assume all robots share the same energy model, (4), and our goal is to ensure sufficient energy while safely performing coverage tasks. In the following subsections, we define four important objectives for transportation tasks. 
+
+B. Control Objectives 
+
+In application, one of the main objectives is to minimize the resources spent to complete a task. Since energy consumption is directly proportional to the actuation effort, and actuation is tied to the commanded velocity, we define the control effort as the aggregated command magnitude: ∥u∥2, where 
+
+u = [ uT 
+
+> 1
+
+, . . . u TN ]T is the control inputs for multi-robot team. Reducing this metric directly promotes energy-efficient control strategies at the team level. 
+
+1) Coverage Objective: In our framework, the primary objective is a density coverage task. Namely, the density of the multi-robot team, ρ(r, t ), should track a predefined, possibly time-varying, target density ρd(r, t ). This formulation applies to a broad range of real-world scenarios, such as transportation, environmental monitoring, search-and-rescue, and targeted deployments of pesticides or fire suppressants. Mathematically, we adopt a CLF formulation to enforce convergence towards the desired distribution. While CLFs are well-established in the ODE domain, recent extensions to the PDE domain have proven effective as well [14]. In a spatial domain Ω ⊂ R2, we define the Lyapunov functional and compute its time derivative as: 
+
+V (ρ) = 
+
+Z
+
+> Ω
+
+(ρd −ρ)2 dr, ˙V (ρ, u ) = −2
+
+Z
+
+> Ω
+
+(ρd −ρ) ˙ ρ dr, (5) where V = 0 if and only if the system density ρ matches the target ρd exactly, and ˙ρ follows the Fokker-Planck evo-lution in (3). This gives the CLF formulation that guarantees convergence towards the target: 
+
+αv V (ρ) + ˙V (ρ, u ) ≤ 0, (6) with positive coefficient αv related to the rate of convergence. 
+
+2) Safety Objective: In many applications, it can be critical to ensure the robots remain outside unsafe regions, such as obstacles or restricted zones. Mathematically, we define these danger areas as A ⊂ Ω, and the spatial barrier functional hs(ρ)
+
+with its time derivative are: 
+
+hs(ρ) = ϵ −
+
+Z
+
+> A
+
+ρ2 dr, ˙hs(ρ, u ) = −2
+
+Z
+
+> A
+
+ρ ˙ρ dr, (7) where ϵ is a predefined upper bound on the aggregated belief mass within A, representing an acceptable level of residual uncertainty due to localization noise. This yields the CBF constraint: 
+
+αshs(ρ) + ˙hs(ρ, u ) ≥ 0, (8) with positive coefficient αs. Following similar steps as the proof in [22], this constraint guarantees forward invariance of the set {ρ : hs(ρ) ≥ 0}, which ensures that the system density remains away from A, and therefore maintains spatial safety at the population level despite localization and motion noise. 
+
+3) Energy Objective: For a robotic team to be deployed in long-term operations, energy sufficiency beyond a single battery charge cycle is necessary. Prior works have studied energy-aware controllers [11], [12], with recent integration with ODE-level CBFs for a single task robot paired with a single mobile charger in [13]. However, most existing approaches do not consider localization noise and assume perfect deterministic motion. In this section, we propose the following formulation to bridge this gap within the PDE-based multi-robot density formulation. We define energy sufficiency as the ability to return to a charging zone, C ⊂ Ω \ A , before the battery level drops below a threshold Emin . Then, the key question is: 
+
+How to compute, in real time, the energy-to-charge (defined as the energy required to reach a charging station/area C)while simultaneously satisfying the spatial safety constraint in (8) ? Most prior work relies on a path planner to estimate the energy-to-charge by using the Euclidean (straight-line) distance between the robot and the charger. However, this approximation is unsuitable in our setting, and in many real-world applications, due to the presence of an unsafe region A,which constrains feasible paths. One naive solution is to exclude the danger zones from the path planning algorithm, such that the resulting path does not enter A. However, this type of exclusion-only method must be very conservative due to the possibility of disruptive motion noise near ∂A, the boundary of A. Specifically, near ∂A,the spatial CBF (8) restricts the admissible control commands to those pointing away from A. This directional limitation is not captured in an exclusion-only planning framework. Therefore, the exclusion needs to be artificially inflated to guard against ignorance of this directional limitation, resulting in conservative and inefficient paths. To address this limitation, we introduce a kinodynamic model-based planner, inspired by [27], that additionally incor-porates the spatial CBF (8). The resulting motion model of the measured position xi, the mean of ρi, with spatial constraints is: 
+
+˙xi(t) = ui(t)
+
+st. α shs(ρ(t)) + ˙hs(ρ(t), u i(t)) ≥ 0
+
+xi(tf ) ∈ C ,
+
+(9) where tf is the terminal time. Importantly, the motion noise is not included in the point-wise motion model ˙xi(t). This is due to two reasons. First, recall that motion noise is represented as the diffusion effect in the deterministic Fokker-Planck equation (3) and constraint (8), as an uncorrelated zero-mean Gaussian 
+
+Algorithm 1 Kinodynamic RRT Schematic Initialize a tree with root node xi
+
+for iteration = 1 to max iterations do 
+
+Sample a random xrand in the free space Ω \ A 
+
+Find the closest existing tree node, xnear , to xrand 
+
+Steer: Try to generate a short motion from xnear to xrand 
+
+if the short motion is feasible (constraint (8) check) then 
+
+Add the reached state as a new node in the tree 
+
+if the new node is inside the charging region C then return the path from the xi to xrand 
+
+end if end if end for return failure noise. Second, the energy calculation is performed as an expectation at the population density level. Since the motion noise is zero-mean, its expected contribution to the drift of the PDF’s mean is effectively zero over time. While individual trajectories fluctuate, the expected motion of the mean of the density evolves according to the deterministic control ui(t).Therefore, the deterministic model ˙xi(t) = ui(t) represents the mean dynamics of the robot’s PDF. The effects of motion noise are captured via diffusion at the density level rather than the individual trajectory level. This separation avoids redundant incorporation of motion noise and preserves the consistency with the Fokker-Planck formulation. To implement this model, (9), we employ a kinodynamic Rapidly-exploring Random Tree (RRT) algorithm with state-based steering, which incrementally grows a feasible tree by probabilistically sampling states and extending them via constrained steering [28]. The schematic of the RRT path planner is shown in Algorithm 1. 
+
+Remark 2. For a faster but coarser path planner, one can restrict the free motion of the control set to a predefined set of admissible directions and nodes. This variation is particularly suitable for grid-based environments, such as urban roads, factory aisles, or warehouse shelves. 
+
+With this safe path to C from the planner, we can define the energy barrier function and compute its derivative as: 
+
+hEi (xi) = Ei − Emin − P (xi),
+
+˙hEi (xi, u i) = −c1∥ui∥2 − c2 − ˙P (xi),
+
+where ˙Ei comes from the energy model (4), P (xi) is the energy-to-charge value based on the length of the RRT-planned path and the robot’s maximum velocity umax , and ˙P (xi) is the corresponding direction obtained from Algorithm 1. This gives our final energy constraint for each robot: 
+
+αE h(Ei) + ˙h(Ei, u i) ≥ 0. (10) with positive coefficient αE .(a) t = 0 s (b) t = 8 .28 s (c) t = 27 .88 s (d) t = 44 .8 s (e) t = 86 .7 s          
+
+> Fig. 1. Time sequence of the experiment (top) and the corresponding simulation representation (bottom). In both representations, measured robot positions are shown as blue dots with black contours indicating ˆρi. The gold star represents the target center, and Ais shown in red, and the charging zone Cappears in green/cyan. In the simulation representation, ˆρdis additionally displayed as a green heatmap (darker indicates higher density), with paths-to-charge overlaid together with the yellow control input ui. A full video is available online at https://surl.li/cpvtyc.
+
+C. Controller Synthesis 
+
+Now that we have the objective and constraints defined in terms of CLF and CBFs, the PDE-level optimization-based controller formulation based on (6), (8), and (10) is: 
+
+min  
+
+> ui∈U , s
+
+∥u∥2 + γs 
+
+s.t. αv V (ρ) + ˙V (ρ, u ) − s ≤ 0
+
+αhh(ρ) + ˙h(ρ, u ) ≥ 0
+
+αE hEi (xi) + ˙hEi (xi, u i) ≥ 0 ∀i ∈ N, 
+
+(11) where the CLF constraint (6) is relaxed by a slack variable 
+
+s ≥ 0 and scaling factor γ.
+
+Remark 3 (Controller Feasibility) . Since the kinodynamic model (9) explicitly includes the spatial CBF constraint (8) ,the energy and space constraints in (11) share the same admissible control set. This means that both safety constraints are implemented as hard guarantees without conflict. The density matching CLF, on the other hand, is relaxed with s
+
+to always ensure safety and energy sufficiency before tracking the target. Therefore, the controller is always feasible. D. Numerical Implementation 
+
+Finally, to implement the continuous optimization problem (11), we derive an ODE approximation with the central FDM and periodic boundary conditions (see Remark 4). Then, on a uniformed 2D grid of size Nx × Ny with spacing l, the continuous density fields ρ, ρ d ∈ L2(Ω) are approximated and then flattened as ˆρ, ˆρd ∈ RNd respectively at grid points with 
+
+Nd = NxNy . Therefore, (11) becomes: 
+
+min  
+
+> u,s
+
+∥u∥2 + γs 
+
+s.t. 
+
+> Nd
+
+X
+
+> i=1
+
+h
+
+αv
+
+ ˆρid − ˆρi2 − 2  ˆρid − ˆρi ˆρit
+
+i
+
+l2 ≤ sαhϵ + X
+
+> i∈A
+
+h
+
+− αh(ˆ ρi)2 − 2ˆ ρi ˆρit
+
+i
+
+l2 ≥ 0
+
+αE (Ei − Emin − P (xi)) − c1∥ui∥2 − c2
+
+− ˙P (xi) ≥ 0 ∀i ∈ N, 
+
+where the superscript i denote the flattened grid position. ˆρt
+
+is the ODE approximation of the Fokker-Planck PDE (3): 
+
+ˆρt = PNi A(ˆ ρi)ui + T B ˆρi, where A(ˆ ρi) and B are constant sparse matrices obtained from central FDM, with the five-point Laplacian B multiplied by the scalar diffusion coefficient T .The values P, ˙P are computed per iteration for each robot using Algorithm 1. This discretization yields a finite-dimensional quadratic program that can be solved at each time step using convex optimization solvers, such as [29]. The sparse A, B from FDM enables efficient real-time computations while preserv-ing consistency with the original PDE formulation (11). This controller is implemented in Python for the following multi-robot experiment and simulations. 
+
+Remark 4. The discretization is well posed under periodic and Neumann boundary conditions. Periodic boundary is implemented to numerically simplify the boundary-related complications and does not imply that robots physically wrap around the domain. Moreover, the areas of interest are chosen strictly inside the spatial domain, which can always be inflated without altering the controller behavior. As a result, the density 
+
+ρ rarely interacts with the domain boundary during operation. If an explicit workspace boundary exists, Neumann boundary conditions provide a physically meaningful reflective model. Dirichlet boundary conditions, however, imply that the density at the boundary is fixed for all time, which prevents robot motion and is therefore not considered. 
+
+IV. E XPERIMENT RESULTS 
+
+We have tested the safe and energy-aware density control framework developed in the previous section on a team of four DJI RoboMaster EP robots operating in an indoor square field with a side length of 4 meters [30]. The position is measured using a Vicon motion-capture system [31], which introduces measurement noise. The robots R1, . . . , R 4 started with dif-ferent initial battery levels of 29% , 89% , 24% , and 39% ,respectively, to demonstrate four distinct battery-dependent behaviors. To complete the experiment within a practical time window, we simulated the battery dynamics using the model in (4). The experiment reaches steady-state and is terminated at 87 s . In this experiment, the average RRT planning time for all four robots using four parallel cores was 0.06341 s ,and the average control-loop time (including RRT planning and all computations) was 0.06571 s on a 12th Gen Intel Core i7-1260P. Figure 1 shows a time sequence of experimental snapshots. The top row presents the corresponding experimental view, while the bottom row displays an animation generated from the logged data. In both rows, the robot density ρi is shown in black contour around measured position xi (blue dot), the target PDF ρd’s center is denoted by a gold star, the danger zones A are highlighted in red, and the charging zone C is shown as a green/cyan circle. Additionally, the path-to-charge from the RRT planner and commanded control ui (yellow) are shown in the animation. At t = 0 s (Fig. 1a), the robots begin from different initial energy levels and positions. At t = 8 .28 s 
+
+(Fig. 1b), R3, with the lowest initial energy, moves toward the charging zone C first. R2 proceeds toward the target density 
+
+ρd between the two danger zones. R4 moves directly towards the target since it has sufficient energy and an obstacle-free route. Although R1 could follow R2, it instead takes a route biased toward C due to the energy-sufficiency constraint. At t = 27 .88 s (Fig. 1c), after R1 and R3 finished charging, they resume motion toward the target. R2 reaches the target and maintains the coverage task. As R4’s energy drops due to the operational cost c2 in (4), it starts to move toward C.Since energy sufficiency is enforced as a hard constraint and density matching is not, the controller prioritizes R4 to reach the charger by steering R1 and R3 out of its path, even when this degrades density matching performance. By t = 44 .80 s 
+
+(Fig. 1d), R4 reaches the charger region before its energy falls below Emin , while R1 and R3 continue towards ρd. At the end of the experiment, t = 86 .7 s (Fig. 1e), all robots converge near the target ρd, while maintaining sufficient energy. A full video of the experiment is available online at https://surl.li/cpvtyc. Figure 2 shows the recorded metrics: Lyapunov function 
+
+V in (5) for coverage task (blue; lower indicate better target tracking) and barrier function hs in (7) for safety constraint (red; higher indicate greater safety margin) are shown on the left, and energy level Ei in (4) on the right. Initially,               
+
+> Fig. 2. Experimental logs. Left: blue target-density CLF V(ˆ ρ), lower is better, and red spatial safety CBF hs(ˆ ρ), higher is better. Right: battery energy trajectories of R1, . . . , R 4with threshold Emin .
+> Fig. 3. Simulation worst case logs. Left: blue target-density CLF V(ˆ ρ),lower is better, and red spatial safety CBF hs(ˆ ρ), higher is better. Right: battery energy trajectories of R1, . . . , R 4with threshold Emin .
+
+V decreases substantially as all four robots move towards the target, while the safety metric hs drops slightly as R2
+
+moves between the danger zones. Around t = 40 s , when R4
+
+must recharge by the energy constraint, the density matching performance worsens as R1 and R3 move around R4 to ensure energy sufficiency. A moderate decrease in hs is observed when R1 moves closer to A to accommodate R4, but safety remains high compared to the threshold ϵ. Near the end of the experiment, all four robots reach equilibrium in V around ρd,oscillating due to inertia and motion noises. Moreover, on the right of Fig. 2, all robots maintained sufficient energy above 
+
+Emin throughout the experiment, even with R4 blocked by two other robots, demonstrating the feasibility of the proposed safe and energy-aware controller. To further evaluate robustness under stochastic localization and motion noises, the next section presents the results of 
+
+100 simulations run with the same setup, allowing for the assessment of average and worst-case behaviors. V. S IMULATION RESULTS 
+
+While the previous section illustrated the behavior of the proposed controller via an experiment with real robots, the underlying theoretical model is stochastic. Therefore, in this section, we further evaluate the performance of the controller by performing 100 simulations with different noise realizations and report the worst-case behavior observed across all trials in Fig. 3, using the same setup as the experiment. In the worst case, the highest V at each time step, the density matching behavior follows the same trend as the experiment, but with a poorer performance during the phase when the two robot blocks R4. All robots still converged at the target, but with a slightly higher steady-state value. The worst safety metric hs, minimum value across all runs, is only slightly lower than the experiment. Even during the blocking phase, the lowest safety value remains within 15% of the allowed threshold, indicating safe operations. In terms of the energy level performance, the worst-case trajectory is noticeably closer to the battery limit Emin = 0 .1.However, across 100 runs, only two trials briefly violated the energy threshold for a single time step with Ei = 0 .0991 ,and 0.0987 . Detailed investigation suggests that the violation is due to the probabilistic nature of the RRT path planner [28] and does not endanger the operations of the team of robots. While R4 moves towards the charger zone, the planner occasionally generates small detours instead of a straight line to C, even without A in the way. In rare cases, the combination of successive detoured paths, the two robots’ blockage, and motion noises caused two slight energy violations. However, 
+
+98 out of 100 runs remain strictly feasible. Importantly, this limitation is intrinsic to probabilistic plan-ners [28]. The planner will converge to the optimal path given enough computational resources. In our implementation, increasing planner resources (maximum iteration in Algo-rithm 1) produced more direct and energy-efficient paths, leading to safer energy reserves. However, this increases planning time to over 2 s per step, rendering it infeasible for real-time, or just online, control loops. Therefore, the results conclude that the proposed controller maintains safety and en-ergy sufficiency while converging to a target PDF, even under measurement and motion noises. The rare cases of violations can be mitigated by using an alternative kinodynamic planner or by precomputing and storing all optimal paths as a lookup table before deployment. VI. S UMMARY AND CONCLUSIONS 
+
+In this paper, we introduced a novel PDE-constrained den-sity control framework for multi-robot systems that explicitly maintains safety and energy sufficiency while tracking a de-sired spatial distribution. By integrating the population-level Fokker-Planck density dynamics with CLF-CBF and robot-level energy constraints, the proposed framework yields a con-vex optimization problem that is implementable in real time. Experiments performed on real robots and results of extensive simulations demonstrated successful constraint satisfaction un-der stochastic localization and motion noise, with only rare and negligible energy violations due to the employment of probabilistic path planning algorithms. Overall, the framework provides a practical approach for intelligent transportation and logistics applications where safety and sustainability are critical for multi-robot coordination. REFERENCES [1] O. W. Xuan, H. Selamat, and M. T. Muslim, “Autonomous mobile robot for transporting goods in warehouse and production,” in Advances in Intelligent Manufacturing and Robotics , A. Tan, F. Zhu, H. Jiang, K. Mostafa, E. H. Yap, L. Chen, L. J. A. Olule, and H. Myung, Eds. Singapore: Springer Nature Singapore, 2024, pp. 555–565. [2] O. M. Ikumapayi, O. T. Laseinde, R. R. Elewa, T. S. Ogedengbe, and E. T. Akinlabi, “Swarm robotics in a sustainable warehouse automation: Opportunities, challenges and solutions,” in E3S Web of Conferences ,vol. 552. EDP Sciences, 2024, p. 01080. [3] J. Wen, L. He, and F. Zhu, “Swarm robotics control and communica-tions: Imminent challenges for next generation smart logistics,” IEEE Communications Magazine , vol. 56, no. 7, pp. 102–107, 2018. [4] K. F. Yuen, L. Cai, S. C. K. Wee, and X. Wang, “Pandemic-driven acceptance of urban drone deliveries,” Transport Policy , vol. 146, pp. 356–370, 2024. [Online]. Available: https://www.sciencedirect.com/ science/article/pii/S0967070X23003359 [5] S. Daudin, “Optimal control of the fokker-planck equation under state constraints in the wasserstein space,” Journal de Math´ ematiques Pures et Appliqu´ ees , vol. 175, pp. 37–75, 2023. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0021782423000594 [6] P. Cannarsa and R. Capuani, “Existence and uniqueness for mean field games with state constraints,” PDE models for multi-agent phenomena ,pp. 49–71, 2018. [7] F. Hoppe and I. Neitzel, “Optimal control of quasilinear parabolic pdes with state-constraints,” SIAM Journal on Control and Optimization ,vol. 60, no. 1, pp. 330–354, 2022. [Online]. Available: https: //doi.org/10.1137/20M1383951 [8] L. Wang, A. D. Ames, and M. Egerstedt, “Safety barrier certificates for collisions-free multirobot systems,” IEEE Transactions on Robotics ,vol. 33, no. 3, pp. 661–674, 2017. [9] A. D. Ames, S. Coogan, M. Egerstedt, G. Notomista, K. Sreenath, and P. Tabuada, “Control barrier functions: Theory and applications,” in 2019 18th European Control Conference (ECC) , 2019, pp. 3420–3431. [10] Y. Origane, Y. Hattori, and D. Kurabayashi, “Control input design for a robot swarm maintaining safety distances in crowded environment,” 
+
+Symmetry , vol. 13, no. 3, p. 478, 2021. [11] G. Notomista and M. Egerstedt, “Persistification of robotic tasks,” IEEE Transactions on Control Systems Technology , vol. 29, no. 2, pp. 756– 767, 2020. [12] H. Fouad and G. Beltrame, “Energy autonomy for robot systems with constrained resources,” IEEE Transactions on Robotics , vol. 38, no. 6, pp. 3675–3693, 2022. [13] A. Nasif and G. Notomista, “Energy-aware coordination of hetero-geneous robotic systems with mobile charging stations for long-term environmental monitoring,” in 2025 33rd Mediterranean Conference on Control and Automation (MED) , 2025, pp. 478–483. [14] L. Niu and G. Notomista, “Decentralized density control of multi-robot systems using pde-constrained optimization,” IEEE Robotics and Automation Letters , vol. 10, no. 4, pp. 4045–4052, 2025. [15] B. Cheng, M. He, Z. Zhu, B. He, and J. Chen, “Development and application of coverage control algorithms: A concise review,” IEEE Transactions on Automation Science and Engineering , vol. 22, pp. 14 906–14 927, 2025. [16] P. Zhu, I. I. Sirmatel, G. Ferrari-Trecate, and N. Geroliminis, “A cov-erage control-based idle vehicle rebalancing approach for autonomous mobility-on-demand systems,” IEEE Transactions on Control Systems Technology , vol. 32, no. 5, pp. 1839–1853, 2024. [17] C. Sinigaglia, A. Manzoni, F. Braghin, and S. Berman, “Robust optimal density control of robotic swarms,” Automatica , vol. 176, p. 112218, 2025. [18] K. Yamaguchi, T. Endo, and F. Matsuno, “Formation control of multia-gent system based on higher order partial differential equations,” IEEE Transactions on Control Systems Technology , vol. 30, no. 2, pp. 570– 582, 2022. [19] M. T. Chiri, R. Guglielmi, and G. Notomista, “Boundary control for stability and invariance of traffic flow dynamics: A convex optimization approach,” IEEE Control Systems Letters , vol. 9, pp. 1333–1338, 2025. [20] Y. Park and C. Sloth, “Discretization-robust safety barrier of partial differential equation,” in 2023 11th International Conference on Control, Mechatronics and Automation (ICCMA) , 2023, pp. 49–54. [21] S. Koga and M. Krstic, “Safe pde backstepping qp control with high relative degree cbfs: Stefan model with actuator dynamics,” IEEE Transactions on Automatic Control , vol. 68, no. 12, pp. 7195–7208, 2023. [22] L. Niu and G. Notomista, “Safe decentralized density control of multi-robot systems using pde-constrained optimization with state constraints,” 2025, presented at the IEEE International Symposium on Multi-Robot and Multi-Agent Systems (MRS), 2025. [Online]. Available: https://arxiv.org/abs/2510.20643 [23] M. Annunziato and A. Borz` ı, “A fokker–planck control framework for multidimensional stochastic processes,” Journal of Computational and Applied Mathematics , vol. 237, no. 1, pp. 487–507, 2013. [24] M. A. Pereira, A. D. Saravanos, O. So, and E. A. Theodorou, “Decentralized safe multi-agent stochastic optimal control using deep fbsdes and admm,” 2022. [Online]. Available: https://arxiv.org/abs/ 2202.10658 [25] A. J. Archer and M. Rauscher, “Dynamical density functional theory for interacting brownian particles: stochastic or deterministic?” Journal of Physics A , vol. 37, pp. 9325–9333, 2004. [26] C. J. Cortes and M. Egerstedt, “Task persistification for robots with control-dependent energy dynamics,” in 2022 International Conference on Robotics and Automation (ICRA) . IEEE, 2022, pp. 128–134. [27] E. Schmerling and M. Pavone, “Kinodynamic planning,” in Encyclope-dia of Robotics . Springer, 2019. [28] S. Caron, Q.-C. Pham, and Y. Nakamura, “Completeness of randomized kinodynamic planners with state-based steering,” Robotics and Autonomous Systems , vol. 89, pp. 85–94, 2017. [Online]. Available: https://www.sciencedirect.com/science/article/pii/S0921889015302190 [29] MOSEK ApS, MOSEK Fusion API for Python 10.2.16 , 2024. [Online]. Available: https://docs.mosek.com/10.2/pythonfusion/index.html [30] DJI, RoboMaster S1 User Manual , DJI, 2020, accessed: 2026-02-26. [Online]. Available: https://www.dji.com/ca/downloads/products/ robomaster-s1#doc [31] Vicon Motion Systems Ltd., Vicon Nexus User Guide ,Vicon Motion Systems Ltd., 2024, accessed: 2026-02-26. [Online]. Available: https://help.vicon.com/download/attachments/ 11611993/Vicon%20Nexus%20User%20Guide.pdf

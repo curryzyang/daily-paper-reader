@@ -1,0 +1,1089 @@
+Title: Lightweight Geometric Adaptation for Training Physics-Informed Neural Networks
+
+URL Source: https://arxiv.org/pdf/2604.15392v1
+
+Published Time: Mon, 20 Apr 2026 00:04:48 GMT
+
+Number of Pages: 22
+
+Markdown Content:
+# LIGHTWEIGHT GEOMETRIC ADAPTATION FOR TRAINING 
+
+# PHYSICS -I NFORMED NEURAL NETWORKS 
+
+Kang An ∗
+
+Department of Computational Applied Mathematics and Operations Research Rice University Houston, USA 
+
+kang.an@rice.edu 
+
+Chenhao Si ∗
+
+School of Data Science The Chinese University of Hong Kong, Shenzhen Shenzhen, China 
+
+chenhao.si@link.cuhk.edu.cn 
+
+Shiqian Ma 
+
+Department of Computational Applied Mathematics and Operations Research Rice University Houston, USA 
+
+shiqian.ma@rice.edu 
+
+Ming Yan †
+
+School of Data Science The Chinese University of Hong Kong, Shenzhen Shenzhen, China 
+
+yanming@cuhk.edu.cn 
+
+April 20, 2026 
+
+# ABSTRACT 
+
+Physics-Informed Neural Networks (PINNs) often suffer from slow convergence, training instability, and reduced accuracy on challenging partial differential equations due to the anisotropic and rapidly varying geometry of their loss landscapes. We propose a lightweight curvature-aware optimization framework that augments existing first-order optimizers with an adaptive predictive correction based on secant information. Consecutive gradient differences are used as a cheap proxy for local geometric change, together with a step-normalized secant curvature indicator to control the correction strength. The framework is plug-and-play, computationally efficient, and broadly compatible with existing optimizers, without explicitly forming second-order matrices. Experiments on diverse PDE benchmarks show consistent improvements in convergence speed, training stability, and solution accuracy over standard optimizers and strong baselines, including on the high-dimensional heat equation, Gray–Scott system, Belousov–Zhabotinsky system, and 2D Kuramoto–Sivashinsky system. 
+
+# 1 Introduction 
+
+Physics-Informed Neural Networks (PINNs) have emerged as a versatile framework for integrating physical laws into neural networks [1, 2]. By incorporating governing Partial Differential Equations (PDEs) into the training objective via automatic differentiation, PINNs enable the solution of both forward and inverse problems without requiring dense observational data. This paradigm combines two complementary strengths: the expressive power of neural networks in approximating complex solution spaces, and the ability to enforce physical constraints through PDE residuals together with boundary and initial conditions. Owing to these advantages, PINNs have demonstrated effectiveness across a broad range of applications, including heat transfer [3 – 6], solid mechanics [7, 8], stochastic systems [9, 10], and uncertainty quantification [11–13]. Despite their strong empirical promise, PINNs remain notoriously difficult to train efficiently and reliably across many practically important regimes. For stiff PDEs and problems with sharp gradients or boundary/interior layers, optimization often becomes slow and unstable, frequently leading to degraded accuracy [14, 15]. Multi-scale and high-frequency 
+
+> *
+
+Kang An and Chenhao Si contributed equally to this work. Their authorship order was determined randomly. 
+
+> †
+
+Corresponding author. 
+
+> arXiv:2604.15392v1 [cs.LG] 16 Apr 2026
+
+A PREPRINT - A PRIL 20, 2026 settings, such as Helmholtz equations, introduce additional challenges due to spectral bias and optimization stiffness, causing PINNs to capture low-frequency components more readily than oscillatory structures [15 – 18]. Moreover, because the PINN objective couples PDE residuals with boundary and initial constraints, different loss components may evolve on highly disparate scales. This can lead to gradient imbalance, incomplete enforcement of physical constraints, and pronounced sensitivity to optimizer choice, sampling strategy, and hyperparameter tuning [15,19]. To mitigate these issues, prior work has explored adaptive loss balancing, residual-based sampling, curriculum strategies, and improved initialization [14, 15, 19 – 22]. Despite meaningful progress, robust and consistently efficient PINN training remains an open challenge. Recent studies increasingly suggest that these training difficulties are not merely empirical phenomena, but are closely tied to the geometry of the underlying optimization landscape. More broadly in deep learning, loss-landscape analyses have shown that local curvature, sharpness, and directional anisotropy play a central role in shaping optimization behavior and solution quality [23, 24]. For PINNs, this connection is even more pronounced: the coupling of PDE residuals, boundary and initial constraints, and higher-order differential operators often gives rise to highly ill-conditioned and anisotropic objectives, with optimization trajectories that traverse regions of markedly different local geometry [25]. Such landscapes can contain narrow or stiff directions together with relatively flat valleys, making standard first-order updates poorly matched to the local structure and contributing to slow convergence, instability, and sensitivity to training settings. These observations indicate that improving PINN training requires not only better balancing of losses or samples, but also optimization mechanisms that can respond more effectively to the evolving local geometry of the loss landscape. Recent studies have therefore revisited PINN training from the perspective of optimization algorithm design. Empirical and theoretical results show that optimizer choice strongly affects convergence speed, training stability, and final accuracy in PINNs [26,27]. While second-order and quasi-Newton perspectives can better capture the structure of PINN objectives [25,27 –29], existing approaches often introduce substantial computational overhead, require problem-specific tuning, or remain difficult to integrate into standard training pipelines. These limitations motivate a lightweight and broadly compatible framework that can exploit local curvature information more effectively in PINN optimization. In this work, we propose a curvature-aware optimization framework for PINNs that augments existing first-order optimizers with local geometric information. The framework is lightweight, plug-and-play, and broadly compatible, enabling improved adaptation to the anisotropic and rapidly varying landscapes that arise in PINN training. As a result, it improves convergence speed, training stability, and solution accuracy across diverse problems. The main contributions are summarized as follows: • We highlight rapidly varying local curvature as a key optimization challenge in PINN training, and revisit PINN optimization from the perspective of matching update dynamics to the anisotropic and ill-conditioned geometry of PINN objectives. • We propose a lightweight and plug-and-play curvature-aware optimization framework that explicitly in-corporates local geometric information into the update process, enabling more effective optimization for PINNs. • The proposed framework is broadly compatible with existing first-order optimizers and is designed to improve geometric adaptation without explicit construction of full second-order matrices, making it practical for integration into modern PINN training pipelines. • We validate the proposed framework on diverse PDE benchmarks and demonstrate consistent improvements in convergence speed, training stability, and solution accuracy over standard optimizers and strong optimizer baselines, highlighting the benefit of explicit curvature-aware adaptation in PINNs. The remainder of this paper is organized as follows. Section 2 briefly introduces PINNs. Section 3-3.1 analyze the PINN loss landscape and its associated curvature characteristics. Section 3.2 then introduces the proposed curvature-aware optimization framework. Section 4 provides a rigorous convergence analysis of the framework based on Adam. Finally, Section 5 reports numerical results on several PDE benchmarks. 
+
+# 2 Physics-Informed Neural Network 
+
+Denote the spatial domain as Ω ⊂ Rn with boundary ∂Ω, and let T represent the time domain. The spatial-temporal variable is given by (x, t ) ∈ Ω × T . A time-dependent partial differential equation (PDE) over this domain is defined as 2A PREPRINT - A PRIL 20, 2026 follows: 
+
+F[u]( x, t ) = 0 , (x, t ) ∈ Ω × T, (1) 
+
+B[u]( x, t ) = 0 , (x, t ) ∈ ∂Ω × T, (boundary condition) (2) 
+
+I[u]( x, 0) = 0 , x ∈ Ω, (initial condition) (3) where F, B, and I are differential operators, and u(x, t ) is the solution to the PDE, subject to boundary and initial conditions. A PINN parameterized by θ approximates the solution u(x, t ). The input to the neural network is (x, t ), and the approximation is denoted by ˆu(θ)( x, t ). The PINN minimizes the following objective function: 
+
+L(θ) = λF LF (θ) + λB LB (θ) + λI LI (θ), (4) where 
+
+LF (θ) = 1
+
+Nf
+
+X
+
+> (x,t )∈ΩF
+
+F[ˆ u(θ)]( x, t ) 2, (5) 
+
+LB (θ) = 1
+
+Nb
+
+X
+
+> (x,t )∈ΩB
+
+B[ˆ u(θ)]( x, t ) 2, (6) 
+
+LI (θ) = 1
+
+N0
+
+X
+
+> (x,0) ∈ΩI
+
+I[ˆ u(θ)]( x, 0) 2. (7) Here, ΩF , ΩB , and ΩI are the training sets for the PDE residual, boundary condition, and initial condition, respectively, with cardinality Nf , Nb, and N0. The weights λF , λB , and λI are hyperparameters tuning the contributions of each loss component. Notably, ΩF may include points on the boundary or at the initial time, allowing ΩF ∩ ΩB and ΩF ∩ ΩI
+
+to be non-empty. 
+
+# 3 Why the instantaneous gradient is not enough in PINNs 
+
+The optimization difficulty of PINNs is rooted not only in gradient magnitude imbalance, but also in the highly heterogeneous geometry induced by stiff PDE residuals [25, 26]. When low-frequency boundary or initial-condition terms interact with high-frequency residual constraints, the resulting loss landscape often becomes strongly anisotropic: some directions remain relatively flat, while others are sharply curved and rapidly varying. In such regions, even a small parameter displacement may lead to a noticeable change in the gradient field, making the optimization dynamics highly sensitive to local geometry [17, 20, 25, 26]. This effect is illustrated in Fig. 1. Compared with the relatively smooth basin of a purely data-driven objective, the inclusion of the stiff PDE residual produces a much more rugged landscape with sharper valleys and more rapidly varying geometry. The main difficulty is not nonconvexity alone, but the coexistence of stiff and flat directions: a step size small enough to remain stable in sharp directions can become too conservative to make meaningful progress in flatter ones. In this regime, relying only on the instantaneous gradient is often insufficient [24]. Furthermore, standard mo-mentum—which relies on an exponential moving average (EMA) of past gradients—is fundamentally reactive. It accumulates a lagging historical average that cannot anticipate sudden geometric changes. For PINNs, where local stiffness can vary substantially along the optimization path, it is therefore useful to supplement the current gradient with predictive information that reflects recent geometric change. A natural question is what additional signal can provide useful look-ahead information about such local geometric variation without incurring the cost of second-order methods. A simple and practical choice is the consecutive gradient difference 
+
+yk := gk − gk−1, (8) where gk = ∇L (θk) is the gradient at the current iterate. Unlike the instantaneous gradient, which only reflects the local descent direction at θk, the difference between consecutive gradients captures how the gradient field has changed along the recent optimization trajectory. In this sense, it provides a lightweight trajectory-level signal of recent local geometric variation. This signal is attractive because it naturally supports a predictive correction: if the optimization trajectory continues its recent trend, then the consecutive gradient difference provides a first-order surrogate for how the gradient may 3A PREPRINT - A PRIL 20, 2026 
+
+Figure 1: Projection of the loss landscape L = LI + λLF for the viscous Burgers’ equation onto a 2D parameter subspace using random directions. The vertical axis shows the logarithm of the scalar loss value, while the two horizontal axes represent the perturbation scale along the two random directions. The left subfigure shows the landscape for the data loss alone ( λ = 0 ), consisting of the initial and boundary condition constraints. The right subfigure displays the PDE residual landscape, illustrating the highly non-convex and rugged topography introduced by the physics constraints. evolve over a short horizon. Related ideas also appear in optimistic, extragradient-type, and gradient-difference-based accelerated methods [30 –37]. For our purposes, the key point is that yk offers a cheap trajectory-level proxy for short-horizon future gradient variation. In PINNs, however, this signal should not be used with a fixed strength: due to strong anisotropy and local stiffness, the same extrapolative correction may help in flatter regions but become overly aggressive in sharper ones. The practical issue is therefore not only whether gradient difference is informative, but also when it should be trusted and how strongly it should influence the update. This suggests that the predictive correction should be modulated according to the recent directional geometry of the optimization trajectory. 
+
+3.1 Secant-based gating for predictive correction 
+
+The previous subsection motivates the need for predictive information beyond the instantaneous gradient in PINNs. The remaining question is how strongly such predictive information should influence the update throughout training. In particular, if consecutive gradient difference is used as a low-cost extrapolative signal, its utility need not be uniform across iterations. Before introducing a geometry-dependent modulation mechanism, we first illustrate this variability through a realized one-step diagnostic. To quantify the realized utility of secant-style predictive correction, we define the relative secant prediction error 
+
+Rk := ∥∇L (θk+1 ) − (gk + τkyk)∥2
+
+∥∇L (θk+1 ) − gk∥2
+
+, (9) where gk := ∇L (θk) is the current gradient, yk := gk − gk−1 is the consecutive gradient difference, and τk denotes the effective extrapolative strength along the recent trajectory. This ratio compares the secant-corrected surrogate gk + τkyk
+
+against the baseline surrogate gk in predicting the next-step gradient. Smaller values of Rk indicate better realized predictive utility of the secant correction, while larger values indicate that the correction is becoming less reliable. In particular, Rk > 1 means that the secant-corrected surrogate is less accurate than gk alone. Figure 2 shows the histories of this diagnostic for AdamW. The main observation is that the realized value of predictive correction varies substantially during PINN training: the error exhibits pronounced fluctuations over time, and some iterations enter the regime Rk > 1. This indicates that a fixed extrapolative strength is not uniformly appropriate. In other words, the practical issue is not whether gradient difference can provide useful look-ahead information, but under what local geometry it should contribute more strongly or more conservatively to the update. To understand the geometric source of this variability, we examine how the gradient difference yk acts as a predictive signal for the next-step gradient. To formalize the recent trajectory, we define the recent step displacement alongside 4A PREPRINT - A PRIL 20, 2026 
+
+Figure 2: Histories of the secant curvature indicator κk (top) and the realized secant prediction error ratio Rk (bottom) for AdamW (left) and CA-AdamW (right). While CA-AdamW does not consistently reduce the directional curvature indicator itself, it substantially suppresses large error-ratio spikes and keeps Rk below or near the baseline-failure regime for a larger portion of training. This supports the intended role of curvature-aware gating, which smoothly modulates the strength of secant-based predictive correction according to the local directional geometry. our gradient difference: 
+
+sk := θk − θk−1, yk := gk − gk−1. (10) By the fundamental theorem of calculus applied to the gradient field along the segment from θk−1 to θk, we have 
+
+yk =
+
+Z 10
+
+H(θk−1 + ts k) sk dt, 
+
+where H(θ) = ∇2L(θ) is the Hessian. Defining the segment-averaged Hessian ¯Hk := R 10 H(θk−1 + ts k) dt , we obtain: 
+
+yk = ¯Hksk.
+
+Hence, the consecutive gradient difference is the secant response of the gradient field along the recent trajectory direction, and can be interpreted as a low-cost directional curvature signal. To apply this signal to the upcoming step, define the next step displacement dk+1 := θk+1 − θk. We relate this new displacement to our recent trajectory by writing: 
+
+dk+1 = τksk + δk,
+
+where τk, as introduced above, measures how much the next step continues the recent trajectory direction, and 
+
+δk = dk+1 − τksk measures the deviation from that local directional persistence. Now, a first-order expansion at θk gives the next-step gradient: 
+
+∇L (θk+1 ) = gk + H(θk)dk+1 + o(∥dk+1 ∥2).
+
+Substituting our trajectory decomposition into this expansion and using yk = ¯Hksk yields: 
+
+∇L (θk+1 ) = gk + τkyk + τk
+
+ H(θk) − ¯Hk
+
+sk + H(θk)δk + o(∥dk+1 ∥2). (11) This equation provides an explanation for the variability observed in the realized error Rk. The term gk + τkyk is the desired predictive component; it uses the recent secant response to approximate the leading variation of the next-step gradient. The remaining terms explain why the realized predictive quality can change substantially across iterations, even when the gradient difference remains available at every step. More specifically, these remaining terms isolate two distinct sources of approximation error. The term τk
+
+ H(θk) −
+
+¯Hk
+
+sk captures curvature mismatch: it remains small when the curvature along the recent segment is consistent with the current iterate but grows large when the local geometry changes rapidly between consecutive steps. The term 5A PREPRINT - A PRIL 20, 2026 
+
+H(θk)δk captures the penalty for directional deviation: it is small when the upcoming step remains coherent with the recent trajectory and large when the optimizer shifts course. Crucially, this directional penalty is not determined by the deviation δk alone; it is scaled by the Hessian at the current point. As a result, identical shifts in trajectory can yield vastly different prediction errors depending on the local geometry’s stiffness. In regions of strong local curvature, even a moderate deviation from the recent path is amplified into a severe secant-extrapolation error. This observation is the cornerstone of our proposed method. It suggests that the role of local geometry is not to dictate whether the secant signal is useful, but rather to determine how strongly it should influence the current update. In regions of mild curvature variation where the recent direction remains predictive, the secant correction can be applied with confidence. Conversely, when the local geometry is stiff or rapidly changing, the identical correction term becomes aggressive and prone to overshooting, necessitating a reduced coefficient. This dynamic is especially critical in PINNs, whose loss landscapes are notorious for exhibiting strong anisotropy and stiff directional geometry due to the interplay of heterogeneous training objectives and PDE residual constraints [17, 25, 26]. Ultimately, (11) frames the practical challenge as an extrapolation-gain control problem. However, the theoretical quantities in (11) cannot be computed online. The diagnostic ratio Rk relies on the unobserved future gradient ∇L (θk+1 ), and the decomposition itself demands explicit Hessian evaluations that are computationally prohibitive during training. Therefore, the algorithm requires a lightweight, online surrogate—a metric that continuously measures local geometry to dynamically scale the secant correction along the recent trajectory. For this purpose, we introduce the secant curvature indicator: 
+
+κk := s⊤ 
+
+> k
+
+yk
+
+∥sk∥22
+
+= s⊤ 
+
+> k
+
+¯Hksk
+
+∥sk∥22
+
+,
+
+which is the Rayleigh quotient of the segment-averaged Hessian along the recent displacement direction. Thus, κk
+
+measures the directional curvature actually experienced by the optimizer along its latest trajectory segment. The role of κk is not to precisely estimate the future error in (9) , but rather to serve as a cheap, online indicator of how aggressively secant-based predictive correction should be applied. When κk is small, the recent direction exhibits mild curvature, allowing the secant response yk to be incorporated more strongly without making the update excessively reactive. Conversely, when κk is large, the recent direction is stiff. In this regime, applying a fixed extrapolative gain would amplify curvature and directional mismatches, likely leading to overshoot. Therefore, a larger κk dictates that the correction coefficient should be damped. We therefore construct the corrected gradient as 
+
+˜gk = gk + αkyk,
+
+where the gating coefficient αk is a monotonically decreasing function of κk. In our implementation, we use 
+
+αk = αbase 
+
+ 1 + tanh( −κk),
+
+where αbase > 0 is the nominal correction level. By smoothly modulating αk, the secant correction is strengthened when the local geometry supports a bold predictive step, and progressively suppressed when local stiffness warns against aggressive extrapolation. The optimizer-level effect of this geometry-aware modulation is illustrated in Fig. 2. As shown in the right panel, compared with AdamW, our curvature-aware variant produces a substantially more stable error-ratio trajectory with fewer and smaller spikes, even when elevated values of κk arise during training. This behavior confirms the intended role of curvature-aware gating: smoothly adapting the strength of the predictive correction to the local directional geometry, rather than blindly applying a fixed extrapolative gain throughout optimization. 
+
+3.2 Curvature-aware optimization framework 
+
+While related in spirit to Adan’s use of gradient difference, our framework targets the specific geometric heterogeneity of PINNs. Rather than relying on a fixed extrapolation form or violently tuning the optimizer’s internal EMA hyperparameters step-by-step, we modulate the look-ahead signal through a trajectory-level secant gate. We now instantiate the proposed mechanism within AdamW to illustrate its practical implementation. Although the proposed curvature-aware trajectory correction is optimizer-agnostic, we use AdamW as a representative example because its update structure makes the integration especially transparent. The resulting optimizer, referred to as 
+
+CA-AdamW , preserves the original AdamW update rule while replacing the raw gradient input with a curvature-gated boosted gradient. In this way, the method remains lightweight and fully first-order, while incorporating the trajectory-level correction developed in the previous subsections. 6A PREPRINT - A PRIL 20, 2026 
+
+Algorithm 1 Curvature-Aware AdamW (CA-AdamW)  
+
+> 1:
+
+Input: initialization θ0, number of iterations T , β1, β2, βa, δ, αbase , λ, {ηk}Tk=1  
+
+> 2:
+
+Initialize m0 ← 0, v0 ← 0, a0 ← 0, g−1 ← 0 
+
+> 3:
+
+for k = 1 to T do  
+
+> 4:
+
+gk = 1 
+
+> |Z k|
+
+P  
+
+> ζj∈Z k
+
+∇ℓ(θk−1; ζj ) 
+
+> 5:
+
+if k = 1 then  
+
+> 6:
+
+αk = 0  
+
+> 7:
+
+˜gk = gk 
+
+> 8:
+
+else  
+
+> 9:
+
+ak = βaak−1 + (1 − βa)( gk − gk−1) 
+
+> 10:
+
+sk = θk−1 − θk−2 
+
+> 11:
+
+κk = ⟨sk ,g k −gk−1⟩∥sk ∥22 
+
+> 12:
+
+αk = αbase (1 + tanh( −κk))  
+
+> 13:
+
+˜gk = gk + αkak 
+
+> 14:
+
+end if  
+
+> 15:
+
+mk = β1mk−1 + (1 − β1)˜ gk 
+
+> 16:
+
+vk = β2vk−1 + (1 − β2)˜ gk ⊙ ˜gk 
+
+> 17:
+
+ˆmk = mk
+
+> 1−βk
+> 1
+
+, ˆvk = vk 
+
+> 1−βk
+> 2
+> 18:
+
+θk = θk−1 − ηk
+
+ ˆmk  
+
+> √ˆvk+δ
+
++ λθ k−1
+
+ 
+
+> 19:
+
+end for 
+
+Algorithm ?? proceeds in three stages. First, it constructs recent trajectory information from consecutive iterations. The parameter displacement sk = θk − θk−1 captures the latest update direction, while the correction signal is formed using an exponential moving average 
+
+ak = βaak−1 + (1 − βa)( gk − gk−1), (12) where βa ∈ [0 , 1) is a decay factor. Compared to the raw consecutive gradient difference, this EMA-smoothed form provides a more stable estimate of recent gradient variation under stochastic training. This stability is particularly beneficial in PINNs, given collocation and residual-sampling noise. Second, the algorithm computes the secant curvature indicator κk and maps it to the adaptive boost coefficient 
+
+αk = αbase (1 + tanh( −κk)) . (13) We let α0 = 0 since s0 = 0 . Here, the raw secant difference is retained in κk to preserve its direct geometric interpretation, whereas the EMA-smoothed signal ak is used in the correction term for improved robustness. This realizes the curvature-aware gating mechanism introduced previously: a stronger correction is applied when the recent trajectory exhibits a flat directional response, while the correction is sharply suppressed when local stiffness indicates a higher risk of amplifying oscillations. Finally, the boosted gradient 
+
+˜gk = gk + αkak (14) is used in place of the raw gradient in the AdamW moment updates. That is, both the first and second moments are updated using ˜gk rather than gk. As a result, the base optimizer receives a gradient signal that combines the current descent information with a smoothed, curvature-gated estimate of recent gradient evolution. The underlying AdamW machinery remains unchanged; only its gradient input is enriched by the proposed trajectory-level correction. Although we present CA-AdamW here for concreteness, the proposed CA framework is not specific to AdamW. Its core operations, constructing a smoothed gradient-difference signal, computing a secant-curvature gate, and injecting the boosted gradient into the optimizer input, carry over directly to other first-order methods. Corresponding instantiations for SOAP and Muon are provided in Algorithm 3 and 5, and all three optimizer families are evaluated in Section 5. 
+
+# 4 Convergence Analysis of Curvature-Aware Adam 
+
+To facilitate theoretical analysis, we consider a simplified variant of CA-AdamW that omits weight decay, bias correction, and the EMA smoothing of the gradient-difference term, while retaining the core curvature-aware gating mechanism 7A PREPRINT - A PRIL 20, 2026 introduced in Section 3.2. Specifically, the smoothed correction signal ak is replaced by the raw consecutive gradient difference gk − gk−1.We consider the stochastic optimization problem 
+
+min 
+
+> θ∈Rd
+
+F (θ) := Eζ [ℓ(θ; ζ)] . (15) Let gk be a stochastic gradient estimator of ∇F (θk). The simplified recursion is 
+
+˜gk := gk + αk(gk − gk−1), mk := β1mk−1 + (1 − β1)˜ gk, (16) 
+
+vk := β2vk−1 + (1 − β2)˜ g2
+
+> k
+
+, θk+1 := θk − η mk
+
+√vk + δ . (17) Throughout the analysis, we only use the uniform bound |αk| ≤ Cα := 2 αbase . For notational convenience, we define the diagonal preconditioning matrix: 
+
+Dk := diag 
+
+ 1
+
+√vk + δ
+
+
+
+, θk+1 − θk = −ηD kmk. (18) For the analysis, we adopt several standard, relatively mild assumptions commonly used in the literature on optimization methods in Deep Learning [35, 38 –41]. These assumptions provide a conventional foundation for establishing the convergence results that follow. 
+
+Assumption 4.1 (L-smoothness) . The objective function F is continuously differentiable and has an L-Lipschitz continuous gradient, satisfying: 
+
+∥∇ F (x) − ∇ F (y)∥ ≤ L∥x − y∥, ∀x, y ∈ Rd. (19) 
+
+Assumption 4.2 (Stochastic Oracle Properties) . The stochastic gradient estimators {gk} satisfy the following conditions for all k:1. Unbiasedness and bounded variance: 
+
+E[gk | θk] = ∇F (θk), E∥gk − ∇ F (θk)∥2 | θk
+
+ ≤ σ2. (20) 2. Uniformly bounded gradients: There exists a constant G > 0 such that 
+
+∥gk∥∞ ≤ ∥ gk∥ ≤ G. (21) The following elementary estimates will be used for the convergence analysis. 
+
+Lemma 4.1 (Properties of modified gradients) . Under Assumptions 4.1 and 4.2, for all k ≥ 0, the modified stochastic gradient ˜gk and the modified full gradient ˜∇k := ∇F (θk) + αk
+
+ ∇F (θk) − ∇ F (θk−1) satisfy: 
+
+∥˜gk∥∞ ≤ ∥ ˜gk∥ ≤ (1 + 2 Cα)G, (22) 
+
+∥ ˜∇k − ∇ F (θk)∥ ≤ CαL∥θk − θk−1∥. (23) 
+
+Proof. By definition, we have ˜gk = gk + αk(gk − gk−1). Taking the norm and applying the triangle inequality yields: 
+
+∥˜gk∥ ≤ ∥ gk∥ + |αk| ∥gk∥ + ∥gk−1∥ ≤ (1 + 2 Cα)G, 
+
+where we have used the uniform bound |αk| ≤ Cα and the assumption that ∥gk∥ ≤ G.For the second claim, by the definition of ˜∇k and Assumption 4.1, we have: 
+
+∥ ˜∇k − ∇ F (θk)∥ = |αk| ∥∇ F (θk) − ∇ F (θk−1)∥ ≤ CαL∥θk − θk−1∥.
+
+This completes the proof. 
+
+Lemma 4.2 (Bounded displacement and preconditioner) . Considering Assumptions 4.1 and 4.2, for all k ≥ 0, the diagonal preconditioning matrix Dk satisfies: 
+
+c0I ⪯ Dk ⪯ 1
+
+δ I, where c0 := 1(1 + 2 Cα)G + δ , (24) and the iterate displacement is bounded by: 
+
+∥θk+1 − θk∥ ≤ ηM, where M := (1 + 2 Cα)Gδ . (25) 8A PREPRINT - A PRIL 20, 2026 
+
+Proof. First, unrolling the momentum recursion mk = β1mk−1 + (1 − β1)˜ gk with the initialization m−1 = 0 , and applying Lemma 4.1, an induction yields ∥mk∥ ≤ (1 + 2 Cα)G.Similarly, because the second moment accumulator vk tracks the exponential moving average of ˜g2
+
+> k
+
+, the infinity norm bound from Lemma 4.1 ensures that ∥vk∥∞ ≤ (1 + 2 Cα)2G2. Taking the square root coordinate-wise gives 
+
+0 ≤ √vk ≤ (1 + 2 Cα)G. By the definition of the preconditioner Dk = diag(1 /(√vk + δ)) , these coordinate-wise bounds directly yield the matrix inequalities in (24). Finally, taking the norm of the parameter update rule θk+1 − θk = −ηD kmk and combining these intermediate bounds yields: 
+
+∥θk+1 − θk∥ = η∥Dkmk∥ ≤ η∥Dk∥ ∥ mk∥ ≤ ηδ (1 + 2 Cα)G = ηM. 
+
+This completes the proof. With these preliminary estimates in hand, we can now state the main convergence result. 
+
+Theorem 4.1 (Convergence under Lipschitz gradient) . Consider the simplified curvature-aware Adam iteration above. Suppose Assumptions 4.1–4.2 hold, and assume that F is lower bounded by F∗ := inf θ F (θ) > −∞ . Let the stepsize satisfy η ≤ min(1 , 1/L ). There exist positive constants C1, C 2, C 3, depending only on L, δ, β 1, G, C α, d , such that for any T ≥ 1,
+
+1
+
+T 
+
+> T−1
+
+X
+
+> k=0
+
+E∥∇ F (θk)∥2 ≤ C1
+
+ F (θ0) − F∗ + G2
+
+ηT + C2η + C3σ2. (26) 
+
+The last term depends strictly on the stochastic gradient variance, while the number of iterations T can be chosen to reduce the first two terms. Specifically, choosing η = Θ( T −1/2) yields a bound of order O(T −1/2) + O(σ2). Thus, in the stochastic setting, the method converges to a neighborhood of stationarity whose radius is controlled by the variance level σ2.Proof. By the L-smoothness of F , the update rule θk+1 − θk = −ηD kmk, and the intermediate bound ∥Dkmk∥ ≤ M
+
+established in Lemma 4.2, we have: 
+
+E[F (θk+1 )] ≤ E[F (θk)] − η E⟨∇ F (θk), D kmk⟩ + LM 2
+
+2 η2. (27) We define the modified full gradient as ˜∇k := ∇F (θk) + αk
+
+ ∇F (θk) − ∇ F (θk−1). Let ∆k := αk
+
+ ∇F (θk) −∇F (θk−1) and ek := mk − ˜∇k. By expanding mk = ∇F (θk) + ∆ k + ek and applying the weighted Young’s inequality ( ⟨a, Db ⟩ ≤ 14 ⟨a, Da ⟩ + ⟨b, Db ⟩) individually to both the momentum shift ∆k and the tracking error ek,together with the preconditioner bounds c0I ⪯ Dk ⪯ 1 
+
+> δ
+
+I in Lemma 4.2, we obtain: 
+
+−⟨∇ F (θk), D kmk⟩ ≤ − c0
+
+2 ∥∇ F (θk)∥2 + 1
+
+δ ∥∆k∥2 + 1
+
+δ ∥ek∥2. (28) We now bound the expected squared tracking error E∥ek∥2. From the momentum recursion, ek = β1ek−1 +β1( ˜∇k−1 −
+
+˜∇k)+(1 −β1)(˜ gk − ˜∇k). Using the convexity of the squared norm and the standard inequality ∥a+b∥2 ≤ 2∥a∥2 +2 ∥b∥2,we obtain: 
+
+E∥ek∥2 ≤ β1E∥ek−1∥2 + 2β21
+
+1 − β1
+
+E∥ ˜∇k−1 − ˜∇k∥2 + 2(1 − β1)E∥˜gk − ˜∇k∥2. (29) We bound the last two terms using the L-smoothness of F , the displacement limit ( ∥θk − θk−1∥ ≤ ηM ), and the stochastic variance from Assumption 4.2. Defining the constants c1 := 3(1 + 2 C2
+
+> α
+
+)L2M 2 and c2 := 3(1 + 2 C2
+
+> α
+
+), we establish: 
+
+E∥ ˜∇k−1 − ˜∇k∥2 ≤ c1η2 and E∥˜gk − ˜∇k∥2 ≤ c2σ2. (30) Substituting these limits back into the recursion yields: 
+
+E∥ek∥2 ≤ β1E∥ek−1∥2 + 2β21 c1
+
+1 − β1
+
+η2 + 2(1 − β1)c2σ2. (31) 9A PREPRINT - A PRIL 20, 2026 With the initialization m−1 = 0 , θ−1 = θ0, and α0 = 0 , we have ˜∇0 = ∇F (θ0). Define the initial tracking error by 
+
+e−1 := m−1 − ∇ F (θ0) = −∇ F (θ0), so that ∥e−1∥2 = ∥∇ F (θ0)∥2 ≤ G2. Unrolling the contraction (31) from k = 0 
+
+gives: 
+
+E∥ek∥2 ≤ βk+1 1 G2 + 2β21 c1
+
+(1 − β1)2 η2 + 2 c2σ2. (32) Finally, substituting the inner product bound (28) into (27) , and using the tracking-error bound (32) together with the assumption η ≤ 1/L (which implies η3 ≤ η2/L ), we obtain: 
+
+E[F (θk+1 )] ≤ E[F (θk)] − c0η
+
+2 E∥∇ F (θk)∥2 + LM 2
+
+2 η2 + (CαLM )2
+
+δ η3 + ηδ E∥ek∥2
+
+≤ E[F (θk)] − c0η
+
+2 E∥∇ F (θk)∥2 + G2
+
+δ ηβ k+1 1 + c3η2 + c4ησ 2,
+
+where the aggregated step-wise constants are defined as: 
+
+c3 := 
+
+ 12 + C2
+
+> α
+
+δ + 6β21 (1 + 2 C2
+
+> α
+
+)
+
+δ(1 − β1)2
+
+
+
+LM 2, c4 := 6(1 + 2 C2
+
+> α
+
+)
+
+δ .
+
+Summing this inequality over k = 0 , . . . , T − 1 and using the global lower bound F (θT ) ≥ F∗ yields: 
+
+c0η
+
+2 
+
+> T−1
+
+X
+
+> k=0
+
+E∥∇ F (θk)∥2 ≤ F (θ0) − F∗ + β1G2
+
+δ(1 − β1) η + c3T η 2 + c4T ησ 2. (33) Dividing both sides by c0ηT  
+
+> 2
+
+gives 
+
+1
+
+T 
+
+> T−1
+
+X
+
+> k=0
+
+E∥∇ F (θk)∥2 ≤ 2 F (θ0) − F∗
+
+
+
+c0ηT + 2β1G2
+
+c0δ(1 − β1)T + 2c3
+
+c0
+
+η + 2c4
+
+c0
+
+σ2. (34) Since η ≤ 1, we have 1 
+
+> T
+
+≤ 1 
+
+> ηT
+
+, and therefore 
+
+2 F (θ0) − F∗
+
+
+
+c0ηT + 2β1G2
+
+c0δ(1 − β1)T ≤ C1
+
+ F (θ0) − F∗ + G2
+
+ηT , (35) for C1 := max 
+
+ 2 
+
+> c0
+
+, 2β1
+
+> c0δ(1 −β1)
+
+
+
+. Setting C2 := 2c3 
+
+> c0
+
+, C 3 := 2c4 
+
+> c0
+
+, we arrive at the inequality stated in the theorem. The remaining claims regarding the convergence rate follow immediately from this bound by the stated choices of η, T , and 
+
+σ2.We next make the curvature interpretation more explicit under a Lipschitz Hessian assumption. In this regime, the gradient-difference correction becomes a first-order surrogate for a Hessian-vector product, up to a second-order remainder, without changing the convergence guarantee above. 
+
+Assumption 4.3 (Lipschitz Hessian) . There exists ρ > 0 such that 
+
+∥∇ 2F (x) − ∇ 2F (y)∥ ≤ ρ∥x − y∥, ∀x, y ∈ Rd. (36) 
+
+Theorem 4.2 (Curvature interpretation under Lipschitz Hessian) . Under the conditions of Theorem 4.1, suppose that Assumption 4.3 holds. Then for each k,
+
+∇F (θk) − ∇ F (θk−1) = 
+
+Z 10
+
+∇2F  θk−1 + t(θk − θk−1) dt 
+
+
+
+(θk − θk−1), (37) 
+
+and hence 
+
+˜∇k = ∇F (θk) + αk
+
+Z 10
+
+∇2F  θk−1 + t(θk − θk−1) dt 
+
+
+
+(θk − θk−1). (38) 
+
+Moreover, 
+
+∥ ˜∇k − ∇ F (θk) − αk∇2F (θk)( θk − θk−1)∥ ≤ Cαρ∥θk − θk−1∥2. (39) 
+
+Therefore, the correction term is a first-order surrogate of a Hessian-vector product, up to a second-order remainder, and the convergence guarantee in Theorem 4.1 remains valid. 
+
+10 A PREPRINT - A PRIL 20, 2026 
+
+Proof. Let sk := θk − θk−1. By the integral form of Taylor’s theorem applied to ∇F ,
+
+∇F (θk) − ∇ F (θk−1) = 
+
+Z 10
+
+∇2F (θk−1 + ts k) dt 
+
+
+
+sk, (40) which immediately gives the stated representation of ˜∇k.Subtracting αk∇2F (θk)sk and using Assumption 4.3, we obtain 
+
+∥ ˜∇k − ∇ F (θk) − αk∇2F (θk)sk∥ ≤ | αk|
+
+Z 10
+
+∥∇ 2F (θk−1 + ts k) − ∇ 2F (θk)∥ dt ∥sk∥ (41) 
+
+≤ Cαρ
+
+Z 10
+
+∥θk−1 + ts k − θk∥ dt ∥sk∥ (42) 
+
+= Cαρ
+
+Z 10
+
+(1 − t) dt ∥sk∥2 ≤ Cαρ∥sk∥2. (43) This proves the claimed approximation bound. Finally, since ∥sk∥ = O(η), the additional term is of order O(η2) and can be absorbed into the higher-order terms in the proof of Theorem 4.1 without affecting the convergence rate. 
+
+Remark 4.1. Theorem 4.2 justifies the term “curvature-aware”: At the full gradient level, the correction 
+
+αk
+
+ ∇F (θk) − ∇ F (θk−1) (44) 
+
+is exactly a Hessian-averaged vector product along the segment from θk−1 to θk, and therefore serves as a first-order surrogate for 
+
+αk∇2F (θk)( θk − θk−1), (45) 
+
+up to a second-order remainder under Lipschitz Hessian continuity. 
+
+# 5 Numerical Experiments 
+
+In this section, we evaluate the proposed CA framework on a diverse set of PDE benchmarks. We combine it with three widely used optimizers in deep learning and PINNs, namely AdamW [42, 43], SOAP [44], and Muon [45], yielding CA-AdamW, CA-SOAP, and CA-Muon, respectively. For each problem setting, the testing set contains 90,000 randomly sampled points and is kept fixed across all experiments for fair comparison. Training samples are independently drawn from the corresponding domains, where Nf , Nb, and 
+
+N0 denote the numbers of residual, boundary, and initial points, respectively, when applicable. For each PDE, all models are trained and evaluated with five random seeds. To isolate the effect of the CA modification, we use the same learning-rate schedule and weight decay for the standard and CA variants within each optimizer family. Performance is measured by the relative L2 error and the L∞ norm: Relative L2 error =
+
+qPNk=1 |ˆu(xk, t k) − u(xk, t k)|2
+
+qPNk=1 |u(xk, t k)|2
+
+,L∞ norm = max  
+
+> 1≤k≤N
+
+|ˆu(xk, t k) − u(xk, t k)| .
+
+Here, u denotes the exact solution, ˆu the model prediction, and N the number of testing samples. We report the best result over five runs in the figures and the average over five runs in the tables. 
+
+5.1 10D Heat Equation 
+
+We consider the following high dimensional heat equation on the domain Ω = [ −1, 1] d and T = [0 , 1] :
+
+ut − ∆u = f (x, t ), (x, t ) ∈ Ω × T, (46) 
+
+u(x, t ) = g(x, t ), (x, t ) ∈ ∂Ω × T, (47) 
+
+u(x, 0) = h(x), x ∈ Ω, (48) 11 A PREPRINT - A PRIL 20, 2026 where f (x, t ), g(x, t ), and h(x) can be inferred from the analytical solution u(x, t ) = cos( 1
+
+> d
+
+Pdi=1 xi)e−t, where 
+
+x = [ x1, x 2, . . . , x d], and we choose d = 10 in this example. Also, we will use a 3-layer network with 80 neurons in each hidden layer. For training, we sample Nf = 3 ,000 collocation points in the domain and set Nb = N0 = 100 for the boundary and initial data. The loss weights are chosen as λF = 1 and λB = λI = 10 . The relative L2 error histories are shown in Fig. 3, and the final numerical results are summarized in Table 1. As shown in Fig. 3 and Table 1, the CA modification improves final accuracy and often accelerates convergence across tested optimizers. Standard AdamW plateaus at a relative L2 error of about 5.66 × 10 −3, whereas CA-AdamW reduces it to 1.34 × 10 −4, corresponding to a relative error ratio of 1.87% . This indicates that CA effectively alleviates optimization stagnation in the 10D setting. Among all methods, CA-SOAP achieves the best accuracy, with the lowest relative L2 error of 5.98 × 10 −6 and L∞
+
+error of 1.21 × 10 −4. Although Muon and SOAP outperform AdamW in their standard forms, their CA variants further reduce the errors substantially. Overall, these results show that the CA modification is a robust enhancement for improving convergence and numerical accuracy on the heat equation. 
+
+Figure 3: History of the relative L2 errors for the 10D Heat Equation. Table 1: Errors for the 10D heat equation (lower is better). Average relative L2 error and absolute L∞ error for each optimizer, comparing the standard version to its CA variant. Error reduction (%) indicates the percentage decrease in error from the standard optimizer to its CA variant ( higher is better ). Green denotes the best results and performance improvements across all optimizers. 
+
+Optimizers Rel. L2 error ( u) L∞ error ( u)AdamW 5.66 × 10 −3 6.71 × 10 −2
+
+CA-AdamW 1.34 × 10 −4 1.07 × 10 −3
+
+Error reduction (%) ↑ 97.63% 98.40% 
+
+Muon 1.41 × 10 −4 7.94 × 10 −3
+
+CA-Muon 3.92 × 10 −5 2.18 × 10 −3
+
+Error reduction (%) ↑ 72.20% 72.54% SOAP 5.84 × 10 −5 8.83 × 10 −4
+
+CA-SOAP 5.98 × 10 −6 1.21 × 10 −4
+
+Error reduction (%) ↑ 89.76% 86.30% 
+
+5.2 Gray-Scott Equation 
+
+Reaction–diffusion systems generate diverse patterns observed in nature. The Gray–Scott system is a canonical model of such dynamics and a challenging benchmark for PINN training due to its stiff reaction–diffusion behavior, nonlinear 12 A PREPRINT - A PRIL 20, 2026 coupling, and sensitivity to error accumulation over long time horizons. It is governed by the following equations: 
+
+ut − ϵ1uxx − b(1 − u) + uv 2 = 0 , (x, t ) ∈ Ω × T, (49) 
+
+vt − ϵ2vxx + ( b + k)v + uv 2 = 0 , (x, t ) ∈ Ω × T, (50) 
+
+u(x, 0) = u0(x), v(x, 0) = v0(x), x ∈ Ω, (51) with a periodic boundary condition. The spatial domain is defined as Ω = [ −50 , 50] with a time horizon of T = [0 , 20] .The diffusion rates are set to ϵ1 = 1 and ϵ2 = 0 .01 , while the reaction coefficients are b = 0 .02 and k = 0 .0562 . The initial conditions are chosen to be: 
+
+u0(x) = 1 − sin( π(x − 50) /100) 4
+
+2 , v0(x) = sin( π(x − 50) /100) 4
+
+4 . (52) We employ a fully connected neural network architecture with depth 3 and width 128. To strictly enforce the periodic boundary condition as a hard constraint, we utilize a Fourier feature embedding layer [20, 46] that maps the spatial input x to 
+
+[cos( ωxx), sin( ωxx), . . . , cos( mω xx), sin( mω xx)] ,
+
+where ωx = 2 π/ 100 and m = 10 . This embedding ensures that the network output is inherently periodic with period 
+
+L = 100 . The dataset consists of Nf = 5 ,000 collocation points and N0 = 100 initial points. The loss weights are set to λF = 1 and λI = 100 .The training configuration, including the learning rate schedule, and weight decay remains identical to the setup described in the previous section. However, due to the chaotic and stiff nature of the Gray-Scott system, we employ a time-marching strategy to enhance convergence [17, 44]. The time domain T = [0 , 20] is uniformly divided into 10 windows, and the model is trained sequentially over them. For the first window, the initial condition is given by the exact problem setup; for each subsequent window, it is taken from the prediction at the end of the previous window. Although this incurs additional retraining cost, it simplifies learning by restricting the network to shorter temporal evolutions. Each window is trained for 20 ,000 iterations. Fig. 4 shows the relative L2 error history, and Table 2 reports the global errors over the full spatiotemporal domain. The periodic spikes in Fig. 4 are caused by the time-marching scheme: each new time window introduces a transient re-initialization difficulty before reconvergence. Therefore, the per-window error trajectories in the figure differ from the cumulative global errors in the table. Table 2 shows three main trends. First, the CA framework consistently improves all three optimizer families, indicating that its benefit is not optimizer-specific. Second, the gains are particularly large for AdamW: CA reduces the relative L2
+
+error of u to 5.69% of that of standard AdamW. Third, CA also improves strong baselines such as Muon and SOAP in both relative L2 and L∞ errors, suggesting that its effect is complementary rather than redundant. To complement the quantitative results, Fig. 5 presents spatiotemporal heatmaps for CA-SOAP, one of the best-performing models in Table 2. It accurately captures the evolution of both u and v, with only minor local discrepancies in the error maps. Table 2: Errors for the Gray-Scott System (lower is better). Average relative L2 error and absolute L∞ error of u
+
+and v for each optimizer, comparing the standard version to its CA variant. 
+
+Optimizers Rel. L2 error L∞ error 
+
+u v u v
+
+AdamW 1.44 × 10 −1 3.35 × 10 −1 2.99 × 10 −1 2.08 × 10 −1
+
+CA-AdamW 8.20 × 10 −3 4.85 × 10 −2 3.48 × 10 −2 5.56 × 10 −2
+
+Error reduction (%) ↑ 94.31% 85.52% 88.36% 73.26% Muon 3.99 × 10 −4 3.82 × 10 −3 1.31 × 10 −3 2.42 × 10 −3
+
+CA-Muon 5.66 × 10 −5 7.85 × 10 −4 3.50 × 10 −4 7.81 × 10 −4
+
+Error reduction (%) ↑ 85.81% 79.45% 73.28% 67.72% SOAP 4.51 × 10 −4 5.05 × 10 −3 3.44 × 10 −3 5.21 × 10 −3
+
+CA-SOAP 6.88 × 10 −5 6.57 × 10 −4 5.30 × 10 −4 9.98 × 10 −4
+
+Error reduction (%) ↑ 84.75% 86.99% 84.59% 80.84% 
+
+13 A PREPRINT - A PRIL 20, 2026 
+
+Figure 4: History of the relative L2 errors for the Gray-Scott system. Because training is performed using a time-marching strategy, the error curves exhibit periodic spikes at the transition between consecutive time windows (every 
+
+20 ,000 iterations), where the model must adapt to a newly initialized subproblem. Within each window, the error decreases as optimization progresses. 
+
+Figure 5: Spatiotemporal heatmaps for the Gray-Scott system using the best-performing optimizer CA-SOAP. For each variable ( u and v), we show the reference solution, the prediction, and the corresponding point-wise error over the full spatiotemporal domain. The predicted fields closely match the reference patterns, with errors remaining small throughout the time horizon. 
+
+5.3 Belousov-Zhabotinsky Equation 
+
+The Belousov–Zhabotinsky (BZ) reaction is a classic nonequilibrium chemical system involving bromine-mediated oxidation in acidic solution. We consider the following coupled BZ system [25]: 
+
+ut − ϵ1uxx + u + v − uv − u2 = 0 , (x, t ) ∈ Ω × T, (53) 
+
+vt − ϵ2vxx + w − v − uv = 0 , (x, t ) ∈ Ω × T, (54) 
+
+wt − ϵ1wxx + u − w = 0 , (x, t ) ∈ Ω × T, (55) 
+
+u(x, 0) = u0(x), v(x, 0) = v0(x), w(x, 0) = w0(x), x ∈ Ω, (56) subject to periodic boundary conditions. The spatial domain is defined as Ω = [ −1, 1] with a time horizon of T = [0 , 3] .The diffusion rates are set to ϵ1 = 10 −5 and ϵ2 = 2 × 10 −5. The initial conditions are chosen to be: 
+
+u0(x) = exp( −100( x + 0 .5) 2), v 0(x) = exp( −100 x2), w 0(x) = exp( −100( x − 0.5) 2).
+
+14 A PREPRINT - A PRIL 20, 2026 We utilize a fully connected neural network architecture with depth 5 and width 128. Also, we employ Nf = 8 ,000 
+
+collocation points, and N0 = 800 initial points for training, with the weight λF = 1 and λI = 100 . Same as the Gray-Scott system in Section 5.2, the periodic boundary condition is enforced as a hard constraint by the Fourier feature embedding by setting L = 2 and m = 10 .To address the stiff dynamics introduced by the small diffusion coefficients, we again apply the time-marching strategy by dividing the time domain T = [0 , 3] into 10 uniform windows. The model will be trained for 20 ,000 iterations per window. Fig. 7 illustrates the history of the relative L2 errors for the species u, v, and w. While the error curves display the expected re-initialization spikes characteristic of the time-marching scheme, the optimizers successfully drive the error down within each interval, maintaining stability throughout the simulation. Table 3 quantifies these robust improvements across the tested settings. The addition of the CA strategy consistently enhances prediction accuracy across all tested optimizers. For instance, CA-AdamW improves upon the standard AdamW results by nearly an order of magnitude. Among the tested methods, CA-SOAP achieves the best overall performance and attains the lowest error in most reported metrics, while CA-Muon is also highly competitive on selected quantities (reaching the order of 10 −5). The CA strategy is highly effective at suppressing error accumulation, reducing the final error to a small fraction of the baseline. These results confirm that the CA mechanism serves as an effective stabilizing mechanism in these experiments, enabling every optimizer to handle the stiff BZ dynamics with superior fidelity. Moreover, Fig. 6 presents the spatiotemporal heatmaps of the best-performing model, CA-SOAP, for 
+
+u, v, and w. The predicted fields agree closely with the reference solutions, and the corresponding error maps remain small throughout the domain. 
+
+Figure 6: Spatiotemporal heatmaps for the Belousov-Zhabotinsky system using CA-SOAP. For each species ( u, v, and 
+
+w), we show the reference solution, the prediction, and the corresponding point-wise error over the full spatiotemporal domain. The predicted fields accurately reproduce the coupled reaction-diffusion dynamics, with small errors throughout the domain. 
+
+5.4 2D Kuramoto-Sivashinsky System 
+
+The Kuramoto-Sivashinsky (KS) equation combines nonlinear advection, fourth-order (bi-harmonic) dissipation, and an anti-diffusive term, and is well known for its chaotic spatiotemporal dynamics. It has been used extensively to model flame front and ion plasma instabilities. In this example, we consider the following 2D KS equation outlined in 15 A PREPRINT - A PRIL 20, 2026 
+
+Figure 7: History of the relative L2 errors for the Belousov-Zhabotinsky system. Table 3: Errors for the Belousov-Zhabotinsky system (lower is better). Average relative L2 error and absolute L∞
+
+error of (u, v, w ) for each optimizer, comparing the base method to its CA variant. 
+
+Optimizers Rel. L2 error L∞ error 
+
+u v w u v w
+
+AdamW 3.08 × 10 −3 2.11 × 10 −3 2.30 × 10 −3 1.34 × 10 −2 2.88 × 10 −3 6.24 × 10 −3
+
+CA-AdamW 4.70 × 10 −4 3.61 × 10 −4 3.88 × 10 −4 1.73 × 10 −3 3.89 × 10 −4 8.19 × 10 −4
+
+Error reduction (%) ↑ 84.74% 82.89% 83.13% 87.09% 86.49% 86.88% Muon 3.31 × 10 −4 2.58 × 10 −4 2.51 × 10 −4 9.50 × 10 −4 3.88 × 10 −4 7.31 × 10 −4
+
+CA-Muon 8.96 × 10 −5 6.41 × 10 −5 6.70 × 10 −5 5.85 × 10 −4 9.08 × 10 −5 1.22 × 10 −4
+
+Error reduction (%) ↑ 72.93% 75.16% 73.31% 38.42% 76.60% 83.31% SOAP 8.78 × 10 −4 7.39 × 10 −4 7.24 × 10 −4 5.33 × 10 −3 9.69 × 10 −4 1.97 × 10 −3
+
+CA-SOAP 8.01 × 10 −5 4.66 × 10 −5 5.41 × 10 −5 3.23 × 10 −4 6.19 × 10 −5 1.50 × 10 −4
+
+Error reduction (%) ↑ 90.88% 93.69% 92.53% 93.94% 93.61% 92.39% 
+
+Ref. [47]: 
+
+∂u ∂t +
+
+
+
+u ∂u ∂x + v ∂u ∂y 
+
+
+
++ λ
+
+ ∂2u∂x 2 + ∂2u∂y 2
+
+
+
++
+
+ ∂4u∂x 4 + 2 ∂4u∂x 2∂y 2 + ∂4u∂y 4
+
+
+
+= f1(x, y, t ),∂v ∂t +
+
+
+
+u ∂v ∂x + v ∂v ∂y 
+
+
+
++ λ
+
+ ∂2v∂x 2 + ∂2v∂y 2
+
+
+
++
+
+ ∂4v∂x 4 + 2 ∂4v∂x 2∂y 2 + ∂4v∂y 4
+
+
+
+= f2(x, y, t ).
+
+16 A PREPRINT - A PRIL 20, 2026 An exact solution family parameterized by λ = 0 .01 is: 
+
+u(x, y, t ) = − cos( πx ) sin( πy ) exp( − π2λt 
+
+4 ),v(x, y, t ) = sin( πx ) cos( πy ) exp( − π2λt 
+
+4 ).
+
+The source functions f1(x, y, t ) and f2(x, y, t ) will be inferred by the exact solution above. Moreover, the spatial domain is Ω = [0 , 2] 2 and time domain is T = [0 , 1] . The networks are constructed by 3 hidden layers with 50 
+
+neurons in each hidden layer. We take Nf = 10 ,000 and Nb = N0 = 200 across all experiments, with λF = 1 , and 
+
+λB = λI = 20 .We run all optimizers for 20 ,000 iterations, with the same learning rates and schedulers as in the previous experiments. The error history is shown in Fig. 8, and the numerical results are summarized in Table 4. Table 4 shows that the CA strategy remains consistently beneficial even for this challenging 2D high-order nonlinear system. Across all three optimizer families, the CA variants reduce both the relative L2 and L∞ errors, indicating that the improvement is not tied to a specific optimizer design. In particular, CA-SOAP achieves the best overall performance, while CA-AdamW also yields substantial gains over its baseline. These results further support the generality of CA strategy as an effective enhancement for PINN training under complex spatiotemporal dynamics. Notably, the CA enhancement remains effective even when the baseline optimizer is already strong, as seen from the further improvement of SOAP on all reported metrics. 
+
+Figure 8: History of the relative L2 errors for the 2D Kuramoto–Sivashinsky system. The curves show the training evolution of the relative L2 errors for both u and v under different optimizers. Table 4: Errors for the 2D Kuramoto-Sivashinsky equation (lower is better). Average relative L2 error and absolute 
+
+L∞ error of (u, v ) for each optimizer, comparing the base method to its CA variant. 
+
+Optimizers Rel. L2 error L∞ error 
+
+u v u v
+
+AdamW 1.44 × 10 −1 9.61 × 10 −2 1.37 × 10 −1 2.19 × 10 −1
+
+CA-AdamW 1.79 × 10 −2 1.76 × 10 −2 5.66 × 10 −2 4.16 × 10 −2
+
+Error reduction (%) ↑ 87.57% 81.69% 58.69% 81.00% 
+
+Muon 1.88 × 10 −1 7.60 × 10 −2 4.17 × 10 −1 2.21 × 10 −1
+
+CA-Muon 8.70 × 10 −2 3.99 × 10 −2 1.20 × 10 −1 9.29 × 10 −2
+
+Error reduction (%) ↑ 53.72% 47.50% 71.22% 57.96% SOAP 1.98 × 10 −2 2.11 × 10 −2 4.69 × 10 −2 5.45 × 10 −2
+
+CA-SOAP 4.70 × 10 −3 8.78 × 10 −3 9.37 × 10 −3 1.54 × 10 −2
+
+Error reduction (%) ↑ 76.26% 58.39% 80.02% 71.74% 17 A PREPRINT - A PRIL 20, 2026 
+
+5.5 Additional Comparison with Related Optimizers 
+
+Beyond the baseline optimizers and their CA variants, we compare CA-AdamW with two related optimizer enhancement methods, Adan [35] and ALTO [24]. We focus on CA-AdamW because both methods are adaptive moment-based and thus are most fairly compared with it. Although Adan and ALTO also modify update dynamics beyond standard adaptive optimization, their mechanisms differ from ours: Adan uses gradient differences as an acceleration signal with fixed coefficients, and ALTO applies a fixed negative correction based on gradient differences. In contrast, our CA framework combines parameter displacement and gradient variation to construct a curvature-aware signal that dynamically adjusts the correction strength. To further evaluate CA against related optimizer enhancement methods on a challenging PINN task, we conduct additional experiments on the 2D Kuramoto–Sivashinsky system, which involves high-order derivatives, nonlinear coupling, and complex spatiotemporal dynamics. As shown in Table 5, CA-AdamW consistently outperforms Adan and ALTO, indicating the benefit of its curvature-aware dynamic correction on difficult PINN optimization problems. Table 5: Errors for the 2D Kuramoto–Sivashinsky equation (lower is better). Average relative L2 error and absolute 
+
+L∞ error of u and v for CA-AdamW and two Adam-style optimizer enhancement methods, Adan and ALTO. Green 
+
+denotes the best results. 
+
+# Optimizers Rel. L2 error L∞ error 
+
+# u v u v
+
+# Adan [35] 4.77 × 10 −2 4.73 × 10 −2 8.99 × 10 −2 9.32 × 10 −2
+
+# ALTO [24] 7.39 × 10 −2 7.98 × 10 −2 2.21 × 10 −1 1.01 × 10 −1
+
+# CA-AdamW 1.79 × 10 −2 1.76 × 10 −2 5.66 × 10 −2 4.16 × 10 −2
+
+# 6 Conclusion 
+
+We proposed a curvature-aware optimization framework for PINNs that augments first-order optimizers with lightweight secant-based geometric adaptation. Motivated by the highly anisotropic and rapidly varying loss landscapes in PINN training, the framework uses consecutive gradient information to provide an adaptive predictive correction without explicitly forming second-order matrices. Experiments on diverse PDE benchmarks show that the proposed method consistently improves convergence speed, training stability, and solution accuracy over standard optimizers, with particularly clear gains on challenging problems such as the 2D Kuramoto–Sivashinsky system. Overall, these results indicate that lightweight secant-based curvature awareness is a practical and effective direction for PINN optimization. Future work includes strengthening the theoretical understanding of the adaptive mechanism and extending the framework to broader physics-informed learning settings, such as operator learning, inverse problems, and large-scale multiphysics systems. 
+
+# Acknowledgments 
+
+Ming Yan and Chenhao Si were partially supported by Guangdong Provincial Key Laboratory of Mathematical Foundations for Artificial Intelligence (2023B1212010001), Shenzhen Stability Science Program, and the Shenzhen Science and Technology Program under grant no. JCYJ20250604141043020. 
+
+# References 
+
+[1] Maziar Raissi, Paris Perdikaris, and George E Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. J. Comput. Phys. , 378:686–707, 2019. [2] George Em Karniadakis, Ioannis G Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, and Liu Yang. Physics-informed machine learning. Nat. Rev. Phys. , 3(6):422–440, 2021. [3] Jiaxuan Xu, Han Wei, and Hua Bao. Physics-informed neural networks for studying heat transfer in porous media. 
+
+Int. J. Heat Mass Transfer , 217:124671, 2023. 18 A PREPRINT - A PRIL 20, 2026 [4] Shengze Cai, Zhicheng Wang, Sifan Wang, Paris Perdikaris, and George Em Karniadakis. Physics-informed neural networks for heat transfer problems. J. Heat Transfer , 143(6):060801, 2021. [5] Chenhao Si and Ming Yan. Initialization-enhanced physics-informed neural network with domain decomposition (IDPINN). J. Comput. Phys. , 530:113914, 2025. [6] Ritam Majumdar, Vishal Jadhav, Anirudh Deodhar, Shirish Karande, Lovekesh Vig, and Venkataramana Runkana. HxPINN: A hypernetwork-based physics-informed neural network for real-time monitoring of an industrial heat exchanger. Numer. Heat Transfer B , 86(6):1910–1931, 2025. [7] Haoteng Hu, Lehua Qi, and Xujiang Chao. Physics-informed neural networks (PINN) for computational solid mechanics: Numerical frameworks and applications. Thin-Walled Struct. , 205:112495, 2024. [8] Salah A Faroughi, Nikhil M Pawar, Celio Fernandes, Maziar Raissi, Subasish Das, Nima K Kalantari, and Seyed Kourosh Mahjour. Physics-guided, physics-informed, and physics-encoded neural networks and operators in scientific computing: Fluid and solid mechanics. J. Comput. Inf. Sci. Eng. , 24(4):040802, 2024. [9] Dongkun Zhang, Ling Guo, and George Em Karniadakis. Learning in modal space: Solving time-dependent stochastic PDEs using physics-informed neural networks. SIAM J. Sci. Comput. , 42(2):A639–A665, 2020. [10] Xiaoli Chen, Liu Yang, Jinqiao Duan, and George Em Karniadakis. Solving inverse stochastic problems from discrete particle observations using the Fokker-Planck equation and physics-informed neural networks. SIAM J. Sci. Comput. , 43(3):B811–B830, 2021. [11] Yibo Yang and Paris Perdikaris. Adversarial uncertainty quantification in physics-informed neural networks. J. Comput. Phys. , 394:136–152, 2019. [12] Dongkun Zhang, Lu Lu, Ling Guo, and George Em Karniadakis. Quantifying total uncertainty in physics-informed neural networks for solving forward and inverse stochastic problems. J. Comput. Phys. , 397:108850, 2019. [13] Liu Yang, Xuhui Meng, and George Em Karniadakis. B-PINNs: Bayesian physics-informed neural networks for forward and inverse PDE problems with noisy data. J. Comput. Phys. , 425:109913, 2021. [14] Levi D McClenny and Ulisses M Braga-Neto. Self-adaptive physics-informed neural networks. J. Comput. Phys. ,474:111722, 2023. [15] Sifan Wang, Yujun Teng, and Paris Perdikaris. Understanding and mitigating gradient flow pathologies in physics-informed neural networks. SIAM J. Sci. Comput. , 43(5):A3055–A3081, 2021. [16] Sifan Wang, Hanwen Wang, and Paris Perdikaris. On the eigenvector bias of fourier feature networks: From regression to solving multi-scale PDEs with physics-informed neural networks. Comput. Methods Appl. Mech. Engrg. , 384:113938, 2021. [17] Aditi Krishnapriyan, Amir Gholami, Shandian Zhe, Robert Kirby, and Michael W Mahoney. Characterizing possible failure modes in physics-informed neural networks. In Advances in Neural Information Processing Systems , volume 34, pages 26548–26560, 2021. [18] Yanzhi Liu, Ruifan Wu, and Ying Jiang. Binary structured physics-informed neural networks for solving equations with rapidly changing solutions. J. Comput. Phys. , 518:113341, 2024. [19] Sifan Wang, Xinling Yu, and Paris Perdikaris. When and why PINNs fail to train: A neural tangent kernel perspective. J. Comput. Phys. , 449:110768, 2022. [20] Sokratis J Anagnostopoulos, Juan Diego Toscano, Nikolaos Stergiopulos, and George Em Karniadakis. Residual-based attention in physics-informed neural networks. Comput. Methods Appl. Mech. Engrg. , 421:116805, 2024. [21] Juan Diego Toscano, Daniel T Chen, Vivek Oommen, Jérôme Darbon, and George Em Karniadakis. A vari-ational framework for residual-based adaptivity in neural PDE solvers and operator learning. arXiv preprint arXiv:2509.14198 , 2025. [22] Chenhao Si and Ming Yan. Convolution-weighting method for the physics-informed neural network: A primal-dual optimization perspective. J. Comput. Phys. , 555:114773, 2026. [23] Hao Li, Zheng Xu, Gavin Taylor, Christoph Studer, and Tom Goldstein. Visualizing the loss landscape of neural nets. In Advances in Neural Information Processing Systems , volume 31, 2018. [24] Tong Zhao, Jiacheng Li, Yuanchang Zhou, Guangming Tan, and Weile Jia. Exploring landscapes for better minima along valleys. In Advances in Neural Information Processing Systems , 2025. [25] Pratik Rathore, Weimu Lei, Zachary Frangella, Lu Lu, and Madeleine Udell. Challenges in training PINNs: A loss landscape perspective. In International Conference on Machine Learning , pages 42159–42191, 2024. 19 A PREPRINT - A PRIL 20, 2026 [26] Elham Kiyani, Khemraj Shukla, Jorge F Urbán, Jérôme Darbon, and George Em Karniadakis. Optimizing the optimizer for physics-informed neural networks and Kolmogorov-Arnold networks. Comput. Methods Appl. Mech. Engrg. , 446:118308, 2025. [27] Jorge F Urbán, Petros Stefanou, and José A Pons. Unveiling the optimization process of physics informed neural networks: How accurate and competitive can PINNs be? J. Comput. Phys. , 523:113656, 2025. [28] Sifan Wang, Ananyae Kumar Bhartari, Bowen Li, and Paris Perdikaris. Gradient alignment in physics-informed neural networks: A second-order optimization perspective. In Advances in Neural Information Processing Systems ,2025. [29] Anas Jnini, Elham Kiyani, Khemraj Shukla, Jorge F. Urban, Nazanin Ahmadi Daryakenari, Johannes Muller, Marius Zeinhofer, and George Em Karniadakis. Curvature-aware optimization for high-accuracy physics-informed neural networks. arXiv preprint arXiv:2604.05230 , 2026. [30] Constantinos Daskalakis and Ioannis Panageas. The limit points of (optimistic) gradient descent in min-max optimization. In Advances in Neural Information Processing Systems , 2018. [31] Alexander Rakhlin and Karthik Sridharan. Optimization, learning, and games with predictable sequences. In 
+
+Advances in Neural Information Processing Systems , 2013. [32] Panayotis Mertikopoulos, Bruno Lecouat, Houssam Zenati, Chuan-Sheng Foo, Vijay Chandrasekhar, and Georgios Piliouras. Optimistic mirror descent in saddle-point problems: Going the extra (gradient) mile. arXiv preprint arXiv:1807.02629 , 2018. [33] Aryan Mokhtari, Asuman Ozdaglar, and Sarath Pattathil. A unified analysis of extra-gradient and optimistic gradient methods for saddle point problems: Proximal point approach. In International Conference on Artificial Intelligence and Statistics , pages 1497–1507, 2020. [34] Weijie Su, Stephen Boyd, and Emmanuel J. Candès. A differential equation for modeling Nesterov’s accelerated gradient method: Theory and insights. J. Mach. Learn. Res. , 17(153):1–43, 2016. [35] Xingyu Xie, Pan Zhou, Huan Li, Zhouchen Lin, and Shuicheng Yan. Adan: Adaptive Nesterov momentum algorithm for faster optimizing deep models. IEEE Trans. Pattern Anal. Mach. Intell. , 46(12):9508–9520, 2024. [36] Yurii E Nesterov. A method for solving the convex programming problem with convergence rate o(1 /k 2). Soviet Math. Dokl. , 27(2):372–376, 1983. [37] Yurii Nesterov. Introductory Lectures on Convex Optimization: A Basic Course . Springer Science & Business Media, 2013. [38] Alexandre Défossez, Leon Bottou, Francis Bach, and Nicolas Usunier. A simple convergence proof of Adam and Adagrad. Trans. Mach. Learn. Res. , 2022. [39] Kang An, Yuxing Liu, Rui Pan, Yi Ren, Shiqian Ma, Donald Goldfarb, and Tong Zhang. ASGO: Adaptive structured gradient optimization. In Advances in Neural Information Processing Systems , 2025. [40] Zhishuai Guo, Yi Xu, Wotao Yin, Rong Jin, and Tianbao Yang. A novel convergence analysis for algorithms of the Adam family. arXiv preprint arXiv:2112.03459 , 2021. [41] Jungmin Kwon, Jeongseop Kim, Hyunseo Park, and In Kwon Choi. ASAM: Adaptive sharpness-aware mini-mization for scale-invariant learning of deep neural networks. In International Conference on Machine Learning ,pages 5905–5914, 2021. [42] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization. arXiv preprint arXiv:1412.6980 ,2014. [43] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2019. [44] Nikhil Vyas, Depen Morwani, Rosie Zhao, Itai Shapira, David Brandfonbrener, Lucas Janson, and Sham M. Kakade. SOAP: Improving and stabilizing shampoo using Adam for language modeling. In International Conference on Learning Representations , 2025. [45] Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker Newhouse, and Jeremy Bernstein. Muon: An optimizer for hidden layers in neural networks, 2024. [46] Suchuan Dong and Naxian Ni. A method for representing periodic functions and enforcing exactly periodic boundary conditions with deep neural networks. J. Comput. Phys. , 435:110242, 2021. [47] Mohammad Mahabubur Rahman and Deepanshu Verma. Regularity and error estimates in physics-informed neural networks for the Kuramoto-Sivashinsky equation. arXiv preprint arXiv:2511.09728 , 2025. 20 A PREPRINT - A PRIL 20, 2026 
+
+# A Algorithms for SOAP and Muon 
+
+Algorithm 2 SOAP Optimizer 
+
+Input: Loss function ℓ, initial parameters θ0 ∈ Rm×n,step sizes {ηk}, hyperparameters β1, β 2 ∈ [0 , 1) (mo-mentum), βP ∈ [0 , 1) (preconditioner decay), ε > 0, f
+
+(eigen-update frequency), λ (weight decay) 
+
+Output: {θk}Tk=1 .1. Initialize m0 = 0, v0 = 0, L0 = ϵIm, R0 =
+
+ϵIn, UL = Im, UR = In
+
+2. while k < T do 
+
+3. Gk = ∇θ ℓ(θk, ζ k);4. Lk = βP Lk−1 + (1 − βP )GkG⊤ 
+
+> k
+
+;5. Rk = βP Rk−1 + (1 − βP )G⊤ 
+
+> k
+
+Gk;6. if k (mod f ) == 0 then 
+
+7. UL, DL = EigenDecomp (Lk);8. UR, DR = EigenDecomp (Rk);9. end if 
+
+10. ˜Gk = U⊤ 
+
+> L
+
+GkUR;11. mk = β1mk−1 + (1 − β1) ˜Gk;12. vk = β2vk−1 + (1 − β2) ˜G2
+
+> k
+
+;13. ˆmk = mk/(1 − βk 
+
+> 1
+
+); ˆvk = vk/(1 − βk 
+
+> 2
+
+);14. Pk = ˆ mk/(√ˆvk + ε);15. ∆θk = ULPkU⊤ 
+
+> R
+
+;16. θk+1 = θk − ηk(∆ θk + λθ k);17. end while Algorithm 3 Curvature-Aware SOAP 
+
+Input: Loss function ℓ, initial parameters θ0 ∈ Rm×n,step sizes {ηk}, hyperparameters β1, β 2, β a ∈ [0 , 1) ,
+
+βP ∈ [0 , 1) , ε > 0, f (eigen-update frequency), αbase 
+
+(base trajectory), λ (weight decay) 
+
+Output: {θk}Tk=1 .1. Initialize m0 = 0, v0 = 0, L0 = ϵIm, R0 =
+
+ϵIn, UL = Im, UR = In, A0 = 0, G0 = 0,
+
+θ−1 = θ0
+
+2. while k < T do 
+
+3. Gk = ∇θ ℓ(θk, ζ k);4. Ak = β1Ak−1 + (1 − βa)( Gk − Gk−1);5. ∆θk = θk − θk−1;6. κk = ⟨∆θk ,Gk −Gk−1⟩F 
+
+> ∥∆θk∥2
+> F
+
+;7. αk = αbase (1 + tanh( −κk)) 
+
+8. Gboost,k = Gk + αkAk;9. Lk = βP Lk−1 + (1 − βP )Gboost,k G⊤
+
+> boost,k
+
+;10. Rk = βP Rk−1 + (1 − βP )G⊤
+
+> boost,k
+
+Gboost,k ;11. if k (mod f ) == 0 then 
+
+12. UL, DL = EigenDecomp (Lk);13. UR, DR = EigenDecomp (Rk);14. end if 
+
+15. ˜Gk = U⊤ 
+
+> L
+
+Gboost,k UR;16. mk = β1mk−1 + (1 − β1) ˜Gk;17. vk = β2vk−1 + (1 − β2) ˜G2
+
+> k
+
+;18. ˆmk = mk/(1 − βk 
+
+> 1
+
+); ˆvk = vk/(1 − βk 
+
+> 2
+
+);19. Pk = ˆ mk/(√ˆvk + ε);20. ∆step = ULPkU⊤ 
+
+> R
+
+;21. θk+1 = θk − ηk(∆ step + λθ k);22. end while 
+
+21 A PREPRINT - A PRIL 20, 2026 
+
+Algorithm 4 Muon Optimizer 
+
+Input: Loss function ℓ, initial parameters θ0 ∈ Rm×n
+
+(assume m ≤ n), step sizes {ηk}, hyperparameter μ ∈
+
+[0 , 1) (momentum), λ (weight decay), I (Newton-Schulz iterations) 
+
+Output: {θk}Tk=1 .1. Initialize M0 = 0
+
+2. while k < T do 
+
+3. Gk = ∇θ ℓ(θk, ζ k);4. Mk = μMk−1 + Gk;5. Ok = μMk + Gk;6. X = Ok/∥Ok∥F ;7. for i = 1 to I do 
+
+8. A = XX ⊤;9. X = 1 .5X − 0.5AX ;10. end for 
+
+11. n∆θk = X · max(1 , pn/m );12. θk+1 = θk − ηk(∆ θk + λθ k);13. end while Algorithm 5 Curvature-Aware Muon 
+
+Input: Loss function ℓ, initial parameters θ0 ∈ Rm×n
+
+(assume m ≤ n), step sizes {ηk}, hyperparameters 
+
+μ ∈ [0 , 1) (momentum), αbase (base trajectory), λ (weight decay), I (Newton-Schulz iterations) 
+
+Output: {θk}Tk=1 .1. Initialize M0 = 0, A0 = 0, G0 = 0, θ−1 = θ0
+
+2. while k < T do 
+
+3. Gk = ∇θ ℓ(θk, ζ k);4. Ak = μAk−1 + (1 − μ)( Gk − Gk−1);5. ∆θk = θk − θk−1;6. κk = ⟨∆θk ,Gk −Gk−1⟩F 
+
+> ∥∆θk∥2
+> F
+
+;7. αk = αbase (1 + tanh( −κk)) 
+
+8. Gboost,k = Gk + αkAk;9. Mk = μMk−1 + Gboost,k ;10. Ok = μMk + Gboost,k ;11. X = Ok/∥Ok∥F ;12. for i = 1 to I do 
+
+13. A = XX ⊤;14. X = 1 .5X − 0.5AX ;15. end for 
+
+16. ∆step = X · max(1 , pn/m );17. θk+1 = θk − ηk(∆ step + λθ k);18. end while 
+
+22

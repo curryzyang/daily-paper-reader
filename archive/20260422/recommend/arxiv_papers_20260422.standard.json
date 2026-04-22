@@ -1,0 +1,511 @@
+{
+  "mode": "standard",
+  "generated_at": "2026-04-22T19:54:29.194090+00:00",
+  "stats": {
+    "mode": "standard",
+    "tag_count": 1,
+    "deep_divecandidates": 2,
+    "deep_cap": 6,
+    "deep_selected": 2,
+    "quick_candidates": 20,
+    "quick_skim_target": 11,
+    "quick_selected": 11
+  },
+  "deep_dive": [
+    {
+      "id": "2604.15524v1",
+      "source": "arxiv",
+      "title": "Safe and Energy-Aware Multi-Robot Density Control via PDE-Constrained Optimization for Long-Duration Autonomy",
+      "abstract": "This paper presents a novel density control framework for multi-robot systems with spatial safety and energy sustainability guarantees. Stochastic robot motion is encoded through the Fokker-Planck Partial Differential Equation (PDE) at the density level. Control Lyapunov and control barrier functions are integrated with PDEs to enforce target density tracking, obstacle region avoidance, and energy sufficiency over multiple charging cycles. The resulting quadratic program enables fast in-the-loop implementation that adjusts commands in real-time. Multi-robot experiment and extensive simulations were conducted to demonstrate the effectiveness of the controller under localization and motion uncertainties.",
+      "authors": [
+        "Longchen Niu",
+        "Andrew Nasif",
+        "Gennaro Notomista"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY",
+        "cs.RO"
+      ],
+      "published": "2026-04-16T21:07:36+00:00",
+      "link": "https://arxiv.org/pdf/2604.15524v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "multi-robot density control via PDE-constrained optimization",
+      "llm_evidence_cn": "通过偏微分方程约束优化进行多机器人密度控制",
+      "llm_evidence": "通过偏微分方程约束优化进行多机器人密度控制",
+      "canonical_evidence": "通过偏微分方程约束优化进行多机器人密度控制",
+      "llm_tldr_en": "Uses Fokker-Planck PDEs and optimization for safe, energy-aware multi-robot density control.",
+      "llm_tldr_cn": "利用Fokker-Planck方程和优化算法实现安全且节能的多机器人密度控制。",
+      "llm_tldr": "利用Fokker-Planck方程和优化算法实现安全且节能的多机器人密度控制。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "id": "2604.17456v1",
+      "source": "arxiv",
+      "title": "TrafficClaw: Generalizable Urban Traffic Control via Unified Physical Environment Modeling",
+      "abstract": "Urban traffic control is a system-level coordination problem spanning heterogeneous subsystems, including traffic signals, freeways, public transit, and taxi services. Existing optimization-based, reinforcement learning (RL), and emerging LLM-based approaches are largely designed for isolated tasks, limiting both cross-task generalization and the ability to capture coupled physical dynamics across subsystems. We argue that effective system-level control requires a unified physical environment in which subsystems share infrastructure, mobility demand, and spatiotemporal constraints, allowing local interventions to propagate through the network. To this end, we propose TrafficClaw, a framework for general urban traffic control built upon a unified runtime environment. TrafficClaw integrates heterogeneous subsystems into a shared dynamical system, enabling explicit modeling of cross-subsystem interactions and closed-loop agent-environment feedback. Within this environment, we develop an LLM agent with executable spatiotemporal reasoning and reusable procedural memory, supporting unified diagnostics across subsystems and continual strategy refinement. Furthermore, we introduce a multi-stage training pipeline with supervised initialization and agentic RL with system-level optimization, further enabling coordinated and system-aware performance. Experiments demonstrate that TrafficClaw achieves robust, transferable, and system-aware performance across unseen traffic scenarios, dynamics, and task configurations. Our project is available at https://github.com/usail-hkust/TrafficClaw.",
+      "authors": [
+        "Siqi Lai",
+        "Pan Zhang",
+        "Yuping Zhou",
+        "Jindong Han",
+        "Yansong Ning",
+        "Hao Liu"
+      ],
+      "primary_category": "cs.AI",
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-04-19T14:17:56+00:00",
+      "link": "https://arxiv.org/pdf/2604.17456v1",
+      "tags": [
+        "query:神经交通"
+      ],
+      "llm_score": 8.0,
+      "llm_evidence_en": "urban traffic control via unified physical environment modeling",
+      "llm_evidence_cn": "通过统一物理环境建模进行城市交通控制",
+      "llm_evidence": "通过统一物理环境建模进行城市交通控制",
+      "canonical_evidence": "通过统一物理环境建模进行城市交通控制",
+      "llm_tldr_en": "Develops a unified framework for general urban traffic control across heterogeneous subsystems and constraints.",
+      "llm_tldr_cn": "开发了一个统一框架，用于跨异构子系统和约束的通用城市交通控制。",
+      "llm_tldr": "开发了一个统一框架，用于跨异构子系统和约束的通用城市交通控制。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "quick_skim": [
+    {
+      "id": "2604.12794v1",
+      "source": "arxiv",
+      "title": "Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator",
+      "abstract": "Neural operators have been increasingly used as data-driven surrogates for time-marching predictions of turbulent flows. However, long-horizon autoregressive prediction is sensitive to error accumulation and the choice of prediction interval. Excessively small time increments may increase temporal redundancy and lengthen rollouts, which can degrade the stability of neural operators in turbulence forecasting. This work pursues a unified objective: stable long-horizon autoregressive prediction at fine temporal resolution for three-dimensional turbulence. We propose a multi-stepsize mixture-of-experts (Ms-MoE) neural operator built on an implicit factorized Transformer (IFactFormer) backbone. The model conditions on a requested relative stride and uses a time-step router to activate scale-specific routed experts together with a shared expert, yielding a single architecture that represents a family of stride-parameterized time-advancement operators. We evaluate the approach on forced homogeneous isotropic turbulence (HIT) and turbulent channel flow using filtered direct numerical simulation datasets. Relative to sampling intervals used in previous studies, we construct training datasets with up to 20 times finer temporal resolution and report long-horizon autoregressive rollouts using qualitative time-slice comparisons and long-time-averaged statistics. Ms-MoE-IFactFormer yields more stable long-horizon rollouts and improved agreement with long-time-averaged statistics on both HIT and turbulent channel flow, suggesting potential for stable time-marching at fine temporal resolution in more complex turbulent flows.",
+      "authors": [
+        "Guanyu Pan",
+        "Huiyu Yang",
+        "Yunpeng Wang",
+        "Zikun Xu",
+        "Jianchun Wang",
+        "Nianyu Yi"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn"
+      ],
+      "published": "2026-04-14T14:26:58+00:00",
+      "link": "https://arxiv.org/pdf/2604.12794v1",
+      "tags": [
+        "keyword:神经交通",
+        "query:神经交通"
+      ],
+      "llm_score": 7.5,
+      "llm_evidence_en": "neural operator for flow prediction and modeling",
+      "llm_evidence_cn": "用于流动预测和建模的神经算子",
+      "llm_evidence": "用于流动预测和建模的神经算子",
+      "canonical_evidence": "用于流动预测和建模的神经算子",
+      "llm_tldr_en": "Develops a multi-stepsize mixture-of-experts neural operator for stable long-horizon turbulence flow prediction.",
+      "llm_tldr_cn": "开发了一种多步长混合专家神经算子，用于稳定的长时湍流预测。",
+      "llm_tldr": "开发了一种多步长混合专家神经算子，用于稳定的长时湍流预测。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.13007v1",
+      "source": "arxiv",
+      "title": "Closed-Form Characterization of Constrained Double-Integrator Optimal Control",
+      "abstract": "We present a framework for predicting human driving behavior in mixed traffic where connected and automated vehicles (CAVs) coexist with human-driven vehicles (HDVs), and validate it using an open-source virtual reality (VR) testbed. We estimate the time-shift parameter of Newell's car-following model for individual drivers using Bayesian linear regression and derive analytical expressions for the mean and variance of predicted trajectories. These predictions are integrated into an optimal control framework for CAV trajectory planning. To address the scarcity of mixed-traffic data, we develop a VR platform supporting realistic, multi-user driving scenarios and provide a reproducible experimental framework with a dedicated tutorial website requiring only MATLAB and Unreal Engine. Results show our approach enables efficient HDV predictions, while the VR platform offers an accessible environment for studying human behavior in mixed traffic.",
+      "authors": [
+        "Filippos N. Tzortzoglou",
+        "Logan E. Beaver",
+        "Andreas A. Malikopoulos"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-14T17:40:02+00:00",
+      "link": "https://arxiv.org/pdf/2604.13007v1",
+      "tags": [
+        "query:神经交通"
+      ],
+      "llm_score": 6.5,
+      "llm_evidence_en": "optimal control framework for CAV trajectory planning in mixed traffic",
+      "llm_evidence_cn": "混合交通中联网自动驾驶车辆轨迹规划的最优控制框架",
+      "llm_evidence": "混合交通中联网自动驾驶车辆轨迹规划的最优控制框架",
+      "canonical_evidence": "混合交通中联网自动驾驶车辆轨迹规划的最优控制框架",
+      "llm_tldr_en": "Integrates car-following models into an optimal control framework for automated vehicle trajectory planning.",
+      "llm_tldr_cn": "将跟驰模型集成到最优控制框架中，用于自动驾驶车辆的轨迹规划。",
+      "llm_tldr": "将跟驰模型集成到最优控制框架中，用于自动驾驶车辆的轨迹规划。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13424v1",
+      "source": "arxiv",
+      "title": "Integrated Routing and Intersection Control for Mixed Traffic",
+      "abstract": "The rapid development of cyber-physical systems is driving a transition toward mixed traffic environments comprising both human-driven and connected and automated vehicles (CAVs). This shift presents a unique opportunity to leverage the efficient operation of CAVs to improve overall network throughput. This paper introduces a hierarchical framework designed to bridge macroscopic routing optimization at the network level with microscopic vicinity control at signalized intersections. The upper layer utilizes aggregated traffic information to provide proactive routing guidance for CAVs, aiming to minimize total travel time. The lower layer leverages local vehicle states to jointly optimize traffic light phases and individual CAV trajectories, aiming to reduce intersection crossing delays and optimize energy consumption, respectively. The effectiveness of the proposed framework is validated through SUMO on the Sioux Falls benchmark network. Results demonstrate that the integration of these macroscopic and microscopic layers yields significantly better performance compared to applying either layer in isolation, significantly improving network throughput and reducing congestion.",
+      "authors": [
+        "Filippos N. Tzortzoglou",
+        "Pengbo Zhu",
+        "Andreas A. Malikopoulos"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-15T02:50:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.13424v1",
+      "tags": [
+        "query:神经交通"
+      ],
+      "llm_score": 7.5,
+      "llm_evidence_en": "routing optimization and traffic system control",
+      "llm_evidence_cn": "路由优化与交通系统控制",
+      "llm_evidence": "路由优化与交通系统控制",
+      "canonical_evidence": "路由优化与交通系统控制",
+      "llm_tldr_en": "Integrates macroscopic routing and microscopic intersection control to improve throughput in mixed traffic.",
+      "llm_tldr_cn": "整合宏观路由与微观交叉口控制，以提高混合交通的吞吐量。",
+      "llm_tldr": "整合宏观路由与微观交叉口控制，以提高混合交通的吞吐量。",
+      "llm_tags": [
+        "query:q6"
+      ],
+      "matched_query_tag": "query:q6",
+      "matched_query_text": "methods combining neural operator learning and traffic system optimization",
+      "matched_requirement_id": "req-6",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.13204v1",
+      "source": "arxiv",
+      "title": "Weakly-supervised Learning for Physics-informed Neural Motion Planning via Sparse Roadmap",
+      "abstract": "The motion planning problem requires finding a collision-free path between start and goal configurations in high-dimensional, cluttered spaces. Recent learning-based methods offer promising solutions, with self-supervised physics-informed approaches such as Neural Time Fields (NTFields) solving the Eikonal equation to learn value functions without expert demonstrations. However, existing physics-informed methods struggle to scale in complex, multi-room environments, where simply increasing the number of samples cannot resolve local minima or guarantee global consistency. We propose Hierarchical Neural Time Fields (H-NTFields), a weakly-supervised framework that combines weak supervision from sparse roadmaps with physics-informed PDE regularization. The roadmap provides global topological anchors through upper and lower bounds on travel times, while PDE losses enforce local geometric fidelity and obstacle-aware propagation. Experiments on 18 Gibson environments and real robotic platforms show that H-NTFields substantially improves robustness over prior physics-informed methods, while enabling fast amortized inference through a continuous value representation.",
+      "authors": [
+        "Ruiqi Ni",
+        "Yuchen Liu",
+        "Ahmed H. Qureshi"
+      ],
+      "primary_category": "cs.RO",
+      "categories": [
+        "cs.RO"
+      ],
+      "published": "2026-04-14T18:26:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.13204v1",
+      "tags": [
+        "keyword:神经交通",
+        "query:神经交通"
+      ],
+      "llm_score": 6.5,
+      "llm_evidence_en": "physics-informed PDE solving for motion planning",
+      "llm_evidence_cn": "物理信息PDE求解用于运动规划",
+      "llm_evidence": "物理信息PDE求解用于运动规划",
+      "canonical_evidence": "物理信息PDE求解用于运动规划",
+      "llm_tldr_en": "Proposes Hierarchical Neural Time Fields for scaling physics-informed PDE solving in complex motion planning.",
+      "llm_tldr_cn": "提出分层神经时间场，用于在复杂运动规划中扩展物理信息PDE求解。",
+      "llm_tldr": "提出分层神经时间场，用于在复杂运动规划中扩展物理信息PDE求解。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13453v1",
+      "source": "arxiv",
+      "title": "FAST: A Synergistic Framework of Attention and State-space Models for Spatiotemporal Traffic Prediction",
+      "abstract": "Traffic forecasting requires modeling complex temporal dynamics and long-range spatial dependencies over large sensor networks. Existing methods typically face a trade-off between expressiveness and efficiency: Transformer-based models capture global dependencies well but suffer from quadratic complexity, while recent selective state-space models are computationally efficient yet less effective at modeling spatial interactions in graph-structured traffic data. We propose FAST, a unified framework that combines attention and state-space modeling for scalable spatiotemporal traffic forecasting. FAST adopts a Temporal-Spatial-Temporal architecture, where temporal attention modules capture both short- and long-term temporal patterns, and a Mamba-based spatial module models long-range inter-sensor dependencies with linear complexity. To better represent heterogeneous traffic contexts, FAST further introduces a learnable multi-source spatiotemporal embedding that integrates historical traffic flow, temporal context, and node-level information, together with a multi-level skip prediction mechanism for hierarchical feature fusion. Experiments on PeMS04, PeMS07, and PeMS08 show that FAST consistently outperforms strong baselines from Transformer-, GNN-, attention-, and Mamba-based families. In particular, FAST achieves the best MAE and RMSE on all three benchmarks, with up to 4.3\\% lower RMSE and 2.8\\% lower MAE than the strongest baseline, demonstrating a favorable balance between accuracy, scalability, and generalization.",
+      "authors": [
+        "Xinjin Li",
+        "Jinghan Cao",
+        "Mengyue Wang",
+        "Yue Wu",
+        "Longxiang Yan",
+        "Yeyang Zhou",
+        "Ziqi Sha",
+        "Yu Ma"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-04-15T04:05:10+00:00",
+      "link": "https://arxiv.org/pdf/2604.13453v1",
+      "tags": [
+        "query:神经交通"
+      ],
+      "llm_score": 7.5,
+      "llm_evidence_en": "spatiotemporal traffic forecasting using attention and state-space models",
+      "llm_evidence_cn": "使用注意力和状态空间模型进行时空交通预测",
+      "llm_evidence": "使用注意力和状态空间模型进行时空交通预测",
+      "canonical_evidence": "使用注意力和状态空间模型进行时空交通预测",
+      "llm_tldr_en": "Proposes FAST, a framework combining attention and state-space models for efficient spatiotemporal traffic prediction.",
+      "llm_tldr_cn": "提出FAST框架，结合注意力和状态空间模型，实现高效的时空交通预测。",
+      "llm_tldr": "提出FAST框架，结合注意力和状态空间模型，实现高效的时空交通预测。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.18261v1",
+      "source": "arxiv",
+      "title": "DeepRitzSplit Neural Operator for Phase-Field Models via Energy Splitting",
+      "abstract": "The multi-scale and non-linear nature of phase-field models of solidification requires fine spatial and temporal discretization, leading to long computation times. This could be overcome with artificial-intelligence approaches. Surrogate models based on neural operators could have a lower computational cost than conventional numerical discretization methods.   We propose a new neural operator approach that bridges classical convex-concave splitting schemes with physics-informed learning to accelerate the simulation of phase-field models. It consists of a Deep Ritz method, where a neural operator is trained to approximate a variational formulation of the phase-field model. By training the neural operator with an energy-splitting variational formulation, we enforce the energy dissipation property of the underlying models.   We further introduce a custom Reaction-Diffusion Neural Operator (RDNO) architecture, adapted to the operators of the model equations. We successfully apply the deep learning approach to the isotropic Allen-Cahn equation and to anisotropic dendritic growth simulation. We demonstrate that our physically-informed training provides better generalization in out-of-distribution evaluations than data-driven training, while achieving faster inference than traditional Fourier spectral methods.",
+      "authors": [
+        "Chih-Kang Huang",
+        "Ludovick Gagnon",
+        "Miha Založnik",
+        "Benoît Appolaire"
+      ],
+      "primary_category": "math.AP",
+      "categories": [
+        "math.AP",
+        "cs.LG",
+        "math.NA"
+      ],
+      "published": "2026-04-20T13:34:50+00:00",
+      "link": "https://arxiv.org/pdf/2604.18261v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.5,
+      "llm_evidence_en": "neural operator surrogate for physical models",
+      "llm_evidence_cn": "物理模型的神经算子代理",
+      "llm_evidence": "物理模型的神经算子代理",
+      "canonical_evidence": "物理模型的神经算子代理",
+      "llm_tldr_en": "Combines energy splitting with neural operators to accelerate simulations of non-linear phase-field models.",
+      "llm_tldr_cn": "将能量分裂与神经算子结合，以加速非线性相场模型的模拟。",
+      "llm_tldr": "将能量分裂与神经算子结合，以加速非线性相场模型的模拟。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.12590v1",
+      "source": "arxiv",
+      "title": "Situation-Aware Feedback-Predictive Control Framework for Lane-Less Dense Traffic",
+      "abstract": "Navigating dense, lane-less traffic remains one of the most challenging scenarios for autonomous vehicles, especially in emerging regions where road structure and driver behavior are highly unpredictable. This paper presents a hybrid control framework tailored for such environments, integrating a $360^\\circ$ zone-based perception module with a dual-layer control strategy that combines classical feedback and predictive optimization. The longitudinal feedback controller computes reference speed based on braking distance and steering dynamics, while the lateral controller tracks a virtual optimal lane derived from the spatial distribution of neighboring vehicles. The predictive planner samples control inputs over a time horizon and selects the most feasible trajectory using a multi-term cost function. Simulation results across diverse one-way traffic scenarios demonstrate the framework's robustness, responsiveness, and suitability for chaotic, unstructured traffic.",
+      "authors": [
+        "Parthib Khound",
+        "Debraj Chakraborty"
+      ],
+      "primary_category": "eess.SY",
+      "categories": [
+        "eess.SY"
+      ],
+      "published": "2026-04-14T11:15:51+00:00",
+      "link": "https://arxiv.org/pdf/2604.12590v1",
+      "tags": [
+        "query:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "feedback and predictive control for traffic flow",
+      "llm_evidence_cn": "交通流的反馈与预测控制",
+      "llm_evidence": "交通流的反馈与预测控制",
+      "canonical_evidence": "交通流的反馈与预测控制",
+      "llm_tldr_en": "Presents a hybrid control framework for autonomous navigation in dense, lane-less traffic environments.",
+      "llm_tldr_cn": "提出一种混合控制框架，用于稠密无车道交通环境中的自主导航。",
+      "llm_tldr": "提出一种混合控制框架，用于稠密无车道交通环境中的自主导航。",
+      "llm_tags": [
+        "query:q5"
+      ],
+      "matched_query_tag": "query:q5",
+      "matched_query_text": "research on applying neural operators for traffic flow modeling and control",
+      "matched_requirement_id": "req-5",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.13723v1",
+      "source": "arxiv",
+      "title": "Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs",
+      "abstract": "Physics-Informed Neural Networks (PINNs) recast PDE solving as an optimisation problem in function space by minimising a residual-based objective, yet many applications require additional derivative-based relations that are just as fundamental as the governing equations. In this paper, we present Derivative-Constrained PINNs (DC-PINNs), a general framework that treats constrained PDE solving as an optimisation guided by a minimum objective function criterion where the physics resides in the minimum principle. DC-PINNs embed general nonlinear constraints on states and derivatives, e.g., bounds, monotonicity, convexity, incompressibility, computed efficiently via automatic differentiation, and they employ self-adaptive loss balancing to tune the influence of each objective, reducing reliance on manual hyperparameters and problem-specific architectures. DC-PINNs consistently reduce constraint violations and improve physical fidelity versus baseline PINN variants, representative hard-constraint formulations on benchmarks, including heat diffusion with bounds, financial volatilities with arbitrage-free, and fluid flow with vortices shed. Explicitly encoding derivative constraints stabilises training and steers optimisation toward physically admissible minima even when the PDE residual alone is small, providing reliable solutions of constrained PDEs grounded in energy minimum principles.",
+      "authors": [
+        "Kentaro Hoshisashi",
+        "Carolyn E Phelan",
+        "Paolo Barucca"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-15T10:57:22+00:00",
+      "link": "https://arxiv.org/pdf/2604.13723v1",
+      "tags": [
+        "keyword:神经交通",
+        "query:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "physics-informed neural networks for solving derivative-constrained PDEs",
+      "llm_evidence_cn": "用于求解导数约束偏微分方程的物理信息神经网络",
+      "llm_evidence": "用于求解导数约束偏微分方程的物理信息神经网络",
+      "canonical_evidence": "用于求解导数约束偏微分方程的物理信息神经网络",
+      "llm_tldr_en": "Presents DC-PINNs for solving PDEs with fundamental derivative-based constraints and nonlinear relations.",
+      "llm_tldr_cn": "提出了DC-PINNs，用于求解具有基本导数约束和非线性关系的偏微分方程。",
+      "llm_tldr": "提出了DC-PINNs，用于求解具有基本导数约束和非线性关系的偏微分方程。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13316v1",
+      "source": "arxiv",
+      "title": "Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators",
+      "abstract": "Neural operators have emerged as fast surrogate models for physics simulations, yet they remain acutely vulnerable to adversarial perturbations, a critical liability for safety-critical digital twin deployments. We present a synergistic defense that combines active learning-based data generation with an input denoising architecture. The active learning component adaptively probes model weaknesses using differential evolution attacks, then generates targeted training data at discovered vulnerability locations while an adaptive smooth-ratio safeguard preserves baseline accuracy. The input denoising component augments the operator architecture with a learnable bottleneck that filters adversarial noise while retaining physics-relevant features. On the viscous Burgers' equation benchmark, the combined approach achieves a 2.04% combined error (1.21% baseline + 0.83% robustness), representing an 87% reduction relative to standard training (15.42% combined) and outperforming both active learning alone (3.42%) and input denoising alone (5.22%). More broadly, our results, combined with cross-architecture vulnerability analysis from prior work, suggest that optimal training data for neural operators is architecture-dependent: because different architectures concentrate sensitivity in distinct input subspaces, uniform sampling cannot adequately cover the vulnerability landscape of all models. These findings have potential implications for the deployment of neural operators in safety-critical energy systems including nuclear reactor monitoring.",
+      "authors": [
+        "Samrendra Roy",
+        "Souvik Chakraborty",
+        "Syed Bahauddin Alam"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-04-14T21:43:09+00:00",
+      "link": "https://arxiv.org/pdf/2604.13316v1",
+      "tags": [
+        "keyword:神经交通",
+        "query:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "robust neural operators for physics simulations with active learning",
+      "llm_evidence_cn": "用于物理模拟的鲁棒神经算子与主动学习",
+      "llm_evidence": "用于物理模拟的鲁棒神经算子与主动学习",
+      "canonical_evidence": "用于物理模拟的鲁棒神经算子与主动学习",
+      "llm_tldr_en": "Proposes a synergistic defense using active learning and denoising to improve neural operator robustness.",
+      "llm_tldr_cn": "提出了一种结合主动学习和去噪的协同防御方法，以提高神经算子的鲁棒性。",
+      "llm_tldr": "提出了一种结合主动学习和去噪的协同防御方法，以提高神经算子的鲁棒性。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    },
+    {
+      "id": "2604.15392v1",
+      "source": "arxiv",
+      "title": "Lightweight Geometric Adaptation for Training Physics-Informed Neural Networks",
+      "abstract": "Physics-Informed Neural Networks (PINNs) often suffer from slow convergence, training instability, and reduced accuracy on challenging partial differential equations due to the anisotropic and rapidly varying geometry of their loss landscapes. We propose a lightweight curvature-aware optimization framework that augments existing first-order optimizers with an adaptive predictive correction based on secant information. Consecutive gradient differences are used as a cheap proxy for local geometric change, together with a step-normalized secant curvature indicator to control the correction strength. The framework is plug-and-play, computationally efficient, and broadly compatible with existing optimizers, without explicitly forming second-order matrices. Experiments on diverse PDE benchmarks show consistent improvements in convergence speed, training stability, and solution accuracy over standard optimizers and strong baselines, including on the high-dimensional heat equation, Gray--Scott system, Belousov--Zhabotinsky system, and 2D Kuramoto--Sivashinsky system.",
+      "authors": [
+        "Kang An",
+        "Chenhao Si",
+        "Shiqian Ma",
+        "Ming Yan"
+      ],
+      "primary_category": "cs.LG",
+      "categories": [
+        "cs.LG",
+        "cs.AI",
+        "stat.ML"
+      ],
+      "published": "2026-04-16T07:44:52+00:00",
+      "link": "https://arxiv.org/pdf/2604.15392v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 6.0,
+      "llm_evidence_en": "optimization for physics-informed neural networks on PDEs",
+      "llm_evidence_cn": "针对PDE的物理信息神经网络优化",
+      "llm_evidence": "针对PDE的物理信息神经网络优化",
+      "canonical_evidence": "针对PDE的物理信息神经网络优化",
+      "llm_tldr_en": "Introduces a lightweight curvature-aware optimizer to improve PINN training stability and accuracy on PDEs.",
+      "llm_tldr_cn": "引入轻量级曲率感知优化器，以提高PINN在PDE上的训练稳定性和精度。",
+      "llm_tldr": "引入轻量级曲率感知优化器，以提高PINN在PDE上的训练稳定性和精度。",
+      "llm_tags": [
+        "query:pde:composite"
+      ],
+      "matched_query_tag": "query:pde:composite",
+      "matched_query_text": "Papers central to 查找偏微分方程的边界控制与交通流结合的研究论文, especially work that connects or combines: T; n; P; B; Neural Operator; PDE; Traffic Flow.",
+      "matched_requirement_id": "req-composite-pde",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "6"
+    },
+    {
+      "id": "2604.13919v1",
+      "source": "arxiv",
+      "title": "Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires",
+      "abstract": "Computational fluid dynamics (CFD) has become an essential tool for predicting fire behavior, yet maintaining both efficiency and accuracy remains challenging. A major source of computational cost in fire simulations is the modeling of radiation transfer, which is usually the dominant heat transfer mechanism in fires. Solving the high-dimensional radiative transfer equation (RTE) with traditional numerical methods can be a performance bottleneck. Here, we present a machine learning framework based on Fourier-enhanced multiple-input neural operators (Fourier-MIONet) as an efficient alternative to direct numerical integration of the RTE. We first investigate the performance of neural operator architectures for a small-scale 2D pool fire and find that Fourier-MIONet provides the most accurate radiative solution predictions. The approach is then extended to 3D CFD fire simulations, where the computational mesh is locally refined across multiple levels. In these high-resolution settings, monolithic surrogate models for direct field-to-field mapping become difficult to train and computationally inefficient. To address this issue, a nested Fourier-MIONet is proposed to predict radiation solutions across multiple mesh-refinement levels. We validate the approach on 3D McCaffrey pool fires simulated with FireFOAM, including fixed fire sizes and a unified model trained over a continuous range of heat release rates (HRRs). The proposed method achieves global relative errors of 2-4% for 3D varying-HRR scenarios while providing faster inference than the estimated cost of one finite-volume radiation solve in FireFOAM for the 16-solid-angle case. With fast and accurate inference, the surrogate makes higher-fidelity radiation treatments practical and enables the incorporation of more spectrally resolved radiation models into CFD fire simulations for engineering applications.",
+      "authors": [
+        "Anran Jiao",
+        "Wengyao Jiang",
+        "Xiaoyi Lu",
+        "Yi Wang",
+        "Lu Lu"
+      ],
+      "primary_category": "physics.flu-dyn",
+      "categories": [
+        "physics.flu-dyn",
+        "cs.LG",
+        "physics.comp-ph"
+      ],
+      "published": "2026-04-15T14:29:41+00:00",
+      "link": "https://arxiv.org/pdf/2604.13919v1",
+      "tags": [
+        "keyword:神经交通"
+      ],
+      "llm_score": 7.0,
+      "llm_evidence_en": "Fourier-enhanced neural operator for modeling transfer in fluid dynamics",
+      "llm_evidence_cn": "用于流体动力学传输建模的傅里叶增强神经算子",
+      "llm_evidence": "用于流体动力学传输建模的傅里叶增强神经算子",
+      "canonical_evidence": "用于流体动力学传输建模的傅里叶增强神经算子",
+      "llm_tldr_en": "Applies Fourier-enhanced neural operators as efficient surrogates for radiative transfer in CFD.",
+      "llm_tldr_cn": "应用傅里叶增强神经算子作为计算流体动力学中辐射传输的高效代理模型。",
+      "llm_tldr": "应用傅里叶增强神经算子作为计算流体动力学中辐射传输的高效代理模型。",
+      "llm_tags": [
+        "query:profile-2:composite"
+      ],
+      "matched_query_tag": "query:profile-2:composite",
+      "matched_query_text": "Papers central to 查找神经算子在交通流建模和控制中的研究论文, especially work that connects or combines: N; L; A; P; research on applying neural operators for traffic flow modeling and control; methods combining neural operator learning and traffic system optimization.",
+      "matched_requirement_id": "req-composite-profile-2",
+      "selection_source": "fresh_fetch",
+      "quick_tier": "7"
+    }
+  ]
+}

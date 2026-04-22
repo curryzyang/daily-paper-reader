@@ -1,0 +1,1329 @@
+Title: Closed-Form Characterization of Constrained Double-Integrator Optimal Control
+
+URL Source: https://arxiv.org/pdf/2604.13007v1
+
+Published Time: Wed, 15 Apr 2026 01:39:42 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+# Closed-Form Characterization of Constrained Double-Integrator Optimal Control 
+
+Filippos N. Tzortzoglou, Student Member, IEEE, Logan E. Beaver Member, IEEE, 
+
+and Andreas A. Malikopoulos, Senior Member, IEEE 
+
+Abstract — We consider the energy-optimal control problem for double-integrator systems subject to state and control constraints, with fixed terminal time and free terminal speed. When the constraints become active, the optimal trajectory consists of a combination of bang, unconstrained, and coast arcs, whose switching instants must be computed explicitly. In this paper, we derive closed-form expressions for the switching times of all admissible profiles, including both constrained and unconstrained arcs, reducing the computation in each case to explicit algebraic equations. In contrast to prior work, we classify all possible combinations of arcs, including special cases, and provide the specific conditions under which each case arises. Furthermore, we prove that when the initial unconstrained trajectory violates both speed and control constraints, the optimal solution follows a predetermined bang–affine–coast profile, enabling direct identification of the optimal trajectory without intermediate feasibility checks. 
+
+I. I NTRODUCTION 
+
+Optimal control problems with state and control con-straints arise naturally in many engineering systems, where physical limitations must be explicitly enforced [1]. Prop-erly accounting for these constraints is essential for both theoretical development and practical implementation. Arepresentative example is an autonomous vehicle whose motion is governed by position and speed states, with accel-eration/deceleration as the control input [2]. In this setting, state constraints may enforce speed limits, while control constraints reflect bounds on acceleration and deceleration [3]. Such formulations are fundamental in transportation and robotics applications, where safety and actuator limitations play a critical role. The foundations of constrained optimal control trace back to the late 1960s [1], [4]–[8], where the need to system-atically handle state and control limitations first emerged. From an application perspective, early studies in aerospace engineering addressed optimal flight path problems with state-variable inequality constraints [9]. Since then, state-and control-constrained optimal control has been widely applied across several domains, including the guidance of  
+
+> This research was supported in part by NSF under Grants CNS-2401007, CMMI-2348381, IIS-2415478, in part by MathWorks. Filippos N. Tzortzoglou is with the Civil and Environmental Engineering Department, Cornell University Logan Beaver is with the Mechanical & Aerospace Engineering Depart-ment of Old Dominion University Andreas A. Malikopoulos is with the Applied Mathematics, Systems Engineering, Mechanical Engineering, Electrical & Computer Engineering, and School of Civil & Environmental Engineering, Cornell University, Ithaca, NY, USA. (email: amaliko@cornell.edu )
+
+autonomous underwater vehicles [10], locomotion of micro-robotic swimmers [11], motion planning in robotics [12], and efficiency improvements in transportation systems, par-ticularly in the domain of connected and automated vehicles (CAVs) [2], [13]–[18]. In transportation applications, an important class of prob-lems involves systems with double-integrator dynamics, where the objective is typically to minimize control effort for a CAV [2], [19]. In this setting, position and speed are the state variables, while acceleration serves as the control input. In [20], a comprehensive study of optimal control for double-integrator systems was presented; however, it does not address the joint activation of both state and control constraints under an objective that minimizes control effort. In optimal control problems, when state and/or control constraints become active along the trajectory, the optimal solution is a piecewise function, consisting of a combination of constrained and unconstrained arcs. The switching instants between arcs must then be computed explicitly. The authors in [13] developed a methodology to charac-terize optimal solutions for state- and control-constrained problems in the context of CAVs approaching signalized intersections. A key contribution of their work is the deriva-tion of real-time analytical solutions, distinguishing their approach from prior methods based on numerical compu-tation. For the fixed terminal time problem, however, they enumerate different cases (see Table II in [13]) without explicitly defining the resulting trajectory from the initial conditions. Also, identifying the switching instants between arcs in certain sub-cases requires solving coupled algebraic equations and, in some cases, cubic equations. The latter arise specifically when bang–affine–coast profiles occur. Later, in [21], the authors addressed some of the limi-tations of [13], focusing on CAVs operating at signal-free intersections. Specifically, they established a priori condi-tions for identifying constraint activation cases, and resulting control profiles. However, in both [13] and [21], determining whether a single-constraint profile remains feasible requires sequential feasibility checks. In [21], the trajectory is first classified as either bang–affine or affine–coast, depending on whether the unconstrained solution violates the control input or the speed limit, respectively. The resulting profile is then re-examined to check whether the introduced constrained arc activates the remaining constraint, in which case the solution escalates to a bang–affine–coast profile. In this paper, we seek to contribute to this space. We first show that when the unconstrained trajectory violates both the 
+
+> arXiv:2604.13007v1 [eess.SY] 14 Apr 2026
+
+state and control constraints, the optimal profile is directly of bang–affine–coast type, eliminating the need for sequential feasibility checks. In addition, in contrast to [21], we provide conditions for all special cases that may arise, such as purely bang or bang–coast profiles. More importantly, we demonstrate that the switching instants between arcs for all admissible profiles reduce to solving at most a single quadratic equation, whose solution is an explicit function of the boundary data, with no intermediate constants of integration required. The remainder of the paper is organized as follows. In Section II, we introduce the problem formulation. In Section III, we classify the admissible control profiles and present the conditions for their identification. In Section IV, we derive the closed-form analytical trajectories for each profile. Finally, we offer concluding remarks and directions for future work in Section V. II. P ROBLEM FORMULATION 
+
+Consider an autonomous agent operating on a predefined path governed by double-integrator dynamics 
+
+˙p(t) = v(t), (1) 
+
+˙v(t) = u(t),
+
+where p(t) ∈ R is the position, v(t) ∈ R is the speed, and 
+
+u(t) ∈ R is the acceleration (control input). The speed and control inputs are subject to the constraints 
+
+vmin ≤ v(t) ≤ vmax , umin ≤ u(t) ≤ umax , (2) with umin < 0 < u max and vmin < v max .Given an initial time t0 with initial conditions p(t0) = p0,
+
+v(t0) = v0, and a given terminal position p(T ) = pT = L at a fixed terminal time T , we consider the following energy-minimizing optimal control problem. 
+
+Problem 1. Determine the control trajectory u(t) that min-imizes, 
+
+min 
+
+> u(·)
+
+Z Tt0
+
+u2(t) dt (3) 
+
+s.t. (1) , (2) ,p(t0) = p0, v (t0) = v0,p(T ) = L. 
+
+Next, we provide the optimal unconstrained trajectory for this problem. Note that although the process for identifying the unconstrained trajectory is well defined (see, e.g., [2], [21]), here we prefer to give an alternative representation using only one coefficient α that will facilitate our expo-sition throughout the paper. In our exposition, we suppress dependence on t for some variables for readability. 
+
+Lemma 1. Without loss of generality, let t0 = 0 and 
+
+p0 = 0 . The optimal control input u(t), t ∈ [0 , T ], for the unconstrained solution of Problem 1 is given by 
+
+u(t) = α(t − T ),
+
+where 
+
+α = 3( v0T − L)
+
+T 3 .
+
+Proof. The Hamiltonian of Problem 1 is 
+
+H(u, p, v, λ 1, λ 2) = u2 + λ1v + λ2u, (4) where λ1, λ 2 are the time-varying costates. For optimality, the costates must satisfy 
+
+˙λ1 = − ∂H ∂p = 0 , ˙λ2 = − ∂H ∂v = −λ1.
+
+Thus, 
+
+λ1 = c1, λ2(t) = −c1t + c2. (5) From the stationarity condition, 
+
+∂H ∂u = 2 u + λ2 = 0 , (6) we obtain 
+
+u(t) = − λ2(t)2 = c1t − c2
+
+2 = at + b, (7) for some constants of integration a, b . Since the terminal speed is free, the transversality condition gives λ2(T ) = 0 .
+
+Hence, u(T ) = 0 , and therefore u(t) = a(t − T ).Let τ ∈ [0 , T ]. Integrating u(τ ) yields 
+
+v(τ ) = v0 +
+
+Z τ
+
+> 0
+
+a(s − T ) ds = v0 + a
+
+2 τ 2 − aT τ. 
+
+Integrating once more, we obtain 
+
+p(τ ) = 0 + 
+
+Z τ
+
+> 0
+
+v(s) ds = 0 + v0τ + a
+
+6 τ 3 − aT 
+
+2 τ 2, (8) which implies, 
+
+L = v0T + a
+
+6 T 3 − a
+
+2 T 3 = v0T − a
+
+3 T 3.
+
+Solving for a gives 
+
+a = 3( v0T − L)
+
+T 3 .
+
+Setting α = a completes the proof. We have identified the optimal control profile for the unconstrained version of Problem 1. However, our goal is to develop a framework that accounts for both the state and control constraints in (2). In [21], it was shown that, when the final time T is feasible, that is, reachable under the vehicle’s physical limits, the inclusion of state and control constraints leads to a finite number of possible control profile structures. In the next section, we discuss these profiles and their classification based on the vehicle’s initial state. We also provide conditions that lead to special control profiles not discussed in [21]. III. O PTIMAL CONTROL PROFILES 
+
+In this section, we discuss the different profiles our solution can exhibit based on the initial conditions of the autonomous agent. Before proceeding, note that, for a free terminal speed, the transversality condition yields an addi-tional boundary condition 
+
+u(T ) = 0 ,
+
+which we derive in the sequel. Moreover, by Lemma 1, the unconstrained optimal control is linear. Therefore, over the interval [t0, T ], the acceleration cannot change sign. 
+
+Assumption 1. The prescribed terminal time T is feasible ;namely, there exists at least one admissible trajectory satis-fying (1) –(2) and the boundary condition. 
+
+Assumption 2. We restrict attention to the case in which the acceleration is linearly decreasing in time, equivalently, the initial acceleration is positive. As shown in [21, Lemma 2], this is equivalent to assuming that the initial speed satisfies 
+
+v(t0) < LT , where L = pT − p0.
+
+The complementary case, in which the acceleration is lin-early increasing in time, follows by symmetry and is therefore omitted. 
+
+Based on the results in [21] and [13] and under As-sumption 1, every optimal solution to Problem 1 with free terminal speed exhibits a control profile that is aconcatenation of at most three arcs drawn from the set 
+
+{Bang , Unconstrained , Coast }, where • a Bang arc has u = umax ,• an Unconstrained arc has u(t) affine in t, and • a Coast arc has u = 0 with v = vmax .
+
+Specifically, the only admissible profiles are: (P1) Unconstrained, (P2) Bang → Unconstrained, (P3) Unconstrained → Coast, (P4) Bang → Coast, (P5) Bang → Unconstrained → Coast, (P6) Bang. The relative control profiles are presented in Fig. 1. For profiles ending in unconstrained arcs (P1, P2), the transversality conditions imply, 
+
+λ2(T ) = 0 = ⇒ u(T ) = 0 . (9) Similarly, for profiles ending on coast arcs (P3, P4, P5), the condition u(T ) = 0 is implied by the active constraint. The bang profile is pathological and arises under a measure-zero set of conditions, which we describe in the following section. Note that by definition, the bang profile u = umax cannot change sign, thus it is consistent with prior discussion. In [21], conditions on the initial state of the agent were derived to determine the resulting control trajectory profile. Next, we review these conditions. 
+
+Fig. 1: Different control profile combinations 
+
+A. Classification of control profiles 
+
+Table I summarizes the conditions under which different constraint activation cases arise in the accelerating case, i.e., when v0 < L/T and a < 0. The conditions are organized in terms of two threshold quantities derived from the boundary conditions of Problem 1: the state constraint threshold, 
+
+T ≤ 3L/ (v0 + 2 vmax ), (10) from Theorem 2(i) in [21], and the control constraint thresh-old, 
+
+T ≤  −3v0 + p9( v0)2 + 12 umax L/(2 umax ), (11) from Theorem 3(i) in [21]. Note that the conditions in rows 6–8 of Table I were not discussed in [21]. Next, we prove why these conditions result in the associated control profiles. We begin by formally stating the conditions under which the optimal trajectory given in Lemma 1 does not activate any constraint. 
+
+Lemma 2 (Unconstrained Profile [21]) . Let u∗ 
+
+> i
+
+(t) = a(t −
+
+T ), t ∈ [t0, T ], be the optimal control input for the unconstrained solution of Problem 1 with a < 0. If 
+
+(T > 3Lv0+2 vmax 
+
+T > −3v0+√9( v0)2+12 umax L  
+
+> 2umax
+
+, (12) 
+
+then none of the state and control constraints become active in [t0, T ].
+
+This result corresponds to the first row of Table I, where the unconstrained (affine) solution satisfies all constraints, i.e., when T exceeds both thresholds. A visualization of this control profile is shown in Fig. 1 (yellow dotted line, labeled 
+
+unconstrained ). Next, we consider the impact of the constraint thresholds (11), (10) on the trajectory. 
+
+Lemma 3 (Constraint Activation [21]) . If only the state threshold (10) is violated, then the trajectory will include a coast arc. If only the control threshold (11) is violated, then the trajectory will include a bang arc. TABLE I: Conditions for constraint activation in the acceler-ating case ( v0 < L/T , i.e., a < 0). A =affine, B–A = bang-affine, A–C = affine-coast, B–A–C = bang-affine-coast. 
+
+τ ∗ 
+
+> c
+
+: control constraint junction point; τ ∗ 
+
+> s
+
+: state constraint junction point.                                                                                                                                     
+
+> #Profile Condition
+> 1AT > 3Lv0+ 2 vmax
+> &T > −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> 2B–A T > 3Lv0+ 2 vmax
+> &T≤ −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> &T < τ ∗
+> c−2 vi(τ∗
+> c)−vmax
+> 
+> umax
+> 3A–C T≤3Lv0+ 2 vmax
+> &T > −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> &τ∗
+> s>
+> −3v0+
+> q
+> 9( v0)2+ 12 umax
+>  p∗(τ∗
+> s)−p(t0)
+> 2umax
+> 4B–A–C T > 3Lv0+ 2 vmax
+> &T≤ −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> &T≥τ∗
+> c−2 vi(τ∗
+> c)−vmax
+> 
+> umax
+> 5B–A–C T≤3Lv0+ 2 vmax
+> &T > −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> &τ∗
+> s≤−3v0+
+> q
+> 9( v0)2+ 12 umax
+>  p∗(τ∗
+> s)−p(t0)
+> 2umax
+> 6B–A–C T≤3Lv0+ 2 vmax
+> &T≤ −3v0+p9( v0)2+ 12 umax L
+> 2umax
+> 7BT=
+> p(v0)2+ 2 umax Lumax
+> −v0
+> umax
+> ≤vmax −v0
+> umax
+> 8B-C τc=τs=vmax −v0
+> umax
+> 3( vmax −v0)2= 6 umax (T v max −L)
+
+Lemma 3 applies to the second, third, fourth, and fifth rows of Table I. In the second row, violating the control threshold (11) leads to a bang–affine (B–A) profile, while in the third row, violating the state threshold (10) leads to an affine–coast profile. However, the threshold conditions are insufficient to determine whether these trajectories are bang– affine–coast (B–A–C). This requires an additional condition, which we present next. 
+
+Lemma 4 (B–A–C [21]) . Let τ ∗ 
+
+> c
+
+and τ ∗ 
+
+> s
+
+be the junction times for the bang–affine and affine–coast junctions. A problem satisfying Lemma 3 is bang–affine–coast if and only if, 
+
+T ≥ τ ⋆c − 2 ( vi(t∗ 
+
+> c
+
+− vmax )) 
+
+umax 
+
+, (13) 
+
+τ ∗ 
+
+> s
+
+≤
+
+p9( v0)2 + 12 umax (p∗(τ ∗ 
+
+> s
+
+) − p0)2umax 
+
+, (14) 
+
+respectively, for each case. 
+
+The conditions in Lemma 4 determine whether the affine segment of the trajectory violates the state or control bounds, resulting in a bang–affine–coast solution in both cases. Specifically, in Table I the third inequality ((13) and (14)) in cases (B–A) and (A–C) ensures that no additional con-straint becomes active after solving the corresponding single-constraint problem. If conditions (13) and (14) are not satisfied, the solution transitions directly to case (B–A–C). In [21], a (B–A–C) profile is obtained only after sequen-tially examining the (B–A) and (A–C) cases. Specifically, if the conditions in rows 2 and 3 are not satisfied, the control profile escalates to (B–A–C). We next present a result showing that, when (11) and (10) hold simultaneously, the (B–A–C) profile arises directly, eliminating the need to check the (B–A) and (A–C) cases. This condition is captured in row 6 of Table I. 
+
+Theorem 1. Let u∗ 
+
+> i
+
+(t) = a(t−T ), t ∈ [t0, T ] be the optimal unconstrained solution of Problem 1, with a < 0. If 
+
+
+
+T ≤ 3Lv0+2 vmax ,T ≤ −3v0+√9( v0)2+12 umax L  
+
+> 2umax
+
+,
+
+(15) 
+
+then the optimal solution of Problem 1 activates both con-straints. In particular, it is of bang–affine–coast type, with bang–coast arising as the degenerate boundary case. Proof. We prove that if (15) holds, neither the bang–affine nor the affine–coast profiles are feasible. Therefore, both constraints must be active in the optimal solution. Let 
+
+β := vmax −v0 > 0, α := vmax T −L, x := umax T, 
+
+and, without loss of generality, let t0 = 0 . We first rewrite the two inequalities in (15) in forms that will be used repeatedly. Re-arranging 
+
+T ≤ 3Lv0 + 2 vmax 
+
+,
+
+yields 
+
+3( vmax T − L) ≤ (vmax − v0)T =⇒ 3α ≤ βT. (16) Multiplying by umax gives 
+
+3umax α ≤ βx. (17) Re-arranging the second inequality in (15) yields, 
+
+2x + 3 v0 ≤ p9( v0)2 + 12 umax L. (18) Squaring both sides and re-arranging yields x2 + 3 v0x ≤
+
+3umax L. Since vmax = v0 + β, it follows that 
+
+3umax α = 3 umax (vmax T − L)= 3( v0 + β)x − 3umax L
+
+≤ 3( v0 + β)x − (x2 + 3 v0x)= 3 βx − x2. (19) Next, we examine the two single-constraint profiles sepa-rately. 
+
+1) The affine–coast (A–C) profile cannot remain feasible on its own. For the A–C profile, the switching time is τ ∗ 
+
+> s
+
+= 3αβ
+
+(cf. Lemma 6 in [21]). The control on the affine arc decreases linearly to zero at τ ∗ 
+
+> s
+
+, so its initial value is u∗ 
+
+> i
+
+(0) = 2βτ ∗
+
+> s
+
+= 
+
+> 2β2
+> 3α
+
+. For the A–C profile to be a single -constraint solution, we must have u∗ 
+
+> i
+
+(0) < u max ; equivalently, 
+
+3umax α > 2β2. (20) We show that (20) is impossible under (15). If x ≤ 2β, then from (17), 
+
+3umax α ≤ βx ≤ 2β2.
+
+If instead x > 2β, then from (19), 
+
+3umax α ≤ 3βx − x2.
+
+Moreover, for x ≥ 2β,
+
+(x − β)( x − 2β) ≥ 0 = ⇒ x2 − 3βx + 2 β2 ≥ 0,
+
+hence 
+
+3βx − x2 ≤ 2β2.
+
+Therefore, in both cases, 
+
+3umax α ≤ 2β2,
+
+which implies 
+
+u∗ 
+
+> i
+
+(0) = 2β2
+
+3α ≥ umax .
+
+Thus, the control constraint is active as well, and the A–C profile cannot be a single state-constrained solution. 
+
+2) The bang–affine (B–A) profile cannot remain feasible on its own. For the B–A profile, the switching time is τ ∗ 
+
+> c
+
+=
+
+T − √3
+
+q
+
+T 2 − 2( L−v0T ) 
+
+> umax
+
+(cf. Lemma 7 in [21]), and the terminal speed is v∗ 
+
+> i
+
+(T ) = v0 + umax  
+
+> 2
+
+(T + τ ∗ 
+
+> c
+
+). Substituting the expression for τ ∗ 
+
+> c
+
+and using x = umax T , we obtain 
+
+v∗ 
+
+> i
+
+(T ) = v0 + x −√32
+
+px2 − 2umax (L − v0T ). (21) From the first inequality in (15), 
+
+(v0 + 2 vmax )T ≤ 3L, 
+
+so 
+
+3( L − v0T ) ≥ 2( vmax − v0)T = 2 βT, 
+
+that is, 
+
+L − v0T ≥ 2βT 
+
+3 = 2βx 
+
+3umax 
+
+. (22) Substituting (22) into (21) gives 
+
+v∗ 
+
+> i
+
+(T ) ≥ v0 + x −√32
+
+r
+
+x2 − 4βx 
+
+3 .
+
+Now observe that 
+
+(x − β)2 − 34
+
+
+
+x2 − 4βx 
+
+3
+
+
+
+= (x − 2β)2
+
+4 ≥ 0.
+
+Hence, 
+
+x − β ≥√32
+
+r
+
+x2 − 4βx 
+
+3 ,
+
+and therefore 
+
+v∗ 
+
+> i
+
+(T ) ≥ v0 + β = vmax .
+
+Thus, the speed constraint is active as well, and the B–A profile cannot be a single control-constrained solution. Since neither single-constraint profile can remain feasible under (15), both ui(t) − umax ≤ 0 and vi(t) − vmax ≤ 0
+
+must be active in the optimal solution. Theorem 1 allows direct identification of the B–A–C pro-file from the boundary conditions of Problem 1, eliminating the need for the intermediate interdependence check via Theorems 4 and 5 in [21] when both conditions in (15) hold. For completeness, we also present the conditions for the bang-and bang-coast solutions, given in rows 7 and 8 of Table I. These are pathological cases, which only occur for a measure-zero set of initial conditions. We present the bang conditions next, and provide bang-coast in the following section. 
+
+Lemma 5. The bang arc is optimal if and only if, 
+
+T =
+
+pv20 + 2 umax Lumax 
+
+− v0
+
+umax 
+
+≤ vmax − v0
+
+umax 
+
+, (23) 
+
+which is a measure-zero set. Proof. Substituting the boundary conditions of Problem 1 into constant-acceleration kinematics yields, 
+
+L = v0T + 12 umax T 2,vf = v0 + uT ≤ vmax .
+
+Solving both equations for T completes the proof. Lemma 5 is provided for completeness, as the bang case only occurs at a single point on the boundary of the admissible initial conditions set under Assumption 1. Finally, the bang–coast case (the last row in Table I) is a degenerate boundary case of the bang–affine–coast profile. In particular, it arises when the two switching times of the bang–affine–coast solution coincide, so that the intermediate affine arc collapses to zero duration. For this reason, we do not treat bang–coast separately at this stage. Instead, in the next section, when deriving the switching times for the bang–affine–coast profile, we show how the bang–coast structure follows directly when these switching times are identical. IV. A NALYTICAL CONSTRAINED TRAJECTORIES 
+
+In this section, we propose the analytical trajectories per profile that are implemented by the agent after the classification presented in Table I. 
+
+A. Affine-coast profile 
+
+Next, we showcase the exact affine-coast (A-C) control profile along with the switching time τ ∗ 
+
+> s
+
+.
+
+Lemma 6. Consider the optimal control Problem 1, and suppose that only vi(t) − vmax ≤ 0 becomes active. Then the optimal trajectory consists of two arcs: an unconstrained arc on [t0, τ ∗ 
+
+> s
+
+] with control input 
+
+u∗ 
+
+> i
+
+(t) = u0
+
+
+
+1 − t − t0
+
+τ ∗ 
+
+> s
+
+− t0
+
+
+
+, t ∈ [t0, τ ∗ 
+
+> s
+
+], (24) where u0 := u∗ 
+
+> i
+
+(t0), followed by a state-constrained arc 
+
+v∗ 
+
+> i
+
+(t) = vmax , u∗ 
+
+> i
+
+(t) = 0 on [τ ∗ 
+
+> s
+
+, T ]. The junction point is given explicitly by 
+
+τ ∗ 
+
+> s
+
+= 3( vmax T − L)
+
+vmax − v0 , (25) 
+
+where L := p(T ) for p(t0) = 0 .Proof. Without loss of generality, let t0 = 0 and p(t0) = 0 
+
+and β := vmax − v0. We present the proof in three steps. 
+
+Step 1: Control and speed on the unconstrained arc. From the necessary conditions [21], the optimal control on the uncon-strained arc is linear in time with u∗ 
+
+> i
+
+(τ ∗ 
+
+> s
+
+) = 0 , yielding (24). Integrating, the speed on [0 , τ ∗ 
+
+> s
+
+] yields 
+
+vi(t) = v0 + u0
+
+
+
+t − t2
+
+2τ ∗
+
+> s
+
+
+
+. (26) Evaluating at t = τ ∗ 
+
+> s
+
+and imposing the continuity condition 
+
+vi(τ ∗ 
+
+> s
+
+) = vmax , we obtain 
+
+u0 = 2βτ ∗
+
+> s
+
+. (27) 
+
+Step 2: Position at the junction point. Integrating the speed profile (26) over [0 , τ ∗ 
+
+> s
+
+] and substituting (27), the position at the junction point is 
+
+p(τ ∗ 
+
+> s
+
+) = v0 τ ∗ 
+
+> s
+
++ u0(τ ∗ 
+
+> s
+
+)2
+
+3 = v0 τ ∗ 
+
+> s
+
++ 2β τ ∗
+
+> s
+
+3 . (28) 
+
+Step 3: Applying the terminal position constraint. On the state-constrained arc [τ ∗ 
+
+> s
+
+, T ], the speed is constant at vmax ,so 
+
+p(τ ∗ 
+
+> s
+
+) + vmax (T − τ ∗ 
+
+> s
+
+) = L. (29) Substituting (28) into (29) yields 
+
+v0 τ ∗ 
+
+> s
+
++ 2β
+
+3 τ ∗ 
+
+> s
+
++ vmax T − vmax τ ∗ 
+
+> s
+
+= L. 
+
+Collecting the coefficient of τ ∗ 
+
+> s
+
+and noting that v0 + 2β 
+
+> 3
+
+−
+
+vmax = − β 
+
+> 3
+
+, simplifies to − β 
+
+> 3
+
+τ ∗ 
+
+> s
+
++ vmax T = L. Solving for 
+
+τ ∗ 
+
+> s
+
+yields (25). 
+
+B. Bang-affine profile 
+
+Next, we showcase the bang-affine profile. 
+
+Lemma 7. Consider the optimal control Problem 1, and suppose that only ui(t)−umax ≤ 0 becomes active. Then the optimal trajectory consists of two arcs: a control-constrained arc u∗ 
+
+> i
+
+(t) = umax on [t0, τ ∗ 
+
+> c
+
+], followed by an unconstrained arc on [τ ∗ 
+
+> c
+
+, T ] with control input 
+
+u∗ 
+
+> i
+
+(t) = umax 
+
+T − τ ∗
+
+> c
+
+(T − t), t ∈ [τ ∗ 
+
+> c
+
+, T ]. (30) 
+
+The junction point is given explicitly by 
+
+τ ∗ 
+
+> c
+
+= T − √3
+
+s
+
+(T )2 − 2( L − v0 T )
+
+umax 
+
+, (31) 
+
+where L := p(T ) for p(t0) = 0 .Proof. Without loss of generality, let t0 = 0 and p(t0) = 0 .
+
+Step 1: Control on the unconstrained arc. From the necessary conditions [21], the optimal control on the unconstrained arc is linear in time with u∗ 
+
+> i
+
+(τ ∗ 
+
+> c
+
+) = umax (continuity at the junction point) and u∗ 
+
+> i
+
+(T ) = 0 (terminal condition from Lemma 1 in [21]). Interpolating between these two points yields (30). 
+
+Step 2: Speed and position at the terminal time. On the control-constrained arc [0 , τ ∗ 
+
+> c
+
+], the speed and position are 
+
+vi(τ ∗ 
+
+> c
+
+) = v0 + umax τ ∗ 
+
+> c
+
+, p(τ ∗ 
+
+> c
+
+) = v0 τ ∗ 
+
+> c
+
++ 12 umax (τ ∗ 
+
+> c
+
+)2.
+
+(32) On the unconstrained arc [τ ∗ 
+
+> c
+
+, T ], integrating (30) yields the terminal speed 
+
+vi(T ) = v0 + umax (T + τ ∗ 
+
+> c
+
+)2 , (33) and, using the position propagation on each arc together with (32), the terminal position reduces to 
+
+p(T ) = v0 T + umax 
+
+ T 2
+
+3 + T τ ∗
+
+> c
+
+3 − (τ ∗ 
+
+> c
+
+)2
+
+6
+
+
+
+. (34) 
+
+Step 3: Solving for the junction point. Imposing the terminal position constraint p(T ) = L in (34) yields 
+
+L − v0 T = umax 
+
+ T 2
+
+3 + T τ ∗
+
+> c
+
+3 − (τ ∗ 
+
+> c
+
+)2
+
+6
+
+
+
+. (35) Multiplying both sides by 6/u max and rearranging, we obtain the quadratic equation 
+
+(τ ∗ 
+
+> c
+
+)2 − 2T τ ∗ 
+
+> c
+
+− 2T 2 + 6( L − v0 T )
+
+umax 
+
+= 0 . (36) Applying the quadratic formula, the two roots are 
+
+τ (±) 
+
+> c
+
+= T ±
+
+s
+
+3T 2 − 6( L − v0 T )
+
+umax 
+
+= T ± √3
+
+s
+
+T 2 − 2( L − v0 T )
+
+umax 
+
+. (37) The root τ (+)  
+
+> c
+
+= T + √3 √· > T violates τ ∗ 
+
+> c
+
+< T and is therefore inadmissible. The admissible junction point is τ (−) 
+
+> c
+
+,which yields (31). 
+
+C. Case where the control input is violated at the beginning (bang-affine-coast) 
+
+Next, we present the case of the bang-affine-coast control profile. Here, for the identification of the switching times τ ∗
+
+> s
+
+and τ ∗ 
+
+> c
+
+, we end up in a significantly simpler formulation in comparison to [21]. 
+
+Lemma 8. Consider the optimal control Problem 1, and suppose that both ui(t) − umax ≤ 0 and vi(t) − vmax ≤ 0
+
+become active. Then the optimal trajectory consists of three arcs: a control-constrained arc u∗ 
+
+> i
+
+(t) = umax on [t0, τ ∗ 
+
+> c
+
+], an unconstrained arc u∗ 
+
+> i
+
+(t) = a(2) t + b(2) on [τ ∗ 
+
+> c
+
+, τ ∗ 
+
+> s
+
+], and a state-constrained arc v∗ 
+
+> i
+
+(t) = vmax , u∗ 
+
+> i
+
+(t) = 0 on [τ ∗ 
+
+> s
+
+, T ].The junction points are given explicitly by 
+
+τ ∗ 
+
+> c
+
+= β − √Ψ
+
+umax 
+
+, (38) 
+
+τ ∗ 
+
+> s
+
+= β + √Ψ
+
+umax 
+
+, (39) 
+
+where β := vmax − v0 and Ψ := 6 umax (T v max − L) − 3β2,and L := p(T ) for p(t0) = 0 .Proof. Without loss of generality, let t0 = 0 and p(t0) = 0 .
+
+Step 1: Relating junction points via speed continuity. On the control-constrained arc [0 , τ ∗ 
+
+> c
+
+], the speed evolves as vi(t) = 
+
+v0 + umax t, yielding 
+
+vi(τ ∗ 
+
+> c
+
+) = v0 + umax τ ∗ 
+
+> c
+
+. (40) On the unconstrained arc [τ ∗ 
+
+> c
+
+, τ ∗ 
+
+> s
+
+], the optimal control is linear in time with u∗ 
+
+> i
+
+(τ ∗ 
+
+> c
+
+) = umax and u∗ 
+
+> i
+
+(τ ∗ 
+
+> s
+
+) = 0 (from the necessary conditions [21]), which yields 
+
+u∗ 
+
+> i
+
+(t) = −umax 
+
+τ ∗ 
+
+> s
+
+− τ ∗
+
+> c
+
+t + umax τ ∗
+
+> s
+
+τ ∗ 
+
+> s
+
+− τ ∗
+
+> c
+
+, t ∈ [τ ∗ 
+
+> c
+
+, τ ∗ 
+
+> s
+
+]. (41) Integrating (41) over [τ ∗ 
+
+> c
+
+, τ ∗ 
+
+> s
+
+] and using (40), the speed at 
+
+τ ∗ 
+
+> s
+
+is 
+
+vi(τ ∗ 
+
+> s
+
+) = v0 + umax (τ ∗ 
+
+> c
+
++ τ ∗ 
+
+> s
+
+)2 . (42) Since the state-constrained arc requires vi(τ ∗ 
+
+> s
+
+) = vmax , we obtain from (42) 
+
+τ ∗ 
+
+> c
+
++ τ ∗ 
+
+> s
+
+= 2βumax 
+
+, (43) where β := vmax − v0. Therefore, 
+
+τ ∗ 
+
+> c
+
+= 2βumax 
+
+− τ ∗ 
+
+> s
+
+. (44) 
+
+Step 2: Deriving the position at the state constraint junc-tion. The position at τ ∗ 
+
+> c
+
+from the control-constrained arc is 
+
+p(τ ∗ 
+
+> c
+
+) = v0 τ ∗ 
+
+> c
+
++ 12 umax (τ ∗ 
+
+> c
+
+)2. Integrating the speed profile on the unconstrained arc and simplifying using (44), the position at τ ∗ 
+
+> s
+
+reduces to 
+
+p(τ ∗ 
+
+> s
+
+) = 4β
+
+3 τ ∗ 
+
+> s
+
+− 2β2
+
+3 umax 
+
+− umax 
+
+6 (τ ∗ 
+
+> s
+
+)2 + v0 τ ∗ 
+
+> s
+
+. (45) 
+
+Step 3: Applying the terminal position constraint. On the state-constrained arc [τ ∗ 
+
+> s
+
+, T ], the speed is constant at vmax ,so 
+
+p(τ ∗ 
+
+> s
+
+) + vmax (T − τ ∗ 
+
+> s
+
+) = L. (46) Substituting (45) into (46) and using v0 + 4β 
+
+> 3
+
+− vmax = β 
+
+> 3
+
+,we obtain the quadratic equation 
+
+umax 
+
+2 (τ ∗ 
+
+> s
+
+)2 − β τ ∗ 
+
+> s
+
++ 2β2
+
+umax 
+
+− 3( T v max − L) = 0 . (47) 
+
+Step 4: Solving for τ ∗ 
+
+> s
+
+and τ ∗ 
+
+> c
+
+. Applying the quadratic formula to (47) with A = umax /2, B = −β, and C =2β2/u max − 3( T v max − L), the discriminant is 
+
+∆ = β2 − 2 umax 
+
+ 2β2
+
+umax 
+
+− 3( T v max − L)
+
+
+
+= 6 umax (T v max − L) − 3β2
+
+= Ψ . (48) The two roots are 
+
+τ (±) 
+
+> s
+
+= β ± √Ψ
+
+umax 
+
+. (49) For the B–A–C profile to be well-posed, we require 0 <τ ∗ 
+
+> c
+
+< τ ∗ 
+
+> s
+
+≤ T . From (43), τ ∗ 
+
+> c
+
+< τ ∗ 
+
+> s
+
+is equivalent to 
+
+τ ∗ 
+
+> s
+
+> β/u max . The smaller root τ (−) 
+
+> s
+
+= ( β − √Ψ) /u max <β/u max violates this requirement. The larger root τ (+)  
+
+> s
+
+=(β + √Ψ) /u max > β/u max satisfies it. Therefore, τ ∗ 
+
+> s
+
+=(β + √Ψ) /u max , and from (44), τ ∗ 
+
+> c
+
+= ( β − √Ψ) /u max .
+
+Remark 1. The boundary case Ψ = 0 corresponds to τ ∗ 
+
+> c
+
+=
+
+τ ∗ 
+
+> s
+
+= β/u max , where the unconstrained arc collapses and the profile degenerates into a bang-coast structure. 
+
+Remark 2. The junction points in Lemma 8 provide a significant simplification over the expressions derived in Lemma 8 and Appendix C of [21]. Therein, the junc-tion points are obtained through the intermediate constants 
+
+a(2) = −u2max 
+
+p−1/ϕ and b(2) = umax (−2v0p−1/ϕ +2vmax 
+
+p−1/ϕ + 1) /2, where ϕ is a function of five parame-ters. Here, the junction points τ ∗ 
+
+> c
+
+and τ ∗ 
+
+> s
+
+are then recovered indirectly from these constants. The resulting closed-form expressions (38) –(39) are explicit functions of the boundary data (v0, L, T, u max , v max ), are symmetric in structure ( τ ∗
+
+> c
+
+and τ ∗ 
+
+> s
+
+differ only in the sign before √Ψ), and do not involve any intermediate variables. 
+
+V. C ONCLUDING REMARKS 
+
+In this paper, we studied the time–energy optimal con-trol problem for double-integrator systems under state and control constraints. We provided a direct classification of admissible control profiles based on the boundary condi-tions, eliminating the need for sequential feasibility checks. We also simplified the structure of constrained trajectories. Specifically, for cases where both state and control con-straints become active, we showed that the switching times can be computed via simple algebraic equations instead of cubic ones, reducing complexity. Furthermore, we derived closed-form expressions for all admissible profiles, including special pathological cases, enabling efficient and transparent trajectory generation. These results are particularly relevant for real-time applications such as CAVs, where vehicle on-board computational capacity is limited. Future work should extend this framework to more complex dynamics and large-scale coordination settings. REFERENCES [1] J. A. E. Bryson and Y. C. Ho, Applied Optimal Control: Optimiza-tion, Estimation, and Control . Waltham, MA: Blaisdell Publishing Company, 1969. [2] A. A. Malikopoulos, L. E. Beaver, and I. V. Chremos, “Optimal time trajectory and coordination for connected and automated vehicles,” 
+
+Automatica , vol. 125, no. 109469, 2021. [3] A. A. Malikopoulos and L. Zhao, “A closed-form analytical solution for optimal coordination of connected and automated vehicles,” in 
+
+2019 American Control Conference (ACC) , pp. 3599–3604, IEEE, 2019. [4] J. A. E. Bryson, W. F. Denham, and S. E. Dreyfus, “Optimal program-ming problems with inequality constraints I: Necessary conditions for extremal solutions,” AIAA Journal , vol. 1, no. 11, pp. 2544–2550, 1963. [5] D. H. Jacobson, M. M. Lele, and J. L. Speyer, “New necessary con-ditions of optimality for control problems with state-variable inequal-ity constraints,” Journal of Mathematical Analysis and Applications ,vol. 35, pp. 255–284, 1971. [6] R. F. Hartl, S. P. Sethi, and R. G. Vickson, “A survey of the maximum principles for optimal control problems with state constraints,” SIAM review , vol. 37, no. 2, pp. 181–218, 1995. [7] J. F. Bonnans and A. Hermant, “Second-order analysis for optimal control problems with pure state constraints and mixed control-state constraints,” Annales de l’Institut Henri Poincar´ e – Analyse Non Lin´ eaire , vol. 26, no. 2, pp. 561–598, 2009. [8] L. C. Evans, “An introduction to mathematical optimal control theory spring, 2024 version,” Accessed on June , vol. 28, p. 2024, 2024. [9] J. L. Speyer, R. K. Mehra, and A. E. Bryson Jr, “The separate computation of arcs for optimal flight paths with state variable inequality constraints,” in Advanced Problems and Methods for space flight optimization , pp. 53–68, Elsevier, 1969. [10] R. Chertovskih, D. Karamzin, N. T. Khalil, and F. L. Pereira, “An indirect method for regular state-constrained optimal control problems in flow fields,” IEEE Transactions on Automatic Control , vol. 66, no. 2, pp. 787–793, 2020. [11] O. Wiezel and Y. Or, “Using optimal control to obtain maximum displacement gait for purcell’s three-link swimmer,” in 2016 IEEE 55th Conference on Decision and Control (CDC) , pp. 4463–4468, IEEE, 2016. [12] L. E. Beaver, R. Tron, and C. G. Cassandras, “A graph-based approach to generate energy-optimal robot trajectories in polygonal environ-ments,” IFAC-PapersOnLine , vol. 56, no. 2, pp. 7000–7005, 2023. [13] X. Meng and C. G. Cassandras, “Eco-driving of autonomous vehicles for nonstop crossing of signalized intersections,” IEEE transactions on automation science and engineering , vol. 19, no. 1, pp. 320–331, 2020. [14] X. Meng and C. G. Cassandras, “Trajectory optimization of au-tonomous agents with spatio-temporal constraints,” IEEE Transactions on Control of Network Systems , vol. 7, no. 3, pp. 1571–1581, 2020. [15] H. Xu, W. Xiao, C. G. Cassandras, Y. Zhang, and L. Li, “A gen-eral framework for decentralized safe optimal control of connected and automated vehicles in multi-lane signal-free intersections,” IEEE Transactions on Intelligent Transportation Systems , vol. 23, no. 10, pp. 17382–17396, 2022. [16] H. Bang and A. A. Malikopoulos, “Optimal trajectory planning meets network-level routing: Integrated control framework for emerging mobility systems,” Automatica , 2023 (in press, arXiv:2311.13193). [17] L. E. Beaver and A. A. Malikopoulos, “Optimal Control of Differ-entially Flat Systems is Surprisingly Easy,” Automatica , vol. 159, no. 111404, 2024. [18] F. N. Tzortzoglou and A. A. Malikopoulos, “Teaching cars to drive,” 
+
+IEEE Potentials , vol. 44, no. 6, pp. 15–24, 2025. [19] B. Chalaki, L. E. Beaver, A. M. I. Mahbub, H. Bang, and A. A. Malikopoulos, “A research and educational robotic testbed for real-time control of emerging mobility systems: From theory to scaled experiments,” IEEE Control Systems Magazine , vol. 42, no. 6, pp. 20– 34, 2022. [20] A. Locatelli, Optimal Control of a Double Integrator: A Primer on Maximum Principle , vol. 68 of Studies in Systems, Decision and Control . Springer, 2017. [21] A. M. I. Mahbub and A. A. Malikopoulos, “Conditions to Provable System-Wide Optimal Coordination of Connected and Automated Vehicles,” Automatica , vol. 131, no. 109751, 2021.

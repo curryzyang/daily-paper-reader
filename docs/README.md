@@ -6,70 +6,61 @@
 </div>
 
 ## 每次日报
-- 最新运行日期：2026-04-21
-- 运行时间：2026-04-21 19:54:11 UTC
+- 最新运行日期：2026-04-22
+- 运行时间：2026-04-22 19:58:50 UTC
 - 运行状态：成功
-- 本次总论文数：16
-- 精读区：5
+- 本次总论文数：13
+- 精读区：2
 - 速读区：11
 
 ### 今日简报（AI）
-今日聚焦神经算子与扩散优化，共完成16篇论文阅读，其中精读5篇。  
-最值得关注的是利用生成扩散方法改进逆问题求解与类脑神经算子的核物理建模。  
-建议普通读者持续关注神经科学与PDE耦合的跨领域创新应用。
-- 详情：[/202604/21/README](/202604/21/README)
+多项机器人自治与交通控制前沿成果今日速览共 13 篇。  
+PDE 约束的多机器人密度优化与统一物理建模的城市交通管控最具突破性。  
+建议关注自动驾驶与多智能体协同节能的新算法应用。
+- 详情：[/202604/22/README](/202604/22/README)
 
 ### 精读区论文标签
-1. [DiLO: Decoupling Generative Priors and Neural Operators via Diffusion Latent Optimization for Inverse Problems](/202604/21/2604.11375v1-dilo-decoupling-generative-priors-and-neural-operators-via-diffusion-latent-optimization-for-inverse-problems)  
+1. [Safe and Energy-Aware Multi-Robot Density Control via PDE-Constrained Optimization for Long-Duration Autonomy](/202604/22/2604.15524v1-safe-and-energy-aware-multi-robot-density-control-via-pde-constrained-optimization-for-long-duration-autonomy)  
+   标签：评分：8.0/10、query:pde
+   evidence：通过偏微分方程约束优化进行多机器人密度控制
+2. [TrafficClaw: Generalizable Urban Traffic Control via Unified Physical Environment Modeling](/202604/22/2604.17456v1-trafficclaw-generalizable-urban-traffic-control-via-unified-physical-environment-modeling)  
    标签：评分：8.0/10、query:profile-2
-   evidence：神经算子作为PDE约束问题的代理求解器
-2. [SCNO: Spiking Compositional Neural Operator -- Towards a Neuromorphic Foundation Model for Nuclear PDE Solving](/202604/21/2604.11625v1-scno-spiking-compositional-neural-operator----towards-a-neuromorphic-foundation-model-for-nuclear-pde-solving)  
-   标签：评分：8.0/10、query:pde
-   evidence：用于求解PDE中基本微分算子的脉冲组合神经算子
-3. [Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators](/202604/21/2604.13316v1-beyond-uniform-sampling-synergistic-active-learning-and-input-denoising-for-robust-neural-operators)  
-   标签：评分：8.0/10、query:profile-2
-   evidence：利用主动学习和输入去噪构建用于物理模拟的鲁棒神经算子。
-4. [Late Fusion Neural Operators for Extrapolation Across Parameter Space in Partial Differential Equations](/202604/21/2604.16721v1-late-fusion-neural-operators-for-extrapolation-across-parameter-space-in-partial-differential-equations)  
-   标签：评分：8.0/10、query:pde
-   evidence：用于预测受偏微分方程控制的系统在不同参数范围下行为的神经算子
-5. [Crouzeix-Raviart Finite Element Approximation of Dirichlet Boundary Control Problems with Piecewise Constant Controls](/202604/21/2604.17315v1-crouzeix-raviart-finite-element-approximation-of-dirichlet-boundary-control-problems-with-piecewise-constant-controls)  
-   标签：评分：8.0/10、query:pde
-   evidence：由泊松方程支配的Dirichlet边界控制问题
+   evidence：通过统一物理环境建模进行城市交通控制
 
 ### 速读区论文标签
-1. [DeepRitzSplit Neural Operator for Phase-Field Models via Energy Splitting](/202604/21/2604.18261v1-deepritzsplit-neural-operator-for-phase-field-models-via-energy-splitting)  
-   标签：评分：7.5/10、query:pde
-   evidence：用于物理信息学习和相场模型变分公式的神经算子方法。
-2. [Hypergraph Neural Diffusion: A PDE-Inspired Framework for Hypergraph Message Passing](/202604/21/2604.10955v1-hypergraph-neural-diffusion-a-pde-inspired-framework-for-hypergraph-message-passing)  
-   标签：评分：7.0/10、query:pde
-   evidence：受偏微分方程启发的框架，将非线性扩散方程与神经消息传递统一起来。
-3. [On Switched Event-triggered Full State-constrained Formation Control for Multi-vehicle Systems](/202604/21/2604.10993v1-on-switched-event-triggered-full-state-constrained-formation-control-for-multi-vehicle-systems)  
+1. [Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator](/202604/22/2604.12794v1-stable-fine-time-step-long-horizon-turbulence-prediction-with-a-multi-stepsize-mixture-of-experts-neural-operator)  
+   标签：评分：7.5/10、query:profile-2
+   evidence：用于流动预测和建模的神经算子
+2. [Integrated Routing and Intersection Control for Mixed Traffic](/202604/22/2604.13424v1-integrated-routing-and-intersection-control-for-mixed-traffic)  
+   标签：评分：7.5/10、query:q6
+   evidence：路由优化与交通系统控制
+3. [FAST: A Synergistic Framework of Attention and State-space Models for Spatiotemporal Traffic Prediction](/202604/22/2604.13453v1-fast-a-synergistic-framework-of-attention-and-state-space-models-for-spatiotemporal-traffic-prediction)  
+   标签：评分：7.5/10、query:profile-2
+   evidence：使用注意力和状态空间模型进行时空交通预测
+4. [Situation-Aware Feedback-Predictive Control Framework for Lane-Less Dense Traffic](/202604/22/2604.12590v1-situation-aware-feedback-predictive-control-framework-for-lane-less-dense-traffic)  
+   标签：评分：7.0/10、query:q5
+   evidence：交通流的反馈与预测控制
+5. [Beyond Uniform Sampling: Synergistic Active Learning and Input Denoising for Robust Neural Operators](/202604/22/2604.13316v1-beyond-uniform-sampling-synergistic-active-learning-and-input-denoising-for-robust-neural-operators)  
    标签：评分：7.0/10、query:profile-2
-   evidence：智能交通系统中的多车编队控制
-4. [A Spectral-based ISS small-gain theorem for boundary control systems with infinite couplings](/202604/21/2604.11031v1-a-spectral-based-iss-small-gain-theorem-for-boundary-control-systems-with-infinite-couplings)  
-   标签：评分：7.0/10、query:pde
-   evidence：边界控制系统及网络的状态输入稳定性
-5. [Stable Fine-Time-Step Long-Horizon Turbulence Prediction with a Multi-Stepsize Mixture-of-Experts Neural Operator](/202604/21/2604.12794v1-stable-fine-time-step-long-horizon-turbulence-prediction-with-a-multi-stepsize-mixture-of-experts-neural-operator)  
-   标签：评分：7.0/10、query:q6
-   evidence：用于湍流时间推进预测的神经算子
-6. [Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs](/202604/21/2604.13723v1-physics-informed-neural-networks-for-solving-derivative-constrained-pdes)  
-   标签：评分：7.0/10、query:pde
-   evidence：用于求解具有导数关系约束的PDE的PINN
-7. [Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires](/202604/21/2604.13919v1-nested-fourier-enhanced-neural-operator-for-efficient-modeling-of-radiation-transfer-in-fires)  
+   evidence：用于物理模拟的鲁棒神经算子与主动学习
+6. [Nested Fourier-enhanced neural operator for efficient modeling of radiation transfer in fires](/202604/22/2604.13919v1-nested-fourier-enhanced-neural-operator-for-efficient-modeling-of-radiation-transfer-in-fires)  
    标签：评分：7.0/10、query:profile-2
-   evidence：用于物理方程高效建模的神经算子框架
-8. [Euler-inspired Decoupling Neural Operator for Efficient Pansharpening](/202604/21/2604.12463v1-euler-inspired-decoupling-neural-operator-for-efficient-pansharpening)  
-   标签：评分：6.0/10、query:profile-2
-   evidence：受物理启发的连续泛函映射神经算子
-9. [Weakly-supervised Learning for Physics-informed Neural Motion Planning via Sparse Roadmap](/202604/21/2604.13204v1-weakly-supervised-learning-for-physics-informed-neural-motion-planning-via-sparse-roadmap)  
+   evidence：用于流体动力学传输建模的傅里叶增强神经算子
+7. [Closed-Form Characterization of Constrained Double-Integrator Optimal Control](/202604/22/2604.13007v1-closed-form-characterization-of-constrained-double-integrator-optimal-control)  
+   标签：评分：6.5/10、query:profile-2
+   evidence：混合交通中联网自动驾驶车辆轨迹规划的最优控制框架
+8. [Weakly-supervised Learning for Physics-informed Neural Motion Planning via Sparse Roadmap](/202604/22/2604.13204v1-weakly-supervised-learning-for-physics-informed-neural-motion-planning-via-sparse-roadmap)  
+   标签：评分：6.5/10、query:pde
+   evidence：物理信息PDE求解用于运动规划
+9. [DeepRitzSplit Neural Operator for Phase-Field Models via Energy Splitting](/202604/22/2604.18261v1-deepritzsplit-neural-operator-for-phase-field-models-via-energy-splitting)  
+   标签：评分：6.5/10、query:profile-2
+   evidence：物理模型的神经算子代理
+10. [Physics-Informed Neural Networks for Solving Derivative-Constrained PDEs](/202604/22/2604.13723v1-physics-informed-neural-networks-for-solving-derivative-constrained-pdes)  
    标签：评分：6.0/10、query:pde
-   evidence：求解程函方程（PDE）的物理增强神经运动规划
-10. [Auxiliary Finite-Difference Residual-Gradient Regularization for PINNs](/202604/21/2604.14472v1-auxiliary-finite-difference-residual-gradient-regularization-for-pinns)  
+   evidence：用于求解导数约束偏微分方程的物理信息神经网络
+11. [Lightweight Geometric Adaptation for Training Physics-Informed Neural Networks](/202604/22/2604.15392v1-lightweight-geometric-adaptation-for-training-physics-informed-neural-networks)  
    标签：评分：6.0/10、query:pde
-   evidence：PINN在偏微分方程求解中的正则化方法
-11. [Neural Network-Based Adaptive Event-Triggered Control for Dual-Arm Unmanned Aerial Manipulator Systems](/202604/21/2604.17048v1-neural-network-based-adaptive-event-triggered-control-for-dual-arm-unmanned-aerial-manipulator-systems)  
-   标签：评分：6.0/10、query:profile-2
-   evidence：基于神经网络的自适应控制，用于具有未建模动力学的复杂动态系统
+   evidence：针对PDE的物理信息神经网络优化
 
 
 <div class="dpr-home-promo-card">

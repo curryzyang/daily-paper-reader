@@ -1,0 +1,753 @@
+Title: Situation-Aware Feedback-Predictive Control Framework for Lane-Less Dense Traffic
+
+URL Source: https://arxiv.org/pdf/2604.12590v1
+
+Published Time: Wed, 15 Apr 2026 00:57:30 GMT
+
+Number of Pages: 8
+
+Markdown Content:
+> 1
+
+# Situation-Aware Feedback-Predictive Control Framework for Lane-Less Dense Traffic 
+
+Parthib Khound and Debraj Chakraborty 
+
+Abstract —Navigating dense, lane-less traffic remains one of the most challenging scenarios for autonomous vehicles, especially in emerging regions where road structure and driver behavior are highly unpredictable. This paper presents a hybrid control framework tailored for such environments, integrating a 360 ◦
+
+zone-based perception module with a dual-layer control strategy that combines classical feedback and predictive optimization. The longitudinal feedback controller computes reference speed based on braking distance and steering dynamics, while the lateral controller tracks a virtual optimal lane derived from the spatial distribution of neighboring vehicles. The predictive planner samples control inputs over a time horizon and selects the most feasible trajectory using a multi-term cost function. Simulation results across diverse one-way traffic scenarios demonstrate the framework’s robustness, responsiveness, and suitability for chaotic, unstructured traffic. 
+
+Index Terms —lane-less traffic, automated driving, predictive vehicle control, vehicle trajectory planning, feedback-predictive control. 
+
+I. I NTRODUCTION 
+
+Advanced driver assistance systems (ADAS) aim to improve road safety by reducing human error [1]. Most current ADAS technologies are developed for structured road networks and regulated traffic conditions. Adaptive cruise control (ACC) and lane keeping systems (LKS) are common examples, handling longitudinal and lateral vehicle control respectively [2]. Pla-tooning control systems further extend longitudinal coordi-nation by optimizing car-following maneuvers [3]. Applying these technologies to unstructured traffic environments, such as those found in emerging countries like India, poses significant challenges due to inconsistent lane discipline and, in many cases, poorly defined or absent lane markings. Automated driving in dense, unstructured traffic environ-ments, where lane markings are absent or disregarded, has gained increasing attention over recent years. These condi-tions challenge conventional lane-based planning and control frameworks and have led to the development of alternative approaches that attempt to capture the complexity of such traffic. For instance, the flexible car–following model proposed by [4] focuses on longitudinal control in heterogeneous traffic using multi-leader logic. It allows a vehicle to respond to multiple leaders ahead, improving adaptability in weak lane discipline scenarios. The model is calibrated using real-world 
+
+> *This work is supported by Honda Cars India Limited (HCIL) under grant no. 10020048. P. Khound and D. Chakraborty are with the Department of Electrical Engineering, Indian Institute of Technology Bombay, Mumbai-400076 India (e-mail: khound@ee.iitb.ac.in and dc@ee.iitb.ac.in)
+
+trajectory data from India and emphasizes data-driven mod-eling. However, it does not explicitly address lateral motion or vehicle actuation constraints such as steering and throttle, limiting its applicability to full-motion planning in chaotic traffic environments. In [5], a microscopic model is introduced for lane-less traffic, inspired by human driving behavior in congested traffic. It uses a graph-theoretic influence framework to simulate both lateral and longitudinal interactions. Vehicles are modeled as point masses, and lateral motion is treated as direct drift, de-coupled from longitudinal control. Each vehicle is influenced by its neighbors based on proximity and angle, and the model assumes that all vehicles obey a common control law. This offers a very structured way to simulate collective behavior. However, as the proposed method is inspired from human driving, it overlooks the critical role of human error, which is widely recognized as the leading cause of road accidents [6]. Furthermore, by assuming uniform compliance, the model fails to capture the variability and unpredictability inherent in real-world traffic, limiting its applicability to autonomous driving systems operating in chaotic environments. In [7], a macroscopic model is proposed that treats traffic as a compressible fluid, enabling nudging interactions among connected automated vehicles (CAVs). Vehicles are not bound to lanes and influence others ahead through sensing or com-munication, conceptually resembling pressure in fluid dynam-ics. While effective in structured CAV networks, the model assumes centralized coordination and cooperative behavior, which is not feasible for ego-vehicle autonomy in mixed traffic. It does not model individual vehicle control inputs such as steering or throttle and relies on emergent behavior from collective interactions. More recently, [8] analyzed traffic stability under weak lane discipline by incorporating reaction time distribution into a hexagonal vehicle formation framework. This method offers insights into collective dynamics and stability margins in idealized traffic configurations. The formation-based approach is designed for theoretical analysis and assumes equilibrium conditions, making it unsuitable for decentralized, ego-centric planning in chaotic traffic where individual vehicles must respond autonomously to unpredictable local interactions. In [9], a reinforcement learning framework is proposed where multiple autonomous vehicles optimize traffic flow through policy learning and coordination. The approach as-sumes vehicle-to-vehicle communication and shared policies. While the control system is not explicitly modeled, the learned policies operate over steering and throttle commands. However, the paper does not describe fallback mechanisms 
+
+> arXiv:2604.12590v1 [eess.SY] 14 Apr 2026 2
+
+or analyze robustness under unpredictable traffic conditions, which are important considerations for deployment in mixed environments. Other studies, such as those analyzing overtaking behav-ior [10] and vehicle detection in lane-less traffic [11], offer insights into behavioral and perception modeling for lane-less environment, respectively. For example, the overtaking decision model [10] uses a probabilistic framework based on lateral and longitudinal positions to simulate driver choices in heterogeneous, weak lane discipline traffic. In contrast, [11] employs binary image processing techniques to detect vehicles in unstructured environments. However, these works focus on isolated behavior or perception modeling tasks and do not integrate these components with motion planning or control. Across these studies, several limitations persist: lateral mo-tion is frequently simplified or omitted; vehicle dynamics are often modeled using point-mass assumptions; and surrounding vehicles are assumed to behave predictably or follow traffic norms. These assumptions break down in chaotic, real-world traffic environments. In contrast, this work proposes a hybrid feedback-predictive control framework for ego-vehicle navigation in dense, un-structured traffic. The vehicle is modeled using a kinematic bicycle model, with steering and throttle as the only control degrees of freedom. The method does not rely on lane struc-ture, formation control, or behavioral compliance from neigh-boring vehicles. Instead, it integrates zone-based perception, feedback stabilization, and trajectory sampling with cost-based selection, enabling responsive and feasible motion planning in environments where structure is absent and behavior is unpredictable. This article is organized as follows: Section II provides an overview of the proposed system, and Section III describes the vehicle model. Sections IV–VII present the core components of the control methodology, namely, perception, planning, feedback control, and optimization, in sequence. Section VIII summarizes the overall control algorithm. Simulation results are presented in Section IX, and conclusions are drawn in Section X. II. S YSTEM OVERVIEW 
+
+The proposed control framework for ego-vehicle navigation in dense, lane-less traffic consists of four interconnected mod-ules that together enable responsive and safe motion planning: 1) Perception Module : Classifies neighboring vehicles into frontal, left, and right zones based on relative angle and distance. This spatial categorization forms the basis for context-aware planning and control. 2) Reference Planner : Computes the target velocity and virtual lane using zone-based perception. The velocity is derived from braking distance constraints and lateral steering dynamics, while the virtual lane is estimated from lateral gaps to side vehicles and road boundaries. 3) Feedback Controller : Implements a simple pro-portional-derivative (PD) control law to track the ref-erence speed and virtual lane center. It computes steer-ing and throttle commands based on lateral deviation, 𝐿 
+
+𝑥 , 𝑦 
+
+𝑣 
+
+𝜓 
+
+𝛿 
+
+𝑌 
+
+𝑋  
+
+> Fig. 1. Schematic of the kinematic bicycle model.
+
+heading error, and velocity error, providing reactive sta-bilization and also serving as a fallback when predictive planning is infeasible. 4) Predictive Optimizer : Samples control inputs over a finite horizon and simulates ego trajectories using a kinematic bicycle model. Each trajectory is evaluated using a multi-term cost function that penalizes road edge violations, collisions, clearance violations, devi-ation from feedback commands, and abrupt changes in control inputs. The lowest-cost feasible trajectory is selected for execution. III. V EHICLE MODEL 
+
+The proposed framework is specifically designed for dense, lane-less traffic scenarios where vehicles operate at low speeds. Under such conditions, dynamic effects such as tire slip and friction are negligible, making the pure kinematic bicycle model a suitable choice. This model has been widely adopted in low-speed autonomous driving applications due to its geo-metric simplicity and computational efficiency (see, e.g., [12], [13], [14]). For mathematical modeling, the left and right wheels of both the front and rear axles are collapsed onto the vehicle’s centerline, resulting in a simplified geometry that resembles a bicycle. The vehicle model is expressed as: 
+
+˙x = [ v cos( ϕ) v sin( ϕ) vL tan( δ) a]T (1) where x := [ x y ϕ v]T is the state vector and u := [ δ a]T
+
+is the control input vector. Here, (x, y ) denote the vehicle’s position in the global inertial frame, ϕ is the global heading angle, v is the longitudinal velocity, δ is the steering angle, a
+
+is the longitudinal acceleration (throttle input), and L is the wheelbase, see Fig. 1. The system is subject to the following fundamental constraints: v ≥ 0 m/s, δ ∈ [δmin , δ max ], and 
+
+a ∈ [amin , a max ]. Steering induces a lateral (centripetal) acceleration, which is bounded by amax,lat . In addition, the vehicle’s frontal and side perception ranges are denoted by 
+
+dF and dS respectively, will be elaborated in the following section. IV. Z ONE -B ASED PERCEPTION MODULE 
+
+To enable context-aware planning, the ego-vehicle defines three directional zones within its fixed perception field, based on relative angle θ and distance d thresholds (see Fig. 2): 3𝑑 S
+
+> 0°
+> 180 °
+> Frontal Zone
+> Left Zone
+> Right Zone
+
+𝑑 F  
+
+> Fig. 2. Perception zones relative to the ego-vehicle.
+> •
+
+Frontal Zone, ZF: |θ| ≤ 10 ◦, d < d F. Captures vehicles directly ahead, relevant for speed regulation and collision avoidance.  
+
+> •
+
+Left Zone, ZL: 0◦ < θ ≤ 180 ◦, d < d S. Includes vehicles to the left, used for lateral clearance and virtual lane estimation.  
+
+> •
+
+Right Zone, ZR: −180 ◦ ≤ θ < 0◦, d < d S. Includes vehicles to the right, complementing the left zone in evaluating spatial constraints and guiding lateral motion. Let each neighboring vehicle i ∈ N have a polygonal shape 
+
+Pi ⊂ R2. Then, the sets of vehicles whose shapes intersect the respective zone regions are defined as: 
+
+VF := {i ∈ N | P i ∩ ZF̸ = ∅} (2a) 
+
+VL := {i ∈ N | P i ∩ ZL̸ = ∅} (2b) 
+
+VR := {i ∈ N | P i ∩ ZR̸ = ∅} (2c) where ZF, ZL, and ZR denote the spatial regions corresponding to the frontal, left, and right zones respectively, and VF, VL,
+
+VR are the corresponding sets of vehicles overlapping those regions. Note that dF < d S, therefore, VF ⊂ (VL ∪ V R). Vehicles may be recorded in multiple zones if they meet more than one criterion. This abstraction supports structured reasoning over unstructured traffic by simplifying spatial complexity into manageable perceptual categories, enabling responsive and context-aware control. V. R EFERENCE PLANNING MODULE 
+
+The absence of lane markings and the lack of lane discipline on many Indian roads present a significant challenge, as conventional LKS cannot be applied in such environments. To address these challenges, the planning logic is intro-duced to generate intermediate motion references based on the perceived traffic configuration. The references consist of the target velocity and a virtual reference lane, both derived from the spatial relationships with neighboring vehicles and road boundaries. These outputs serve as reference signals for the downstream control modules, enabling structured motion planning even in unstructured traffic scenarios. 
+
+A. Reference Velocity Computation 
+
+In lane-less traffic environments, maintaining a constant preset cruise velocity can be unsafe, as the ego-vehicle must 𝑌 
+
+𝑋    
+
+> Ego vehicle Neighboring vehicles
+> 𝑥 𝑥 1𝑥 2
+> 𝑑 1
+> 𝑑 2
+
+ZF 
+
+> Fig. 3. Average headway computation.
+
+adapt its speed to ensure safe braking when frontal obstacles are encountered and also account for lateral motion during steering. To achieve this, three velocity components are con-sidered: the nominal cruise velocity vN, the braking velocity vB
+
+derived from stopping distance constraints, and the curvature-constrained velocity vC derived from lateral acceleration limits. The target reference velocity vref is then obtained using a smooth minimum operator applied to these values, ensuring responsive braking and safe turning. When no vehicles are detected within the frontal zone, the ego-vehicle maintains a nominal cruise velocity vN. Otherwise, the velocity is reduced to satisfy braking distance require-ments, given by 
+
+vB =
+
+q
+
+2 |amin | max(0 , (∆ xavg − dsafe )) , (3) derived from the classical stopping distance kinematic relation 
+
+v2 = −2 a s , with s denoting the required stopping distance. This ensures that the ego-vehicle can decelerate safely to avoid collisions with frontal obstacles. In (3), the headway distances to frontal vehicles i ∈ V F are weighted by inverse distance di:
+
+∆xavg =
+
+P 
+
+> i∈V F
+
+wF,i ∆xi
+
+P 
+
+> i∈V F
+
+wF,i 
+
+, wF,i = 1
+
+di
+
+, (4) Here, dsafe is the stand-still headway clearance and ∆xi is the relative distance of the i−th vehicle to the ego-vehicle, equal to (xi − x), see Fig. 3. Additionally, the velocity is adapted based on the steering output command δ. The curvature-constrained velocity is given by 
+
+vC =
+
+s
+
+amax,lat L
+
+tan( |δ| + ε) , (5) which follows from the centripetal acceleration relation alat =
+
+v ˙ϕ and the vehicle model (1), where alat denotes the lateral acceleration of the ego-vehicle . The small offset ε is intro-duced to avoid singularity, ensuring numerical stability during straight driving when δ ≈ 0.To ensure smooth transitions between velocity modes, the smooth minimum operator smin ϵ(·) is used, defined as smin ϵ({xi}Ni=1 ) = ϵ log 
+
+( NX
+
+> i=1
+
+exp 
+
+ xi
+
+ϵ
+
+)
+
+, ϵ < 0, (6) where ϵ is the smoothing parameter [15]. As ϵ → 0−, the operator converges to the exact minimum function min( ·).4
+
+The final reference velocity is computed as 
+
+vref =
+
+(
+
+smin ε(vN, v C), VF = ∅
+
+smin ε(vN, v C, v B), VF̸ = ∅ . (7) 
+
+B. Reference Lane Estimation 
+
+The primary challenge on many Indian roads is the lack of lane discipline or lane markings. Therefore, relying on lane markings as a reference is not a viable option for safe autonomous driving. Inspired from [5], the reference lateral position is estimated from the spatial distribution of neighbor-ing vehicles in the left and right zones, along with lateral road boundaries. Lateral positions are weighted by inverse distance, similar to the headway averaging in (4). The weighted averages are computed as 
+
+yL, avg =
+
+P  
+
+> i∈V L
+
+wL,i (yi − do) + wL,e yL,e 
+
+ P  
+
+> i∈V L
+
+wL,i 
+
+ + wL,e 
+
+,wL,i = 1
+
+di
+
+, wL,e = 1
+
+dL,e 
+
+,
+
+(8) 
+
+yR, avg =
+
+P  
+
+> i∈V R
+
+wR,i (yi + do) + wR,e yR,e 
+
+ P  
+
+> i∈V R
+
+wR,i 
+
+ + wR,e 
+
+,wR,i = 1
+
+di
+
+, wR,e = 1
+
+dR,e 
+
+.
+
+(9) Fig. 4 gives a geometrical illustration of these formulations. Here, yi is the lateral global position of the i-th vehicle within the zone, and do is an offset term to compensate for the vehicles’ nominal width and a safe side clearance, since the lateral positions yi’s are computed from the vehicle center and does not account for width or clearance. Fig. 5 provides an illustrative sketch highlighting the significance of do. yL,e and 
+
+yR,e denote the lateral positions of the left and right road edges also adjusted for nominal width and clearance, and dL,e , dR,e 
+
+are their respective shortest distances from the ego-vehicle. The virtual reference lane is then defined as 
+
+yref = yL, avg + yR, avg 
+
+2 . (10) This virtual centerline, illustrated by the light green color line in Fig. 4, serves as the lateral reference for downstream control modules, enabling structured motion in unstructured traffic environments. VI. F EEDBACK CONTROL MODULE 
+
+A. Controller Design 
+
+The feedback controller computes the steering and acceler-ation commands (δ, a ) based on the reference speed vref and the estimated lane reference yref , as derived in the previous section. For longitudinal control, the velocity error is defined as 
+
+ev = vref − v , (11) and the feedback acceleration command is computed using a PD controller: 
+
+afb = Kv,P ev + Kv,D ˙ev , (12) where Kv,P and Kv,D are constant control gain parameters. For lateral control, a lookahead point is projected forward to improve stabilization. The lookahead distance dLA is a fixed parameter that determines how far ahead the reference point is placed. The desired heading is then computed as 
+
+ϕref = tan −1
+
+ yref − ydLA cos ϕ
+
+
+
+. (13) The lateral and heading errors are given by 
+
+e∆y = yref − (y + dLA sin ϕ) (14) and 
+
+eϕ = ϕref − ϕ . (15) Then the feedback steering command is computed as 
+
+δfb = K∆y,P e∆y + K∆y,D ˙e∆y + Kϕ,P eϕ + Kϕ,D ˙eϕ . (16) where K∆y,P , K∆y,D , Kϕ,P , and Kϕ,D are constant control gain parameters. The next subsection presents conditions for the feedback control parameters derived from local stability analysis. Since the local stability analysis guarantees stability only for small perturbations, the parameters are further tuned through simulation tests. This feedback structure enables responsive control by con-tinuously adapting to both spatial constraints and curvature-induced speed variations. 
+
+B. Local Stability Analysis 
+
+Suppose the reference signals are constant, with vref = v⋆ >
+
+0, yref = y⋆, and ϕref = ϕ⋆. For a straight virtual reference lane, ϕ⋆ = 0 . Define perturbations ˜v = v − v⋆, ˜y = y − y⋆,and ˜ϕ = ϕ − ϕ⋆ = ϕ.From the longitudinal PD control law (12), the linearized closed-loop dynamics are 
+
+˙˜v ≈ − Kv,P 
+
+1 + KD,P 
+
+˜v . (17) For Kv,P > 0 and KD,P > −1, the longitudinal subsystem is locally asymptotically stable. Linearizing the kinematic vehicle model (1) around the equilibrium yields: ˙˜y ≈ v∗ ˜ϕ and ˙˜ϕ ≈ v∗ 
+
+> L
+
+δ. The lateral and heading errors (14) and (15) reduce to 
+
+˜e∆y ≈ − ˜y − dLA ˜ϕ (18) and 
+
+˜eϕ ≈ − 1
+
+dLA 
+
+˜y − ˜ϕ . (19) Their derivatives are 
+
+˙˜e∆y ≈ − v∗ ˜ϕ − dLA v∗
+
+L δ (20) and 
+
+˙˜eϕ ≈ − v∗
+
+dLA 
+
+˜ϕ − v∗
+
+L δ . (21) From the lateral PD steering law (16), the closed-loop dynam-ics become " ˙˜y
+
+˙˜ϕ
+
+#
+
+≈
+
+ 0 v⋆v⋆ 
+
+> L
+
+k1 v⋆ 
+
+> L
+
+k2
+
+  ˜y
+
+˜ϕ
+
+
+
+, (22) 5Ego vehicle Neighboring vehicles 
+
+𝑌 
+
+𝑋 
+
+𝑑 1 𝑑 2 𝑑 3
+
+Left Zone Right Zone 
+
+𝑋 
+
+𝑌 
+
+𝑑 𝐿 ,𝑒 
+
+> 𝑦 𝐿 ,𝑒
+> 𝑦 1
+> 𝑦 2
+> 𝑦 3
+> 𝑦 𝐿 ,avg
+
+𝑑 4
+
+> 𝑦 4
+> 𝑦 R,avg
+> 𝑦 ref
+> 𝑦 ref
+> 𝑦 𝑅 ,𝑒
+
+𝑑 𝑅 ,𝑒  
+
+> Fig. 4. Virtual reference lane estimation.
+
+Ego vehicle Neighboring vehicle 
+
+𝑑 cl 
+
+𝑊 
+
+𝑊 
+
+𝑑 𝑜 = 𝑊 + 𝑑 cl 
+
+𝑊 ≔ Vehicle’s width 
+
+𝑑 cl ≔ Offset clearance  
+
+> Fig. 5. Vehicle lateral geometry.
+
+where, 
+
+k1 = − K∆y,P + Kψ,P 
+
+> dLA
+
+1 + v⋆ 
+
+> L
+
+(K∆y,D dLA + Kψ,D ) (23) and 
+
+k2 = − K∆y,P dLA + Kψ,P + K∆y,D v⋆ + Kψ,D v⋆
+
+> dLA
+
+1 + v⋆ 
+
+> L
+
+(K∆y,D dLA + Kψ,D ) . (24) The linearized lateral subsystem (22) is asymptotically stable if k1 < 0 and k2 < 0, which is ensured when all controller gains in (16) are positive. VII. P REDICTIVE OPTIMIZER MODULE 
+
+While the feedback controller provides reactive stabilization based on reference signals, its behavior in chaotic, unstruc-tured environments can become overly aggressive due to abrupt spatial changes and limited foresight. In such cases, relying solely on instantaneous feedback may lead to control violations such as road edge breaches, unsafe clearance, or erratic steering. To mitigate these risks, a predictive optimiza-tion layer is introduced, enabling the ego-vehicle to evaluate future trajectories over a finite horizon and select control inputs that balance feasibility, safety, and smoothness.The predictive optimizer evaluates candidate control inputs over a finite horizon using trajectory simulation and cost-based selection. It operates on the kinematic bicycle model (Sec-tion III), incorporates neighbor information detected via zone-based perception (Section IV), and penalizes deviation from feedback control (Section VI) as part of its cost function. 
+
+A. Neighbor Trajectory Prediction 
+
+For each neighbor vehicle detected within the perception zones p ∈ (VL ∪ V R), the predicted trajectory over horizon H,starting from time t, is computed under constant velocity and heading assumptions as: 
+
+> p
+
+xt+( h+1)∆ t|t = pxt+h∆t|t + pvt cos( pϕt) ∆ t , (25a) 
+
+> p
+
+yt+( h+1)∆ t|t = pyt+h∆t|t + pvt sin( pϕt) ∆ t , (25b) where h = 0 , . . . , H − 1, and ∆t denotes sampling time of the controller. Here, pxt+h∆t|t and pyt+h∆t|t denote the pre-dicted longitudinal and lateral positions of the p-th neighboring vehicle at time t + h∆t, given information available at time t.The variables pvt and pϕt represent the velocity and heading angle of the p-th vehicle at time t, respectively. The notation 
+
+> p
+
+(·) is used to distinguish the states of neighboring vehicles from those of the ego-vehicle. The iterative formulation in (25a)–(25b) thus propagates the neighbor trajectories forward under constant velocity and heading assumptions. 
+
+B. Ego-Vehicle Trajectory Sampling 
+
+Control inputs (δk, a k) are uniformly sampled at dis-crete points within the bounded ranges [δmin , δ max ] and 
+
+[amin , a max ]. For each pair, the ego-vehicle’s trajectory is simulated over horizon H, starting from time t, using the kinematic bicycle model (1): 6
+
+xt+( h+1)∆ t|t = xt+h∆t|t + vt+h∆t|t cos( ϕt+h∆t|t)∆ t (26a) 
+
+yt+( h+1)∆ t|t = yt+h∆t|t + vt+h∆t|t sin( ϕt+h∆t|t)∆ t (26b) 
+
+ϕt+( h+1)∆ t|t = ϕt+h∆t|t + vt+h∆t|t
+
+L tan( δk) ∆ t (26c) 
+
+vt+( h+1)∆ t|t = max(0 , v t+h∆t|t + ak ∆t) . (26d) Similar to (25), here, h = 0 , . . . , H − 1, and ∆t denotes the sampling time of the controller. The terms xt+h∆t|t
+
+and yt+h∆t|t represent the predicted longitudinal and lateral positions of the ego-vehicle at time t + h∆t, respectively, given information available at time t. The variable ϕt+h∆t|t
+
+denotes the predicted heading angle, while vt+h∆t|t denotes the predicted velocity. The parameters δk and ak are the sampled steering and acceleration control inputs, respectively, applied at the k-th iteration. Finally, the operator max(0 , ·)
+
+ensures that the predicted velocity remains non-negative. 
+
+C. Cost Evaluation 
+
+Each sampled ego trajectory is scored using a multi-term cost function: 
+
+J =
+
+> H
+
+X
+
+> h=1
+
+ Jrd ,h + Jcol ,h + Jclr ,h + Jfb ,h + Jjrk ,h 
+
+ . (27) The road edge cost Jrd ,h penalizes lateral deviation near the boundaries by applying inverse-square penalties as the ego-vehicle approaches the road edges: 
+
+Jrd ,h = wrd 
+
+(yh − yR,e + ε1)2 + wrd 
+
+(yL,e − yh + ε1)2 , (28) where wrd is the weight assigned to this cost term. All weights w∗ are indexed to reflect their respective cost com-ponents. Here, yh denotes the predicted lateral position of the ego-vehicle at the h-th prediction step, while yL,e and yR,e 
+
+are illustrated in Fig. 4. The inverse-square of the relative lateral distance ensures that the penalty for boundary violation increases sharply as the vehicle approaches either road edge. The collision cost Jcol ,h assigns an infinite penalty if the ego-vehicle’s predicted footprint intersects with any predicted footprint of the neighboring vehicle: 
+
+Jcol ,h = X
+
+> p∈(VL∪V R)
+
+(
+
+∞, Pego ,h ∩ P p,h ̸ = ∅
+
+0, Pego ,h ∩ P p,h = ∅ . (29) Here, Pego ,h and Pp,h denote the polygons representing the ego-vehicle and the p-th neighboring vehicle at time step 
+
+h, used for collision detection via geometric intersection. For simplicity, each vehicle is modeled as a rectangle. All 
+
+p ∈ (VL ∪ V R) are fixed throughout the prediction horizon 
+
+H, as these correspond to the detected vehicles from the perception module at time t. The rectangular shapes of the ego-vehicle and its neighbors are computed via coordinate transformation based on the predicted position and orientation information given by (25) and (26). The clearance cost Jclr ,h penalizes close proximity to neigh-boring vehicles by evaluating the minimum Euclidean distance between their boundaries: 
+
+Jclr ,h = X
+
+> p∈(VL∪V R)
+
+wclr 
+
+
+
+min 
+
+> u∈∂Pego ,h , v ∈∂Pp,h
+
+∥u − v∥2 + ε1
+
+2
+
+(30) where ∂Pego ,h and ∂Pp,h are the boundaries of Pego ,h and 
+
+Pp,h , respectively. The feedback cost Jfb ,h penalizes deviation from nominal control inputs computed by the feedback controller: 
+
+Jfb ,h = wfb,1 (δk − δfb )2 + wfb,2 (ak − afb )2 . (31) The jerk cost Jjrk ,h discourages abrupt changes in control inputs (δk , a k) relative to the previous timestep (δprev , a prev ),promoting smoother actuation: 
+
+Jjrk ,h = wjrk,1 (δk − δprev )2 + wjrk,2 (ak − aprev )2 . (32) VIII. C ONTROL ALGORITHM 
+
+Algorithm 1 illustrates the complete control strategy that combines perception, planning, feedback, and optimization into a unified decision-making process. 
+
+Algorithm 1 Feedback-Predictive Control  
+
+> 1:
+
+Assign detected vehicles to perception zones based on spatial regions  
+
+> 2:
+
+Adapt vref according to braking distance constraints and lateral steering dynamics  
+
+> 3:
+
+Estimate yref as the weighted average of lateral positions of neighbors and road edges  
+
+> 4:
+
+Compute feedback control (δfb , a fb ) 
+
+> 5:
+
+for each visible neighbor do  
+
+> 6:
+
+Predict trajectory over horizon H assuming constant velocity and heading  
+
+> 7:
+
+end for  
+
+> 8:
+
+Sample control pairs (δk, a k) within [δmin , δ max ] and 
+
+[amin , a max ] 
+
+> 9:
+
+for each (δk, a k) do  
+
+> 10:
+
+Simulate ego trajectory over horizon H 
+
+> 11:
+
+Check road edge violations  
+
+> 12:
+
+Check collisions with predicted neighbor trajectories  
+
+> 13:
+
+Check minimum clearance  
+
+> 14:
+
+Check deviation from actuation commands  
+
+> 15:
+
+Compute cost Jk using multi-term cost function  
+
+> 16:
+
+end for  
+
+> 17:
+
+Select (δ∗, a ∗) with minimum cost J∗ 
+
+> 18:
+
+if no feasible trajectory exists then  
+
+> 19:
+
+Set control to feedback values: δ∗ ← δfb , a∗ ← afb  
+
+> 20:
+
+end if  
+
+> 21:
+
+Apply control: δ ← δ∗, a ← a∗
+
+IX. S IMULATION EXPERIMENTS 
+
+The simulation is conducted on a one-way lane that is 10 mwide, with 10 neighboring vehicles randomly spawned across the region at each initialization. The nominal speed of the neighboring vehicles is set to 8.33 m/s ( ≈ 30 km/h), with small 70
+
+10 
+
+> Y (m)
+
+X (m) 
+
+20 40 60 80 100 
+
+5
+
+0
+
+Ego vehicle Neighboring vehicles 
+
+10 
+
+5
+
+0
+
+10 
+
+5
+
+0
+
+10 
+
+5
+
+0
+
+𝒕 = 𝟏 𝐬 
+
+𝒕 = 𝟑 𝐬 
+
+𝒕 = 𝟓 𝐬 
+
+𝒕 = 𝟕 𝐬 
+
+𝒕 = 𝟗 𝐬 
+
+10 
+
+5
+
+0 
+
+> Fig. 6. Simulation snapshots illustrating ego-vehicle control in a chaotic lane-less traffic scenario.
+
+20 30 40 
+
+> Y (m)
+
+X (m) 
+
+50 
+
+5
+
+7
+
+6
+
+10            
+
+> 𝑡 =1𝑠
+> 𝑡 =3𝑠
+> 𝑡 =5𝑠
+> 𝑡 =7𝑠
+> 𝑡 =9𝑠
+> Fig. 7. Trajectory of the ego-vehicle in a representative simulation scenario over 10 s.
+
+0 2 4 6
+
+4
+
+8
+
+> Ego velocity (m/s)
+
+Time (s) 
+
+6
+
+8 10 
+
+2 
+
+> Fig. 8. Longitudinal velocity profile of the ego-vehicle in the representative simulation scenario.
+
+random deviations. Key simulation parameters are listed in Table I. Note that, the acceleration is within the range specified by ISO norm [16]. The simulation yields promising results, with the ego-vehicle successfully avoiding collisions even under severe conditions. While chaotic traffic environments can present a wide variety of scenarios, one representative case is presented here. Fig. 6 shows snapshots of the simulation 0 2 4 6
+
+-3
+
+3
+
+> Ego acceleration (m/ s2)
+
+Time (s) 
+
+0
+
+8 10  
+
+> Fig. 9. Longitudinal acceleration profile of the ego-vehicle in the represen-tative simulation scenario.
+
+0 2 4 6
+
+> Ego heading angle ( °)
+
+Time (s) 
+
+8 10 
+
+-20 
+
+20 
+
+0 
+
+> Fig. 10. Heading angle profile of the ego-vehicle in the representative simulation scenario..
+
+at different times during the 10 s runtime. Fig. 7 depicts the corresponding trajectory of the ego-vehicle, with time markers aligned to Fig. 6. Figs. 8–10 present the velocity, acceleration, and heading profiles of the ego-vehicle, demonstrating smooth and safe control performance despite the presence of chaotic neighbors. 8
+
+TABLE I SIMULATION PARAMETERS 
+
+Parameters Value Unit 
+
+∆t 0.1 s
+
+δmin −π/ 12 radian 
+
+δmax π/ 12 radian 
+
+amin −3 m/s 2
+
+amax 3 m/s 2
+
+amax ,lat 1 m/s 2
+
+L 2.5 m
+
+dF 7 m
+
+dS 12 m
+
+H 1 s
+
+X. C ONCLUSION 
+
+This paper presented a feedback-predictive control frame-work for autonomous driving in chaotic, lane-less traffic. The system combines zone-based perception with a dual-layer control strategy. The feedback controller reacts quickly to spatial changes, while the predictive optimizer makes more cautious decisions by evaluating future trajectories. Simulation results show that the ego-vehicle can avoid collisions and maintain smooth motion in dense, unpredictable traffic, across a wide range of challenging scenarios. However, a more refined approach to tuning the control parameters and cost function weights could further improve the system’s responsiveness and adaptability. Future work will focus on implementing the framework in a high-fidelity simu-lator such as CARLA, built on Unreal Engine, to enable more realistic testing. We also plan to extend the methodology to handle two-way traffic scenarios with complex road geometry. REFERENCES [1] L. Masello, G. Castignani, B. Sheehan, F. Murphy, and K. McDonnell, “On the road safety benefits of advanced driver assistance systems in different driving contexts,” Transportation research interdisciplinary perspectives , vol. 15, pp. 1–20, 2022. [2] R. Rajamani, Vehicle dynamics and control . Springer Science & Business Media, 2012. [3] P. Khound, P. Will, A. Tordeux, and F. Gronwald, “Unified framework for over-damped string stable adaptive cruise control systems,” Trans-portation research part C: emerging technologies , vol. 148, pp. 1–24, 2023. [4] V. Papathanasopoulou and C. Antoniou, “Flexible car–following mod-els for mixed traffic and weak lane–discipline conditions,” European transport research review , vol. 10, no. 2, p. 62, 2018. [5] A. K. Mulla, A. Joshi, R. Chavan, D. Chakraborty, and D. Manjunath, “A microscopic model for lane-less traffic,” IEEE Transactions on Control of Network Systems , vol. 6, no. 1, pp. 415–428, 2019. [6] S. Singh, “Critical reasons for crashes investigated in the national motor vehicle crash causation survey,” Tech. Rep., 2015. [7] M. Papageorgiou, K.-S. Mountakis, I. Karafyllis, I. Papamichail, and Y. Wang, “Lane-free artificial-fluid concept for vehicular traffic,” Pro-ceedings of the IEEE , vol. 109, no. 2, pp. 114–121, 2021. [8] A. Nagahama, A. Tomoeda, and T. Wada, “Effect of response time distribution in weak lane discipline on linear stability,” Collective Dynamics , vol. 10, pp. 1–32, 2025. [9] M. Tobisawa, K. Matsuda, T. Suzuki, T. Harada, J. Hoshino, Y. Itoh, K. Kumagae, J. Matsuoka, and K. Hattori, “Reinforcement learning-based autonomous driving control for efficient road utilization in lane-less environments,” Artificial Life and Robotics , vol. 30, no. 2, pp. 276– 288, 2025. [10] A. K. Budhkar and A. K. Maurya, “Overtaking decision modeling in heterogeneous, weak lane discipline traffic,” Journal of the Eastern Asia Society for Transportation Studies , vol. 12, pp. 1740–1754, 2017. [11] G. Satyanarayana, S. Majhi, and S. K. Das, “A vehicle detection technique using binary images for heterogeneous and lane-less traffic,” 
+
+IEEE Transactions on Instrumentation and Measurement , vol. 70, pp. 1–14, 2021. [12] V. Freire and X. Xu, “Optimal control for kinematic bicycle model with continuous-time safety guarantees: A sequential second-order cone programming approach,” IEEE Robotics and Automation Letters , vol. 7, no. 4, pp. 11 681–11 688, 2022. [13] J. Matute, S. Diaz, and A. Karimoddini, “Sliding mode control for robust path tracking of automated vehicles in rural environments,” IEEE Open Journal of Vehicular Technology , 2024. [14] Q. Chen, S. Wang, B. Gao, Z. Zhan, and R. Zhong, “Robust longitudinal and lateral control for mixed-vehicular platoons with string stability guarantees,” Nonlinear Dynamics , pp. 1–23, 2025. [15] P. Blanchard, D. J. Higham, and N. J. Higham, “Accurately computing the log-sum-exp and softmax functions,” IMA Journal of Numerical Analysis , vol. 41, no. 4, pp. 2311–2330, 2021. [16] K. N. De Winkel, T. Irmak, R. Happee, and B. Shyrokau, “Standards for passenger comfort in automated vehicles: Acceleration and jerk,” 
+
+Applied Ergonomics , vol. 106, pp. 1–9, 2023.
