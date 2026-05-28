@@ -1,0 +1,834 @@
+Title: Causality by Abstraction: Symbolic Rule Learning in Multivariate Timeseries with Large Language Models
+
+URL Source: https://arxiv.org/pdf/2602.17829v1
+
+Published Time: Mon, 23 Feb 2026 01:10:36 GMT
+
+Number of Pages: 23
+
+Markdown Content:
+> Proceedings of Machine Learning Research vol vvv:1–23, 2025
+
+# Causality by Abstraction: Symbolic Rule Learning in Multivariate Timeseries with Large Language Models 
+
+Preetom Biswas PBISWA 11@ ASU .EDU 
+
+Arizona State University, Tempe, AZ, USA 
+
+Giulia Pedrielli GPEDRIEL @ASU .EDU 
+
+Arizona State University, Tempe, AZ, USA 
+
+K. Selc ¸uk Candan CANDAN @ASU .EDU 
+
+Arizona State University, Tempe, AZ, USA 
+
+Abstract 
+
+Inferring causal relations in timeseries data with delayed effects is a fundamental challenge, especially when the underlying system exhibits complex dynamics that cannot be captured by simple functional mappings. Traditional approaches often fail to produce generalized and inter-pretable explanations, as multiple distinct input trajectories may yield nearly indistinguishable out-puts. In this work, we present ruleXplain , a framework that leverages Large Language Models (LLMs) to extract formal explanations for input-output relations in simulation-driven dynamical systems. Our method introduces a constrained symbolic rule language with temporal operators and delay semantics, enabling LLMs to generate verifiable causal rules through structured prompt-ing. ruleXplain relies on the availability of a principled model (e.g., a simulator) that maps multivariate input time series to output time series. Within ruleXplain , the simulator is used to generate diverse counterfactual input trajectories that yield the same or closely matching target output, serving as candidate explanations. Such counterfactual inputs are clustered and provided as context to the LLM, which is tasked with the generation of symbolic rules encoding the joint temporal trends responsible for the patterns observable in the output times series. A closed-loop re-finement process ensures rule consistency and semantic validity. We validate the framework using the PySIRTEM epidemic simulator, mapping testing rate inputs to daily infection counts; and the EnergyPlus building energy simulator, observing temperature and solar irradiance inputs to elec-tricity needs. For validation, we perform three classes of experiments: (1) we verify the efficacy of the ruleset through input reconstruction; (2) we conduct ablation studies evaluating the causal encoding of the ruleset; and (3) we perform generalization tests of the extracted rules across unseen output trajectories with varying phase dynamics. The code is available here. 
+
+Keywords: Causal inference, Timeseries analysis, Rule-Based Explanations, Large Language Models (LLMs), Closed-Loop Learning. 
+
+1. Introduction and Related Literature 
+
+Many scientific and engineering domains rely on high-fidelity physics-based simulators that model complex dynamical systems such as epidemic spread, climate projections, and autonomous driv-ing testing. These simulators can accurately generate output timeseries from given inputs, yet they are typically treated as black boxes due to the inner complexity. While they reproduce dynamics, they do not provide transparent explanations of how qualitative behaviors in the output arise from patterns in the input. Timeseries data exacerbate such challenges due to temporal dependencies, delayed effects, high-dimensionality, and feedback loops, further complicating the characterization   
+
+> © 2025 P. Biswas, G. Pedrielli & K.S. Candan.
+> arXiv:2602.17829v1 [cs.LG] 19 Feb 2026 BISWAS PEDRIELLI CANDAN
+
+of causal dependency. Approaches such as Granger causality (Granger, 1969), conditional indepen-dence methods (Chu et al., 2008; Runge, 2020), and Structural Equation Models (Peters et al., 2013) identify statistical dependencies over the complete simulation horizon. While insightful, these meth-ods typically quantify aggregate influence rather than providing explicit relations between specific input trends and delayed qualitative output behaviors. These challenges are further complicated when both inputs and outputs are multivariate timeseries produced by a simulator whose structural equations are inaccessible (or intractable). More recently, Large Language Models (LLMs) have gained prominence in this field due to their pattern recognition, explainable abstraction, and high reasoning capabilities. The attention mech-anism in transformers-based LLMs can capture long-range dependencies and complex sequential patterns present in timeseries data (Abdullahi et al., 2025; Ekambaram et al., 2025). LLM archi-tectures have accelerated timeseries forecasting by managing larger, more complex datasets and capturing non-linearities and dependencies directly from historical data (Liu et al., 2022, 2017, 2024). For example, Wang et al. (2025) combined numerical timeseries and text-based news in-puts with chain-of-thought reasoning to connect events with temporal shifts. Also relevant, (Jin et al., 2024) introduce a framework that reprograms LLMs for timeseries forecasting by mapping timeseries into text-based representations, allowing few-shot and zero-shot prompting without mod-ifying the pre-trained model. Other contributions have explored the construction of causal graphs to predict multi-variate timeseries progression (Orang et al., 2025). Despite such significant strides, few studies have proposed methodologies that attempt identifying generalized, explainable causal relations, especially between multi-variate timeseries inputs and outputs. In this paper, we propose ruleXplain , a framework that leverages LLMs to infer gener-alizable, symbolic causal relations between multivariate input and output timeseries with delayed effects. Inspired by in-context learning (ICL) (Brown et al., 2020), our approach avoids fine-tuning by providing the LLM with a relevant set of input trajectories, i.e., diverse counterfactual inputs that yield similar output behaviors in a simulator. The LLM is prompted to synthesize a formal ruleset using a constrained symbolic language that captures conjunctions of input trends over time windows and their delayed implications on output phases (e.g., peak onset or plateau formation). These rules are iteratively refined in a closed-loop process: the LLM generates new input configurations based on the extracted rules, the simulator evaluates the resulting outputs, and the ruleset is adjusted to correct inconsistencies or refine the temporal window associated with each phase. The LLM is in-structed to provide symbolic justifications for its decisions, akin to chain-of-thought prompting, but grounded in a formal logical schema. Finally, we evaluate the inference and generalizability of the extracted rules by testing their ability to generate plausible inputs for unseen output trajectories with distinct phase dynamics, validating the causal structure encoding capabilities of ruleXplain .To demonstrate the framework, we use timeseries generated from the epidemiological simulator 
+
+PySIRTEM (Biswas et al., 2025), studying the relationship between testing rates and daily infection trends, and the EnergyPlus simulator (Crawley et al., 2001), inferring causation between tempera-ture and solar irradiance inputs and electricity consumption for a Supermarket System. Importantly, 
+
+ruleXplain only uses raw numerical input-output timeseries without any specific semantics as-sociated with epidemics, governing domain-specific dynamics, or underlying system information. 
+
+Contributions. ruleXplain introduces a symbolic and phase-aware framework for explainable causal inference in black-box timeseries systems. Specifically:   
+
+> 2R U L E XP L A I N : C AUSALITY BY ABSTRACTION
+
+(C1) Symbolic framing of delayed causal inference: We formalize timeseries causal inference as a symbolic rule identification task, introducing a constrained rule language with temporal operators and delay semantics. This shifts the focus from traditional forecasting or graph reconstruction toward interpretable, phase-based reasoning. (C2) Domain-agnostic extraction from black-box simulators: Our method infers interpretable causal abstractions without access to simulator equations or domain priors. It treats mul-tivariate input-output timeseries purely as abstract signals, enabling general-purpose causal rule extraction across black-box systems. (C3) LLM-in-the-loop rule synthesis: We propose a novel prompting and refinement strategy that uses LLMs to generate, verify, and iteratively improve formal rulesets using a closed-loop process grounded in simulation feedback. (C4) Generalization via input reconstruction: We validate inference ability by reconstructing inputs for unseen output trajectories with distinct qualitative dynamics. 
+
+2. Methodology 
+
+Fig. 1 summarizes the ruleXplain pipeline. 
+
+Figure 1: ruleXplain method overview key modules and interactions. Executing the simulation for a given input, we obtain a baseline output trajectory Ybase . A learn-ing module then generates diverse multivariate input timeseries that fit Ybase . These diverse input-output pairs form the basis for extracting causal structure (Sec. 2.1). To reduce redundancy, we apply dimensionality reduction and clustering to select representative input-output trajectories (Sec. 2.2). The resulting cluster centroids are used as context for the LLM, which generates a symbolic ruleset R capturing temporal input trends and their delayed effects on output phases (Sec. 2.3). Next, the LLM generates new input timeseries consistent with R, which are evaluated through the simulator to produce an output Y ′. The validity of R is assessed by comparing Y ′ with Ybase . If the deviation exceeds a threshold ϵ, the mismatch is used as feedback to refine R in a closed-loop manner. This iterative process enforces the logical constraints until the ruleset R yields inputs that produce output trajectories within acceptable deviation from Ybase (Sec. 2.3). 
+
+2.1. Input Timeseries Learning Module 
+
+Given a Baseline Output trajectory Ybase of length T , the goal of the learning module is to construct diverse inputs (as multivariate time series) Xt that would result in similar output Ysim ≈ Ybase .
+
+> 3
+
+BISWAS PEDRIELLI CANDAN 
+
+We sequentially generate a set of N diverse input time series, AN = {Xpt }Np=1 that minimize deviation from the baseline output while maintaining diversity among previously discovered solu-tions. Here, each component of the input is a time series, i.e., Xj = {xj, 1, x j, 2, . . . , x j,T } for each component j = 1 , . . . , J .For each iteration p = 1 , . . . , N , we solve: 
+
+PLEARN (p) : min  
+
+> Xp
+
+Lout (Ysim (Xp), Y base ) − λarch Darch (Xp, Ap−1) (1) s.t. ℓj,t ≤ xpj,t ≤ uj,t , ∀j = 1 . . . , J and t ∈ { 1, . . . , T }.
+
+In problem PLEARN (p), we have: 
+
+Lout (·) = 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+(Ysim ,t (Xpt ) − Ybase ,t )2 ; Darch (·) = 1
+
+|A p−1|
+
+> |A p−1|
+
+X
+
+> ℓ=1
+
+dℓ,
+
+where: dℓ =
+
+> J
+
+X
+
+> j=1
+
+(
+
+1
+
+T
+
+> T
+
+X
+
+> t=1
+
+xpj,t − xℓj,t 
+
+xℓj,t 
+
+)
+
+.
+
+Solving PLEARN (p) sequentially for p = 1, . . . , N yields a set of diverse input time series 
+
+(Xpt )Tt=1  
+
+> Np=1
+
+that produce a similar baseline trajectory Ybase (the cost Lout ). To enforce diver-sity, we maintain an archive A of previously generated solutions. At iteration p, the archive Ap−1
+
+contains all time series (Xit)Tt=1  
+
+> p−1
+> i=1
+
+, with A0 = ∅, and the newly obtained solution is added after each iteration. The diversity term Darch quantifies the sum of the average difference between the candidate input (Xpt ) and each archived input across all time steps and input components, weighted by λarch which is chosen by the user to balance diversity. To incrementally solve PLEARN (p) , p = 1 , . . . , N we employed the Tree-structured Parzen Esti-mator (TPE) algorithm (Watanabe, 2023) in the Optuna environment (Akiba et al., 2019). 
+
+2.2. Dimensionality Reduction and Clustering 
+
+To form the training set for the explanation generation step, we apply dimensionality reduction and clustering on the set of timeseries resulting from the learning step (Sec. 2.1), {(Xpt )Tt=1 }Np=1 .Specifically, we employ the Uniform Manifold Approximation and Projection (UMAP) (McInnes et al., 2020) technique to represent the data points in a 2-D space em-bedding and partition into clusters through K-Means clustering, from which a single centroid representative (Xct )Tt=1 is selected per cluster. The resulting input-output pairs {(Xct )Tt=1 , Y c
+
+> sim
+
+)}
+
+serve as the training context for the LLM during explanation generation (Sec. 2.3). This reduction step preserves diversity while eliminating redundant examples that could bias the learned ruleset toward over-specific patterns. Implementation details are provided in Appendix A.3. 
+
+2.3. LLM-based Explanation Generation 
+
+The explanation generation component of the proposed ruleXplain consists of two steps: (i) initial ruleset elicitation based on the cluster-derived context and (ii) closed-loop rule refinement process. The specific LLM used in this work is the OpenAI gpt4.1 (OpenAI, 2024). The complete procedure is also summarized in Table 1. 
+
+4R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+Initial Explanation Inference. This step receives as input the centroids resulting from the clus-tering (Sec. 2.2), namely 
+
+
+
+(Xpt )Tt=1 , Y c
+
+> sim
+
+
+
+, which we refer to as the context , for generating the initial set of explainable symbolic rules that characterize the relationship between input and output timeseries. Notably, we avoid providing ruleXplain with prior knowledge of the underlying system dynamics (e.g., epidemics-specific transmission dynamics) and domain-specific notations. Instead, variables are presented purely as abstract timeseries data without any explicit reference to their physical meaning and/or regulating equations, conveying only the existence of a causal rela-tionship. Since Y c 
+
+> sim
+
+≈ Ybase , we will represent the contexts with {(Xct )Tt=1 , Y base )}.Along with the aforementioned context, through prompting, we further guide the LLM to infer a causal ruleset by stating the following general properties: (i) direct/inverse trend between (Xct )Tt=1 
+
+and Y , without providing an indication of proportionality, (ii) delayed effect (temporal lag) between the input (cause) and the output series (effect) and, (iii) explicit constraints on structure, format, and vocabulary to ensure reproducibility and consistency (Sec. 2.3). The specific prompt to generate the initial set of rules is listed in Appendix C. 
+
+Closed-loop Rule Refinement. Given the initial ruleset, the closed-loop refinement pipeline iter-ates until an acceptable set of rules is obtained, i.e., when the input sequence generated from the ruleset yields an output Ysim sufficiently similar to the baseline output. Without loss of generality, we say that two time series are similar when the distance measure Lout (Ysim , Y base ) is bounded by a user selected positive ϵ. The refinement iterates through three key steps: i) Input set generation using the initial ruleset . Given the cluster-derived context, we prompt the LLM to generate a unique input timeseries X′ = ( x′
+
+> 1
+
+, . . . , x′ 
+
+> T
+
+) that differs from the cluster-derived inputs ( 
+
+n
+
+(Xct )Tt=1 
+
+oCc=1 ) but remains strictly consistent with the initial ruleset. We prompt the LLM to identify the different phases, predefined by a schema, and generate the input configurations accordingly. Moreover, the LLM is instructed to justify the generated input values to prevent misalignment with the previously inferred relationships. ii) Evaluation of the new input. The generated input timeseries are evaluated by executing the simulator, obtaining the corresponding output trace Y ′. All other simulator hyperparameters remain unmodified. iii) Ruleset refinement. The new input-output pair 
+
+n
+
+(X′
+
+> t
+
+)Tt=1 , Y ′
+
+o
+
+is then returned to the LLM model along with the baseline Ybase to quantify the deviation Lout (Ysim , Y base ). The LLM also retains the cluster contexts and prior iteration results. By evaluating the 
+
+n
+
+(X′
+
+> t
+
+)Tt=1 , Y ′
+
+o
+
+and 
+
+Ybase , the LLM identifies inaccurate symbolic rules and generates a modified (refined) ruleset. Additional qualitative constraints (such as “ Y ′ displays weaker resurgence than Ybase ”, and “the inputs should not oscillate”) are provided as constraints to guide ruleset refinement. The rationale behind iterative refinement with progressive constraints, instead of offering all the constraints initially, is to reduce reasoning load and avoid overwhelming the model. At this stage of ruleXplain development, the constraints are added manually based on observed deviations in Ybase and Y ′.
+
+Formal Representation of Extracted Rules To formalize the structure of the extracted rules, we adopt a symbolic and temporal logic-based notation to describe causal dependencies between trends in the input timeseries and phases of the output. Each rule is represented as a temporal implication of the form: 
+
+□[t1,t 2] (Trend h(Xh) ∧ Trend j (Xj )) → ♢[t3,t 4]Phase (Y ) (2) 5BISWAS PEDRIELLI CANDAN 
+
+where h and j are two particular dimensions of the input timeseries. Here: • Trend ·(X·) is a unary predicate applied to an input series over interval [t1, t 2], drawn from a fixed vocabulary T (e.g., Low , SharpSpike , HighStable ). • Phase (Y ) is a qualitative output behavior over [t3, t 4], drawn from a vocabulary P (e.g., 
+
+InitialGrowth , PeakFormation ). • □ and ♢ denote persistent and eventual satisfaction of input and output properties over their respective intervals. • Rules may include explicit delay constraints: t3 > t 2.• The delay δ = t3 − t2 captures the temporal lag between cause and effect. As an illustrative example, consider the rule: 
+
+□[t1,t 2] (SlowRise (Xh) ∧ Low (Xj )) → ♢[t3,t 4]PeakFormation (Y ) (3) 
+
+This rule states that if Xh slowly rises and Xj remains low over a time window [t1, t 2], then a peak in Y will occur in the delayed interval [t3, t 4]. The ruleset R is composed of multiple such formulas, one per output phase, and provides an interpretable symbolic explanation of the causal dynamics. 
+
+Table 1: Stepwise process for Causal Rules Inference through LLM. 
+
+Procedure: Explanation Generation and Refinement Step 1: Initialize. Extract an initial ruleset R0 derived from Cluster-derived context [( Xct )Tt=1 , Y base ]Cc=1 pairs. 
+
+Step 2: Generate Inputs. Use Ri and [( Xct )Tt=1 , Y base ]Cc=1 to prompt novel input sequences 
+
+
+
+X(i)
+
+> t
+
+Tt=1 
+
+) that approximately reproduce the baseline trajectory Ybase .
+
+Step 3: Simulate & Evaluate. Run the simulator and compute deviation ∆(i) using the loss Lout calculated from 
+
+Y (i) and Ybase .
+
+Step 4: Update Rules. If ∆(i) > ϵ , update Ri based on observed mismatches and added constraints to get Ri+1 .
+
+Step 5: Repeat. Continue Steps 2–4 until ∆(i) ≤ ϵ or the maximum number of iterations is reached, yielding the refined ruleset Rfinal . Please note that [( Xct )Tt=1 , Y base ]Cc=1 remain unchanged across iterations. 
+
+3. Numerical Experiments 
+
+In this section, through set of validation experiments, we address three questions: Q1. Do the rules generated within ruleXplain lead to increasingly more accurate and explain-able timeseries? Q2. How much does the ruleset or context impact the quality of the generated input timeseries? Q3. Is the ruleset generalizable to any baseline timeseries? 
+
+3.1. Simulation Environments 
+
+To demonstrate ruleXplain , we use different two simulation environments: • PySIRTEM (Biswas et al., 2025). For this epidemic simulator, the relevant input-output pair for the causal analysis is {(Xpt )Tt=1 , Y } ≡ { (Xs,t , X a,t ), Y }, where Xs and Xa denote the symptomatic and asymptomatic testing-rate, respectively, and Y denotes the daily infected 
+
+6R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+cases over T = 100 days. The input trajectories vary weekly, consistent with the simulator assumptions. • EnergyPlus (Crawley et al., 2001). For this building energy simulator, the relevant in-put–output pair is (Xd, X g), Y , where Xd denotes Dry Bulb Temperature ( oC), Xg denotes solar input, i.e., the global horizontal irradiance ( W h/m 2), and Y denotes building electricity usage ( J) for a supermarket setting. Inputs vary hourly and horizon is T = 100 hours. In our experiments, we treat the simulator as a black box: its internal equations and parameters remain fixed and are not used by ruleXplain . A detailed description of the PySIRTEM and EnergyPlus model dynamics is provided in Appendix A.1- A.2. 
+
+3.2. Q1: Evaluation of Ruleset-Generated Input Timeseries 
+
+To address Q1, we apply ruleXplain to extract symbolic rules describing the relationship be-tween multivariate input time series and the target output trajectory. For each simulation envi-ronment, we first select a baseline output time series Ybase over a fixed horizon ( T = 100 ). For 
+
+PySIRTEM , we used the daily infection data from March 22 to June 30, 2020 (CTW, n.d.) and for EnergyPlus, the electricity consumption for a supermarket setup in Miami, FL from Jan 1 to Jan 5, 1997. From the baseline output, we solved PLEARN (p) for p = 1 , . . . , N = 20 obtaining a pre-liminary set A with |A| = 20 top performing input timeseries (Xℓs , X ℓa) |A|  
+
+> ℓ=1
+
+ranked by distance measure from the baseline, Lout . The centroid timeseries (Xct )Tt=1 
+
+> Cc=1
+
+, obtained from U-MAP projection and K-Means clustering, were used as input to the simulators ( PySIRTEM and Energy-Plus) to produce the Ysim ≈ Ybase . Given the clusters (context) (Xct )Tt=1 , Y base , we can then execute the procedure detailed in Sec. 2.3, where we infer the formal rulesets Rfinal for both PySIRTEM and EnergyPlus (complete rulesets are reported in Appendix B, Table 2- 3). Fig. 2- 3 shows the input–output trajectories resulting from the final ruleset Rfinal produced by 
+
+ruleXplain , for both PySIRTEM and EnergyPlus respectively, along with centroid context time-series. The close temporal and magnitude alignment of the simulated Yfinal and Ybase is indicative of the accuracy and effectiveness of Rfinal in explaining the inherent (and unknown) dynamics emerging from the principled simulation. In particular, for EnergyPlus, the periodic structure of the output signal is also effectively reflected through the inferred input patterns. Across all our experiments we consistently observed lower errors as a function of the ruleXplain iterates, thus supporting convergence of the proposed approach (numerical evidence is reported in Appendix B, Fig. 8). 
+
+3.3. Q2: Impact of Ruleset and Cluster-Derived Context 
+
+We examine how much causal information is encoded in the causal ruleset and the cluster-derived context by using them to generate input timeseries corresponding to a fixed target output Ybase in our 
+
+PySIRTEM experiment. Specifically, we evaluate three scenarios: (S1) no ruleset and no clustering context , (S2) ruleset only , and (S3) ruleset with clustering context . This comparative setup allows us to isolate and quantify the contribution of Rfinal and contextual examples to the accuracy and novelty of the generated inputs. The specific prompts for each experiment are listed in the Appendix C.2. Fig. 4- 5 display a clear progressive improvement from S1 to S2. The no-guidance (S1) sce-nario produces outputs with the least accuracy, which is significantly increased with Rfinal (S2). Adding clustering context (S3) yields mixed effects, reporting slight improvement for PySIRTEM ,but less flexible to baseline trends for EnergyPlus. This suggests potential overfitting to the examples   
+
+> 7BISWAS PEDRIELLI CANDAN
+
+Figure 2: Timeseries Xs, Xa, and Y generated using Rf inal for PySIRTEM .
+
+Figure 3: Timeseries Xd, Xg, and Y generated using Rf inal for EnergyPlus. rather than improved adherence to the baseline and ruleset. The progression, particularly the major gain from S1 to S2, corroborate the encoding ability of causal information in the ruleXplain -generated ruleset, while addition of context in downstream tasks could overbias the model. Across all scenarios, the timing of key phases (e.g. peak and decline) are aligned with Ybase . We conjecture it to be due to the underlying physics of system: specific parameters govern certain qual-itative properties. For example, in PySIRTEM , infection rate is the primary driver of the disease progression which is kept constant to infer causal dependency between decidable human-regulated testing rates and corresponding infection case trends. Similarly, in EnergyPlus, we isolate the influ-ence of observable weather inputs (e.g., temperature) on facility-level electricity consumption. In both cases, our focus was to generate interpretable insights that can support decision makers. 
+
+> 8R U L E
+
+XP L A I N : C AUSALITY BY ABSTRACTION 
+
+Figure 4: Causal Encoding Comparison of Rfinal through scenarios S1-S3 for PySIRTEM .
+
+Figure 5: Causal Encoding Comparison of Rfinal through scenarios S1-S3 for EnergyPlus. 
+
+3.4. Q3: Results Generalizability Across Baselines 
+
+We assess whether the ruleset Rfinal inferred from a specific baseline Ybase timeseries and cluster-derived contexts (( Xcs , X ca), Y c
+
+> sim
+
+) , if utilized to construct input timeseries for a different Y ′
+
+> base
+
+, pro-duce a timeseries Y ′ 
+
+> final
+
+≈ Y ′
+
+> base
+
+. Due to space limitation, we perform this experiment only for our 
+
+PySIRTEM setup where we varied testing and infection rates to produce two Ybase patterns with the following properties: i) Y 1 
+
+> base
+
+with prominent phase changes that are easily mapped by the symbolic ruleset, but differing in timing (i.e., prolonged low initial phase, sharp peak no resurgence). ii) Y 2 
+
+> base
+
+with less distinct, non-prominent phase dynamics that cannot be directly mapped to the ruleset (i.e. prolonged low initial phase, mild growth, slight dip, and late high resurgence). For each baseline, we perform two experiments: (E1) We provide the LLM with the ruleset but no clustering context (see Sec. 3.3). The objec-tive is to assess whether the ruleset inferred from another baseline alone can generate inputs 
+
+(Xa, X s) with acceptable accuracy for the new baselines Y i
+
+> base
+
+, i = 1 , 2.(E2) We modify the ruleset by inverting and replacing a subset of causal relationships, producing an inaccurate ruleset Rincorrect , (provided in Appendix C, Table 4). We then examine how rule inaccuracies affect input generation and the alignment between Yincorrect and Ybase .Fig. 6 demonstrates the ability of the Rfinal -induced inputs to infer trajectories that produce accurate outputs under both prominent and non-prominent phase dynamics (Fig. 6). In both cases, inputs generated under Rfinal capture the progression of Ybase with reasonable accuracy. In contrast, under the modified ruleset Rincorrect we observe substantially greater misalignment—both temporally and in magnitude—between Yincorrect and Ybase . This supports the importance of a well-defined, structured ruleset for improved input generation. 
+
+9BISWAS PEDRIELLI CANDAN 
+
+Figure 6: Input Inference for an alternate (left) Y 1 
+
+> base
+
+with Prominent Phase Changes (right) Y 2 
+
+> base
+
+with Non-Prominent Phase Changes. E1 results are in the left subplot, E2 in the right subplot for each. 
+
+Discussion and limitations. While our evaluations demonstrate that the extracted rules are syn-tactically valid, semantically consistent, and effective in generating novel inputs given outputs, we acknowledge several limitations. First, our framework does not aim to recover the “ground-truth” generative rules of the simulator, instead constructing symbolic rules within a constrained logical grammar that provide valid and reusable causal explanations for observed trajectories. As such, traditional accuracy-based comparisons against latent mechanistic models are not applicable. Sec-ondly, we do not benchmark against existing symbolic rule learners or interpretable predictors (e.g., shapelet-based classifiers or symbolic regression), as our objective is not prediction or classification, but symbolic abstraction of delayed causal relations in high-dimensional temporal simulations. 
+
+4. Conclusions and Future Work 
+
+We presented ruleXplain , a symbolic rule learning framework for causal abstraction in multivariate timeseries data. Unlike traditional forecasting or structural inference methods, 
+
+ruleXplain constructs formal causal rules expressed in a constrained, human-interpretable sym-bolic language with explicit temporal and delay semantics. This structure enables LLMs to generate reusable explanations that link input trends to output phase behaviors without relying on domain-specific knowledge or direct simulator access. We demonstrate the approach across two distinct models and domains: an epidemic simulator mapping human-regulated testing rates to infection counts, and a building energy simulator mapping weather variables to electricity usage. Despite their differences in signal characteristics, periodicity, and causal structure, ruleXplain success-fully extracts reusable symbolic rules that capture the governing temporal relationships. The closed-loop synthesis-and-verification process ensures rules are refined through simulation feedback, en-abling robust alignment between symbolic explanations and system dynamics. We demonstrate the framework ability to generalize rules across diverse input trajectories and regenerate semantically consistent counterfactual inputs. The ruleset structured form makes it suitable for applications in counterfactual reasoning, treatment effect analysis, and simulation auditing. Future work will explore adaptive clustering for more informative reference trajectories, fine-tuning LLMs for improved rule refinement, and agentic approaches to autonomously introduce logical constraints scalably and systematically. We also aim to develop hybrid evaluation metrics that balance fidelity, simplicity, and semantic alignment to benchmark symbolic causal frameworks like ruleXplain against emerging alternatives.   
+
+> 10 R U L E XP L A I N : C AUSALITY BY ABSTRACTION
+
+References 
+
+Shamsu Abdullahi, Kamaluddeen Usman Danyaro, Abubakar Zakari, Izzatdin Abdul Aziz, Noor Amila Wan Abdullah Zawawi, and Shamsuddeen Adamu. Time-series large language models: A systematic review of state-of-the-art. IEEE Access , 13:30235–30261, 2025. doi: 10.1109/ ACCESS.2025.3535782. Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, and Masanori Koyama. Op-tuna: A next-generation hyperparameter optimization framework. In Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining , KDD ’19, page 2623–2631, New York, NY, USA, 2019. Association for Computing Machinery. ISBN 9781450362016. doi: 10.1145/3292500.3330701. URL https://doi.org/10.1145/ 3292500.3330701 .Fahim Tasneema Azad, Robert W. Dodge, Allen M. Varghese, Jaejin Lee, Giulia Pedrielli, K. Selc ¸uk Candan, and Gerardo Chowell-Puente. Sirtem: Spatially informed rapid testing for epidemic modeling and response to covid-19. ACM Trans. Spatial Algorithms Syst. , 8(4), November 2022. ISSN 2374-0353. doi: 10.1145/3555310. URL https://doi.org/10.1145/3555310 .Preetom Biswas, Giulia Pedrielli, and K Selc ¸uk Candan. Pysirtem: An efficient modular simulation platform for the analysis of pandemic scenarios. medRxiv , pages 2025–05, 2025. Tom B. Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared Kaplan, Prafulla Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell, Sandhini Agarwal, Ariel Herbert-Voss, Gretchen Krueger, Tom Henighan, Rewon Child, Aditya Ramesh, Daniel M. Ziegler, Jeffrey Wu, Clemens Winter, Christopher Hesse, Mark Chen, Eric Sigler, Mateusz Litwin, Scott Gray, Benjamin Chess, Jack Clark, Christopher Berner, Sam McCandlish, Alec Radford, Ilya Sutskever, and Dario Amodei. Language models are few-shot learners. In Proceed-ings of the 34th International Conference on Neural Information Processing Systems , NIPS ’20, Red Hook, NY, USA, 2020. Curran Associates Inc. ISBN 9781713829546. Tianjiao Chu, Clark Glymour, and Greg Ridgeway. Search for additive nonlinear time series causal models. Journal of Machine Learning Research , 9(5), 2008. Drury B Crawley, Linda K Lawrie, Frederick C Winkelmann, Walter F Buhl, Y Joe Huang, Curtis O Pedersen, Richard K Strand, Richard J Liesen, Daniel E Fisher, Michael J Witte, et al. Energy-plus: creating a new-generation building energy simulation program. Energy and buildings , 33 (4):319–331, 2001. CTW. The covid tracking project, n.d. Retrieved from https://covidtracking.com/data. Vijay Ekambaram, Arindam Jati, Pankaj Dayama, Sumanta Mukherjee, Nam H. Nguyen, Wesley M. Gifford, Chandra Reddy, and Jayant Kalagnanam. Tiny time mixers (ttms): fast pre-trained models for enhanced zero/few-shot forecasting of multivariate time series. In Proceedings of the 38th International Conference on Neural Information Processing Systems , NIPS ’24, Red Hook, NY, USA, 2025. Curran Associates Inc. ISBN 9798331314385. Clive WJ Granger. Investigating causal relations by econometric models and cross-spectral methods. 
+
+Econometrica: journal of the Econometric Society , pages 424–438, 1969.   
+
+> 11 BISWAS PEDRIELLI CANDAN
+
+Ming Jin, Shiyu Wang, Lintao Ma, Zhixuan Chu, James Y. Zhang, Xiaoming Shi, Pin-Yu Chen, Yuxuan Liang, Yuan-Fang Li, Shirui Pan, and Qingsong Wen. Time-llm: Time series forecasting by reprogramming large language models, 2024. URL https://arxiv.org/abs/2310. 01728 .Chang Liu, Zhijian Jin, Jie Gu, and Caiming Qiu. Short-term load forecasting using a long short-term memory network. In 2017 IEEE PES Innovative Smart Grid Technologies Conference Eu-rope (ISGT-Europe) , pages 1–6, 2017. doi: 10.1109/ISGTEurope.2017.8260110. Chenxi Liu, Sun Yang, Qianxiong Xu, Zhishuai Li, Cheng Long, Ziyue Li, and Rui Zhao. Spatial-temporal large language model for traffic prediction, 2024. URL https://arxiv.org/ abs/2401.10134 .Shizhan Liu, Hang Yu, Cong Liao, Jianguo Li, Weiyao Lin, Alex X. Liu, and Schahram Dust-dar. Pyraformer: Low-complexity pyramidal attention for long-range time series modeling and forecasting. In International Conference on Learning Representations , 2022. URL https: //openreview.net/forum?id=0EXmFzUn5I .Leland McInnes, John Healy, and James Melville. Umap: Uniform manifold approximation and projection for dimension reduction. 2020. URL https://arxiv.org/abs/1802.03426 .OpenAI. Gpt-4.1. https://openai.com , 2024. Accessed: 2025-07-29. Omid Orang, Patricia O. Lucas, Gabriel I. F. Paiva, Petronio C. L. Silva, Felipe Augusto Rocha da Silva, Adriano Alonso Veloso, and Frederico Gadelha Guimaraes. Causal graph fuzzy llms: A first introduction and applications in time series forecasting, 2025. URL https://arxiv. org/abs/2507.17016 .Jonas Peters, Dominik Janzing, and Bernhard Sch¨ olkopf. Causal inference on time series using restricted structural equation models. Advances in neural information processing systems , 26, 2013. Jakob Runge. Discovering contemporaneous and lagged causal relations in autocorrelated nonlinear time series datasets. 124:1388–1397, 2020. Xinlei Wang, Maike Feng, Jing Qiu, Jinjin Gu, and Junhua Zhao. From news to forecast: integrating event analysis in llm-based time series forecasting with reflection. NIPS ’24, Red Hook, NY, USA, 2025. Curran Associates Inc. ISBN 9798331314385. Shuhei Watanabe. Tree-structured parzen estimator: Understanding its algorithm components and their roles for better empirical performance. 2023. URL https://arxiv.org/abs/2304. 11127 .
+
+Appendix A. Experimental Setup and Methodological Details 
+
+A.1. PySIRTEM Epidemic Simulator 
+
+PySIRTEM (Biswas et al., 2025) is an extended Susceptible-Expected-Infected-Recovered (SEIR) model that uses Delay Differential Equations (DDEs) with compartments that represent, in addition   
+
+> 12 R U L E XP L A I N : C AUSALITY BY ABSTRACTION
+
+to the original SEIR ones, health processes such as hospitalization, immunity, and testing. A com-plete list of transition parameters can be found in (Azad et al., 2022). Without loss of generality, this work uses PySIRTEM as the basis to show the proposed explanation-generation approach. In fact, ruleXplain is independent from PySIRTEM , but a simulator is needed in the evaluation loop (see Fig. 1). With PySIRTEM as base simulator, to demonstrate ruleXplain , we focus on generating ex-planations for two timeseries, the symptomatic testing rate (Xs = Φ s = ( xs, 1, x s, 2, x s, 3, . . . x s,T ))and the asymptomatic testing rate (Xa = Φ a = ( xa, 1, x a, 2, x a, 3, . . . x a,T )), where xs,t and xa,t rep-resent the daily ratio of the symptomatic and asymptomatic population tested against the total pop-ulation for day t, respectively. The pair {(Xs, X a)}t can be modeled as a discrete time timeseries. These timeseries are important to understand the daily infected population (output timeseries) and they can be implemented as decisions (e.g., from the local government). Following the PySIRTEM 
+
+notation and the modeling introduced in Biswas et al. (2025), the following holds: 
+
+Yt = It = r ·  P S t + P A t + IA t + AT N t
+
+ + IS t + ST N t. (4) In eqn. (4), P S and P A are the pre-symptomatic and pre-asymptomatic population, IS and IA 
+
+are the symptomatic and asymptomatic infected population, and AT N and ST N are Asymp-tomatic and Symptomatic population who test negative (by error), respectively. The quantity 
+
+r is the ratio between transmission rates for the asymptomatic against symptomatic population. 
+
+P S, P A, IS, IA, ST N, and AT N are represented in PySIRTEM as compartments and they are di-rectly affected by the timeseries Xs and Xa. In this work, we treat PySIRTEM as a black box system keeping all hyperparameters constant except the timeseries Xs and Xa, which ruleXplain will produce as a prediction and explanation for the output timeseries Yt. Namely, the relevant input-output pair for the causal inference analysis step of ruleXplain are {(Xs, X a), Y } where Xs
+
+and Xs are daily testing rates timeseries (symptomatic and asymptomatic, respectively) and Y is the list of corresponding daily number of currently infected individuals. In this paper, we consider a simulation horizon of T = 100 days, i.e., t = 1 , 2, . . . , T , and to maintain the assumptions in 
+
+PySIRTEM original work, we allow the timeseries for the test rates to only vary weekly, i.e., we impose the test rates to be stepwise constant functions. 
+
+ruleXplain uses the PySIRTEM module in two ways: (i) as a learning module (step 1 in Fig. 1) to derive the baseline current daily infected cases Ibase from historical data, and secondly as a simulator (step 6 in Fig. 1) to evaluate the effects of the timeseries inputs (Φ s, Φa). In this work, we refer to Φs, Φa, and I as Xs, X a,and Y respectively to avoid domain-specific notations. 
+
+A.2. EnergyPlus Building Energy Simulator 
+
+EnergyPlus (Crawley et al., 2001) is a physics-based building energy simulation tool that models building thermal dynamics, HVAC operation, internal loads, and environmental interactions using heat balance equations and system-level energy models. The simulator takes as input a building configuration file (IDF: Input Data File ) and a weather file (EPW: EnergyPlus Weather file ). The IDF file specifies the building geometry, dimensions, geological location, materials, HVAC systems, occupancy schedules, and other internal parameters. The IDF also contains the specifications for the run period, variables of interest, and frequency of reporting. The EPW file provides temporal weather data including dry-bulb temperature, solar radiation, humidity, wind speed, and other me-teorological variables. EnergyPlus can operate at any temporal resolution. In our experiments, we use hourly simulation outputs.   
+
+> 13 BISWAS PEDRIELLI CANDAN
+
+EnergyPlus can model a wide range of outputs, including zone temperatures, heating and cooling loads, HVAC energy consumption, and total building electricity usage. Without loss of generality, we use EnergyPlus as a second simulation environment to demonstrate the domain-independence of ruleXplain . Similar to PySIRTEM , ruleXplain treats EnergyPlus strictly as a black-box forward simulator within the evaluation loop (see Fig. 1). For the experiments in this work, we use the Supermarket reference building IDF model provided within the standard EnergyPlus example files. As weather input, we use the file USA VA Sterling-Washington Dulles.Intl.AP.epw from the official EnergyPlus weather database. The simulation horizon is set to 100 consecutive hours and the baseline data is from Jan 1 to Jan 5, 1997. The relevant input–output pair for the causal analysis step of 
+
+ruleXplain is 
+
+{(Xd, X g), Y } ,
+
+where: • Xd denotes outdoor dry-bulb temperature (in ◦C), • Xg denotes global horizontal irradiance (in Wh/m 2), • Y denotes total building electricity consumption (in J). Outdoor dry-bulb temperature represents ambient air temperature affecting heat transfer across the building and Global horizontal irradiance measures the total solar radiation incident on a hori-zontal surface, influencing solar heat gains through windows and building surfaces. Both variables directly affect cooling loads and HVAC operation and impact electricity consumption which is our output variable of interest. In this work, we observe temperature and irradiance as multivariate input trajectories Xt, while keeping all building physical properties and HVAC parameters fixed. The simulator maps these environmental inputs to hourly electricity consumption Y .
+
+ruleXplain uses the EnergyPlus module analogously to the epidemic case: (i) to generate a baseline electricity consumption trajectory Ybase under reference weather conditions, and (ii) to evaluate candidate multivariate input trajectories during rule refinement. As before, we abstract the domain-specific notation and refer to temperature, irradiance, and electricity consumption as Xd,
+
+Xg, and Y , respectively, to maintain consistency across domains. 
+
+A.3. Dimensionality Reduction and Clustering 
+
+To reduce redundancy and extract representative data points that will form the training set for the explanation generation step (Sec. 2.3), we apply dimensionality reduction and clustering on the set of timeseries resulting from the input timeseries learning step (Sec. 2.1), {(Xps , X pa )}Np=1 .
+
+Dimensionality reduction. As each candidate comprises of two daily timeseries vectors, Xs =(xs, 1, x s, 2, . . . x s,T ) and Xa = ( xa, 1, x a, 2, . . . , x a,T ), the input space is 2T -dimensional. Because of the high-dimensionality and non-linearity of the input space, we first reduce the dimensional-ity considering only the weekly changing points (this is not necessary to the application of the framework), and, on the reduced dimensionality timeseries, we employ the Uniform Manifold Ap-proximation and Projection (UMAP) (McInnes et al., 2020) technique to represent the data points in a 2-D space embedding for clustering. UMAP facilitates visual confirmation of cluster separabil-ity by constructing a high-dimensional topological representation of the data and then optimizing a   
+
+> 14 R U L E XP L A I N : C AUSALITY BY ABSTRACTION
+
+low-dimensional graph to be as structurally similar as possible through cross-entropy minimization. Unlike other linear (Principle Component Analysis or PCA) and non-linear techniques (t-distributed Stochastic Neighbor Embedding or t-SNE), UMAP preserves both local and global structure with competitive accuracy (McInnes et al., 2020). 
+
+Clustering the reduced-dimensionality timeseries. Upon reduction to a 2-D input space, we employ a K-Means clustering to identify distinct input timeseries “trends”. We choose K-Means clustering due to its simplicity and efficiency in detecting separable clusters. The input timeseries corresponding with the centroids of each cluster are represented by (Xcs , X ca). As all (Xcs , X ca)
+
+result in output trends identical to Ybase , we denote the input-output pairs of each clusters as 
+
+(( Xcs , X ca), Y base ) for simplicity. The primary purpose of clustering in ruleXplain is to elect a single representative data point from each solution cluster as inducing timeseries within the training set during the LLM phase (see Sec. 2.3). We argue that such data reduction can help in the training context emphasizing diversity, removing redundant examples that may result into overly “engineered” explanations (rulesets R), while removing the influence of individual cluster size or density. Since all the input pairs generate the same output trajectory ( Ybase ), we argue that a diverse training set facilitates the LLM task to extrapolate the implicit, causal relation between the variables. 
+
+Figure 7: Clustering of the initial solution pool {(Xps , X pa )}p from solving PLEARN (p) for PySIRTEM 
+
+setup. 
+
+Appendix B. Extended Results and Analysis 
+
+In this section, we report the final extracted ruleset after the closed-loop refinement process of 
+
+ruleXplain for both PySIRTEM (Table. 2) and EnergyPlus (Table 3). Figure 8 reports the iterative reconstruction loss produced by the closed-loop pipeline. At each iteration, a symbolic ruleset is extracted or refined, the LLM is prompted to generate input tra-jectories consistent with the rules, and the simulator is executed to obtain Ysim . The output loss 
+
+Lout (Ysim , Y base )—measured as Mean Squared and Normalized Mean Squared Difference—is then computed. The decreasing trend observed for both (a) PySIRTEM and (b) EnergyPlus demon-strates that successive rule refinements generate inputs whose simulated outputs progressively align 
+
+> 15
+
+BISWAS PEDRIELLI CANDAN 
+
+Table 2: Causal rules extracted from timeseries examples and context for PySIRTEM Setup. 
+
+Rule ID Input Window 
+
+Xs Trend Xa Trend Output Window 
+
+Y Phase Symbolic Rule 
+
+R1 [0, 14] Low SlowRise [15, 29] InitialGrowth □[0 ,14] (Low( Xs) ∧ SlowRise( Xa)) →
+
+♢[15 ,29] InitialGrowth( Y )
+
+R2 [14, 28] Moderate SlowRise [29, 43] PeakFormation □[14 ,28] (Moderate( Xs) ∧
+
+SlowRise( Xa)) →
+
+♢[29 ,43] PeakFormation( Y )
+
+R3 [28, 42] SharpSpike Low [43, 57] PostPeak □[28 ,42] (SharpSpike( Xs) ∧
+
+Low( Xa)) → ♢[43 ,57] PostPeak( Y )
+
+R4 [42, 56] DipThenRise Low [57, 71] Decline □[42 ,56] (DipThenRise( Xs) ∧
+
+Low( Xa)) → ♢[57 ,71] Decline( Y )
+
+R5 [56, 70] SlowRise HighStable [71, 85] Resurgence □[56 ,70] (SlowRise( Xs) ∧
+
+HighStable( Xa)) →
+
+♢[71 ,85] Resurgence( Y )
+
+R6 [70, 100] Moderate SlowRise [85, 100] PeakFormation □[70 ,100] (Moderate( Xs) ∧
+
+SlowRise( Xa)) →
+
+♢[85 ,100] PeakFormation( Y )
+
+Table 3: Causal rules extracted from timeseries examples and context for EnergyPlus Setup. 
+
+Rule ID Input Window 
+
+Xt, 1 Trend Xt, 2 Trend Output Window 
+
+Y Phase Symbolic Rule 
+
+R1 [0, 9] Low Low [0, 8] Decline □[0 ,9] (Low( Xt, 1) ∧ Low( Xt, 2)) →
+
+♢[0 ,8] Decline( Y )
+
+R2 [9, 18] SlowRise SharpSpike [9, 17] InitialGrowth □[9 ,18] (SlowRise( Xt, 1) ∧
+
+SharpSpike( Xt, 2)) →
+
+♢[9 ,17] InitialGrowth( Y )
+
+R3 [18, 21] DipThenRise LowModerate [18, 20] PostPeak □[18 ,21] (DipThenRise( Xt, 1) ∧
+
+LowModerate( Xt, 2)) →
+
+♢[18 ,20] PostPeak( Y )
+
+R4 [21, 30] Low Low [21, 29] Decline □[21 ,30] (Low( Xt, 1) ∧ Low( Xt, 2)) →
+
+♢[21 ,29] Decline( Y )
+
+R5 [30, 42] Moderate HighStable [30, 41] PeakFormation □[30 ,42] (Moderate( Xt, 1) ∧
+
+HighStable( Xt, 2)) →
+
+♢[30 ,41] PeakFormation( Y )
+
+R6 [42, 48] DipThenRise LowModerate [42, 47] PostPeak □[42 ,48] (DipThenRise( Xt, 1) ∧
+
+LowModerate( Xt, 2)) →
+
+♢[42 ,47] PostPeak( Y )
+
+R7 [48, 54] Low Low [48, 53] Decline □[48 ,54] (Low( Xt, 1) ∧ Low( Xt, 2)) →
+
+♢[48 ,53] Decline( Y )
+
+R8 [54, 66] Moderate HighStable [54, 65] PeakFormation □[54 ,66] (Moderate( Xt, 1) ∧
+
+HighStable( Xt, 2)) →
+
+♢[54 ,65] PeakFormation( Y )
+
+R9 [66, 72] DipThenRise LowModerate [66, 71] PostPeak □[66 ,72] (DipThenRise( Xt, 1) ∧
+
+LowModerate( Xt, 2)) →
+
+♢[66 ,71] PostPeak( Y )
+
+R10 [72, 78] Low Low [72, 77] Decline □[72 ,78] (Low( Xt, 1) ∧ Low( Xt, 2)) →
+
+♢[72 ,77] Decline( Y )
+
+R11 [78, 90] SlowRise HighStable [78, 89] Resurgence □[78 ,90] (SlowRise( Xt, 1) ∧
+
+HighStable( Xt, 2)) →
+
+♢[78 ,89] Resurgence( Y )
+
+R12 [90, 96] DipThenRise LowModerate [90, 95] PostPeak □[90 ,96] (DipThenRise( Xt, 1) ∧
+
+LowModerate( Xt, 2)) →
+
+♢[90 ,95] PostPeak( Y )
+
+R13 [96, 102] Low Low [96, 100] Decline □[96 ,102] (Low( Xt, 1) ∧ Low( Xt, 2)) →
+
+♢[96 ,100] Decline( Y )
+
+16 R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+with the baseline trajectory, highlighting the effectiveness of the iterative refinement–verification process. 
+
+Figure 8: ruleXplain input timeseries produced Mean Squared Difference across iterations for (left) PySIRTEM (right) EnergyPlus 
+
+Appendix C. Detailed Prompts for LLM 
+
+The codebase used during the course of this work can be found here. 
+
+C.1. ruleXplain Framework Prompts 
+
+The following prompts are used during ruleXplain ’s LLM-based Explanation Generation (Sec. 2.3): 1. Initial Explanation Inference Prompt . This prompt provides the LLM with cluster-derived contexts and asks to generate an interpretable, formal ruleset describing input-output relations (Fig. 9). 2. Input set generation using ruleset. This prompt instructs the LLM to use the provided ruleset and cluster-derived context to generate a novel input series (Fig. 10). 3. Ruleset refinement prompt. This provides the LLM with the simulated output Y ′ resulting from the generated (X′
+
+> s
+
+, X ′
+
+> a
+
+) and Ybase along with the previously available contexts. The LLM is then asked to assess the deviations of Y ′ and Ybase and refine the ruleset (Fig. 11). 
+
+C.2. Validation Experiment Prompts 
+
+The following prompts have been used to validate ruleXplain :1. (S1) Executing LLM with no rules and no cluster-derived context (Sec. 3.3). we provide the LLM with only the target output Ybase , existence of causal dependency between inputs and outputs, and the valid input ranges. The LLM is further instructed to avoid any domain specific knowledge (Fig 12). 2. (E2) Input generation with inaccurate ruleset. We modify the ruleset by inverting and replacing a subset of the input-output timeseries relationships. This produces an inaccurate 
+
+ruleset Rincorrect (Table 4), and we want to observe how the inaccuracy of rules affects the generation of the input timeseries and, consequently, the alignment between Yincorrect and Ybase .We use the inaccurate ruleset in the same prompt as Fig. 10. 
+
+> 17
+
+BISWAS PEDRIELLI CANDAN 
+
+Goal: Generate initial causal rules R0 from clustering context 
+
+Prompt: 
+
+You are given several input-output examples from a timeseries simulation model. Each example consists of a multivariate input timeseries Xt and a univariate daily output timeseries Y .The input Xt is defined over a time interval length {∆}. If Y spans 100 days, then Xt will contain ⌈100 /∆⌉ interval values. The relationship between inputs and outputs is be {direct/inverse } and may include temporal lag/delay effects. Your goal is to observe the input-output relationships from the examples and extract symbolic causal rules of the form: “If trends in selected components of Xt persist over a given time interval, then the output Y will exhibit a specific phase after a delay.” Please divide the baseline output into specific output phases listed below in order of timing and infer the multivariate input trends that are responsible. Each output phase should be unique (no duplicate entries in the output column), and the rules should provide input and corresponding output trend behavior for the total time window (i.e., all input windows should concatenate to cover from T = 0 to T = 100 ). Input time windows must be multiples of ∆.Fill in the table below with symbolic causal rules. Each rule should specify: • Input Trend Window: the time interval where a specific trend in selected components of Xt is observed. • Trend Description: qualitative trends over that window. • Output Phase Window: the time interval where a specific phase in Y occurs, as a delayed effect of the input. • Phase Description: the qualitative behavior of Y .• Symbolic Rule: a formal statement capturing this as a logical implication. Use the vocabulary: • Trends: Low, Moderate, HighStable, SharpSpike, SlowRise, DipThenRise, LowModerate • Output Phases: InitialGrowth, PeakFormation, PostPeak, Decline, Resurgence Below is the list of example input-output points and Baseline Expected Output: —- Example 0 —— 
+
+Xt, 1: [0.018, 0.14, ... K values], Xt, 2: [0.06, 0.23, ... K values], Y : [15, 12, ... T values] —- Example 1 —— 
+
+Xt, 1: [0.025, 0.083, ... K values], Xt, 2: [0.05, 0.19, ... K values], Y : [15, 12, ... T values] 
+
+{Insert More ... }
+
+———————— Baseline Y : [15, 12, ... T values] Table format: 
+
+Rule ID Input Trend Window 
+
+Xs Trend Xa
+
+Trend Output Phase Window 
+
+Y Phase Symbolic Rule 
+
+R1 [0, 15] Low SlowRise [0, 20] PeakFormation □[0 ,15] (Low (Xs) ∧
+
+SlowRise (Xa)) →
+
+♢[0 ,20] PeakFormation (Y )
+
+R2 [15, 30] Low Low [20, 35] InitialGrowth □[15 ,30] (Low (Xs) ∧ Low (Xa)) →
+
+♢[20 ,35] InitialGrowth (Y )
+
+Make sure to use the table format shown above. Do not use domain-specific terminology; instead, describe timeseries patterns using abstract trend labels. Ensure the symbolic rule column uses the logical form: 
+
+□[t1,t 2] (Trend (Xt,i ) ∧ Trend (Xt,j ) ∧ . . . ) → ♢[t3,t 4] Phase (Y )
+
+Ensure: • All time windows are valid. • Input windows are multiples of ∆.• Output phases are unique and cover the full timeline. • The symbolic rule strictly follows the required logical template. • Only abstract trend labels are used. 
+
+Figure 9: Prompt for generating the initial ruleset. 
+
+18 R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+Table 4: Inaccurate Causal Rules used for Input Generation for Generalizability Experiment for 
+
+PySIRTEM 
+
+Rule ID Input Window 
+
+Xt, 1 Trend Xt, 2 Trend Output Window 
+
+Y Phase Symbolic Rule 
+
+R1 [0, 14] SharpSpike Low [15, 29] InitialGrowth □[0 ,14] (SharpSpike( Xs) ∧ Low( Xa)) →
+
+♢[15 ,29] InitialGrowth( Y )
+
+R2 [14, 28] HighStable HighStable [29, 43] PeakFormation □[14 ,28] (HighStable( Xs) ∧
+
+HighStable( Xa)) →
+
+♢[29 ,43] PeakFormation( Y )
+
+R3 [28, 42] Low DipThenRise [43, 57] PostPeak □[28 ,42] (Low( Xs) ∧
+
+DipThenRise( Xa)) →
+
+♢[43 ,57] PostPeak( Y )
+
+R4 [42, 56] SharpSpike HighStable [57, 71] Decline □[42 ,56] (SharpSpike( Xs) ∧
+
+HighStable( Xa)) →
+
+♢[57 ,71] Decline( Y )
+
+R5 [56, 70] Moderate Low [71, 85] Resurgence □[56 ,70] (Moderate( Xs) ∧ Low( Xa)) →
+
+♢[71 ,85] Resurgence( Y )
+
+R6 [70, 100] HighStable HighStable [85, 100] PeakFormation □[70 ,100] (HighStable( Xs) ∧
+
+HighStable( Xa)) →
+
+♢[85 ,100] PeakFormation( Y )
+
+19 BISWAS PEDRIELLI CANDAN 
+
+Goal: Novel input set (X′
+
+> s
+
+, X ′
+
+> a
+
+) generation using ruleset Ri
+
+Prompt: You are given several input-output examples from a timeseries simulation model and a causal ruleset describing input trends and their corresponding output effects. Each example consists of: • A multivariate input timeseries Xt defined over interval length ∆
+
+• A daily output timeseries Y
+
+All example inputs generate the same output Y . The relationship between inputs and outputs is direct and may include temporal lag/delay effects. The baseline output Y spans 100 days. The input Xt is defined over interval length {∆}, so Xt contains 
+
+⌈100 /∆⌉ interval values. Input constraints: • All Xt, 1 values must lie in the range {Insert Range }
+
+• All Xt, 2 values must lie in the range {Insert Range }
+
+You must use the provided ruleset to generate a novel multivariate input sequence Xt that is different from all example inputs but produces an output Y that closely follows the baseline Y trend. 
+
+Instructions: 
+
+1. Analyze the baseline Y trend and the provided ruleset. 2. Divide the baseline Y into output phases. 3. For each output phase: • Identify the corresponding rule in the ruleset. • Determine the required input trends. 4. Generate a new multivariate input sequence Xt:• Length must match the number of intervals determined by ∆.• Trends must be consistent with the ruleset. • The full timeline must be covered. • The trend pattern must differ from all previous example inputs. • All input values must satisfy the specified bounds. 5. For each output phase, briefly justify your input choices for the corresponding input intervals, referencing: • The applied rule • The delayed and direct relationship between inputs and output Below is the list of example input-output points and Baseline Expected Output: 
+
+{Insert Clustering Context ... }
+
+———————— Baseline Y : {Baseline Output }
+
+Rules Table: < Insert Ruleset in Markdown format >
+
+Required Output Format: 
+
+1. Generated Input Series: Provide the full multivariate input sequence: - Xt, 1: [v1, v 2, . . . , v K ], Xt, 2: [v1, v 2, . . . , v K ], . . . 
+
+2. Phase-wise Justification: For each output phase, provide: 
+
+Output Phase: PhaseName, Output Window: [t3, t 4], Applied Rule: RuleID, Required Input Trend Window: 
+
+[t1, t 2], Assigned Input Trends: Xt,i : Trend 
+
+Justification: Brief explanation referencing the rule and the delayed/direct or inverse relationship. Ensure: • The generated input trends differ structurally from all example inputs. • Input intervals are multiples of ∆.• The ruleset is followed consistently. • The entire timeline is covered. • All input values lie within the specified range. • The resulting Y closely follows the baseline Y .
+
+Figure 10: Prompt for Novel Input series generation using inferred ruleset Ri.
+
+20 R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+Goal: Ruleset Refinement by evaluating Y ′ (generated from (X′
+
+> s
+
+, X ′
+
+> a
+
+) and Ybase 
+
+Prompt: 
+
+You previously generated a multivariate input series X′ 
+
+> t
+
+using a causal ruleset, simulated the system, and obtained an output 
+
+Y ′. The simulated output Y ′ does not closely match the Baseline Y .The relationship between inputs and output is {direct/inverse } and delayed. This is critical and must guide your diagnosis and rule updates. 
+
+Generated Input: 
+
+X′
+
+> t
+
+: Your generated weekly input timeseries: 
+
+{Insert Xt,sim }
+
+corresponding Y ′: {Insert Ysim }
+
+———————— Baseline Y : {Insert Ybase }
+
+Previous Rules Table: < Insert Ruleset in Markdown Format >
+
+—
+
+Instructions: 
+
+1. Divide the Baseline Y into distinct output phases in chronological order. 2. Compare Y ′ with Baseline Y and identify mismatches, including: Timing shifts, magnitude differences, shape differences (peaks, valleys, slopes), and phase misalignment. 3. Diagnose which input trends in X′ 
+
+> t
+
+caused the mismatch, considering whether they were too high or too low, too early or too late, too sharp or too flat, not sustained long enough, or incorrectly capturing the direct or delayed relationship. 4. Update the ruleset to better guide future input generation. 
+
+Constraints for Updated Rules: 
+
+Each output phase must be unique. Input windows must be multiples of ∆.Input windows must concatenate to cover the full timeline ( T = 0 to T = 100 ). Use only abstract trend labels. Do not use domain-specific terminology. When appropriate, refine only the input variable most responsible for a mismatch. 
+
+Allowed Vocabulary: 
+
+Input Trends: Low, Moderate, HighStable, SharpSpike, SlowRise, DipThenRise, LowModerate Output Phases: InitialGrowth, PeakFormation, PostPeak, Decline, Resurgence 
+
+Required Output Format: 
+
+Return the updated rules in following Markdown table format: 
+
+Rule ID Input Trend Window 
+
+Xs Trend Xa
+
+Trend Output Phase Window 
+
+Y Phase Symbolic Rule 
+
+R1 [t1,t2] Low SlowRise [t3,t4] PeakFormation □[t1,t 2] (Low (Xt, 1) ∧
+
+SlowRise (Xt, 2)) →
+
+♢[t3,t 4] PeakFormation (Y )
+
+Symbolic Rule Format: 
+
+Each rule must follow: 
+
+□[t1,t 2] (Trend (Xt,i ) ∧ Trend (Xt,j ) ∧ . . . ) → ♢[t3,t 4] Phase (Y )
+
+Ensure: Rules better explain the mismatch between Y ′ and Baseline Y . The direct and delayed relationship must be properly encoded. The updated rules should improve future alignment with Baseline Y .
+
+Figure 11: Prompt for Ruleset Refinement. 
+
+21 BISWAS PEDRIELLI CANDAN 
+
+Goal: Novel Input Generation without Rules or Context 
+
+Prompt: 
+
+You are given a system that takes as input a multivariate timeseries parameters Xt defined over interval length 
+
+∆, and produces a daily output timeseries Y . If Y spans {T} days, each input sequence contains ⌈{ T }/{∆}⌉ 
+
+values. Given a target output trajectory Y over {T} days and the valid range for each input parameter, your task is to infer a pair of input sequences that could plausibly generate the same output. Input constraints: • All Xt, 1 values must lie within {Insert Range 1}
+
+• All Xt, 2 values must lie within {Insert Range 2}{Insert More }
+
+Do not provide code. Infer the input values directly from the given output pattern. Do not use any domain-specific knowledge; treat the inputs and outputs as abstract functional relationships. 
+
+Required Output Format: 
+
+Provide the full multivariate input sequences explicitly: 
+
+Xt, 1 = [ v1, v 2, . . . , v K ], Xt, 2 = [ v1, v 2, . . . , v K ].
+
+Figure 12: Prompt for Input Generation with no rules + no clustering context 
+
+22 R U L E XP L A I N : C AUSALITY BY ABSTRACTION 
+
+23

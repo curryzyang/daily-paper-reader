@@ -1,0 +1,316 @@
+Title: AI4S-SDS: A Neuro-Symbolic Solvent Design System via Sparse MCTS and Differentiable Physics Alignment
+
+URL Source: https://arxiv.org/pdf/2603.03686v1
+
+Published Time: Thu, 05 Mar 2026 01:28:27 GMT
+
+Number of Pages: 13
+
+Markdown Content:
+# AI4S-SDS: A Neuro-Symbolic Solvent Design System via Sparse MCTS and Differentiable Physics Alignment 
+
+Jiangyu Chen 1,* , Huawei Zhou 2,* , Zhou Zhang 1, Tianfan Fu 1, †, Ruzhi Zhang 2, †, and Yuqiang Li 3, †
+
+> 1
+
+State Key Laboratory for Novel Software Technology at Nanjing University, School of Computer Science, Nanjing University 
+
+> 2
+
+Suzhou Laboratory 
+
+> 3
+
+Shanghai Artificial Intelligence Laboratory 
+
+> *
+
+Equal contribution. 
+
+> †
+
+Corresponding author. 
+
+# Abstract 
+
+Automated design of chemical formulations is a cornerstone of materials science, yet it requires navigating a high-dimensional combinatorial space involving dis-crete compositional choices and continuous geometric constraints. Existing Large Language Model (LLM) agents face significant challenges in this setting, including context window limitations during long-horizon reasoning and path-dependent exploration that may lead to mode collapse. To address these issues, we introduce 
+
+AI4S-SDS , a closed-loop neuro-symbolic framework that integrates multi-agent collaboration with a tailored Monte Carlo Tree Search (MCTS) engine. We pro-pose a Sparse State Storage mechanism with Dynamic Path Reconstruction ,which decouples reasoning history from context length and enables arbitrarily deep exploration under fixed token budgets. To reduce local convergence and improve coverage, we implement a Global–Local Search Strategy : a memory-driven plan-ning module adaptively reconfigures the search root based on historical feedback, while a Sibling-Aware Expansion mechanism promotes orthogonal exploration at the node level. Furthermore, we bridge symbolic reasoning and physical feasibility through a Differentiable Physics Engine , employing a hybrid normalized loss with sparsity-inducing regularization to optimize continuous mixing ratios under thermodynamic constraints. Empirical results show that AI4S-SDS achieves full va-lidity under the adopted HSP-based physical constraints and substantially improves exploration diversity compared to baseline agents. In preliminary lithography experiments, the framework identifies a novel photoresist developer formulation that demonstrates competitive or superior performance relative to a commercial benchmark, highlighting the potential of diversity-driven neuro-symbolic search for scientific discovery. 
+
+# 1 Introduction 
+
+The discovery of high-performance chemical formulations—such as photoresist developers—is a cornerstone of materials science, yet it poses a daunting combinatorial challenge [ 6 , 18 ]. Even when restricted to a pool of 50 candidate solvents and mixtures of only 2 to 5 components, the discrete design space alone exceeds millions of combinations, independent of the continuous mixing ratios. Beyond combinatorial scale, practical discovery further requires iterative, closed-loop reasoning under physical constraints, making exhaustive enumeration or purely black-box optimization infeasible [ 8]. 
+
+Preprint. Under review. 
+
+> arXiv:2603.03686v1 [cs.AI] 4 Mar 2026
+
+Recent advances in Large Language Models (LLMs) have demonstrated promising capabilities in semantic reasoning and structured generation [ 1 , 14 ]. However, applying LLMs to long-horizon, high-dimensional scientific discovery remains largely unsolved. In particular, existing LLM-based multi-agent frameworks [ 3 , 4 ] face three fundamental bottlenecks in this domain. First, context overflow: long-horizon trial-and-error exploration produces extensive interaction histories that rapidly exceed the context window, severing the logical chain of discovery [ 21 ]. Second, path dependence and mode collapse: agents tend to overexploit early successful patterns induced by language priors, lacking mechanisms to reflect on global search history or explicitly diverge from local trajectories [ 31 , 27 ]. Third, the discrete–continuous gap: while LLMs excel at proposing qualitative recipes (topology), they struggle with continuous ratio optimization (geometry), often hallucinating numerically invalid solutions [9] that violate physical constraints. To address these challenges, we propose AI4S-SDS, a neuro-symbolic search framework that tightly integrates multi-agent collaboration with a tailored Monte Carlo Tree Search (MCTS) engine [ 5 , 24 ,12 ] and a differentiable physics layer. At its core, AI4S-SDS introduces a search-theoretic abstraction that decouples long-horizon symbolic exploration from continuous physical optimization, enabling LLM agents to operate beyond their context and numerical limitations. In this framework, LLMs are not treated as numerical optimizers, but as semantic generators over a vast combinatorial design space, proposing structured topologies that are infeasible to enumerate or encode symbolically. To mitigate path dependence and mode collapse, AI4S-SDS adopts a Global–Local search strategy. A global memory module synthesizes historical successes and failures to dynamically reconfigure the search root, enabling strategic redirection rather than myopic continuation. At the local level, we introduce a Sibling-Aware Expansion mechanism within MCTS, explicitly conditioning generation on alternative sibling nodes. Unlike prior diversity-regularized or novelty-based search methods, this mechanism is specifically designed to counteract LLM-induced mode collapse, where language priors dominate tree expansion regardless of reward signals, thereby significantly enhancing search diversity. Crucially, to overcome context limitations, we introduce Sparse State Storage with Dynamic Path Reconstruction. Instead of retaining verbose interaction logs, the system stores minimal action–value abstractions and reconstructs full reasoning trajectories on demand. This design enables deep, infinite-horizon exploration while remaining within strict token budgets, preserving logical coherence without sacrificing scalability. Finally, we bridge semantic reasoning and physical feasibility through a Differentiable Physics Layer. Rather than claiming full physical fidelity, this layer enforces differentiable constraint consistency, mapping discrete recipes to a continuous gradient landscape [ 23 ]. We introduce a Hybrid Normalized Loss to balance relative selectivity and absolute solubility distance, along with an Audit Mode using 
+
+L1 regularization to enforce sparsity. This mechanism operationalizes Occam’s Razor, automatically pruning non-essential components and ensuring that generated formulations are not only theoretically valid but also engineeringly minimal. Our main contributions are summarized as follows: • Global–Local Collaborative Search Framework: We propose AI4S-SDS, a unified neuro-symbolic architecture that overcomes LLM path dependence via a dual-loop strat-egy combining global memory-driven planning with a sibling-aware local MCTS engine, explicitly designed to prevent mode collapse in LLM-guided search. • Sparse State Abstraction for Infinite-Horizon Reasoning: We introduce Sparse State Storage with Dynamic Path Reconstruction, enabling long-horizon, logically coherent explo-ration under strict context constraints by storing only minimal action–value representations. • Differentiable Physics-Guided Topology–Geometry Optimization: We establish a gener-alizable topology–geometry paradigm by coupling symbolic recipe generation with gradient-based physical constraint enforcement, using a hybrid normalized loss and sparsity-inducing audit to eliminate numerical hallucinations common in pure LLM approaches. 
+
+# 2 Related Work 
+
+Recent progress at the intersection of large language models (LLMs), autonomous agents, and scientific computing has significantly advanced computational chemistry and materials discovery. 2This section reviews three converging research directions most relevant to our work: (1) LLM-based agentic systems for scientific discovery, (2) structured reasoning and search architectures, and (3) optimization methods for chemical design. We highlight the limitations of existing approaches and motivate the need for a unified framework that couples semantic planning with physically grounded optimization. 
+
+2.1 LLM-based Agents for Scientific Discovery 
+
+The emergence of agentic LLM architectures marks a shift from passive text generation to autonomous scientific reasoning and action. Systems such as C OSCIENTIST [3 ] exemplify this paradigm by integrating LLM-based planning with tool execution and retrieval-augmented generation (RAG), enabling closed-loop control of laboratory hardware. C OSCIENTIST demonstrates that LLMs can autonomously design experiments, interpret results, and iteratively refine protocols, addressing the “last-mile” challenge of physical execution. Complementary to hardware-oriented agents, C HEM CROW [4] focuses on augmenting LLM reasoning through expert-designed software tools under the ReAct framework. By grounding generation in external calculators, databases, and safety checks, C HEM CROW substantially reduces hallucinations and improves chemical validity compared to unaugmented LLMs. A parallel research direction explores domain-specific instruction tuning, exemplified by C HEM -LLM [ 32 ], which demonstrates that chemical reasoning can be significantly improved through curated, large-scale chemistry instruction datasets. While effective for symbolic tasks such as retrosynthesis, such models operate primarily as standalone generators without closed-loop interaction. 
+
+Limitation. Despite their success, existing agentic systems largely operate in discrete, procedural, or symbolic spaces. They lack explicit mechanisms for long-horizon exploration over combinatorial design spaces and tight coupling with continuous, physics-based optimization—capabilities essential for formulation discovery. 
+
+2.2 Structured Reasoning and Search with LLMs 
+
+To overcome the limitations of linear Chain-of-Thought (CoT) prompting, recent work has introduced structured reasoning architectures that impose explicit search over the LLM’s generative space. Tree of Thoughts (ToT) and Graph of Thoughts (GoT) [ 2, 31 ] generalize CoT into tree or graph topologies, enabling branching, backtracking, and aggregation of intermediate reasoning states. More recently, Reasoning via Planning (RAP) integrates Monte Carlo Tree Search (MCTS) with LLMs [17]. It is worth noting that MCTS has been successfully applied to chemical synthesis planning even prior to the LLM era, as demonstrated by Segler et al. [ 24 ]. By performing rollouts and balancing exploration and exploitation, these search-based methods improve long-horizon planning performance in complex reasoning benchmarks. 
+
+Limitation. While general-purpose mechanisms like MemGPT [ 20 ] or Reflection [ 27 ] address context limits via memory retrieval, they operate primarily on textual semantics. They lack the structured, state-based abstraction required to maintain the logical integrity of a scientific search tree over infinite horizons. 
+
+2.3 Optimization in Chemical Design 
+
+Chemical formulation design fundamentally requires optimization over mixed discrete–continuous spaces. Bayesian Optimization (BO) remains the gold standard for sample-efficient optimization of expensive black-box functions [ 8 ]. However, its performance degrades in high-dimensional settings, where kernel-based surrogates struggle with combinatorial explosion. Prior to LLMs, deep generative models such as Variational Autoencoders (VAEs) [ 10 ] were widely adopted to map discrete molecular graphs to continuous latent spaces for optimization. While effective for generation, these continuous embedding methods often lack the explicit semantic reasoning required for complex, multi-constraint formulation tasks. 3Genetic Algorithms (GA) are commonly applied to discrete molecular spaces [ 26 ], but they are notoriously sample-inefficient. Beyond evolutionary strategies, Deep Reinforcement Learning (DRL) has emerged as a powerful paradigm for de novo design [ 19 , 22 ]. Methods like REINVENT optimize molecular structures by treating generation as a policy learning problem. However, DRL approaches often require extensive pre-training and struggle with sample efficiency in low-data regimes typical of experimental formula-tion discovery. Recently, large language models have also been proposed as direct optimizers (OPRO) by iteratively prompting for better solutions [ 29 ]. However, these methods operate purely on textual prompts and lack the numerical precision provided by gradient-based physical simulation. Finally, the growing field of Physics-Informed Machine Learning (PIML) seeks to integrate physical laws into deep learning frameworks [ 15 ]. However, most PIML approaches focus on solving differential equations rather than guiding discrete combinatorial search in agentic systems. Positioning. Our work addresses these gaps by introducing a closed-loop neuro-symbolic framework. Unlike prior agentic systems that focus on procedural execution, and unlike numerical optimizers or OPRO [ 29 ] that lack physical grounding, our approach explicitly couples MCTS-based exploration with differentiable physics optimization for solvent design. Table 1: Comparison of related methods and AI4S-SDS.                                           
+
+> Method Agentic Search / Planning Sparse Memory Diversity Control Physics-based Opt. Closed-loop
+> ChemLLM [32] ✓–––––ChemCrow [4] ✓–––✓(Tools) –Coscientist [3] ✓Limited –––✓
+> ToT / GoT [31] ✓✓––––RAP [17] ✓✓(MCTS) ––––
+> AI4S-SDS (Ours) ✓✓(Sparse MCTS) ✓✓✓(Diff. Physics) ✓
+
+# 3 Problem Formulation 
+
+We formulate the solvent design task as a hierarchical optimization problem that jointly considers discrete compositional structure and continuous mixing ratios. The objective is to identify solvent formulations that achieve high solubility with a target photoresist while satisfying physical and safety constraints. 
+
+3.1 The Chemical Search Space 
+
+Let S = {s1, s 2, . . . , s N } denote a candidate pool of N = 50 commercially available solvents. A solvent formulation is formally defined as a tuple (M, ϕ), where: • Discrete Topology: M ⊂ S represents the subset of selected components, subject to the sparsity constraint 2 ≤ |M| ≤ 5.• Continuous Geometry: ϕ ∈ R|M| denotes the volume fractions associated with compo-nents in M, satisfying the simplex constraint P 
+
+> i∈M
+
+ϕi = 1 and ϕi > 0.The dimensionality of the continuous variable ϕ is conditioned on the selected topology M, inducing a variable-dimensional, non-convex, and mixed discrete–continuous search space. This hierarchical structure poses a significant challenge for traditional gradient-only optimization methods, which typically assume a fixed parameter space. 
+
+3.2 Theoretical Basis: Hansen Solubility Parameters 
+
+To quantify the physicochemical affinity between a solvent mixture ( mix ) and a target material ( target ), we adopt the Hansen Solubility Parameters (HSP) theory. Each material is characterized by a triplet vector δ = ( δd, δ p, δ h), corresponding to atomic dispersion, molecular dipolar, and hydrogen-bonding interactions, respectively. For a mixture defined by volume fractions ϕ, the effective HSP parameters are derived via the linear mixing rule [11]: 
+
+δmix (ϕ) = X
+
+> i∈M
+
+ϕiδi. (1) 4The affinity metric, commonly referred to as the HSP distance ( Ra), is defined as: 
+
+Ra(mix , target ) = 
+
+q
+
+4( δmix  
+
+> d
+
+− δtarget  
+
+> d
+
+)2 + ( δmix  
+
+> p
+
+− δtarget  
+
+> p
+
+)2 + ( δmix  
+
+> h
+
+− δtarget  
+
+> h
+
+)2. (2) Note that the factor of 4 in the dispersion term is empirical, accounting for the steric nature of dispersion forces. A smaller Ra indicates higher solubility. Crucially, Eq. (1) and (2) establish a differentiable mapping from the formulation ratio ϕ to the property space, enabling end-to-end gradient-based guidance. 
+
+3.3 Optimization Objective 
+
+Our goal is to identify an optimal formulation (M∗, ϕ∗) that satisfies three competing criteria: 1. Solubility Efficiency: Maximize affinity to the target photoresist ( Ra(mix , target ) → 0); 2. Selectivity & Safety: Ensure the formulation remains inert to the protective layer (Ra(mix , protect ) > R safe ); 3. Physical Validity: Satisfy thermodynamic constraints such as boiling point hierarchy and flash point safety. Instead of computationally expensive Pareto front enumeration, we formulate a unified scalar objective via a hybrid penalty method: 
+
+min  
+
+> M,ϕ
+
+J = Lhybrid (M, ϕ) + λ · C (M, ϕ), (3) where Lhybrid represents a normalized loss balancing relative selectivity and absolute solubility, and 
+
+C(·) denotes a differentiable penalty term encoding physical constraints. The explicit derivation of 
+
+Lhybrid is detailed in Section 4. 
+
+# 4 Methodology 
+
+4.1 System Overview 
+
+Figure 1: AI4S-SDS: Multi-Agent & MCTS Integrated Solvent Design System We propose AI4S-SDS , a closed-loop neuro-symbolic framework designed to navigate the high-dimensional chemical space efficiently. As illustrated in Figure 1, the system operates through four coordinated modules driven by a central Monte Carlo Tree Search (MCTS) engine. Unlike 5standard agents that rely on linear conversation histories, AI4S-SDS employs a Tree-of-Thought 
+
+approach with two key innovations: (1) Sparse State Abstraction , which decouples reasoning steps from verbose context logs; and (2) Differentiable Physics Alignment , which grounds discrete recipes in continuous thermodynamic laws.At an abstract level, AI4S-SDS can be viewed as a tree-structured policy search algorithm over discrete recipe topologies, augmented with continuous physics-constrained optimization at each leaf. The workflow proceeds iteratively: The Planning Module initializes the search root based on global memory. The MCTS Engine expands the tree using a Mixture-of-Experts (MoE) Generator . Finally, the Physics Engine and Stateless Critic optimize and evaluate the candidates, feeding rewards back to update the policy. 
+
+4.2 Sparse MCTS with Sibling-Awareness 
+
+Standard MCTS implementations in LLM agents often suffer from context window exhaustion because each node retains the full dialogue history. We address this via a Sparse Storage mechanism and a Sibling-Aware Expansion strategy. 
+
+Sparse State Storage. Formally, each node v in the search tree is a lightweight tuple v =(a, r, n, Q ), storing only: the recipe action a (topology M), the evaluation reward r, the visit count n, and the mean value Q. Crucially, intermediate reasoning chains (“thoughts”) and tool execution logs are discarded after node creation, ensuring constant storage complexity O(1) per node. 
+
+Dynamic Path Reconstruction. To restore context for the LLM during expansion, we dynamically reconstruct the reasoning trajectory. Let Pt = ( v0, v 1, . . . , v t−1) be the path from the root to the current leaf node. The input prompt xt for the generator is assembled on-the-fly: 
+
+xt = Concat RootPlan ,
+
+> t−1
+
+M
+
+> i=1
+
+Summary (vi)
+
+!
+
+, (4) where Summary (vi) extracts only the decision outcome and critique from ancestor nodes. This enables the agent to perform in-context learning from the decision path without being burdened by redundant historical logs. 
+
+Sibling-Aware Expansion. To mitigate mode collapse—where the agent repeatedly generates similar valid but sub-optimal recipes—we introduce a Sibling-Aware mechanism. When expanding a node vt−1, the generator is conditioned not only on the ancestral path Pt but also on the set of existing children (siblings) C(vt−1). The generation objective is modified to: 
+
+at ∼ πθ (· | xt, NegativeConstraints (C(vt−1))) . (5) By explicitly including summaries of sibling actions in the negative constraints (NegativeConstraints encodes a lightweight, structured summary of sibling actions, which is injected as an auxiliary conditioning signal rather than a hard constraint. ), we force the MoE generator to explore orthogonal regions of the chemical space, significantly enhancing diversity. 
+
+4.3 The Generator and Global Planning 
+
+The core driving force of AI4S-SDS is the synergy between macroscopic global planning and microscopic generative reasoning. This section details how the system leverages historical memory to guide exploration and employs a Mixture-of-Experts (MoE) architecture to generate physically robust recipes. 
+
+4.3.1 Memory-Driven Global Planning 
+
+To prevent the MCTS engine from conducting blind searches or falling into local optima, we introduce a Planning Module that serves as a meta-learner. Prior to each search iteration, a dedicated Memory Agent aggregates structured data (action-value pairs) from the vector database to synthesize a Global Plan .6This Global Plan acts as the static Root Node for the MCTS, establishing the prior distribution and search heuristics. It explicitly defines the exploration boundaries across six key dimensions, as detailed in Table 2. Table 2: Structure of the Global Plan (MCTS Root Node) 
+
+Dimension Description & Function Exploration Theme Defines the strategic direction (e.g., EHS First , Innovative , Balanced ). 
+
+Golden Features Extracts common substructures from historical recipes with scores > 9.0.
+
+Death List A prohibitory list summarizing patterns from failed cases (scores < 6.0). 
+
+Risk Warning Dynamic alerts for borderline cases (scores ≈ 8.0) to avoid repeated pitfalls. 
+
+Innovation Vector Suggests differentiation strategies based on the current theme. 
+
+Lab Data Ref. References grounded physical properties to prevent hallucination. All elements of the Global Plan are automatically synthesized from historical action–value statistics, without access to ground-truth labels or oracle guidance. By injecting this structured knowledge at the root, the system effectively transforms the search problem from "finding a needle in a haystack" to "optimizing within a promising subspace." 
+
+4.3.2 Mixture-of-Experts (MoE) Generator 
+
+To handle the multi-objective nature of solvent design, the Generator Module adopts a Main-Sub Agent Collaborative Architecture , inspired by recent role-playing agent frameworks [ 16 , 13 ]. This hierarchy prevents attention dispersion often observed in single monolithic models." 
+
+Architecture Overview. The workflow is orchestrated by a a coordinating controller (Main Agent) , which coordinates domain-specific Expert Agents (focusing on polarity, boiling point hierarchy, and toxicity). Additionally, Retrieval Agents provide real-time access to the chemical database, ensuring the validity of molecular inputs. These roles represent functional decompositions rather than distinct trained models. 
+
+Generation Logic: The Qualitative-Quantitative-Engineering Loop. The generation process follows a rigorous three-stage pipeline designed to bridge theoretical optimization with engineering reality: 1. Qualitative Formulation (LLM): Based on the reconstructed path context (Section 3.2), the Main Agent proposes a discrete topology M (i.e., the set of solvents). During this phase, verbose tool logs are compressed in real-time to maintain context sparsity. 2. Quantitative Optimization (Physics Engine): The system invokes the Physics Engine (Section 4) to perform gradient descent, outputting a theoretically optimal ratio wphys that minimizes the Hybrid Loss. 3. Engineering Fine-tuning (Chief Agent): Crucially, we recognize that mathematical optima may not translate to engineering feasibility. For instance, a component with a < 5% mass fraction often contributes little to solubility while increasing process complexity. Therefore, the Main Agent performs a final Engineering Review . It refines wphys by pruning low-concentration components and adjusting ratios for operational robustness. The agent then recalculates the Relative Energy Difference (RED) and other physicochemical properties for this custom ratio. The final output stored in the sparse node is strictly the engineering-aligned recipe , ensuring that the stored knowledge is ready for laboratory deployment. 
+
+4.4 Differentiable Physics Optimization 
+
+In this section, we optimize Lhybrid with M fixed, as determined by the discrete search stage. While the Generator Module determines the discrete topology of the solvent recipe (i.e., the subset of components M), the precise mixing ratios w are strictly governed by thermodynamic laws. To 7bridge the gap between discrete reasoning and continuous reality, we employ a gradient-based Physics Engine implemented in PyTorch. This module maps the candidate recipe into a differentiable landscape, optimizing w to maximize solubility while strictly adhering to safety constraints. 
+
+4.4.1 Hybrid Normalized Loss Function 
+
+A common challenge in multi-objective chemical optimization is the Magnitude Trap , where objec-tives with larger numerical scales dominate the gradient descent process [ 7, 25 ], causing the optimizer to neglect subtle but critical constraints. To address this, we propose a Hybrid Normalized Loss Function that decouples relative selectivity from absolute separation. The optimization objective is defined as: 
+
+Lhybrid (w) = ω1 · Lratio + ω2 · Ldiff + λ X ReLU (Lconstraint ), (6) where ω1, ω 2 are balancing weights and λ is a penalty coefficient for hard constraints. 
+
+Relative Selectivity ( Lratio ). This term ensures the mixture has a significantly higher affinity for the target photoresist than for the protective layer: 
+
+Lratio = D(mix , target )
+
+D(mix , protect ) + ϵ , (7) where ϵ is a smoothing term. Minimizing this ratio maximizes the selectivity multiplier. 
+
+Normalized Absolute Separation ( Ldiff ). Relying solely on ratios can lead to solutions where both distances are large (poor solubility). We introduce a normalized difference term using the target’s interaction radius Rtarget  
+
+> 0
+
+as a physical scaler: 
+
+Ldiff = D(mix , target ) − D(mix , protect )
+
+Rtarget 
+
+> 0
+
+. (8) This term forces the Euclidean distance D(mix , target ) to effectively approach zero while pushing 
+
+D(mix , protect ) away. 
+
+Physical Boundary Constraints. We impose hard constraints via ReLU functions to confine the solution within the feasible thermodynamic domain: • Solubility Constraint: D(mix , target ) < R target  
+
+> 0
+
+.• Safety Constraint: D(mix , protect ) > R protect safe .
+
+4.4.2 Audit Mode: Sparsity Inducement via Occam’s Razor 
+
+After standard optimization, the system enters an Audit Mode to enforce engineering robustness. We introduce an L1 regularization term to the loss function, embodying the principle of Occam’s Razor [28]: 
+
+Laudit = Lhybrid + α|| w|| 1. (9) Since w represents mass fractions, this regularization creates a strong sparsity-inducing pressure, forcing the weights of non-essential components (e.g., those contributing < 1% to performance) towards zero. This results in a “minimalist recipe” that reduces manufacturing complexity and cost. 
+
+4.4.3 Safety Verification Standards 
+
+To ensure Environmental, Health, and Safety (EHS) compliance, the final optimized recipes are classified into three safety zones based on their HSP distance Dp = D(mix , protect ) relative to the safety threshold Szone . The classification criteria are detailed in Table 3. 
+
+# 5 Experiments 
+
+This section evaluates the effectiveness and necessity of each component in AI4S-SDS through a progressive ablation study that mirrors the system’s developmental trajectory. Rather than optimizing 8Table 3: Safety Verification Standards based on HSP Distance                          
+
+> Safety Level Mathematical Condition Verdict Physical Interpretation CRITICAL DANGER Dp≤Szone FAIL Intrusion: Solvent penetrates the protective layer radius.
+> BUFFER ZONE Szone < D p<(Szone +Rt
+> 0
+> 2)WARN Swelling Risk: No dissolution, but proximity implies risk.
+> ROBUST SAFE Dp≥Threshold PASS Geometric Margin: Sufficient safety distance guaranteed.
+
+a single scalar score, our evaluation emphasizes robust discovery under noisy and imperfect evaluators, which is critical in real-world scientific discovery tasks with mixed discrete-continuous search spaces. Accordingly, we adopt three complementary metrics: (i) Physical Validity (PV) , measuring compli-ance with thermodynamic constraints; (ii) Discovery Quality , reported as the Top-10 Score ; and (iii) Exploration Diversity , quantified by Shannon Entropy over unique solvent compositions. Unless otherwise specified, all methods are evaluated under the same sampling budget. The baseline is a 
+
+ReAct-Critic agent [ 27 , 30 ] powered by GPT-5.2 , incorporating reflection-based self-verification but lacking domain-specific search, physics integration, or planning modules. Table 4: Evolutionary Ablation Study. Impact of each component on physical validity, discovery quality, and exploration diversity.                          
+
+> Method Key Mechanism PV Top-10 Score Entropy Dominant Failure Mode 1. ReAct-Critic Baseline None Low 83.5 3.59 Numerical Hallucination
+> 2. Naive MCTS + Physics Engine 100% 86.5 3.53 Mode Collapse
+> 3. MCTS + Sibling-Aware + Local Divergence 100% 85.8 3.73 Redundant Exploration
+> 4. AI4S-SDS (Ours) + Global Planning 100% 81.17 4.37 None
+
+5.1 Phase 1: Eliminating Numerical Hallucination via a Physics Engine 
+
+In the initial configuration, the LLM was tasked with directly generating continuous mixing ratios. As shown in Table 4, this black-box approach resulted in frequent violations of phase stability and thermodynamic constraints, leading to a low physical validity. By introducing a differentiable physics engine, we decoupled discrete topological reasoning from continuous geometric optimization. This change immediately raised the physical validity to 100% ,confirming that precise ratio optimization lies beyond the reliable capability of current LLMs and necessitates neuro-symbolic grounding. 
+
+5.2 Phase 2: Enforcing Local Divergence via Sibling Awareness 
+
+Even with valid physical reasoning, we observed significant redundancy during node expansion, par-ticularly under low-temperature sampling. To address this, we introduce Sibling-Aware Expansion ,where summaries of sibling nodes are injected as negative constraints. As illustrated in Figure 2, this mechanism substantially increases both the number of unique solvent compositions and the entropy of the resulting distribution, indicating higher information gain per expansion step. 
+
+5.3 Phase 3: Overcoming Global Mode Collapse via Planning 
+
+Despite achieving high top scores, Naive MCTS exhibited severe global mode collapse, repeatedly converging to formulations dominated by a small set of common solvents. While this behavior inflated average scores, it resulted in poor exploration diversity. The introduction of the Memory-Driven Planning Module fundamentally altered the search dy-namics. Although the top-10 score decreased slightly, the entropy increased from 3.53 to 4.37, and the reliance on dominant solvent templates was significantly reduced. This demonstrates that global planning trades superficial score maximization for robust and diverse discovery. 9Figure 2: Diversity and distributional characteristics of generated formulations. (a) AI4S-SDS discovers significantly more unique solvent compositions. (b) Higher Shannon entropy indicates more uniform exploration. (c) Lower top-5 usage concentration reflects reduced reliance on evaluator-favored templates. 
+
+5.4 Main Result: Discovery Beyond Evaluator Bias 
+
+By integrating all components, AI4S-SDS identifies solvent formulations that occupy chemically distinct regions of the feasible search space compared to baseline agents. Rather than merely improving scalar scores, the framework demonstrates the ability to expand explo-ration beyond evaluator-favored regions. In our experiments, the discovered candidates consistently exhibit structural diversity while remaining physically admissible under thermodynamic constraints. This result highlights a key insight: in discovery-oriented settings, excessive agreement with a scoring function may indicate overfitting to the evaluator. In contrast, diversity-aware search broadens coverage of the constrained design space and surfaces alternative feasible solution families. 
+
+# 6 Discussion: Diversity-Aware Search under Imperfect Evaluators 
+
+Our results suggest that discovery-oriented scientific problems differ in important ways from con-ventional score-driven optimization. Rather than identifying a single solution that maximizes a predefined scalar metric, such tasks often require exploring multiple viable candidates under imper-fect and incomplete evaluators. In this section, we reflect on why score maximization alone may be insufficient, how diversity-aware search can enhance robustness, and the broader implications of this perspective. 
+
+6.1 Why Score Maximization Alone May Be Insufficient 
+
+In complex formulation tasks, scalar scoring functions inevitably act as proxies for real-world performance. While such objectives provide useful guidance, they are constructed from simplified physical assumptions and surrogate metrics. As a result, they may not fully characterize the richness of the underlying chemical design space. Optimizing exclusively for a single scalar objective can therefore narrow exploration prematurely, particularly when the evaluator does not capture all relevant factors. In mixed discrete–continuous search spaces, structurally distinct candidates may achieve comparable scores while occupying different regions of the feasible domain. Importantly, diversity should not be interpreted as unconstrained exploration. All candidates generated by AI4S-SDS remain subject to explicit physical constraints and feasibility checks. Even when certain candidates do not maximize the adopted objective, they may still represent alternative admissible configurations within the constrained search space. From this perspective, moderate trade-offs in scalar score can reflect structured exploration of distinct solution families rather than degradation in overall quality. In realistic scientific workflows, 10 maintaining such exploration breadth can be valuable for downstream analysis and hypothesis generation. 
+
+6.2 Diversity as a Structural Robustness Mechanism 
+
+Beyond empirical considerations, diversity-aware search can serve as a structural safeguard against evaluator bias. Any scalar objective—whether derived from theoretical models or learned predic-tors—encodes assumptions and approximations. Over-optimization against such signals can amplify local biases and lead to premature convergence. By distributing search effort across heterogeneous regions of the solution space, diversity-aware mechanisms reduce over-commitment to evaluator-favored patterns. In our framework, diversity is not introduced as an explicit regularization term applied after optimization. Instead, it emerges from the interaction between sibling-aware expansion and memory-driven global planning, which shape the search process itself. This structural design promotes exploration across chemically distinct yet feasible regions while maintaining constraint consistency. From this viewpoint, diversity becomes a robustness mechanism in discovery settings where evaluators are inherently limited. 
+
+6.3 Limitations and Practical Considerations 
+
+AI4S-SDS has several limitations. First, the physics module relies on simplified thermodynamic models and surrogate metrics. While these are sufficient to enforce feasibility constraints, they do not fully capture all process-level or long-term material behaviors. Second, diversity-aware search introduces a trade-off between broad exploration and short-term objective maximization. Under strict computational budgets, emphasizing exploration may reduce immediate scalar performance, although it may still improve coverage of the design space. Third, as with other stochastic search methods, the candidate sets produced by the system may vary across runs. Careful aggregation and domain-expert evaluation remain necessary before experimental validation. AI4S-SDS is therefore intended to complement, rather than replace, domain expertise. Its primary function is to expand the space of physically admissible candidates for further scientific investigation. 
+
+6.4 Broader Implications 
+
+The perspective explored in this work suggests that, in certain scientific domains, optimizing search dynamics may be as important as improving predictive accuracy. When evaluators serve only as partial proxies of real-world performance, mechanisms that preserve structural diversity and exploration breadth may enhance the reliability of discovery pipelines. More broadly, this distinction highlights differences between prediction-oriented and discovery-oriented objectives. While the former emphasizes precise estimation under a fixed metric, the latter may benefit from structured exploration strategies that tolerate evaluator uncertainty. We view AI4S-SDS as one possible instantiation of this paradigm, illustrating how symbolic con-straints, planning mechanisms, and diversity-aware search can be integrated within a unified frame-work. 
+
+# References 
+
+[1] Josh Achiam, Steven Adler, Sandhini Agarwal, et al. Gpt-4 technical report. arXiv preprint arXiv:2303.08774 , 2023. [2] Maciej Besta, Nils Blach, Ales Kubicek, et al. Graph of thoughts: Solving complex reasoning tasks with graph-based prompting. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 38, pages 17682–17690, 2024. [3] Daniil A Boiko, Robert MacKnight, Ben Kline, and Gabe Gomes. Autonomous chemical research with large language models. Nature , 624(7992):570–578, 2024. 11 [4] Andres M Bran, Sam Cox, Philippe Schwaller, Teodoro Laino, et al. Chemcrow: Augmenting large-language models with chemistry tools. Nature Machine Intelligence , 6:525–531, 2024. [5] Cameron B Browne, Edward Powley, Daniel Whitehouse, Simon M Lucas, Peter I Cowling, Philipp Rohlfshagen, Stephen Tavener, Diego Perez, Spyridon Samothrakis, and Simon Colton. A survey of monte carlo tree search methods. IEEE Transactions on Computational Intelligence and AI in Games , 4(1):1–43, 2012. [6] Keith T Butler, Daniel W Davies, Hugh Cartwright, Olexandr Isayev, and Aron Walsh. Machine learning for molecular and materials science. Nature , 559(7715):547–555, 2018. [7] Zhao Chen, Vijay Badrinarayanan, Chen-Yu Lee, and Andrew Rabinovich. Gradnorm: Gra-dient normalization for adaptive loss balancing in deep multitask networks. In International conference on machine learning , pages 794–803. PMLR, 2018. [8] Peter I Frazier. A tutorial on bayesian optimization. arXiv preprint arXiv:1807.02811 , 2018. [9] Simon Frieder. Mathematical capabilities of chatgpt. arXiv preprint arXiv:2301.13867 , 2023. [10] Rafael Gómez-Bombarelli, Jennifer N Wei, David Duvenaud, José Miguel Hernández-Lobato, Benjamín Sánchez-Lengeling, Dennis Sheberla, Jorge Aguilera-Iparraguirre, Timothy D Hirzel, Ryan P Adams, and Alán Aspuru-Guzik. Automatic chemical design using a data-driven continuous representation of molecules. ACS central science , 4(2):268–276, 2018. [11] Charles M Hansen. Hansen solubility parameters: a user’s handbook . CRC press, 2007. [12] Shibo Hao, Yi Gu, Haodi Ma, Joshua Hong, Zhen Wang, Daisy Wang, and Zhiting Hu. Reason-ing with language model is planning with world model. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pages 8154–8173, 2023. [13] Sirui Hong, Mingchen Zhuge, Jonathan Chen, Xiawu Zheng, Yuheng Cheng, Jinlin Wang, Ceyao Zhang, Zili Wang, Steven Ka Shing Yau, Zijuan Lin, et al. Metagpt: Meta programming for a multi-agent collaborative framework. In The twelfth international conference on learning representations , 2023. [14] Kevin Maik Jablonka, Qianxiang Ai, Alexander Al-Feghali, Shruti Badhwar, Joshua D Bocarsly, Andres M Bran, Stefan Bringuier, L Catherine Brinson, Kamal Choudhary, Defne Circi, et al. 14 examples of how llms can transform materials science and chemistry: a reflection on a large language model hackathon. Digital discovery , 2(5):1233–1250, 2023. [15] George Em Karniadakis, Ioannis G Kevrekidis, Lu Lu, Paris Perdikaris, Sifan Wang, and Liu Yang. Physics-informed machine learning. Nature Reviews Physics , 3(6):422–440, 2021. [16] Guohao Li, Hasan Hammoud, Hani Itani, Dmitrii Khizbullin, and Bernard Ghanem. Camel: Communicative agents for" mind" exploration of large language model society. Advances in Neural Information Processing Systems , 36:51991–52008, 2023. [17] Honglu Lu, Zhen Liu, Liang Wang, et al. Reasoning via planning: Integrating MCTS with language models. In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 8146–8165, 2023. [18] Amil Merchant, Simon Batzner, Samuel S Schoenholz, Muratahan Aykol, Gowoon Cheon, and Ekin D Cubuk. Scaling deep learning for materials discovery. Nature , 624(7990):80–85, 2023. [19] Marcus Olivecrona, Thomas Blaschke, Ola Engkvist, and Hongming Chen. Molecular de-novo design through deep reinforcement learning. Journal of cheminformatics , 9(1):48, 2017. [20] Charles Packer, Sarah Wooders, Kevin Lin, Vivian Fang, Shishir G. Patil, Ion Stoica, and Joseph E. Gonzalez. MemGPT: Towards llms as operating systems. arXiv preprint arXiv:2310.08560 , 2023. [21] Joon Sung Park, Joseph O’Brien, Carrie Jun Cai, Meredith Ringel Morris, Percy Liang, and Michael S Bernstein. Generative agents: Interactive simulacra of human behavior. In Proceed-ings of the 36th annual acm symposium on user interface software and technology , pages 1–22, 2023. 12 [22] Mariya Popova, Olexandr Isayev, and Alexander Tropsha. Deep reinforcement learning for de novo drug design. Science advances , 4(7):eaap7885, 2018. [23] Maziar Raissi, Paris Perdikaris, and George E Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Computational physics , 378:686–707, 2019. [24] Marwin HS Segler, Mike Preuss, and Mark P Waller. Planning chemical syntheses with deep neural networks and symbolic ai. Nature , 555(7698):604–610, 2018. [25] Ozan Sener and Vladlen Koltun. Multi-task learning as multi-objective optimization. Advances in neural information processing systems , 31, 2018. [26] Robert P Sheridan and Stephen K Kearsley. Applications of genetic algorithms in chemistry and chemoinformatics. Wiley Interdisciplinary Reviews: Computational Molecular Science , 1 (3):317–324, 2011. [27] Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu Yao. Reflexion: Language agents with verbal reinforcement learning. Advances in Neural Information Processing Systems , 36:8634–8652, 2023. [28] Robert Tibshirani. Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society Series B: Statistical Methodology , 58(1):267–288, 1996. [29] Chengrun Yang, Xuezhi Wang, Yifeng Lu, Hanxiao Liu, Quoc V Le, Denny Zhou, and Xinyun Chen. Large language models as optimizers. In International Conference on Learning Repre-sentations (ICLR) , 2024. [30] Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik R Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. In The eleventh international conference on learning representations , 2022. [31] Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas L Griffiths, Yuan Cao, and Karthik Narasimhan. Tree of thoughts: Deliberate problem solving with large language models. In 
+
+Advances in Neural Information Processing Systems (NeurIPS) , volume 36, 2023. [32] Di Zhang, Wei Wei, Yang Liu, et al. Chemllm: A chemical large language model. arXiv preprint arXiv:2402.06852 , 2024. 
+
+# 7 Appendix / supplemental material 
+
+13

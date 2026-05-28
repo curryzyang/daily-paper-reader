@@ -892,11 +892,18 @@ window.$docsify = {
         window.renderMathInElement(el, {
           delimiters: [
             { left: '$$', right: '$$', display: true },
+            { left: '\\[', right: '\\]', display: true },
+            { left: '\\(', right: '\\)', display: false },
             { left: '$', right: '$', display: false },
           ],
           throwOnError: false,
         });
       };
+
+      const normalizeLatexDelimiters = (markdown) =>
+        String(markdown || '')
+          .replace(/\\\[([\s\S]*?)\\\]/g, (_, expr) => `$$${expr}$$`)
+          .replace(/\\\(([\s\S]*?)\\\)/g, (_, expr) => `$${expr}$`);
 
       // 公共工具：简单表格 + 标记修正：
       // 1）移除协议标记 [ANS]/[THINK]
@@ -4447,16 +4454,17 @@ window.$docsify = {
       // --- Docsify beforeEach 钩子：解析 front matter ---
       hook.beforeEach(function (content) {
         const file = vm && vm.route ? vm.route.file : '';
+        const normalizedContent = normalizeLatexDelimiters(content);
         // 只对论文页面处理
         if (!isPaperRouteFile(file)) {
           latestPaperRawMarkdown = '';
-          return content;
+          return normalizedContent;
         }
         latestPaperRawMarkdown = content || '';
 
-        const { meta, body } = parseFrontMatter(content);
+        const { meta, body } = parseFrontMatter(normalizedContent);
         if (!meta) {
-          return content;
+          return normalizedContent;
         }
 
         // 生成论文页面 HTML + 正文

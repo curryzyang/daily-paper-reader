@@ -1,0 +1,243 @@
+Title: On the Limits of Interpretable Machine Learning in Quintic Root Classification
+
+URL Source: https://arxiv.org/pdf/2602.23467v1
+
+Published Time: Mon, 02 Mar 2026 01:05:37 GMT
+
+Number of Pages: 12
+
+Markdown Content:
+# On the Limits of Interpretable Machine Learning in Quintic Root Classification 
+
+Rohan Thomas, Majid Bani-Yaghoub ∗
+
+Division of Computing, Analytics & Mathematics, School of Science and Engineering, University of Missouri-Kansas City, 5100 Rockhill Rd., Kansas City, Missouri 64110, USA 
+
+Abstract 
+
+Can Machine Learning (ML) autonomously recover interpretable mathematical structure from raw numerical data? We aim to answer this question using the classification of real-root configurations of polynomials up to degree five as a structured benchmark. While algebraic discriminants exist for degrees two through four, quintic polynomials admit no general sym-bolic solution in radicals. This provides a controlled setting to evaluate whether ML models can rediscover meaningful mathematical invariants. We tested an extensive set of ML models, including decision trees, logistic regression, support vector machines, random forest, gradient boosting, XGBoost, symbolic regression, and neural networks. Neural networks achieved strong in-distribution performance on quintic classification using raw coefficients alone (84.3% ± 0.9% balanced accuracy), whereas decision trees perform substantially worse (59.9% ± 0.9%). How-ever, when provided with an explicit feature capturing sign changes at critical points, decision trees match neural performance (84.2% ± 1.2%) and yield explicit classification rules. Knowl-edge distillation reveals that this single invariant accounts for 97.5% of the extracted decision structure. Out-of-distribution, data-efficiency, and noise robustness analyses indicate that neu-ral networks learn continuous, data-dependent geometric approximations of the decision bound-ary rather than recovering scale-invariant symbolic rules. This distinction between geometric approximation and symbolic invariance explains the gap between predictive performance and interpretability observed across models. Although high predictive accuracy is attainable, we find no evidence that the evaluated ML models autonomously recover discrete, human-interpretable mathematical rules from raw coefficients. These results suggest that, in structured mathemat-ical domains, interpretability may require explicit structural inductive bias rather than purely data-driven approximation. 
+
+Keywords: Machine Learning, Polynomial Roots, Interpretability, Automated Discovery, Knowl-edge Distillation. 
+
+MSC 2020: 68T05, 12D10, 68T30 
+
+# 1 Introduction 
+
+While Machine Learning (ML) models have achieved significant predictive accuracy across various domains, enhancing their interpretability remains a persistent challenge. In the present work, we address the following question. Can ML discover interpretable mathematical rules from raw data? 
+
+> ∗
+
+Corresponding author. Email: baniyaghoubm@umkc.edu 
+
+1
+
+> arXiv:2602.23467v1 [math.NA] 26 Feb 2026
+
+We define “autonomous discovery” as the ability of an ML model to (i) learn a decision bound-ary directly from raw coefficients without mathematically engineered invariants, and (ii) produce an explicit, human-interpretable rule that generalizes beyond the training distribution without additional symbolic guidance. Recent work has showcased ML abilities in mathematical pattern recognition [1, 2], but the learned patterns remain entrapped in network weights. Our research investigates whether the rules learned by ML models can help mathematicians uncover discrete, symbolic decision rules governing real-root structure, rather than merely approximate classification boundaries. Quintic polynomial classification offers the ideal testbed. Although the Abel-Ruffini theorem proves no general solution in radicals exists [3, 4, 5], real-root counting remains algorithmi-cally solvable through classical analytic tools (e.g., Sturm sequences). Thus, quintic classification presents a structured but nontrivial benchmark for evaluating whether ML can rediscover mean-ingful mathematical structure from raw coefficients. Real and complex roots of quintic polynomials can be numerically estimated with high precision, which provides ground truth for the present study. Table 1 lists popular ML models and their descriptions. In the present work, we evaluated a diverse set of machine learning approaches, including decision trees [6, 7], logistic regression, support vector machines [8], random forests [9], gradient boosting machines [10], XGBoost [11, 12], and neural networks [13, 14], to investigate this question. Despite utilizing both classical statistical learning frameworks and modern ensemble and deep learning architectures, the models did not autonomously discover interpretable mathematical rules as we had initially hypothesized. The main contributions of the present work are as follows. First, we test the interpretability of ML models on degrees 2-4 (where algebraic discriminants exist) and confirm that, as long as they are provided with the necessary features, interpretable models could successfully extract near-perfect classification rules. Second, we demonstrate that neural networks perform well in quintic root classification with only coefficient features (84.2%), suggesting some form of pattern learning, although the nature of this learning remains unclear. Third, we show that decision trees, when evaluated through the same framework, achieve only 60.7% balanced accuracy, demonstrating a sig-nificant capability gap. Finally, through decision-tree distillation, we identify Crit8 (critical point sign changes) as 97.5% responsible for learned structure. While the results of our paper yield some promise, the ML models ultimately failed to provide extractable mathematical rules without human intervention. This suggests that autonomous dis-covery of interpretable mathematical rules remains an open challenge for the scientific community. Recent work has investigated the usefulness of AI and ML in mathematics [15]. Davies et al. [1] used supervised learning to guide conjecture formation in knot theory, where human mathematicians provided pattern labels. Fawzi et al. [2] discovered faster matrix multiplication algorithms through reinforcement learning. Romera-Paredes et al. [16] employed large language models (LLMs) with program search for combinatorial construction. Lample and Charton [17] trained transformers on symbolic mathematics tasks, including integration and differential equations. Although these approaches show promise, they generally work with explicit problem formulations where the true extent of ML innovation is fairly limited. Our work differs by investigating whether models can dis-cover mathematical structure from raw numerical data (polynomial coefficients) without symbolic guidance and, critically, whether the learned knowledge can be extracted. 22 Methods 
+
+2.1 Quintic Polynomial Experimental Setup 
+
+For our experiments, we generated 40,000 quintic polynomials with coefficients sampled from [−10 , 10]. Roots were computed using NumPy’s eigenvalue method with the threshold 10 −10 for real/complex classification. Our experiments returned three classes: 5 real roots (class 0), 3 real roots (class 1), and 1 real root (class 2). Model performance was evaluated using 5-Fold Stratified Cross-Validation across 20 independent seeds (0-19). All metrics are reported as the mean ± a95% Confidence Interval. Balanced accuracy was used to mitigate potential bias due to class im-balance. As explained below, we first evaluated our scaffold over lower-degree polynomials where algebraic discriminants exist to validate that decision trees can extract known mathematical rules when provided with the necessary features. For quadratic polynomials ax 2 + bx + c = 0, the discriminant ∆ = b2 − 4ac algebraically deter-mines root type. ∆ ≥ 0 indicates real roots while ∆ < 0 indicates complex ones. To replicate the decision boundary derived from the quadratic discriminant, we provided neural networks and de-cision trees with the discriminant ratio feature b2/ac . Additionally, we tested Symbolic Regression (PySR) on quadratic coefficients to determine whether it could bypass the need for the discriminant ratio feature by deriving the true discriminant formula. For monic cubic polynomials x3 + Ax 2 + Bx + C, we utilized reduced form parameters: α =(A/ 3) 2 −B/ 3 and β = 2( A/ 3) 3 −(A/ 3)( B/ 3)+ C to determine root type. We then aggregated these parameters into the ratio β2/α 3, which serves as the key discriminant feature for distinguishing between the cases of all real roots and one real with two complex conjugates. For quartic polynomials, classical invariants exist but are more complex. So, instead of tran-scribing them directly, we provided Tschirnhaus-style invariants and discriminant-related features to replicate their decision boundary. For monic quartics x4 +Ax 3 +Bx 2 +Cx +D, relevant invariants include: 
+
+I = 12 e − 3bd + c2
+
+J = 72 ace + 9 bcd − 27 ad 2 − 27 b2e − 2c3
+
+where a = 1, b = A, c = B, d = C, e = D.Next, we evaluated an extensive set of ML approaches to identify which model performed best on quintic classification with coefficient features alone. This initial screening, evaluated across three different seeds, would help us determine the model we should optimize with explicit feature engineering Neural Networks consistently outperformed other models on raw coefficient inputs. Decision trees, on the other hand, performed substantially worse, revealing the first signs of the complexity gap between powerful models and interpretable ones. Despite their underwhelming performance, decision trees are a necessary foil to the ”black box” complexity of Neural Networks, which were evaluated alongside decision trees in a more robust 20-trial evaluation with explicit feature engi-neering. 3Table 1: Overview of Machine Learning models used in this study to evaluate their interpretability 
+
+Model Description Decision Trees (CART) Interpretable models that produce explicit if-then rules, allowing direct examination of learned structure. 
+
+Logistic Regression Linear classifier to test whether linear decision boundaries suffice for this problem. 
+
+Support Vector Machines (SVM) 
+
+RBF kernel to explore whether kernel methods could find separat-ing boundaries. 
+
+Random Forest Ensemble of decision trees to assess whether aggregation improves performance. 
+
+Gradient Boosting Sequential ensemble method for comparison. 
+
+XGBoost Optimized gradient boosting implementation. 
+
+Symbolic Regression Genetic programming approach (PySR) to search for exact math-ematical formulas mapping coefficients to root counts. 
+
+Neural Networks Multi-layer perceptrons to explore whether deeper models could learn complex patterns. 
+
+2.2 Mathematical Features for Quintic Classification 
+
+According to the Abel-Ruffini theorem [5], unlike their second, third, and fourth degree counter-parts, quintic polynomials do not have a clean algebraic decision boundary. So, to replicate quintic behavior as closely as possible, we engineered 63 feature coefficients and six classical methods from polynomial theory. In the following, we explain how these classical methods have been utilized in our study. Following Sturm Sequences (8 features), we construct the complete Sturm sequence through iterated polynomial division, starting from p(x) and its derivative [18]. This sequence allows us to count roots, since the difference in sign changes between two points equals the number of real roots in that interval. Our features extract sign changes at ±∞ (indicating total real roots), plus sign changes evaluated at five other points {− 10 , −1, 0, 1, 10 } to capture local roots. Using Descartes’ Rule (6 features), we count sign changes in the coefficient sequences of p(x)and p(−x) to bound positive and negative real roots [19]. Features include the number of positive root sign changes, negative root sign changes, their sum (total real root bound), the implied mini-mum complex root count (5 − total bound), and parity indicators for both counts. Utilizing Newton’s Sums (10 features), we compute power sums sk = P5 
+
+> i=1
+
+rki directly from coefficients using Newton’s identities without finding the actual roots [20]. The first five features are the raw power sums s1 through s5. We then derive the estimated mean of roots ( s1/5), the estimated variance ( s2/5 − (s1/5) 2), and three normalized ratios that measure properties like how spread out or clustered the roots are in scale-invariant form. Using Critical Points (10 features), we find the roots of the derivative p′(x) = 5 x4 + 4 Ax 3 +3Bx 2 +2 Cx +D to identify critical points where the polynomial changes from increasing to decreas-4ing (or vice versa) [21]. Features include: the count of real critical points, their position statistics (minimum, maximum, mean, standard deviation), polynomial values at these points (minimum, maximum, mean), and the number of real inflection points. Most importantly, we compute Crit8: the number of sign changes in the sequence {p(c1), p (c2), . . . , p (ck)} where ci are ordered critical points. By the Intermediate Value Theorem, each sign change between consecutive extrema guar-antees a root in that interval, making Crit8 a vital feature in quintic classification. Following Hybrid Symbolic approach (16 features), we compute Tschirnhaus invariants I2
+
+through I5 (generalizations of classical discriminants), four novel algebraic combinations such as 
+
+A · B · C − D · E and A2E − B2D + C3, three discriminant-like difference measures ( B2 − AC ,
+
+C2 − BD , D2 − CE ), and five scale-invariant coefficient ratios. These features capture algebraic relationships that may encode root configuration patterns. Using the decomposition method (8 features), we count the number of near-zero coefficients (absolute value < 0.1), the ratio of maximum to minimum coefficient magnitudes, coefficient vari-ance, an indicator for potential x-factorization (whether |E| < 0.1), and four normalized measures testing for factorization patterns inspired by Sylvester matrix relationships. 
+
+2.3 Distillation Protocol 
+
+To interpret the nonlinear decision boundary learned by neural networks, we employ a knowledge distillation framework to extract an interpretable surrogate decision tree. We first train the neural network with the identified features. We then use the trained network to generate predictions on the training data and train the decision tree to mimic them. After the tree is trained, we evaluate it on a test set, calculating the tree’s (1) fidelity (agreement with network predictions on unseen data), and (2) balanced accuracy (agreement with ground truth). Feature importance is also analyzed via SHAP, which is SHapley Additive exPlanations [22]. 
+
+# 3 Results and Analysis 
+
+3.1 Validation of Methodology 
+
+For quadratic polynomials, neural networks achieved 99.3% ± 0.1% accuracy using raw coefficients, rising to perfect 100.0% ± 0.0% when provided the discriminant ratio b2/ac . Decision trees achieved perfect 100% classification using this single feature, learning threshold values near 4.0 that match theoretical predictions. For cubic polynomials, neural networks achieved 98.5% ± 0.002% accuracy using raw coefficients, while decision trees, using the invariant ratio β2/α 3 returned the thresh-old 3.999, achieving perfect 100% accuracy using a threshold nearly identical to the theoretical value of 4.0 separating real from complex root cases. For quartic polynomials, neural networks achieved 97.5% ± 0.2% balanced accuracy with raw coefficients. When provided classical invari-ants (discriminant expressions and Tschirnhaus-style features), decision trees reached 99.4% and other ensemble methods (specifically Random Forest and Gradient Boosting) achieved 100.0% bal-anced accuracy. These validation results establish that our methodology can extract meaningful mathematical structure when ground truth is available and appropriate features are provided, giv-ing us confidence to apply the same approach to quintics for which no closed-form solutions are known. All symbolic regression experiments were conducted with fixed search depth, operator set, and computational budget. While increasing these resources may improve performance, our results 5indicate that under practical search constraints, symbolic regression struggles beyond quadratic structure. The Symbolic Regression results reveal a distinct “Complexity Cliff,” demonstrating how performance degrades as polynomial complexity increases, as summarized in Table 2. Table 2: Summary of Symbolic Regression Performance by Polynomial Degree 
+
+Polynomial Accuracy (%) Observations 
+
+Quadratic 97 .3 ± 4.2 Discovered discriminant rule (100% in 2/5 trials) Cubic 94 .4 ± 1.6 Discovered highly accurate but complex heuristic Quartic 47 .3 ± 5.8 Consistently failed; relied on simple linear heuristic Quintic 53 .5 ± 2.9 Failed to find interpretable rules; relied on complex heuristics This confirms that while Symbolic Regression can discover simple algebraic rules, classification problems beyond the second degree pose a complexity barrier that prevents autonomous symbolic discovery, in contrast to the 84%+ performance of neural networks. 
+
+3.2 Model Screening Results 
+
+In our initial screening phase, we evaluated all model classes on quintic polynomial classification using raw coefficients across three separate seeds. As shown in Table 3, Neural networks consistently achieved the highest performance, while interpretable models struggled significantly to establish boundaries without guided features. Table 3: Degree 5 Initial Screening Performance (Mean ± 95% CI) 
+
+Model Balanced Accuracy (Raw Coefficients) 
+
+Neural Networks 83.8% ± 3.9% Gradient Boosting 63.3% ± 3.8% SVM (RBF) 62.9% ± 0.4% Random Forest 62.5% ± 1.5% Decision Trees (CART) 53.1% ± 3.1% Logistic Regression 41.6% ± 0.9% Based on these findings, we focused our rigorous 20-trial statistical analysis on neural networks and decision trees, as these two model classes directly address our research question about learning patterns and extracting interpretable rules. As shown in Table 4, testing neural networks and decision trees across 20 independent trials with different random seeds reveals a significant gap between their capabilities when using only raw polynomial coefficients. The inclusion of the Crit8 
+
+feature (sign changes at critical points) significantly narrows the capability gap between the black-box neural model and the interpretable decision tree (84.2% versus 89.9%). The 33% baseline reflects random guessing among three classes. Neural networks achieved 84.3% balanced accuracy using only raw coefficients, substantially above baseline. However, decision trees achieved only 59.9%, demonstrating their inability to autonomously discover useful classification rules from raw data. While the performance of Neural Networks was impressive, the performance gap highlights a fundamental limitation. The structure that neural networks learn internally can-not be extracted as interpretable rules without additional guidance. When provided Crit8 (sign changes at critical points) as an explicit feature, decision trees improve dramatically to 84.2% 6Table 4: Performance comparison of neural networks and de-cision trees when additional feature “crit8” added. 
+
+Model Raw Coefficients With Crit8 1
+
+Neural Networks 84.3% ± 0.9% 89.9% ± 1.4% Decision Trees 59.9% ± 0.9% 84.2% ± 1.2% 
+
+Performance Gap 24.4 points 5.7 points      
+
+> 1Crit8 Feature: the number of sign changes in the sequence
+> {p(c1), p (c2), . . . , p (ck)}where ciare ordered critical points.
+
+(+24.3 points). Neural networks improve modestly (+5.6 points). This asymmetry suggests that the neural network potentially learned a rule similar to Crit8 with raw coefficients alone, while in-terpretable models require human-engineered features to achieve good performance on this problem. In an attempt to better understand the decision boundary learned by neural networks, we trained them on all 63 mathematical features (see subsection 2.2) for quintic classification, then attempted to distill their knowledge into decision trees. As shown in Table 5, the 98.9% test-set fidelity demonstrates that decision trees can successfully mimic neural network predictions when provided with engineered features. The 84.6% standalone balanced accuracy confirms that the extracted rules are useful. Table 5: Quantitative results for the Knowledge Distillation process from Neural Networks (NN) to Decision Trees. The high fidelity indicates that the inter-pretable tree successfully approximates the neural model’s decision logic. 
+
+Metric Value Interpretation 
+
+NN Test Balanced Accuracy 87.0% ± 1.2% Robust feature learning 
+
+Tree Test Fidelity 98.9% ± 0.1% Successful logic transfer Tree Standalone Accuracy 84.6% ± 1.2% Generalizable rule extraction The SHAP analysis [22] revealed that the feature Crit8, which counted sign changes in critical points, enabled this success. It boasted a feature importance score of 97.5%, 145.6 × more important than the second-ranked feature. Examining the best-trial decision tree revealed the classification structure as follows. Classification = 
+
+
+
+1 real, 4 complex if Crit8 ≤ 0.53 real, 2 complex if 0 .5 < Crit8 ≤ 1.55 real roots if Crit8 > 1.5These rules have a clear mathematical foundation. Critical points where p′(x) = 0 divide the real line into monotonic regions. By the Intermediate Value Theorem, sign changes in {p(c1), . . . , p (ck)}
+
+indicate zero crossings. Polynomials with 5 real roots exhibit multiple oscillations (high Crit8 ≥ 2); those with 1 real root show near-monotonic behavior (low Crit8 ≤ 1). The learned thresholds (0.5, 1.5) match this mathematical intuition. However, it is crucial to note that this interpretable rule was only discoverable because we explicitly engineered the Crit8 feature. The neural network did not produce this rule autonomously, and without our feature engineering, the decision tree could 7not have found it. Additionally, testing each classical method individually yields these results (see Table 6). Only when critical point features are explicitly included does neural network performance improve above baseline; other methods often degrade it through noise or overfitting. For decision trees, critical points provide massive improvement (+24.3 points) while other methods offer minimal gains. Table 6: Comparative performance across different mathemat-ical feature sets for quintic polynomials. Bold values indicate the optimal feature configuration, where Critical points provide the most significant gain in interpretability and accuracy. 
+
+Feature Set Neural Networks Decision Trees 
+
+Raw coefficients 84.3% ± 0.9% 59.9% ± 0.9% + Sturm sequences 85.2% ± 1.1% 62.1% ± 4.1% + Newton sums 83.0% ± 1.3% 63.0% ± 4.2% + Critical points 89.3% ± 0.7% 84.2% ± 1.2% 
+
++ Hybrid symbolic 80.5% ± 1.4% 61.4% ± 4.0% All 63 combined 87.0% ± 1.2% 68.2% ± 4.5% 
+
+3.3 Model Robustness and Generalization 
+
+To rigorously evaluate the nature of the neural network’s internal representations, we established a mathematically “desired” control group. We compared the performance of black-box neural net-works trained on raw coefficients against interpretable decision trees equipped with exact algebraic invariants (e.g., the exact discriminants ∆ for lower degrees, and the Crit8 features for degree 5). Both models were subjected to out-of-distribution (OOD) extrapolation, data efficiency, and input noise robustness stress tests using 5-Fold Stratified Cross-Validation across 3 random seeds. The comparative performance is visualized in Figure 1. The stress tests provide strong empirical evidence that the neural network did not recover dis-crete algebraic invariants in a scale-invariant or symbolically extractable form. A true mathematical invariant (such as ∆ = b2 − 4ac ) is perfectly scale-invariant and requires virtually no training data to define a decision boundary. When evaluated out-of-distribution on coefficients scaled up to 10 ×
+
+their training bounds, the control group (invariant decision trees) maintained flawless stability, scor-ing an exact 1 .000 ± 0.000 balanced accuracy across degrees 2, 3, and 4. In stark contrast, the raw neural networks failed to generalize their approximations; for example, quartic accuracy dropped from 95 .4% ± 0.5% to 83 .1% ± 1.6%. Furthermore, the data efficiency curves reveal the underlying learning mechanisms. The invariant control models achieved near-perfect accuracy with as few as 50 to 100 samples. Conversely, the neural networks required thousands of samples to navigate the complex decision geometries of higher-degree polynomials, with quintic models continuing to improve steadily up to the 5,000 sample maximum without plateauing perfectly. Interestingly, both the raw neural networks and the invariant control models degraded identically under continuous Gaussian noise (e.g., degree 4 accuracy dropping to roughly 71 .9% at σ = 2 .0 for both models). This synchronous failure highlights the chaotic sensitivity of the polynomial coefficient space itself: introducing noise fundamentally alters the roots of the polynomial, meaning even perfect mathemat-ical logic will inherently misclassify the original data labels. Ultimately, these side-by-side results clearly illustrate the interpretability gap. While the neural network finds a highly accurate, resilient representation of the math, it does so by building a continuous, data-dependent, localized geomet-8±10 ±20 ±50 ±100 
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+> Balanced Accuracy
+
+Raw NN: OOD Extrapolation 
+
+> 25
+> 100
+> 500
+> 5,000
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+Raw NN: Data Efficiency 
+
+0 0.5 1 1.5 2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+Raw NN: Noise Robustness 
+
+±10 ±20 ±50 ±100 
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+Range Bounds 
+
+> Balanced Accuracy
+
+Invariant DT: OOD Extrapolation 
+
+> 25
+> 100
+> 500
+> 5,000
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+Training Samples 
+
+Invariant DT: Data Efficiency 
+
+Degree 2 Degree 3 Degree 4 Degree 5 
+
+0 0.5 1 1.5 2
+
+0.4
+
+0.6
+
+0.8
+
+1
+
+Noise Std. Dev. ( σ)
+
+Invariant DT: Noise Robustness 
+
+Figure 1: Behavioral divergence between neural approximation (Top Row) and discrete mathe-matical execution (Bottom Row). Error bars indicate 95% Confidence Intervals. Left: Invariant decision trees maintain perfectly stable, scale-invariant bounds out-of-distribution, whereas neu-ral approximations decay. Middle: Trees lock in boundaries with mere dozens of samples, while networks require thousands. Right: Both models degrade identically under noise, reflecting the fundamental alteration of the true polynomial roots. 9ric approximation bounded by its training space. Because the knowledge is stored geometrically rather than symbolically, it cannot be easily extracted. Translating that latent pattern-matching capability into explicit, human-readable logic strictly requires human intervention and guided fea-ture engineering. These results suggest that the network’s learned representation is geometric and data-dependent rather than symbolic and invariant. Because the knowledge is stored geometri-cally rather than symbolically, it cannot be easily extracted as explicit mathematical logic without human intervention. 
+
+# 4 Discussion and Conclusion 
+
+Our extensive evaluation of ML methods for quintic polynomial classification yields a nuanced conclusion. While neural networks can achieve reasonable balanced accuracy (84.3%) from raw coefficients, the models we tested did not autonomously discover interpretable mathematical rules as we had hoped. Interpretable models like decision trees perform poorly on raw data (59.9%), and extracting rules from neural networks requires explicit human-guided feature engineering. When we provided the Crit8 feature, decision trees achieved 84.2% balanced accuracy and produced inter-pretable rules. But this required us to identify and implement the relevant mathematical concept; the models did not discover it on their own. The present study carries a number of limitations. First, our experiments rely on polynomials with coefficients sampled uniformly from [ −10 , 10] , which defines a specific coefficient geometry; alternative sampling distributions may alter root configuration frequencies and learned decision boundaries. Second, root classification is determined numerically using a fixed tolerance threshold, meaning near-multiple roots may introduce unavoidable labeling instability. Third, while we eval-uated a broad range of classical and modern ML models, including neural networks and symbolic regression, our analysis does not exhaust the space of possible architectures (e.g., transformer-based symbolic learners, equivariant networks, or program-synthesis systems). Fourth, symbolic regres-sion experiments were conducted under practical computational constraints, and deeper search regimes may yield different outcomes. Finally, although our stress tests strongly suggest that neu-ral networks learn continuous geometric approximations rather than discrete symbolic invariants, we did not directly probe internal representations; therefore, we cannot exclude the possibility that latent algebraic structure exists in a form not accessible through distillation. These considerations suggest that our conclusions should be interpreted within the scope of the evaluated ML models and experimental design. Our results do not prove that no ML approach can autonomously discover interpretable math-ematical rules. However, they suggest this remains an open challenge. Future work may explore richer symbolic regression systems, transformer architectures trained on formal mathematics, hy-brid neuro-symbolic methods, and alternative interpretability strategies beyond distillation. In conclusion, bridging the gap between geometric approximation and symbolic reasoning remains a central challenge for interpretable machine learning in structured mathematical domains. 
+
+# Declaration of competing interest 
+
+The authors declare no conflicts of interest. 10 Data Availability 
+
+All codes to perform numerical simulations, model fitting and hypothesis testing are available in our GitHub repository. The README file contains instructions to use each code to verify the numerical results. 
+
+# References 
+
+[1] Alex Davies, Petar Veliˇ ckovi´ c, Lars Buesing, et al. Advancing mathematics by guiding human intuition with AI. Nature , 600:70–74, 2021. doi: 10.1038/s41586-021-04086-x. [2] Alhussein Fawzi, Matej Balog, Aja Huang, et al. Discovering faster matrix multiplication algorithms with reinforcement learning. Nature , 610:47–53, 2022. [3] Niels Henrik Abel. M´ emoire sur les ´ equations alg´ ebriques, 1824. Oeuvres compl` etes d’Abel. [4] Paolo Ruffini. Teoria Generale delle Equazioni . Presso gli eredi di Marco Antonio Rossi, Reggio Emilia, 1799. [5] Ian Stewart. Galois Theory . CRC Press, Boca Raton, FL, 4 edition, 2015. [6] Leo Breiman, Jerome Friedman, Richard Olshen, and Charles Stone. Classification and re-gression trees. 1984. [7] Dilek Soysal, Majid Bani-Yaghoub, and Tiffani A Riggers-Piehl. A machine learning approach to evaluate variables of math anxiety in stem students. Pedagogical Research , 7(2), 2022. [8] Corinna Cortes and Vladimir Vapnik. Support-vector networks. Machine Learning , 20(3): 273–297, 1995. [9] Leo Breiman. Random forests. Machine Learning , 45(1):5–32, 2001. [10] Jerome H. Friedman. Greedy function approximation: A gradient boosting machine. Annals of Statistics , 29(5):1189–1232, 2001. [11] Arash Arjmand, Majid Bani-Yaghoub, Gary Sutkin, Kiel Corkran, and Susanna Paschal. Com-parative analysis of machine learning models for predicting hospital-and community-associated urinary tract infections using demographic, hospital, and socioeconomic predictors. Journal of Hospital Infection , 162:263–271, 2025. [12] Tianqi Chen and Carlos Guestrin. Xgboost: A scalable tree boosting system. Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining ,pages 785–794, 2016. [13] Frank Rosenblatt. The perceptron: A probabilistic model for information storage and organi-zation in the brain. Psychological Review , 65(6):386–408, 1958. [14] Christopher M. Bishop. Pattern Recognition and Machine Learning . Springer, New York, 2006. [15] Samuel Golladay and Majid Bani-Yaghoub. Evaluating the reasoning abilities of llms on underrepresented mathematics competition problems. arXiv preprint arXiv:2512.24505 , 2025. 11 [16] Bernardino Romera-Paredes, Mohammadamin Barekatain, Alexander Novikov, et al. Math-ematical discoveries from program search with large language models. Nature , 625:468–475, 2024. [17] Guillaume Lample and Fran¸ cois Charton. Deep learning for symbolic mathematics. In Inter-national Conference on Learning Representations (ICLR) , 2020. arXiv:1912.01412. [18] Charles-Fran¸ cois Sturm. M´ emoire sur la r´ esolution des ´ equations num´ eriques. Bulletin de F´ erussac , 11:419–425, 1829. [19] Ren´ e Descartes. La G´ eom´ etrie . Jan Maire, Leiden, 1637. [20] Isaac Newton. Arithmetica Universalis . Cambridge University Press, Cambridge, 1707. [21] Morris Marden. Geometry of Polynomials , volume 3 of Mathematical Surveys and Monographs .American Mathematical Society, 1949. [22] Scott M. Lundberg and Su-In Lee. A unified approach to interpreting model predictions. 
+
+Advances in Neural Information Processing Systems , 30, 2017. 12

@@ -1,0 +1,2636 @@
+Title: Principle-Evolvable Scientific Discovery via Uncertainty Minimization
+
+URL Source: https://arxiv.org/pdf/2602.06448v1
+
+Published Time: Mon, 09 Feb 2026 01:32:34 GMT
+
+Number of Pages: 32
+
+Markdown Content:
+# Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Yingming Pu 1 2 Tao Lin 1 Hongyu Chen 1
+
+## Abstract 
+
+Large Language Model (LLM)-based scientific agents have accelerated scientific discovery, yet they often suffer from significant inefficiencies due to adherence to fixed initial priors. Existing approaches predominantly operate within a static hypothesis space, which restricts the discovery of novel phenomena, resulting in computational waste when baseline theories fail. To address this, we propose shifting the focus from search-ing hypotheses to evolving the underlying scien-tific principles. We present PIEVO , a principle-evolvable framework that treats scientific discov-ery as Bayesian optimization over an expand-ing principle space. By integrating Information-Directed Hypothesis Selection via Gaussian Pro-cess and an anomaly-driven augmentation mech-anism, PIEVO enables agents to autonomously refine their theoretical worldview. Evaluation across four benchmarks demonstrates that PIEVO 
+
+(1) achieves an average solution quality of up to 90.81% ∼93.15%, representing a 29.7% ∼31.1% improvement over the state-of-the-art, (2) attains an 83.3% speedup in convergence step via signifi-cantly reduced sample complexity by optimizing the compact principle space, and (3) maintains robust performance across diverse scientific do-mains and LLM backbones. 
+
+## 1. Introduction 
+
+Large Language Model (LLM)-based scientific agents have significantly accelerated the pace of automated scientific discovery (Gridach et al., 2025; Wei et al., 2025; Zhang et al., 2025; Tang et al., 2025; Lu et al., 2024; Yamada et al., 2025). By automating complex reasoning and hy-pothesis generation, these systems have shown potential to transform research methodologies across fundamental fields, including chemistry (Boiko et al., 2023), biology (Mitchener  
+
+> 1
+
+Westlake University, Hangzhou, Zhejiang, China. 2 Email: puyingming@westlake.edu.cn. Correspondence to: Tao Lin <lin-tao@westlake.edu.cn>. 
+
+Preprint. February 9, 2026. 
+
+Figure 1. Illustration of principle evolution. PIEVO evolves the optimizable principle space by exploring hypothesis candi-dates progressively, and the system seeks a principle capable of explaining or predicting the observed phenomena (e.g., empirical observations). 
+
+et al., 2025), physics (Ghafarollahi & Buehler, 2024), and material science (Panapitiya et al., 2025). Despite these ad-vancements, existing approaches predominantly maximize exploitation within a fixed search space. While recent frameworks have begun to incorporate scien-tific principles as guidance (Pu et al., 2025; Lai & Pu, 2025; Zhao et al., 2025), they typically treat these principles, or the prior knowledge, as immutable constraints. Consequently, when agents encounter experimental evidence that contra-dicts their prior, they often discard valid observations as errors rather than recognizing them as signals for theoret-ical refinement and extension. This rigidity leads to sig-nificant inefficiencies: agents explore the hypothesis space constrained by fixed priors without updating the “cognition” of real-world knowledge to emerging experimental evidence. 
+
+These limitations culminate in three primary challenges: (a) restricted scientific insight discovery , where agents are blinded to novel phenomena that lie outside their initial prior; (b) inefficiency in hypothesizing , caused by the repet-itive application of limited and inadequate prior knowledge; and (c) inability to handle anomalies in discovery pro-cess , where the system fails to leverage unexpected results to expand its conceptual boundaries. To bridge this gap, we propose PIEVO , which reformu-lates scientific discovery as Bayesian optimization over 
+
+1 
+
+> arXiv:2602.06448v1 [cs.LG] 6 Feb 2026 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization
+
+an evolving principle space . Departing from the standard paradigm of static hypothesis searching (Pu et al., 2025; Tang et al., 2025), PIEVO models scientific principles as learnable probabilistic priors that actively guide exploration. Crucially, PIEVO employs an anomaly-driven epistemic evolution mechanism (Figure 1): high-surprisal experimen-tal outcomes—typically discarded as noise—are leveraged to catalyze principle space expansion and belief updates. This fosters a dual-loop optimization cycle: refined princi-ples constrain the search to high-utility manifolds, while anomalies drive the structural evolution of the principles themselves, ensuring the agent’s internal model scales in complexity with empirical data. We evaluate PIEVO across four diverse benchmarks in physics, chemistry, biology, and materials science. Empiri-cal results demonstrate that PIEVO : ➊ Establishes state-of-the-art performance , achieving an average solution quality of up to 93.15% and surpassing top-tier baseline (Pu et al., 2025) by up to 31.06%; ➋ Enhances efficiency , attaining 83.3% higher sample efficiency than PiFlow while reduc-ing inference time by ∼16%; ➌ Exhibits robust transfer-ability across tasks and LLMs; and ➍ Uncovers funda-mental mechanisms , identifying novel principles in sub-wavelength chiral optics. In summary, our contributions are: (a) We introduce Principle Evolution concept, a paradigm shift that transforms scientific discovery from searching in a static hypothesis space to optimizing the underlying scientific principle space, which constrains vast regions of potential hypotheses. (b) We propose PIEVO , a framework that automatically evolves tentative principles via Bayesian updates and adaptively extends the principle space based on experi-mental feedback, turning anomalies into drivers of scien-tific discovery. (c) We conduct extensive evaluations across four real-world tasks, demonstrating that P IEVO improves discovery ef-ficiency with 20% ∼30% higher performance compared to SOTA, while validating its ability to aid the discovery of physical principles in a blind case study. 
+
+## 2. Related Work 
+
+2.1. Autonomous Agents for Scientific Discovery 
+
+The integration of Large Language Models (LLMs) into scientific workflows has catalyzed a paradigm shift from manual experimentation to autonomous discovery (Gridach et al., 2025; Wei et al., 2025; Zheng et al., 2025). Ini-tial efforts focused on specialized assistants for specific domains, such as organic synthesis (M. Bran et al., 2024) and material design (Panapitiya et al., 2025). Recent ad-vancements have expanded into general-purpose AI Sci-entists capable of end-to-end research management. Sys-tems like The-AI-Scientist (Lu et al., 2024; Yamada et al., 2025), AI-Researcher (Tang et al., 2025), and Agent Lab-oratory (Schmidgall et al., 2025) demonstrate proficiency in ideation, coding, and manuscript generation. Concur-rently, multi-agent frameworks have emerged to enhance reliability through collaborative reasoning (Su et al., 2024; Zhang et al., 2025) and comprehensive workflow manage-ment (Chai et al., 2025; Mitchener et al., 2025). However, a distinct limitation persists: these systems largely operate within the bounds of their pre-trained knowledge or static external retrievals. While principle-aware frameworks (Pu et al., 2025) introduce scientific rules as constraints, they treat these principles as immutable priors. This rigidity pre-vents agents from challenging foundational assumptions, re-stricting their ability to discover phenomena that contradict established theories (Wang et al., 2023; Xie et al., 2025). 
+
+2.2. Epistemic Evolution and Active Learning 
+
+To transcend static capabilities, recent research focuses on 
+
+self-evolving agents that refine their behavior through in-teraction (Zhang et al., 2025; Zheng et al., 2025). Frame-works like RAGEN (Wang et al., 2025), Agent0 (Xia et al., 2025a), and EvolveR (Wu et al., 2025b) utilize reinforce-ment learning and self-generated curricula to optimize pro-cedural strategies from experience. Parallel to this, Bayesian inference and Active Learning (AL) serve as the theoretical backbone for data-efficient decision-making in uncertainty-laden environments (Zhou et al., 2025; Xia et al., 2025b). These methodologies have been successfully adapted for LLM-driven planning (He et al., 2024) and curiosity-driven world modeling (Levy et al., 2025), enabling agents to max-imize information gain with limited feedback. Despite these successes, a critical gap remains in the target of optimiza-tion. Existing evolutionary and Bayesian frameworks pre-dominantly optimize procedural parameters (e.g., policy weights, prompts) or fact accumulation . They do not ap-ply Bayesian updates to the semantic principles themselves. PIEVO bridges this gap by formalizing scientific principles not as fixed constraints, but as probabilistic beliefs to be iteratively optimized, thereby enabling the discovery of new physical laws through anomaly-driven active learning. 
+
+## 3. Methodology 
+
+3.1. Overview 
+
+Figure 2 illustrates the general concept of principle-evolving .Unlike existing methods that operate with fixed hypothesis space (Tang et al., 2025; Lu et al., 2024; Yamada et al., 2025; Pu et al., 2025), P IEVO actively optimizes scientific prin-ciples , i.e., the natural language statements of correlations, patterns or mechanisms in scientific scenarios. Leveraging Bayesian inference, it manages the posterior of principles 2PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization ？ ？
+
+> ？？？
+
+Anomaly 
+
+> (High Surprisal Evidence)
+
+P3 
+
+Active Principles 
+
+P2 
+
+P1 
+
+> Current Best Principle
+> Explained Data
+
+Pnew 
+
+> Candidate Principle
+
+Coherent 
+
+Augmentation 
+
+> (Expand Principle Set)
+> (Working Set)
+
+Universal Principle Space 
+
+... 
+
+True Principle 
+
+P⋆Leads to Optimal 
+
+Hypothesis p(Pnew)      
+
+> PrincipleBelief
+> ∝p0(Pnew)
+> Prior
+> ⋅
+> t
+> ∏
+> s=1
+> p(ys|hs,Pnew)
+> ExperimentalResults
+
+Latent Principles 
+
+Explainable Evidence 
+
+Optimization Trajectory 
+
+PiEvo evolves principles by maximizing explanatory power. 
+
+> Extend and Evolve
+
+Figure 2. Evolutionary trajectory of the principle space via Coherent Augmentation. The system guided by P IEVO operates within a restricted Active Principles ; however, when high-surprisal anomalies suggest epistemic stagnation, the system triggers a discovery phase. P IEVO integrates new candidate principles (Pnew ) to reconcile these anomalies while maintaining consistency with the whole historical evidence through Coherent Augmentation . This iterative evolution drives the optimization trajectory toward the True Principle 
+
+P ⋆, enabling the identification of the optimal hypothesis candidate. 
+
+by experimental evidence and extends its Active Principles to efficiently search hypotheses. As illustrated in Figure 3, P IEVO is a strategic layer that con-nects to a minimal scientific agent system through prompt injection per iteration: (a) Principle Agent is guided to expand the Active Principles scope (see Section 3.4) or wait for other two agents to collect enough evidence, (b) Hypoth-esis Agent is guided by current Maximum A Posteriori (MAP) principle as a conditional prompt to propose hy-pothesis candidates (see Appendix J), and (c) Experiment Agent is guided to test the only one candidate selected by P IEVO (see Section 3.3). These modules establish the iteration-level directing, allowing to explore hypotheses from evolvable principle scope. 
+
+3.2. Theoretical Framework Definition 3.1 (Universal Principle Space ). Let ¯P be a countable, universal set of potential scientific principles, endowed with a fixed prior distribution p0 with finite entropy 
+
+H(p0). At any time step t, the agent maintains a finite Active Principle Pt ⊆ ¯P. The goal is to identify the unknown True Principle P ⋆ while maximizing the outcome of hypotheses generated under it. 
+
+In this section, we first define the interaction between inter-nal P IEVO optimization and the external physical validation, and then formulate the dual uncertainty minimization ar-chitecture in P IEVO , i.e., Principle (a)
+
+−−→ Hypothesis (b)
+
+−−→
+
+Evidence .Principle 
+
+⋆ Experiment 
+
+⋆
+
+> Hypothesis
+
+⋆
+
+PiEvo 
+
+Task 
+
+> The Agent Group for Hypothesis-Testing
+
+Cumulative Historical Evidence                  
+
+> <principle, hypothesis, outcome>
+> Propose principles Propose hypotheses Select &Conduct
+> Guidance
+> Collect experiments for updating principle beliefs
+> Propose principle by
+> anomalies ... or Pause ...
+> Based on the principle, I
+> propose 4candidates to test.
+> Given 4 candidates, the one
+> I will test is ...
+> Multiple Paths Hypothesizing
+> Optimal Hypothesis
+> (Not Selected)
+
+hselected = arg min 
+
+> h∝⋅
+
+(Regret )2 𝒜 
+
+Information Gain ∈ 
+
+> Multi-Agents Loop PiEvo Prompt Injection
+
+Figure 3. Guidance Injection Mechanism. PIEVO generates strategic guidance with a prompt template (see Appendix J) via backend optimization: (a) Active Principles, (b) identified high-surprisal anomalies and (c) hypothesis selection, injecting it into agent’s context to guide reasoning. 
+
+Hypothesis & Principle Space. Let H denote the space of all possible experimental hypotheses (e.g., molecular struc-tures) and ¯P denote the universal set of scientific principles 
+
+(Definition 3.1). At any time t, the system maintains a set of Active Principles Pt = {P1, . . . , P n} ⊂ ¯P.
+
+External Validation Function f ⋆. An experiment consists of selecting a hypothesis h ∈ H and observing a real-valued outcome y ∈ R (e.g., bio-activity of a molecule). We model this as y = f ⋆(h) + ϵ, where f ⋆ is the true underlying 3PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+physical mapping (e.g., wet experiment, simulation, etc.) and ϵ is observational noise. In our study, f ⋆ corresponds to surrogate model evaluations per task. 
+
+Internal Principle Beliefs and Likelihoods. The epistemic state of P IEVO in principle optimization is formalized as a belief distribution pt(P ) for each principle P ∈ P t, up-dated via Bayesian inference given the interaction history 
+
+Ht−1 = {(hs, y s)}t−1
+
+> s=1
+
+. To enable belief update, we model the likelihood p(y | h, P ) of observing an outcome y given a hypothesis h and a governing principle P as a generative distribution, describing the expected experimental outcomes if P were the true governing principle. With this likeli-hood , P IEVO can perform both hypothesis selection (see Section 3.3) and coherent principle augmentation (see Sec-tion 3.4). To navigate ¯P, P IEVO models two distinct uncertainties that obstruct the identification of P ⋆ as a closed loop: (a) Principle →Hypothesis Uncertainty. Given a princi-ple as hypothesizing direction, this term captures the stochasticity in translating a high-level principle into a concrete, testable hypothesis h. In our study, this term is implemented via a well-instructed LLM to propose h
+
+conditioned on one dynamically optimized principle. (b) Evidence →Principle Uncertainty. Based on agent’s history, this term represents the epistemic uncertainty regarding which principle in the current Active Principle scope Pt is the gold choice. This term is grounded by hypothesis selection and principles optimization. 
+
+Overview of theoretical framework. We formulate sci-entific discovery as a dual uncertainty problem over hy-pothesis and principle space, respectively: 
+
+(a) For hypothesis space , P IEVO selects possible high-quality hypothesis to reduce the uncertainty of principle beliefs (see Section 3.3). 
+
+(b) For principle space , P IEVO acts as a monitor to main-tain a posterior distribution over the working principles, iteratively refining a set of principle-conditioned likeli-hood models, i.e., Gaussian Process Experts, to converge to the true principle (see Section 3.4). 
+
+3.3. Information-Directed Hypothesis Selection 
+
+Scientific discovery inherently requires balancing exploita-tion with exploration . We illustrate this necessity through a motivating case in superconductor discovery (SPO): 
+
+Example 3.2 (High-Reward Trap (Paradigm Exploita-tion) in SPO ). Consider the search for room-temperature superconductors: Outcome-driven agents (e.g., PiFlow) rig-orously hill-climb within established systems like Cuprate 
+
+manifolds. While capable of local optimization, they remain blind to counter-intuitive regimes (e.g., Iron-based families) that appear suboptimal under the current paradigm. 
+
+To address this gap, we introduce hypothesis selection, while 
+
+Hypothesis Agent is only responsible for suggesting di-verse candidates and Experiment Agent for executing the one selected by P IEVO . By valuing information gain along-side yield , the system validates emerging principles that eventually unlock superior hypothesis regions. 
+
+Information-Directed Hypothesis Selection. We adopt the Information-Directed Sampling (IDS) (Russo & Roy, 2014) to select the next hypothesis ht. IDS minimizes the objective: 
+
+ht = arg min 
+
+> h∈H
+
+ ∆t(h)
+
+2
+
+/It(h) , (1) where ∆t(h) = Ept(P )[v⋆(P )] − Ept(P )[μP (h)] is the ex-pected regret relative to the estimated optimal value v⋆(P )
+
+under current beliefs. The denominator It(h) = I(P ; Y |
+
+h, H t−1) is the Information Gain , defined as the expected reduction in the entropy of the posterior pt(P ). This ratio ensures that the agent only incurs high regret (exploration costs) if the expected information gain regarding the princi-ple P is commensurately high. 
+
+Modeling Likelihoods by GP Experts. To compute the required likelihoods p(y | h, P ) in a sample-efficient manner, we utilize distinct Gaussian Process (GP) experts 
+
+{M P }P ∈P t rather than neural alternatives for three reasons. (i) Data efficiency : GPs provide robust generalization and exact Bayesian inference in sparse-data regimes where ex-perimental budgets are severely constrained (e.g., T < 30 ). (ii) Calibrated uncertainty : Unlike typical deep models, GPs yield properly calibrated predictive variances σ2 
+
+> P
+
+(h),which are essential for the information-theoretic selection in Equation 1. (iii) Analytical computation : GPs allow for the analytical computation of ∆t(h) and It(h) via the BALD approximation (Houlsby et al., 2011), bypassing the need for computationally expensive ensemble retraining. To bridge the modality gap between textual propositions and numerical GP kernels, we employ semantic alignment as a theoretically rigorous proxy for physical likelihoods (proof in Appendix B): 
+
+ϕ(h, P ) = eh · eP , ∥eh − eP ∥2
+
+⊤ , (2) where eh and eP are normalized embeddings of the hypoth-esis and principle, respectively. This allows us to leverage light efforts to achieve likelihood estimation, enabling effi-cient GPs training and inference. 
+
+Takeaway (Hypothesis Selection in P IEVO ). Overall, we use GPs to model likelihoods p(y|h, P ) for updat-ing the principle beliefs and selecting the exploration-exploitation balanced hypothesis for testing. 4PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+3.4. Coherent Augmentation for Principles 
+
+In scientific discovery, the initial conception of the external world is often incomplete. If the true principle is missing, the agent may fall into epistemic stagnation. PIEVO 
+
+resolves this through an anomaly-driven expansion of the principle space, including (a) identifying anomalies and (b) reconciling anomalies by proposing a new principle, as detailed below. 
+
+Identifying Anomalies. The system monitors the valid-ity of principles by first computing the Anomaly Score Ss,a bounded metric proxying the epistemic surprisal of ex-perimental evidence. This score quantifies the degree of mismatch between observation and GP prediction, account-ing for both model uncertainty and observation noise. For a new observation (hs, y s), the Anomaly Score under the current Maximum A Posteriori (MAP) principle P MAP  
+
+> t
+
+is: 
+
+Ss = 1 − exp −
+
+s
+
+(ys − μMAP (hs)) 2
+
+σ2
+
+> MAP
+
+(hs) + σ2
+
+> obs
+
+!
+
+> θ t , (3) where θt ∈ (0 , 1) is anomaly threshold, μMAP (hs) and 
+
+σ2
+
+> MAP
+
+(hs) are the predictive mean and variance under the MAP principle, and σ2 
+
+> obs
+
+is the observation noise variance. An observation is flagged as anomalous if Ss > θ t. A collec-tion of high-surprisal hypotheses forms the Anomaly Set Ut,signaling that the current principle space Pt is insufficient to explain the observed phenomena. 
+
+Reconciling Anomaly with Coherent Principle Augmen-tation. Upon detected anomalies, P IEVO triggers a discov-ery phase where the Principle Agent proposes a new candi-date Pnew ∈ ¯P to resolve the contradictions in Ut. Finally, the posterior belief of Active Principles Pt is re-calculated over the augmented set Pt+1 = Pt ∪ { Pnew } by: 
+
+pt+1 (P ) ∝ p0(P )
+
+> t
+
+Y
+
+> s=1
+
+p(ys | hs, P ) . (4) The new principle is only adopted if it provides superior explanatory power for Ht.
+
+Theorem 3.3 (Convergence and Efficiency, Informal) . Un-der coherent principle augmentation and a calibrated gen-erator, the PIEVO optimization loop guarantees (formally stated in Theorem A.6): (a) sublinear cumulative regret ,where the cumulative regret follows R(T ) = ˜O(√T ), and (b) posterior consistency , where the system belief pt(P )
+
+concentrates on the optimal principle P ⋆.
+
+In summary, we detailed the implementation of P IEVO in Algorithm 1 with prompt templates in Appendix J, and the optimization in P IEVO provides strong theoretical guaran-tees (Theorem 3.3, with proof in Appendix A). Additionally, its superior efficiency demonstrates faster convergence than PiFlow (Pu et al., 2025) (see proof in Appendix C), as also empirically validated in Figure 6. 
+
+Takeaway (Coherent Augmentation in P IEVO ). The surprisal-based anomaly detection allows both sensitivity control by threshold and dynamic principle reconciling. This self-closed updating ensures that the scientific cog-nition evolves coherently with empirical evidence. 
+
+## 4. Experiments 
+
+4.1. Experiment Setup Tasks and Benchmarks. We evaluate P IEVO on four standard scientific discovery benchmarks: nanomaterial op-tical property optimization (NHO), molecular bio-activity optimization (MBO), and superconductor critical temper-ature optimization (SPO) (Pu et al., 2025), covering con-tinuous (seven dimension), discrete , and hybrid search spaces, alongside transition metal complex optimization (TMC) (Song et al., 2025) for four-dimensional combina-tional entities search. Employing high-fidelity surrogate models, each task aims to maximize the target property value within a constrained experiment budget (See Appendix I). 
+
+Baselines. We benchmark P IEVO against three cate-gories of Multi-Agent Systems (MAS): (a) Classical Strate-gies : including Vanilla MAS , an iterative hypothesis-testing loop without higher-order strategy, and ReAct (Yao et al., 2022), which interleaves reasoning traces with actions. (b) Autonomous Scientific Agents : tailored adaptations of AI-Researcher (Tang et al., 2025) and The-AI-Scientist (v1/v2) (Lu et al., 2024; Yamada et al., 2025), restricted to their core hypothesis-generation modules without web searching and retrieval for fair comparison. (c) Principle-Guided Approaches : represented by PiFlow (Pu et al., 2025), the state-of-the-art method conditioning hypothesis generation on static scientific principles. Other methods like Co-scientist (Gottweis et al., 2025), Kosmos (Mitchener et al., 2025) and Robin (Ghareeb et al., 2025) are excluded from this comparative analysis, as they are either tailored to specific scientific domains or leverage hypothesis-testing mechanisms represented by the selected baselines. 
+
+Implementation details. For all experiments, we enforce a strict budget of 24 trials and truncate agent context to the 10 most recent messages to mitigate overflow. Performance metrics are reported as the mean ± std over three indepen-dent runs. We use Qwen3-32B (Yang et al., 2025) with 
+
+no_think prompt for force-disabling Chain-of-Thought and Gemini-2.5-Flash-No Thinking backends with a temperature of 0.6. An additional think mode abla-tion study uses Gemini-2.5-Flash-Thinking (Co-manici et al., 2025) through API. 5PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Table 1. Performance comparison with baselines on 4 benchmarks under the Solution Quality (SQ %) metric. We categorize the results by LLMs, i.e., Qwen3-32B and Gemini-2.5-Flash with both non-thinking mode, and highlight superior or inferior SQ compare to Vanilla MAS. Our P IEVO outperforms all baselines, and achieves 1.5 ∼ 1.7 times SQ of Vanilla MAS in average. 
+
+Model / Method MBO NHO SPO TMC Average Qwen3-32B (No Thinking) Vanilla MAS 57.57 ± 3.50 58.22 ± 8.35 28.71 ± 3.20 63.98 ± 4.79 52.12 ReAct (Yao et al., 2022) 69.15 ± 8.88 ↑1.2x 67.02 ± 3.81 ↑1.2x 30.51 ± 0.05 ↑1.1x 58.07 ± 5.08 ↓ 0.9x 56.19 ↑1.1x 
+
+The AI Scientist v1 (Lu et al., 2024) 66.41 ± 12.48 ↑1.2x 79.76 ± 0.58 ↑1.4x 30.52 ± 0.26 ↑1.1x 72.36 ± 8.72 ↑1.1x 62.26 ↑1.2x 
+
+The AI Scientist v2 (Yamada et al., 2025) 76.56 ± 2.04 ↑1.3x 71.50 ± 2.97 ↑1.2x 30.01 ± 0.76 ↑1.0x 71.45 ± 1.59 ↑1.1x 62.38 ↑1.2x 
+
+AI Researcher (Tang et al., 2025) 69.72 ± 11.46 ↑1.2x 79.05 ± 4.28 ↑1.4x 30.24 ± 1.21 ↑1.1x 74.17 ± 3.27 ↑1.2x 63.29 ↑1.2x 
+
+PiFlow (Pu et al., 2025) 96.10 ± 4.85 ↑1.7x 79.68 ± 0.97 ↑1.4x 33.99 ± 2.65 ↑1.2x 70.35 ± 10.03 ↑1.1x 70.03 ↑1.3x 
+
+PIEVO (ours) 149.06 ± 16.02 ↑2.6x 96.36 ± 1.70 ↑1.7x 37.33 ± 1.36 ↑1.3x 80.49 ± 1.93 ↑1.3x 90.81 ↑1.7x 
+
+Gemini-2.5-Flash-No Thinking 
+
+Vanilla MAS 72.72 ± 17.45 63.77 ± 22.22 32.57 ± 3.51 79.36 ± 4.86 62.10 ReAct (Yao et al., 2022) 61.24 ± 14.71 ↓ 0.8x 73.70 ± 9.63 ↑1.2x 32.57 ± 3.46 78.71 ± 10.60 ↓ 1.0x 61.56 ↓ 1.0x 
+
+The AI Scientist v1 (Lu et al., 2024) 50.37 ± 7.97 ↓ 0.7x 77.40 ± 1.26 ↑1.2x 36.57 ± 0.01 ↑1.1x 84.14 ± 2.19 ↑1.1x 62.12 The AI Scientist v2 (Yamada et al., 2025) 59.83 ± 8.64 ↓ 0.8x 77.85 ± 4.44 ↑1.2x 36.74 ± 0.07 ↑1.1x 84.86 ± 0.65 ↑1.1x 64.82 ↑1.0x 
+
+AI Researcher (Tang et al., 2025) 61.22 ± 21.80 ↓ 0.8x 72.46 ± 15.13 ↑1.1x 36.95 ± 0.28 ↑1.1x 83.79 ± 2.50 ↑1.1x 63.61 ↑1.0x 
+
+PiFlow (Pu et al., 2025) 80.18 ± 7.55 ↑1.1x 79.32 ± 4.60 ↑1.2x 37.31 ± 0.71 ↑1.1x 87.45 ± 1.54 ↑1.1x 71.07 ↑1.1x 
+
+PIEVO (ours) 153.53 ± 6.35 ↑2.1x 87.98 ± 1.13 ↑1.4x 37.85 ± 0.35 ↑1.2x 93.25 ± 0.79 ↑1.2x 93.15 ↑1.5x 5 10 15 20 
+
+Iteration 
+
+> 25
+> 50
+> 75
+> 100
+> Cumulative SQ Max (%)
+
+Trajectory on NHO    
+
+> Method
+> Vanilla
+> ReAct
+> The-AI-Scientist-v1
+> The-AI-Scientist-v2
+> AI-Researcher
+> PiFlow
+> PiEvo 510 15 20
+
+Iteration 
+
+> 25
+> 50
+> 75
+> 100
+> 125
+> 150
+> 175
+> Cumulative SQ Max (%)
+
+Trajectory on MBO    
+
+> Method
+> Vanilla
+> ReAct
+> The-AI-Scientist-v1
+> The-AI-Scientist-v2
+> AI-Researcher
+> PiFlow
+> PiEvo 510 15 20
+
+Iteration 
+
+> 10
+> 20
+> 30
+> 40
+> Cumulative SQ Max (%)
+
+Trajectory on SPO    
+
+> Method
+> Vanilla
+> ReAct
+> The-AI-Scientist-v1
+> The-AI-Scientist-v2
+> AI-Researcher
+> PiFlow
+> PiEvo 510 15 20
+
+Iteration 
+
+> 20
+> 40
+> 60
+> 80
+> Cumulative SQ Max (%)
+
+Trajectory on TMC 
+
+> Method
+> Vanilla
+> ReAct
+> The-AI-Scientist-v1
+> The-AI-Scientist-v2
+> AI-Researcher
+> PiFlow
+> PiEvo
+
+Figure 4. Trajectory comparison among baselines w/ Qwen3-32B. We plot the cumulative best solution quality over time for each task. SQ > 100% indicates surpassing the empirical reference. Our P IEVO consistently outperforms baselines across all tasks, though in challenging tasks like TMC and SPO, the gap is smaller due to the inherent searching complexity of hypotheses. 
+
+4.2. Evaluation Metrics 
+
+To comprehensively evaluate the performance, we employ multi-faceted metrics that captures abilities to (a) reach-ing the objective, (b) exploration width and (c) promising exploitation, as detailed below. 
+
+a. Solution Quality (SQ). Defined as the maximum out-come achieved within its hypothesis-outcome trajectory T ,and outcome is normalized by the theoretical (NHO and SPO) or empirical (MBO and TMC) maximum, μref (see Appendix I) per task: 
+
+SQ = max {yk |(hk ,y k )∈T } /μref × 100% .
+
+A high SQ exceeds 100% indicates discovery of solutions superior to the reference dataset/maximum. 
+
+b. Average Pairwise Distance (APD). A value that de-scribes average pairwise distance of all valid hypothesis, featurized by ϕ(h) per task (refer to Appendix I): 
+
+APD = 2/M (M −1) 
+
+MX
+
+i<j 
+
+d (ϕ(hi), ϕ (hj )) .
+
+A higher APD indicates searching broadly, which is a pre-requisite for novel discovery and landscape coverage. 
+
+c. Area Under the Optimization Curve (AUOC). A value that measures the cumulative maximum performance over the fixed budget: 
+
+AUOC = 1/T ·μref 
+
+TX
+
+t=1 
+
+max 
+
+k≤t {yk} ,
+
+A higher AUOC signifies superior search efficiency that identifies promising directions early and exploits them ef-fectively. 
+
+4.3. Performance Analysis 
+
+Table 1 presents a comparison of P IEVO against six base-lines across four benchmarks, while Table 3 examines scala-bility under varying geometric dimensionality in the NHO task. Our analysis yields three primary observations: 
+
+Obs. ➊: P IEVO establishes a new state-of-the-art in so-lution quality. PIEVO dominates all baselines, achieving an average SQ of 90 .81% ∼ 93 .15% . This corresponds to a 30% improvement over leading AI Scientist frame-6PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Table 2. Exploration (APD ↑) and Exploitation (AUOC ↑) comparison with baselines on 4 benchmarks. We categorize the results by LLMs, i.e., Qwen3-32B and Gemini-2.5-Flash with both non-thinking mode, and highlight superior or inferior average performance compare to Vanilla MAS. Our P IEVO attains superior balance in both exploration and exploitation, as shown in Figure 7. 
+
+Model / Method MBO NHO SPO TMC Average APD ↑ AUOC ↑ APD ↑ AUOC ↑ APD ↑ AUOC ↑ APD ↑ AUOC ↑ Avg APD ↑ Avg AUOC ↑
+
+Gemini-2.5-Flash-No Thinking 
+
+Vanilla 6.0 ± 1.8 61.6 ± 19.6 34.5 ± 46.8 59.6 ± 20.8 7.0 ± 8.9 32.2 ± 2.9 44.9 ± 29.0 76.7 ± 2.7 23.1 57.5 ReAct 7.3 ± 1.7 54.9 ± 12.7 11.2 ± 8.5 69.3 ± 12.7 2.6 ± 4.3 32.4 ± 3.2 45.2 ± 8.4 77.0 ± 9.1 16.6 ↓0.7x 58.4 ↑1.0x 
+
+The AI Scientist v1 3.3 ± 0.6 43.5 ± 6.7 14.2 ± 4.0 76.5 ± 1.3 3.2 ± 0.2 34.5 ± 3.0 38.9 ± 3.8 83.8 ± 2.5 14.9 ↓0.6x 59.6 ↑1.0x 
+
+The AI Scientist v2 6.5 ± 2.6 50.1 ± 7.1 27.2 ± 1.7 77.2 ± 4.3 4.1 ± 0.3 36.2 ± 0.1 52.7 ± 3.9 80.7 ± 2.4 22.6 ↓1.0x 61.1 ↑1.1x 
+
+AI Researcher 6.9 ± 8.2 49.1 ± 10.0 34.1 ± 6.9 60.4 ± 23.2 7.6 ± 5.0 36.1 ± 0.3 55.5 ± 11.6 50.3 ± 25.7 26.0 ↑1.1x 49.0 ↓0.9x 
+
+PiFlow 14.4 ± 8.9 52.8 ± 6.1 36.5 ± 8.7 66.0 ± 6.7 16.2 ± 6.4 33.4 ± 4.1 61.1 ± 11.4 80.9 ± 5.5 32.0 ↑1.4x 58.3 ↑1.0x 
+
+PIEVO (ours) 28.3 ± 2.5 122.3 ± 9.1 82.5 ± 24.7 85.9 ± 2.0 21.1 ± 2.5 35.4 ± 0.9 86.8 ± 4.0 92.3 ± 1.3 54.7 ↑2.4x 84.0 ↑1.5x 
+
+Qwen3-32B 
+
+Vanilla 9.6 ± 1.6 53.2 ± 1.1 9.3 ± 1.7 57.8 ± 7.8 5.8 ± 5.0 28.6 ± 3.4 34.3 ± 22.3 62.4 ± 3.3 14.8 50.5 ReAct 3.1 ± 2.0 63.7 ± 7.2 6.9 ± 8.8 67.0 ± 3.8 1.1 ± 1.2 30.5 ± 0.0 47.2 ± 21.0 57.8 ± 4.7 14.6 ↓1.0x 54.8 ↑1.1x 
+
+The AI Scientist v1 9.1 ± 4.1 53.2 ± 5.9 17.4 ± 1.3 71.4 ± 3.4 2.3 ± 1.6 30.3 ± 0.4 53.2 ± 18.7 69.8 ± 6.3 20.5 ↑1.4x 56.2 ↑1.1x 
+
+The AI Scientist v2 7.2 ± 1.5 58.9 ± 5.3 22.4 ± 2.1 68.3 ± 1.2 4.4 ± 0.4 29.8 ± 0.6 62.5 ± 2.6 66.5 ± 2.3 24.1 ↑1.6x 55.9 ↑1.1x 
+
+AI Researcher 9.0 ± 7.5 53.0 ± 10.8 38.9 ± 14.9 74.9 ± 5.9 7.3 ± 4.0 29.8 ± 0.9 44.2 ± 4.7 68.9 ± 4.3 24.9 ↑1.7x 56.6 ↑1.1x 
+
+PiFlow 19.0 ± 14.5 80.4 ± 17.5 59.2 ± 20.1 70.3 ± 4.8 35.2 ± 21.7 32.1 ± 3.6 65.9 ± 24.6 68.7 ± 8.8 44.8 ↑3.0x 62.9 ↑1.2x 
+
+PIEVO (ours) 24.5 ± 2.6 118.3 ± 23.8 78.3 ± 31.6 95.7 ± 1.8 18.2 ± 5.7 33.2 ± 2.8 77.5 ± 7.0 69.7 ± 9.2 49.7 ↑3.4x 79.2 ↑1.6x 3 4 5 6 7
+
+Anomaly Cnt Threshold    
+
+> 80
+> 85
+> 90
+> 95
+> Solution Quality (SQ, %)
+> Performance (Left Axis)
+> Principles (Right Axis)
+> Anomalies (Right Axis)
+> 5
+> 10
+> 15
+> Count (#) 0.2 0.4 0.6 0.8
+
+Anomaly Threshold    
+
+> 80
+> 100
+> 120
+> 140
+> 160
+> Solution Quality (SQ, %)
+> Performance (Left Axis)
+> Principles (Right Axis)
+> Anomalies (Right Axis)
+> 10
+> 20
+> 30
+> Count (#) 0.00 0.25 0.50 0.75
+
+Noise Scale σ    
+
+> 80
+> 90
+> 100
+> 110
+> Solution Quality (SQ, %)
+> Performance (Left Axis)
+> Principles (Right Axis)
+> Anomalies (Right Axis)
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> 12.5
+> 15.0
+> Count (#) 5.0 7.5 10.0 12.5 15.0
+
+Warm Up Rounds 
+
+> 80
+> 90
+> 100
+> 110
+> Solution Quality (SQ, %)
+> Performance (Left Axis)
+> Principles (Right Axis)
+> Anomalies (Right Axis)
+> 5
+> 10
+> 15
+> 20
+> Count (#)
+
+Figure 5. Ablations of Parameters Sensitivity. Both anomaly count threshold and anomaly threshold affect the number of principles, while sigma as noise representation affects the system’s exploration capability. Warm-up rounds affect the system’s initialization capability. 
+
+Table 3. Performance on NHO task with different search-ing dimensions. The best and runner-up results are bolded and underlined , respectively. Physical meaning of each dimension and performance interpretation see Appendix I.1. 
+
+Method dimension=4 dimension=5 dimension=6 Avg. 
+
+AI Researcher 79.37 86.74 74.48 80.20 The AI Scientist v1 82.47 83.81 81.01 82.43 The AI Scientist v2 79.92 68.15 68.58 72.22 PiFlow 75.62 74.10 69.07 72.93 
+
+PIEVO (ours) 82.33 88.94 82.41 84.56 0 10 20 
+
+Iterations   
+
+> 0.0
+> 2.5
+> 5.0
+> 7.5
+> 10.0
+> Best Outcome
+> Speedup: 83.3%
+> PiFlow
+> PiEvo
+> Global Optimal
+> 010 20
+
+Iterations        
+
+> 0
+> 50
+> 100
+> 150
+> Cumulative Regret
+> PiFlow: 37.91 T43.23
+> PiEvo: 13.49 T2.81
+> PiFlow PiEvo
+
+Methods 
+
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Solution Quality  +91.5% Improv.
+> 80.2%
+> 153.5%
+
+Figure 6. Comparison of PiFlow and P IEVO in MBO task, as shown in Table 1 and Table 2 . P IEVO excels in 83.3% speedup and lower empirical regret compared to PiFlow, demonstrating its superior efficiency. 
+
+works ( 62 .26% ∼ 64 .82% ) and principle-conditioned Pi-Flow ( 70 .03% ∼ 71 .07% ), confirming that dynamic princi-ple evolution effectively confines exploration to high-value scientific manifolds. 
+
+Obs. ➋: PIEVO effectively balances Exploration-Exploitation. As visualized in the Pareto frontier (Figure 7), PIEVO demonstrates dominance in both diversity ( AP D = 54 .7% ) and convergence efficiency (AU OC = 84 .0% ). Unlike baselines that compromise diversity for hill-climbing speed (e.g., AI Researcher), PIEVO ’s dual-loop mechanism ensures broad coverage of the hypothesis space without sacrificing local optimization. 
+
+Obs. ➌: P IEVO exhibits robustness in high-dimensional search spaces. In the NHO task, where search space complexity scales with geometric dimensionality (Table 3), PIEVO sustains a high average SQ of 84 .56% across dimen-sions 4 to 6. Conversely, baselines suffer sharp performance collapse as dimensionality increases (e.g., PiFlow drops to 72 .93% ), demonstrating P IEVO ’s superior scalability in navigating complex design spaces. 
+
+4.4. Efficiency Analysis 
+
+We evaluate the discovery efficiency of P IEVO through two key dimensions: solution quality (SQ) and computational cost. As detailed in Table 4 and Figure 6, P IEVO demon-strates substantial gains in both metrics. 
+
+Obs. ➍: P IEVO achieves sublinear regret and accelerated convergence. Empirical trajectories in Figure 6 validate the 7PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 20 40 60 80 
+
+Avg APD (%) ↑ 
+
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Avg AUOC (%) ↑
+> Vanilla
+> ReAct
+> The-AI-Scientist-v1
+> The-AI-Scientist-v2
+> AI-Researcher
+> PiFlow
+> PiEvo (ours)
+
+Figure 7. Pareto frontier across all tasks. PIEVO stands on the Pareto frontier, indicating its superior balance on both exploration (APD) and exploitation (AUOC) in scientific discovery. 
+
+theoretical sublinear regret bound ˜O(√T ) (Theorem 3.3). Specifically, P IEVO achieves an 83.3% speedup in con-vergence step compared to PiFlow. Curve fitting reveals a significantly lower regret coefficient for P IEVO (13 .49 √T )versus PiFlow ( 37 .91 √T ). This ∼3× reduction empiri-cally corroborates our theoretical insight: optimizing over the principle space (entropy H(P)) is fundamentally more sample-efficient than searching the vast hypothesis space (entropy H(H)), i.e. , pH(P) · T < pH(H) · T .
+
+Table 4. Performance and efficiency comparison on NHO task, as SQ reported in Table 1. The τrun denotes the execution time in seconds. Efficiency is calculated as SQ /log 10 (τrun ).
+
+Method SQ (%) ↑ Time τ (sec) ↓ SQ  
+
+> log 10 (τrun )
+
+↑
+
+AI Researcher 79.05 ± 4.28 3272.9 22.48 The AI Scientist v1 79.76 ± 0.58 1953.5 24.23 The AI Scientist v2 71.50 ± 2.97 1953.5 21.72 PiFlow 79.68 ± 0.97 2498.9 23.45 
+
+PIEVO (ours) 96.36 ± 1.70 2096.7 29.01 
+
+4.5. Case Study: Discovering Physics Mechanism Task Scenario. We deploy P IEVO on a challenging discov-ery task in nanophotonics: identifying the electrodynamic origin of circular dichroism (CD) in isolated nanohelices. Unlike well-studied helix arrays (Faniayeu et al., 2020), the governing laws for single-structure chirality remain largely unexplored. P IEVO with agents are initialized without any document resources and must evolve principles to explain the chirality obtained from a high-fidelity surrogate model. 
+
+Obs. ➎: P IEVO autonomously identifies electrodynamic mechanisms. Within just 30 iterations, P IEVO success-fully identifies a high-surprisal anomaly. Triggered by this gap, P IEVO synthesizes a unified theory attributing strong chirality to the interference between toroidal and electric quadrupole moments . This mechanism was subsequently corroborated by full-wave FDTD analysis manually (see Ap-pendix H), demonstrating the capacity of P IEVO to uncover physical laws in complex systems. Layer OFF Layer ON    
+
+> (a) PiEvo Layer Ablation
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Solution Quality (SQ, %)
+> 67.7
+> 94.0
+> Improve:
+> +39.0%
+> Full Greedy Static
+> (b) Modules Ablation
+> 40
+> 50
+> 60
+> 70
+> 80
+> 90
+> 100
+> Solution Quality (SQ, %)  96.4
+> 84.0 85.9
+> SQ Mean (%)
+> SQ /log (τrun )
+> 25
+> 26
+> 27
+> 28
+> 29
+> 30
+> SQ/log( τrun ) ↑
+
+Figure 8. Ablation study of P IEVO module on NHO task. 
+
+(a) Performance gain from P IEVO layer. (b) Comparison of cost-effectiveness across ON/OFF submodules in P IEVO .
+
+4.6. Ablation Study Hyperparameters Sensitivity. We analyze P IEVO ’s sensi-tivity to key hyperparameters: anomaly threshold θt (Eq. 3), observational noise σ, and IDS warm-up rounds. Figure 5 demonstrates robustness across a wide θt spectrum, where the optimal value balances anomaly detection against noise rejection. Regarding warm-up, minimal initial exploration (≈ 5 rounds) proves sufficient for GP experts to establish meaningful priors, effectively minimizing uncertainty. 
+
+Table 5. Ablation study of P IEVO . The mode Greedy Only 
+
+is for disabling hypothesis selection, and Static Evolution is for disabling principle optimization in NHO task. Efficiency is calculated as SQ per log-scale time.                               
+
+> Method SQ (%) ↑SQ max (%) ↑τrun (sec) ↓SQ max
+> log 10 (τrun )↑
+> PIEVO 96.36 ±1.70 99.64 2069.7 29.01
+> w/o Hypothesis Selection
+> Greedy Only 84.03 ±2.22 86.99 2029.2 26.30 w/o Principle Evolution
+> Static Evolution 85.87 ±2.76 88.63 2168.3 26.57
+
+PIEVO Module Ablations. To disentangle component con-tributions, we perform ablations on the NHO task (Table 5, Figure 8). Disabling Coherent Augmentation (Static Evolution ) caps SQ at 85 .87% , as the agent cannot access high-value regimes beyond the initial prior. Sim-ilarly, removing Information-Directed Selection (Greedy )reduces SQ to 84 .03% , limiting the efficient resolution of principle-evidence uncertainty. The full P IEVO framework achieves 96 .36% SQ, confirming that the synergy between dynamic principle evolution and information-directed sam-pling is critical for robust discovery. 
+
+Ablation of P IEVO Dynamics and Test-time Reasoning. 
+
+We further analyze the system’s internal mechanisms (see Appendix F and test-time reasoning by Think mode in E). We found that: (a) P IEVO systematically evolves high-fidelity principles that correlate directly with solution qual-ity, validating the efficacy of principle-space optimization. (b) a cognitive interference effect where Think models de-grade performance ( ↓ 26 .35% ), as LLM’s diverse reasoning conflicts with the rigorous utility of strategic layers. 8PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+## 5. Conclusion 
+
+We presented P IEVO , a framework that reformulates sci-entific discovery from static hypothesis search to Bayesian optimization over an evolving principle space. By syner-gizing Information-Directed Selection via GP experts with 
+
+Anomaly-Driven Epistemic Augmentation , P IEVO actively refines its theoretical worldview. Empirically, it achieves a 31.06% gain in solution quality, sublinear regret, and au-tonomous discovery of chiral physics, establishing principle evolution as a key paradigm for scientific agents. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of automated scientific discovery. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here. 
+
+## References 
+
+Boiko, D. A., MacKnight, R., Kline, B., and Gomes, G. Au-tonomous chemical research with large language models. 
+
+Nature , 624:570 – 578, 2023. Chai, J., Tang, S., Ye, R., Du, Y., Zhu, X., Zhou, M., Wang, Y., Weinan, E., Zhang, Y., Zhang, L., and Chen, S. Sci-master: Towards general-purpose scientific ai agents, part i. x-master as foundation: Can we lead on humanity’s last exam? ArXiv , abs/2507.05241, 2025. Comanici, G., Bieber, E., Schaekermann, M., Pasupat, I., Sachdeva, N., Dhillon, I., Blistein, M., Ram, O., Zhang, D., Rosen, E., et al. Gemini 2.5: Pushing the frontier with advanced reasoning, multimodality, long context, and next generation agentic capabilities. arXiv preprint arXiv:2507.06261 , 2025. Faniayeu, I., Asadchy, V. S., and Fanyaev, I. Polarization control with helical metasurfaces. Crystals , 2020. Ghafarollahi, A. and Buehler, M. J. Sciagents: Automating scientific discovery through bioinspired multi-agent intel-ligent graph reasoning. Advanced Materials (Deerfield Beach, Fla.) , 37, 2024. Ghareeb, A. E., Chang, B., Mitchener, L., Yiu, A., Szostkiewicz, C. J., Laurent, J. M., Razzak, M. T., White, A. D., Hinks, M. M., and Rodriques, S. G. Robin: A multi-agent system for automating scientific discovery. 
+
+ArXiv , abs/2505.13400, 2025. Gottweis, J., Weng, W.-H., Daryin, A., Tu, T., Palepu, A., Sirkovic, P., Myaskovsky, A., Weissenberger, F., Rong, K., Tanno, R., Saab, K., Popovici, D., Blum, J., Zhang, F., Chou, K., Hassidim, A., Gokturk, B., Vahdat, A., Kohli, P., Matias, Y., Carroll, A., Kulkarni, K., Tomasev, N., Guan, Y., Dhillon, V., Vaishnav, E. D., Lee, B., Costa, T. R. D., Penad’es, J. R., Peltz, G., Xu, Y., Pawlosky, A., Karthikesalingam, A., and Natarajan, V. Towards an ai co-scientist. ArXiv , abs/2502.18864, 2025. Gridach, M., Nanavati, J., Abidine, K. Z. E., Mendes, L., and Mack, C. D. Agentic ai for scientific discovery: A survey of progress, challenges, and future directions. 
+
+ArXiv , abs/2503.08979, 2025. He, J., Chen, S., Zhang, F., and Yang, Z. From words to actions: Unveiling the theoretical underpinnings of llm-driven autonomous systems. ArXiv , abs/2405.19883, 2024. Houlsby, N., Huszár, F., Ghahramani, Z., and Lengyel, M. Bayesian active learning for classification and preference learning. ArXiv , abs/1112.5745, 2011. Lai, Z. and Pu, Y. Prim: Principle-inspired material discovery through multi-agent collaboration. ArXiv ,abs/2504.08810, 2025. Levy, G., Colas, C., Oudeyer, P.-Y., Carta, T., and Romac, C. Worldllm: Improving llms’ world modeling using curiosity-driven theory-making. ArXiv , abs/2506.06725, 2025. Lu, C., Lu, C., Lange, R. T., Foerster, J. N., Clune, J., and Ha, D. The ai scientist: Towards fully automated open-ended scientific discovery. ArXiv , abs/2408.06292, 2024. M. Bran, A., Cox, S., Schilter, O., Baldassari, C., White, A. D., and Schwaller, P. Augmenting large language mod-els with chemistry tools. Nature Machine Intelligence , 6 (5):525–535, 2024. Mitchener, L., Yiu, A., Chang, B., Bourdenx, M., Nadol-ski, T., Sulovari, A., Landsness, E. C., Barabási, D. L., Narayanan, S., Evans, N., Reddy, S., Foiani, M. S., Ka-mal, A., Shriver, L. P., Cao, F., Wassie, A. T., Lau-rent, J. M., Melville-Green, E., Ramos, M. C., Bou, A., Roberts, K. F., Zagorac, S., Orr, T. C., Orr, M. E., Zwezdaryk, K. J., Ghareeb, A. E., McCoy, L., Gomes, B., Ashley, E. A., Duff, K. E., Buonassisi, T., Rainforth, T., Bateman, R. J., Skarlinski, M., Rodriques, S. G., Hinks, M. M., and White, A. D. Kosmos: An ai scientist for autonomous discovery. ArXiv , abs/2511.02824, 2025. Panapitiya, G., Saldanha, E., Job, H., and Hess, O. Auto-labs: Cognitive multi-agent systems with self-correction for autonomous chemical experimentation. ArXiv ,abs/2509.25651, 2025. Pu, Y., Lin, T., and Chen, H. Piflow: Principle-aware sci-entific discovery with multi-agent collaboration. ArXiv ,abs/2505.15047, 2025. 9PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Russo, D. and Roy, B. V. Learning to optimize via information-directed sampling. Oper. Res. , 66:230–252, 2014. Schmidgall, S., Su, Y., Wang, Z., Sun, X., Wu, J., Yu, X., Liu, J., Liu, Z., and Barsoum, E. Agent laboratory: Using llm agents as research assistants. ArXiv , abs/2501.04227, 2025. Song, Z., Lu, J., Du, Y., Yu, B., Pruyn, T. M., Huang, Y., Guo, K., Luo, X., Qu, Y., Qu, Y., et al. Evaluating large language models in scientific discovery. arXiv preprint arXiv:2512.15567 , 2025. Su, H., Chen, R., Tang, S., Yin, Z., Zheng, X., Li, J., Qi, B., Wu, Q., Li, H., Ouyang, W., Torr, P., Zhou, B., and Dong, N. Many heads are better than one: Improved scientific idea generation by a llm-based multi-agent system. In 
+
+Annual Meeting of the Association for Computational Linguistics , 2024. Tang, J., Xia, L., Li, Z., and Huang, C. Ai-researcher: Au-tonomous scientific innovation. ArXiv , abs/2505.18705, 2025. Wang, R., Zelikman, E., Poesia, G., Pu, Y., Haber, N., and Goodman, N. D. Hypothesis search: Inductive reasoning with language models. ArXiv , abs/2309.05660, 2023. Wang, Z., Wang, K., Wang, Q., Zhang, P., Li, L., Yang, Z., Yu, K., Nguyen, M. N., Liu, L., Gottlieb, E., Lam, M., Lu, Y., Cho, K., Wu, J., Li, F.-F., Wang, L., Choi, Y., and Li, M. Ragen: Understanding self-evolution in llm agents via multi-turn reinforcement learning. ArXiv ,abs/2504.20073, 2025. Wei, J., Yang, Y., Zhang, X., Chen, Y., Xiang, Z., Gao, Z., Zhou, D., Wang, G., Gao, Z., Cao, J., Qiu, Z., He, X., Zhang, Q., You, C., Zheng, S., Ding, N., Ouyang, W., Dong, N., Cheng, Y., Sun, S., Bai, L., and Zhou, B. From ai for science to agentic science: A survey on autonomous scientific discovery. ArXiv , abs/2508.14111, 2025. Wu, J., Pu, Y., Wang, J., Gu, B., Chen, X., and Chen, H. Machine learned structure-property correlation between nanohelices and circular dichroism. Advanced Optical Materials , 2025a. Wu, R., Wang, X., Mei, J., Cai, P., Fu, D., Yang, C., Wen, L., Yang, X., Shen, Y., Wang, Y., and Shi, B. Evolver: Self-evolving llm agents through an experience-driven lifecycle. ArXiv , abs/2510.16079, 2025b. Xia, P., Zeng, K., Liu, J., Qin, C., Wu, F., Zhou, Y., Xiong, C., and Yao, H. Agent0: Unleashing self-evolving agents from zero data via tool-integrated reasoning. arXiv preprint arXiv:2511.16043 , 2025a. Xia, Y., Mukherjee, S., Xie, Z., Wu, J., Li, X., Aponte, R., Lyu, H., Barrow, J., Chen, H., Dernoncourt, F., Kveton, B., Yu, T., Zhang, R., Gu, J., Ahmed, N. K., Wang, Y., Chen, X., Deilamsalehy, H., Kim, S., Hu, Z., Zhao, Y., Lipka, N., Yoon, S., Huang, T., Wang, Z., Mathur, P., Pal, S., Mukherjee, K., Zhang, Z., Park, N., Nguyen, T. H., Luo, J., Rossi, R. A., and McAuley, J. J. From selection to generation: A survey of llm-based active learning. ArXiv ,abs/2502.11767, 2025b. Xie, Q., Weng, Y., Zhu, M., Shen, F., Huang, S., Lin, Z., Zhou, J., Mao, Z., Yang, Z., Yang, L., Wu, J., and Zhang, Y. How far are ai scientists from changing the world? 
+
+ArXiv , abs/2507.23276, 2025. Yamada, Y., Lange, R. T., Lu, C., Hu, S., Lu, C., Foer-ster, J. N., Clune, J., and Ha, D. The ai scientist-v2: Workshop-level automated scientific discovery via agen-tic tree search. ArXiv , abs/2504.08066, 2025. Yang, A., Li, A., Yang, B., Zhang, B., Hui, B., Zheng, B., Yu, B., Gao, C., Huang, C., Lv, C., et al. Qwen3 technical report. arXiv preprint arXiv:2505.09388 , 2025. Yao, S., Zhao, J., Yu, D., Du, N., Shafran, I., Narasimhan, K., and Cao, Y. React: Synergizing reasoning and acting in language models. ArXiv , abs/2210.03629, 2022. Zhang, H., Li, R., Zhang, Y., Xiao, T., Chen, J., Ding, J., and Chen, H. The evolving role of large language models in scientific innovation: Evaluator, collaborator, and scientist. ArXiv , abs/2507.11810, 2025. Zhao, K., Lin, W., Zheng, Q., Xu, F., and Li, Y. Deep ideation: Designing llm agents to generate novel re-search ideas on scientific concept network. ArXiv ,abs/2511.02238, 2025. Zheng, T., Deng, Z., Tsang, H. T., Wang, W., Bai, J., Wang, Z., and Song, Y. From automation to autonomy: A survey on large language models in scientific discovery. ArXiv ,abs/2505.13259, 2025. Zhou, C., Kyrki, V., Fränti, P., and Ruotsalainen, L. Com-bining bayesian inference and reinforcement learning for agent decision making: A review. ArXiv , abs/2505.07911, 2025. 10 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+## A. Theory with Coherent Principle Augmentation 
+
+We formalize a learning process that (i) selects hypotheses guided by candidate principles and (ii) coherently augments the principle space when anomalies appear, while maintaining a single fixed prior over a (possibly countable) universal 
+
+principle space. This section establishes regret guarantees and posterior consistency under explicit, verifiable assumptions of PIEVO . The analysis separates the contributions of identification (principle selection) and principle-to-hypothesis execution, and makes the cost of discovery delay, i.e., the time until an adequate principle becomes available. 
+
+A.1. Assumptions Universal principle space and coherent augmentation. Let ¯P be a countable universe of principles endowed with a fixed prior p0 such that 
+
+H(p0) := H(P ) = − X  
+
+> P∈¯P
+
+p0(P ) ln p0(P ) < ∞,
+
+where P ∼ p0 is the (a priori) random principle and H(·) denotes Shannon entropy. At each round t = 1 , 2, . . . , P IEVO 
+
+maintains a working set Pt ⊆ ¯P of principles. It may augment Pt by adding new elements of ¯P in response to anomalies. Augmentation is Bayesian coherent in the following sense. 
+
+Assumption 1 (Coherent augmentation) . For every t, the posterior over all P ∈ ¯P is defined by Bayes’ rule from the fixed prior p0 and the full history Ht:
+
+pt(P ) := p(P | Ht) ∝ p0(P )
+
+> t
+
+Y
+
+> s=1
+
+p(ys | hs, P ).
+
+When new principles are added to the working set at time t, their (stored) posterior equals the restriction of pt(·) to those elements. No local re-initialization of priors occurs. 
+
+Observation model, rewards, and regret. On round t, P IEVO selects a principle Pt ∈ P t, then a hypothesis ht ∈ H (via a generator πt), and receives yt ∼ p(· | ht, P ⋆) for a fixed but unknown P ⋆ ∈ ¯P. A bounded reward r : H × ¯P → [0 , 1] is realized, and regret is measured against the oracle hypothesis under the true principle :
+
+v⋆ = max  
+
+> h∈H
+
+r(h, P ⋆), ∆t = v⋆ − E [r(ht, P ⋆) | Ht−1] , Regret( T ) = 
+
+> T
+
+X
+
+> t=1
+
+∆t.
+
+Define h⋆(P ) ∈ arg max h r(h, P ) and the uniform deviation bound: 
+
+G := sup   
+
+> h∈H , P ∈¯P
+
+r h⋆(P ), P ⋆ − r(h, P ⋆) ≤ 1.
+
+Identifiability and persistent information. Assumption 2 (Identifiability) . For every P̸ = P ⋆ there exists h ∈ H such that p(· | h, P )̸ = p(· | h, P ⋆) (e.g., in total variation or KL). 
+
+Assumption 3 (Persistent information) . Conditioned on any history, the policy selects actions that (with positive probability, infinitely often) yield strictly positive information about each wrong P̸ = P ⋆; equivalently, the cumulative expected information against any P̸ = P ⋆ diverges almost surely once an informative discriminator is available in the working set. 
+
+Principle-to-hypothesis generator. Given a chosen principle Pt, a generator (e.g., a well-trained large language model in our case) produces a finite candidate set Ct(Pt) ⊂ H with cardinality Nt := |C t(Pt)| ≥ 2 and a proposal distribution 
+
+πt(· | Pt, H t−1) supported on Ct(Pt). Let H(πt) denote its entropy. We assume: (G1) Low-entropy proposal: almost surely H(πt) ≤ εt, with 0 ≤ εt ≤ ln Nt.(G2) Candidate-pool approximation: almost surely there exists h† 
+
+> t
+
+∈ C t(Pt) such that 
+
+r h† 
+
+> t
+
+, P ⋆ ≥ r h⋆(Pt), P ⋆ − δt, δt ≥ 0.
+
+(G3) Calibration of top mass: almost surely πt(h† 
+
+> t
+
+) ≥ αt, where αt is the top mass of πt on Ct(Pt).11 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Information and IDS selection. Let U EP  
+
+> t
+
+:= H(P | Ht−1) be the (Bayesian) posterior entropy of the principle before seeing yt, and 
+
+It := EYt|Ht−1,h t
+
+U EP  
+
+> t
+
+− U EP 
+
+> t+1
+
+ = I (P ; Yt | Ht−1, h t)
+
+be the expected entropy reduction (mutual information). The action ht is chosen to satisfy an information-directed sampling (IDS) ratio bound. 
+
+Assumption 4 (IDS ratio) . For every t, either It = 0 and ∆(ID)  
+
+> t
+
+= 0 , or It > 0 and 
+
+ ∆(ID) 
+
+> t
+
+2
+
+It
+
+≤ Γ for some fixed Γ > 0,
+
+where the ID-regret component is 
+
+∆(ID)  
+
+> t
+
+:= E [r (h⋆(P ⋆), P ⋆) − r (h⋆(Pt), P ⋆)|Ht−1] .
+
+Discovery time and discoverability. Define the discovery time of an adequate principle as 
+
+τdisc := inf 
+
+n
+
+t ≥ 1 : Pt contains P ⋆ or some P with sup 
+
+> h∈H
+
+p(· | h, P ) − p(· | h, P ⋆) TV ≤ ε
+
+o
+
+,
+
+for a fixed accuracy parameter ε ∈ [0 , 1) . Before τdisc , the working set may not allow informative discrimination of P ⋆.
+
+Assumption 5 (Discoverability) . There exist S ∈ N and ρ ∈ (0 , 1] such that the augmentation routine is triggered at least once every S rounds and, whenever triggered, it proposes a new principle in the above ε-ball with probability at least ρ
+
+(possibly via multiple draws per trigger). Then E[τdisc ] ≤ S/ρ .
+
+A.2. Auxiliary Lemmas Lemma A.1 (Regret decomposition) . For every t,
+
+∆t = E [r (h⋆(P ⋆), P ⋆) − r (h⋆(Pt), P ⋆)|Ht−1]
+
+| {z }
+
+> ∆(ID)
+> t
+
++ E [r (h⋆(Pt), P ⋆) − r(ht, P ⋆)|Ht−1]
+
+| {z }
+
+> ∆(PH)
+> t
+
+.
+
+Proof. Condition on Ht−1. Decompose the instantaneous gap between v⋆ and the expected reward of the chosen hypothesis 
+
+ht by introducing the intermediate comparator h⋆(Pt):
+
+∆t = v⋆ − E[r(ht, P ⋆) | Ht−1]=
+
+
+
+v⋆ − E[r(h⋆(Pt), P ⋆) | Ht−1]
+
+| {z }
+
+> Intermediate
+
+
+
++
+
+
+
+E[r(h⋆(Pt), P ⋆) | Ht−1]
+
+| {z }
+
+> Intermediate
+
+−E[r(ht, P ⋆) | Ht−1]
+
+
+
+= ∆ (ID)  
+
+> t
+
++ ∆ (PH)  
+
+> t
+
+,
+
+which is the stated decomposition. 
+
+Lemma A.2 (Discrete-entropy bound for PH-regret) . Under (G1)–(G3), conditioning on Ht−1 and Pt, let Nt = |C t(Pt)| ≥ 
+
+2, let εt ∈ [0 , ln Nt] be such that H(πt) ≤ εt, and let 
+
+ΦN (α) := Hb(α) + (1 − α) ln( N − 1) , αN (ε) := max {α ∈ [1 /N, 1] : Φ N (α) = ε},φN (ε) := 1 − αN (ε).
+
+Then 
+
+∆(PH)  
+
+> t
+
+≤ δt + G · φNt (εt).
+
+Proof. Condition on Ht−1 and Pt. By definition, 
+
+∆(PH)  
+
+> t
+
+= X
+
+> h∈C t
+
+πt(h)
+
+
+
+r(h⋆(Pt), P ⋆) − r(h, P ⋆)
+
+
+
+.
+
+12 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Split the sum at h† 
+
+> t
+
+:
+
+∆(PH)  
+
+> t
+
+= πt(h† 
+
+> t
+
+)
+
+
+
+r(h⋆(Pt), P ⋆) − r(h† 
+
+> t
+
+, P ⋆)
+
+
+
++ X
+
+> h̸=h†
+> t
+
+πt(h)
+
+
+
+r(h⋆(Pt), P ⋆) − r(h, P ⋆)
+
+
+
+≤ πt(h† 
+
+> t
+
+) · δt + (1 − πt(h† 
+
+> t
+
+)) · G ≤ δt + G · (1 − πt(h† 
+
+> t
+
+)) .
+
+Let αt := max h πt(h) be the top mass. By calibration, πt(h† 
+
+> t
+
+) ≥ αt. Among distributions on Nt atoms with top mass α,entropy is maximized by spreading 1 − α uniformly on the remaining Nt − 1 atoms, giving ΦNt (α). Hence 
+
+H(πt) ≤ ΦNt (αt) ≤ εt ⇒ αt ≥ αNt (εt), 1 − πt(h† 
+
+> t
+
+) ≤ 1 − αt ≤ φNt (εt).
+
+Combine with the previous inequality to conclude. 
+
+Lemma A.3 (IDS information-ratio bound) . If Assumption 4 holds, then for any T ≥ 1,
+
+> T
+
+X
+
+> t=1
+
+∆(ID)  
+
+> t
+
+≤
+
+vuutΓT
+
+> T
+
+X
+
+> t=1
+
+It.
+
+Taking expectations preserves the bound, and using PTt=1 It ≤ H(P ) yields 
+
+E
+
+" TX
+
+> t=1
+
+∆(ID) 
+
+> t
+
+#
+
+≤ pΓT H (P ).
+
+Proof. For indices with It = 0 we also have ∆(ID)  
+
+> t
+
+= 0 by assumption. For the others, (∆ (ID)  
+
+> t
+
+)2 ≤ ΓIt. Then 
+
+ TX
+
+> t=1
+
+∆(ID) 
+
+> t
+
+2
+
+=
+
+ TX
+
+> t=1
+
+r 
+
+> (∆ (ID)
+> t)2
+> It
+
+pIt
+
+2
+
+≤
+
+ TX 
+
+> t=1 (∆ (ID)
+> t)2
+> It
+
+ TX
+
+> t=1
+
+It
+
+
+
+≤ ΓT
+
+> T
+
+X
+
+> t=1
+
+It,
+
+by Cauchy–Schwarz and the per-round ratio bound. Take square roots. For expectations, use Jensen’s inequality for √· and the information budget bound in Lemma A.4 below. 
+
+Lemma A.4 (Information accounting under coherent augmentation) . Under Assumption 1, for every T ≥ 1,
+
+> T
+
+X
+
+> t=1
+
+It = H(P ) − H(P | HT ) almost surely ,
+
+and consequently E
+
+hPTt=1 It
+
+i
+
+= H(P ) − E [H(P | HT )] ≤ H(P ).Proof. Fix an outcome path. Coherence ensures that at every round the posterior pt(·) equals the Bayes posterior on ¯P
+
+based on Ht. By the chain rule for entropy and mutual information, 
+
+H(P | Ht−1) − E [H(P | Ht) | Ht−1] = I (P ; Yt | Ht−1, h t) = It.
+
+Summing from t = 1 to T telescopes: 
+
+> T
+
+X
+
+> t=1
+
+It =
+
+> T
+
+X
+
+> t=1
+
+ H(P | Ht−1) − H(P | Ht) = H(P | H0) − H(P | HT ) = H(P ) − H(P | HT ).
+
+Taking expectations yields the second statement; the inequality follows since entropy is nonnegative. 13 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Lemma A.5 (Discovery delay cost) . For any T ≥ 1,
+
+> T
+
+X
+
+> t=1
+
+∆t ≤ G · min {T, τ disc − 1} +
+
+> T
+
+X
+
+> t=τdisc
+
+
+
+∆(PH)  
+
+> t
+
++ ∆ (ID) 
+
+> t
+
+
+
+.
+
+Consequently, E
+
+hPmin {T,τ disc −1} 
+
+> t=1
+
+∆t
+
+i
+
+≤ GE [min {T, τ disc − 1}] ≤ GE[τdisc ]. If Assumption 5 holds, then E[τdisc ] ≤
+
+S/ρ .Proof. Before τdisc the algorithm cannot (by definition) rely on a principle in Pt that is ε-adequate for P ⋆. The per-round regret is bounded by G. Sum the bound up to min {T, τ disc − 1} and apply Lemma A.1 for the remainder. The expectation bound follows from monotonicity of expectation. The discoverability bound is a standard geometric waiting-time estimate under Assumption 5. 
+
+A.3. Regret Bound and Posterior Concentration 
+
+Define the per-round PH control 
+
+ψNt (εt, δ t) := δt + Gφ Nt (εt),
+
+where φNt is from Lemma A.2. 
+
+Theorem A.6 (Regret with coherent augmentation) . Suppose bounded rewards, Assumptions 1, 2, 4, and generator conditions (G1)–(G3) hold. Then for every horizon T ≥ 1,
+
+E [Regret( T )] ≤
+
+> T
+
+X
+
+> t=1
+
+E [ψNt (εt, δ t)] + pΓT H (p0) + GE[τdisc ] .
+
+If in addition P∞ 
+
+> t=1
+
+E[ψNt (εt, δ t)] < ∞ and Assumption 5 holds (so E[τdisc ] < ∞), then E[Regret( T )] = O(√T ).Proof. Fix T . Apply Lemma A.5 to split the sum at τdisc :
+
+Regret( T ) ≤ G · min {T, τ disc − 1} +
+
+> T
+
+X
+
+> t=τdisc
+
+∆(PH)  
+
+> t
+
++
+
+> T
+
+X
+
+> t=τdisc
+
+∆(ID)  
+
+> t
+
+.
+
+Take expectations and use E[min {T, τ disc − 1}] ≤ E[τdisc ] for the first term. For the PH part, Lemma A.2 gives ∆(PH)  
+
+> t
+
+≤
+
+ψNt (εt, δ t) pointwise, hence 
+
+E
+
+" TX
+
+> t=τdisc
+
+∆(PH) 
+
+> t
+
+#
+
+≤
+
+> T
+
+X
+
+> t=1
+
+E [ψNt (εt, δ t)] .
+
+For the ID part, Lemma A.3 yields 
+
+> T
+
+X
+
+> t=τdisc
+
+∆(ID)  
+
+> t
+
+≤
+
+vuutΓ( T − τdisc + 1) 
+
+> T
+
+X
+
+> t=τdisc
+
+It ≤
+
+vuutΓT
+
+> T
+
+X
+
+> t=1
+
+It,
+
+where the second inequality uses T − τdisc + 1 ≤ T and monotonicity of the sum of informations. Taking expectations and invoking Lemma A.4 gives 
+
+E
+
+" TX
+
+> t=τdisc
+
+∆(ID) 
+
+> t
+
+#
+
+≤
+
+vuutΓT E
+
+" TX
+
+> t=1
+
+It
+
+#
+
+≤ pΓT H (p0).
+
+Combine the three bounds to conclude. 
+
+Corollary A.7 (Sublinear regret) . Under the assumptions of Theorem A.6, if P ⋆ ∈ P 0 (so τdisc = 1 ) or more generally 
+
+E[τdisc ] < ∞, and P∞ 
+
+> t=1
+
+E[ψNt (εt, δ t)] < ∞, then E[Regret( T )] = O(√T ).
+
+Theorem A.8 (Posterior concentration) . Under Assumptions 1, 2, and 3, E[H(P | HT )] → 0 as T → ∞ . If | ¯P| < ∞, then for any measurable estimator ˆPT = ˆP (HT ), Pr( ˆPT̸ = P ⋆) → 0.
+
+14 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Proof. Lemma A.4 gives E
+
+hPTt=1 It
+
+i
+
+= H(p0) − E[H(P | HT )] . Under Assumption 3, the cumulative expected information diverges to H(p0), thus E[H(P | HT )] → 0. For finite ¯P, Fano’s inequality implies E[H(P | HT )] ≤
+
+Hb(Pr( ˆPT̸ = P ⋆)) + Pr( ˆPT̸ = P ⋆) ln( | ¯P| − 1) , which forces the error probability to vanish. 
+
+Takeaway (Regret Bound of P IEVO ). The derivation of Theorem A.6 reveals a fundamental efficiency property. Our analysis rests on a three-step logic: (i) decomposing regret into identification (ID), execution (PH), and discovery delay components; (ii) leveraging coherent augmentation to telescope the information gain P It against a fixed prior entropy 
+
+H(p0), regardless of when principles are added; and (iii) bounding the generator’s deviation via entropy constraints. The resulting ˜O(√T ) bound confirms that the primary bottleneck is not the size of the search space, but the discovery time of the true principle. In the following section, we refine this analysis to quantify the specific sample complexity required to drive the identification error to zero. 
+
+A.4. Precise Identification and Sample-Complexity Statements 
+
+In Theorem A.8, we found that posterior mass on wrong principles converges to 0, The next proposition quantifies an exponential decay (precisely) of posterior mass on any fixed wrong principle once informative actions are taken with nontrivial frequency. 
+
+Proposition A.9 (Exponential decay of wrong principles) . Fix P̸ = P ⋆. Define the conditional expected KL at round t,
+
+κt(P ) := E [DKL (p(· | ht, P ⋆)∥p(· | ht, P )) |Ht−1] .
+
+If there exist κ > 0 and η ∈ (0 , 1] such that with probability at least η (infinitely often) we have κt(P ) ≥ κ, then 
+
+E
+
+
+
+log pt(P )
+
+pt(P ⋆)
+
+
+
+≤ log p0(P )
+
+p0(P ⋆) − κE[Nt],
+
+where Nt is the number of rounds up to t at which the event {κs(P ) ≥ κ} occurs. In particular, E[pt(P )] decays to 0.Proof. Let pt(P ) ≜ p(P | Ht−1) be the posterior at the start of round t. The posterior after t rounds, pt+1 (P ) ≜ p(P | Ht),is given by Bayes’ rule: 
+
+pt+1 (P ) ∝ pt(P ) · p(yt | ht, P )
+
+The log-likelihood ratio relative to the true principle P ⋆ evolves as: 
+
+log pt+1 (P )
+
+pt+1 (P ⋆) = log pt(P )
+
+pt(P ⋆) + log p(yt | ht, P )
+
+p(yt | ht, P ⋆) .
+
+Unrolling this recursion back to the prior p0 gives: 
+
+log pt+1 (P )
+
+pt+1 (P ⋆) = log p0(P )
+
+p0(P ⋆) +
+
+> t
+
+X
+
+> s=1
+
+log p(ys | hs, P )
+
+p(ys | hs, P ⋆) .
+
+We take the total expectation, E[·], which is over the joint distribution of the full history Ht = {(hs, y s)}ts=1 generated under 
+
+P ⋆ and the algorithm’s (possibly random) choices. We use the tower property of expectation E[·] = EHs−1 [EYs,h s [· | Hs−1]] .Let Zs = log p(ys|hs,P )  
+
+> p(ys|hs,P ⋆)
+
+. Its conditional expectation given the past Hs−1 is: 
+
+E[Zs | Hs−1] = Ehs∼πs(·| Hs−1)
+
+
+
+EYs∼p(·| hs,P ⋆)
+
+
+
+log p(Ys | hs, P )
+
+p(Ys | hs, P ⋆) | hs, H s−1
+
+
+
+| Hs−1
+
+
+
+= Ehs∼πs(·| Hs−1) [−DKL (p(· | hs, P ⋆)∥p(· | hs, P )) | Hs−1]= −κs(P ).
+
+Taking the total expectation of the unrolled sum: 
+
+E
+
+
+
+log pt+1 (P )
+
+pt+1 (P ⋆)
+
+
+
+= log p0(P )
+
+p0(P ⋆) +
+
+> t
+
+X
+
+> s=1
+
+E [E[Zs | Hs−1]] = log p0(P )
+
+p0(P ⋆) −
+
+> t
+
+X
+
+> s=1
+
+E[κs(P )] .
+
+15 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Notably, the proposition statement uses pt(P ), which we interpret as the posterior after t rounds, i.e., pt+1 (P ) in our derivation. We proceed with t as the final time index. Let Nt = Pts=1 1{κs(P )≥κ} be the number of rounds where the KL is sufficiently large. We can lower-bound the sum of expected KL terms: 
+
+> t
+
+X
+
+> s=1
+
+E[κs(P )] = E
+
+" tX
+
+> s=1
+
+κs(P )
+
+#
+
+≥ E
+
+" tX
+
+> s=1
+
+κs(P ) · 1{κs(P )≥κ}
+
+#
+
+≥ E
+
+" tX
+
+> s=1
+
+κ · 1{κs(P )≥κ}
+
+#
+
+= κE[Nt].
+
+Substituting this back gives the first claim: 
+
+E
+
+
+
+log pt(P )
+
+pt(P ⋆)
+
+
+
+≤ log p0(P )
+
+p0(P ⋆) − κE[Nt].
+
+For the second claim, let Rt(P ) = pt(P )/p t(P ⋆). The above bound shows that if E[Nt] → ∞ (which is implied by the 
+
+infinitely often assumption), then E[log Rt(P )] → −∞ . This implies Rt(P ) → 0 almost surely (e.g., by the supermartingale convergence theorem). Since pt(P ) = Rt(P )1+ Rt(P )+ P    
+
+> P′̸ =P,P ⋆Rt(P′)
+
+≤ Rt(P ), we have pt(P ) → 0 almost surely. Because 
+
+pt(P ) is bounded in [0 , 1] , the Bounded Convergence Theorem applies, and we conclude E[pt(P )] → E[0] = 0 .
+
+Proposition A.10 (ε-optimal average regret sample complexity) . Under the conditions of Theorem A.6, let ¯RT := 
+
+E[Regret( T )] /T . Then for all T ≥ 1,
+
+¯RT ≤ 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+E[ψNt (εt, δ t)] + 
+
+r ΓH(p0)
+
+T + GE[τdisc ]
+
+T .
+
+Hence, for any ε > 0, it suffices to take 
+
+T ≳ ΓH(p0)
+
+ε2 + GE[τdisc ]
+
+ε
+
+to ensure ¯RT ≤ ε up to the (summable) PH term. Proof. The first inequality is obtained by dividing the bound in Theorem A.6 by T .
+
+¯RT = E[Regret( T )] 
+
+T ≤ 1
+
+T
+
+> T
+
+X
+
+> t=1
+
+E[ψNt (εt, δ t)] + 
+
+pΓT H (p0)
+
+T + GE[τdisc ]
+
+T .
+
+Simplifying pΓT H (p0)/T = pΓH(p0)/T gives the stated bound. For the second part, we want to find T such that ¯RT ≤ ε. The PH term 1
+
+> T
+
+PTt=1 E[ψNt (εt, δ t)] vanishes as T → ∞ because the sum is assumed to be finite (summable). We therefore seek T such that the remaining two terms are bounded by ε:
+
+r ΓH(p0)
+
+T + GE[τdisc ]
+
+T ≤ ε. 
+
+A sufficient condition is to make each term individually less than or equal to ε/ 2:1. For the identification term: r ΓH(p0)
+
+T ≤ ε
+
+2 =⇒ ΓH(p0)
+
+T ≤ ε2
+
+4 =⇒ T ≥ 4Γ H(p0)
+
+ε2 .
+
+2. For the discovery delay term: 
+
+GE[τdisc ]
+
+T ≤ ε
+
+2 =⇒ T ≥ 2GE[τdisc ]
+
+ε .
+
+To satisfy both conditions, T must be larger than the maximum of these two lower bounds. This scaling is captured by the ≳
+
+(or O) notation, which hides the constants: 
+
+T ≳ ΓH(p0)
+
+ε2 + GE[τdisc ]
+
+ε .
+
+This shows the required sample complexity to achieve an ε-optimal average regret. 16 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Discussion of the PH term. The quantity P 
+
+> t
+
+E[ψNt (εt, δ t)] is algorithm-dependent and interprets as the cumulative price of keeping the generator low-entropy yet well-calibrated and of ensuring candidate pools contain near-optimal actions (relative to the currently selected principle). Constraining decoding (e.g., top-k), temperature control, and explicit pruning may be used to guarantee H(πt) ≤ εt while maintaining the calibration property; these design choices directly control the PH component without impacting the information budget H(p0) thanks to coherence. 
+
+Takeaway (Propositions of Sample Complexity Required to Drive the Identification Error to Zero). Coherent augmentation preserves the global information accounting PTt=1 It = H(p0) − H(P | HT ), which in turn keeps the IDS-driven identification regret at ˜O(√T ) with budget H(p0). Exploration at the principle level only adds an explicit, interpretable discovery-delay term GE[τdisc ], while the PH term remains controlled by generator entropy and calibration. Under identifiability and persistent information, the posterior concentrates on the true principle and misidentification probability vanishes (finite universes), completing a tight exploration–exploitation loop over an expanding but coherently managed principle space. 
+
+Remark on the Gap between Theory and Algorithm. The theoretical model above assumes a hierarchical selection process where a principle Pt is sampled first, followed by a hypothesis ht. In contrast, the practical implementation (Algorithm 1) employs a marginalized Information-Directed Sampling (IDS) strategy, where AH selects ht by marginalizing over the posterior pt(P ). We emphasize that this algorithmic choice is consistent with the theoretical objective: by selecting 
+
+h to minimize the ratio ∆2 
+
+> t
+
+/I t(P ; Yt), the algorithm is directly minimizing the cumulative identification regret P ∆(ID)  
+
+> t
+
+.The marginalization serves as a robust estimator for the expected information gain It in the presence of principle uncertainty, effectively maintaining the O(√T ) identification rate while smoothing the exploration in the principle space. 
+
+## B. Theoretical Justification of Naive Feature Design in Gaussian Process Experts 
+
+We provide the formal proof that the structural feature embedding ϕ(h, P ), defined in Equation 2, constitutes a valid and sufficient input space for the Gaussian Process experts to learn the likelihood p(y | h, P ).
+
+Proposition B.1 (Geometric Sufficiency and Kernel Validity) . Let E be a Hilbert space where principles and hypotheses are represented as normalized semantic vectors eP , eh ∈ E (i.e., ∥eP ∥ = ∥eh∥ = 1 ). If the latent reward function f (h, P )
+
+depends continuously on the semantic alignment between h and P , then the mapping ϕ(h, P ) = [ ⟨eh, eP ⟩, ∥eh − eP ∥2]⊤
+
+forms a sufficient statistic for this alignment, and the induced kernel kϕ
+
+ (h, P ), (h′, P ′) is a valid positive semi-definite covariance function. Proof. 1. Geometric decomposition of semantic alignment. We posit that the conditional probability p(y | h, P ) is governed by the semantic compatibility between the hypothesis h and the principle P . In the embedding space E, the relationship between any two vectors is fully characterized by their magnitudes and the angle θ between them. Given the normalization assumption ( ∥eh∥ = ∥eP ∥ = 1 ), the geometry of the pair reduces to a single degree of freedom: the angle θ.By the law of cosines, the Euclidean distance is determined solely by this angle: 
+
+∥eh − eP ∥22 = 2 − 2⟨eh, eP ⟩ (5) Consequently, the pair of scalars (⟨eh, eP ⟩, ∥eh − eP ∥2) contains redundant but complete information to reconstruct the geometric configuration of (eh, eP ) up to rigid rotation. Therefore, any function f dependent on the relative geometry of h
+
+and P can be factorized as f (h, P ) = g(ϕ(h, P )) for some function g : R2 → R.
+
+2. Kernel validity. A Gaussian Process requires a positive semi-definite (PSD) kernel function. Let κ : Rd × Rd → R be a standard PSD kernel (e.g., RBF). We define the kernel on the joint hypothesis-principle space X = H × ¯P as: 
+
+k (h, P ), (h′, P ′) ≜ κ ϕ(h, P ), ϕ (h′, P ′) (6) Since ϕ : X → R2 is a deterministic feature map, the resulting kernel k is a valid kernel on X (specifically, it is the pullback of κ along ϕ). This ensures the GP expert MP defines a valid prior distribution over functions on the complex semantic space H × ¯P.17 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+## C. The Comparison of Regret Bound: P IEVO and PiFlow 
+
+In this section, we analyze the theoretical efficiency of P IEVO compared to the existing principle-guided framework 
+
+PiFlow (Pu et al., 2025). We demonstrate that by decomposing the search space into an abstract principle layer and a concrete hypothesis layer, PIEVO achieves significantly faster convergence through a reduction in the complexity of the identification task. 
+
+Regret decomposition and convergence in P IEVO . The design of the loop directly maps to our theoretical regret decomposition. The instantaneous regret ∆t = v⋆ − E[r(ht, P ⋆) | Ht−1] can be partitioned as: 
+
+∆t =
+
+
+
+v⋆ − E[r(h⋆(Pt), P ⋆) | Ht−1]
+
+| {z } 
+
+> ∆(ID)
+> t:Identifying principle
+
++
+
+
+
+E[r(h⋆(Pt), P ⋆) | Ht−1] − E[r(ht, P ⋆) | Ht−1]
+
+| {z } 
+
+> ∆(PH)
+> t:Principle-to-hypothesis
+
+where ∆(ID)  
+
+> t
+
+captures the loss from not yet identifying P ⋆, and ∆(PH)  
+
+> t
+
+captures the loss from imperfect hypothesis generation. The cumulative regret is bounded as: 
+
+E[Regret (T )] ≤
+
+> T
+
+X
+
+> t=1
+
+E[ψNt (εt, δ t)] 
+
+| {z }
+
+> Hypothesis Generation Cost
+
++ pΓT H (P )
+
+| {z }
+
+> Principle Identification Cost
+
+If the hypothesis generation cost is o(T ), the dominant term scales as pΓH(P )√T , yielding O(√T ) convergence. Crucially, the identification cost depends on the entropy H(P ) of the principle space. 
+
+Regret in PiFlow. As illustrates in PiFlow (Pu et al., 2025), the regret is bounded by E[Regret (T )] ≤
+
+PTt=1 E[ψNt (εt, δ t)] + pΓT H (H), where H is the hypothesis space. If the hypothesis generation cost is o(T ), the dominant term scales as pΓH(H)√T , yielding O(√T ) convergence. This means, the identification cost depends on the entropy H(H) of the hypothesis space. 
+
+Table 6. Theoretical comparison of learning efficiency: P IEVO vs. PiFlow. Our P IEVO is theoretically more efficient than PiFlow. Though they are the same sublinear regret, P IEVO enjoys superior lower complexity driver ( H(P )) in the scales of regret bound, as also empirically validated in Figure 6. 
+
+Feature PiFlow PIEVO (Ours) Learning space H P
+
+Regret upper bound O
+
+pT · H(H)
+
+
+
+O
+
+pT · H(P )
+
+
+
+Complexity driver H(H) (↑) H(P ) (↓)Convergence speed Slower Faster 
+
+The natural relationship of |P| < |H| highlights the superior efficiency of P IEVO . The efficiency gain of P IEVO hinges on the relationship |P| < |H| . Formally, let H be the universal set of hypotheses. A principle P ∈ P acts as a generator for a subset HP ⊆ H . For the framework to be non-trivial, two conditions must hold (a) coverage , H = S  
+
+> P∈P
+
+HP , and (b) 
+
+abstraction , The average number of hypotheses per principle, ¯k = 1
+
+> |P|
+
+P |H P |, must be much greater than 1. By the union bound, |H| ≤ P |H P | = |P| · ¯k, which implies |P| ≥ |H| /¯k. For domains where principles offer strong abstraction ( ¯kg1), this directly leads to |P| < |H| , and consequently H(P ) ≈ log |P| < log |H| ≈ H(H).
+
+Takeaway. PiFlow lacks the dynamic principle evolution and IDS-driven selection, often operating in a space where the constant factor in regret is governed by the full hypothesis space H(H). In contrast, P IEVO shifts the learning complexity to the compact principle space P.18 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+## D. Algorithm of P IEVO 
+
+While Section 3 establishes the theoretical foundations, the operational implementation of P IEVO follows a multi-agent coordination flow that allows for dynamic principle optimization. The typical execution loop is summarized in the following Algorithm 1. 
+
+Operational Workflow of PiEvo. The execution of P IEVO is structured as a closed-loop, multi-agent coordination process that operationalizes the evolution of principles through a Bayesian framework. As formalised in Algorithm 1, the system cyclically transitions through four primary phases: (1) anomaly-driven principle generation , (2) posterior belief updating , (3) strategic hypothesis selection via Information Directed Sampling (IDS), and (4) empirical observation by experimentation. This iterative loop ensures that the agentic system does not merely optimize within a fixed conceptual space but actively expands its foundational logic to account for unexpected environmental feedback. 
+
+## E. LLM Test-Time Reasoning Ablation 
+
+We assess the impact of inference-time reasoning (Gemini-2.5-flash Think ) on discovery performance (Table 7). We observe a distinct dichotomy: unstructured baselines like AI Researcher benefit from internal chain-of-thought ( ↑
+
+25.06% SQ), as it compensates for their lack of strategic planning. Conversely, structured frameworks like PiFlow and PIEVO suffer performance degradation ( ↓ 16.78% and ↓ 26.35% SQ, respectively). This suggests an interference effect :effectively, the LLM’s stochastic internal reasoning conflicts with the rigorous, data-driven utility functions (e.g., GP experts) of the higher-level framework, overriding optimal exploration decisions with sub-optimal heuristics. Thus, for principle-guided systems, externalized Bayesian reasoning proves superior to internal LLM “thinking”. 
+
+Table 7. Comparison of Think and No-Think modes on MBO with Gemini-2.5-flash model. Arrows indicate performance improvement ( ↑) or degradation ( ↓) in Think mode relative to No-Think. All changes are highlighted as superior or inferior.                                                                                    
+
+> Method Mode SQ (%) ↑AUOC (%) ↑APD (%) ↑
+> AI Researcher No-Think 61 .22 ±21 .80 49 .13 ±9.99 6.90 ±8.17
+> Think 76 .57 ±28 .20 ↑25.06% 52 .42 ±7.64 ↑6.71% 14 .09 ±8.78 ↑104.16%
+> PiFlow No-Think 80 .18 ±7.55 52 .81 ±6.05 14 .36 ±8.90
+> Think 66 .72 ±2.37 ↓16.78% 46 .78 ±3.33 ↓11.41% 13 .78 ±10 .52 ↓4.06%
+> PIEvo (ours) No-Think 153 .53 ±6.35 122 .26 ±9.14 28 .30 ±2.48
+> Think 113 .08 ±21 .71 ↓26.35% 94 .48 ±11 .57 ↓22.72% 22 .54 ±4.07 ↓20.33%
+
+## F. Internal Principle Evolving Dynamics of P IEVO 
+
+The high performance of P IEVO is fundamentally rooted in its ability to navigate the discovery process via a dual-layered uncertainty minimization framework. By this design, P IEVO achieves a level of sample efficiency that exceeds traditional methods. In this section, we provide a deep quantitative and qualitative analysis of the internal dynamics that drive this evolutionary process. All results are sampled from one running case with superlong running horizon (47 experiments in total). 
+
+Evolutionary principle identification. The core of P IEVO ’s cognition is the maintenance of a posterior distribution over a dynamically expanding principle space. As shown in Figure 9a, the belief mass initially disperses across multiple candidate principles. However, as experimental evidence accumulates, we observe a distinct concentration of belief on specific principles that exhibit high predictive accuracy. A critical milestone in this process is the Watershed Phenomenon, visualized in Figure 10a. In scientific discovery, initial priors (often limited by pre-existing knowledge or LLM hallucinations) can frequently mislead the agent. The watershed represents the inflection point where the log-likelihood of accumulated outcomes provides sufficient evidence to overcome these prior biases. Beyond this point, the ground-truth principle P ⋆ emerges as the dominant paradigm, drastically reducing 
+
+U EP and enabling the agent to transition from broad exploration to targeted exploitation. 
+
+Information-Directed execution efficiency. In P IEVO , the mechanism for selecting experimental hypotheses is governed by Information-Directed Sampling (IDS), which balances the expected reward (exploitation) against the expected entropy reduction in the principle space (exploration). Figure 10b illustrates the candidate space at a sampled iteration (Round 45). 19 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Algorithm 1 Iterative Principle-Hypothesis-Testing Loop in P IEVO .
+
+1: Initialize: Task and objective O, Principle Agent AP , Hypothesis Agent AH , and Experiment Agent AE. Principle working set P0, uniform priors of principles p0(P ), History of observations H0 = ∅, Gaussian Process Models MP for all P ∈ P 0 using RBF kernel, and fixed budget T .
+
+2: for t = 1 , 2, . . . , T do 
+
+3: 1. Anomaly detection & Coherent augmentation (for Principle Agent AP )
+
+4: Identify MAP principle: PMAP ← arg max P pt−1(P )
+
+5: for each (hs, y s) ∈ H t−1 do 
+
+6: Extract features x ← ϕ(hs, P MAP )
+
+7: Predict μ, σ 2 ← M PMAP (x)
+
+8: Compute surprisal by Ss = 1 − exp 
+
+
+
+−
+
+q (ys−μMAP (hs)) 2
+
+> σ2
+> MAP (hs)+ σ2
+> obs
+
+
+
+> θ t (by Equation 3) 
+
+9: end for 
+
+10: if max( S) > τ adaptive then 
+
+11: AP generates Pnew via LLM targeting high-surprisal anomalies 
+
+12: Pt ← P t−1 ∪ { Pnew }, assign prior p0(Pnew )
+
+13: Back-fill: Initialize MPnew and train on all (h, y ) ∈ H t−1
+
+14: else 
+
+15: AP generates Pt for exploration or exploitation, depends on p(PMAP )
+
+16: end if 
+
+17: 18: 2. Full-history posterior update (for System State Updating) 
+
+19: for each principle P ∈ P t do 
+
+20: log ˜ p(P ) ← log p0(P )
+
+21: for each observation (hs, y s) ∈ H t−1 do 
+
+22: μs, σ 2 
+
+> s
+
+← M P (ϕ(hs, P )) 
+
+23: L ← N (ys; μs, σ 2 
+
+> s
+
++ σ2
+
+> noise
+
+)
+
+24: log ˜ p(P ) ← log ˜ p(P ) + log L
+
+25: end for 
+
+26: end for 
+
+27: Normalize posteriors pt(P ) ∝ exp(log ˜ p(P )) 
+
+28: 29: 3. Hypothesis selection by IDS (for Hypothesis Agent AH )
+
+30: if Warm-up Phase then 
+
+31: Select ht ← arg max h
+
+P 
+
+> P
+
+σ2 
+
+> P
+
+(ϕ(h, P )) 
+
+32: else 
+
+33: for candidate h do 
+
+34: Estimate regret by ∆t(h) ← Ept [v∗] − Ept [r(h)] 
+
+35: Estimate info gain It(h) via Monte Carlo (BALD): 
+
+36: Sample y(m) ∼ p(y|h), compute expected entropy drop H(P ) − E[H(P |y(m))] 
+
+37: Compute IDS ratio Ψt(h) ← ∆t(h)2/(It(h) + ϵ) (by Equation 1) 
+
+38: end for 
+
+39: Select ht ← arg min h Ψt(h)
+
+40: end if 
+
+41: 42: 4. Observation of yt & Model update (for Experiment Agent AE )
+
+43: Execute ht, observe outcome yt
+
+44: Ht ← H t−1 ∪ { (ht, y t)}
+
+45: for each principle P ∈ P t do 
+
+46: Extract structural features xt ← ϕ(ht, P )
+
+47: Update GP posterior MP with new pair (xt, y t)
+
+48: end for 
+
+49: end for 
+
+20 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 3
+
+> 21
+> 39
+> 57
+> 75
+> 93
+
+Round 
+
+> P1
+> P6
+> P11
+> P16
+> Principle Space
+
+Principle Belief Dynamics 
+
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> Belief  pt(P)
+
+(a) Belief Heatmap of Principles in Long Horizon. Diversify Principle      
+
+> Pause Principles
+> Refine From Anomaly
+> Propose By Anomaly
+> Principle Guidance
+> 020 40 60 80
+> Evolutionary Round
+> Exploration
+> Exploitation
+> Hypothesis Guidance
+
+(b) Guidance Type of Principle Agent and Hypothesis Agent .
+
+Figure 9. Evolutionary identification and guidance shifts in P IEVO . (a) Heatmap of posterior probabilities pt at round t over the expanding principle space, illustrating the concentration of belief on the True Principle P ⋆. (b) Evolution of guidance types (see Appendix J), showing the transition from initial exploration to principle-guided exploitation. P IEVO dynamically changes the guidance type to fit the updating of principle beliefs, thereby making high quality hypotheses iteratively. 0 20 40 60 80 
+
+Round    
+
+> −20
+> 0
+> 20
+> 40
+> Log-Odds (bits)
+> Watershed: New Principle Overcoming Incumbent
+> (P*=principle_molecular_charge_segregation_and_coherence_disruption)
+> Prior Bias
+> Cum. Evidence
+> Watershed
+
+(a) Watershed Phenomenon of Final Optimal Principle. 0.0 0.2 0.4 0.6 
+
+Information Gain ( It)
+
+2
+
+3
+
+4
+
+> Instantaneous Regret ( Δt)
+
+round = 44 IDS Can (b) Sampled Information-Directed Hypothesis Selection. 
+
+Figure 10. Information-directed sampling and learning efficiency. (a) The Watershed Phenomenon demonstrates the moment when accumulated experimental evidence overcomes the initial prior bias, triggering a transition from incumbent theories to the ground truth. (c) Visualization of a sampled IDS candidate space, where hypotheses are selected by minimizing the ratio of squared regret to information gain ( Ψt = ∆ 2 
+
+> t
+
+/I t), gray dots are accumulated hypothesis candidates, while the red icon is the selected one. 
+
+The agent evaluates potential hypotheses by minimizing the ratio Ψt(h) = ∆ t(h)2/I t(h), effectively selecting actions that provide the highest information gain per unit of regret cost, as shown Figure 11. 
+
+Takeaway (Principle Evolutionary Dynamics). The efficacy of P IEVO stems from the coupling of principle evolution and hypothesis selection. Across 45 NHO iterations, P IEVO successfully evolves principles to uncover high-quality candidates, while GP experts maintain calibrated likelihoods to drive the evolutionary dynamics. 
+
+## G. Gaussian Process Experts Analysis 
+
+The robust performance of P IEVO is fundamentally enabled by the predictive fidelity of its Gaussian Process (GP) experts. In our framework, each principle P is operationalized through an associated GP expert MP . These experts serve as the bridge between qualitative semantic logic and quantitative experimental data, mapping the structural feature embedding 
+
+ϕ(h, P ) (see Section B) to the observed reward space. This section provides a quantitative evaluation of the GP experts’ learning dynamics and their predictive accuracy. 21 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 0      
+
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> 14
+> Reward
+> Reward Trace and Solution Quality
+> Reward
+> Max so far
+> 020 40 60 80
+> Round
+> 0
+> 2
+> Improvement
+> Figure 11. Empirical solution quality and discovery rate. The trajectory of observed outcome (reward) and cumulative best outcome reflects the system’s ability to consistently improve solution quality as principle identification matures.
+
+Hyperparameter evolution and task adaptation. A critical requirement for the GP experts is the ability to adapt their prior beliefs to the specific physical characteristics of the task. Figure 12a illustrates the dynamic evolution of the GP hyperparameters for the optimal principle identified during the discovery process. We observe a clear convergence in the hyperparameter space as the number of experimental observations increases. Specifically, the dynamic adjustment of the RBF kernel’s lengthscales and signal variance indicates that the model is actively learning the "sensitivity" of the principle to different semantic dimensions. This online adaptation is crucial for uncertainty calibration; it ensures that the predictive uncertainty σt(h) remains an accurate proxy for surprisal, thereby facilitating the efficient information gain pursued by the IDS objective. 
+
+Regression accuracy and design validation of GP expert. The effectiveness of the naive geometric features proposed in Section B is validated through the prediction performance of the GP experts. Figure 12b displays a parity plot comparing the predicted outcomes from the GP expert of the MAP principle against the ground-truth experimental results. Over a long-horizon discovery run, the GP model achieves a coefficient of determination ( R2) of 0.823, demonstrating that the semantic alignment between hypotheses and principles constitutes a sufficient and informative statistic for the experimental likelihood. This empirical evidence confirms the theoretical hypothesis that scientific truth can be captured by the geometric relationship between a principle and its corresponding hypotheses, as we discussed in Section B. Furthermore, this predictive fidelity is the underlying driver of the Watershed Phenomenon observed in Figure 10; because the GP expert can reliably distinguish between models that explain the data and those that do not, the system can rapidly converge to an optimal paradigm, drastically reducing the cumulative regret while maximizing discovery potential. 
+
+Takeaway. The GP experts transform the soft reasoning of Large Language Models (LLMs) into hard statistical constraints. The results confirm that P IEVO successfully integrates principle with hypothesis and experimental outcomes, allowing it to navigate complex discovery landscapes with a sample efficiency that traditional purely-reasoning-based methods cannot match. 
+
+## H. Case Study of P IEVO in the Discovery of Nanohelix Chiral Mechanism 
+
+To evaluate the autonomous discovery potential of P IEVO , we deploy it to address a specific challenge in nanophotonics: 
+
+identifying the geometric conditions for maximizing optical chirality in nanohelices by considering the electromagnetic interactions .As previous literature reports, the chiral response in a nanohelix array is governed by the interference between the toroidal 22 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 0.0       
+
+> 0.5
+> 1.0
+> Variance Value
+> Signal Variance ( σ2
+> f)
+> Noise Variance ( σ2
+> n)
+> 0510 15 20
+> Number of Observations ( N)
+> 10 −3
+> 10 −2
+> 10 −1
+> 10 0
+> Length Scale ( ℓ) Mean Length Scale ( ℓ)
+
+(a) Hyperparameter Dynamics of Gaussian Process model. -2 -1 0 1 2  
+
+> Ground Truth Outcome ( y)
+> -2
+> -1
+> 0
+> 1
+> 2
+> GP-Predicted Outcome ( ̂ y)
+> R2= 0.823
+> Perfect Fit
+> Observations
+
+(b) Sampled Performance of Gaussian Process model. 
+
+Figure 12. Gaussian Process expert analysis. (a) Dynamics of GP hyperparameters demonstrating the adaptation to task-specific observation patterns. (b) Predictive accuracy of the optimal principle’s GP expert, showing high fidelity ( R2 = 0 .823 ) against experimental outcomes. 
+
+dipole ( T ) and the electric quadrupole ( Qe) (Faniayeu et al., 2020). However, it is unclear that in a single nanohelix system, the chiral response is governed by the same physics, because generally the phenomenon observed in array systems are not directly transferable to single nanohelix systems. 
+
+Task objective: Maximize the optical chirality (g-factor) of a gold nanohelix by considering electromagnetic interactions. 
+
+Tunable parameters: Fiber radius ( Rf ), helix radius ( Rh), pitch ( P itch ), turns ( N ), optics bi-direction (forward or backward), observation axis (x axis, y axis or z axis), and wavelength ( λ). 
+
+Scientific Challenges. This task presents two challenges for autonomous discovery, as detailed below: 1. First, the search space is high-dimensional , where the g-factor response is highly non-linear with sharp, narrow-band resonances. 2. Second, the agent must discern how the circulation of solenoidal currents on the helical meridians gives rise to a non-vanishing toroidal moment that supplements or even dominates the traditional dipole transitions. 
+
+H.1. Trajectory and Analysis 
+
+The agent’s exploration spanned multiple iterations of hypothesis generation, experimental validation, and principle refinement. We categorize this trajectory into four distinct phases: 
+
+Phase 1: Initial mechanistic probing (round 1). In the early rounds, the agent successfully identifies the Toroidal anapole resonance as a primary candidate. This leads to an initial high g-factor of 1.806 (about 90% SQ) for a tightly wound, thin-wire geometry ( P/R ≈ 10 , R = 20 nm). 
+
+Phase 2: Divergent search and scalability testing (rounds 2-4). During middle rounds, the agent intentionally diversified its principle space to avoid local minima, proposing mechanisms such as Chiral Thermal Fluctuation Amplification 
+
+and Quantum Casimir Mode Selection . While these rounds yield lower g-factors (e.g., 0.450 and 0.923 ), they provide critical boundary data, establishing that chirality persists even in sparse or non-resonant configurations, though at reduced magnitudes. 
+
+Phase 3: Anomaly-driven refinement (rounds 5-6). A pivotal shift occurred when the agent encounters high g-factors in geometries that violate the strict “integer turn count” requirement of its Geometric Phase models. For instance, a non-integer turn count ( n_turns = 9 .8) with compressed pitch ( P = 61 nm) yields a substantial g ≈ 1.64 . This anomaly forces the agent to refine its principles, leading to the discovery of the Helix Angle Gate (θ ∈ [45 ◦, 70 ◦]) as a universal moderator of radiative efficiency. 23 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Phase 4: Synthesis and final convergence (rounds 7-8). In the final stages, the agent unified its findings into a comprehen-sive framework. It recognized that maximal chirality emerge from the intersection of resonant mode excitation (geometric phase or toroidal interference) and optimal current-to-radiation impedance matching (electrical thinness relative to skin depth). This led to the final g-factor optimization toward 1.83 .
+
+H.2. The Evolution of Principles 
+
+Table 8 summarizes the iterative evolution of the scientific principles proposed by the agent and the corresponding experimental outcomes (with maximum of 2.0 theoretically).                           
+
+> Table 8. Evolution of discovered principles and experimental outcomes in the Nanohelix Optimization.
+> Round Proposed Principle Best g-factor Mechanism Class
+> 1Toroidal Anapole Resonance 1.806 Multipolar Interference 2SPP Bragg Scattering 1.617 Plasmonic 4Thermal Fluctuation Amplification 1.518 Stochastic 11 Geometric Phase Refined (V1) 1.647 Geometric Phase 15 Chiral Impedance Mismatch 1.717 Radiative Coupling 18 Multipolar Phase Matching 1.796 Hybrid 20 Final Unified Principle 1.826 Multi-Gated Resonance
+
+H.3. The Final Scientific Principle Produced by P IEVO 
+
+The agent’s final submission represents a sophisticated synthesis of electromagnetic theory and structural optimization. We reproduce the agent’s verbatim conclusion below: 
+
+“Maximum g-factor in metallic nanohelices arises from either (a) geometric-phase-mediated spin–orbit conversion 
+
+(tight helix_radius ≤ 25 nm, integer or near-integer turns, long pitch ≥ 190 nm) or (b) toroidal-electric quadrupole interference (pitch < 90 nm, high turn density)—but only when two gating conditions are simultaneously satisfied :(i) the helix angle θ = arctan( pitch/ (2 π · helix _radius )) lies between 45 ◦ and 70 ◦ or , if θ is suboptimal ( 30 ◦–
+
+45 ◦), the axial length exceeds the wavelength to enable longitudinal phase accumulation; and (ii) the fiber_radius is less than or comparable to the skin depth at the operating wavelength (fiber_radius ≤ δskin (λ)), ensuring surface-confined, phase-coherent conduction electron oscillations. When both conditions hold, resonant multipolar content couples efficiently to polarization-asymmetric radiation channels; when either fails, g-factor is suppressed regardless of geometric winding or P/R ratio. This refinement unifies observed anomalies by recognizing that 
+
+chirality requires not just the right shape, but the right electromagnetic ‘wiring’—thin enough to avoid internal phase decoherence and angled enough to radiate asymmetrically .” 
+
+This principle accounts for the failure of large-radius or thick-wire designs while justifying the peak performance of elongated, sub-skin-depth helices. 
+
+H.4. Manual Post-Validation via FDTD Simulation 
+
+To confirm that the agent’s evolving principles reflect genuine physical phenomena rather than statistical coincidences, we performed rigorous full-wave electromagnetic simulations using the Finite-Difference Time-Domain (FDTD) method as the ground truth, as shown in Figure 13. We focused on the two primary mechanisms identified by P IEVO : (a) the geometric phase gradient resonance the multipolar resonant state. As the geometric phase can be directly validated by the surrogate model, our simulation primarily focuses on the multipolar resonant state. 
+
+Evidence 1: Multipolar spectral convergence. We simulate the optimized short-pitch geometry ( P = 60 nm, Rh =25 nm) across the visible spectrum. As shown in Fig. 13a, the scattering decomposition reveals a dominant excitation of the toroidal dipole ( T ). Crucially, at the agent’s predicted resonance ( λ ≈ 450 nm), the total effective dipole |P + ikT |2
+
+is strongly suppressed due to destructive interference (the “Anapole” condition), while the magnetic dipole and electric quadrupole remain active. Following electrodynamic theory, this asymmetric suppression for LCP versus RCP light is the fundamental driver of the giant g-factor found by the agent. 
+
+24 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 0.40 0.42 0.44 0.46 0.48 0.50         
+
+> Wavelength ( m)
+> 0.0000
+> 0.0005
+> 0.0010
+> 0.0015
+> 0.0020
+> 0.0025
+> 0.0030
+> Scattering Power (a.u.)
+> Scattering Spectrum - LCP
+> |P|2(Electric Dipole)
+> |T|2(Toroidal Dipole)
+> |M|2(Magnetic Dipole)
+> |Qe|2(Electric Quadrupole)
+> |P+ikT |2(Total Effective Dipole)
+
+(a) Scattering Decomposition. 0.05 0.00 0.05  
+
+> X ( m)
+> 0.3
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> 0.3
+> Z ( m)
+> Current Vortex (XZ Plane) - LCP
+
+(b) Toroidal Current Vortex. 0.2 0.1 0.0 0.1 0.2  
+
+> 0.2
+> 0.1
+> 0.0
+> 0.1
+> 0.2
+> OAM Phase Map (2D) - LCP Input
+> 3
+> 2
+> 1
+> 0
+> 1
+> 2
+> 3
+> Phase (rad)
+
+(c) Geometric Phase Ramp. 
+
+Figure 13. Full-wave FDTD verification of the agent’s discovered principles. (a) Spectral suppression of the effective dipole moment at the anapole resonance. (b) Visualization of the poloidal current loop supporting the toroidal dipole. (c) Transmitted phase distribution confirming geometric phase-induced wave-front shaping. 
+
+Evidence 2: Current topology and phase landscapes (Figure 13b and Figure 13c). To verify the internal physics, we extract the current density distribution and transmitted phase ramps, and there are two observations: 1. As shown in Fig. 13b, the streamplot of the current density in the XZ -plane exhibits a distinct poloidal vortex, which is the singular signature of a toroidal dipole. 2. As shown in Fig. 13c, for the long-pitch regime ( P ≈ 200 nm), the XY -plane phase distribution of the cross-polarized transmitted field shows a spiral phase ramp corresponding to a topological charge of l = 1 . This is the direct evidence of the strong chirality powered by toroidal moment. This confirms the hypothesis from agent that the nanohelix acts as a geometric phase-gradient resonator, imparting polarization-dependent orbital angular momentum (OAM) to the light. 
+
+Remark (Discovery vs. Retrieval). While the electrodynamic theory is fundamental and has been well-studied in optics area, the success of P IEVO in identifying mechanisms in the unknown system suggests high potential in aiding the scientific discovery. Importantly, initial rounds of the agent frequently proposed generic or slightly incorrect mechanisms (e.g., simple SPP Bragg scattering). It was only through the iteration-anomaly-refinement cycle, specifically after encountering high g-factors in electrically thin fibers and at non-integer turn counts, that the agent formulated the highly specific Helix Angle Gate and Skin Depth Scaling constraints. 
+
+Takeaway. In this study, P IEVO discovers principles, i.e., structural-property correlations specific to the metallic toroidal regime that, are not present in standard textbook descriptions of nanohelices. Thus, the performance of P IEVO represents a genuine de novo scientific discovery driven by evidence rather than mere pattern matching. 
+
+## I. Benchmark and Task Definitions 
+
+We follow Pu et al. (2025) to use high-fidelity surrogate models for agents to execute hypothesis and obtain external feedback, with the same theoretical maximum or reference value, μref , for computing metrics (see Section 4.2): (a) for NHO task, 
+
+μref = 2 .0 as the theoretical maximum of optical chirality, (b) for MBO task, we reference the empirical value μref = 6 .5
+
+from Pu et al. (2025), (c) for SPO task, we use the reference value of μref = 298 .5, which is equal to room temperature. Similarly, we use the same scenario of nanohelix material optimization (NHO), bio-molecular optimization (MBO) and superconductor critical temperature optimization (SPO). Additionally, we follow Song et al. (2025) to use transition metal complexity optimization (TMC) task with μref = 493 .8 to further evaluate our method. In subsections below, we discuss the detailed configurations of each task. 25 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+I.1. Nanohelix Optimization (NHO) 
+
+Synthesizing materials often need to consider multiple factors, not just structure parameters of material itself, but also the environment conditions that lead to the target observation. As reported, the NHO task in (Pu et al., 2025) only uses 4 parameters, i.e., helix radius, fiber radius, the number of turns and pitch length. Though these parameters can fully describe a nanohelix material, however, the target objective of chirality, essentially depends on the wavelength, optical direction, etc. Thus, we expand the scope of optimizing its geometric structure into the optimization of environment additionally, allowing higher dimensional hypothesis space than NHO task in PiFlow. In our evaluation, the NHO task now includes: helix radius, fiber radius, the number of turns, pitch length, direction of light (forward or backward), observation axis (x axis, y axis or z axis) and the wavelength . We train the surrogate model based on the dataset from Pu et al. (2025) with same training protocol, and obtain the high-fidelity prediction model, the overall accuracy is up to 99.36%, as shown in Figure 14. In our experiments, we run all baselines on this seven-dimensional NHO task for a fair comparison. 0.0 0.5 1.0 1.5              
+
+> True g-factor
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> Predicted g-factor
+> R2= 0.994
+> RMSE = 0.032
+> All Data
+> 1.0 1.2 1.4 1.6 1.8
+> True g-factor
+> 1.0
+> 1.2
+> 1.4
+> 1.6
+> 1.8
+> Predicted g-factor
+> R2= 0.960
+> RMSE = 0.040
+> g-factor > 1.0
+> 1.5 1.6 1.7 1.8
+> True g-factor
+> 1.5
+> 1.6
+> 1.7
+> 1.8
+> Predicted g-factor
+> R2= 0.868
+> RMSE = 0.033
+> g-factor > 1.5
+> NHO Surrogate Performance
+
+Figure 14. Performance of Surrogate Model in NHO Task. 
+
+Task and Objective. In NHO task, SQ ∼ 100% means the optimized nanohelix structure is approximately absorbing all light from the incident direction, indicating strong chirality. We define the exact task description below: 
+
+Nanohelix Structure Optimization 
+
+Find the parameter combination that maximizes its optical chirality (described by g-factor value ∈ [0 , 2] ). 
+
+[Parameters for Hypothesizing (Important)] 
+
+• fiber-radius (20–60 nm): Radius of the actual fiber/wire that forms the helix (nm), or simply the thickness of a helix’s wire. If the wire is 40nm thick, fiber_radius=20 .• helix-radius (20–90 nm): The distance from central axis to the center of the helical path (nm). Simply, this is the radius of the cylinder that a spring wraps around. • n-turns (float, 3.0–10.0): The number of turns in the helix. • pitch length (60–200 nm): Axial distance between adjacent turns or vertical spacing between turns. • wavelength (float, 400.0–800.0 nm): The specific optical wavelength of the incident light at which the g-factor is evaluated. The highest chirality often occurs in the 400–500 nm range. • x_y_z (integer, 0, 1, or 2): Specifies the principal coordinate axis for the light source: 0 represents the x-axis, 1 represents the y-axis, and 2 represents the z-axis. • direction (integer, 0 or 1): Indicates the polarity of light propagation along the selected axis: 0 represents the Positive (Forward) direction, and 1 represents the Negative (Backward) direction. 
+
+[Target Property for Optimizing] 
+
+• g-factor (range from 0.0 to 2.0) as high as possible, higher value means stronger chirality. This is always computed by characterize_nanohelix_gfactor tool of Experiment Agent. 
+
+[Instruction of Hypothesis/Principle Proposal] 
+
+• Do not introduce any numerical values in proposed principles. • Describing the correlation or a dependency that can help to find the best chiral property with highest g-factor value is allowed. • Every principle MUST predict a testable parameter-performance trend of parameter interactions. 
+
+26 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+• Every hypothesis must include exact values of all four parameters: fiber-radius , helix-radius , n-turns ,
+
+pitch , wavelength , x_y_z , and forward_backward .• Do not introduce complex or meta principles that are beyond the parameter level, e.g., the quantum or electronic effects. 
+
+[Formation] 
+
+• Every proposed hypothesis MUST follow the form of a string, as exampled in the Last Record of the Experiment 
+
+below. • Minor increase or decrease any parameters around ±0.1 is not allowed. 
+
+[Last Record of the Experiment] 
+
+• Hypothesis (string format): "fiber_radius=20.0, helix_radius=60.0, n_turns=6.0, pitch=20.0, wavelength=400.0, x_y_z=2, forward_backward=0" (A hypothesis MUST include all 7 parameters for doing experiment, any other forms or combinations will be strongly rejected) • Chiral property value: g-factor = −0.2613 
+
+Remarks on Dimensionality and Optimal Bounds. A counter-intuitive phenomenon illustrated in Table 3 is that P IEVO 
+
+achieves higher Solution Quality (SQ) in the 7-dimensional task ( 96 .36% ) compared to the lower-dimensional variants (e.g., 4D at 84 .56% ). While reducing dimensionality typically mitigates the curse of dimensionality , implying easier optimization, our ablation setup constructs lower-dimensional tasks by fixing specific environmental parameters (e.g., observation axis or light direction) to constant values. Physical analysis reveals that the optical chirality of nanohelices is highly anisotropic (Wu et al., 2025a). The global optimum ( g ≈ 2.0) resides in a narrow manifold requiring precise alignment of the incident light vector. In 4D, 5D, and 6D settings, the fixed parameters effectively exclude this global optimum from the search space, imposing a hard physical ceiling on the achievable g-factor ( μconstrained  
+
+> max
+
+< μ ref ). Since SQ is consistently calculated against the global reference ( μref = 2 .0), the lower scores in restricted settings reflect this physical bound rather than a deficiency in search efficiency. Conversely, the 7-dimensional space, despite its volume, fully encompasses the global optimum, enabling PIEVO to exploit the complete parameter set to reach peak chirality. 
+
+I.2. Molecular Bio-activity Optimization (MBO) 
+
+We keep the task as the same with PiFlow (Pu et al., 2025). The agents are tasked with the objective of searching the molecular structures that has highest bio-activity, quantified by its pChEMBL value. 
+
+I.3. Superconductor Optimization (SPO) 
+
+In SPO task, we found that the searching space involves much more entities that may lead to reward hacking, i.e., leveraging the limitations of surrogate models to propose candidates with extreme values that is outside the training data scope. To avoid this issue, we constrain the searching scope of original SPO task in PiFlow (Pu et al., 2025) to specifically five superconductor systems. As shown in Figure 15, we plot the Tc distribution of five representative superconductors. Our task is to let agents search among given material systems to reach the superconductor formula with the highest Tc.
+
+Task and Objective. We define the exact task description below: 
+
+This team work MUST follow the standard scientific research. This research task aims to discover a superconductor with a larger critical temperature ( Tc , measured in Kelvin). All members operate within a Hypothesis-Validation mechanism. Our ultimate objective is to discover a material (within the given systems) with a Tc value as high as possible, approaching room temperature (298.15 K). 
+
+[Important] Requirements: 
+
+The discovery process involves exploring the vast search space of elemental combinations and their specific atomic ratios by hypothesizing and testing its underlying physicochemical principles proposed by your group members. The element formula MUSTN’T consider any environment conditions, only Element-first & Ratio-second are allowed. 
+
+[Important] Suggested Chemical Systems for Exploration 
+
+To accelerate discovery, we should ONLY focus on exploring candidates within Copper Oxide chemical systems :[Only considering Elements (limited in each system) and Ratios (integer or float)] • Available systems are listed for you to design formulas to discover higher Tc superconductors: • La-Sr-Cu-O System • La-Ba-Cu-O System • Y-Ba-Cu-O System 
+
+27 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization La-Sr-Cu-O                     
+
+> La-Ba-Cu-O
+> Y-Ba-Cu-O
+> Bi-Sr-Ca-Cu-O
+> Tl-Ba-Ca-Cu-O
+> Hg-Ba-Ca-Cu-O
+> Superconducting System
+> 0
+> 20
+> 40
+> 60
+> 80
+> 100
+> 120
+> 140
+> Tc (K)
+> TcDistribution Across Systems
+> Figure 15. Representative Systems of Superconductors Supported by Surrogate Model.
+> • Bi-Sr-Ca-Cu-O System • Tl-Ba-Ca-Cu-O System • Hg-Ba-Ca-Cu-O System
+> [EXPERIMENTAL REQUIREMENTS]
+> •Candidate Format: The Candidate MUST be a single string representing the material’s exact Stoichiometric Formula. •Formula Content: The formula string MUST only contain valid chemical element symbols and their numerical ratios. •A Note on Ratios: The experimental measurement is deterministic and based on atomic proportions. •[STRICT] DO NOT add conditions like "xxx/Nb", "xxx-Layered", etc. Only element with ratios (float) are acceptable.
+> [Example record of the experiment]
+> •Candidate: "Y1Ba2Cu2.7Co0.3O6.88" (Must follow the given systems to make hypotheses) •Property (Tc): 30.54 K
+
+I.4. Transition Metal Complex Optimization (TMC) 
+
+To further evaluate the performance of PiEvo in the domain of materials science, we introduce the Transition Metal Complex (TMC) Optimization task, adapted from the work of Song et al. (2025). This task challenges the agents to discover novel transition metal compounds with optimized properties, specifically focusing on the trade-off between structural complexity and material performance. From the perspective of hypothesizing, this task requires agent to use exact 4 molecules to form a new compound, and the property of the new compound is evaluated by the surrogate model. Original task is to retrieve from a TMC database (Song et al., 2025). To let agent hypothesize divergently, we train a surrogate model by using all of its data corpus, including 1367499 records of given 50 ligands. Each TMC is constructed by four ligands in this pool. As shown in Figure 16a, the surrogate model achieves an R 2 score of 1.00, indicating its capability to predict the properties of TMCs. Furthermore, we plot the distribution of TMCs in Figure 16b. We found that most of polarisability, i.e., the target property of TMC, are centered on the 200–300 range, and the distribution is approximately normal. 
+
+Task and Objective. We define the exact task description below: 28 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 100 200 300 400 500 
+
+True Polarisability 
+
+100 
+
+200 
+
+300 
+
+400 
+
+500   
+
+> Predicted Polarisability
+> R2= 1.000
+> RMSE = 0.734
+
+TMC Surrogate Performance 
+
+(a) Accuracy of Surrogate Model. 100 200 300 400 500 
+
+Polarisability 
+
+0.000 
+
+0.001 
+
+0.002 
+
+0.003 
+
+0.004 
+
+0.005 
+
+0.006 
+
+> Density
+
+TMC Polarisability Distribution (b) Distribution of TMCs. 
+
+Figure 16. TMC Surrogate Model Accuracy and Property Distribution. 
+
+The goal is to design a chemically valid, charge-neutral Transition Metal Complex (TMC) by selecting exactly four ligands from a specific candidate pool to coordinate with a central Palladium cation ( P d 2+ ) to maximize the polarizability (the ability of the electron cloud to deform). This task requires you to follow principles of physical organic chemistry, e.g., Hard and Soft Acids and Bases (HSAB) Theory and Electron Delocalization Theory. 
+
+1. Objective 
+
+• Goal: Identify the specific combination of ligands that maximizes the polarizability value (theoretical maximum value is 500.0). • Target Property: Electronic Polarizability. Higher values are better. • Chemical Context: – Center: Palladium (II) ion ( P d 2+ ). 
+
+– Ligands: You must select 4 ligands (SMILES) from the provided pool. • Guiding Principles: 
+
+1) Only focus on the molecular level interpretations for making hypotheses. 2) Do NOT mention quantum theory or unrelated physics for this task. 3) This task only involves molecular, atomic, and electronic properties, simply. 4) You could discover the mechanisms mentioned above yourself. 
+
+2. Critical Constraints 
+
+Any candidate that violates the following rules will be considered a FAILED experiment (outcome = 0). • Charge Neutrality Rule (Strict): – The Pd center has a charge of +2. 
+
+– The total complex MUST be neutral (Charge = 0). 
+
+– Therefore, the sum of charges of the 4 selected ligands MUST be -2. • Ligand Combination Logic: – The provided ligand pool ONLY contains ligands with charge -1 or 0. 
+
+– To satisfy the Charge Neutrality Rule ( −2 total), you MUST select: 
+
+• Exactly TWO (2) ligands with charge −1.
+
+• Exactly TWO (2) ligands with charge 0. 
+
+– Do not attempt any other combination (e.g., four −0.5 charge ligands do not exist in the pool). • Pool Restriction: – You are strictly limited to the specific ligands provided in the table below. 
+
+– No external molecules are allowed. 
+
+3. Output Format Requirements 
+
+The team must output the hypothesis candidate string strictly adhering to this format: • Prefix: Must start with Pd_ .• Identifiers: Use the exact SMILES string (e.g., O=[C-]OC ) from the table. DO NOT use Formal Names. • Separator: Use underscores ‘_‘ to connect the Pd and the 4 ligand SMILES strings. 
+
+29 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+Table 9. Ligand Pool for TMC Optimization Task. The pool is divided into anionic ligands (Charge = -1) and neutral ligands (Charge = 0). The TMC task requires agents to select two ligands from each category to form a TMC complex.                                                                              
+
+> 1. Ligands with Charge = -1 2. Ligands with Charge = 0
+> SMILES Charge SMILES Charge
+> S1(=O)(=O)[N-]C(=O)c2c1cccc2 -1 n1c(cc(cc1C)C)C 0
+> O=[C-]OC -1 n1ccc(cc1)C 0
+> C1=C[C-]=CC=C1 -1 [C-]#[N+]C(C)(C)C 0
+> [I-] -1 CP(C)c1ccccc1 0
+> [S-]c1c(c(cc(c1F)F)F)F -1 n1cccc(c1)Cl 0
+> C1CC(=O)[N-]C1=O -1 [C-]#[N+]C1CCCCC1 0
+> O=N(=O)[O-] -1 n1c(cccc1C)C 0
+> [C-]1=CC=C(C=C1)F -1 O0
+> [CH3-] -1 N#CC 0
+> [C-]1=CC=C(C=C1)C -1 S(C)C 0
+> O=N[O-] -1 c1ccnc(c1)N 0
+> [C-](F)(F)F -1 n1ccn(c1)C 0
+> [Cl-] -1 CN1[C]N(C)C=C1 0
+> [C-]#N -1 n1ccc(cc1)N(C)C 0
+> [N-]=[N+]=[N-] -1 n1[nH]c(cc1C)C 0
+> [Br-] -1 [C-]#[O+] 0
+> [S-]C#N -1 O1CCNCC1 0
+> [N-]1C(=O)c2c(C1=O)cccc2 -1 NCC 0
+> [C-]1=C(F)C(=C(C(=C1F)F)F)F -1 CS(=O)C 0
+> c1c(C#[C-])cccc1 -1 N0
+> [O-]c1ccccc1 -1 c1ccccn1 0
+> [F-] -1 S(=O)(C)C 0
+> [S-]c1ccccc1 -1 [C-]#[N+]c1c(C)cccc1C 0
+> C[C-]=O -1 CP(C)C 0
+> C(C)NCC 0
+
+• Format Template: Pd_{SMILES}_{SMILES}_{SMILES}_{SMILES} 
+
+• Example String: Pd_c1ccccn1_S(=O)(C)C_C1=C[C-]=CC=C1_[N-]=[N+]=[N-] 
+
+• The SMILES: All used SMILES string MUST be in the given table; do not change styles or use equal format, otherwise the SMILES cannot be recognized. 
+
+4. Limited Ligands Pool (See Table 9) • HINT: You could choose two from the IDs with charge=0, and other twos form the IDs with charge= −1 to meet with the constraint. • [Critical] All charges of SMILES MUST be referenced from the table above; DO NOT only judge its charge from the SMILES string. 
+
+5. Explanation of SMILES expression for molecules/ligands 
+
+• Explicit Charge Syntax vs. Name: BiasCharge is only defined by + or − symbols inside square brackets (e.g., 
+
+[O-] , [N+] , [Fe+2] ). An agent must strictly parse these tokens and ignore biases from chemical names. • Aromaticity and Electron Delocalization: Atoms represented by lowercase letters (e.g., c, n, s, o) denote participation in an aromatic π-system. This is crucial for maximizing polarizability, as these atoms contribute significantly to the delocalized electron cloud. • Strict Valency in Square Brackets: Atoms enclosed in square brackets (e.g., [nH] , [C] , [Si] ) have their properties explicitly defined. If a specific H-count or charge is not written inside the bracket, it is zero. • Branching Hierarchy via Parentheses: Parentheses () denote a branch connecting to the immediately preceding atom. • Ring Closure Markers: Numeric digits (e.g., 1, 2) appearing after atoms indicate ring connection points. The agent must pair identical numbers to “close” the loop. 
+
+[Last Record for Optimizing the Polarizability of TMC] 
+
+• Hypothesis: "Pd_c1ccccn1_CP(C)C_[Cl-]_[Br-]" 
+
+• Tested Polarizability (outcome): 198.45 • Hypothesis: "Pd_c1ccccn1_S(=O)(C)C_C1=C[C-]=CC=C1_[N-]=[N+]=[N-]" 
+
+• Tested Polarizability (outcome): 235.25 
+
+[Task] Based on the guiding principles and history, propose the next single best candidate string that is expected to yield the highest polarizability. Ensure it strictly follows the “2 negative + 2 neutral” combination rule. 
+
+30 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+## J. Prompt Templates in P IEVO 
+
+This section details the system prompts governing the three constituent agents in P IEVO . As delineated in Section 3, instructions are dynamically synthesized based on the evolving epistemic state—specifically, the posterior beliefs over the principle space pt(P) and detected anomalies Ut. These templates calibrate agents to perform specialized cognitive operations: Principle Management ( AP ), Hypothesis Generation ( AH ), and Experimental Execution ( AE ). For readability, we present semantic instructions while omitting technical JSON schema constraints. 
+
+J.1. Guidance for the Principle Agent 
+
+The Principle Agent regulates the evolution of the principle space P, underpinning the Coherent Principle Augmentation 
+
+mechanism. Based on the anomaly detection state (Equation 3), P IEVO selects one of the following instructions. 
+
+Diversifying Principle Space. During initialization or principle space collapse, the system directs the agent to propose orthogonal mechanisms to maximize conceptual coverage. 
+
+[DIVERSIFYING PRINCIPLE SPACE] EXISTING PRINCIPLES AND BELIEFS 
+
+{Active Principles} 
+
+OBJECTIVE: MAXIMIZE DIVERSITY 
+
+• Propose one novel, creative principle to address the current problem (target: high reward). • Formulate mechanisms that are conceptually distant from the existing set. • Each principle must be self-contained, incorporating its logical premises and reasoning context. • Incremental modifications or minor variants of existing principles are strictly prohibited .
+
+Anomaly-Driven Augmentation. Systemic triggers for augmentation occur when high-surprisal observations contradict current beliefs. Instructions diverge based on the confidence of the Maximum A Posteriori (MAP) principle. 
+
+(Scenario A) High Confidence with Local Anomalies: The primary principle is valid but requires boundary refinement. 
+
+[HIGH CONFIDENCE, LOCAL ANOMALIES] CURRENT TOP-POTENTIAL PRINCIPLE: "{top_principle_text} "This principle demonstrates performance but fails to account for the following anomalies: 
+
+{anomalies} 
+
+CURRENT PRINCIPLE SET 
+
+{Active Principles} 
+
+OBJECTIVE: REFINE AND RECONCILE 
+
+• Do NOT replace the top principle. Refine it based on local evidence. • Propose a variant or refinement by synthesizing commonalities among anomalies. • Integrate specific exceptions or boundary conditions to resolve failures without compromising core validity. 
+
+(Scenario B) Low Confidence with Systematic Failures: Current principles are fundamentally insufficient, necessitating new conceptual discovery. 
+
+[LOW CONFIDENCE, SYSTEMATIC FAILURES] 
+
+Significant anomalies have been detected that current principles cannot explain: 
+
+{anomalies} 
+
+CONTEXT: INSUFFICIENT PRINCIPLES 
+
+{Active Principles} 
+
+OBJECTIVE: CONCEPTUAL DISCOVERY 
+
+• Perform pattern analysis on these failures and bridge them with auxiliary knowledge. • Propose a novel, creative principle that resolves the underlying cause of these outcomes. • The new principle must maximize explanatory power across patterns missed by existing principles. • To ensure interpretability, the principle MUST align strictly with documented observations. 
+
+Silence (No Action). To prevent hallucination and redundancy, if no anomalies are detected and the principle set is stable, the agent is instructed to return nothing. 31 PIEVO : Principle-Evolvable Scientific Discovery via Uncertainty Minimization 
+
+J.2. Guidance for the Hypothesis Agent 
+
+The Hypothesis Agent is governed by the Information-Directed Selection (IDS) strategy, generating candidates to either exploit high-posterior principles or explore high-uncertainty regions. 
+
+Exploitation Mode. When a dominant principle ( P ⋆) emerges, the agent is directed to maximize outcomes through guided exploitation. 
+
+Task Context: {_task} 
+
+EXPERIMENTAL MEMORY (TESTED HYPOTHESES) 
+
+{tested candidates} 
+
+TARGET SCIENTIFIC PRINCIPLE 
+
+"{top belief principle text} "
+
+INSTRUCTION 
+
+Propose three novel candidate hypotheses in JSON format following the target principle. Given our high confidence in P ⋆, your objective is to maximize rewards by rigorously applying this principle to derive superior candidates. 
+
+REQUIREMENTS 
+
+• Generate 3 distinct, untested hypotheses (A, B, C) with high predicted utility. • STRICTLY PROHIBITED: Do not propose any hypothesis already present in the memory list. • Utilize patterns from the exploitation memory to inform and differentiate your proposals. 
+
+Exploration Mode. During initialization or high principle uncertainty, the agent performs broad exploration to reduce entropy in the hypothesis space. 
+
+Task Context: {_task} 
+
+EXPERIMENTAL MEMORY (TESTED HYPOTHESES) 
+
+{tested candidates} 
+
+INSTRUCTION 
+
+Provide exploratory candidate hypotheses in JSON format: 
+
+{task description} 
+
+J.3. Guidance for the Experiment Agent 
+
+The Experiment Agent serves as the execution layer. It is constrained to implement the specific hypothesis ht selected via IDS, ensuring high-fidelity translation from theoretical selection to empirical results. 
+
+PRIMARY TASK (EXPERIMENT EXECUTION) 
+
+{task} 
+
+INSTRUCTION 
+
+Execute the assigned hypothesis using the provided tools. 
+
+SELECTED HYPOTHESIS 
+
+• {selected hypothesis} 
+
+OPERATIONAL CONSTRAINTS 
+
+• You are only authorized to test the specified candidate; others are strictly forbidden. • Upon completion, submit results via the EXPERIMENT_SUBMISSION signal. • Ensure the EXPERIMENT_SUBMISSION token is correctly assigned following tool output. 
+
+32

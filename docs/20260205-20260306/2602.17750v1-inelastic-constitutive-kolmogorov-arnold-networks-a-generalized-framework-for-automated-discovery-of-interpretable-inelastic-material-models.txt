@@ -1,0 +1,2222 @@
+Title: Inelastic Constitutive Kolmogorov-Arnold Networks: A generalized framework for automated discovery of interpretable inelastic material models
+
+URL Source: https://arxiv.org/pdf/2602.17750v1
+
+Published Time: Mon, 23 Feb 2026 01:04:21 GMT
+
+Number of Pages: 35
+
+Markdown Content:
+# Inelastic Constitutive Kolmogorov-Arnold Networks: A generalized framework for automated discovery of interpretable inelastic material models 
+
+## Chenyi Ji a, Kian P. Abdolazizi b, Hagen Holthusen c, Christian J. Cyron b,d, Kevin Linka a,∗ 
+
+> a
+
+Computational Mechanics in Medicine, Applied Medical Engineering, RWTH Aachen University Pauwelsstraße 20, 52074 Aachen, Germany  
+
+> b
+
+Institute for Continuum and Material Mechanics, Hamburg University of Technology Eißendorfer Straße 42, 21073 Hamburg, Germany  
+
+> c
+
+Institute of Applied Mechanics, University of Erlangen-Nuremberg Egerlandstrasse 5, 91058 Erlangen, Germany  
+
+> d
+
+Institute of Material Systems Modeling, Helmholtz-Zentrum Hereon Max-Planck-Straße 1, 21502 Geesthacht, Germany 
+
+Abstract. A key problem of solid mechanics is the identification of the constitutive law of a material, that is, the relation between strain and stress. Machine learning has lead to considerable advances in this field lately. Here we introduce inelastic Constitutive Kolmogorov–Arnold Networks (iCKANs). This novel artificial neural network architecture can discover in an automated manner symbolic constitutive laws describing both the elastic and inelastic behavior of materials. That is, it can translate data from material testing into corresponding elastic and inelastic potential functions in closed mathematical form. We demonstrate the advantages of iCKANs using both synthetic data and experimental data of the viscoelastic polymer materials VHB 4910 and VHB 4905. The results demonstrate that iCKANs accurately capture complex viscoelastic behavior while preserving physical interpretability. It is a particular strength of iCKANs that they can process not only mechanical data but also arbitrary additional information available about a material (e.g., about temperature-dependent behavior). This makes iCKANs a powerful tool to discover in the future also how specific processing or service conditions affect the properties of materials. 
+
+Keywords: Kolmogorov-Arnold Networks, constitutive modeling, inelasticity, finite strains, model discovery, symbolic regres-sion 
+
+# 1 Introduction 
+
+Accurately predicting the behavior of complex material systems is a core challenge in engineering and the physical sciences. Conventional computational mechanics relies on constitutive models to describe how materials respond to external stimuli. However, traditional constitutive models, grounded in continuum mechanics, depend on sim-plifying assumptions that often fail to capture the full complexity of real-world material behavior—particularly for inelastic materials. Moreover, developing these models is typically incremental, labor-intensive, and demands substantial domain expertise, with the process repeated for each novel material system. 
+
+> *
+
+Corresponding author linka@ame.rwth-aachen.de 
+
+1
+
+> arXiv:2602.17750v1 [cond-mat.mtrl-sci] 19 Feb 2026
+
+To overcome these limitations, data-driven material modeling has emerged as a promising alternative, bypassing explicit constitutive model formulation and leveraging experimental data directly [Fuhg et al., 2024]. The model-free or direct data-driven paradigm, pioneered by Kirchdoerfer and Ortiz [2016], eliminates predefined constitutive equations in favor of using raw material measurements. Another avenue is symbolic regression, which constructs closed-form mathematical models from data by systematically combining analytical expressions to achieve a bal-ance between accuracy and interpretability [Abdusalamov et al., 2023, Bomarito et al., 2021, Kabliman et al., 2021, Versino et al., 2017]. Expanding on this, EUCLID (Efficient Unsupervised Constitutive Law Identification and Discovery) applies sparse regression to a broad model library, enabling learning from full-field data [Flaschel, 2023, Flaschel et al., 2021, 2023]. Recent developments have further enhanced these approaches to better handle noisy experimental data [Narouie et al., 2026]. A distinct class of data-driven approaches involves constitutive neural networks, which have gained prominence due to their flexibility and capacity for universal function approximation [Hornik et al., 1989]. Unlike methods that impose physical constraints via the loss function [Masi et al., 2021, Raissi et al., 2019], these networks encode physical consistency directly through architectural design. Notable variants include Constitutive Artificial Neural Networks (CANNs) [Linka and Kuhl, 2023, Linka et al., 2021], which favor interpretable, sparse architectures, and Physics-Augmented Neural Networks (PANNs) [Linden et al., 2023, Rosenkranz et al., 2024], which lever-age denser, more expressive structures. Additional neural network classes have further broadened the modeling landscape: neural ordinary differential equations (ODEs) have been used to identify polyconvex strain energy functions [Tac et al., 2022]; graph neural networks [Maurizi et al., 2022] and neural operators [You et al., 2022] have been explored for learning complex constitutive and surrogate models. These methods have also found ap-plications in the design and optimization of metamaterials [Fern´ andez et al., 2021, 2022]. Current research pushes the boundaries by targeting increasingly complex phenomena, such as anisotropy and inelasticity [Holthusen and Kuhl, 2026]. To capture inelastic effects, the Generalized Standard Materials framework offers a broad and physically grounded foundation [Halphen and Nguyen, 1975]. This approach introduces an inelastic dissipation potential alongside the elastic free energy, governing the evolution of internal variables and inelastic deformation in a thermodynamically consistent manner. Integrating this framework with constitutive neural networks has enabled the discovery of material laws for finite-strain viscoelasticity [As’ ad and Farhat, 2023, Holthusen et al., 2026, Rosenkranz et al., 2024, Tac ¸ et al., 2023], plasticity [Boes et al., 2026, Flaschel et al., 2025, Jadoon et al., 2025], fracture [Dammaß et al., 2025], and biological processes like growth and remodeling [Holthusen et al., 2025]. Constitutive models based on internal variables have also been successfully employed in neural ODEs and neural operators to model history- and path-dependent behaviors [Guo et al., 2025, Jones et al., 2022]. Furthermore, approaches such as long short-term memory networks have been introduced to enhance computational efficiency in plasticity modeling [Li et al., 2025]. Constitutive Kolmogorov–Arnold Networks (CKANs) [Abdolazizi et al., 2025, Thakolkaran et al., 2025] offer a distinctive alternative by employing B-Splines as nonlinear, trainable activation functions whose mathematical forms can be extracted for interpretation [Liu et al., 2024]. The introduction of Kolmogorov–Arnold Networks (KANs) has prompted comparative studies with traditional neural networks across a range of applications. KANs have shown improved accuracy and convergence in solving partial differential equations relative to multilayer perceptrons [Abueidda et al., 2025, Kiyani et al., 2025, Wang et al., 2025], with their greatest strengths evident in symbolic regression tasks [Ji et al., 2024]. In the context of material modeling, KANs have been incorporated into CKANs and Input-Convex KANs to enhance interpretability and facilitate the discovery of convex strain energy functions, all while retaining the adaptability of neural network-based frameworks [Abdolazizi et al., 2025, Thakolkaran et al., 2025]. These developments underscore the potential of KAN-based architectures to increase the transparency of data-driven material models without sacrificing predictive accuracy, though challenges in modeling 2inelastic behavior persist. In this work, we advance KAN-based constitutive modeling by extending it to inelastic materials and introducing inelastic Constitutive Kolmogorov–Arnold Networks (iCKANs). This novel approach integrates the generalized inelastic constitutive framework with the inherent interpretability of KANs, aiming to deliver a robust, data-driven, and transparent model for complex inelastic behavior. iCKANs leverage experimental stress–strain data, option-ally enriched with non-mechanical features, to uncover the underlying elastic and inelastic potentials of materials. Crucially, the trainable activations of the KANs are subsequently symbolized, yielding interpretable closed-form expressions for these potentials. By enabling the automated derivation of symbolic inelastic potentials, previ-ously accessible primarily to a limited group of experts, iCKANs address a longstanding challenge in finite strain inelasticity. The overall workflow of the iCKAN framework is illustrated in Figure 1. 
+
+Outline. Section 2 provides a concise review of the generalized constitutive framework for inelastic materials at finite strains. Section 3 details the proposed iCKANs’ methodology, beginning with the foundations of Kol-mogorov–Arnold Networks and their partially input-convex variants, followed by their application to constitutive modeling. Section 4 addresses the symbolic extraction process to obtain interpretable, closed-form representations of the discovered models. Section 5 evaluates the performance of iCKANs on both synthetic and experimental viscoelastic datasets. The paper concludes in Section 6 with a discussion of key findings and future research directions. 
+
+Experimental data Kolmogorov-Arnold Networks Symbolic function                             
+
+> •Time-dependent stress-deformation data
+> •Non-mechanical data f
+> f=f1
+> f=f2
+> f=f3
+> Stretch Fi
+> Stress  Pi
+> Training with sparsification
+> Stress P
+> Deformation gradient F
+> Elastic pot. Inelastic pot.
+> •Recurrent network architecture
+> •Mathematical/physical constraints
+> •(Partially) convex splines
+> Symbolification
+> Stress predictions
+> P=a(F+b)2
+> f=f1
+> f=f2
+> f=f3
+> Stretch Fi
+> Stress  Pi
+> •Interpretability of elastic and inelastic potential
+> •Efficient numerical simulations
+
+Figure 1: Inelastic Constitutive Kolmogorov-Arnold Network (iCKAN) pipeline for automated interpretable model discovery of inelastic materials. Three-dimensional stress-strain data with optional additional features (e.g., tem-perature) collected in a feature vector f are used to train the iCKAN model, which consists of two KANs repre-senting the elastic potential ψ and the inelastic potential ω. The trained model can then be analyzed using symbolic regression to extract interpretable mathematical expressions. 
+
+# 2 Constitutive modeling of inelastic materials 
+
+In this section, we briefly review the generalized constitutive framework for inelastic materials at finite strains by Holthusen et al. [2023, 2026], which can be seen as an equivalence to the framework of Generalized Standard Ma-terials [Halphen and Nguyen, 1975]. The framework employs the multiplicative decomposition of the deformation gradient and is based on two fundamental scalar-valued quantities, the elastic potential ψ and an inelastic potential 
+
+ω [Holthusen et al., 2024b]. 
+
+Multiplicative decomposition. The general assumption of multiplicative decomposition is applied on the defor-mation gradient F, resulting into an elastic part Fe and inelastic part Fi, i.e., F = FeFi. Conceptually, an interme-3diate configuration is introduced, which is reached by the inelastic deformation Fi from the reference configuration. The elastic deformation Fe then maps the intermediate configuration to the current configuration. However, the intermediate configuration is fictitious and not unique, since any rotation Q† ∈ SO (3) applied to the intermediate configuration does not alter the physics of the resulting deformation gradient, i.e., F = FeQ†TQ†Fi = F†
+
+> e
+
+F† 
+
+> i
+
+. Fol-lowing Holthusen et al. [2023, 2024b], a unique co-rotated intermediate configuration is obtained by applying the rotation of the polar decomposition of Fi = RiUi to the intermediate configuration, i.e., ¯Fe = FeRi = FU −1 
+
+> i
+
+,with Ui and Ri being the stretch part and rotation part of the inelastic deformation, respectively.    
+
+> FF†
+> iF†
+> e
+> FiFe
+> Q†
+> Ui
+> Ri
+> reference configuration intermediate configuration current configuration arbitrarily rotated intermediate configuration co-rotated intermediate configuration
+> B0Bt
+
+Figure 2: Multiplicative split of the deformation gradient into elastic and inelastic part, including the non-uniqueness of the intermediate configuration and the co-rotated intermediate configuration [Holthusen et al., 2023]. The right Cauchy-Green deformation tensors are defined as C = FTF and ¯Ce = U−1 
+
+> i
+
+CU −1 
+
+> i
+
+in the current and co-rotated intermediate configuration, respectively. Due to the fact that ¯Ce = U−1 
+
+> i
+
+CU −1 
+
+> i
+
+serves as an unique measurement for elastic stretches, the elastic potential can be defined depending on it, i.e., ψ = ψ( ¯Ce), while preserving the principles of objectivity and frame indifference. To ensure that the elastic potential is a scalar-valued isotropic function, we define it based on the principal invariants of ¯Ce, i.e., ψ = ψ(I ¯Ce 
+
+> 1
+
+, I ¯Ce 
+
+> 2
+
+, I ¯Ce 
+
+> 3
+
+), with 
+
+I ¯Ce 
+
+> 1
+
+= tr( ¯Ce), I ¯Ce 
+
+> 2
+
+= 12
+
+(tr( ¯Ce)) 2 − tr( ¯C2
+
+> e
+
+) , I ¯Ce 
+
+> 3
+
+= det( ¯Ce) . (1) 
+
+Dissipation inequality. Following the second law of thermodynamics, the dissipation D has to be non-negative so that thermodynamic consistency is preserved. This can be expressed using Clausius-Plank inequality D = S : 
+
+> 12
+
+˙C − ˙ψ ≥ 0. By inserting the fact that the elastic potential depends on ¯Ce and applying the chain rule, we obtain 
+
+D =
+
+
+
+S − 2 U−1
+
+> i
+
+∂ψ ∂ ¯Ce
+
+U−1
+
+> i
+
+
+
+: 12 ˙C + 2 ¯Ce
+
+∂ψ ∂ ¯Ce
+
+: ˙UiU−1 
+
+> i
+
+≥ 0 , (2) which has to be fulfilled for any arbitrary value of ˙C. Hence, the second Piola-Kirchhoff stress tensor and the symmetric elastic Mandel-like stress tensor are defined as 
+
+S = 2 U−1
+
+> i
+
+∂ψ ∂ ¯Ce
+
+U−1 
+
+> i
+
+and ¯Σ = 2 ¯Ce
+
+∂ψ ∂ ¯Ce
+
+, (3) respectively. The first Piola-Kirchhoff stress can be derived by pulling back the second Piola-Kirchhoff stress, i.e., 
+
+P = FS . Moreover, by noting that ¯Σ is symmetric, the dissipation inequality can be reduced to 
+
+D = ¯Σ : ˙UiU−1 
+
+> i
+
+= ¯Σ : ¯Di ≥ 0 with ¯Di = sym( ˙UiU−1 
+
+> i
+
+) . (4) 4Evolution equation. At this stage, a suitable evolution equation for the inelastic rate tensor ¯Di remains to be specified. To this end, a dual inelastic potential ω is introduced, which is assumed to be a scalar-valued, isotropic function of the thermodynamically consistent driving force ¯Σ, i.e., ω = ω( ¯Σ). It has been shown that if ω is constructed to be convex, zero-valued at ¯Σ = 0, and non-negative, the reduced dissipation inequality is satisfied automatically [Germain et al., 1983]. While these conditions are sufficient , they are not necessary to guarantee non-negative dissipation. Following [Holthusen et al., 2026], a more general formulation is obtained by introducing an invariant-based inelastic potential of the form 
+
+ω( ¯Σ) = ω
+
+
+
+I ¯Σ 
+
+> 1
+
+,
+
+q
+
+J ¯Σ 
+
+> 2
+
+, 3
+
+q
+
+J ¯Σ
+
+> 3
+
+
+
+, (5) which is required to be convex, zero-valued at its origin, and non-negative with respect to the three invari-ants *
+
+I ¯Σ 
+
+> 1
+
+= tr( ¯Σ), J ¯Σ 
+
+> 2
+
+= 12 tr  dev( ¯Σ)2, J ¯Σ 
+
+> 3
+
+= 13 tr  dev( ¯Σ)3,∂I ¯Σ
+
+> 1
+
+∂ ¯Σ = I, ∂J ¯Σ
+
+> 2
+
+∂ ¯Σ = dev( ¯Σ), ∂J ¯Σ
+
+> 3
+
+∂ ¯Σ = dev  dev( ¯Σ)2.
+
+(6) Here, dev( ¯Σ) = ¯Σ − 13 I ¯Σ 
+
+> 1
+
+I denotes the deviatoric part of a second-order tensor. It is worth emphasizing that the square and cubic roots of the second and third invariants, respectively, are essential to ensure non-negative dissipation within this framework [Holthusen et al., 2026]. The evolution equation for the inelastic rate tensor then follows directly from the inelastic potential as 
+
+¯Di = ∂ω ( ¯Σ)
+
+∂ ¯Σ = ∂ω ∂I ¯Σ
+
+> 1
+
+I + ∂ω ∂J ¯Σ
+
+> 2
+
+dev( ¯Σ) + ∂ω ∂J ¯Σ
+
+> 3
+
+dev  dev( ¯Σ)2. (7) 
+
+Incompressible materials. For the special case of incompressible materials, i.e., det( F) = 1 , a Lagrange multi-plier term is added to the elastic potential ψ to obtain the augmented elastic potential ˆψ,
+
+ˆψ = ψ( ¯Ce) − p(IC 
+
+> 3
+
+) . (8) The term p can be considered as the hydrostatic pressure and is determined using the boundary conditions. It is important to note that the elastic part of the deformation is, in general, not incompressible, meaning that I ¯Ce 
+
+> 3
+
+not necessarily remain equal to one [Holthusen et al., 2024b]. 
+
+# 3 Inelastic Constitutive Kolmogorov–Arnold Networks (iCKANs) 
+
+Building on the constitutive framework presented in the previous section, this section extends the idea of CK-ANs [Abdolazizi et al., 2025] by introducing inelastic Constitutive Kolmogorov–Arnold Networks (iCKANs) for automatic model discovery of inelastic materials. We start with a brief review of Kolmogorov-Arnold Networks (KANs) [Liu et al., 2024] and their modified variant of monotonic input-convex KANs [Thakolkaran et al., 2025], and then we continue with presenting partially input-convex KANs, in which the output is generally convex with respect to specified inputs. Afterwards, we apply these partially input-convex KANs to express the elastic and inelastic potential functions of the constitutive material model introduced in the last section, leading to the formu-lation of iCKANs. Thus, iCKANs naturally preserve mandatory constraints and flexibility due to the expression of activation functions via B-Splines. 
+
+## 3.1 Input-convex Kolmogorov-Arnold Networks 
+
+Serving as a promising alternative to mutli-layer perceptrons, KANs replace the combination of a linear layer following with a nonlinear activation function with a naturally nonlinear, trainable activation. KANs are inspired  
+
+> *It is worth noting that the third invariant is generally not convex with respect to ¯Σ.
+
+5by the Kolmogorov-Arnold representation theorem, which states that any continuous multivariate function on a bounded domain f : [0 , 1] n → R can be represented as a finite composition of univariate functions 
+
+f (x0) = f (x0,1, x 0,2, . . . , x 0,n ) = 
+
+> 2n+1
+
+X
+
+> j=1
+
+ϕ1,1,j 
+
+> n
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,i )
+
+!
+
+, (9) where x0,i are the elements of the input vector x0 and ϕ0,j,i : [0 , 1] → R and ϕ1,1,j : R → R are univariate continuous functions [Abdolazizi et al., 2025, Kolmogorov, 1961]. This equation can be seen as a two-layer net-work with a topology of [n, 2n + 1 , 1] . Extending this idea, a deeper architecture with L layers can be constructed, resulting in a KAN with the topolgy of [n0, n 1, . . . , n L], where ni is the number of neurons in the i-th layer. Thus, KANs can be expressed as the following nested summation 
+
+f (x) = 
+
+> nL−1
+
+X
+
+> iL−1=1
+
+ϕL−1,i L,i L−1
+
+
+
+> nL−2
+
+X
+
+> iL−2=1
+
+. . . 
+
+> n2
+
+X
+
+> i2=1
+
+ϕ2,i 3,i 2
+
+> n1
+
+X
+
+> i1=1
+
+ϕ1,i 2,i 1
+
+> n0
+
+X
+
+> i0=1
+
+ϕ0,i 1,i 0 (xi0 )
+
+!!! 
+
+. . . 
+
+ . (10) The activation function connecting the i-th neuron in the l-th layer (l, i ) and the i-th neuron in the (l + 1) -th layer 
+
+(l + 1 , j ) is denoted as ϕl,j,i for l = 0 , . . . , L − 1, i = 1 , . . . , n l and j = 1 , . . . , n l+1 . An activation function is defined as follows 
+
+ϕl,j,i (x) = wb · b(x) + ws · s(x) (11) with a basis function b(x), usually b(x) = x/ (1 + e−x), and a spline function s(x) = P 
+
+> i
+
+ciBi(x), where ci are trainable control points and Bi are B-spline basis functions. The factors wb and ws are trainable coefficients. The output of neuron (l + 1 , j ), xl+1 ,j , is defined as the sum of the inputs xl,i after transformation, i.e., xl+1 ,j =
+
+Pnl 
+
+> i=1
+
+ϕl,j,i (xl,i ), where each input xl,i is processed by its associated univariate activation function ϕl,j,i . For the simplicity of notation, the layer-wise mapping is defined using the nonlinear function matrix Φl as follows 
+
+xl+1 = Φl(xl) = 
+
+
+
+ϕl, 1,1( •) ϕl, 1,2( •) . . . ϕl, 1,n l(•)
+
+ϕl, 2,1( •) ϕl, 2,2( •) . . . ϕl, 2,n l(•)
+
+... ... . . . ...
+
+ϕl,n l+1 ,1( •) ϕl,n l+1 ,2( •) . . . ϕl,n l+1 ,n l(•)
+
+ xl . (12) Thus, Equation 10 can be written compactly as 
+
+KAN( x) = (Φ L−1 ◦ ΦL−2 ◦ · · · ◦ Φ1 ◦ Φ0)( x) . (13) 
+
+3.1.1 Fully input-convex architecture 
+
+A function that is twice differentiable is convex if and only if its second derivative is nonnegative over its entire domain. For instance, consider a two-layer KAN with the input x0 = {x0,1, . . . , x 0,n 0 }, we can express it as the following function 
+
+f (x0) = 
+
+> ni
+
+X
+
+> j=1
+
+ϕ1,1,j 
+
+> n0
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,i )
+
+!
+
+. (14) The first and second derivatives of f with respect to x0,k are given by 
+
+∂f ∂x 0,k 
+
+=
+
+> n1
+
+X
+
+> j=1
+
+ϕ′
+
+> 1,1,j
+> n0
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,k )
+
+!
+
+· ϕ′
+
+> 0,j,k
+
+(x0,k ) , (15) 
+
+∂2f∂x 20,k 
+
+=
+
+> n1
+
+X
+
+> j=1
+
+ϕ′′ 
+
+> 1,1,j
+> n0
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,i )
+
+!
+
+· ϕ′
+
+> 0,j,k
+
+(x0,k )2 +
+
+> n1
+
+X
+
+> j=1
+
+ϕ′
+
+> 1,1,j
+> n0
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,i )
+
+!
+
+· ϕ′′ 
+
+> 0,j,k
+
+(x0,k ) , (16) 6respectively. Consequently, a sufficient condition for f to be convex with respect to the inputs x0 is that the following criteria hold 
+
+ϕ′′  
+
+> 0,j,i
+
+≥ 0 ∀i = 1 , . . . , n 0 ; ∀j = 1 , . . . , n 1 ;
+
+ϕ′′  
+
+> 1,1,j
+
+≥ 0 ∀j = 1 , . . . , n 1 ;
+
+ϕ′ 
+
+> 1,1,j
+
+≥ 0 ∀j = 1 , . . . , n 1 .
+
+(17) That is, all first-layer activation functions ϕ0,j,i must be convex, while all second-layer activation functions ϕ1,1,j 
+
+must be both convex and non-decreasing. 
+
+Convex and non-decreasing activations. Constraining all activations to be convex and monotonic non-decreasing results into a monotonic input-convex KAN. To satisfy the aforementioned criteria and achieve monotonically increasing and convex activations, Thakolkaran et al. [2025] proposes to constrain the control points of the B-splines activation functions. First, zero base functions are chosen, i.e. b(x) = 0 . Then, ws is constrained to be positive, monotonically increasing, and convex by w∗ 
+
+> s
+
+= softplus( ws). Finally, the control points ci are modified to become convex coefficients c∗ 
+
+> i
+
+. Thus, s∗(x) = P 
+
+> i
+
+c∗ 
+
+> i
+
+Bi(x) is monotonically increasing and convex, i.e., 
+
+ci+2 − ci+1 ≥ ci+1 − ci ≥ 0, ∀i . (18) Finally, the original activation in Equation 11 is modified to 
+
+ϕ(x) = w∗ 
+
+> s
+
+· X
+
+> i
+
+c∗ 
+
+> i
+
+Bi(x) . (19) To ensure that the activations outside the initial grid range also remain convex and monotonically increasing, linear extrapolation is applied at both ends of the grid range [Polo-Molina et al., 2024, Thakolkaran et al., 2025]. 
+
+Generally convex activations. The previously introduced approach provides a convex and non-decreasing KAN-output with respect to its inputs. However, in some cases, specifically for the inelastic potential, the output is required to be convex with a desired stationary point. Therefore, we apply an additional activation function to the KAN-output to ensure the convexity while allowing for non-monotonic behavior. It is important to note that the network architecture remains unchanged from the monotonic input-convex KANs and only the output of the KAN is passed through this additional activation function. Given a convex and non-decreasing multivariate function f (x), one can construct a new function ˜f (x) that is convex, zero-valued at its origin and has a zero derivative at x = α by passing it through the following defined operation H(•),
+
+˜f (x) = H(f (x)) = f (x) − f (α) − ∇ f (x)|x=α · (x − α) , (20) For a more general case, we can apply a further manipulation step, 
+
+ˆf (x) = max( ˜f (x) − c, 0) with c > 0 . (21) Applying the resulting functions ˜f (x) and ˆf (x) to the KAN-output preserve convexity. A demonstration of this for an univariate simplification is shown in Figure 3a. The proof of this theorem can be found in Appendix A.1. 
+
+3.1.2 Partially input-convex architecture 
+
+In general, the outputs are required to be convex with respect to selected input arguments, but not necessarily with respect to all inputs. In particular, the elastic potential and the inelastic potential must be convex in the invariant-based arguments, while convexity with respect to additional non-mechanical features is not required. For this reason, we developed a partially input-convex KAN, as shown in Figure 3b [Amos et al., 2017, Deschatre and Warin, 2025]. The output z = f (x, y) is convex with respect to the input variables x = [ x1, x 2, x 3], but not 7necessarily convex with respect to the input variable y = [ y1]. This is achieved by modifying the first layer of a generally input-convex KAN. While the activations corresponding to the convex input variables x remain convex and non-decreasing, the activations with respect to the input variable y are unconstrained. The outputs of the first layer are then additively combined and passed through the second layer. It is to note, that this implementation is a simplified variant of partially input-convex networks [Amos et al., 2017], as a more generalized implementation is beyond the scope of this work. 
+
+> (a) Postprocessing of a convex, non-decreasing function
+
+x1 x2 x3 y1
+
+z
+
+> (b) A partially input-convex Kolmogorov-Arnold Network
+
+Figure 3: (a) Demonstration of the postprocessing of a convex and non-decreasing function f (x) to achieve a gen-eral convex function with the designed stationary point at x = 0 . ˜f (x) is achieved by H-operation in Equation 20 and ˆf (x) is achieved by Equation 21. (b) A partially input-convex Kolmogorov-Arnold Network, where the output 
+
+z is convex with respect to the yellow-marked input variables (x1, x 2, x 3) and unconstrained to the blue-marked input variables y1.
+
+## 3.2 Constitutive modeling with KANs 
+
+Recalling the constitutive framework in Section 2, the elastic potential ψ and inelastic potential ω must be defined to formulate an inelastic material. In this work, we propose using partially input-convex KANs to model these two scalar-valued functions. Thus, we present the inelastic Constitutive Kolmogorov-Arnold Networks (iCKANs) framework, which can be considered an extension to the Constitutive Kolmogorov-Arnold Networks (CKANs) for hyperelastic materials introduced in Abdolazizi et al. [2025]. 
+
+3.2.1 Elastic potential 
+
+CKANs have been formulated using different choices of functional bases for the elastic potential function, e.g., pricipal invariants and principal stretches [Abdolazizi et al., 2025]. In this work, we adopt the variant, in which the principal invariants are selected as the functional basis for constructing the KAN representing the elastic po-tential. In the original CKAN implementation, an input-monotonic KAN is employed [Polo-Molina et al., 2024]. Here, we use the previously introduced input-convex KAN to enforce convexity of the learned elastic potential representation. The elastic potential function ψ should be constructed polyconvex with respect to the deformation gradient F,to ensure the existence of minimizers of the elastic potential function. To achieve a polyconvex elastic potential function, the input arguments of the KAN must be polyconvex in F [Hartmann and Neff, 2003]. It is evident that the elastic potential should be dependent on the principal invariants of the elastic right Cauchy-Green deformation 8tensor in the co-rotated intermediate configuration ¯Ce = U−1 
+
+> i
+
+CU −1 
+
+> i
+
+. For nearly incompressible materials, it is common practice to decouple the volumetric and isochoric parts of the elastic deformation [Flory, 1961, Holthusen et al., 2024b]. Therefore, the polyconvex modified elastic invariants ( ˆI ¯Ce 
+
+> 1
+
+, ˆI ¯Ce 
+
+> 2
+
+, ˆI ¯Ce 
+
+> 3
+
+) are then defined using the principal invariants (Equation 1) as [Hartmann and Neff, 2003, Holthusen et al., 2024a] 
+
+ˆI ¯Ce 
+
+> 1
+
+= ˜I ¯Ce 
+
+> 1
+
+− 3, ˆI ¯Ce 
+
+> 2
+
+= ( ˜I ¯Ce 
+
+> 2
+
+)3/2 − 33/2, ˆI ¯Ce 
+
+> 3
+
+= ( J ¯Ce − 1) 2 , (22) with J ¯Ce =
+
+q
+
+det( ¯Ce) , ˜I ¯Ce 
+
+> 1
+
+=
+
+
+
+J ¯Ce
+
+−2/3
+
+I ¯Ce 
+
+> 1
+
+, ˜I ¯Ce 
+
+> 2
+
+=
+
+
+
+J ¯Ce
+
+−4/3
+
+I ¯Ce 
+
+> 2
+
+. (23) Thus, a polyconvex elastic potential is constructed using the modified invariants of ¯Ce as input argument for the input-convex KAN 
+
+ψ = ψ( ¯Ce) = ψ( ˆI ¯Ce 
+
+> 1
+
+, ˆI ¯Ce 
+
+> 2
+
+, ˆI ¯Ce 
+
+> 3
+
+) . (24) It is to note that the polyconvexity with respect to the arguments is not a necessary condition for the elastic potential to fulfill the physics, but rather a convenient assumption for the potential minimization. Furthermore, a proof that the output elastic potential ψ and its derivative are zero at undeformed state can be found in Appendix A.2 
+
+3.2.2 Inelastic potential 
+
+What remains to be defined is the inelastic potential ω, which governs the evolution equation of the inelastic strain. To satisfy thermodynamic consistency, the inelastic potential ω must be zero-valued at its origin, nonnegative and convex with respect to its arguments, which are the modified stress invariants of the elastic Mandel stress ¯Σ
+
+(Equation 6), 
+
+ˆI ¯Σ 
+
+> 1
+
+= I ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+=
+
+q
+
+J ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+= 3
+
+q
+
+J ¯Σ 
+
+> 3
+
+. (25) Thus, we define the inelastic potential dependent on the modified stress invariants as 
+
+ω = ω( ¯Σ) = ω
+
+ ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ
+
+> 3
+
+
+
+. (26) Unlike the previously mentioned condition for the elastic potential, the inelastic potential must be convex with respect to the modified stress invariants for the dissipation inequality to be fulfilled. Noteworthy, we could enhance the existing arguments as long as the convexity condition is satisfied. For instance, to increase network flexibility and expressibility, the negative stress invariants, or additional invariants, e.g., the principal invariants [Holthusen et al., 2026], can be appended to the argument of the inelastic potential network. These alternative constructions are presented in Appendix A.3. Following the approach of the previously presented general input-convex KAN, a convex, zero-valued and non-negative inelastic potential ω is constructed by applying H-operator (Equation 20) as a postprocessing activation on the output of the monotonic input-convex KAN, ωKAN , i.e., 
+
+ω = H(ωKAN ) = ωKAN − ωKAN ¯Σ=0 −
+
+
+
+∂ω/∂ ˆI ¯Σ
+
+> 1
+
+∂ω/∂ ˆJ ¯Σ
+
+> 2
+
+∂ω/∂ ˆJ ¯Σ
+
+> 3
+
+
+
+> ¯Σ=0
+
+·
+
+
+
+ˆI ¯Σ
+
+> 1
+
+ˆJ ¯Σ
+
+> 2
+
+ˆJ ¯Σ
+
+> 3
+
+ . (27) As previously stated, a further postprocessing step shown in Equation 21 can be applied to ω. Due to the special construction of the inelastic potential, which allows for a zero interval of the derivative of inelastic potential, meaning that no inelastic response is activated until a certain stress level is reached, and one single iCKAN model is sufficient to represent a viscoelastic material under relaxation. This can be represented as the rheological model in Figure 4. The elastic potential ψ is associated with the spring, and the inelastic potential ω with the dashpot. However, at this end, the training of this parameter c is unstable, leading us to choose to leave out this particular step and combine two iCKANs in parallel to express a viscoelastic material. 9ψ( ¯Ce) ω( ¯Σ)
+
+Figure 4: Representation of the iCKAN formulation in the form of a Maxwell model. The elastic potential ψ is associated with the spring, and the inelastic potential ω with the dashpot. 
+
+3.2.3 Feature dependency 
+
+The appropriate functional form of the elastic and inelastic potential generally depend on material descriptors such as composition, microstructure, or processing conditions. We collect this information in a feature vector f and augment the arguments of both the elastic and inelastic potentials as 
+
+ψ = ψ( ˆI ¯Ce 
+
+> 1
+
+, ˆI ¯Ce 
+
+> 2
+
+, ˆI ¯Ce 
+
+> 3
+
+, f ) and ω = ω
+
+ ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+, f
+
+
+
+. (28) This feature is solely non-mechanical and neither the elastic potential nor the inelastic potential is convex with respect to it. 
+
+3.2.4 Numerical implementation 
+
+The evolution equation defined by the inelastic rate tensor, Di = ∂ω/∂ Σ (see also (7)), is solved numerically. The exponential integrator map has been shown to be particularly effective for inelastic problems and in the finite strain regime [Holthusen et al., 2025, 2026]. Numerically, this evolution equation can be integrated using either explicit or implicit time integration schemes. In the explicit formulation, the current inelastic stretch tensor Ui,t 
+
+depends solely on the previous time step and the current increment. Conversely, the implicit formulation introduces a nonlinear dependence on both current and previous states, necessitating the solution of a nonlinear system at each time step. Although the implicit scheme is generally less sensitive to time step size, it is computationally more demanding than the explicit approach. To accelerate the solution of the nonlinear system in the implicit scheme, a Liquid Time Constant Network can be employed as an alternative to the traditional iterative Newton solver [Holthusen and Kuhl, 2026]. Section 5 presents a side-by-side comparison of both formulations using synthetic data. Given its superior robustness and performance across all numerical examples discussed in the following section, this work primarily focuses on explicit time integration. Detailed information on the implicit time integration scheme is provided in Appendix A.6. 
+
+Explicit time integration. Following the explicit integration scheme, the inelastic right Cauchy-Green tensor at the current timestep, Ci,t , is approximated using the inelastic strain rate from the previous timestep, Di,t −1,as 
+
+Ci,t = Ui,t −1 exp(2 ∆ t Di,t −1) Ui,t −1, Ui,t = C1/2 
+
+> i,t
+
+, (29) where ∆t is the time increment between timestep t−1 and t [Holthusen et al., 2026]. The overall architecture of the explicit iCKAN is illustrated in Figure 5. Noteworthy, while a Tyler expansion might be sufficient to generate the matrix squre-root under moderate deformations, a closed-form representation should be utilized for nonlinear finite strains [Holthusen et al., 2026, Hudobivnik and Korelc, 2016]. The explicit scheme proves to be computationally efficient, as no iterative solver is required. Stability is controlled through the selection of the time increment ∆t,offering a straightforward and transparent mechanism for maintaining numerical robustness. 
+
+Initial grid range. Since the KAN activation functions are represented by B-splines defined on fixed domains, suitable input grid range must be specified for each input dimension. In the present recurrent formulation, these effective inputs are not known a priori, as they are generated during the forward pass and evolve throughout training. We therefore adopt a data-driven initialization strategy to estimate appropriate grid ranges from physically 10 ¯Ce,t −1 ¯Σ ¯Di  
+
+> ¯Ui¯Ce
+> Ct−1,
+> Ui,t −1
+> State
+> Ft,∆tInput
+> Ct,
+> Ui,t
+> State
+> PtOutput
+
+ψt−1
+
+ψt
+
+ωt−1
+
+Figure 5: Explicit iCKAN architecture at timestep t. The inputs at each step are the current deformation gradient and time increment (Ft, ∆t) together with the state variables (Ct−1, Ui,t −1) from the previous step. The KAN models for the elastic potential ψ and the inelastic potential ω are evaluated to update the state variables according to Equation 29. The updated state is then propagated to the next time step. In addition, the output stress P is computed by evaluating the elastic potential ψ with the updated state variables. meaningful tensor invariants computed on the training data. The detailed construction and its justification are provided in Appendix A.4. Further details of computation refinements, i.e. the modified definitions of square root and cubic root and the numerical implementation of the matrix square roots, are summarized in the Appendix A.5. 
+
+# 4 Symbolic constitutive modeling 
+
+To obtain an interpretable closed-form expression of the constitutive models, the trained KANs for the elastic and inelastic potentials can be symbolified after model training. In this section, we briefly review the sparsification and symbolification process, for more details, please refer to [Abdolazizi et al., 2025, Liu et al., 2024]. 
+
+Sparsification and pruning. To achieve a sparse network structure, L1 regularization is applied to the trainable parameters, which in this case correspond to the control points of the B-Spline activations. Furthermore, pruning methods can be applied to the trained KANs to remove less important connections or nodes, further simplifying the model. This can help improve interpretability by focusing on the most relevant features and reducing the overall complexity of the network. 
+
+Symbolification of convex, monotonic activations. The trained KANs can be symbolified into closed-form math-ematical expressions using symbolic regression techniques. The symbolification process aims to find a mathemat-ical expression that closely approximates the behavior of the trained KANs while being more interpretable. This is achieved by searching through a space of mathematical expressions fl,j,i and selecting the one that best fits the data generated by the KANs. For each activation ϕl,j,i , we aim to find the optimal symbolically approximated activation, 
+
+yl,j,i = cl,j,i · (fl,j,i (al,j,i · xl,i + bl,j,i )) + dl,j,i , (30) so that the squared error between ϕl,j,i and yl,j,i is minimized. For this, a library of designed symbolic functions is provided and additional affine parameters (a, b, c, d )l,j,i are introduced. Furthermore, the parameters (a, c )l,j,i 
+
+11 are constrained to be nonnegative to preserve the monotonicity and convexity of the activation functions. Due to the recurrent network architecture, only the activation values from the final forward pass (i.e., the last time step) are retained. Consequently, a forward pass over the entire dataset is required to recover activation values across the full input domain. Otherwise, the extracted symbolic function does not faithfully reproduce the original B-spline activation. 
+
+# 5 Numerical examples 
+
+In this section, we validate the proposed iCKAN framework on synthetic and experimental datasets, including VHB 4910 [Hossain et al., 2012] and temperature-dependent VHB 4905 polymer [Liao et al., 2020]. These examples demonstrate that iCKAN capture inelastic material behaviors and additional feature effects. Symbolic expressions of the trained iCKANs are presented to highlight the interpretability of the approach. For all training processes, the initial weights and biases of the KANs are initialized using a uniform random distribution. The loss function is defined as the normalized mean squared error (NMSE) between the predicted and target first Piola-Kirchhoff stresses, P and ˆP, respectively. The error is normalized by the largest absolute entry of the target stress for each batch sample, computed over all time steps and stress components. Formally, the loss is given by 
+
+Lstress = 1
+
+BT S 
+
+> B
+
+X
+
+> b=1
+> T
+
+X
+
+> t=1
+> S
+
+X
+
+> s=1
+
+Pb,t,s − ˆPb,t,s 
+
+max 
+
+> t,s
+
+ˆPb,t,s 
+
+> 2
+
+, (31) where B is the batch size, T is the number of time steps, and S is the number of stress components. The AMS-GRAD optimizer [Reddi et al., 2019], which combines the benefits of ADAM and RMSPROP, is utilized for train-ing in combination with a cyclic learning rate scheduler [Smith, 2017], where the learning rate cyclically varies between a base learning rate and a maximum learning rate over a given step size. Furthermore, L1 regularization is applied to achieve a sparse network and gradient clipping is applied to prevent gradient explosion. 
+
+## 5.1 Verification on synthetic data 
+
+Synthetic data are generated using an explicit time integration scheme on an iCKAN, where the corresponding KANs are replaced by analytical formulas. A Neo-Hookean free energy ψ = 0 .5 · ˆI ¯Ce 
+
+> 1
+
++ 0 .5 · ˆI ¯Ce 
+
+> 3
+
+is assumed for the elastic potential, and the inelastic potential is defined as ω = 0 .1 · ( ˆI ¯Σ 
+
+> 1
+
+)2 + ( ˆJ ¯Σ 
+
+> 2
+
+)2. We only change the first entry of the deformation gradient from the undeformed state and apply a cyclic loading case of tension, relaxation, compression and relaxation. We set the maximum stretches to F max 11 = {1.1, 1.2, 1.3} and set the time of tensile loading to tload = {0.2, 0.5, 1.0} s, resulting into different strain rates. At the end, the dataset consists of deformation gradients F and time increments ∆t as inputs and the corresponding first Piola–Kirchhoff stresses P
+
+as outputs. 
+
+Model training. For the training, we use only the tensile loading and relaxation part of the datasets with tload =
+
+{0.2, 0.5} s for all three stretch levels. We consider an iCKAN which can be illustrated as the rheological model in Figure 4. Both the elastic and inelastic potentials are modeled by input-convex KANs with topology [3,1]. The initial grid ranges are approximated as described in Appendix A.4. To improve robustness and account for previously unseen input ranges, the grid bounds are extended by 20%. For arguments that may attain negative values, the lower bound is chosen symmetrically with respect to the upper bound. We examine both the explicit and implicit variant of iCKAN. Training is performed with an initial learning rate of 5 · 10 −4 and a cyclic scheduler between 5 · 10 −5 and 1 · 10 −4 with a step size of 50 iterations. L1 regularization of 10 −5 and gradient clipping at 0.1 are applied. For the implicit iCKAN, the evolution penalty with λevo = 1000 and increased by a factor of two every 250 epochs. 12 Symbolification. We demonstrate the symbolification on the trained iCKAN. All activations in the KAN for elastic potential are approximated using a library of convex, non-decreasing functions f (x) on [0 , ∞). This process is illustrated in Figure 6a and the full set of candidate functions is listed in Appendix A.7. The symbolic formulation of the output inelastic potential ωKAN can be obtained analogously while the enforcement of convexity, zero-valued at its origin and non-negativity is achieved by applying H-operator in Equation 27 on the symbolified ωKAN .However, for the presented single-layer KAN, the network output reduces to 
+
+ωKAN =
+
+> n0
+
+X
+
+> i=1
+
+ϕ0,j,i (x0,i ) , (32) In this case, it is equivalent to apply H-operator to the full output ωKAN or to each activation function ϕ0,0,i ,
+
+H(ωKAN ) = 
+
+> n0
+
+X
+
+> i=1
+
+H(ϕ0,0,i (x0,i )) . (33) Consequently, the desired inelastic potential can be obtained by directly symbolizing H(ϕ0,j 0,i ) using candidate functions that are convex, nonnegative, and zero at the origin (see Appendix A.7). The resulting symbolic expres-sion inherently satisfies all constraints without requiring further postprocessing, i.e., ω = ωKAN . This procedure is illustrated in Figure 6b. However, this simplification does not apply to deeper network architectures. The final symbolic expressions for the elastic and inelastic potential functions identified by the implicit and ex-plicit iCKAN approaches are presented in Figure 7c. The corresponding predictions are shown in Figure 7a and Figure 7b. More detailed results regarding model validation with synthetic data are provided in Appendix A.8. The predictions generated by iCKAN align closely with both the training and test datasets. Interestingly, both time integration approaches produced comparable results on this simple synthetic dataset, with only minor differences in the discovered symbolic forms of the elastic and inelastic potentials. This demonstrates that, in principle, either approach leads to similar outcomes and can be effectively employed in practice to discover material models using iCKANs.      
+
+> ˆI¯Ce
+> 1ˆI¯Ce
+> 2ˆI¯Ce
+> 3
+> ψKAN
+> symb.
+
+## −→            
+
+> ˆI¯Ce
+> 1ˆI¯Ce
+> 2ˆI¯Ce
+> 3
+> ψKAN
+> (a) Symbolification for elastic potential
+> ˆI¯Σ
+> 1ˆJ¯Σ
+> 2ˆJ¯Σ
+> 3
+> ωKAN
+> symb.
+
+## −→       
+
+> ˆI¯Σ
+> 1ˆJ¯Σ
+> 2ˆJ¯Σ
+> 3
+> ωKAN
+> (b) Symbolification for inelastic potential
+
+Figure 6: Symbolification of the activation functions of the trained iCKAN on synthetic data. Black curves de-note the learned B-spline activations, and red curves their symbolified approximations. (a) KAN-based elastic potential: convex, non-decreasing activations are approximated by symbolic functions that preserve convexity and monotonicity over the admissible domain. (b) KAN-based inelastic potential: activations are transformed by 
+
+H-operator (Equation 20) and then symbolified by convex, nonnegative functions that are zero-valued at the origin. 13 (a) Explicit time integration (b) Implicit time integration                                                         
+
+> t[s]
+> Elastic potential ψ( ¯Ce) = a·ˆI¯Ce
+> 1+b·ˆI¯Ce
+> 2+c·ˆI¯Ce
+> 3
+> Material parameters
+> Explicit Implicit
+> abcabc
+> 0.0 0.2194 0.5027 0.2722 0.1093 0.5255 Inelastic potential ω( ¯Σ) = a·( ˆI¯Σ
+> 1)2+b·( ˆJ¯Σ
+> 2)2+c·( ˆJ¯Σ
+> 3)2
+> Material parameters
+> Explicit Implicit
+> abcabc
+> 0.109 0.9394 0.4286 0.1045 1.2613 0.6397
+
+(c) Discovered elastic and inelastic potential functions for the synthetic dataset 
+
+Figure 7: Results of the symbolified iCKAN on synthetic compressible material data using (a) the explicit time integration scheme and (b) the implicit time integration scheme, using the expressions presented in Table (c). The gray regions in (a) and (b) indicate the range of the training data, and the colored dots represent the corresponding reference data. 
+
+## 5.2 Model discovery for experimental data 
+
+To access the practical applicability of iCKANs, we examine the framework on experimental data of viscoelastic polymers. Due to the fact that the provided experimental data are one-dimensional, the information of volumetric modes are lacking. Thus, we assume incompressible materials [Abdolazizi et al., 2024, Holthusen et al., 2026]. The detailed hyperparameters are provided in Appendix A.9, together with the loss convergence curves over the training epochs. 
+
+5.2.1 Viscoelastic model discovery of VHB 4910 polymer 
+
+Very-High-Bond (VHB) 4910 is a polymer exhibiting highly nonlinear and viscoelastic behavior. Experimental uniaxial loading–unloading data for VHB 4910 are reported by Hossain et al. [2012] for four maximum stretch levels, F11 = {1.5, , 2.0, , 2.5, , 3.0}, tested under three different stretch rates, ˙F11 = {0.01 , , 0.03 , , 0.05 } s−1.In our framework, rate dependence is incorporated directly through the network input pair (F, ∆t), allowing the model to learn time-dependent behavior without introducing explicit viscosity terms. 14 To capture more complex material behaviors, we utilize two iCKANs in parallel, motivated by classical rheological representations of viscoelastic materials, as illustrated in Figure 8b. In continuum mechanics, the total stress response of viscoelastic solids is often represented as the superposition of multiple parallel mechanisms, each corresponding to a distinct elastic potential and inelastic potential. The two branches of the parallel structure are indexed by superscripts 1(•) and 2(•), which share the same input deformation gradient F. Each branch learns its own elastic potential iψ(i ¯Ce) and inelastic potential iω(i ¯Σ), while enforcing thermodynamic consistency. The stress contribution iP of each branch is obtained consistently via differentiation of the learned potentials. The total stress response is then computed as the additive superposition P = 1P + 2P, which is consistent with classical rheological network models and enables the representation of multiple concurrent elastic and inelastic mechanisms with different characteristic responses. 
+
+Model training. For training, we use the dataset corresponding to the highest stretch level, F11 = 3 .0, while the remaining stretch levels are reserved for validation to assess generalization for unseen data. We approximate the initial grid range as previously and extend them by 20% on both sides.                               
+
+> ˆI1¯Ce
+> 1ˆI1¯Ce
+> 2ˆI1¯Ce
+> 31ψKAN
+> (a) 1ψ(1¯Ce)
+> ˆI1¯Σ
+> 1ˆJ1¯Σ
+> 2ˆJ1¯Σ
+> 31ωKAN
+> (b) 1ω(1¯Σ)
+> ˆI2¯Ce
+> 1ˆI2¯Ce
+> 2ˆI2¯Ce
+> 32ψKAN
+> (c) 2ψ(2¯Ce)
+> 1ψ(1¯Ce)
+> 2ψ(2¯Ce)
+> 1ω(1¯Σ)
+> 2ω(2¯Σ)
+> P=
+> 1P+2P
+> (a) Discovered model for VHB4910 polymer
+> (b) Rheological model
+
+Figure 8: KAN architectures of discovered model for VHB4910 polymer. (b) Rheological model consisting two iCKANs in parallel combination. Both iCKAN branches receive the same input deformation gradient F and each learns an elastic potential and an inelastic potential. The first branch identifies 1ψ(1 ¯Ce) and 1ω(1 ¯Σ) and produces the stress 1P while preserving thermodynamic consistency. The second branch identifies 2ψ(2 ¯Ce) and 2ω(2 ¯Σ)
+
+and produces the stress 2P under the same thermodynamic constraints. The total stress response is obtained by summing the stresses of both branches, P = 1P + 2P.
+
+Symbolification and results. At the end, we utilize the same library of convex, monotoonic functions as in the previous section to symbolify the activations of the trained model. The symbolified discovered KAN models of the corresponding elastic and inelastic potentials are shown in Figure 8a with their corresponding symbolic functions in Figure 9b. The predicted results of the symbolified iCKAN model are shown in Figure 9a. 15 Training Testing Testing Testing 
+
+(a) Predictions of the symbolified iCKANs for VHB 4910 
+
+Elastic potential 1ψ(1 ¯Ce) = a · exp( b · ˆI1 ¯Ce 
+
+> 1
+
+) + c · ˆI1 ¯Ce
+
+> 2
+
+Material parameters a b c
+
+34.654 0.1204 3.7902 Inelastic potential 1ω(1 ¯Σ) = H(a · exp( b · exp( c · ˆJ1 ¯Σ 
+
+> 2
+
+))) 
+
+Material parameters a b c
+
+0.0195 0.0002 0.036 Elastic potential 2ψ(2 ¯Ce) = a · ˆI2 ¯Ce 
+
+> 1
+
++ b · ˆI2 ¯Ce 
+
+> 2
+
++ c · exp( d · ˆI2 ¯Ce 
+
+> 1
+
+)
+
+Material parameters a b c d
+
+2.5911 1.8997 68.73 0.0299 (b) Discovered elastic and inelastic potential functions for VHB 4910 polymer 
+
+Figure 9: Discovered model for VHB4910 polymer. (a) Predictions by the symbolified trained iCKAN under three different constant loading/unloading rates, denoted as ˙F11 . The prediction of the trained iCKAN model is represented by the solid lines and the experimentally measured data is represented by dots in corresponding colors. Only the experimental data corresponding to F max  
+
+> 11
+
+= 3 .0 [-] are utilized for training. (b) listes the corresponding symbolic functions. 
+
+5.2.2 Thermo-viscoelastic model discovery of VHB 4905 polymer 
+
+Building on the previous section, we next consider the identification of material models augmented by an additional feature vector f . Our goal is to find a single iCKAN expression capable of describing the material behavior under varying non-mechanical conditions. To this end, we study the VHB 4905 polymer, which exhibits highly 16 deformable, viscoelastic, and temperature-sensitive behavior. Uniaxial experimental data for VHB 4905 polymer at different temperatures, θ = {0, 10 , 20 , 40 , 60 , 80 } ◦C, under multiple strain rates, F11 = {0.03 , 0.05 , 0.1} s−1,and maximum stretch ratios, F11 = {2.0, 3.5, 4.0}, are reported in [Liao et al., 2020]. 
+
+Temperature as feature. The strain rate and deformation information are naturally incorporated into the model inputs. In addition, the temperature θ is explicitly included as a feature in the arguments of the elastic potential, i.e., [Abdolazizi et al., 2025] 
+
+> i
+
+ψ(i ¯Ce) = iψ( ˆIi ¯Ce 
+
+> 1
+
+, ˆIi ¯Ce 
+
+> 2
+
+, ˆIi ¯Ce 
+
+> 3
+
+, θ ) . (34) It is important to note that this approach differs from classical thermo-mechanical constitutive modeling, where temperature is included via either thermal strain decomposition or temperature-dependent material parameters. Instead, this feature-augmented construction provides a general, data-driven mechanism to capture the influence of unknown non-mechanical factors on the elastic potential, and consequently, on the material stress response. The initial grid range for this temperature feature is set directly by the experimental temperature range, [0 , 80] ◦C, while the grid ranges for the invariants are approximated as before and extend by 20% on both ends. Although it is reasonable to assume the feature has influence on both elastic and inelastic potential, we choose to omit it for the inelastic potential due to network robustness. 
+
+Symbolification. We symbolify the trained activations, except for those corresponding to the temperature feature in the first layer of each KAN for elastic energy, using the same library of convex, monotonic functions as in the previous section. The resulting KAN architectures are shown in Figure 10. For each branch, there remains an activation function associated with temperature in the elastic potential iψ(i ¯Ce), which we denote as 1g(θ) and 
+
+> 2
+
+g(θ) for the first and second branch, respectively. 
+
+ˆI1 ¯Ce 
+
+> 1
+
+ˆI1 ¯Ce 
+
+> 2
+
+ˆI1 ¯Ce 
+
+> 3
+
+θ
+
+> 1
+
+ψKAN   
+
+> (a) Model of 1ψ(1¯Ce)
+
+ˆI1 ¯Σ 
+
+> 1
+
+ˆJ1 ¯Σ 
+
+> 2
+
+ˆJ1 ¯Σ
+
+> 31
+
+ωKAN   
+
+> (b) Model of 1ω(1¯Σ)
+
+ˆI2 ¯Ce 
+
+> 1
+
+ˆI2 ¯Ce 
+
+> 2
+
+ˆI2 ¯Ce 
+
+> 3
+
+θ
+
+> 2
+
+ψKAN   
+
+> (c) Model of 2ψ(2¯Ce)
+
+ˆI2 ¯Σ 
+
+> 1
+
+ˆJ2 ¯Σ 
+
+> 2
+
+ˆJ2 ¯Σ
+
+> 32
+
+ωKAN   
+
+> (d) Model of 2ω(2¯Σ)
+
+Figure 10: Discovered model for VHB4905 thermo polymer As these activations are not constrained to be monotonic or convex, their shapes can be arbitrary. To capture this flexibility, we adopt higher-order polynomial functions. This approach allows us to automatically discover a symbolic expression for 1g(θ). For 2g(θ), however, a single symbolifc function did not provide sastisfactory fit. Therfore, we allow for piecewise symbolification, and manually approximate it using two piecewise quadratic functions defined over the temperature intervals [0 , 40) and [40 , 80] ◦C, respectively. The coefficients are chosen such that C1-continuity is enforced at θ = 40 ◦C. 
+
+Results. The predicted results of the symbolified iCKAN model are shown in Figure 11. The symbolified formula for the discoverd model are listed in Figure 12. 17 (a) Training data 
+
+(b) Testing data 
+
+Figure 11: (a) Training set and (b) validation set of discovered model for the experimental data of VHB 4905 polymer under three different constant loading/unloading rates, denoted as ˙F11 . The prediction of the trained iCKAN model is represented by the solid lines and the experimentally measured data is represented by the dotts in the corresponding colors. 18 The iCKAN framework successfully captures the temperature-dependent viscoelastic behavior of VHB 4905. Symbolification of the learned activations provides interpretable functional forms, revealing how temperature in-fluences the elastic potentials in each branch. Overall, this demonstrates the model’s ability to combine predictive accuracy with physical interpretability under varying environmental conditions.                                                                                                                                          
+
+> Elastic potential 1ψ(1¯Ce) = a·exp( b·ˆI1¯Ce
+> 1+c·ˆI1¯Ce
+> 2+g(θ))
+> Material parameters abc
+> 0.0349 0.0855 0.0864 Temperature dependency 1g(θ) = 10 .0746 ·(0 .5239 −0.0111 ·θ)3
+> Inelastic potential 1ω(1¯Σ) = H(a·exp( b·exp( c·ˆJ1¯Σ
+> 2) + d·exp( e·ˆJ1¯Σ
+> 3)))
+> Material parameters abcde
+> 31.918 0.1077 4.7 0.0382 10.0 Elastic potential 2ψ(2¯Ce) = a·exp( b·ˆI2¯Ce
+> 2+c·exp( d·ˆI2¯Ce
+> 3) + 2g(θ))
+> Material parameters abcd
+> 0.319 0.0261 0.0921 10.0 Temperature dependency 2g(θ) =
+> 
+> −1.7498 ·10 −4·θ2+ 3 .256 ·10 −3·θ−1.8712 ·10 −1,0≤θ < 40
+> −3.51 ·10 −5·θ2+ 2 .344 ·10 −3·θ−7.9019 ·10 −2,40 ≤θ≤80
+> Inelastic potential 2ω(2¯Σ) = H(a·exp( b·ˆI2¯Σ
+> 1+c·exp( d·ˆJ2¯Σ
+> 2)))
+> Material parameters abcd
+> 0.0589 0.2543 0.0264 2.8013
+
+Figure 12: Discovered elastic and inelastic potential functions for VHB 4905 thermo polymer. 
+
+# 6 Discussion 
+
+Developing accurate and interpretable constitutive models for materials undergoing nonlinear inelastic deforma-tion, particularly at finite strains, remains a central challenge in computational mechanics. Although recent ad-vances in data-driven modeling have accelerated model discovery, a persistent trade-off exists between predictive accuracy and physical interpretability. Thermodynamically consistent approaches often rely on highly flexible neural networks, which can lack transparency, or on symbolic methods with limited expressiveness [Flaschel et al., 2023, Holthusen et al., 2026]. This work bridges this divide by introducing inelastic Constitutive Kol-mogorov–Arnold Networks (iCKANs), which combine a generalized inelastic constitutive framework with the interpretability of Kolmogorov–Arnold Networks (KANs). This integration enables iCKANs to achieve predictive accuracy, interpretability, and robust extrapolation simultaneously. Their flexible architecture also facilitates sym-bolic extraction of learned potentials. Building upon previous KAN-based frameworks for hyperelastic materials, iCKANs establish a new paradigm for interpretable, data-driven discovery of inelastic material models [Abdolazizi et al., 2025, Thakolkaran et al., 2025]. 
+
+Interpretability. The iCKAN framework shares the constitutive structure of inelastic Constitutive Neural Net-works (iCANNs) [Holthusen et al., 2026], but differs fundamentally in its representation of the elastic and inelastic potentials. Whereas iCANNs employ custom-built convex neural networks, iCKANs use input-convex KANs, en-abling a more compact and expressive formulation. The use of trainable B-spline activations enables iCKANs to achieve high expressiveness with substantially reduced network complexity. A major advantage of KANs is their built-in support for activation-level symbolic regression, which facilitates the direct extraction of interpretable, closed-form analytical expressions for both elastic and inelastic potentials. This capability preserves flexibility in 19 data-driven discovery while yielding transparent, physically meaningful models with strong predictive performance [Abdolazizi et al., 2025]. Furthermore, iCKANs naturally accommodate additional non-mechanical features, such as temperature, whose effects can be extracted as explicit mathematical expressions, providing valuable physical insight. 
+
+Extrapolability. The combination of a thermodynamically consistent constitutive framework and convex-network architecture ensures that the learned elastic and inelastic potentials satisfy essential physical constraints across their entire input domain. Importantly, these constraints are retained in the closed-form symbolic expressions obtained through the KAN symbolification process. This structure enhances robustness and enables physically consistent extrapolation beyond the training regime [Abdolazizi et al., 2025]. As demonstrated in synthetic benchmarks (Section 5.1), models trained on limited deformation data can still provide reliable predictions for unseen, larger deformations using both the spline-based KAN and its symbolic form. 
+
+Computational efficiency. By promoting sparsity in the KAN architecture, the symbolic regression process yields concise, closed-form expressions for both elastic and inelastic potentials. These analytical formulations can be seamlessly integrated into finite element solvers, eliminating the need for network evaluation during simulation. As a result, the iCKAN approach introduces no additional computational overhead at deployment [Abdolazizi et al., 2025]. 
+
+Choice of input representation. This study employs the principal invariants of the elastic right Cauchy–Green tensor as inputs for the elastic potential, but alternative objective representations—such as principal stretches—are equally valid in the iCKAN formulation [Abdolazizi et al., 2025]. For the inelastic potential, invariant-based stress measures are used, with the option to augment input sets by combining stress and deformation invariants. The selection of input representation influences both predictive accuracy and interpretability, and a systematic compar-ison across different material classes is a promising direction for future research [Holthusen et al., 2026]. 
+
+Predictive performance. The results demonstrate that iCKANs deliver strong predictive performance on both synthetic and experimental viscoelastic datasets, including cases with feature-dependent material behavior. How-ever, in certain scenarios, conventional neural network models may still yield lower prediction errors. The iCKAN framework deliberately prioritizes interpretability and physical structure, which may result in modest accuracy trade-offs. Closing this gap remains an open challenge, motivating further work on training strategies, archi-tectural optimization, and advanced regularization techniques to enhance predictive performance while retaining interpretability. 
+
+Limitations and future work. While this work primarily addresses viscoelastic material behavior, the iCKAN framework is broadly applicable to other classes of inelasticity, including plasticity, damage, growth and remod-eling [Boes et al., 2026, Holthusen et al., 2025, 2026]. Extensions to anisotropic materials and structural-scale implementations are also feasible [Holthusen and Kuhl, 2026, Kalina et al., 2025, Thakolkaran et al., 2025]. These directions open new possibilities for feature-aware material characterization and data-driven design. From a numerical standpoint, KANs require the specification of spline grid ranges, which makes initialization more involved than in standard multilayer perceptrons. Although the present approximation strategy proved effective, future research should focus on developing robust adaptive grids and training techniques. Additional opportu-nities include investigating partially input-convex architectures, advanced pruning and convexification strategies, and automated hyperparameter selection, potentially leveraging large language models or other AI-driven tools [Hospedales et al., 2021, Tacke et al., 2025]. Efficient, standardized integration into finite element solvers for both forward and inverse boundary value problems represents another key step for broad adoption. 
+
+Conclusion. Reliable and interpretable constitutive models for inelastic materials under finite deformations are es-sential for fields where complex, feature-dependent responses arise, such as biomedical engineering. The iCKAN 20 framework presented in this work provides a robust, physically consistent, and data-driven solution for automated discovery of inelastic material models. By incorporating input-convex Kolmogorov–Arnold Networks, the ap-proach achieves a unique combination of flexibility, predictive accuracy, and transparent symbolic representations, advancing the state of the art in interpretable inelastic material modeling. 
+
+# A Appendix 
+
+## A.1 Generation of a convex function from a convex, non-decreasing function 
+
+Let f (x) be a multivariate funciton of x, which is convex and non-decreasing with respect to each component of 
+
+x. We prove that 
+
+˜f (x) = f (x) − f (α) − ∇ f (x)|x=α · (x − α) (A.1) is convex with respect to each component of x, nonnegative and has zero value and zero-valued derivative at 
+
+x = α.
+
+Convexity. Suppose f (x) is a twice-diffentiable function, it holds that the second partial derivate with respect to each argument must be nonnegative, i.e., ∂2f /∂x 2 
+
+> i
+
+≥ 0 for all i. The first partial derivative of ˜f (x) with respect to 
+
+xi is given as 
+
+∂ ˜f (x)
+
+∂x i
+
+= ∂f (x)
+
+∂x i
+
+− ∂f (x)
+
+∂x i x=α
+
+, (A.2) and the second partial derivative is 
+
+∂2 ˜f (x)
+
+∂x 2
+
+> i
+
+= ∂2f (x)
+
+∂x 2
+
+> i
+
+≥ 0 for all i . (A.3) Therefore, ˜f (x) is convex with respect to each component of x.
+
+Nonnegativity. Since f (x) is convex and non-decreasing with respect to each component of x, it must hold that for any x and α,
+
+f (x) ≥ f (α) + ∇f (x)|x=α · (x − α) . (A.4) Rearranging this inequality gives 
+
+f (x) − f (α) − ∇ f (x)|x=α · (x − α) ≥ 0 , (A.5) which implies that ˜f (x) ≥ 0 for all x.
+
+Zero value and zero derivative at x = α. Evaluating ˜f (x) at x = α gives 
+
+˜f (α) = f (α) − f (α) − ∇ f (x)|x=α · (α − α) = 0 . (A.6) The gradient of ˜f (x) at x = α is 
+
+∇ ˜f (x) x=α
+
+= ∇f (x)|x=α − ∇ f (x)|x=α = 0 . (A.7) Thus, ˜f (x) has a zero value and derivative at x = α.
+
+## A.2 Stress-free undeformed state 
+
+To ensure that the undeformed state is correctly represented, that is, that there should be no energy or stress at zero elastic deformation [Holzapfel, 2000], the elastic potential function must satisfy the following conditions 
+
+ψ( ¯Ce = I) = 0 and ∂ψ ∂ ¯Ce ¯Ce=I
+
+= 0 . (A.8) 21 This can be achieved by adding a correction term for stress and potential, ψσ and ψϵ, respectively, to the output elastic potential of the KAN, ψKAN , i.e., ψ = ψKAN + ψσ (J) + ψϵ. These two terms are calculated dependent on the output elastic potential at the undeformed state. For more detailed explanation, please refer to Appendix D in [Abdolazizi et al., 2025]. In our case, the derivatives of the modified invariants w.r.t. ¯Ce are zero at the undeformed state [Thakolkaran et al., 2025], i.e., 
+
+∂ ˆI ¯Ce
+
+> 1
+
+∂ ¯Ce ¯Ce=I
+
+= ∂ ˆI ¯Ce
+
+> 2
+
+∂ ¯Ce ¯Ce=I
+
+= ∂ ˆI ¯Ce
+
+> 3
+
+∂ ¯Ce ¯Ce=I
+
+= 0 . (A.9) Therefore, the stress-free undeformed state is automatically ensured. The potential-free undeformed state is achieved by subtracting the output elastic potential evaluated at in the undeformed state, 
+
+ψ = ψKAN − ψKAN ¯Ce=I . (A.10) 
+
+## A.3 Alternative choices of argument for inelastic potential 
+
+Adding negative stress invariants. For more network expressibility, the negative invariants can be added addi-tionally to the positive invariants to enhance the input arguments of KAN for the inelastic potential, i.e., 
+
+ω = ω
+
+ ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+, − ˆI ¯Σ 
+
+> 1
+
+, − ˆJ ¯Σ 
+
+> 2
+
+, − ˆJ ¯Σ
+
+> 3
+
+
+
+. (A.11) This approach increases the expressivity of the inelastic potential network by additional activations that are mono-tonic decreasing and convex with respect to the invariants. In this way, the convexity with respect to the invariants is preserved. To ensure that the output inelastic potential is zero-valued at its origin and non-negative, the same transformation step in Equation 27 should be carried out. 
+
+Adding principal invariants. Additional stress invariants can be added to the input arguments of the inelastic potential network to enhance the expressivity, e.g., the classical invariants I ¯Σ 
+
+> 2
+
+and I ¯Σ 
+
+> 3
+
+. These invariants can be expressed in terms of the stress invariants as 
+
+I ¯Σ 
+
+> 2
+
+= (I ¯Σ 
+
+> 1
+
+)2
+
+6 + J ¯Σ 
+
+> 2
+
+, I ¯Σ 
+
+> 3
+
+= (I ¯Σ 
+
+> 1
+
+)3
+
+27 + 23 I ¯Σ 
+
+> 1
+
+J ¯Σ 
+
+> 2
+
++ J ¯Σ 
+
+> 3
+
+. (A.12) Analogously to the modification of the stress invariants, we take the square root and cubic root of the second and third principal invariants, respectively, and achieve the following modified invariants, 
+
+ˆI ¯Σ 
+
+> 2
+
+=
+
+q
+
+I ¯Σ 
+
+> 2
+
+, ˆI ¯Σ 
+
+> 3
+
+= 3
+
+q
+
+I ¯Σ 
+
+> 3
+
+. (A.13) Thus, the expression of the inelastic potential can be reformulated as 
+
+ω = ω
+
+
+
+I ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+, ˆI ¯Σ 
+
+> 2
+
+(I ¯Σ 
+
+> 1
+
+, J ¯Σ 
+
+> 2
+
+), ˆI ¯Σ 
+
+> 3
+
+(I ¯Σ 
+
+> 1
+
+, J ¯Σ 
+
+> 2
+
+, J ¯Σ 
+
+> 3
+
+)
+
+
+
+. (A.14) The guarantee of thermodynamic consistency is prove in Holthusen et al. [2026]. Analogously, the transformation step in Equation 27 should follow. 
+
+## A.4 Estimation for initial grid range of iCKANs 
+
+The activation functions in KANs are represented by B-splines defined on fixed grids. In this work, we adopt the spline grid initialization strategy proposed by Thakolkaran et al. [2025]. Accordingly, each input dimension requires a prescribed grid range that specifies the interval over which the activation functions are explicitly repre-sented. Outside this interval, linear extrapolation is applied, which may lead to numerical instabilities if the inputs extend significantly beyond the grid bounds. Consequently, a reliable choice of the grid range for the first KAN 22 layer is essential for stable training and evaluation. Although one could assume a generally sufficiently large range, this would lead to a reduction of training efficiency and resolution. In contrast to prior work focusing on hyperelasticity [Abdolazizi et al., 2025, Thakolkaran et al., 2025], the effective network inputs in the present iCKAN formulation are not directly given by the dataset (F, P), but instead arise within a recurrent constitutive update and depend on intermediate model predictions. Their distribution is therefore not known a priori and cannot be determined through a simple preprocessing step. To address this difficulty, we introduce an estimation procedure for suitable grid ranges based on invariant measures computed from the input and output tensors using the training data. Specifically, the initial grid range for the KAN model representing the Helmholtz free energy ψ is defined based on the invariants of the right Cauchy-Green deformation tensor C = FTF, while the initial grid range for the KAN model representing the inelastic potential ω is defined based on the invariants of the product of the right Cauchy-Green deformation tensor C and the second Piola-Kirchhoff stress tensor S = F−1P. In the following, we provide a justification for the plausibility of this estimation scheme. 
+
+A.4.1 Approximation for initial grid range of KAN for inelastic potential 
+
+The initial grid range of the KAN for inelastic potential should cover the range of the invariants of the symmetric elastic Mandel-like stress tensor ¯Σ. The elastic Mandel-like stress ¯Σ and the second Piola-Kirchhoff stress tensor 
+
+S are defined by 
+
+¯Σ = 2 ¯Ce
+
+∂ψ ∂ ¯Ce
+
+and S = 2 U−1
+
+> i
+
+∂ψ ∂ ¯Ce
+
+U−1 
+
+> i
+
+, (A.15) leading to the relation ¯Σ = U−1 
+
+> i
+
+CSU i. We thus define ˆΣ = CS and proove that ¯Σ = U−1 
+
+> i
+
+ˆΣU i and ˆΣ share the same invariants. 
+
+First stress invariant. 
+
+I ¯Σ 
+
+> 1
+
+= tr( ¯Σ) = tr( U−1 
+
+> i
+
+ˆΣU i) = tr( ˆΣU iU−1 
+
+> i
+
+) = tr( ˆΣ) = I ˆΣ1 . (A.16) 
+
+Second stress invariant. 
+
+J ¯Σ 
+
+> 2
+
+= 12 tr(dev( ¯Σ)2) = 12 tr 
+
+
+
+¯Σ2 − 23 I ¯Σ 
+
+> 1
+
+¯Σ + 19 (I ¯Σ 
+
+> 1
+
+)2I
+
+
+
+= 12 (tr( ¯Σ2) − 59 (I ¯Σ 
+
+> 1
+
+)2) = 12 (tr( ˆΣ2) − 59 (I ˆΣ1 )2)= 12 tr(dev( ¯Σ)2) = J ˆΣ2
+
+with tr( ¯Σ2) = tr( U−1 
+
+> i
+
+ˆΣU iU−1 
+
+> i
+
+ˆΣU i) = tr( U−1 
+
+> i
+
+ˆΣ ˆΣU i) = tr( ˆΣ2) .
+
+(A.17) 
+
+Third stress invariant. 
+
+J ¯Σ 
+
+> 3
+
+= 13 tr(dev( ¯Σ)3) = 13 tr 
+
+
+
+¯Σ3 − I ¯Σ 
+
+> 1
+
+¯Σ2 + 13 (I ¯Σ 
+
+> 1
+
+)2 ¯Σ − 127 (I ¯Σ 
+
+> 1
+
+)3I
+
+
+
+= 13 (tr( ¯Σ3) − I ¯Σ 
+
+> 1
+
+tr( ¯Σ2) + 827 (I ¯Σ 
+
+> 1
+
+)3) = 13 (tr( ˆΣ3) − I ˆΣ1 tr( ˆΣ2) + 827 (I ˆΣ1 )3)= 13 tr(dev( ˆΣ)3) = J ˆΣ3
+
+with tr( ¯Σ3) = tr( U−1 
+
+> i
+
+ˆΣU iU−1 
+
+> i
+
+ˆΣU iU−1 
+
+> i
+
+ˆΣU i) = tr( U−1 
+
+> i
+
+ˆΣ ˆΣ ˆΣU i) = tr( ˆΣ3) .
+
+(A.18) In conclusion, the approximated grid range using the invariants of ˆΣ = CS is equivalent to the grid range using the invariants of ¯Σ.23 A.4.2 Approximation for initial grid range of KAN for elastic potential 
+
+The initial grid range of the KAN for elastic potential should cover the range of the invariants of the elastic right Cauchy-Green deformation tensor ¯Ce. We approximate the grid range using the invariants of the right Cauchy-Green deformation tensor C. For one cyclic tension test, the elastic deformation is always smaller than the total deformation, i.e., ¯Ce ≤ C. Hence, the invariants of ¯Ce are always smaller than or equal to the invariants of C,i.e., I ¯Ce 
+
+> 1
+
+≤ IC 
+
+> 1
+
+, I ¯Ce 
+
+> 2
+
+≤ IC 
+
+> 2
+
+and I ¯Ce 
+
+> 3
+
+≤ IC 
+
+> 3
+
+. Therefore, the grid range using the invariants of C always covers the grid range using the invariants of ¯Ce.It is to note, this only holds for compressible cases. For incompressible materials, we assume this approach is sufficient. 
+
+## A.5 Refinement of computations for numerical stability 
+
+Square root and cubic root. To enable the differentiability at the origin, the square root and cubic root of the stress invariants are modified as [Holthusen et al., 2026] 
+
+√x = x
+
+(x + ϵ1)1/2 , 3
+
+√x = x
+
+(x + ϵ2)2/3 , with ϵ1, ϵ 2 > 0 . (A.19) 
+
+Matrix square root. Closed-form formulation of the matrixs by Hudobivnik and Korelc [2016] are used for computing the matrix square roots, specifically, Ui = √Ci [Holthusen et al., 2026]. 
+
+## A.6 Implicit time integration scheme 
+
+Following the implicit integration scheme, the following nonlinear equation hast to be solved at each timestep t to get the current inelastic stretch tensor Ui,t ,
+
+r := Ci,t −1 − Ui,t exp( −2 ∆ t Di,t )Ui,t 
+
+> !
+
+= 0 , (A.20) where Di,t depends nonlinearly on Ui,t [Holthusen and Kuhl, 2026]. Classically, the initial guess for U(0)  
+
+> i,t
+
+is chosen as the previous timestep value Ui,t −1 and the equation is solved iteratively using, e.g., the Newton-Raphson method, until the residual r is sufficiently small. In comparison to the explicit time integration scheme, this approach is more stable but however time consuming. 
+
+A.6.1 Helper network for solving implicit evolution equation 
+
+To overcome the drawbacks of the implicit scheme and accelerate the training, the iterative solver can be replaced by a helper neural network Nf to directly predict Ui,t [As’ ad and Farhat, 2023, Rosenkranz et al., 2024]. This helper network can be represented by a Liquid Time-Constant Network (LTC) [Hasani et al., 2021] to predict the current inelastic stretch [Holthusen and Kuhl, 2026]. For instance, we need to compute a trial value of Di,t , Dtrial  
+
+> i,t
+
+,which is Di evaluated with the current Ct but the last Ui,t −1. Note that the outcome of the network generally not statisfy the symmetric positive definite condition of Ui,t . To enforce this condition, it is of advantage to work with the lower triangular matrix Li of the Cholesky decomposition of Ui, i.e., Ui = LiLT 
+
+> i
+
+[Benoit, 1924]. The helper network is then designed to predict Li,t as 
+
+Li,t = Nf (Li,t −1, Ct, ¯Dtrial  
+
+> i,t
+
+) , (A.21) following with Ui,t = Li,t LT
+
+> i,t
+
+.To evaluate the accuracy of the predicted Ui,t , the loss function is enhanced by a term corresponding to the evolution equation, namely the residual of the implicit scheme in Equation A.20, 
+
+Ltotal = Lstress + λevo · L evo with Levo = MSE( r) (A.22) 24 with λevo being a hyperparameter to balance the two loss parts and is heuristically set to 1e3 to 1e5 to bring the two loss parts to a similar scale. The overall architecture of the implicit iCKAN with a helper LTC is illustrated in Figure A.1. The algorithm for the implicit iCKANs with helper network is summarized in Appendix A.6.     
+
+> ¯Ctrial
+> e¯Σtrial ¯Dtrial
+> i
+> LTC ¯Ce
+> Ct−1,
+> Ui,t −1
+> State
+> Ft,∆tInput
+> Ct,
+> Ui,t
+> State
+> PtOutput
+
+ψtrial ωtrial 
+
+ψt
+
+Figure A.1: Implicit iCKAN architecture with helper LTC to solve the evolution equation at timestep t. The inputs at each step are the current deformation gradient and time increment (Ft, ∆t) together with the state variables 
+
+(Ct−1, Ui,t −1) from the previous step. The updated state variables is achieved by solving Equation A.20 using a helper LTC network. The updated state is then propagated to the next time step. In addition, the output stress P is computed by evaluating the elastic potential function ψ with the updated state variables. 
+
+Liquid time constant networks. LTCs are a type of recurrent neural networks that is designed to model temporal dependencies in sequential data. A LTC is based on the following ordinary differential equation (ODE) 
+
+dh
+
+dt = f (x, h) − α(x, h) h(t) , (A.23) where h is the hidden state, x is the input, and α is a learnable parameter that controls the decay rate of the hidden state. Consequently, a LTC consists of two networks, the source network Nf to learn the update function f , and a second network Nα to learn the state-dependent time constant α, which is positive and scaled by the timestep ∆t.This parameter controls the dynamics of the network, specifically, the larger α, the faster the state changes. Thus, the original forward Euler scheme 
+
+ht+1 = ht + ∆ t · f (ht, x) (A.24) is modified into a semi-explicit scheme, which reads 
+
+ht+1 = ht + ∆ t · (f (ht, x) − αt ht) . (A.25) In the present framework, the current hidden state is the previous lower Cholesky decompsition of the inelastic stretch tensor Li,t −1 and the current state is the current right Cauchy-Green tensor Ct and the trial inelastic strain rate Dtrial  
+
+> i,t
+
+, i.e., 
+
+Li,t = Li,t −1 + ∆ t ·  Nf (Li,t −1, Ct, ¯Dtrial  
+
+> i,t
+
+) − N α(Li,t −1, Ct, ¯Dtrial  
+
+> i,t
+
+)Li,t −1
+
+ . (A.26) 
+
+A.6.2 Pseudo code for iCKAN with implicit time integration and helper network 
+
+25 Algorithm 1 iCKAN with implicit time integration and helper network 
+
+Require: ∆tt, Ft, f 
+
+> 1:
+
+Retrieve Ct−1, Ui,t −1 from history  
+
+> 2:
+
+Get trial value of evolution equation Dtrial  
+
+> i,t
+> 3:
+
+Ct ← FTt Ft 
+
+> 4:
+
+¯Ctrial  
+
+> e,t
+
+← U−1
+
+> i,t −1
+
+CtUi,t −1 
+
+> 5:
+
+ψ ← cKAN( I ¯Ctrial  
+
+> e,t
+> 1
+
+, I ¯Ctrial  
+
+> e,t
+> 2
+
+, I ¯Ctrial  
+
+> e,t
+> 3
+
+) KAN for elastic potential  
+
+> 6:
+
+¯Σtrial ← 2 ¯Ctrial 
+
+> e,t
+
+∂ψ ∂ ¯Ctrial  
+
+> e,t
+> 7:
+
+ω ← cKAN( I ¯Σtrial  
+
+> 1
+
+,
+
+q
+
+J ¯Σtrial  
+
+> 2
+
+, 3
+
+q
+
+J ¯Σtrial  
+
+> 3
+
+) KAN for inelastic potential  
+
+> 8:
+
+Dtrial  
+
+> i
+
+← ∂ω ∂ ¯Σtrial  
+
+> 9:
+
+Predict Li,t ← fNN (Ui,t −1, Ct, Dtrial  
+
+> i,t
+
+) 
+
+> 10:
+
+Ui,t ← LiLT 
+
+> i
+> 11:
+
+Get predicted value of evolution equation Di,t  
+
+> 12:
+
+Di ← ∂ω ∂ ¯Σ 
+
+> 13:
+
+Get residual of evolution equation: r := Ci,t −1 − Ui,t exp( −2 ∆ t Di,t )Ui,t 
+
+> !
+
+= 0 
+
+> 14:
+
+¯Ce,t ← U−1 
+
+> i,t
+
+CtUi,t  
+
+> 15:
+
+Compute invariants: I1,e , I 2,e , I 3,e ← Invariants( ¯Ce,t ) 
+
+> 16:
+
+ψ ← cKAN( I1,e , I 2,e , I 3,e ) KAN for elastic potential  
+
+> 17:
+
+St ← 2U−1
+
+> i
+
+∂ψ ∂ ¯Ce,t 
+
+U−1 
+
+> i
+> 18:
+
+Pt ← FtSt 
+
+> 19:
+
+Update history: store Ct, Ui,t  
+
+> 20:
+
+return Pt
+
+## A.7 Candidate functions for symbolification 
+
+Candidate functions that are convex and non-decreasing on the interval [0 , ∞) [Thakolkaran et al., 2025]: 
+
+x, x1.5, x2, x2.5, x3, x3.5, x4, x4.5, x5
+
+ex, log( ex), log( ex)2, log( ex)3
+
+Candidate functions that are convex, zero-valued and non-negative on the interval (−∞ , ∞):
+
+|x|, |x|1.5, x2, |x|2.5, |x|3, |x|3.5, x4, |x|4.5, |x|5
+
+ex2
+
+− 1, ex4
+
+− 1cosh( x) − 1, cosh( x2) − 1log(cosh( x)) , log(cosh( x2)) 
+
+## A.8 Additional results of iCKANs on synthetic data 
+
+In this section, we show the additional results of the iCKANs trained on synthetic data. Using the explicit time integration, we examine the options where the input arguments of the KAN for inelastic potential is augmented with the negative stress invariants or additional pricipal invariants. We further examine the performance of iCKANs with implicit time intergration scheme Appendix A.6. We provide the details on the performance of each variant and compare the convergence between the explicit and implicit iCKANs. 
+
+Explicit iCKAN: Full result. The prediction of the symbolified version of the explicit iCKAN on the entire dataset is shown in Figure A.2 26 tload = 0 .2 s
+
+tload = 0 .5 s
+
+tload = 1 s
+
+Figure A.2: Predicted first Piola-Kirchhoff stress by the symbolified explicit iCKAN. The gray area shows the range of the training data and the dots with corresponding color indicate the reference data. 
+
+Explicit iCKAN: Adding negative stress invariants to arguments of inelasitc potential. We could enhance the arguments for the inelastic potential with the negative stress invariants, as shown in Equation A.11. This approach provides higher expressibility of the network, but unfortunately shows lower stability in prediction. To achieve more interpretable symbolifc expressions of the inelasitc potential we could symbolify the combined 27 activations for the positive and negative parts of each input argument together, i.e. 
+
+ysymb  
+
+> 1
+
+= y+1 ( ˆI ¯Σ 
+
+> 1
+
+) + y− 
+
+> 1
+
+(− ˆI ¯Σ 
+
+> 1
+
+) ,ysymb  
+
+> 2
+
+= y+2 ( ˆJ ¯Σ 
+
+> 2
+
+) + y− 
+
+> 2
+
+(− ˆJ ¯Σ 
+
+> 2
+
+) ,ysymb  
+
+> 3
+
+= y+3 ( ˆJ ¯Σ 
+
+> 3
+
+) + y− 
+
+> 3
+
+(− ˆJ ¯Σ 
+
+> 3
+
+) .
+
+(A.27) The candidate functions are general convex functions that are not necessarily non-decreasing. The architecture of the KAN for inelastic potential before and after the symbolification is shown in Figure A.3. The last three activations are pruned to be zero since their contribution to the output is included in the first three activations. It is to note, that the H-transformation has to be applied to the network outcome to achieve convex, non-negative and zero-valued at origin inelastic potential. 
+
+ˆI ¯Σ 
+
+> 1
+
+ˆJ ¯Σ 
+
+> 2
+
+ˆJ ¯Σ 
+
+> 3
+
+− ˆI ¯Σ 
+
+> 1
+
+− ˆJ ¯Σ 
+
+> 2
+
+− ˆJ ¯Σ
+
+> 3
+
+ωKAN 
+
+(a) B-spline expression of KAN for in-elastic potential 
+
+> Symb.
+
+## −→ 
+
+ˆI ¯Σ 
+
+> 1
+
+ˆJ ¯Σ 
+
+> 2
+
+ˆJ ¯Σ 
+
+> 3
+
+− ˆI ¯Σ 
+
+> 1
+
+− ˆJ ¯Σ 
+
+> 2
+
+− ˆJ ¯Σ
+
+> 3
+
+ωKAN 
+
+(b) Symbolic expression of KAN for in-elastic potential 
+
+Figure A.3: KAN for inelastic potential using both positive and negative stress invariants as arguments (a) before and (b) after the symbolification of the activations. 
+
+Explicit iCKAN: Adding princiap invariants to arguments of inelasitc potential. We could enhance the argu-ments of the KAN for inelastic potential with the principal invariants, as shown in Equation A.14. 
+
+Implicit iCKAN. We consider the implicit iCKAN variant using three modified stress invariants as inputs to the KAN for inelastic potential (Equation 26). The accuracy of the inelastic stretch predicted by the helper LTC network is compared with the Newton–Raphson solution of the implicit evolution equation in Figure A.4 for the case of F max 11 = 1 .3 and ˙F11 = 0 .6 s−1. Although trained only on the gray-marked range, the LTC shows good generalization to larger deformation levels. 28 t [s] 
+
+Figure A.4: Stress prediction of the implicit iCKAN. During training, the evolution equation is solved with a trainable LTC helper network. The gray region indicate the range of training data. Predictions using the trained LTC are compared with solutions obtained by a Newton–Raphson solver. 
+
+Comparison between the explicit and implicit iCKAN. For the case where three modified stress invariants are used as input arguments for the KAN for inelastic potential, the convergence behavior of the explicit and implicit time integration schemes is compared in Figure A.5. 
+
+(a) Explicit training (b) Implicit training with helper LTC Figure A.5: Training loss of the iCKAN model with L1 regularization using (a) the explicit integration scheme and (b) the implicit integration scheme with helper LTC to solve the evolution equation. 
+
+Detailed results. Table A.1 shows the detailed results for both explicit and implicit iCKAN before and after symbolification. The quantities Lstress and Ltest denote the NMSE of the predicted stress on the training and full datasets, respectively. Lsymb is the NMSE of the symbolified network on the full dataset, and Levo is the loss of the implicit evolution equation when a helper LTC is used during training. 
+
+## A.9 Additional data for training iCKANs on experimental data 
+
+Hyperparameters. Table A.2 lists the hyperparameters of the iCKANs from Section 5 for the material model discovery of VHB 4910 and VHB 4905. 29 Table A.1: Detailed results of training and testing of iCKANs on the synthetic dataset. 
+
+iCKAN ωKAN (•) Lstress Levo Ltest Lsymb 
+
+Explicit ( ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+) 2.0 · 10 −5 - 6.3 · 10 −4 3.8 · 10 −4
+
+Explicit ( ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+, ˆI ¯Σ 
+
+> 2
+
+, ˆI ¯Σ 
+
+> 3
+
+) 4.2 · 10 −4 - 9.7 · 10 −4 -Implicit (LTC) ( ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+) 6.9 · 10 −5 2.9 · 10 −8 7.3 · 10 −4 -Implicit (NR) ( ˆI ¯Σ 
+
+> 1
+
+, ˆJ ¯Σ 
+
+> 2
+
+, ˆJ ¯Σ 
+
+> 3
+
+) - - 3.4 · 10 −4 3.9 · 10 −4
+
+Hyperparameter Value VHB 4910 VHB 4905 elastic potential inelastic potential elastic potential inelastic potential Topology [3,2,1] [3,2,1] [4,2,1] [3,2,1] Order of splines 3 3 3 3Grid intervals 1 1 1 1Optimizer AMSGrad AMSGrad Scheduler Cyclic LR Cyclic LR Base Learning rate 5 · 10 −3 1 · 10 −4
+
+Max Learning rate 5 · 10 −2 1 · 10 −3
+
+Clip gradient norm 0.1 0.1
+
+L1 regularization magnitude 1 · 10 −5 1 · 10 −4
+
+Table A.2: Hyperparameters for the iCKAN models used in the numerical examples in Section 5 for VHB 4910 and VHB 4905. 
+
+Detailed results. Table A.3 shows the detailed results of iCKANs performance on VHB 4910 and VHB 4905 polymer. The stress loss before symbolification is denoted as L and the stress loss after symbolification is denoted as ˆL. Figure A.6 shows the loss convergence of training iCKANs from Section 5 for the material model discovery of VHB 4910 and VHB 4905. Table A.3: Detailed results of training and testing of iCKANs on VHB 4910 and VHB 4905 dataset. 
+
+Ltrain Ltest ˆLtrain ˆLtest 
+
+VHB 4910 7.6 · 10 −5 1.3 · 10 −3 1.9 · 10 −4 1.9 · 10 −3
+
+VHB 4905 2.2 · 10 −4 6.5 · 10 −4 4.1 · 10 −4 6.9 · 10 −4
+
+30 Loss 
+
+> (a) VHB 4910
+> Loss (b) VHB 4905
+
+Figure A.6: Losses during training of the iCKAN for the experimental data of (a) VHB 4910 and (b) VHB4905 polymer. The losses are plotted on a logarithmic scale. For training, 1300 epochs were used. 
+
+# B Declarations 
+
+## B.1 Acknowledgements 
+
+This work was supported by the Emmy Noether Grant 533187597 by the Deutsche Forschungsgemeinschaft to Kevin Linka. Christian Cyron greatfully acknowledges support of the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme (grant agreement No 101167207 / MechVivo). 
+
+## B.2 Conflict of interest 
+
+The authors of this work certify that they have no affiliations with or involvement in any organization or en-tity with any financial interest (such as honoraria; participation in speakers’ bureaus; membership, employment, consultancies, stock ownership, or other equity interest; and expert testimony or patent-licensing arrangements), or non-financial interest (such as personal or professional relationships, affiliations, knowledge or beliefs) in the subject matter or materials discussed in this manuscript. 
+
+## B.3 Code availability 
+
+The source code will be made publicly available upon acceptance of the manuscript. 
+
+## B.4 Contributions by the authors 
+
+Chenyi Ji: Writing – original draft, Writing – review & editing, Visualization, Validation, Software, Methodol-ogy, Investigation, Formal analysis, Data curation, Conceptualization. Kian P. Abdolazizi: Writing – review & editing, Supervision, Software, Methodology, Data curation, Conceptualization. Hagen Holthusen: Writing – review & editing, Supervision, Methodology, Conceptualization. Chrstian J. Cyron: Writing – review & editing, Methodology, Conceptualization. Kevin Linka: Writing – review & editing, Supervision, Methodology, Funding acquisition, Conceptualization. 31 B.5 Declaration of generative AI and AI-assisted technologies in the manuscript prepa-ration process 
+
+During the preparation of this work the authors used OpenAI’s ChatGPT in order to refine the language. After using this tool/service, the authors reviewed and edited the content as needed and take full responsibility for the content of the published article. 
+
+# References 
+
+K. P. Abdolazizi, K. Linka, and C. J. Cyron. Viscoelastic constitutive artificial neural networks (vcanns)–a frame-work for data-driven anisotropic nonlinear finite viscoelasticity. Journal of computational physics , 499:112704, 2024. K. P. Abdolazizi, R. C. Aydin, C. J. Cyron, and K. Linka. Constitutive Kolmogorov–Arnold Networks (CKANs): Combining accuracy and interpretability in data-driven material modeling. Journal of the Mechanics and Physics of Solids , 203:106212, oct 2025. ISSN 00225096. doi: 10.1016/j.jmps.2025. 106212. URL http://arxiv.org/abs/2502.05682https://linkinghub.elsevier.com/ retrieve/pii/S0022509625001887 .R. Abdusalamov, M. Hillg¨ artner, and M. Itskov. Automatic generation of interpretable hyperelastic material models by symbolic regression. International Journal for Numerical Methods in Engineering , 124(9):2093–2104, 2023. D. W. Abueidda, P. Pantidis, and M. E. Mobasher. Deepokan: Deep operator network based on kolmogorov arnold networks for mechanics problems. Computer Methods in Applied Mechanics and Engineering , 436:117699, 2025. B. Amos, L. Xu, and J. Z. Kolter. Input convex neural networks. In International conference on machine learning ,pages 146–155. PMLR, 2017. F. As’ ad and C. Farhat. A mechanics-informed neural network framework for data-driven nonlinear viscoelasticity. In AIAA SCITECH 2023 Forum , page 0949, 2023. C. Benoit. Note sur une m´ ethode de r´ esolution des ´ equations normales provenant de l’application de la m´ ethode des moindres carr´ es ` a un syst` eme d’´ equations lin´ eaires en nombre inf´ erieur ` a celui des inconnues (proc´ ed´ e du commandant cholesky). Bulletin g´ eod´ esique , 2(1):67–77, 1924. B. Boes, J.-W. Simon, and H. Holthusen. Accounting for plasticity: An extension of inelastic constitutive artificial neural networks. European Journal of Mechanics - A/Solids , 117:105998, 2026. ISSN 0997-7538. G. Bomarito, T. Townsend, K. Stewart, K. Esham, J. Emery, and J. Hochhalter. Development of interpretable, data-driven plasticity models with symbolic regression. Computers & Structures , 252:106557, 2021. F. Dammaß, K. A. Kalina, and M. K¨ astner. Neural networks meet phase-field: A hybrid fracture model. Computer Methods in Applied Mechanics and Engineering , 440:117937, 2025. T. Deschatre and X. Warin. Input convex kolmogorov arnold networks. arXiv preprint arXiv:2505.21208 , 2025. M. Fern´ andez, M. Jamshidian, T. B¨ ohlke, K. Kersting, and O. Weeger. Anisotropic hyperelastic constitutive models for finite deformations combining material theory and data-driven approaches with application to cubic lattice metamaterials. Computational Mechanics , 67(2):653–677, 2021. M. Fern´ andez, F. Fritzen, and O. Weeger. Material modeling for parametric, anisotropic finite strain hyperelas-ticity based on machine learning with application in optimization of metamaterials. International Journal for Numerical Methods in Engineering , 123(2):577–609, 2022. 32 M. Flaschel. Automated discovery of material models in continuum solid mechanics . PhD thesis, ETH Zurich, 2023. M. Flaschel, S. Kumar, and L. De Lorenzis. Unsupervised discovery of interpretable hyperelastic constitutive laws. 
+
+Computer Methods in Applied Mechanics and Engineering , 381:113852, 2021. M. Flaschel, S. Kumar, and L. De Lorenzis. Automated discovery of generalized standard material models with euclid. Computer Methods in Applied Mechanics and Engineering , 405:115867, 2023. M. Flaschel, P. Steinmann, L. De Lorenzis, and E. Kuhl. Convex neural networks learn generalized standard material models. Journal of the Mechanics and Physics of Solids , 200:106103, 2025. P. Flory. Thermodynamic relations for high elastic materials. Transactions of the Faraday Society , 57:829–838, 1961. J. N. Fuhg, G. A. Padmanabha, N. Bouklas, B. Bahmani, W. Sun, N. N. Vlassis, M. Flaschel, P. Carrara, and L. De Lorenzis. A review on data-driven constitutive laws for solids. arXiv preprint arXiv:2405.03658 , 2024. P. Germain, Q. S. Nguyen, and P. Suquet. Continuum thermodynamics. Journal of applied mechanics , 50:1010– 1020, 1983. B. Guo, Z. Lin, and Q. He. History-aware neural operator: Robust data-driven constitutive modeling of path-dependent materials. arXiv preprint arXiv:2506.10352 , 2025. B. Halphen and Q. S. Nguyen. Sur les mat´ eriaux standard g´ en´ eralis´ es. Journal de m´ ecanique , 14(1):39–63, 1975. S. Hartmann and P. Neff. Polyconvexity of generalized polynomial-type hyperelastic strain energy functions for near-incompressibility. International journal of solids and structures , 40(11):2767–2791, 2003. R. Hasani, M. Lechner, A. Amini, D. Rus, and R. Grosu. Liquid time-constant networks. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 35, pages 7657–7666, 2021. H. Holthusen and E. Kuhl. A complement to neural networks for anisotropic inelasticity at finite strains. Computer Methods in Applied Mechanics and Engineering , 450:118612, 2026. ISSN 0045-7825. H. Holthusen, C. Rothkranz, L. Lamm, T. Brepols, and S. Reese. Inelastic material formulations based on a co-rotated intermediate configuration—application to bioengineered tissues. Journal of the Mechanics and Physics of Solids , 172:105174, 2023. ISSN 0022-5096. H. Holthusen, L. Lamm, T. Brepols, S. Reese, and E. Kuhl. Polyconvex inelastic constitutive artificial neural networks. PAMM , 24(3):e202400032, 2024a. H. Holthusen, L. Lamm, T. Brepols, S. Reese, and E. Kuhl. Theory and implementation of inelastic constitutive artificial neural networks. Computer Methods in Applied Mechanics and Engineering , 428:117063, 2024b. H. Holthusen, T. Brepols, K. Linka, and E. Kuhl. Automated model discovery for tensional homeostasis: Consti-tutive machine learning in growth and remodeling. Computers in biology and medicine , 186:109691, 2025. H. Holthusen, K. Linka, E. Kuhl, and T. Brepols. A generalized dual potential for inelastic constitutive artificial neural networks: A jax implementation at finite strains. Journal of the Mechanics and Physics of Solids , 206: 106337, 2026. ISSN 0022-5096. G. A. Holzapfel. Nonlinear Solid Mechanics: A Continuum Approach for Engineering Science . John Wiley & Sons, Chichester, 2000. ISBN 0-471-82319-8. 33 K. Hornik, M. Stinchcombe, and H. White. Multilayer feedforward networks are universal approximators. Neural networks , 2(5):359–366, 1989. T. Hospedales, A. Antoniou, P. Micaelli, and A. Storkey. Meta-learning in neural networks: A survey. IEEE transactions on pattern analysis and machine intelligence , 44(9):5149–5169, 2021. M. Hossain, D. K. Vu, and P. Steinmann. Experimental study and numerical modelling of vhb 4910 polymer. 
+
+Computational Materials Science , 59:65–74, 2012. B. Hudobivnik and J. Korelc. Closed-form representation of matrix functions in the formulation of nonlinear material models. Finite Elements in Analysis and Design , 111:19–32, 2016. A. A. Jadoon, K. A. Meyer, and J. N. Fuhg. Automated model discovery of finite strain elastoplasticity from uniaxial experiments. Computer Methods in Applied Mechanics and Engineering , 435:117653, 2025. T. Ji, Y. Hou, and D. Zhang. A comprehensive survey on kolmogorov arnold networks (kan). arXiv preprint arXiv:2407.11075 , 2024. R. E. Jones, A. L. Frankel, and K. Johnson. A neural ordinary differential equation framework for modeling inelastic stress response via internal state variables. Journal of Machine Learning for Modeling and Computing ,3(3), 2022. E. Kabliman, A. H. Kolody, J. Kronsteiner, M. Kommenda, and G. Kronberger. Application of symbolic regression for constitutive modeling of plastic deformation. Applications in Engineering Science , 6:100052, 2021. K. A. Kalina, J. Brummund, W. Sun, and M. K¨ astner. Neural networks meet anisotropic hyperelasticity: A frame-work based on generalized structure tensors and isotropic tensor functions. Computer Methods in Applied Mechanics and Engineering , 437:117725, 2025. T. Kirchdoerfer and M. Ortiz. Data-driven computational mechanics. Computer Methods in Applied Mechanics and Engineering , 304:81–101, 2016. E. Kiyani, K. Shukla, J. F. Urb´ an, J. Darbon, and G. E. Karniadakis. Optimizing the optimizer for physics-informed neural networks and kolmogorov-arnold networks. Computer Methods in Applied Mechanics and Engineering ,446:118308, 2025. A. N. Kolmogorov. On the representation of continuous functions of several variables by superpositions of con-tinuous functions of a smaller number of variables . American Mathematical Society, 1961. J.-Z. Li, Z.-P. Guan, J.-R. Chen, and H.-C. Jin. A long short-term memory-based constitutive modeling framework for capturing strain path dependence in plastic deformation. Mechanics of Materials , 205:105325, 2025. Z. Liao, M. Hossain, X. Yao, M. Mehnert, and P. Steinmann. On thermo-viscoelastic experimental characterization and numerical modelling of vhb polymer. International Journal of Non-Linear Mechanics , 118:103263, 2020. L. Linden, D. K. Klein, K. A. Kalina, J. Brummund, O. Weeger, and M. K¨ astner. Neural networks meet hypere-lasticity: A guide to enforcing physics. Journal of the Mechanics and Physics of Solids , 179:105363, 2023. K. Linka and E. Kuhl. A new family of constitutive artificial neural networks towards automated model discovery. 
+
+Computer Methods in Applied Mechanics and Engineering , 403:115731, 2023. K. Linka, M. Hillg¨ artner, K. P. Abdolazizi, R. C. Aydin, M. Itskov, and C. J. Cyron. Constitutive artificial neural networks: A fast and general approach to predictive data-driven constitutive modeling by deep learning. Journal of Computational Physics , 429:110010, 2021. 34 Z. Liu, Y. Wang, S. Vaidya, F. Ruehle, J. Halverson, M. Soljaˇ ci´ c, T. Y. Hou, and M. Tegmark. Kan: Kolmogorov-arnold networks. arXiv preprint arXiv:2404.19756 , 2024. F. Masi, I. Stefanou, P. Vannucci, and V. Maffi-Berthier. Thermodynamics-based artificial neural networks for constitutive modeling. Journal of the Mechanics and Physics of Solids , 147:104277, 2021. M. Maurizi, C. Gao, and F. Berto. Predicting stress, strain and deformation fields in materials and structures with graph neural networks. Scientific reports , 12(1):21834, 2022. V. K. Narouie, J.-H. Urrea-Quintero, F. Cirak, and H. Wessels. Unsupervised constitutive model discovery from sparse and noisy data. Computer Methods in Applied Mechanics and Engineering , 452:118722, 2026. A. Polo-Molina, D. Alfaya, and J. Portela. Monokan: Certified monotonic kolmogorov-arnold network. arXiv preprint arXiv:2409.11078 , 2024. M. Raissi, P. Perdikaris, and G. E. Karniadakis. Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. Journal of Compu-tational physics , 378:686–707, 2019. S. J. Reddi, S. Kale, and S. Kumar. On the convergence of adam and beyond. arXiv preprint arXiv:1904.09237 ,2019. M. Rosenkranz, K. A. Kalina, J. Brummund, W. Sun, and M. K¨ astner. Viscoelasticty with physics-augmented neural networks: model formulation and training methods without prescribed internal variables. Computational Mechanics , 74(6):1279–1301, 2024. L. N. Smith. Cyclical learning rates for training neural networks. In 2017 IEEE winter conference on applications of computer vision (WACV) , pages 464–472. IEEE, 2017. V. Tac, F. S. Costabal, and A. B. Tepole. Data-driven tissue mechanics with polyconvex neural ordinary differential equations. Computer Methods in Applied Mechanics and Engineering , 398:115248, 2022. V. Tac ¸, M. K. Rausch, F. S. Costabal, and A. B. Tepole. Data-driven anisotropic finite viscoelasticity using neural ordinary differential equations. Computer methods in applied mechanics and engineering , 411:116046, 2023. M. Tacke, M. Busch, K. Bali, K. Abdolazizi, K. Linka, C. Cyron, and R. Aydin. Constitutive scientific generative agent (csga): Leveraging large language models for automated constitutive model discovery. Machine Learning for Computational Science and Engineering , 1(1):23, 2025. P. Thakolkaran, Y. Guo, S. Saini, M. Peirlinck, B. Alheit, and S. Kumar. Can kan cans? input-convex kolmogorov-arnold networks (kans) as hyperelastic constitutive artificial neural networks (cans). Computer Methods in Applied Mechanics and Engineering , 443:118089, 2025. D. Versino, A. Tonda, and C. A. Bronkhorst. Data driven modeling of plastic deformation. Computer Methods in Applied Mechanics and Engineering , 318:981–1004, 2017. Y. Wang, J. Sun, J. Bai, C. Anitescu, M. S. Eshaghi, X. Zhuang, T. Rabczuk, and Y. Liu. Kolmogorov–arnold-informed neural network: A physics-informed deep learning framework for solving forward and inverse prob-lems based on kolmogorov–arnold networks. Computer Methods in Applied Mechanics and Engineering , 433: 117518, 2025. H. You, Q. Zhang, C. J. Ross, C.-H. Lee, M.-C. Hsu, and Y. Yu. A physics-guided neural operator learning approach to model biological tissues from digital image correlation measurements. Journal of Biomechanical Engineering , 144(12):121012, 2022. 35

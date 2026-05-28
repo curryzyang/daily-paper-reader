@@ -1,0 +1,1322 @@
+Title: Physics-constrained symbolic regression for discovering closed-form equations of multimodal water retention curves from experimental data
+
+URL Source: https://arxiv.org/pdf/2603.03346v1
+
+Published Time: Thu, 05 Mar 2026 01:02:50 GMT
+
+Number of Pages: 25
+
+Markdown Content:
+Physics-constrained symbolic regression for discovering closed-form equations of multimodal water retention curves from experimental data 
+
+Yejin Kim 1 Hyoung Suk Suh 1,∗
+
+> 1
+
+Department of Civil and Environmental Engineering, Case Western Reserve University, United States 
+
+y.kim@case.edu hssuh@case.edu 
+
+Abstract 
+
+Modeling the unsaturated behavior of porous materials with multimodal pore size distributions presents significant challenges, as standard hydraulic models often fail to capture their complex, multi-scale character-istics. A common workaround involves superposing unimodal retention functions, each tailored to a specific pore size range; however, this approach requires separate parameter identification for each mode, which limits interpretability and generalizability, especially in data-sparse scenarios. In this work, we introduce a funda-mentally different approach: a physics-constrained machine learning framework designed for meta-modeling, enabling the automatic discovery of closed-form mathematical expressions for multimodal water retention curves directly from experimental data. Mathematical expressions are represented as binary trees and evolved via genetic programming, while physical constraints are embedded into the loss function to guide the symbolic regressor toward solutions that are physically consistent and mathematically robust. Our results demonstrate that the proposed framework can discover closed-form equations that effectively represent the water retention characteristics of porous materials with varying pore structures. To support third-party validation, application, and extension, we make the full implementation publicly available in an open-source repository. 
+
+1 Introduction 
+
+Water retention characteristics play a central role in modeling unsaturated flow in porous media, as they gov-ern how fluids are distributed and retained under varying conditions. This behavior can be captured by the water retention curve, which links matric suction to degree of saturation, and serves as a key constitutive equa-tion in macroscopic models for hydro-mechanically coupled simulations [Borja, 2004, Griffiths and Lu, 2005, Song and Borja, 2014, Kim et al., 2025]. Semi-empirical models, such as those proposed by [Brooks, 1965, Van Genuchten, 1980, Kosugi, 1994, Fredlund and Xing, 1994], are commonly used in these simulations, as they provide simple analytical expressions with relatively few parameters to describe the water retention curve. However, these models rely on the assumption that the corresponding porous medium exhibits a unimodal pore size distribution, making them unsuitable for accurately capturing unsaturated behavior of materials with complex or multimodal pore structures [Li et al., 2014, Zhou et al., 2017]. A typical workaround is to combine multiple unimodal models, each corresponding to a distinct pore size range [Durner, 1994, Priesack and Durner, 2006], but this approach may complicate the parameter identification process and thus limits its applicability, particularly when the available data are sparse. Water retention characteristics play a central role in modeling unsaturated flow in porous media, as they govern how fluids are distributed and retained under varying conditions. This behavior can be captured by the water retention curve, which links matric suction to degree of saturation, and serves as a key constitutive equation in macroscopic models for hydro-mechanically coupled simulations [Borja, 2004, Griffiths and Lu, 2005, Song and Borja, 2014, Kim et al., 2025]. Semi-empirical models, such as those proposed by [Brooks, 1965, Van Genuchten, 1980, Kosugi, 1994, Fredlund and Xing, 1994], are commonly used in these simulations, as they provide simple analytical expressions with relatively few parameters to describe the water retention curve. However, these models rely on the assumption that the corresponding porous medium exhibits a unimodal pore size distribution, making them unsuitable for accurately capturing unsaturated behavior of materials with complex or multimodal pore structures [Li et al., 2014, Zhou et al., 2017]. A typical workaround is to combine multiple unimodal models, each corresponding to a distinct pore size range [Durner, 1994, Priesack and Durner, 2006], but this approach may complicate the parameter identification process and thus limits its applicability, particularly when the available data are sparse. 
+
+> *Corresponding author.
+
+1
+
+> arXiv:2603.03346v1 [physics.geo-ph] 24 Feb 2026
+
+One possible direction to overcome the aforementioned challenges is to adopt data-driven methods that can learn complex behaviors directly from experimental data without relying on pre-specified functional forms or the explicit calibration of material parameters. Among various approaches, deep neural networks have emerged as a popular choice due to their high flexibility and expressive capability. They have demonstrated strong potential to reproduce a wide range of constitutive models, for instance, elastic energy functional [Vlassis et al., 2020, Linden et al., 2023], plastic yield surfaces and hardening rules [Vlassis and Sun, 2021, Suh et al., 2023], permeabilities [Singh et al., 2020, Tembely et al., 2020], and also water retention characteristics [Liu et al., 2019, Heider et al., 2021]. Despite their powerful capacity to represent such complex, nonlinear relationships, employing neural networks has not yet become mainstream in practical engineering applications. This is largely due to their lack of interpretability; the black-box nature of neural networks often makes the trustworthiness of the trained model questionable, which may have hindered their broader use [Murdoch et al., 2019, Fan et al., 2020, Wing, 2021]. Although several efforts have been made to improve the interpretability of machine learning approaches [Saleem et al., 2022, Li et al., 2022, Liu et al., 2024], as noted by [Agarwal et al., 2021], models designed for improved interpretability often suffer from a lack of expressiveness needed to achieve high predictive accuracy (i.e., interpretability-accuracy trade-off). In contrast, symbolic regression–which aims to discover mathematical expressions that best fit a given dataset–can achieve both high interpretability and accuracy, provided the com-binatorial optimization used to search the expression space is successful [Angelis et al., 2023, Cranmer, 2023, Makke and Chawla, 2024]. This best-case outcome, however, is often difficult to achieve in practice. One major limitation of symbolic regression is its scalability: as the dimensionality of the input space or the complexity of the target function increases, the number of candidate expressions grow exponentially, making the search com-putationally demanding [Petersen et al., 2019, Udrescu and Tegmark, 2020]. Moreover, symbolic regression is particularly sensitive to noise and outliers in the data, which can lead to overfitting and the discovery of expres-sions that fail to generalize beyond the training dataset [Bomarito et al., 2022, de Franca and Kronberger, 2023]. To resolve these issues, recent studies [Bahmani et al., 2024, Suh et al., 2024] have proposed hybrid frameworks that integrate neural networks with symbolic regression, wherein a neural network is first trained to approximate the data, followed by symbolic regression to extract a closed-form expression for the neural network function. While this approach has made partial success in resolving these issues, one thing that has been overlooked is that the resulting mathematical expression or its neural network counterpart may yield a learned function that is not physically sound (e.g., a learned water retention model that predicts saturation values exceeding unity or exhibits non-monotonic behavior). Therefore, this work presents a meta-modeling approach for water retention in porous media using a multi-objective symbolic regressor that can discover closed-form mathematical expressions for multimodal water retention curves from experimental data, while maintaining physical consistency. The framework represents mathematical expressions as binary trees and employs genetic programming to evolve them over successive generations. A multi-objective optimization strategy drives this evolution by minimizing the prediction error while simultaneously enforcing physical constraints through dedicated loss terms, including monotonicity, lim-iting, and mode constraints. This approach enables the data-driven discovery of mathematical expressions that best describe the observed data while rigorously satisfying imposed physics constraints. Even when the result-ing equations exhibit a certain degree of complexity, they remain transparent, interpretable, and analytically tractable, standing in clear contrast to black-box neural network models. Consequently, the discovered clo-sure relationships can be seamlessly integrated into existing hydraulic simulation codes in the same manner as conventional water retention models. To promote transparency, reproducibility, and further development, the full implementation is publicly available in an open-source repository. For clarity and focus, this study specif-ically addresses the modeling of water retention behavior during primary drying (i.e., drainage), deliberately excluding hysteresis effects, with the intention of addressing these complexities in future work. 
+
+2 Method 
+
+This section begins by formulating the problem for discovering water retention models from experimental data as a multi-objective regression task in Section 2.1. We then outline the key physical constraints–such as monotonicity, limiting conditions at extreme suction pressures, and saturation bounds–that the model must satisfy to accurately reflect the behavior of unsaturated porous media (Section 2.2). Finally, in Section 2.3, we 2present a physics-constrained symbolic regression (PCSR) framework for multimodal water retention curves, with physics constraints enforced during training via penalization. The performance of the proposed framework will be demonstrated through a series of examples later in Section 3. 
+
+2.1 Learning problem 
+
+The machine learning task considered in this work is to discover a function ˆSw(s) that maps a suction pressure 
+
+s ∈ R to the corresponding water saturation ratio Sw ∈ R, given a set of data pairs {(s(i), S (i) 
+
+> w
+
+)}ndata  
+
+> i=1
+
+, with ndata 
+
+representing the number of experimental measurements. Our goal is to learn a model that not only fits the ob-served data but also generalizes well to unseen matric suction levels, accurately representing the water retention behavior of porous materials. This requires ensuring that the learned function is consistent with the underlying physics. Furthermore, we assume that the shape of the target function is known a priori and characterized by a designated number of modes, denoted as Nmode . This parameter serves as a structural prior, identifiable from experimental observations or material characteristics, and guides the symbolic search to mitigate overfitting without prescribing a rigid mathematical architecture. To achieve this, one may frame the problem as a multi-objective optimization task, in which the total loss function L comprises three major components: a data loss term Ldata to ensure the fitness to the experimental data, a physics loss term Lphys to enforce essential physics constraints, and a shape-guiding loss term Lmode to achieve the desired number of modes in the learned function: 
+
+L = 1
+
+ndata 
+
+> ndata
+
+X
+
+> i=1
+
+h ˆS(i) 
+
+> w
+
+(s(i)) − S(i)
+
+> w
+
+i2
+
+| {z }
+
+> =Ldata
+
++Lphys + Lmode , (1) where the quantities superposed with a hat correspond to predictions of the learned model, while Nmode rep-resents the target number of modes for the learned function. If neural networks are employed to represent the model, for instance, all relevant Lphys terms must be formulated as (partially) differentiable functions in order to integrate them into the backpropagation process during optimization. In contrast, the symbolic regression approach adopted in this work does not require the loss components to be differentiable. As such, it is not nec-essary to define a specific functional form for Lphys ; instead, the relevant physics constraints are incorporated through a custom penalization strategy. The constraints themselves will be summarized in Section 2.2, and implementation details will be presented in Section 2.3. While the function ˆSw(s) is inferred from a set of observed data pairs, experimental measurements can exhibit substantial variability in both the range and scale of suction pressure s and water saturation ratio Sw,depending on the type of porous material. Directly utilizing such raw data may compromise the stability and efficiency of machine learning models. To address this, we preprocess each data pair by mapping (s, S w)
+
+to normalized coordinates (s∗, S ∗
+
+> w
+
+), using reference points (smin , S w, max ) and (sres , S w, res ). Specifically, the suction pressure s is first subjected to a logarithmic transformation and then linearly mapped to s∗ ∈ [0 , 1] ,while the water saturation ratio Sw is normalized based on its minimum and maximum values to yield S∗ 
+
+> w
+
+∈
+
+[0 , 1] , as illustrated in Figure 1. Here, Sw, max and Sw, res represent the maximum and residual saturation levels, respectively, while smin and sres correspond to the minimum suction required to initiate air phase invasion and the suction at which residual is reached. Utilizing this mapping, the data loss term in the mapped space can be expressed as, 
+
+Ldata = 1
+
+ndata 
+
+> ndata
+
+X
+
+> i=1
+
+h ˆS∗(i) 
+
+> w
+
+(s∗(i)) − S∗(i)
+
+> w
+
+i2
+
+, (2) while the shape-guiding loss component can be determined as, 
+
+Lmode =
+
+ ˆNmode − Nmode 
+
+2
+
+, (3) noting that Nmode is independent to the mapping. In this work, all training is conducted in the mapped space, with Sw, max set to 1 to ensure that the drying process begins from a fully saturated condition. It should be noted that these mapping parameters are auxiliary quantities determined by the observed data range to guide the search process, rather than intrinsic material parameters. 310 0 10 5  
+
+> 0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1
+> 0.0 0.5 1.0
+> 0.0
+> 0.5
+> 1.0
+
+Figure 1: Schematic illustration of the data mapping procedure. Black hollow symbols represent exemplary water retention data, with the black axes denoting the original (s, S w) space and the red axes indicating the mapped (s∗, S ∗
+
+> w
+
+) space. The upper left corner of the red box corresponds to the reference point (smin , S w, max )
+
+and the lower right corner to (sres , S w, min ) in the original space, which map to (0 , 1) and (1 , 0) , respectively, in the transformed space. This mapping ensures that the learned function (red curve) resides within s∗ ∈ [0 , 1] and 
+
+S∗ 
+
+> w
+
+∈ [0 , 1] .Small perturbations in mapping parameters or data can influence the form of the discovered equations, especially given the stochastic nature of the genetic programming-based symbolic regression. Nonetheless, it should be noted that the primary goal of this work is not to identify a unique ground-truth symbolic expression, but rather to discover a closed-form expression that best represents the given dataset with rigorously satisfying imposed physics constraints. This approach ensures physically consistent and interpretable models, despite inevitable variations in symbolic form. 
+
+2.2 Physics constraints for water retention curves 
+
+Ensuring that the learned functions are physically consistent and applicable to real porous systems requires satisfying a set of fundamental constraints grounded in thermodynamic principles. These constraints define the essential conditions that any valid water retention model should satisfy when characterizing the main drying path. Assuming that the learned function is continuous, the following outlines these critical conditions: 
+
+Monotonicity constraint. A key requirement for the drying water retention curve is that as s increases, Sw
+
+must decrease. In other words, the degree of saturation should be a monotonically decreasing function of matric suction: dSw
+
+ds ≤ 0. (4) This ensures that water is not spontaneously added to the pore space as matric suction increases, which would contradict thermodynamic principles. 
+
+Limiting constraints. The drying path of a water retention curve must exhibit specific limiting behaviors at both ends of the matric suction spectrum. At s ≤ smin , the degree of saturation should remain constant at its maximum value, Sw = Sw, max . Furthermore, the rate of change of saturation should approach zero at this wet end, i.e., 
+
+Sw(smin ) = Sw, max ; dSw
+
+ds s=smin 
+
+= 0 . (5) Conversely, under extremely dry conditions ( s ≥ sres ), the water saturation should approach a residual level as most pores have drained and only a small amount of water remains. This means that, at s = sres , the saturation 4approaches its residual value and the rate of change of Sw should approach 0: 
+
+Sw(sres ) = Sw, res ; dSw
+
+ds s=sres 
+
+= 0 . (6) 
+
+Boundedness constraint. Regardless of the positioning of the reference points, the suction-saturation rela-tionship must be bounded within physical limits. Specifically, the degree of saturation Sw must satisfy: 
+
+0 ≤ Sw ≤ 1. (7) This constraint ensures that the saturation does not exceed unity nor fall below zero, aligned with the concept that the maximum water content corresponds to a fully saturated condition, while preventing non-physical scenarios, such as negative water content. Since we train our model in the mapped space, the physics constraints [Eqs. (4)-(7)] must be reformulated accordingly. By letting the prime symbol denote the derivative with respect to the normalized suction s∗, the monotonicity constraint in the mapped space becomes: 
+
+S∗
+
+> w
+> ′
+
+(s∗) ≤ 0, (8) since both dS∗
+
+> w
+
+/dSw and ds/ ds∗ are non-negative. Similarly, the limiting constraints at the wet end in the mapped space can be expressed as: 
+
+S∗
+
+> w
+
+(0) = 1 ; S∗
+
+> w
+> ′
+
+(0) = 0 , (9) while the corresponding constraints at the dry end are given by, 
+
+S∗
+
+> w
+
+(1) = 0 ; S∗
+
+> w
+> ′
+
+(1) = 0 . (10) It is worth noting that the boundedness constraint is automatically satisfied in the mapped space if the saturation levels at the two reference points satisfy Eq. (7), owing to the other constraints. This means that the boundedness constraint does not need to be explicitly enforced during model training. 
+
+2.3 A physics-constrained symbolic regressor for closed-form water retention model discovery 
+
+Symbolic regression aims to discover an explicit mathematical expression that best fits a given dataset, without prescribing its form in advance. The search process typically involves exploring a large space of candidate expressions, each represented as a binary tree, constructed from a predefined set of variables, constants, and mathematical operators (see Figure 2). Here, the total number of nodes in each discovered expression reflects its complexity, which, together with accuracy, serves as a key metric for evaluating model performance. In this work, a genetic programming framework [Koza, 1994, Wagner and Affenzeller, 2005, Schmidt and Lipson, 2009] is employed to navigate this space, where evolutionary operations are applied to iteratively refine the population of candidates toward increased predictive accuracy and physical consistency. The training starts with randomly generating an initial population of candidate expressions. This population then undergoes an iterative evolutionary process consisting of three main operations: selection, mutation, and crossover. Selection involves choosing individuals with better performance from the current populations. Muta-tion, as shown in Figure 3a, introduces small, random alterations to individual candidates, promoting diversity within the population. Crossover, illustrated in Figure 3b, combines genetic information from two individuals to generate offspring that inherit characteristics from both parents. While vanilla symbolic regression (SR) aims solely to minimize the discrepancy between model predictions and data [e.g., using the mean squared error (MSE) loss], this study extends this approach by incorporating physics-based constraints outlined in Section 2.2 and a priori mode information into the learning process. In our PCSR, the standard MSE loss is replaced with a custom loss function that explicitly incorporates both physics and mode constraints. Specifically, each constraint is incorporated as an individual loss term that quantifies the discrepancy between the enforced constraint and the model’s behavior, and these terms are integrated to the total loss function as a penalty to guide the search process during training. Similar to training physics-informed neural networks [Raissi et al., 2019, Cai et al., 2021, Haghighat et al., 2021], we introduce a total of ncol collocation points s∗ 
+
+> col
+
+= {s∗(j) 
+
+> col
+
+}ncol 
+
+> j=1
+
+, which are distributed uniformly across 5<latexit sha1_base64="Vn9zJ8CI59e8RtLHwkA4H9+eAlU=">AAAF8HiclVTdThQxFC7IKq5/oJferG5IDDFk1xjkEhECJBIQWNiEWUln5uxs3Zl2bDv8pOlz6J1y67v4AL6Npzu7cZllSGwynZPvnO87bc9p/TRmSjcaf6am78xU7t6bvV998PDR4ydz80+PlMhkAK1AxEK2faogZhxamukY2qkEmvgxHPv9D85/fAZSMcEP9WUKnYRGnHVZQDVCHU/DhTZrjFN5aU/n6o2lxmDUJo3m0KiT4dg7nZ/57YUiyBLgOoipUoZKzYIYbK3qZQpSGvRpBCeZ7q50DONppoEHdtxnaKISqnsTYFdwrSZQdZn4BTAIYCLSHRzjUQF1ebQQ8Q2wVN0CqlkCBagbC6oR4nAeiCShPDR4flwJaU+aHeOhmUlwcsbzRRy6xYrY1JvWFlhfsiTNObEvUd17MTRq9WbNkyMsNwpcGoPUOdkVb9ACRkJoB4mq3jpgKSTs4DJ2U5BUo9uLJMUAj1M/pmUxuNzxsM+5vlG2VDVk2FqjeC8IhS6L3CwKu1OrtUuV18eVxwm3ZsEdWOOmMn//HP04lfg1psSvbLdwZo2bytQjjuo4DeqleyCwGYxM+tbsY1dIV0gJ46U8g+B/OwdjJimDDk7yv9/NabZaXViovf+4ubu/fbi1c/3OxJGQTPcSW4RTBRneaBEC8scSeweaamib/H/h9RSSwDXjUIkFjId4EV1eh4bQNQcb9uSgtYZr6Jjt3Gs2eDgy7TU6YJKaXRiQXd8tjihjyD8y7q16YxkWUVRGCb2w+BZF3mtn3RbI+CgQLXwAm8XnbtI4erPUXF5a/vS2vroyfApnyXPykrwiTfKOrJItskdaJCBfyTfyk1xVZOV75UflKg+dnhpynpFro/LrL+7JJXU=</latexit> 
+
+Binary <latexit sha1_base64="+HBackLTm8ArgIxWrsVtFwqSCls=">AAAF9HiclVTdThQxFC7KKq4/gF56s7ohMcSQXWOQS1QIkEhAYGETZiWdztnZcWfaSdtZIE2fRO+UW9/EB/BtPN3ZjcssQ2KT6Zx853zfaXtO66dxpHSj8Wfmzt3Zyr37cw+qDx89fjK/sPj0WIlMMmgxEQvZ9qmCOOLQ0pGOoZ1KoIkfw4nf/+j8JwOQKhL8SF+m0EloyKNuxKhG6Gxh3tNwoY1IQVItpD1bqDdWGsNRmzaaI6NORmP/bHH2txcIliXANYupUoZKHbEYbK3qZQpSyvo0hNNMd9c6JuJppoEzO+kzNFEJ1b0psCu4VlOoukz8AsgYTEW6w4t4WEBdHi1EfAMsVbeA6iiBAtSNBdUIcThnIkkoDwyeIFd4dKfNjvHQzCQ4OeP5Ig7cYkVs6k1rC6yvWZLmnNiXqO69GBm1erPmyTGWGwUujUHqnOzKN2wDIyGww0RVbwOwFBJ2cRl7o8oaL5QUAzxO/ZiWxeByJ8O+5PpG2VLVIML2Gsd7LBC6LHKrKOxOrdYuVd6YVJ4k3JoFd2CNm8r8/XP041Ti15gSv7LdwsAaN5WphxzVcRrWS/dAYDMYmfStOcCukK6QEiZLOQD2v52DMdOUYQcn+d/v5jRbrS4t1d5/2to72Dna3r1+Z+JQyEj3EluEUwUZ3mgRAPInEnuHmmpom/x/4fUUksA140gpYhEP8CK6vA4NoGsON+3pYesDrqFjdnKv2eTB2LTX6IBJanZpSHZ9tzymTCD/yLi36o1lWEZRGSb0wuJbFHqvnXVbYMTHgWjhA9gsPnfTxvGblebqyurnt/X1tdFTOEeek5fkFWmSd2SdbJN90iKMZOQb+UmuKoPK98qPylUeemdmxHlGro3Kr7/nlCbB</latexit> 
+
+operator 
+
+<latexit sha1_base64="+HBackLTm8ArgIxWrsVtFwqSCls=">AAAF9HiclVTdThQxFC7KKq4/gF56s7ohMcSQXWOQS1QIkEhAYGETZiWdztnZcWfaSdtZIE2fRO+UW9/EB/BtPN3ZjcssQ2KT6Zx853zfaXtO66dxpHSj8Wfmzt3Zyr37cw+qDx89fjK/sPj0WIlMMmgxEQvZ9qmCOOLQ0pGOoZ1KoIkfw4nf/+j8JwOQKhL8SF+m0EloyKNuxKhG6Gxh3tNwoY1IQVItpD1bqDdWGsNRmzaaI6NORmP/bHH2txcIliXANYupUoZKHbEYbK3qZQpSyvo0hNNMd9c6JuJppoEzO+kzNFEJ1b0psCu4VlOoukz8AsgYTEW6w4t4WEBdHi1EfAMsVbeA6iiBAtSNBdUIcThnIkkoDwyeIFd4dKfNjvHQzCQ4OeP5Ig7cYkVs6k1rC6yvWZLmnNiXqO69GBm1erPmyTGWGwUujUHqnOzKN2wDIyGww0RVbwOwFBJ2cRl7o8oaL5QUAzxO/ZiWxeByJ8O+5PpG2VLVIML2Gsd7LBC6LHKrKOxOrdYuVd6YVJ4k3JoFd2CNm8r8/XP041Ti15gSv7LdwsAaN5WphxzVcRrWS/dAYDMYmfStOcCukK6QEiZLOQD2v52DMdOUYQcn+d/v5jRbrS4t1d5/2to72Dna3r1+Z+JQyEj3EluEUwUZ3mgRAPInEnuHmmpom/x/4fUUksA140gpYhEP8CK6vA4NoGsON+3pYesDrqFjdnKv2eTB2LTX6IBJanZpSHZ9tzymTCD/yLi36o1lWEZRGSb0wuJbFHqvnXVbYMTHgWjhA9gsPnfTxvGblebqyurnt/X1tdFTOEeek5fkFWmSd2SdbJN90iKMZOQb+UmuKoPK98qPylUeemdmxHlGro3Kr7/nlCbB</latexit> 
+
+operator 
+
+<latexit sha1_base64="d5y18o1OPic9P/fjPiGRcwXgFaY=">AAAF73iclVTdThQxFC7IKq5/oJferG5IDDFklxjkEhUCJBIQWNiErqQzc3Z23E47djr8pOlr6J1y68P4AL6Npzu7cZllSGwynZPvnO87bc9pvYRHqW40/kxN35mp3L03e7/64OGjx0/m5p8epTJTPrR8yaVqeywFHglo6UhzaCcKWOxxOPb6H5z/+AxUGklxqC8T6MQsFFE38plGiFINF9q0BFOX9nSu3lhqDEZt0mgOjToZjr3T+ZnfNJB+FoPQPmdpapjSkc/B1qo0SyFhfp+FcJLp7mrHRCLJNAjfjvsMi9OY6d4E2JVCpxNoehl7BdD3YSLSnVskwgLq8mgp+Q2wSrsFVEcxFKAul0wjJODcl3HMRGDw+EQqlT1pdgxFM1Pg5Az1JA/cYiU39aa1BdaXLE5yDvcUqtMXQ6NWb9aoGmG5UeAyDkrnZFe7QQcYBYEdJKrSdcBSKNjBZewmoJhGNw0VwwAqmMdZWQwudzzsc65vUluqGkTYWaN46gdSl0VuFoXdqdXapcrr48rjhFuz4A6scVOZv3+OfpxK/BpT4le2Wzizxk1l6qFAdZwG9dI9kNgMRsV9a/axK5QrpILxUp6B/7+dgzGTlEEHx/nf6+Y0W60uLNTefdzc3d8+3Nq5fmd4KFWke7EtwkkKGd5oGQDyxxLTA800tE3+v6C9FEngmnGoFPmRCPAiurwODaBrDjbsyUHrPa6hY7Zzr9kQwci01+iASWp2YUB2fbc4oowh/8i4t+qNZVhEURXG7MLiWxTS1866LTASo0C08AFsFp+7SeNoeam5srTy6U19bXX4FM6S5+QleUWa5C1ZI1tkj7SITxLyjfwkV5Wvle+VH5WrPHR6ash5Rq6Nyq+/6CklFQ==</latexit> 
+
+Unary 
+
+<latexit sha1_base64="xdNXDLtloVQPDLVvinBt9KkND1Q=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahAaaGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvT6da7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHTf5NZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKcMh+0</latexit> 
+
++
+
+<latexit sha1_base64="3YTsepRS5/ZQZuvREh5xEbWyxZs=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCY0NRMaXI6xaZvEtN9ulZYyOc5JGprYke3sR5afAO5gt7wRD8DbcNK0okuXSViKffSd833Hzjm2l8aR0q3Wn6npezO1+w9mH9YfPX7y9Nnc/PNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9FUK3YSGPAoiRjVC+87ZXLO11BqMxqThDI0mGY69s/mZ364vWJYA1yymShkqdcRisI26mylIKevTEE4zHXzomoinmQbO7LjP0EQlVPcmwEBwrSZQdZV4JZAxmIjMf1bEwxKa59FCxLfAUgUlVEcJlKAgFlQjxOGCiSSh3DcuHkgJaU+drnHRzCTkcsb1ROznmxWxaTrWllhfsyQtOLEnUd19NTQaTafhyhFWGCUujUHqgqzhUg/KbiT4dpCo7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9sdD/tS6BtlK1X9CNtpFO8yX+iqyM2ycP7XGp1K5fVx5XHCnVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3qpXsgsBmMTPrWHGBXyLyQEsZLeQ7sfzsHYyYpgw5OitULCpqt1xcWGh8/b+4ebB9t7dy8M3EoZKR7iS3DqYIMb7TwAfljid1DTTV0TLFeuj2FJMibcagUsYj7eBHzvDnqQ2AON+zpYXsN99A124XXbHB/ZNobdMAkDbswIOd9tziijCH/yHi2+q1lWERRGSb00uJbFLpvc+uuwIiPAtHCB9ApP3eTxvHykrOytLL/rrm6NnwKZ8lL8pq8IQ55T1bJFtkjbcIIkG/kJ7muBbXvtR+16yJ0emrIeUFujNqvv70yH7o=</latexit> 
+
+1 <latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="thi+2J95D9fCxsiSWvsjqdzY0Fw=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaVoQGl2Ns2iYx7bdbpaVMjnOSmjp25Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJ4KnZmnpz9Sdu9O1e/dnHtQfPnr85Ons3LOjVGWaQZspoXTHpykILqFtuBHQSTTQ2Bdw7Pc/5f7jM9ApV/LQXCbQjWkkecgZNQjtXZ7ONpcWlwajMWm0hkaTDMfu6dz0by9QLItBGiZomlqqDWcCXKPuZSkklPVpBCeZCT90LZdJZkAyN+6zNE5janoTYKikSSfQ9DL2SyBjMBGZ/ywuoxKa5zFKiRtgnYYl1PAYSlAoFDUISThnKo6pDKyHB0qVdietrvXQzDTkctbzlQjyzSphmy3nSqyvWZwUHOFrVPdeDo1Gs9Xw9AgrjBKXCtCmIBu4MIOyWw2BGySqe2uApdCwjdvYSUBTg24v0hQDPEl9QaticLvjYV8KfZu6StWAYzuN4j0WKFMVuVEWzv9ao1OpvDauPE64NQuewNl8qvL3z9GPU4XfYEr8qk4LZ87mU5V6JFEdp0G9TA8UNoPVcd/ZfewKnRdSw3gpz4D9b+dgzCRl0MFxsfphQXP1+vx84+PnjZ39rcPN7et3RkRKc9OLXRlOUsjwRqsAkD+W2Dsw1EDHFuuF10uRBHkzDpU44zLAi5jnzdEAQnuw7k4O2qu4h67dKrx2XQYj012jAyZpuPkBOe+7hRFlDPlHxrPVbyzDAorqKKYXDt+iyHuTW7cFcjkKRAsfwFb5uZs0jt4utpYXl/feNVdWh0/hDHlBXpHXpEXekxWySXZJmzAC5Bv5Sa5qYe177Uftqgi9MzXkPCfXRu3XX0lQIAI=</latexit> 
+
+y
+
+<latexit sha1_base64="UP8qSWfO73U0MEGESgQ6WHYB1Kk=">AAAF5niclVTdbtMwFPbGCqP8bXDJTaGahCY0tQgNLsfYtE1i2ljXrdJSJsc5TU0dO3Kc/cjyI8Ad7JYX4gF4G06aVnTpMglLsY++c77v2DnH9mPBE9No/JmZvTNXuXtv/n71wcNHj58sLD49SlSqGbSZEkp3fJqA4BLahhsBnVgDjXwBx/7gY+Y/PgOdcCUPzWUM3YiGkvc4owahlifk6UK9sdIYjtq00RwZdTIa+6eLc7+9QLE0AmmYoEliqTacCXC1qpcmEFM2oCGcpKb3vmu5jFMDkrlJn6VRElHTnwJ7SppkCk0uI78AMgZTkdnv4jIsoFkeo5S4AdZJr4AaHkEB6glFDUISzpmKIioD6+GBEqXdSbNrPTRTDZmc9XwlgmyzSth607kC62saxTlH+BrVvRcjo1Zv1jw9xnKjwKUCtMnJBi7MsPBWQ+CGiareBmApNOziNvZi0NSg2ws1xQBPUl/Qshjc7mTYl1zfJq5UNeDYUON4jwXKlEVuFYWzv1brlCpvTCpPEm7NgidwNpvK/INz9ONU4jeYEr+y08KZs9lUph5KVMdpWC/TB4XNYHU0cPYAu0JnhdQwWcozYP/bORgzTRl2cJSvfi+nuWp1aan24dPW3sHO4fbu9TsjQqW56UeuCMcJpHijVQDIn0jstQw10LH5euH1EyRB1owjJc64DPAiZnkzNICebW26k1Z7HffQtTu5127KYGy6a3TAJDW3NCRnfbc8pkwg/8h4tuqNZVhGUR1G9MLhWxR6rzPrtkAux4Fo4QPYLD5308bRm5Xm6srq57f1tfXRUzhPnpOX5BVpkndkjWyTfdImjITkG/lJrir9yvfKj8pVHjo7M+I8I9dG5ddfq/Ig0w==</latexit> 
+
+ln 
+
+<latexit sha1_base64="h49kTJrYh7pTwT0GElnKG8ZTdow=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYkeNAkeVX2O42bvdAe4C9zY6bVispQZql2EffOd937Jxj+0nEU91o/JmZvTNXuXtv/n71wcNHj58sLD49TmWmGLSYjKRq+zSFiAtoaa4jaCcKaOxHcOL3Pzr/yTmolEtxpC8T6MQ0FLzLGdUO8mCQnC3UGyuN4ahNG82RUSejsX+2OPfbCyTLYhCaRTRNDVWaswhsreplKSSU9WkIp5nuvu8YLpJMg2B20mdonMZU96bArhQ6nULTy9gvgIzBVKT7X1yEBdTl0VJGN8Aq7RZQzWMoQN1IUo2QgAsm45iKwHh4oFQqe9rsGA/NTIGTM54vo8BtVkam3rS2wPqaxUnOiXyF6t6LkVGrN2ueGmO5UeDSCJTOyRoGelh5oyCww0RVbwOwFAp2cRt7CSiq0e2FimKAJ6gf0bIY3O5k2Jdc36S2VDXg2FHjeI8FUpdFbhWF3V+rtUuVNyaVJwm3ZsETWOOmMn//Av04lfg1psSv7LRwbo2bytRDgeo4DeuleyCxGYyK+9YcYFcoV0gFk6U8B/a/nYMx05RhB8f56ndzmq1Wl5ZqHz5t7R3sHG3vXr8zUSgV173YFuEkhQxvtAwA+ROJvUNNNbRNvg68XookcM04UuKMiwAvosvr0AC65nDTnh621nEPHbOTe82mCMamvUYHTFKzS0Oy67vlMWUC+UfGs1VvLMMyiqowpgOLb1HovXbWbYFcjAPRwgewWXzupo3jNyvN1ZXVz2/ra+ujp3CePCcvySvSJO/IGtkm+6RFGOmRb+QnuarwyvfKj8pVHjo7M+I8I9dG5ddfTrUhUA==</latexit> 
+
+exp 
+
+<latexit sha1_base64="nT/GIgxZe/L79bTKWF46vBDbGvg=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCaYGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvTmda7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHRf59ZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKnMh+2</latexit> 
+
+→ <latexit sha1_base64="2I8MOacshsp4rDSgQsTDmjXENT0=">AAAF5niclVTdbtMwFPZghVH+NrjkplBNQhOqWgSDyzE2bZOYNtZ1q7SMyXFOU1MnjmxnP7L8CHAHu+WFeADehpOmFV26TMJS7KPvnO87ds6x/URwbZrNPzO3bs9W7tydu1e9/+Dho8fzC08OtEwVgw6TQqquTzUIHkPHcCOgmyigkS/g0B98zPyHp6A0l/G+uUjgOKJhzHucUYNQu9l4ezJfbzaaw1GbNlojo05GY/dkYfa3F0iWRhAbJqjWlirDmQBXq3qphoSyAQ3hKDW998eWx0lqIGZu0mdppCNq+lNgT8ZGT6H6IvILIGMwFZn9Lh6HBTTLY6QU18BK9wqo4REUoJ6Q1CAUwxmTUUTjwHp4IC2VO2odWw/NVEEmZz1fiiDbrBS23nKuwPqaRknOEb5Cde/5yKjVWzVPjbHcKHCpAGVysoFzMyy8VRC4YaKqtwZYCgXbuI2dBBQ16PZCRTHAi6kvaFkMbncy7Euub7UrVQ04NtQ43mOBNGWRG0Xh7K/VuqXKa5PKk4Qbs+AJnM2mMv/gDP04lfgNpsSv7LRw6mw2lamHMarjNKyX6YPEZrAqGji7h12hskIqmCzlKbD/7RyMmaYMOzjKV7+X01y1urhY+/BpY2dva39z++qdEaFU3PQjV4QTDSneaBkA8icSe21DDXRtvp57fY0kyJpxpMQZjwO8iFneDA2gZ9vr7qjdWcU9HNut3GvX42Bsuit0wCQ1tzgkZ323NKZMIP/IeLbqtWVYQlEVRvTc4VsUeq8y66ZAHo8D0cIHsFV87qaNg9eN1nJj+fOb+srq6CmcI8/IC/KStMg7skI2yS7pEEZC8o38JJeVfuV75UflMg+9NTPiPCVXRuXXXyqvIDA=</latexit> 
+
+0.5
+
+<latexit sha1_base64="qp4nBIDP3E3o9fXB3ofVuhQad/g=">AAAF6XiclVTdbtMwFPZghVH+NrjkplBNQhOaWoQGl2Ns2iYxbWzrVmkpk+Ocpl6dOLKd/cjyO8Ad7Jbn4QF4G06aVrTpMglLcY6+c77v2D7H9hPBtWk0/szcuTtbuXd/7kH14aPHT57OLzw70jJVDFpMCqnaPtUgeAwtw42AdqKARr6AY7//KfMfn4PSXMaH5iqBTkTDmHc5owahI8/wCPTpfL2x3BiM2rTRHBp1Mhx7pwuzv71AsjSC2DBBtbZUGc4EuFrVSzUklPVpCCep6X7oWB4nqYGYuXGfpZGOqOlNgV0ZGz2F6qvIL4CMwVRkdmI8DgtolsdIKW6Ale4W0MGJTEJdIalBKIYLJqOIxoH1cENaKnfS7FgPzVRBJmc9X4ogW6wUtt50rsA6S6Mk5whfobr3cmjU6s2ap0ZYbhS4VIAyOdnApRnU3ioI3CBR1VsHLIWCHVzGbgKKGnR7oaIY4MXUF7QsBpc7HvY117falaoGHHtqFO+xQJqyyM2icHZqtXap8vq48jjh1iy4A2ezqczfv0A/TiV+gynxK9stnDubTWXqYYzqOA3qZXogsRmsivrO7mNXqKyQCsZLeQ7sfzsHY6Ypgw6O8r/fzWmuWl1crH38vLm7v324tTN5Z0QoFTe9yBXhREOKN1oGgPyxxN6BoQbaNv9fej2NJMiacajEGY8DvIhZ3gwNoGsPNtzJQWsN19Cx27nXbsTByHQTdMAkNbc4IGd9tzSijCH/yLi36o1lWEJRFUb00uFbFHpvMuu2QB6PAtHCB7BZfO6mjaO3y82V5ZUv7+qra8OncI68IK/Ia9Ik78kq2SJ7pEUYOSPfyE9yXelXvld+VK7z0DszQ85zMjEqv/4COA4iOQ==</latexit> 
+
+→
+
+<latexit sha1_base64="7IvAT+inWp0AwfJfFUYLNH27cks=">AAAF9XiclVTdTtswFDaMbqz7K9vlbrJVSBOaUDtNjEu2gQBpCAYUKpEOOc5pmjWxI8dpQZbfZLvbuN2T7AH2NjtuWq2kBGmW4hx953zfsX2O7SVRmKpG48/c/J2Fyt17i/erDx4+evyktvT0JBWZZNBiIhKy7dEUopBDS4UqgnYigcZeBKde/6P1nw5ApqHgx+oygU5MAx52Q0YVQue1mqvgQulDIZTDhQ/mvFZvrDZGw5k1mmOjTsbj4Hxp4bfrC5bFwBWLaJpqKlXIIjBO1c1SSCjr0wDOMtVd7+iQJ5kCzsy0T9M4janqzYBdwVU6g6aXsVcAGYOZSHt6IQ8KqM2jhIhugGXaLaAqjKEAdSNBFUIchkzEMeW+xiPkqZDmrNnRLpqZBCunXU9Evl2siHS9aUyB9TWLk5wTeRLV3Rdjw6k3HVdOsNwocGkEUuVkW79RH2gJvhklqrqbgKWQsIfL2E9AUoVuN5AUA1xOvYiWxeByp8O+5Po6NaWqfoj9NYl3mS9UWeR2UdiemtMuVd6cVp4m3JoFd2C0ncr8/SH6cSrxK0yJX9luYWC0ncrUA47qOI3qpXogsBm0jPtGH2JXSFtICdOlHAD7387BmFnKqIPj/O91c5qpVpeXnfeftvcPd4939q7fmSgQMlS92BThJIUMb7R9DarTid0jRRW0df6/cHspksA241gpZCH38SLavBb1oauPtszZUesDrqGjd3Ov3uL+xDTX6IBJHLM8Itu+W5lQppB/ZNxb9cYyrKCoDGJ6YfAtCtzX1rotMOSTQLTwAWwWn7tZ4+TNanNtde3z2/rG+vgpXCTPyUvyijTJO7JBdsgBaRFGBuQb+UmuKsPK98qPylUeOj835jwj10bl118J9ybJ</latexit> 
+
+Root node 
+
+<latexit sha1_base64="QzIsq8n6PvoIQAUgFRq3S08/cLM=">AAAF9XiclVTdTtswFDYb3Vj3V7bL3WSrkCY0ITpNjEu2gQAJBAMKlUiHnOQk9ZrYkeMUkOU32e42bvcke4C9zY6bVispQZqlOEffOd93bJ9je2nMMrW8/Gfmzt3Z2r37cw/qDx89fvK0Mf/sOBO59KHti1jIjkcziBmHtmIqhk4qgSZeDCde/5P1nwxAZkzwI3WZQjehEWch86lC6KzRcBVcKL0DNHS4CMCcNZrLS8vD4UwbrZHRJKOxfzY/+9sNhJ8nwJUf0yzTVCrmx2CcuptnkFK/TyM4zVW42tWMp7kC7ptJn6ZJllDVmwJDwVU2hWaXiVcCfR+mIu3pMR6VUJtHCRHfAMssLKGKJVCCwlhQhRCHc18kCeWBxiPkmZDmtNXVLpq5BCunXU/EgV2siHWzZUyJ9TVP0oITexLV3Zcjw2m2HFeOscIocWkMUhVkW79hH2gJgRkmqrvrgKWQsIvL2EtBUoVuN5IUA1xOvZhWxeByJ8O+FPo6M5WqAcP+Gse7fiBUVeRmWdiemtOpVF6fVJ4k3JoFd2C0nar8/XP041ThV5gSv6rdwsBoO1WpRxzVcRrWS/VAYDNomfSNPsCukLaQEiZLOQD/fzsHY6Ypww5Oir8XFjRTry8sOB92NvcOto+2dq/fmTgSkqleYspwmkGON9q+BvXJxO6hogo6uvhfuL0MSWCbcaTEfMYDvIg2r0UDCPXhhjk9bH/ENXT1duHVGzwYm+YaHTCJYxaGZNt3i2PKBPKPjHur31iGRRSVUUIvDL5FkfvGWrcFMj4ORAsfwFb5uZs2jt8utVaWVj6/a66tjp7COfKCvCKvSYu8J2tki+yTNvHJgHwjP8lV7bz2vfajdlWE3pkZcZ6Ta6P26y8WrCad</latexit> 
+
+Leaf node <latexit  sha1_base64="YKQULSceDKe+xcZsGOHDxC1OQes=">AAAF9niclVTdTtswFDaMbqz7g+1yN9kqpAlNqJkmxiXbQIA0BAMKlUiHnOQ09ZrYkeNAkeVH2e42bvcie4C9zY6bVispQZqlOEffOd93bJ9j+2nMMtVs/pmZvTNXu3tv/n79wcNHj58sLD49zkQuA2gFIhay7dMMYsahpZiKoZ1KoIkfw4nf/2j9J+cgMyb4kbpMoZPQiLMuC6hC6Gxh0VMwUPpIAjghpKpnzhYazZXmcDjThjsyGmQ09s8W5357oQjyBLgKYpplmkrFghiMU/fyDFIa9GkEp7nqrnU042mugAdm0qdpkiUUk5fBruAqm0Kzy8QvgUEAU5H2+BiPSqjNo4SIb4Bl1i2hiiVQgrqxoAohDheBSBLKQ41nyDMhzanb0R6auQQrpz1fxKFdrIh1wzWmxPqaJ2nBiX2J6t6LkeE0XMeTY6wwSlwag1QF2RZw2AhaQmiGiereBmApJOziMvZSkFSh24skxQCPUz+mVTG43MmwL4W+zkylasiwwcbxXhAKVRW5VRa2p+a0K5U3JpUnCbdmwR0Ybacqf/8C/ThV+BWmxK9qt3ButJ2q1COO6jgN66V6ILAZtEz6Rh9gV0hbSAmTpTyH4H87B2OmKcMOToq/3y1opl5fWnLef9raO9g52t69fmfiSEimeokpw2kGOd5oEQLyJxJ7h4oqaOviP/B6GZLANuNIiQWMh3gRbV6LhtDVh5vm9LD1AdfQ0TuFV2/ycGyaa3TAJI5ZGpJt3y2PKRPIPzLurX5jGZZRVEYJHRh8iyLvtbVuC2R8HIgWPoBu+bmbNo7frLirK6uf3zbW10ZP4Tx5Tl6SV8Ql78g62Sb7pEUCckG+kZ/kqjaofa/9qF0VobMzI84zcm3Ufv0FLX4nLg==</latexit> 
+
+> Tree depth
+
+<latexit sha1_base64="xdNXDLtloVQPDLVvinBt9KkND1Q=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahAaaGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvT6da7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHTf5NZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKcMh+0</latexit> 
+
++
+
+<latexit sha1_base64="68gmTI/eZ90mGBRyvQwPxknM+DY=">AAAF9XiclVTdTtswFDaMbqz7K9vlbrpVSBOaEJ0mxiXbQIA0BAMKlUiHHOc09ZrYkeMUkOU32e42bvcke4C9zY6bVispQZqlOEffOd93bJ9j+0nEU72y8mdm9s5c5e69+fvVBw8fPX5SW3h6nMpMMWgxGUnV9mkKERfQ0lxH0E4U0NiP4MTvf3T+kwGolEtxpC8T6MQ0FLzLGdUIndVqnoYLbY4U5YIiyZ7VGivLK8NRnzaaI6NBRmP/bGHutxdIlsUgNItomhqqNGcoVa96WQoJZX0awmmmu2sdw0WSaRDMTvoMjdOY6t4U2JVCp1Noehn7BZAxmIp0p8dFWEBdHi1ldAOs0m4B1TyGAtSNJNUICThnMo6pCAweoUilsqfNjvHQzBQ4OeP5MgrcYmVkGk1rC6yvWZzknMhXqO69GBn1RrPuqTGWGwUujUDpnOzqN+wDoyCww0RVbwOwFAp2cRl7CSiq0e2FimKA5+pMy2JwuZNhX3J9k9pS1YBjf43jPRZIXRa5VRR2p1ZvlypvTCpPEm7Ngjuwxk1l/v45+nEq8WtMiV/ZbmFgjZvK1EOB6jgN66V7ILEZjIr71hxgVyhXSAWTpRwA+9/OwZhpyrCD4/zvd3OarVYXF+vvP23tHewcbe9evzNRKBXXvdgW4SSFDG+0DAD5E4m9Q001tE3+v/B6KZLANeNIiTMuAryILq9DA+iaw017etj6gGvomJ3cazZFMDbtNTpgkrpdHJJd3y2NKRPIPzLurXpjGZZQVIUxvbD4FoXea2fdFsjFOBAtfACbxedu2jh+s9xcXV79/LaxvjZ6CufJc/KSvCJN8o6sk22yT1qEkQH5Rn6Sq8p55XvlR+UqD52dGXGekWuj8usv5rgm8Q==</latexit> 
+
+Trainable <latexit sha1_base64="cLj+o1JGPs8cXDfJcQyqd/0rN8E=">AAAF9HiclVTdThQxFC7KKq4/gF56s7ohMcSQXWOQS1QIkEhAYGETZiWdztnZcWfaSdtZIE2fRO+UW9/EB/BtPN3ZjcssQ2KT6Zx853zfaXtO66dxpHSj8Wfmzt3Zyr37cw+qDx89fjK/sPj0WIlMMmgxEQvZ9qmCOOLQ0pGOoZ1KoIkfw4nf/+j8JwOQKhL8SF+m0EloyKNuxKhG6Gxh3tNwoQ0TXGnKtT1bqDdWGsNRmzaaI6NORmP/bHH2txcIliXANYupUoZKHbEYbK3qZQpSyvo0hNNMd9c6JuJppoEzO+kzNFEJ1b0psCu4VlOoukz8AsgYTEW6w4t4WEBdHi1EfAMsVbeA6iiBAtSNBdUIcThnIkkoDwyeIFdC2tNmx3hoZhKcnPF8EQdusSI29aa1BdbXLElzTuxLVPdejIxavVnz5BjLjQKXxiB1TnblG7aBkRDYYaKqtwFYCgm7uIy9FCTV6PZCSTHA49SPaVkMLncy7Euub5QtVQ0ibK9xvMcCocsit4rC7tRq7VLljUnlScKtWXAH1ripzN8/Rz9OJX6NKfEr2y0MrHFTmXrIUR2nYb10DwQ2g5FJ35oD7ArpCilhspQDYP/bORgzTRl2cJL//W5Os9Xq0lLt/aetvYOdo+3d63cmDoWMdC+xRThVkOGNFgEgfyKxd6iphrbJ/xdeTyEJXDOOlCIW8QAvosvr0AC65nDTnh62PuAaOmYn95pNHoxNe40OmKRml4Zk13fLY8oE8o+Me6veWIZlFJVhQi8svkWh99pZtwVGfByIFj6AzeJzN20cv1lprq6sfn5bX18bPYVz5Dl5SV6RJnlH1sk22SctwkhGvpGf5KoyqHyv/Khc5aF3ZkacZ+TaqPz6C9x7Jr8=</latexit> 
+
+constant 
+
+<latexit sha1_base64="euhIaiZ8tX0YYNxfS8olsafS38c=">AAAF9HiclVTdThQxFC7KKq4/gF56s7ohMcSQXWOQS1QIkEhAYGETZiWdztnZujPtpNNZIE2fRO+UW9/EB/BtPN3ZjcssQ2KT6Zx853zfaXtO6ycRT3Wj8Wfmzt3Zyr37cw+qDx89fjK/sPj0OJWZYtBiMpKq7dMUIi6gpbmOoJ0ooLEfwYnf/+j8JwNQKZfiSF8m0IlpKHiXM6oROluY9zRcaHNMFafIsWcL9cZKYzhq00ZzZNTJaOyfLc7+9gLJshiEZhFNU0OV5gylalUvSyGhrE9DOM10d61juEgyDYLZSZ+hcRpT3ZsCu1LodApNL2O/ADIGU5Hu8LgIC6jLo6WMboBV2i2gmsdQgLqRpBohAedMxjEVgcETFKlU9rTZMR6amQInZzxfRoFbrIxMvWltgfU1i5OcE/kK1b0XI6NWb9Y8NcZyo8ClESidk135hm1gFAR2mKjqbQCWQsEuLmMvAUU1ur1QUQzwBNaZlsXgcifDvuT6JrWlqgHH9hrHeyyQuixyqyjsTq3WLlXemFSeJNyaBXdgjZvK/P1z9ONU4teYEr+y3cLAGjeVqYcC1XEa1kv3QGIzGBX3rTnArlCukAomSzkA9r+dgzHTlGEHx/nf7+Y0W60uLdXef9raO9g52t69fmeiUCque7EtwkkKGd5oGQDyJxJ7h5pqaJv8f+H1UiSBa8aREmdcBHgRXV6HBtA1h5v29LD1AdfQMTu512yKYGzaa3TAJDW7NCS7vlseUyaQf2TcW/XGMiyjqApjemHxLQq91866LZCLcSBa+AA2i8/dtHH8ZqW5urL6+W19fW30FM6R5+QleUWa5B1ZJ9tkn7QIIxn5Rn6Sq8qg8r3yo3KVh96ZGXGekWuj8usvZSwmew==</latexit> 
+
+Variable <latexit sha1_base64="2YWlHK0sAF5MwgRfgXk4GC+yEpo=">AAAF7niclVTdbtMwFPbGCqP8bXDJTaGahCY0tQiNXQ7YtE1i2tjWrVJTJic5TU0dO3Kc/cjyY8Ad7JaX4QF4G46bVnTpMglLcY6+c77v2D7H9hPOUt1o/JmZvTNXuXtv/n71wcNHj58sLD49TmWmAmgFkkvV9mkKnAloaaY5tBMFNPY5nPiDj85/cgYqZVIc6csEujGNBOuxgGqEOp6GC22EDMGeLtQbK43hqE0bzZFRJ6Oxf7o499sLZZDFIHTAaZoaqjQLONha1ctSSGgwoBF0Mt1b6xomkkyDCOykz9A4januT4E9KXQ6haaXsV8AgwCmIt2xMREVUJdHS8lvgFXaK6CaxVCAelxSjZCA80DGMRWhwdMTqVS20+waD81MgZMzni956BYruak3rS2wvmZxknO4r1DdezEyavVmzVNjLDcKXMpB6ZzsSjdsAKMgtMNEVW8DsBQKdnEZewkoqtHtRYpigCeoz2lZDC53MuxLrm9SW6oaMmyscbwXhFKXRW4Vhd2p1dqlyhuTypOEW7PgDqxxU5l/cI5+nEr8GlPiV7ZbOLPGTWXqkUB1nIb10n2Q2AxGxQNrDrArlCukgslSnkHwv52DMdOUYQfH+d/v5TRbrS4t1d5/2to72Dna3r1+Z3gkFdP92BbhJIUMb7R7DaqTib1DTTW0Tf6/8PopksA140iJBUyEeBFdXoeG0DOHm7Zz2PqAa+iandxrNkU4Nu01OmCSml0akl3fLY8pE8g/Mu6temMZllFURTG9sPgWRd5rZ90WyMQ4EC18AJvF527aOH6z0lxdWf38tr6+NnoK58lz8pK8Ik3yjqyTbbJPWiQgknwjP8lVJal8r/yoXOWhszMjzjNybVR+/QV5TCSi</latexit> 
+
+node 
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+xFigure 2: Exemplary symbolic equation represented as a binary tree. This tree represents an expression (1 + 
+
+x) ln( x) − exp( y) + 0 .5, with a depth of 4 and a total size of 12 nodes. <latexit sha1_base64="qoJnOAIsocSHBWkz0Sj3nAFe9iI=">AAAF/HiclVTdThQxFC7IKq5/oBdeeDO6IQFUsmMMeokKARIJCCyQ0JV0Omdnx52ZbtoOLGnqy+idcutb+AC+jWd2duMyy5DYZNqT75zvO+2c03rdKFS6Xv8zMXljqnLz1vTt6p279+4/mJl9eKBEKjk0uIiEPPKYgihMoKFDHcFRVwKLvQgOvc6HzH94ClKFItnX511oxixIwlbImUboZObxvOs8dygXar63sOC8dKgKEzRPZmr1pXp/OOOGOzBqZDB2TmanflNf8DSGRPOIKWWY1CGPwDpVmiroMt5hARynuvW2acKkm2pIuB31GRarmOn2GNgSiVZjqDqPvQLIOYxFZj8xTIICmuXRQkRXwFK1CqgOYyhArUgwjVACZ1zEMUt8Q/FASkh77DYNRTOVkMkZ6onIzzYrIlNzrS2wvqRxN+dEnkR1+nRgODXXoXKI5UaByyKQOidr6Ol+OxgJvu0nqtJVwFJI2MJtbHdBMo1uGkiGATRhXsTKYnC7o2Gfc32jbKmqH2KbDeMp94Uui1wvCmd/zTkqVV4dVR4lXJsFT2BNNpX5O2fox6nErzElfmWnhVNrsqlMPUhQHad+vXQbBDaDkXHHml3sCpkVUsJoKU+B/2/nYMw4pd/Bcb56rZxmq9W5Oefdx/Xt3c39ja3LdyYKhAx1O7ZFuKsgxRstfED+SGK6p5mGI5OvPdpWSIKsGQdKIQ8THy9iljdDfWiZvTV7vNd4j3toms3ca9YSf2jaS3TAJI6d65OzvlscUkaQf2Q8W/XKMiyiqAxi1rP4FgX0RWZdFxgmw0C08AF0i8/duHHwasldXlr+9Lq2sjJ4CqfJE/KMzBOXvCErZIPskAbhxJJv5Ce5qHytfK/8qFzkoZMTA84jcmlUfv0Fghgmxw==</latexit> 
+
+(1 + cos( x)) → sin( x)
+
+<latexit sha1_base64="vV1pvsz8mXzyejGJZ5qUSOpmlrw=">AAAF7niclVTdbtMwFPbGCqP8bXDJTaCaNCaYGoQGlwM2bZOYNrZ1q9SUyUlOU9PEjmxn62T5MeAOdsvL8AC8DSdNK7p0nYSl2EffOd937Jxj+2nMlK7X/8zM3pqr3L4zf7d67/6Dh48WFh8fK5HJABqBiIVs+lRBzDg0NNMxNFMJNPFjOPF7H3P/yRlIxQQ/0hcptBMacdZhAdUItVznleMpxpf7L04XavXV+mA4k4Y7NGpkOPZPF+d+e6EIsgS4DmKqlKFSsyAG61S9TEFKgx6NoJXpzru2YTzNNPDAjvsMTVRCdXcC7Aiu1QSqLhK/BAYBTETmv43xqITmebQQ8TWwVJ0SqlkCJagTC6oR4nAeiCShPDQeHkgJaVtu23hoZhJyOeP5Ig7zzYrY1FxrS6yvWZIWnNiXqO49GxpOzXU8OcIKo8SlMUhdkDX09aABjITQDhJVvQ3AUkjYxW3spSCpRrcXSYoBHqd+TKfF4HbHw74U+kbZqaohw8YaxXtBKPS0yK2ycP7XnOZU5Y1x5XHCjVnwBNbk0zR/7xz9OE3xa0yJ37TTwpk1+TRNPeKojtOgXroLApvByKRnzQF2hcwLKWG8lGcQ/G/nYMwkZdDBSbH6nYJmq9WlJef9p629g52j7d2rdyaOhGS6m9gynCrI8EaLEJA/ltg71FRD0xRr3+sqJEHejEMlFjAe4kXM8+ZoCB1zuGlbh40PuIe22Sm8ZpOHI9NeoQMmcezSgJz33cqIMob8I+PZqteWYQVFZZTQvsW3KPJe5tZNgYyPAtHCB9AtP3eTxvHrVXdtde3zm9r6+vApnCdPyXOyTFzylqyTbbJPGiQggnwjP8llJa18r/yoXBahszNDzhNyZVR+/QUeLyL4</latexit> 
+
+1 → sin( x)
+
+<latexit sha1_base64="D39RsrRsQFkJM1+sb5j7sm8BLI4=">AAAF9XiclVTdbtMwFPZghVH+OrjkplBNQhOaGoQGlwM2bZOYNrZ1q7SUyUlO0tDEjmyn22T5TeAOdsuT8AC8DcdNK7p0mYSlOEffOd93bJ9je1kSS9Vu/5m7dXu+dufuwr36/QcPHz1uLD45kjwXPnR8nnDR9aiEJGbQUbFKoJsJoKmXwLE3+Gj9x0MQMubsUF1k0EtpxOIw9qlC6LTRcBWcK70bhjITMYvMaaPVXmmPRnPWcMZGi4zH3uni/G834H6eAlN+QqXUVKjYT8A0624uIaP+gEZwkqvwXU/HLMsVMN9M+zRNZUpVfwYMOVNyBpUXqVcCfR9mIu3p4Y5KqM2jOE+ugYUMS6iKUyhBYcKpQojBmc/TlLJA4xEyyYU5cXraRTMXYOW06/EksIvliW45xpRYX/M0KziJJ1DdfT42mi2n6YoJVhglLk1AqIJs6zfqAy0gMKNEdXcdsBQCdnAZuxkIqtDtRoJigMuol9CqGFzudNiXQl9LU6kaxNhfk3jXD7iqitwsC9tTa3YrldenlacJN2bBHRhtpyr/4Az9OFX4FabEr2q3MDTaTlXqEUN1nEb1Un3g2AxapAOj97ErhC2kgOlSDsH/387BmFnKqIPT4u+FBc3U60tLzfefNnf3tw+3dq7emSTiIlb91JThTEKON5oHgPypxO6Bogq6uvifu32JJLDNOFaK/ZgFeBFtXosGEOqDDXNy0PmAa+jp7cKrN1gwMc0VOmCSplkakW3fLU8oU8g/Mu6tfm0ZllFURCk9N/gWRe4ra90UGLNJIFr4ADrl527WOHq94qyurH5+01pbGz+FC+QZeUFeEoe8JWtki+yRDvHJkHwjP8ll7az2vfajdlmE3pobc56SK6P26y+DaicV</latexit> 
+
+Offspring 
+
+<latexit sha1_base64="BLpf3LWxiJ15mYqTDW6k/Y2vE2A=">AAAF8HiclVTdbtMwFPbGCqP8bXDJTaGahCY0tQgNLgts2iYxbWzrVmkpk+OcpqaJHRxnP7L8HHAHu+VdeADehuOmFV26TMJSnKPvnO87ts+x/STiqW40/szM3pqr3L4zf7d67/6Dh48WFh8fpjJTDNpMRlJ1fJpCxAW0NdcRdBIFNPYjOPIHH5z/6BRUyqU40BcJdGMaCt7jjGqEup6Gc212qQKh7clCvbHSGI7atNEcGXUyGrsni3O/vUCyLEY2i2iaGqo0ZxHYWtXLUkgoG9AQjjPde9s1XCSZBsHspM/QOI2p7k+BPSl0OoWmF7FfABmDqUh3cFyEBdTl0VJG18Aq7RVQzWMoQL1IUo2QgDMm45iKwOD5iVQqe9zsGg/NTIGTM54vo8AtVkam3rS2wPqSxUnOiXyF6t6zkVGrN2ueGmO5UeDSCJTOya54wxYwCgI7TFT11gBLoWAbl7GTgKIa3V6oKAZ4gvoRLYvB5U6Gfc71TWpLVQOOrTWO91ggdVnkRlHYnVqtU6q8Nqk8SbgxC+7AGjeV+Qdn6MepxK8xJX5lu4VTa9xUph4KVMdpWC/dB4nNYFQ8sGYPu0K5QuI9myjlKbD/7RyMmaYMOzjO/34vp9lqdWmp9u7jxs7e1sHm9tU7E4VScd2PbRFOUsjwRssAkD+R2NvXVEPH5P9zr58iCVwzjpQ44yJwj4jjIRpAz+yv2+P99ntcQ9ds5V6zLoKxaa/QAZPU7NKQ7PpueUyZQP6RcW/Va8uwjKIqjOm5xbco9F4666ZALsaBaOED2Cw+d9PG4auV5urK6qfX9VZr9BTOk6fkOXlBmuQNaZFNskvahJGv5Bv5SS4rqvK98qNymYfOzow4T8iVUfn1Fwz7JYI=</latexit> 
+
+Parent 
+
+<latexit sha1_base64="i/vsEOd6egocAmgnFUIM8SZ7hNc=">AAAF9HiclVTdTtswFDaMbqz7AbbL3XSrkCY0oWaa2C7ZBgKkIRhQqEQ65CSnqdfEjmyngCw/yXa3cbs32QPsbXaStFpJCdIsxTn6zvm+Y/sc20sipnSr9Wdm9s5c7e69+fv1Bw8fPV5YXHpyrEQqfWj7IhKy41EFEePQ1kxH0Ekk0NiL4MQbfMz8J0OQigl+pC8T6MY05KzHfKoROltccDVcaLOb6hywZ4vN1morH41pwxkZTTIa+2dLc7/dQPhpDFz7EVXKUKmZH4Ft1N1UQUL9AQ3hNNW9d13DeJJq4L6d9Bkaq5jq/hTYE1yrKVRdxl4J9H2YiswOj/GwhGZ5tBDRDbBUvRKqWQwlqBcJqhHicO6LOKY8MHiCXAlpT52ucdFMJWRyxvVEFGSLFZFpOtaWWF/TOCk4kSdR3X0+MhpNp+HKMVYYJS6NQOqCnJUvbwMjIbB5orq7AVgKCbu4jL0EJNXodkNJMcDl1ItoVQwudzLsS6FvlK1UDRi21zje9QOhqyK3ysLZqTU6lcobk8qThFuz4A6syaYq/+Ac/ThV+DWmxK9qtzC0Jpuq1EOO6jjl9dJ9ENgMRsYDaw6wK2RWSAmTpRyC/7+dgzHTlLyD4+Lv9QqardeXlxvvP23tHewcbe9evzNRKCTT/diW4URBijdaBID8icTuIb4R0DHF/8LtKyRB1owjJeYzHuBFzPJmaAA9c7hpTw/bH3ANXbNTeM0mD8amvUYHTNKwyzk567uVMWUC+UfGvdVvLMMKisowphcW36LQfZVZtwUyPg5k+QPolJ+7aeP49aqztrr2+U1zfX30FM6TZ+QFeUkc8pask22yT9rEJyn5Rn6Sq9qw9r32o3ZVhM7OjDhPybVR+/UXVLsmrg==</latexit> 
+
+Mutation 
+
+<latexit sha1_base64="nT/GIgxZe/L79bTKWF46vBDbGvg=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCaYGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvTmda7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHRf59ZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKnMh+2</latexit> 
+
+→
+
+<latexit sha1_base64="TbwFC+f/dHrMcw3B+vPTPYrUnxc=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYke0UkOVX2O42bvdAe4C9zU6aVispQZql2EffOd937Jxj+0nEtWk0/szM3pmr3L03f7/64OGjx08WFp8ea5kqBi0mI6naPtUQcQEtw00E7UQBjf0ITvz+x8x/MgCluRRH5jKBTkxDwbucUZNBnubibKHeWGkMR23aaI6MOhmN/bPFud9eIFkagzAsolpbqgxnEbha1Us1JJT1aQinqem+71guktSAYG7SZ2msY2p6U2BXCqOnUH0Z+wWQMZiKzP4XF2EBzfIYKaMbYKW7BdTwGApQN5LUICTgnMk4piKwHh5IS+VOmx3roZkqyOSs58soyDYrI1tvOldgfU3jJOdEvkJ178XIqNWbNU+NsdwocGkEyuRkAxdmWHmrIHDDRFVvA7AUCnZxG3sJKGrQ7YWKYoAnqB/Rshjc7mTYl1zfaleqGnDsqHG8xwJpyiK3isLZX6u1S5U3JpUnCbdmwRM4m01l/v45+nEq8RtMiV/ZaWHgbDaVqYcC1XEa1sv0QGIzWBX3nT3ArlBZIRVMlnIA7H87B2OmKcMOjvPV7+Y0V60uLdU+fNraO9g52t69fmeiUCpuerErwomGFG+0DAD5E4m9Q0MNtG2+Xng9jSTImnGkxBkXAV7ELG+GBtC1h5vu9LC1jnvo2J3cazdFMDbdNTpgkppbGpKzvlseUyaQf2Q8W/XGMiyjqApjeuHwLQq915l1WyAX40C08AFsFp+7aeP4zUpzdWX189v62vroKZwnz8lL8oo0yTuyRrbJPmkRRnrkG/lJriq88r3yo3KVh87OjDjPyLVR+fUXPkIhTQ==</latexit> 
+
+sin 
+
+<latexit sha1_base64="52GCiF/XVnURWnv8+ajGjBDkl84=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlXCHHOc09ZrEke0UkOVX2O42bvdAe4C9zU6aVispQZql2EffOd937Jxje0kotGk0/szM3pmr3L03f7/64OGjx08WFp8ea5kqDi0uQ6naHtMQihhaRpgQ2okCFnkhnHj9j5n/ZABKCxkfmcsEOhELYtEVnJkMolzqs4V6Y6UxHLVpozky6mQ09s8W535TX/I0gtjwkGltmTKCh+BqVZpqSBjvswBOU9N937EiTlIDMXeTPssiHTHTmwK7MjZ6CtWXkVcAOYepyOx/iTgooFkeI2V4A6x0t4AaEUEB6oaSGYRiOOcyiljsW4oH0lK502bHUjRTBZmcpZ4M/WyzMrT1pnMF1tc0SnJO6ClUpy9GRq3erFE1xnKjwGUhKJOTDVyYYeWtAt8NE1XpBmApFOziNvYSUMygmwaKYQCNmReyshjc7mTYl1zfaleq6gvsqHE85b40ZZFbReHsr9Xapcobk8qThFuz4AmczaYyf/8c/TiV+A2mxK/stDBwNpvK1IMY1XEa1sv0QGIzWBX1nT3ArlBZIRVMlnIA/H87B2OmKcMOjvLV6+Y0V60uLdU+fNraO9g52t69fmfCQCphepErwomGFG+09AH5E4npoWEG2jZfL2hPIwmyZhwpCS5iHy9iljdDfejaw013ethaxz107E7utZuxPzbdNTpgkppbGpKzvlseUyaQf2Q8W/XGMiyjqAoiduHwLQro68y6LVDE40C08AFsFp+7aeP4zUpzdWX189v62vroKZwnz8lL8oo0yTuyRrbJPmkRTnrkG/lJriqi8r3yo3KVh87OjDjPyLVR+fUXIqghSA==</latexit> 
+
+cos 
+
+<latexit sha1_base64="xdNXDLtloVQPDLVvinBt9KkND1Q=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahAaaGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvT6da7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHTf5NZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKcMh+0</latexit> 
+
++
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="3YTsepRS5/ZQZuvREh5xEbWyxZs=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCY0NRMaXI6xaZvEtN9ulZYyOc5JGprYke3sR5afAO5gt7wRD8DbcNK0okuXSViKffSd833Hzjm2l8aR0q3Wn6npezO1+w9mH9YfPX7y9Nnc/PNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9FUK3YSGPAoiRjVC+87ZXLO11BqMxqThDI0mGY69s/mZ364vWJYA1yymShkqdcRisI26mylIKevTEE4zHXzomoinmQbO7LjP0EQlVPcmwEBwrSZQdZV4JZAxmIjMf1bEwxKa59FCxLfAUgUlVEcJlKAgFlQjxOGCiSSh3DcuHkgJaU+drnHRzCTkcsb1ROznmxWxaTrWllhfsyQtOLEnUd19NTQaTafhyhFWGCUujUHqgqzhUg/KbiT4dpCo7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9sdD/tS6BtlK1X9CNtpFO8yX+iqyM2ycP7XGp1K5fVx5XHCnVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3qpXsgsBmMTPrWHGBXyLyQEsZLeQ7sfzsHYyYpgw5OitULCpqt1xcWGh8/b+4ebB9t7dy8M3EoZKR7iS3DqYIMb7TwAfljid1DTTV0TLFeuj2FJMibcagUsYj7eBHzvDnqQ2AON+zpYXsN99A124XXbHB/ZNobdMAkDbswIOd9tziijCH/yHi2+q1lWERRGSb00uJbFLpvc+uuwIiPAtHCB9ApP3eTxvHykrOytLL/rrm6NnwKZ8lL8pq8IQ55T1bJFtkjbcIIkG/kJ7muBbXvtR+16yJ0emrIeUFujNqvv70yH7o=</latexit> 
+
+1 <latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="TbwFC+f/dHrMcw3B+vPTPYrUnxc=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYke0UkOVX2O42bvdAe4C9zU6aVispQZql2EffOd937Jxj+0nEtWk0/szM3pmr3L03f7/64OGjx08WFp8ea5kqBi0mI6naPtUQcQEtw00E7UQBjf0ITvz+x8x/MgCluRRH5jKBTkxDwbucUZNBnubibKHeWGkMR23aaI6MOhmN/bPFud9eIFkagzAsolpbqgxnEbha1Us1JJT1aQinqem+71guktSAYG7SZ2msY2p6U2BXCqOnUH0Z+wWQMZiKzP4XF2EBzfIYKaMbYKW7BdTwGApQN5LUICTgnMk4piKwHh5IS+VOmx3roZkqyOSs58soyDYrI1tvOldgfU3jJOdEvkJ178XIqNWbNU+NsdwocGkEyuRkAxdmWHmrIHDDRFVvA7AUCnZxG3sJKGrQ7YWKYoAnqB/Rshjc7mTYl1zfaleqGnDsqHG8xwJpyiK3isLZX6u1S5U3JpUnCbdmwRM4m01l/v45+nEq8RtMiV/ZaWHgbDaVqYcC1XEa1sv0QGIzWBX3nT3ArlBZIRVMlnIA7H87B2OmKcMOjvPV7+Y0V60uLdU+fNraO9g52t69fmeiUCpuerErwomGFG+0DAD5E4m9Q0MNtG2+Xng9jSTImnGkxBkXAV7ELG+GBtC1h5vu9LC1jnvo2J3cazdFMDbdNTpgkppbGpKzvlseUyaQf2Q8W/XGMiyjqApjeuHwLQq915l1WyAX40C08AFsFp+7aeP4zUpzdWX189v62vroKZwnz8lL8oo0yTuyRrbJPmkRRnrkG/lJriq88r3yo3KVh87OjDjPyLVR+fUXPkIhTQ==</latexit> 
+
+sin 
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="nT/GIgxZe/L79bTKWF46vBDbGvg=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCaYGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvTmda7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHRf59ZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKnMh+2</latexit> 
+
+→
+
+<latexit sha1_base64="3YTsepRS5/ZQZuvREh5xEbWyxZs=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCY0NRMaXI6xaZvEtN9ulZYyOc5JGprYke3sR5afAO5gt7wRD8DbcNK0okuXSViKffSd833Hzjm2l8aR0q3Wn6npezO1+w9mH9YfPX7y9Nnc/PNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9FUK3YSGPAoiRjVC+87ZXLO11BqMxqThDI0mGY69s/mZ364vWJYA1yymShkqdcRisI26mylIKevTEE4zHXzomoinmQbO7LjP0EQlVPcmwEBwrSZQdZV4JZAxmIjMf1bEwxKa59FCxLfAUgUlVEcJlKAgFlQjxOGCiSSh3DcuHkgJaU+drnHRzCTkcsb1ROznmxWxaTrWllhfsyQtOLEnUd19NTQaTafhyhFWGCUujUHqgqzhUg/KbiT4dpCo7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9sdD/tS6BtlK1X9CNtpFO8yX+iqyM2ycP7XGp1K5fVx5XHCnVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3qpXsgsBmMTPrWHGBXyLyQEsZLeQ7sfzsHYyYpgw5OitULCpqt1xcWGh8/b+4ebB9t7dy8M3EoZKR7iS3DqYIMb7TwAfljid1DTTV0TLFeuj2FJMibcagUsYj7eBHzvDnqQ2AON+zpYXsN99A124XXbHB/ZNobdMAkDbswIOd9tziijCH/yHi2+q1lWERRGSb00uJbFLpvc+uuwIiPAtHCB9ApP3eTxvHykrOytLL/rrm6NnwKZ8lL8pq8IQ55T1bJFtkjbcIIkG/kJ7muBbXvtR+16yJ0emrIeUFujNqvv70yH7o=</latexit> 
+
+1
+
+(a) <latexit sha1_base64="xdNXDLtloVQPDLVvinBt9KkND1Q=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahAaaGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvT6da7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHTf5NZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKcMh+0</latexit> 
+
++
+
+<latexit sha1_base64="j5039tEE75LG2ZmvwVyZ+GdhyrM=">AAAF9HiclVTdTtswFDaMbqz7AbbL3WSrkCY0oWaa2C7ZBgKkIRhQqEQ65DinqdfEjhyngCw/yXa3cbs32QPsbXbStFpJCdIsxTn6zvm+Y/sc208inupm88/M7J252t178/frDx4+erywuPTkOJWZYtBiMpKq7dMUIi6gpbmOoJ0ooLEfwYnf/5j7TwagUi7Fkb5MoBPTUPAuZ1QjdLa44Gm40GafKhDace3ZYqO52hwOZ9pwR0aDjMb+2dLcby+QLIuRzyKapoYqzVkE1ql7WQoJZX0awmmmu+86hosk0yCYnfQZGqcx1b0psCuFTqfQ9DL2SyBjMBWZHx4XYQnN82gpoxtglXZLqOYxlKBuJKlGSMA5k3FMRWDwBEUqlT11O8ZDM1OQyxnPl1GQL1ZGpuFaW2J9zeKk4ES+QnXv+chwGq7jqTFWGCUujUDpgpyXb9gGRkFgh4nq3gZgKRTs4jL2ElBUo9sLFcUAT1A/olUxuNzJsC+FvkltpWrAsb3G8R4LpK6K3CoL56fmtCuVNyaVJwm3ZsEdWJNPVf7+OfpxqvBrTIlf1W5hYE0+VamHAtVxGtZL90BiMxgV9605wK5QeSHxpk2UcgDsfzsHY6Ypww6Oi7/fLWi2Xl9edt5/2to72Dna3r1+Z6JQKq57sS3DSQoZ3mgZAPInEnuHmmpom+J/4fVSJEHejCMlzrgI8CLmeXM0gK453LSnh60PuIaO2Sm8ZlMEY9NeowMmcezykJz33cqYMoH8I+Pe6jeWYQVFVRjTC4tvUei9yq3bArkYB6KFD6Bbfu6mjePXq+7a6trnN4319dFTOE+ekRfkJXHJW7JOtsk+aRFGMvKN/CRXtUHte+1H7aoInZ0ZcZ6Sa6P26y8aUCYY</latexit> 
+
+Parent 1 
+
+<latexit sha1_base64="nuPD+IyBeOTbP2CxdWdnsWkxhkA=">AAAF9XiclVTdbtMwFPbGCqP8dXDJTaCaNCaYGoQGlwM2bZOYNrZ1q7SUyUlO01Anjmyn62T5TeAOdsuT8AC8DSdNK9p0mYSlOEffOd93bJ9juwkLpWo0/szN31qo3L6zeLd67/6Dh49qS49PJE+FB02PMy5aLpXAwhiaKlQMWokAGrkMTt3ex8x/2gchQx4fq8sE2hEN4rATelQhdF6r2dYra2VgOSqMQFqDF+e1emOtMRzWrGGPjDoZjYPzpYXfjs+9NIJYeYxKqalQocfAWFUnlZBQr0cDOEtV511bh3GSKog9M+nTNJIRVd0ZsMNjJWdQeRm5BdDzYCYyO70wDgpolkdxzq6BhewU0OGhTEMdxqlCKIYLj0cRjX3t4IYkF+bMbmsHzVRAJqcdlzM/Wyxnum4bU2B9TaMk5zBXoLrzbGRYddtyxBjLjQKXMhAqJysYqGEfaAG+GSaqOpuApRCwh8vYT0BQhW4nEBQDnJi6jJbF4HInw77k+lqaUlU/xP4axzuez1VZ5HZRODs1q1WqvDmpPEm4MQvuwOhsKvP3LtCPU4lfYUr8ynYLfaOzqUw9iFEdp2G9VBc4NoMWUc/oQ+wKkRVSwGQp++D9b+dgzCxl2MFR/nc7Oc1Uq8vL1vtP2/uHu8c7e9N3hgVchKobmSKcSEjxRnMfkD+R2DlSVEFL5/+B05VIgqwZR0qhF8Y+XsQsb4b60NFHW+bsqPkB19DWu7lXb8X+2DRTdMAkllkekrO+Wx1TJpB/ZNxb9doyrKKoCCI6MPgWBc7LzLopMIzHgWjhA2gXn7tZ4+T1mr2+tv75TX1jY/QULpKn5DlZITZ5SzbIDjkgTeKRPvlGfpKrykXle+VH5SoPnZ8bcZ6QqVH59ReHviTr</latexit> 
+
+1 → (x ↑ x)
+
+<latexit sha1_base64="gY+wFTTDACWT7x3mRqwvT8KCKp0=">AAAF93iclVTdTtRAFB6QVVz/AC+9qW5IDDFkawx6iQoBEgkILGxCVzJtT7t125lmZgpLJvMqeqfc+iA+gG/j6XY3li4lcZJOT75zvu/MzDkzbhpHUrXbf2Zm78w17t6bv9988PDR4ycLi0vHkmfCg47HYy66LpUQRww6KlIxdFMBNHFjOHEHH3P/yTkIGXF2pC5T6CU0ZFEQeVQhdLaw5CgYKr0XBDIVEQst25wttNqr7dGwpg17bLTIeOyfLc79dnzuZQkw5cVUSk2FirwYjNV0Mgkp9QY0hNNMBe96OmJppoB5puzTNJEJVf0pMOBMySlUXiZuBfQ8mIrMzw/3VEHzPIrz+AZYyKCCqiiBChTEnCqEGFx4PEko8zUeIpNcmFO7px00MwG5nHZcHvv5YnmsW7YxFdbXLEkLTuwKVHeejw2rZVuOmGCFUeHSGIQqyHkFR52gBfhmlKjpbACWQsAuLmMvBUEVup1QUAxwGHVjWheDyy2HfSn0tTS1qn6EHTaJdzyfq7rIrapwfmpWt1Z5o6xcJtyaBXdgdD7V+QcX6Mepxq8wJX51u4Vzo/OpTj1kqI7TqF6qDxybQYtkYPQBdoXICymgXMpz8P63czBmmjLq4KT4u0FBM83m8rL1/tPW3sHO0fbu9TsTh1xEqp+YKpxKyPBGcx+QX0rsHCqqoKuL/9DpSyRB3oxjpciLmI8XMc+boz4E+nDTnB52PuAaenqn8OpN5k9Mc40OmMQyyyNy3ncrE0oJ+UfGvTVvLMMKioowoUODb1HovMqt2wIjNglECx9Au/rcTRvHr1fttdW1z29a6+vjp3CePCMvyEtik7dknWyTfdIhHhmSb+QnuWpcNr43fjSuitDZmTHnKbk2Gr/+AqBJJ3o=</latexit> 
+
+Offspring 1 
+
+<latexit sha1_base64="3EDGjivmOEd5rjL2g/SgF3OFeVE=">AAAF9HiclVTdTtswFDYb3Vj3A2yXu8lWIU1oQg2a2C7ZBgKkIRhQqEQ65DinadbEjmyngCw/yXa3cbs32QPsbXbStFpJCdIsxTn6zvm+Y/sc20/jSOlm88/MnbuztXv35x7UHz56/GR+YfHpsRKZZNBiIhay7VMFccShpSMdQzuVQBM/hhO//zH3nwxAqkjwI32ZQiehIY+6EaMaobOFeU/DhTb7VALXzqo9W2g0V5rD4Uwb7shokNHYP1uc/e0FgmUJ8llMlTJU6ojFYJ26lylIKevTEE4z3X3XMRFPMw2c2UmfoYlKqO5NgV3BtZpC1WXil0DGYCoyP7yIhyU0z6OFiG+ApeqWUB0lUIK6saAaIQ7nTCQJ5YHBE+RKSHvqdoyHZiYhlzOeL+IgX6yITcO1tsT6miVpwYl9ierei5HhNFzHk2OsMEpcGoPUBTkv37ANjITADhPVvQ3AUkjYxWXspSCpRrcXSooBHqd+TKticLmTYV8KfaNspWoQYXuN4z0WCF0VuVUWzk/NaVcqb0wqTxJuzYI7sCafqvz9c/TjVOHXmBK/qt3CwJp8qlIPOarjNKyX7oHAZjAy6VtzgF0h80LiTZso5QDY/3YOxkxThh2cFH+/W9Bsvb605Lz/tLV3sHO0vXv9zsShkJHuJbYMpwoyvNEiAORPJPYONdXQNsX/wuspJEHejCOliEU8wIuY583RALrmcNOeHrY+4Bo6Zqfwmk0ejE17jQ6YxLFLQ3Led8tjygTyj4x7q99YhmUUlWFCLyy+RaH3OrduC4z4OBAtfADd8nM3bRyvrrhrK2uf3zTW10dP4Rx5Tl6SV8Qlb8k62Sb7pEUYycg38pNc1Qa177Uftasi9M7MiPOMXBu1X38BH9EmGQ==</latexit> 
+
+Parent 2 
+
+<latexit sha1_base64="FjSDNN6n80W8IZ4Wn7F4d7Qs7I8=">AAAF93iclVTdTtswFDYb3Vj3B+xyN9kqpAlNqEUT2yXbQIA0BAMKlUiHnOQk9ZrYke1AkeVX2e42bvcge4C9zU6aVispQZqlOEffOd93bJ9je2nMlG42/8zcuTtbu3d/7kH94aPHT57OLyweK5FJH9q+iIXseFRBzDi0NdMxdFIJNPFiOPH6H3P/yTlIxQQ/0pcpdBMacRYyn2qEzuYXXQ0DbfbCUKWS8chZtWfzjeZKczicaaM1MhpkNPbPFmZ/u4HwswS49mOqlKFSMz8G69TdTEFK/T6N4DTT4buuYTzNNHDfTvoMTVRCdW8KDAXXagpVl4lXAn0fpiLz88M9ldA8jxYivgGWKiyhmiVQgsJYUI0QhwtfJAnlgcFD5EpIe9rqGhfNTEIuZ1xPxEG+WBGbRsvaEutrlqQFJ/YkqrsvRobTaDmuHGOFUeLSGKQuyHkFh51gJAR2mKjubgCWQsIuLmMvBUk1ut1IUgxwOfViWhWDy50M+1LoG2UrVQOGHTaOd/1A6KrIrbJwfmpOp1J5Y1J5knBrFtyBNflU5e9foB+nCr/GlPhV7RbOrcmnKvWIozpOw3rpHghsBiOTvjUH2BUyL6SEyVKeg/+/nYMx05RhByfF3wsLmq3Xl5ac95+29g52jrZ3r9+ZOBKS6V5iy3CqIMMbLQJA/kRi91BTDR1T/AduTyEJ8mYcKTGf8QAvYp43RwMIzeGmPT1sf8A1dM1O4TWbPBib9hodMIljl4bkvO+Wx5QJ5B8Z91a/sQzLKCqjhA4svkWR+zq3bgtkfByIFj6ArfJzN20cr6601lbWPr9prK+PnsI58py8JK9Ii7wl62Sb7JM28cmAfCM/yVXtsva99qN2VYTemRlxnpFro/brL6XKJ3s=</latexit> 
+
+Offspring 2 
+
+<latexit sha1_base64="e4VwUO3lg5fX1m/3Zs9d1b0pOCE=">AAAF+3iclVTdThQxFC7KKq5/oIk33oxuSAAN2TUGvUSFAIkEBBZI6Eo6nbOz485MJ20HltS+jN4ptz6GD+DbeGZnN+7OMiQ2mc7Jd873nbbntG4SBkrX63+mbtycrty6PXOnevfe/QcPZ+ceHSqRSg5NLkIhj12mIAxiaOpAh3CcSGCRG8KR2/2Q+Y/OQKpAxAf6IoFWxPw4aAecaYROZ58s9ByqgwiU01t0XjgUeslCb/F0tlZfrveHM2k0BkaNDMbu6dz0b+oJnkYQax4ypQyTOuAhWKdKUwUJ413mw0mq229bJoiTVEPM7ajPsEhFTHcmwLaItZpA1UXkFkDOYSIyO8Mg9gtolkcLEV4BS9UuoP3jGYfaoWAaoRjOuYgiFnuG4oaUkPak0TIUzVRCJmeoK0IvW6wITa1hbYH1JY2SnBO6EtXps4Hh1BoOlUMsNwpcFoLUOVlDT/e7wUjwbD9Rla4BlkLCNi5jJwHJNLqpLxkG0Ji5ISuLweWOhn3O9Y2ypapegF02jKfcE7oscqMonJ2ac1yqvDaqPEq4NgvuwJpsKvN3z9GPU4lfY0r8ynYLZ9ZkU5m6H6M6Tv166Q4IbAYjo641e9gVMiukhNFSngH/387BmElKv4Oj/O+2c5qtVufnnXcfN3b2tg42t8fvTOgLGehOZItwoiDFGy08QP5IYrqvmYZjk/97tKOQBFkzDpQCHsQeXsQsb4Z60Db76/Zkv/ke19AyW7nXrMfe0LRjdMAkjp3vk7O+WxpSRpB/ZNxb9coyLKGo9CPWs/gW+fRlZl0XGMTDQLTwAWwUn7tJ4/DVcmNleeXT69rq6uApnCFPyXOyQBrkDVklm2SXNAknX8k38pNcVmzle+VH5TIPvTE14DwmY6Py6y8E2ydm</latexit> 
+
+(x → x) + exp( x)
+
+<latexit sha1_base64="Qn+4W/mId1DpjLmMMn+5OpZcgb8=">AAAF9niclVTdbtMwFPbGCqP8bXDJTaCaNAaaWoQGlwM2bZOYNvZbaS6Tk5ympokd2c7WyfKjwB3slhfhAXgbTppWdOk6CUuxj75zvu/YOcf205hrU6//mZq+NVO5fWf2bvXe/QcPH83NPz7SMlMBHAYylqrpMw0xF3BouImhmSpgiR/Dsd/9mPuPz0BpLsWBuUihlbBI8DYPmEHodG6eai4Wey+8lx6FXorW6VytvlzvD2/caAyMGhmM3dP5md80lEGWgDBBzLS2TBkexOC8Ks00pCzosghOMtN+17JcpJkBEbhRn2WJTpjpjIFtKYweQ/VF4pfAIICxyPz3cRGV0DyPkTK+Bla6XUINT6AEtWPJDEICzgOZJEyEluKBtFTupNGyFM1MQS5nqS/jMN+sjG2t4VyJ9TVL0oIT+wrV6bOB4dUaHlVDrDBKXBaDMgXZQM/0G8EqCF0/UZWuAZZCwTZuYycFxQy6aaQYBlDB/JhNisHtjoZ9KfStdhNVQ44NNoynQSjNpMiNsnD+17zmROW1UeVRwo1Z8ATO5tMkf/cc/ThN8BtMid+k08KZs/k0ST0SqI5Tv16mAxKbwaqk6+wedoXKC6lgtJRnEPxv52DMOKXfwUmx+u2C5qrVhQXv/aeNnb2tg83tq3cmjqTippO4MpxqyPBGyxCQP5KY7htmoGmLtUc7GkmQN+NAiQdchHgR87w5GkLb7q+7k/3DD7iHlt0qvHZdhEPTXaEDJvHcQp+c993SkDKC/CPj2arXlmEJRVWUsJ7Dtyiir3LrpkAuhoFo4QPYKD9348bR6+XGyvLK5ze11dXBUzhLnpLnZJE0yFuySjbJLjkkATkn38hPclnpVb5XflQui9DpqQHnCbkyKr/+AoFDJaQ=</latexit> 
+
+sin( x) + exp( x)
+
+<latexit sha1_base64="ELqwodhmXtn9dTEC7RkJYIFsY4s=">AAAF9XiclVTdTtswFDaMbqz7K9vlbrpVSBOaUDtNbJdsgABpCAYUKpEOOclp6jWxI9spIMtvst1t3O5J9gB7mx03RSspQZqlOEffOd93bJ9j+2nMlG42/8zM3pmr3L03f7/64OGjx09qC0+PlMhkAO1AxEJ2fKogZhzamukYOqkEmvgxHPuDNec/HoJUTPBDfZFCN6ERZz0WUI3Qaa3maTjXZk0KpQQG2tNao7ncHI36tNEaGw0yHnunC3O/vVAEWQJcBzFVylCpWRCDrVe9TEFKgwGN4CTTvfddw3iaaeCBnfQZmqiE6v4U2BNcqylUXSR+AQwCmIp0p8d4VEBdHi1EfAMsVa+AapZAAerFgmqEOJwFIkkoDw0eIVdC2pNW13hoZhKcnPF8EYdusSI2jZa1BdbXLElzTuxLVPdejI16o1X35BWWGwUujUHqnOzqN+oDIyG0o0RVbx2wFBJ2cBm7KUiq0e1FkmKAx6kf07IYXO5k2Jdc3yhbqhoy1zbjeC8IhS6L3CwKu1Ord0qV1yeVJwm3ZsEdWOOmMv/gDP04lfg1psSvbLcwtMZNZeoRR3WcRvXSfRDYDEYmA2v2sSukK6SEyVIOIfjfzsGYacqog5P87/dymq1WFxfrHz5t7u5vH27tXL8zcSQk0/3EFuFUQYY3WoSA/InE3oGmGjom/597fYUkcM04VmIB4yFeRJfXoSH0zMGGPTlof8Q1dM127jUbPLwy7TU6YJK6XRyRXd8tXVEmkH9k3Fv1xjIsoaiMEnpu8S2KvNfOui2Q8atAtPABbBWfu2nj6M1ya2V55fPbxurq+CmcJ8/JS/KKtMg7skq2yB5pk4AMyTfyk1xWzirfKz8ql3no7MyY84xcG5VffwEHzyct</latexit> 
+
+Crossover 
+
+<latexit sha1_base64="vV1pvsz8mXzyejGJZ5qUSOpmlrw=">AAAF7niclVTdbtMwFPbGCqP8bXDJTaCaNCaYGoQGlwM2bZOYNrZ1q9SUyUlOU9PEjmxn62T5MeAOdsvL8AC8DSdNK7p0nYSl2EffOd937Jxj+2nMlK7X/8zM3pqr3L4zf7d67/6Dh48WFh8fK5HJABqBiIVs+lRBzDg0NNMxNFMJNPFjOPF7H3P/yRlIxQQ/0hcptBMacdZhAdUItVznleMpxpf7L04XavXV+mA4k4Y7NGpkOPZPF+d+e6EIsgS4DmKqlKFSsyAG61S9TEFKgx6NoJXpzru2YTzNNPDAjvsMTVRCdXcC7Aiu1QSqLhK/BAYBTETmv43xqITmebQQ8TWwVJ0SqlkCJagTC6oR4nAeiCShPDQeHkgJaVtu23hoZhJyOeP5Ig7zzYrY1FxrS6yvWZIWnNiXqO49GxpOzXU8OcIKo8SlMUhdkDX09aABjITQDhJVvQ3AUkjYxW3spSCpRrcXSYoBHqd+TKfF4HbHw74U+kbZqaohw8YaxXtBKPS0yK2ycP7XnOZU5Y1x5XHCjVnwBNbk0zR/7xz9OE3xa0yJ37TTwpk1+TRNPeKojtOgXroLApvByKRnzQF2hcwLKWG8lGcQ/G/nYMwkZdDBSbH6nYJmq9WlJef9p629g52j7d2rdyaOhGS6m9gynCrI8EaLEJA/ltg71FRD0xRr3+sqJEHejEMlFjAe4kXM8+ZoCB1zuGlbh40PuIe22Sm8ZpOHI9NeoQMmcezSgJz33cqIMob8I+PZqteWYQVFZZTQvsW3KPJe5tZNgYyPAtHCB9AtP3eTxvHrVXdtde3zm9r6+vApnCdPyXOyTFzylqyTbbJPGiQggnwjP8llJa18r/yoXBahszNDzhNyZVR+/QUeLyL4</latexit> 
+
+1 → sin( x)
+
+<latexit sha1_base64="TbwFC+f/dHrMcw3B+vPTPYrUnxc=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYke0UkOVX2O42bvdAe4C9zU6aVispQZql2EffOd937Jxj+0nEtWk0/szM3pmr3L03f7/64OGjx08WFp8ea5kqBi0mI6naPtUQcQEtw00E7UQBjf0ITvz+x8x/MgCluRRH5jKBTkxDwbucUZNBnubibKHeWGkMR23aaI6MOhmN/bPFud9eIFkagzAsolpbqgxnEbha1Us1JJT1aQinqem+71guktSAYG7SZ2msY2p6U2BXCqOnUH0Z+wWQMZiKzP4XF2EBzfIYKaMbYKW7BdTwGApQN5LUICTgnMk4piKwHh5IS+VOmx3roZkqyOSs58soyDYrI1tvOldgfU3jJOdEvkJ178XIqNWbNU+NsdwocGkEyuRkAxdmWHmrIHDDRFVvA7AUCnZxG3sJKGrQ7YWKYoAnqB/Rshjc7mTYl1zfaleqGnDsqHG8xwJpyiK3isLZX6u1S5U3JpUnCbdmwRM4m01l/v45+nEq8RtMiV/ZaWHgbDaVqYcC1XEa1sv0QGIzWBX3nT3ArlBZIRVMlnIA7H87B2OmKcMOjvPV7+Y0V60uLdU+fNraO9g52t69fmeiUCpuerErwomGFG+0DAD5E4m9Q0MNtG2+Xng9jSTImnGkxBkXAV7ELG+GBtC1h5vu9LC1jnvo2J3cazdFMDbdNTpgkppbGpKzvlseUyaQf2Q8W/XGMiyjqApjeuHwLQq915l1WyAX40C08AFsFp+7aeP4zUpzdWX189v62vroKZwnz8lL8oo0yTuyRrbJPmkRRnrkG/lJriq88r3yo3KVh87OjDjPyLVR+fUXPkIhTQ==</latexit> 
+
+sin 
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="nT/GIgxZe/L79bTKWF46vBDbGvg=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCaYGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvTmda7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHRf59ZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKnMh+2</latexit> 
+
+→
+
+<latexit sha1_base64="3YTsepRS5/ZQZuvREh5xEbWyxZs=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCY0NRMaXI6xaZvEtN9ulZYyOc5JGprYke3sR5afAO5gt7wRD8DbcNK0okuXSViKffSd833Hzjm2l8aR0q3Wn6npezO1+w9mH9YfPX7y9Nnc/PNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9FUK3YSGPAoiRjVC+87ZXLO11BqMxqThDI0mGY69s/mZ364vWJYA1yymShkqdcRisI26mylIKevTEE4zHXzomoinmQbO7LjP0EQlVPcmwEBwrSZQdZV4JZAxmIjMf1bEwxKa59FCxLfAUgUlVEcJlKAgFlQjxOGCiSSh3DcuHkgJaU+drnHRzCTkcsb1ROznmxWxaTrWllhfsyQtOLEnUd19NTQaTafhyhFWGCUujUHqgqzhUg/KbiT4dpCo7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9sdD/tS6BtlK1X9CNtpFO8yX+iqyM2ycP7XGp1K5fVx5XHCnVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3qpXsgsBmMTPrWHGBXyLyQEsZLeQ7sfzsHYyYpgw5OitULCpqt1xcWGh8/b+4ebB9t7dy8M3EoZKR7iS3DqYIMb7TwAfljid1DTTV0TLFeuj2FJMibcagUsYj7eBHzvDnqQ2AON+zpYXsN99A124XXbHB/ZNobdMAkDbswIOd9tziijCH/yHi2+q1lWERRGSb00uJbFLpvc+uuwIiPAtHCB9ApP3eTxvHykrOytLL/rrm6NnwKZ8lL8pq8IQ55T1bJFtkjbcIIkG/kJ7muBbXvtR+16yJ0emrIeUFujNqvv70yH7o=</latexit> 
+
+1
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="h49kTJrYh7pTwT0GElnKG8ZTdow=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYkeNAkeVX2O42bvdAe4C9zY6bVispQZql2EffOd937Jxj+0nEU91o/JmZvTNXuXtv/n71wcNHj58sLD49TmWmGLSYjKRq+zSFiAtoaa4jaCcKaOxHcOL3Pzr/yTmolEtxpC8T6MQ0FLzLGdUO8mCQnC3UGyuN4ahNG82RUSejsX+2OPfbCyTLYhCaRTRNDVWaswhsreplKSSU9WkIp5nuvu8YLpJMg2B20mdonMZU96bArhQ6nULTy9gvgIzBVKT7X1yEBdTl0VJGN8Aq7RZQzWMoQN1IUo2QgAsm45iKwHh4oFQqe9rsGA/NTIGTM54vo8BtVkam3rS2wPqaxUnOiXyF6t6LkVGrN2ueGmO5UeDSCJTOyRoGelh5oyCww0RVbwOwFAp2cRt7CSiq0e2FimKAJ6gf0bIY3O5k2Jdc36S2VDXg2FHjeI8FUpdFbhWF3V+rtUuVNyaVJwm3ZsETWOOmMn//Av04lfg1psSv7LRwbo2bytRDgeo4DeuleyCxGYyK+9YcYFcoV0gFk6U8B/a/nYMx05RhB8f56ndzmq1Wl5ZqHz5t7R3sHG3vXr8zUSgV173YFuEkhQxvtAwA+ROJvUNNNbRNvg68XookcM04UuKMiwAvosvr0AC65nDTnh621nEPHbOTe82mCMamvUYHTFKzS0Oy67vlMWUC+UfGs1VvLMMyiqowpgOLb1HovXbWbYFcjAPRwgewWXzupo3jNyvN1ZXVz2/ra+ujp3CePCcvySvSJO/IGtkm+6RFGOmRb+QnuarwyvfKj8pVHjo7M+I8I9dG5ddfTrUhUA==</latexit> 
+
+exp <latexit sha1_base64="qp4nBIDP3E3o9fXB3ofVuhQad/g=">AAAF6XiclVTdbtMwFPZghVH+NrjkplBNQhOaWoQGl2Ns2iYxbWzrVmkpk+Ocpl6dOLKd/cjyO8Ad7Jbn4QF4G06aVrTpMglLcY6+c77v2D7H9hPBtWk0/szcuTtbuXd/7kH14aPHT57OLzw70jJVDFpMCqnaPtUgeAwtw42AdqKARr6AY7//KfMfn4PSXMaH5iqBTkTDmHc5owahI8/wCPTpfL2x3BiM2rTRHBp1Mhx7pwuzv71AsjSC2DBBtbZUGc4EuFrVSzUklPVpCCep6X7oWB4nqYGYuXGfpZGOqOlNgV0ZGz2F6qvIL4CMwVRkdmI8DgtolsdIKW6Ale4W0MGJTEJdIalBKIYLJqOIxoH1cENaKnfS7FgPzVRBJmc9X4ogW6wUtt50rsA6S6Mk5whfobr3cmjU6s2ap0ZYbhS4VIAyOdnApRnU3ioI3CBR1VsHLIWCHVzGbgKKGnR7oaIY4MXUF7QsBpc7HvY117falaoGHHtqFO+xQJqyyM2icHZqtXap8vq48jjh1iy4A2ezqczfv0A/TiV+gynxK9stnDubTWXqYYzqOA3qZXogsRmsivrO7mNXqKyQCsZLeQ7sfzsHY6Ypgw6O8r/fzWmuWl1crH38vLm7v324tTN5Z0QoFTe9yBXhREOKN1oGgPyxxN6BoQbaNv9fej2NJMiacajEGY8DvIhZ3gwNoGsPNtzJQWsN19Cx27nXbsTByHQTdMAkNbc4IGd9tzSijCH/yLi36o1lWEJRFUb00uFbFHpvMuu2QB6PAtHCB7BZfO6mjaO3y82V5ZUv7+qra8OncI68IK/Ia9Ik78kq2SJ7pEUYOSPfyE9yXelXvld+VK7z0DszQ85zMjEqv/4COA4iOQ==</latexit> 
+
+→
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="nT/GIgxZe/L79bTKWF46vBDbGvg=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCaYGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvTmda7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHRf59ZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKnMh+2</latexit> 
+
+→
+
+<latexit sha1_base64="3YTsepRS5/ZQZuvREh5xEbWyxZs=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahCY0NRMaXI6xaZvEtN9ulZYyOc5JGprYke3sR5afAO5gt7wRD8DbcNK0okuXSViKffSd833Hzjm2l8aR0q3Wn6npezO1+w9mH9YfPX7y9Nnc/PNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9FUK3YSGPAoiRjVC+87ZXLO11BqMxqThDI0mGY69s/mZ364vWJYA1yymShkqdcRisI26mylIKevTEE4zHXzomoinmQbO7LjP0EQlVPcmwEBwrSZQdZV4JZAxmIjMf1bEwxKa59FCxLfAUgUlVEcJlKAgFlQjxOGCiSSh3DcuHkgJaU+drnHRzCTkcsb1ROznmxWxaTrWllhfsyQtOLEnUd19NTQaTafhyhFWGCUujUHqgqzhUg/KbiT4dpCo7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9sdD/tS6BtlK1X9CNtpFO8yX+iqyM2ycP7XGp1K5fVx5XHCnVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3qpXsgsBmMTPrWHGBXyLyQEsZLeQ7sfzsHYyYpgw5OitULCpqt1xcWGh8/b+4ebB9t7dy8M3EoZKR7iS3DqYIMb7TwAfljid1DTTV0TLFeuj2FJMibcagUsYj7eBHzvDnqQ2AON+zpYXsN99A124XXbHB/ZNobdMAkDbswIOd9tziijCH/yHi2+q1lWERRGSb00uJbFLpvc+uuwIiPAtHCB9ApP3eTxvHykrOytLL/rrm6NnwKZ8lL8pq8IQ55T1bJFtkjbcIIkG/kJ7muBbXvtR+16yJ0emrIeUFujNqvv70yH7o=</latexit> 
+
+1 <latexit sha1_base64="qp4nBIDP3E3o9fXB3ofVuhQad/g=">AAAF6XiclVTdbtMwFPZghVH+NrjkplBNQhOaWoQGl2Ns2iYxbWzrVmkpk+Ocpl6dOLKd/cjyO8Ad7Jbn4QF4G06aVrTpMglLcY6+c77v2D7H9hPBtWk0/szcuTtbuXd/7kH14aPHT57OLzw70jJVDFpMCqnaPtUgeAwtw42AdqKARr6AY7//KfMfn4PSXMaH5iqBTkTDmHc5owahI8/wCPTpfL2x3BiM2rTRHBp1Mhx7pwuzv71AsjSC2DBBtbZUGc4EuFrVSzUklPVpCCep6X7oWB4nqYGYuXGfpZGOqOlNgV0ZGz2F6qvIL4CMwVRkdmI8DgtolsdIKW6Ale4W0MGJTEJdIalBKIYLJqOIxoH1cENaKnfS7FgPzVRBJmc9X4ogW6wUtt50rsA6S6Mk5whfobr3cmjU6s2ap0ZYbhS4VIAyOdnApRnU3ioI3CBR1VsHLIWCHVzGbgKKGnR7oaIY4MXUF7QsBpc7HvY117falaoGHHtqFO+xQJqyyM2icHZqtXap8vq48jjh1iy4A2ezqczfv0A/TiV+gynxK9stnDubTWXqYYzqOA3qZXogsRmsivrO7mNXqKyQCsZLeQ7sfzsHY6Ypgw6O8r/fzWmuWl1crH38vLm7v324tTN5Z0QoFTe9yBXhREOKN1oGgPyxxN6BoQbaNv9fej2NJMiacajEGY8DvIhZ3gwNoGsPNtzJQWsN19Cx27nXbsTByHQTdMAkNbc4IGd9tzSijCH/yLi36o1lWEJRFUb00uFbFHpvMuu2QB6PAtHCB7BZfO6mjaO3y82V5ZUv7+qra8OncI68IK/Ia9Ik78kq2SJ7pEUYOSPfyE9yXelXvld+VK7z0DszQ85zMjEqv/4COA4iOQ==</latexit> 
+
+→
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="xdNXDLtloVQPDLVvinBt9KkND1Q=">AAAF5HiclVTdbtMwFPbGCqP8bXDJTaGahAaaGoQGl2Ns2iYx7bdbpaVMjnOSmjpx5Dj7keUngDvYLW/EA/A2nDSt6NJlEpZiH33nfN+xc47tJYKnutX6MzV9Z6Z2997s/fqDh48eP5mbf3qUykwxaDMppOp4NAXBY2hrrgV0EgU08gQce/1Puf/4DFTKZXyoLxPoRjSMecAZ1QjtvT6da7aWWoPRmDScodEkw7F7Oj/z2/UlyyKINRM0TQ1VmjMBtlF3sxQSyvo0hJNMBx+6hsdJpiFmdtxnaJRGVPcmwEDGOp1A08vIK4GMwURk/rN4HJbQPI+WUtwAqzQooZpHUIICIalGKIZzJqOIxr5x8UCpVPbE6RoXzUxBLmdcTwo/36wUpulYW2J9zaKk4AhPobr7Ymg0mk7DVSOsMEpcKkDpgqzhQg/KbhT4dpCo7q4BlkLBNm5jJwFFNbrdUFEMcGPqCVoVg9sdD/tS6JvUVqr6HNtpFO8yX+qqyI2ycP7XGp1K5bVx5XHCrVnwBNbkU5W/f45+nCr8GlPiV3VaOLMmn6rUwxjVcRrUS/dAYjMYFfWt2ceuUHkhFYyX8gzY/3YOxkxSBh0cFasXFDRbry8sND5+3tjZ3zrc3L5+Z0QoFde9yJbhJIUMb7T0Afljid0DTTV0TLFeuL0USZA341CJMx77eBHzvDnqQ2AO1u3JQXsV99A1W4XXrMf+yLTX6IBJGnZhQM77bnFEGUP+kfFs9RvLsIiiKozohcW3KHTf5NZtgTweBaKFD6BTfu4mjaO3S87y0vLeu+bK6vApnCXPyUvyijjkPVkhm2SXtAkjQL6Rn+SqFtS+137UrorQ6akh5xm5Nmq//gKcMh+0</latexit> 
+
++
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x
+
+<latexit sha1_base64="h49kTJrYh7pTwT0GElnKG8ZTdow=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYkeNAkeVX2O42bvdAe4C9zY6bVispQZql2EffOd937Jxj+0nEU91o/JmZvTNXuXtv/n71wcNHj58sLD49TmWmGLSYjKRq+zSFiAtoaa4jaCcKaOxHcOL3Pzr/yTmolEtxpC8T6MQ0FLzLGdUO8mCQnC3UGyuN4ahNG82RUSejsX+2OPfbCyTLYhCaRTRNDVWaswhsreplKSSU9WkIp5nuvu8YLpJMg2B20mdonMZU96bArhQ6nULTy9gvgIzBVKT7X1yEBdTl0VJGN8Aq7RZQzWMoQN1IUo2QgAsm45iKwHh4oFQqe9rsGA/NTIGTM54vo8BtVkam3rS2wPqaxUnOiXyF6t6LkVGrN2ueGmO5UeDSCJTOyRoGelh5oyCww0RVbwOwFAp2cRt7CSiq0e2FimKAJ6gf0bIY3O5k2Jdc36S2VDXg2FHjeI8FUpdFbhWF3V+rtUuVNyaVJwm3ZsETWOOmMn//Av04lfg1psSv7LRwbo2bytRDgeo4DeuleyCxGYyK+9YcYFcoV0gFk6U8B/a/nYMx05RhB8f56ndzmq1Wl5ZqHz5t7R3sHG3vXr8zUSgV173YFuEkhQxvtAwA+ROJvUNNNbRNvg68XookcM04UuKMiwAvosvr0AC65nDTnh621nEPHbOTe82mCMamvUYHTFKzS0Oy67vlMWUC+UfGs1VvLMMyiqowpgOLb1HovXbWbYFcjAPRwgewWXzupo3jNyvN1ZXVz2/ra+ujp3CePCcvySvSJO/IGtkm+6RFGOmRb+QnuarwyvfKj8pVHjo7M+I8I9dG5ddfTrUhUA==</latexit> 
+
+exp 
+
+<latexit sha1_base64="TbwFC+f/dHrMcw3B+vPTPYrUnxc=">AAAF53iclVTdTtswFDaMbqz7g+1yN90qpAlNqJ0mtkvGQIA0BAMKlUiHHOc09ZrYke0UkOVX2O42bvdAe4C9zU6aVispQZql2EffOd937Jxj+0nEtWk0/szM3pmr3L03f7/64OGjx08WFp8ea5kqBi0mI6naPtUQcQEtw00E7UQBjf0ITvz+x8x/MgCluRRH5jKBTkxDwbucUZNBnubibKHeWGkMR23aaI6MOhmN/bPFud9eIFkagzAsolpbqgxnEbha1Us1JJT1aQinqem+71guktSAYG7SZ2msY2p6U2BXCqOnUH0Z+wWQMZiKzP4XF2EBzfIYKaMbYKW7BdTwGApQN5LUICTgnMk4piKwHh5IS+VOmx3roZkqyOSs58soyDYrI1tvOldgfU3jJOdEvkJ178XIqNWbNU+NsdwocGkEyuRkAxdmWHmrIHDDRFVvA7AUCnZxG3sJKGrQ7YWKYoAnqB/Rshjc7mTYl1zfaleqGnDsqHG8xwJpyiK3isLZX6u1S5U3JpUnCbdmwRM4m01l/v45+nEq8RtMiV/ZaWHgbDaVqYcC1XEa1sv0QGIzWBX3nT3ArlBZIRVMlnIA7H87B2OmKcMOjvPV7+Y0V60uLdU+fNraO9g52t69fmeiUCpuerErwomGFG+0DAD5E4m9Q0MNtG2+Xng9jSTImnGkxBkXAV7ELG+GBtC1h5vu9LC1jnvo2J3cazdFMDbdNTpgkppbGpKzvlseUyaQf2Q8W/XGMiyjqApjeuHwLQq915l1WyAX40C08AFsFp+7aeP4zUpzdWX189v62vroKZwnz8lL8oo0yTuyRrbJPmkRRnrkG/lJriq88r3yo3KVh87OjDjPyLVR+fUXPkIhTQ==</latexit> 
+
+sin 
+
+<latexit sha1_base64="Nt8/jJHFTipao7/hAvAPemYF1AM=">AAAF5HiclVTdbtMwFPZghVH+NrjkplBNQhOaGoQGl2Ns2iYx7bdbpaVMjnOShiZ2ZDtbJ8tPAHewW96IB+BtOGla0aXLJCzFPvrO+b5j5xzbS+NI6Vbrz8ydu7O1e/fnHtQfPnr85On8wrNjJTLJoM1ELGTHowriiENbRzqGTiqBJl4MJ17/U+4/OQepIsGP9GUK3YSGPAoiRjVC+4Oz+WZruTUcjWnDGRlNMhp7Zwuzv11fsCwBrllMlTJU6ojFYBt1N1OQUtanIZxmOvjQNRFPMw2c2UmfoYlKqO5NgYHgWk2h6jLxSiBjMBWZ/6yIhyU0z6OFiG+ApQpKqI4SKEFBLKhGiMMFE0lCuW9cPJAS0p46XeOimUnI5YzridjPNyti03SsLbG+ZklacGJPorr7cmQ0mk7DlWOsMEpcGoPUBVnDQA/LbiT4dpio7q4DlkLCDm5jNwVJNbrdUFIMcDn1YloVg9udDPtS6BtlK1X9CNtpHO8yX+iqyM2ycP7XGp1K5fVJ5UnCrVnwBNbkU5W/f4F+nCr8GlPiV3VaOLcmn6rUQ47qOA3rpXsgsBmMTPrWHGBXyLyQEiZLeQ7sfzsHY6Ypww5OitULCpqt1xcXGx8/b+4ebB9t7Vy/M3EoZKR7iS3DqYIMb7TwAfkTid1DTTV0TLEO3J5CEuTNOFKKWMR9vIh53hz1ITCHG/b0sL2Ge+ia7cJrNrg/Nu01OmCShl0ckvO+WxpTJpB/ZDxb/cYyLKGoDBM6sPgWhe6b3LotMOLjQLTwAXTKz920cfx22VlZXtl/11xdGz2Fc+QFeUVeE4e8J6tki+yRNmEEyDfyk1zVgtr32o/aVRF6Z2bEeU6ujdqvv0PQIAE=</latexit> 
+
+x (b) 
+
+Figure 3: Illustration of (a) mutation and (b) crossover operations in an evolutionary symbolic regression algo-rithm. 6Algorithm 1 Custom loss function for physics-constrained symbolic water retention model discovery. 
+
+Input: Symbolic expression tree in the mapped space ˆS∗
+
+> w
+
+(s), normalized dataset {(s∗(i), S ∗(i) 
+
+> w
+
+)}ndata  
+
+> i=1
+
+, the pre-scribed number of modes Nmode , and collocation points s∗ 
+
+> col
+
+= {s∗(j) 
+
+> col
+
+}ncol 
+
+> j=1
+
+.
+
+Output: Total loss L.
+
+1. Evaluate Ldata .
+
+Ldata ← 1
+
+> ndata
+
+Pndata 
+
+> i=1
+
+h ˆS∗(i) 
+
+> w
+
+(s∗(i)) − S∗(i)
+
+> w
+
+i2
+
+▷ Eq. (2) 
+
+2. Evaluate Lphys .
+
+if any ( ˆS∗
+
+> w′
+
+(s∗
+
+> col
+
+) > 0) then 
+
+Lphys ← L phys + 1
+
+> nnz
+
+( ˆS∗ 
+
+> w′(s∗
+> col )>0
+
+)
+
+Pncol 
+
+> j=1
+
+h
+
+ReLU 
+
+ ˆS∗
+
+> w′
+
+(s∗(j) 
+
+> col
+
+)
+
+i 2
+
+▷ Eq. (8) 
+
+else 
+
+Lphys ← 0
+
+end if if | ˆS∗
+
+> w
+
+(0) | < 1 then 
+
+Lphys ← L phys +
+
+h ˆS∗
+
+> w
+
+(0) − 1
+
+i2
+
+▷ Eq. (9) 1
+
+end if if | ˆS∗
+
+> w′
+
+(0) | < 0 then 
+
+Lphys ← L phys +
+
+h ˆS∗
+
+> w′
+
+(0) 
+
+i2
+
+▷ Eq. (9) 2
+
+end if if | ˆS∗
+
+> w
+
+(1) | < 0 then 
+
+Lphys ← L phys +
+
+h ˆS∗
+
+> w
+
+(1) 
+
+i2
+
+▷ Eq. (10) 1
+
+end if if | ˆS∗
+
+> w′
+
+(1) | < 0 then 
+
+Lphys ← L phys +
+
+h ˆS∗
+
+> w′
+
+(1) 
+
+i2
+
+▷ Eq. (10) 2
+
+end if 3. Evaluate Lmode .
+
+ˆNmode ← nummodes ( ˆS∗
+
+> w
+
+(s∗
+
+> col
+
+)) 
+
+if not ˆNmode == Nmode then 
+
+Lmode ←
+
+ ˆNmode − Nmode 
+
+2
+
+▷ Eq. (3) 
+
+else 
+
+Lmode ← 0
+
+end if 4. Return total loss L.
+
+return L ← L data + Lphys + Lmode ▷ Eq. (1) 7the mapped domain and serve as specific locations where constraints are explicitly enforced. As detailed in Algorithm 1, the custom loss function is constructed by first evaluating the data loss ( Ldata ) on the normalized dataset to ensure fitness to experimental observations. Subsequently, the physics loss ( Lphys ) is computed by checking the predictions at the collocation points for violations of physics constraints. Monotonicity constraint is enforced by penalizing deviations from Eq. (8): at each collocation point where the monotonicity condition is not met, a penalty term [ReLU ( ˆS∗
+
+> w′
+
+(s∗(j) 
+
+> col
+
+))] 2 is added to the physics loss. Here, ReLU (•) denotes the rec-tified linear unit, which ensures that only instances where the derivative exceeds zero are penalized, thereby quantifying the extent of non-monotonicity. Limiting constraints are similarly incorporated by imposing addi-tional penalties for deviations from the expected values and derivatives at the endpoints of the domain ( s∗ = 0 
+
+and s∗ = 1 ), thus ensuring physical consistency at both maximum and residual saturation levels. The mode loss ( Lmode ) is then evaluated using Eq. (3). Here, nummodes ( ˆS∗
+
+> w
+
+(s∗
+
+> col
+
+)) determines the number of modes of the learned function ( ˆNmode ), by counting the number of sign changes from negative to positive in the second derivative ˆS∗
+
+> w′′
+
+, which corresponds to the number of concave-to-convex inflection points. Finally, the custom loss function returns the total loss L as defined in Eq. (1). To further investigate how the imposed physics constraints suppress nonphysical solutions and effectively mitigate overfitting, particularly in the presence of noisy data, we provide a detailed comparative analysis be-tween vanilla SR and the constrained variants in Appendix A. The entire PCSR implementation is built on top of the Julia package SymbolicRegression.jl [Cran-mer, 2023], and is open-sourced to support third-party application and extension (see Open Research). 
+
+3 Results 
+
+This section presents a comprehensive evaluation of the proposed PCSR framework for discovering closed-form equations of water retention models under various scenarios. To establish a thorough benchmark, we compare the performance of PCSR against both the vanilla SR and established semi-empirical models [Van Genuchten, 1980, Durner, 1994]. In Section 3.1, we apply PCSR to two distinct experimental datasets representing soils with unimodal pore size distributions and examine its ability to discover physically consistent equations. Sec-tion 3.2 extends the evaluation to multimodal water retention curves, including both experimentally measured bimodal ( Nmode = 2 ) datasets and synthetically generated datasets with higher mode numbers (e.g., Nmode = 3 
+
+and 4), to investigate the scalability and robustness of PCSR in capturing complex, multi-scale retention behav-iors as well as its effectiveness in enforcing the prescribed number of modes. All symbolic regressions in this work were trained using a consistent set of hyperparameter settings: the number of training iterations was fixed at 100, the population size of candidate expressions was set to 50, and the maximum allowable complexity for each candidate expression was limited to 150 nodes. The binary operators available for the model were restricted to {+, ×} , while the unary operators included {sin( •), cos( •), exp( •), ln( •)}.For PCSRs, the number of collocation points was fixed at ncol = 100 .It is important to note that a conventional train-test splitting strategy is not adopted in this study. The objective of the proposed framework is not to construct a model that generalizes across different datasets, but rather to discover a physically sound, best-fit closed-form equation specific to the given experimental dataset (i.e., meta-modeling). Hence, all available measurements are fully leveraged as training data, while overfitting is effectively controlled by the imposed physical constraints, which limit the admissible functional space and prevent nonphysical solutions that might otherwise fit local noise or fluctuations. Furthermore, because our primary focus is on ensuring that the discovered equations satisfy the physical constraints rather than preventing overparameterization (e.g., minimizing expression complexity), the resulting equations may be highly complex, yet remain physically consistent. 
+
+3.1 Unimodal water retention curves 
+
+We considered two different water retention datasets: one corresponding to the poorly graded sand, which exhibits a steep slope in its water retention curve [Song, 2014], and the other to the clay loam soil with a water retention curve [Tuller and Or, 2001]. For each case, the experimental data were mapped to the normalized space as described in Section 2.1 for training, using the following mapping parameters: for the poorly graded sand, smin = 10 −2, Sw, max = 1 .0, and sres = 10 5; for the clay loam soil, smin = 10 −1, Sw, max = 1 .0, sres = 10 6,and Sw, res = 0 .035 . Model predictions were then obtained by applying the inverse mapping to the outputs of 8the trained models. Figure 4 presents the water retention models discovered using PCSR with mode constraint (red solid curves) and without mode constraint (yellow dashed curves), as well as those obtained with vanilla SR (green solid curves) and the [Van Genuchten, 1980] model (blue dotted curves). Here, the experimental training data are depicted as black hollow circles. While the semi-empirical model closely fits the experimental data for poorly graded sand (Figure 4a), it may fail to accurately capture the retention behavior of the clay loam soil near the air entry value or residual saturation (Figure 4b). Although the models identified by vanilla SR achieve very low MSE losses and closely match the experimental data, they tend to overfit and exhibit limited generalizability beyond the training dataset. When physics loss Lphys is incorporated into the vanilla SR (i.e., PCSR without 
+
+Lmode ), excessive fluctuations are effectively suppressed, ensuring that the resulting curves adhere to the physics constraints detailed in Section 2.2. However, as depicted in the subfigure within Figure 4b, the curve may still exhibit slight overfitting, which does not represent a unimodal pore size distribution. In contrast, the proposed framework that includes both physics and mode constraints (i.e., PCSR with Lmode ), takes the target number of modes as an additional input (e.g., Nmode = 1 in this case), and effectively prevents overfitting to the sparse experimental data, resulting in water retention models that only exhibit one concave-to-convex inflection point. 10 
+
+0 10 
+
+5         
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+> Experimental data (Song ,2014)
+> van Genuchten (1980) model
+> Vanilla SR
+> PCSR without
+
+L mode   
+
+> PCSR with
+
+L mode 
+
+(a) 1 
+
+ 1 
+
+           
+
+> s[kPa]
+>  
+>  
+>  
+>  
+>  
+> 1 
+> S
+> w
+> Experimental data (Tuller and Or ,2001)
+> van Genuchten (1980) model
+> Vanilla SR
+> PCSR without
+
+L mode   
+
+> PCSR with
+
+L mode 
+
+1 1 1  1 1 1   
+
+  
+
+1  (b) 
+
+Figure 4: The symbolic model discovered from experimental unimodal water retention data using the proposed approach, compared against the [Van Genuchten, 1980] model, vanilla SR, and PCSR without mode constraint. Table 1 summarizes the best-fit mathematical expressions discovered for each unimodal water retention dataset using PCSR, both with and without mode constraints, corresponding to those illustrated in Figures 4a-4b. For each case, we also provide the number of modes exhibited by the trained model ( ˆNmode ), the complexity of the symbolic expression, and the corresponding total loss L. Models trained without the mode loss term all fail to achieve ˆNmode = 1 , whereas models incorporating Lmode tend to consistently achieve ˆNmode = 1 ,confirming that the identified water retention curve is unimodal. Further, the best-fit mathematical expressions exhibit sufficiently low total loss values, and complexities below the maximum bound of 150, indicating that the proposed approach can efficiently identify concise, physically sound water retention curves with a consistent number of modes for unimodal datasets. Figure 5 showcases six exemplary mathematical expressions discovered by the PCSR with Lmode , each exhibiting varying levels of complexity, illustrating its effect on the loss and the number of modes exhibited. Here, the data ( Ldata ) and physics ( Lphys ) losses are represented as white and gray segments in the stacked bar plots on the left primary y-axis, respectively, while the exhibited number of modes ˆNmode as a red bar on the right secondary y-axis. The results suggest that as the level of complexity increases, both Ldata and Lphys tend to decrease, indicating that the discovered mathematical expression better describes the water retention behavior as the number of nodes in the binary tree increases. This highlights that there is a trade-off between accuracy and 9Table 1: Discovered closed-form equations corresponding to those illustrated in Figures 4a–4b. 
+
+> Model  Discovered expression  ˆNmode  Complexity  Loss
+> (a)  PCSR without  Lmode
+> Sw = sin(sin((cos(cos(exp(exp((sin( s) − 0.32)  × 64 .88)  × − 0.25))) + 0 .85)
+> × 4.51)  × (cos(cos(exp(exp((sin( s) − 0.27)  × 64 .88)  × − 0.25))) + 0 .76))  × 1.00  2 35  3.751  × 10 −4
+> PCSR with  Lmode
+> Sw = sin(sin(exp(exp( s × 97 .45  × s) × − 1.46 E−05 + 0 .25))  × 1.44)  × 0.94 + exp(cos((sin( s + s) +  s) × (s + sin( s + s))  × sin( s + s))  × 2.69)  × 0.005  1 42  2.198  × 10 −4
+> (b)  PCSR without  Lmode
+> Sw = cos(cos(sin(sin(cos( s × (s − 2.12)  × − 12 .45)  × s) × − 1.70))
+> × 0.46)  × (sin(cos(cos( s × − 3.14) + 4 .75))  × 0.75 + 0 .55)  4 31  4.790  × 10 −6
+> PCSR with  Lmode
+> Sw = cos(sin((( s + 0 .64)  × sin( s × 1.88)  × 1.42 +  s)
+> × (s − 0.23)))  × cos(sin( s × 1.88)  × (s + 0 .65))  1 28  3.023  × 10 −5
+
+10 simplicity. Further, when Lmode is incorporated into the PCSR, mathematical expressions consistently maintain 
+
+ˆNmode = 1 , demonstrating that the mode loss term effectively enforces the intended unimodal shape in the discovered water retention curves. 5 6 17 29 36 41       
+
+> 10 -8
+> 10 -6
+> 10 -4
+> 10 -2
+> 10 0
+> 02468
+> (a) 6810 22 24 28
+> 10 -8
+> 10 -6
+> 10 -4
+> 10 -2
+> 10 0
+> 02468(b)
+
+Figure 5: Data and physics loss components and the number of modes exhibited by PCSR with Lmode at varying complexity levels that optimally fit the data presented in Figure 4. We also compare the learning curves of PCSR models trained with and without Lmode , as illustrated in Figure 6. Figures 6a and 6b each contain three subplots, displaying the evolution of Ldata , Lphys , and, instead of 
+
+Lmode , the change in ˆNmode over training iterations. The black solid line represents the learning curve of PCSR without the mode loss term, while the red solid line indicates the results from PCSR with the shape-guiding mode loss term included. In both models, Ldata and Lphys exhibit a downward trend as training progresses, though some noise is observed due to the evolutionary nature of symbolic regression. Nonetheless, the overall loss levels are low enough that the difference between the models is negligible. The difference between two models can be seen in the change of ˆNmode during training. PCSR trained without Lmode fails to achieve the target number of modes for the unimodal water retention curve, often increasing the expression complexity in an attempt to reduce data and physics losses. This results in overfitting and a substantial deviation of ˆNmode from the prescribed value, as shown in Figures 6a and 6b. In contrast, the candidate representations obtained by PCSR with the mode loss term consistently yield ˆNmode = 1 throughout the training process, while simultaneously reducing the values of the other two loss components. These results demonstrate that incorporating both physics and mode loss terms into the symbolic regression training enables the discovery of closed-form mathematical expressions that can capture unimodal water reten-tion behavior. Compared to other approaches, our PCSR avoids overfitting and spurious modes, consistently yielding physically sound models while maintaining the specified number of modes. Having demonstrated the effectiveness of the proposed approach for unimodal cases, we next consider its performance on more complex, multimodal water retention datasets. 
+
+3.2 Multimodal water retention curves 
+
+In this section, we first consider the PCSR models trained with the bimodal water retention data ( Nmode = 2 ), utilizing four distinct training datasets that are collected from the literature. As shown in Figure 7, these datasets were collected to test the scalability and applicability of our PCSR model, as they exhibit markedly different curve shapes and cover distinct suction pressure ranges. The datasets correspond to: (1) silty sand with gravel and (2) well-graded gravel with sand [Li et al., 2014], (3) paddy soil [Zhai et al., 2017], and (4) a mixture of 90% 
+
+sand and 10% kaolin [Zhou et al., 2017]. For symbolic regression model training, the mapping parameters for each dataset were set as follows: (1) smin = 10 −2, Sw, max = 1 .0, sres = 10 5, and Sw, res = 0 .1; (2) smin = 10 −1,
+
+Sw, max = 1 .0, sres = 10 6, and Sw, res = 0 .1; (3) smin = 10 −3, Sw, max = 1 .0, sres = 10 6, and Sw, res = 0 .35 ; and 11 0  0  00 
+
+> Iteration
+> 0
+> 
+> 0
+> L
+> data
+> 0
+
+ 
+
+PCSR without L mode 
+
+PCSR with L mode     
+
+> 0 0  00
+> Iteration
+> 0
+> 
+> 0
+> L
+> phys
+> 0
+
+     
+
+> 0 0  00
+> Iteration
+> 0
+> 
+> 0
+> ˆ
+> N
+> mode
+
+(a) 0  0  00 
+
+> Iteration
+> 0
+> 
+> 0
+> L
+> data
+> 0
+
+ 
+
+PCSR without L mode 
+
+PCSR with L mode     
+
+> 0 0  00
+> Iteration
+> 0
+> 
+> 0
+> L
+> phys
+> 0
+
+     
+
+> 0 0  00
+> Iteration
+> 0
+> 
+> 0
+> ˆ
+> N
+> mode
+
+(b) 
+
+Figure 6: Learning curves of loss components and predicted number of modes for the PCSR without and with 
+
+Lmode for the data presented in Figure 4. 12 (4) smin = 10 −2, Sw, max = 1 .0, sres = 10 5, and Sw, res = 0 .05 .Figure 7 presents the best-fit water retention models discovered using PCSR, both with and without Lmode ,compared against the experimental results and the curve fitted using the [Durner, 1994] model. It should be noted that the colors and styles of the symbols and curves used here are identical to those described previ-ously in Figure 4. The water retention curves discovered using vanilla SR (solid green curves) provide fairly accurate predictions from the given dataset, but substantial fluctuations are evident, similar to the unimodal re-sults (Figure 4). These issues may arise from focusing solely on minimizing the differences between the given data points and the model predictions, and can be effectively resolved by incorporating physics constraints, as demonstrated by the retention curves discovered by the PCSR without Lmode (solid yellow curves). Despite the improvements in curve fitting, as shown in Tables 2 and 3, the mathematical expressions discovered by PCSR without the mode loss term result in overestimated values of ˆNmode –specifically 3, 9, 4, and 12 for the curves shown in Figures 7a–7d, respectively–and thus fail to match the targeted number of modes, Nmode = 2 . In contrast, the proposed framework (i.e., PCSR with Lmode ), successfully discovers the retention curves with the desired bimodal shapes, yielding ˆNmode = 2 and thereby demonstrating precise alignment with the target mode number. 10 
+
+0 10 
+
+5 
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+
+Experimental data (Li et al . , 2014) 
+
+Durner (1994) model 
+
+Vanilla SR 
+
+PCSR without L mode 
+
+PCSR with L mode 
+
+(a) 10 
+
+0 10 
+
+5 
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+
+Experimental data (Li et al . , 2014) 
+
+Durner (1994) model 
+
+Vanilla SR 
+
+PCSR without L mode 
+
+PCSR with L mode (b) 10 
+
+0 10 
+
+5 
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+
+Experimental data (Zhai et al . , 2017) 
+
+Durner (1994) model 
+
+Vanilla SR 
+
+PCSR without L mode 
+
+PCSR with L mode 
+
+(c) 10 
+
+0 10 
+
+5 
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+
+Experimental data (Zhou et al . , 2017) 
+
+Durner (1994) model 
+
+Vanilla SR 
+
+PCSR without L mode 
+
+PCSR with L mode (d) 
+
+Figure 7: The symbolic model discovered from experimental bimodal water retention data using the proposed approach, compared against the [Durner, 1994] model, vanilla SR, and PCSR without mode constraint. 13 Subsequently, Figure 8 illustrates the application of our PCSR framework to two additional water retention datasets with more complex curve shapes, specifically those with Nmode = 3 and 4. As experimental data for these multimodal water retention scenarios are not readily available, both datasets were synthetically generated using the [Durner, 1994] model. Although the synthetic datasets are designed to clearly exhibit the multimodal nature of the curves, the water retention curves discovered using vanilla SR result in noisy predictions that do not satisfy the physics constraints. In contrast, PCSR models, both with and without Lmode , produce visually similar water retention curves. However, as shown in Figure 8b, the water retention curve without the mode constraint still fails to accurately capture the air entry pressure. Additionally, not incorporating the mode constraint leads to the discovery of water retention curves that do not match the desired number of modes, as shown in Table 4. In comparison, incorporating Lmode enables PCSR to reliably discover physically sound symbolic expressions that not only fit the given data points well but also adhere to the target number of modes. The comparative analysis made in this section demonstrates that the PCSR framework, enhanced with the mode loss term, can effectively address the challenges of modeling multimodal water retention curves from sparse datasets. The water retention curves discovered using this approach consistently predict the correct number of modes and generate physically consistent symbolic expressions without requiring explicit parameter identification or predefined mathematical forms. These results underscore the effectiveness of the proposed PCSR framework for modeling water retention behavior of materials with complex, multi-scale pore structures. 10 
+
+0 10 
+
+5     
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+> Synthetic data
+> Vanilla SR
+> PCSR without
+
+L mode   
+
+> PCSR with
+
+L mode 
+
+(a) 10 
+
+0 10 
+
+5  
+
+> s[kPa]
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> S
+> w
+
+(b) 
+
+Figure 8: The symbolic model discovered from synthetically generated multimodal water retention data, com-pared against the [Durner, 1994] model, vanilla SR, and PCSR without mode constraint. 
+
+4 Conclusion and future outlook 
+
+In this work, we introduce a physics-constrained symbolic regression (PCSR) framework designed to discover closed-form equations for water retention curves directly from sparse experimental data. By considering the data-driven discovery of physically consistent water retention curves as a multi-objective optimization problem, we formulate the symbolic regression task through an objective function comprising multiple terms derived from physics constraints. Assuming the number of modes in the pore size distribution of a material of interest is known a priori, our framework also incorporates a mode constraint to limit the number of convex-to-concave in-flection points in the learned function, thereby effectively guiding the regression process. The PCSR framework has been rigorously evaluated on both unimodal and multimodal water retention datasets. Our results show that incorporating these additional constraints enables the discovery of mathematical expressions that not only fit the experimental data accurately but also describe water retention behavior in a thermodynamically consistent way, while preserving the desired number of modes. This advantage is particularly notable in cases where vanilla 14 Table 2: Discovered closed-form equations corresponding to those illustrated in Figures 7a-7b. 
+
+> Model  Discovered expression  ˆNmode  Complexity  Loss
+> (a)  PCSR without  Lmode
+> Sw = cos(sin(sin(sin( s × 1.01 +  s + sin(sin(exp(( s × 2.72 +  s) × 0.23) + sin( s × (s + sin( s) + ( s × 2.70 +  s) × 0.27 +  s + s + sin(sin( s)+ ( s + s + sin(sin(sin(sin( s + s + s × (s + 1 .18)  − 0.51)) +  s + s + sin( s)
+> − 2.24 +  s) +  s + s × s + s + s + sin( s + s))  − 0.53)  × exp(( s × 2.73 + s × 0.27)  × − 0.23 + 0 .85) +  s + s + s − 1.59)  − 0.78))))  − 1.41) + s − 0.55)) + exp(cos(( s + 0 .20)  × − 0.57) + 1 .38)  × 0.03 + 0 .48)  × 1.00
+> 3 137  4.555  × 10 −5
+> PCSR with  Lmode
+> Sw = sin(exp(sin(exp(cos( s × sin( s + s + s + 1 .74)) + 0 .93)) + cos(sin(exp(cos(cos(exp(cos(exp(cos(sin( s) + exp(sin( s)) +  s)))) +  s
+> + sin(exp(cos(exp(cos(cos(cos(exp(cos(cos( s × (s − 1.06 +  s − 0.19)) + exp(cos(sin(exp(cos( s × (s + 0 .92 +  s × 1.94)) + 0 .92)))) +  s))) + cos(cos(sin( s) + ( s + 0 .68)  × s × 1.97))) + exp(cos( s + sin(sin( s)) + s + 0 .50)) + exp( s × s))))) + exp(cos(sin( s)) + 0 .86)))) + sin(exp(cos(sin( s × (s + 0 .78)  × cos(sin( s + 2 .95)))) + 0 .88))))
+> × (s + s × 1.95 \left()))  − 0.19)  × 0.35)
+> 2 141  4.407  × 10 −5
+> (b)  PCSR without  Lmode
+> Sw = cos(sin(sin( s × 1.55) + sin(sin(sin( s))  × 2.36) + (sin(sin(sin( s × s
+> × 1.68 +  s) + ( s + sin( s) +  s) × 3.10 +  s − 1.02)) +  s) × (sin((sin( s) + sin( s)+ s × 0.97 + sin(sin(sin(( s + s + s) × 2.05 +  s − 1.29) + sin( s − 1.30 + (sin( s + s) + 2 .04)  × (( s + s + s) × 1.04 +  s)))  × (sin( s + s + ( s + s
+> + s + sin( s))  × 1.42) +  s + sin(sin( s + s)))))  × 1.36 +  s + sin( s + s
+> + sin(sin( s)))) + sin( s) +  s)))  × cos((sin(sin( s × 1.02 +  s)) + sin( s))  × 0.97)
+> 9 143  2.450  × 10 −5
+> PCSR with  Lmode
+> Sw = cos(cos(sin(sin( s × 1.21) + sin(sin( s + s))))  × (sin(( s + sin( s × 1.37) + sin( s + s))  × cos(sin((sin(sin(sin((sin( s) +  s + s − 0.45)  × 1.07)
+> × exp(sin(sin(sin(sin( s + s + s − 0.45))  × − 1.70)  × exp(sin(sin(sin(( s + s
+> + 1 .07)  × 3.96) +  s × 1.02 + sin( s))  × − 1.68) + 1 .04)) + 0 .99) +  s) +  s)+ sin( s))  × − 1.73 + cos(cos( s))))) + sin(sin( s + s)) + sin( s)))  × 1.20  − 0.20
+> 2 108  1.862  × 10 −4
+
+15 Table 3: Discovered closed-form equations corresponding to those illustrated in Figures 7c-7d. 
+
+> Model  Discovered expression  ˆNmode  Complexity  Loss
+> (c)  PCSR without  Lmode
+> Sw = sin(exp(sin(sin(sin(sin( s × s))  × (s + sin(sin( s))  × (s + sin(( s + s)
+> × 1.12))))))  − 0.03) + sin( s + sin(sin(cos( s × 1.69)  × s
+> × (s + sin(sin( s + s × s + sin(sin(( s + sin( s) + 1 .48)  × 1.70
+> × (sin( s − 0.55) + exp( s))  × cos( s) × (exp(sin( s × 1.00 +  s + s))  − 0.52)) + sin( s × (s + 4 .81))  × − 0.31))) + 0 .27)  × s × (sin(exp(sin( s × (s + s
+> + 1 .41))))  − 0.53)  × (s + s + 1 .43) +  s)))  × sin( s) × − 0.91)  × 1.21
+> 4 123  1.812  × 10 −5
+> PCSR with  Lmode
+> Sw = sin((sin( s) + ( s − 2.02)  × cos((cos(( s + s × s × cos( s) × 0.63)
+> × (s × − 1.01 + cos(cos( s × 1.00)  × sin(( s + (sin( s + s × 0.99)
+> − 4.27)  × − 1.02)  × (s + sin( s + s − 0.28))))))  − 1.08)  × (exp( s)+ s)))  × (cos(sin((cos(cos(sin(( s × sin( s) + sin( s) +  s + s) × s))
+> − 0.91)  − 1.07)  × (s − 4.76)) + cos(( s + ( s − 1.44)  × (cos( s × s
+> + sin( s + 0 .45)) + 0 .05))  × 1.59  × s))  − 1.00))
+> 2 112  3.046  × 10 −5
+> (d)  PCSR without  Lmode
+> Sw = (cos(sin(sin( s + exp((cos( s × (s × s + 0 .97 +  s) × s × s) + 1 .75)
+> × sin(exp(exp(sin(exp( s) × 0.89) + sin(sin(exp(exp(sin(sin(sin(sin(sin( exp(sin(sin(exp(sin(exp(sin( s + 1 .26 + (sin(exp( s − 0.42)  × sin( s)) + sin( s) +  s) × sin( s × 0.71)) + sin((sin(sin(sin( s) + exp( s))) +  s)
+> × 2.27)  × 1.00)) + 1 .21))) + sin(exp( s + s × 1.26)))  × 0.43 +  s + 0 .36)) + 1 .20) + sin(( s + sin(sin( s + exp(sin( s)))))  × 2.40)  × 1.13)))) + 1 .37))))))  × (s − 0.65)) + 0 .59) + 0 .39)  − 0.18)  × 1.23  − 0.001
+> 12  134  3.321  × 10 −5
+> PCSR with  Lmode
+> Sw = sin(exp(( s × − 0.88 + exp(sin( s × s × s × 1.69 +  s × (s + s)
+> × exp(( s × 0.47 + exp(( s × s × − 77 .22 + 3 .26)  × 6.57 + sin( s)
+> × ((( s + 6 .57)  × 1.11 + cos( s))  × (s × s × − 77 .22 + 3 .26) + cos( s × s
+> × − 0.52  × s) + sin( s + ( s + s) × − 18 .56)  − 17 .47)  × 1.25) +  s) × s
+> × sin( s) × s × − 1.00 +  s × exp((sin( s) × (s − 4.27)  − 0.12)  × s
+> × 1.77)  × s × − 17 .47  × (s × 4.05 + 0 .87))  × exp( s × − 1.77)
+> × 26 .08  − 0.40)  × 7.98)  × − 0.50  × s) × s × 3.41 + 0 .37))  × 1.01
+> 2 139  1.207  × 10 −4
+
+16 Table 4: Discovered closed-form equations corresponding to those illustrated in Figures 8a-8b. 
+
+> Model  Discovered expression  ˆNmode  Complexity  Loss
+> (a)  PCSR without  Lmode
+> Sw = cos((sin((sin( s) + (cos(sin((cos( s) +  s + 0 .36)  × sin( s)) + 0 .38) + 0 .07)  × cos((cos(exp( s)) + 1 .10)  × (cos( s × (cos(cos((cos( s × 0.39 + ( s + 2 .81)  × cos( s + sin((cos(cos(sin( s)) + 2 .02) + 3 .12)  × s))) + 0 .13)
+> × ((cos(exp(cos( s × 1.94)))  × cos( s × cos((cos(cos(cos( s)) + 2 .02) + 3 .12)  × (s + 0 .36) + 0 .05)) + 2 .31)  × (s × cos(exp( s)) + 1 .00)
+> − 0.36))) + 2 .33)  × (exp(sin(sin( s))) + 1 .05)) +  s × 0.89 + 0 .98)))
+> × (cos( s) + 1 .40)) + 0 .69)  × sin( s + s × 0.49) + 0 .04)
+> 6 127  1.026  × 10 −4
+> PCSR with  Lmode
+> Sw = exp(exp((sin(exp( s) × (s − 0.21)  × 2.31) + sin(sin(sin((exp(cos( s) × s)+ s) × exp(sin(sin( s × 0.79))) +  s × 5.17)  − 4.25) +  s × 3.30))  × − 2.64 + sin(sin( s)))  × s × (s × (sin( s) + cos(sin(( s + cos(sin(((sin( s × 3.29 + exp( s × 0.52)  × exp( s + 1 .00) + sin(sin( s × 5.15  − 2.70))) + 0 .96)
+> × − 2.63 + sin(sin(sin( s))) + 1 .55)  × s)) + 0 .20)  × sin( s × 5.19 + (( s + exp(sin(sin( s))))  × exp(sin( s × (s + 0 .27))) +  s × 3.30)
+> × 1.02  − 4.21)))) +  s + s × s) × − 0.87)  × 1.00
+> 3 136  3.861  × 10 −5
+> (b)  PCSR without  Lmode
+> Sw = (cos(cos(cos( s + s × cos( s) × ((cos(exp( s) × s × exp( s × s) × 0.12)
+> − 0.29)  × cos(cos(cos(exp(cos(cos(sin(cos( s × ln(cos(sin( s × exp( s × 0.44 + cos( s × (s × 2.05  × s × − 0.12 + 0 .28)  × 3.90))) +  s))))) + 1 .00 + exp(exp( s × 0.45 + cos(cos( s) × 4.13  × (s × 1.29  − 0.19)))  × 0.94
+> − 0.31))))  × − 0.53 + ln(cos(sin( s × exp(cos( s × (s × exp(cos( s))  × s
+> × − 0.13 + 0 .29)  × 3.91) +  s × 0.43)) +  s)))) + sin( s)))))  − 0.54)  × 3.17
+> 8 123  5.784  × 10 −4
+> PCSR with  Lmode
+> Sw = exp(exp(( s + cos(exp( s × s × 0.67 + 1 .56))  × − 0.38)  × 7.37)
+> × sin(sin( s) × sin( s × cos(exp(cos((cos(exp(cos(exp( s
+> × sin(cos(exp((cos(cos(cos((exp( s × 1.98)  × s × 1.98 +  s) × s)) + (cos( s) + cos(( s + s) × − 2.66))  × (exp(exp(cos( s × s))) +  s)) +  s
+> × cos(exp(cos(cos(exp( s × exp( s × s + s) × (s − 0.17)  × s)
+> × − 1.38  − 1.10))))  × 3.44)  × s + 0 .56)  × (s − 1.10)))  × s
+> + exp( s × sin( s))))  × − 0.58)) + cos(cos(exp(cos(cos(exp( s))) + sin( s) + 0 .21))  × exp(exp(sin( s)))))  × (s − 1.11)))))))
+> 4 139  1.361  × 10 −4
+
+17 symbolic regression models tend to overfit and fail to reproduce the correct curve shape, especially for complex multimodal behaviors. Because the discovered models are expressed as closed-form equations, they can be directly integrated into existing hydraulic simulation workflows, just like conventional water retention models, offering the potential to improve simulations under heterogeneous and data-sparse conditions. While the present study focuses on meta-modeling of water retention in porous media rather than interpreting the physical signif-icance of individual parameters or components within the discovered expressions, future research may explore embedding strategies to establish links between the symbolic structures and physical properties. Future work will also focus on extending PCSR to account for hysteretic water retention behavior, as well as exploring its application to broader geotechnical and environmental problems, and improving the efficiency of the symbolic regressor. 
+
+Open Research 
+
+The source code and dataset generated and/or analyzed during this study are publicly available at Zenodo Kim and Suh [2026]. 
+
+Acknowledgments 
+
+This work was supported by the National Research Foundation of Korea (NRF) grant funded by the Korea government (MSIT) (No. RS-2024-00360509), and the start-up grant from Case Western Reserve University. 
+
+Appendix A. Effects of physics constraints on the discovered symbolic expressions 
+
+This appendix examines how incorporating physics constraints influences the closed-form equation discov-ered by symbolic regression (SR). The three constraints considered in this work–monotonicity, limiting, and boundedness–are evaluated and compared against unconstrained (vanilla) SR under both noise-free and noisy settings. In each case, a dataset is generated from a benchmark equation specifically designed to highlight the effect of the corresponding constraint. 
+
+A.1 Monotonicity constraint 
+
+To examine the effect of the monotonicity constraint, this example considers the benchmark equation: 
+
+y(x) = x + sin( Ax ) + ϵ, (A.1) which satisfies dy/ dx ≥ 0 for A = 1 , but contains regions with dy/ dx < 0 when A > 1. Here, ϵ denotes an additive noise term representing measurement or process uncertainty. By selecting A = 1 .1 and ϵ = 0 ,we generated uniformly sampled data (Figure A.1a). Both vanilla SR and SR with monotonicity constraint 
+
+dy/ dx ≥ 0 were then applied to identify the mathematical expression that best fits the data. To assess robustness in system structure identification, the search space was intentionally restricted: binary operators were limited to {+, ×} and the unary operator to {exp }, thereby excluding the trigonometric functions present in the benchmark equation. As summarized in Table A.1, both vanilla SR and SR with monotonicity constraint compensate for these restrictions by producing complex expressions composed of nested exponential terms. Although both vanilla SR and SR with the monotonicity constraint produce curves that visually approx-imate the benchmark function, their derivative behaviors differ substantially. As shown in Figure A.1b, the vanilla SR model exhibits regions of negative slope, violating monotonicity. In contrast, the constrained SR model preserves nonnegative derivatives across the entire domain. Importantly, despite differences in symbolic representation, the constrained model correctly captures the intended behavior. This indicates that variations in the discovered expressions arise from the flexibility of symbolic regression under operator restrictions, rather than from instability or unreliability in the learned models. When Gaussian process noise is introduced ( ϵ = 0 .05 ; Figure A.2), vanilla SR adapts more aggressively to the noisy data, resulting in expanded regions with negative derivatives. In contrast, SR with the monotonicity constraint strictly preserves monotonic behavior, demonstrating effective suppression of noise-induced viola-tions. 18 Table A.1: Discovered equations that best fit the data generated from the benchmark expression in Eq. (A.1), corresponding to those illustrated in Figure A.1. 
+
+Model Discovered expression 
+
+Vanilla SR y = 2 × x × (1 .5181 × exp( x × (−0.0948 × x + 6 .829 × 10 −6)) + (0 .0327 × x × x − 9.953 × 10 −6 × x − 0.4680)) + 1 .5125 × 10 −6
+
+SR with monotonicity cstr. 
+
+y = ((exp(((exp((( x × (−0.176)) × (x + (exp(( x × x) × 0.469) 
+
+× (x × 0.434)))) + 0 .465) + (( x + x) × x)) 
+
+× (−0.108)) + 0 .502) + 0 .718) × x) − 0.001 − − −          
+
+> x
+> −
+> −
+> −
+>  
+> 
+> 
+> 
+> y
+> Sampled data
+> Benchmark
+> Vanilla SR
+> SR with monotonicity cstr .
+
+(a) − − −      
+
+> x
+> −
+>  
+> 
+> 
+> 
+> dy/ dx
+
+(b) 
+
+Figure A.1: Effect of the monotonicity constraint ( dy/ dx ≥ 0) in the noise-free case. (a) Benchmark equation and sampled data (black hollow circles) compared with vanilla SR (green solid curves) and SR with monotonic-ity constraint (red solid curves). (b) First derivatives of the corresponding equations, illustrating monotonicity violations in vanilla SR and preservation in the constrained model. 19 − − −          
+
+> x
+> −
+> −
+> −
+>  
+> 
+> 
+> 
+> y
+> Noisy data
+> Benchmark
+> Vanilla SR
+> SR with monotonicity cstr .
+
+(a) − − −      
+
+> x
+> −
+>  
+> 
+> 
+> 
+> dy/ dx
+
+(b) 
+
+Figure A.2: Effect of the monotonicity constraint ( dy/ dx ≥ 0) in the presence of Gaussian process noise. (a) Noisy sampled data and learned equations from vanilla SR and SR with monotonicity constraint. (b) First derivatives of the corresponding equations, illustrating monotonicity violations in vanilla SR and preservation in the constrained model. 
+
+A.2 Limiting constraint 
+
+To investigate the effect of limiting constraints, we trained both vanilla SR and SR with limiting constraint on a dataset sampled from the following benchmark: 
+
+y(x) = B(x + C) + cos (( D(x + C)) + ϵ. (A.2) This example considers the limiting constraint y = 0 for x < 0.2, while choosing B = 0 .4, C = 0 .4, D = 3 .0,and ϵ = 0 so that the sampled data from Eq. (A.2) intentionally violate the imposed condition. As illustrated in Figure A.3, vanilla SR accurately fits the sampled data but produces nonzero values for 
+
+x < 0.2, violating the limiting constraint. In contrast, SR with limiting constraint strictly enforces this condition while maintaining a good fit to the data elsewhere. For the case where the sampled data contain Gaussian process noise ( ϵ = 0 .2), as shown in Figure A.4, vanilla SR adapts strongly to noisy fluctuations, resulting in noticeable violations of the imposed limiting con-straint. In contrast, SR with limiting constraint effectively suppresses overfitting in the limiting region, ensuring that the discovered expression remains consistent with the imposed condition. 
+
+A.3 Boundedness constraint 
+
+In this section, we investigate the effect of the boundedness constraint by considering the following benchmark equation: 
+
+y(x) = E(x2 − F )( x2 − G) + ϵ. (A.3) Based on this setting, we consider the boundedness constraint 0 ≤ y ≤ 1, while deliberately choosing the parameters ( E = 0 .125 , F = 4 .0, G = 2 .25 , ϵ = 0 ) such that the resulting benchmark equation–and thus the sampled data–violates this condition. As shown in Figure A.5a, vanilla SR discovers the expression that best fits the sampled data, while out-of-bound behavior consistent with the sampled data, while SR with boundedness constraint yields equation that ranges from 0 ≤ y ≤ 1, satisfying the imposed boundedness constraint. A similar pattern is observed when Gaussian process noise is introduced to the dataset ( ϵ = 0 .5). As illustrated in Figure A.5b, vanilla SR continues to reproduce out-of-bound deviations amplified by noise, whereas the constrained model consistently preserves the imposed bounds. 20 0    
+
+> x
+> 
+> 
+> 0
+> 
+> 
+> 
+> 
+> y
+
+Sampled data 
+
+Benchmark 
+
+Vanilla SR 
+
+SR with limiting cstr .(a) 0     
+
+> x
+> 
+> 0
+> 
+> 
+> 
+> dy/ dx
+
+(b) 
+
+Figure A.3: Effect of the limiting constraint ( y = 0 for x < 0.2) in the noise-free case. (a) Benchmark equation and sampled data compared with vanilla SR and SR with limiting constraint. (b) First derivatives of the corresponding equations, illustrating strict enforcement of the limiting behavior in the constrained model. 0    
+
+> x
+> 
+> 
+> 0
+> 
+> 
+> 
+> 
+> y
+
+Noisy data 
+
+Benchmark 
+
+Vanilla SR 
+
+SR with limiting cstr .
+
+(a) 0     
+
+> x
+> 
+> 0
+> 
+> 
+> 
+> dy/ dx
+
+(b) 
+
+Figure A.4: Effect of the limiting constraint ( y = 0 for x < 0.2) in the presence of Gaussian process noise. (a) Noisy sampled data and learned equations from vanilla SR and SR with limiting constraint. (b) First deriva-tives of the corresponding equations, demonstrating reduced sensitivity to noise under the imposed limiting constraint. 21 − −        
+
+> x
+> − 
+>  
+>  
+>  
+>  
+> y
+> Sampled data
+> Benchmark
+> Vanilla SR
+> SR with boundedness cstr .
+
+(a) − −         
+
+> x
+> − 
+>  
+>  
+>  
+>  
+> y
+> Noisy data
+> Benchmark
+> Vanilla SR
+> SR with boundedness cstr .
+
+(b) 
+
+Figure A.5: Effect of the boundedness constraint ( 0 ≤ y ≤ 1) in (a) noise-free case and in (b) the presence of Gaussian process noise. These results demonstrate that physically motivated constraints, particularly those derived from thermody-namic principles, can be effectively enforced within the symbolic regression framework. By embedding such constraints into the learning process, the proposed approach enables the data-driven discovery of models directly from data while preventing nonphysical behavior, even in the presence of noise. 
+
+References 
+
+Rishabh Agarwal, Levi Melnick, Nicholas Frosst, Xuezhou Zhang, Ben Lengerich, Rich Caruana, and Geof-frey E Hinton. Neural additive models: Interpretable machine learning with neural nets. Advances in neural information processing systems , 34:4699–4711, 2021. Dimitrios Angelis, Filippos Sofos, and Theodoros E Karakasidis. Artificial intelligence in physical sciences: Symbolic regression trends and perspectives. Archives of Computational Methods in Engineering , 30(6): 3845–3865, 2023. Bahador Bahmani, Hyoung Suk Suh, and WaiChing Sun. Discovering interpretable elastoplasticity models via the neural polynomial method enabled symbolic regressions. Computer Methods in Applied Mechanics and Engineering , 422:116827, 2024. Geoffrey F Bomarito, Patrick E Leser, Nolan CM Strauss, Karl M Garbrecht, and Jacob D Hochhalter. Bayesian model selection for reducing bloat and overfitting in genetic programming for symbolic regression. In Pro-ceedings of the Genetic and Evolutionary Computation Conference Companion , pages 526–529, 2022. Ronaldo I Borja. Cam-clay plasticity. part v: A mathematical framework for three-phase deformation and strain localization analyses of partially saturated porous media. Computer methods in applied mechanics and engineering , 193(48-51):5301–5338, 2004. Royal Harvard Brooks. Hydraulic properties of porous media . Colorado State University, 1965. Shengze Cai, Zhicheng Wang, Sifan Wang, Paris Perdikaris, and George Em Karniadakis. Physics-informed neural networks for heat transfer problems. Journal of Heat Transfer , 143(6):060801, 2021. Miles Cranmer. Interpretable machine learning for science with pysr and symbolicregression. jl. arXiv preprint arXiv:2305.01582 , 2023. 22 Fabricio Olivetti de Franca and Gabriel Kronberger. Reducing overparameterization of symbolic regression models with equality saturation. In Proceedings of the Genetic and Evolutionary Computation Conference ,pages 1064–1072, 2023. Wolfgang Durner. Hydraulic conductivity estimation for soils with heterogeneous pore structure. Water re-sources research , 30(2):211–223, 1994. Fenglei Fan, Jinjun Xiong, and Ge Wang. On interpretability of artificial neural networks. arXiv preprint arXiv:2001.02522 , 2(10), 2020. Delwyn G Fredlund and Anqing Xing. Equations for the soil-water characteristic curve. Canadian geotechnical journal , 31(4):521–532, 1994. DV Griffiths and N Lu. Unsaturated slope stability analysis with steady infiltration or evaporation using elasto-plastic finite elements. International journal for numerical and analytical methods in geomechanics , 29(3): 249–267, 2005. Ehsan Haghighat, Maziar Raissi, Adrian Moure, Hector Gomez, and Ruben Juanes. A physics-informed deep learning framework for inversion and surrogate modeling in solid mechanics. Computer Methods in Applied Mechanics and Engineering , 379:113741, 2021. Yousef Heider, Hyoung Suk Suh, and WaiChing Sun. An offline multi-scale unsaturated poromechanics model enabled by self-designed/self-improved neural networks. International journal for numerical and analytical methods in geomechanics , 45(9):1212–1237, 2021. Taegu Kim, Tae Sup Yun, and Hyoung Suk Suh. Can chatgpt implement finite element models for geotechnical engineering applications? International Journal for Numerical and Analytical Methods in Geomechanics ,2025. Yejin Kim and Hyoung Suk Suh. Code and data: physics-constrained symbolic regression for multimodal water retention curve modeling (version 1.2) [software]. Zenodo , page https://doi.org/10.5281/zenodo.18760423, 2026. Ken’ichirou Kosugi. Three-parameter lognormal distribution model for soil water retention. Water Resources Research , 30(4):891–901, 1994. John R Koza. Genetic programming as a means for programming computers by natural selection. Statistics and computing , 4:87–112, 1994. Xianmin Li, Jin Hui Li, and Li Ming Zhang. Predicting bimodal soil–water characteristic curves and perme-ability functions using physically based parameters. Computers and geotechnics , 57:85–96, 2014. Xuhong Li, Haoyi Xiong, Xingjian Li, Xuanyu Wu, Xiao Zhang, Ji Liu, Jiang Bian, and Dejing Dou. Inter-pretable deep learning: Interpretation, interpretability, trustworthiness, and beyond. Knowledge and Infor-mation Systems , 64(12):3197–3234, 2022. Lennart Linden, Dominik K Klein, Karl A Kalina, Jörg Brummund, Oliver Weeger, and Markus Kästner. Neural networks meet hyperelasticity: A guide to enforcing physics. Journal of the Mechanics and Physics of Solids ,179:105363, 2023. Siyan Liu, Arsalan Zolfaghari, Shariar Sattarin, Amirmasoud Kalantari Dahaghi, and Shahin Negahban. Appli-cation of neural networks in multiphase flow through porous media: Predicting capillary pressure and relative permeability curves. Journal of Petroleum Science and Engineering , 180:445–455, 2019. Ziming Liu, Yixuan Wang, Sachin Vaidya, Fabian Ruehle, James Halverson, Marin Soljaˇ ci´ c, Thomas Y Hou, and Max Tegmark. Kan: Kolmogorov-arnold networks. arXiv preprint arXiv:2404.19756 , 2024. 23 Nour Makke and Sanjay Chawla. Interpretable scientific discovery with symbolic regression: a review. Artificial Intelligence Review , 57(1):2, 2024. W James Murdoch, Chandan Singh, Karl Kumbier, Reza Abbasi-Asl, and Bin Yu. Definitions, methods, and applications in interpretable machine learning. Proceedings of the National Academy of Sciences , 116(44): 22071–22080, 2019. Brenden K Petersen, Mikel Landajuela, T Nathan Mundhenk, Claudio P Santiago, Soo K Kim, and Joanne T Kim. Deep symbolic regression: Recovering mathematical expressions from data via risk-seeking policy gradients. arXiv preprint arXiv:1912.04871 , 2019. E Priesack and W Durner. Closed-form expression for the multi-modal unsaturated conductivity function. 
+
+Vadose Zone Journal , 5(1):121–124, 2006. Maziar Raissi, Paris Perdikaris, and George E Karniadakis. Physics-informed neural networks: A deep learn-ing framework for solving forward and inverse problems involving nonlinear partial differential equations. 
+
+Journal of Computational physics , 378:686–707, 2019. Rabia Saleem, Bo Yuan, Fatih Kurugollu, Ashiq Anjum, and Lu Liu. Explaining deep neural networks: A survey on the global interpretation methods. Neurocomputing , 513:165–180, 2022. Michael Schmidt and Hod Lipson. Distilling free-form natural laws from experimental data. science , 324 (5923):81–85, 2009. Vijay Kumar Singh, Devendra Kumar, PS Kashyap, Pramod Kumar Singh, Akhilesh Kumar, and Sudhir Kumar Singh. Modelling of soil permeability using different data driven algorithms based on physical properties of soil. Journal of Hydrology , 580:124223, 2020. Xiaoyu Song and Ronaldo I Borja. Mathematical framework for unsaturated flow in the finite deformation range. International Journal for Numerical Methods in Engineering , 97(9):658–682, 2014. Young-Suk Song. Suction stress in unsaturated sand at different relative densities. Engineering Geology , 176: 1–10, 2014. Hyoung Suk Suh, Chulmin Kweon, Brian Lester, Sharlotte Kramer, and WaiChing Sun. A publicly available pytorch-abaqus umat deep-learning framework for level-set plasticity. Mechanics of Materials , 184:104682, 2023. Hyoung Suk Suh, Jun Young Song, Yejin Kim, Xiong Yu, and Jinhyun Choo. Data-driven discovery of inter-pretable water retention models for deformable porous media. Acta Geotechnica , 19(6):3821–3835, 2024. Moussa Tembely, Ali M AlSumaiti, and Waleed Alameri. A deep learning perspective on predicting perme-ability in porous media from network modeling to direct simulation. Computational Geosciences , 24(4): 1541–1556, 2020. Markus Tuller and Dani Or. Hydraulic conductivity of variably saturated porous media: Film and corner flow in angular pore space. Water resources research , 37(5):1257–1276, 2001. Silviu-Marian Udrescu and Max Tegmark. Ai feynman: A physics-inspired method for symbolic regression. 
+
+Science advances , 6(16):eaay2631, 2020. M Th Van Genuchten. A closed-form equation for predicting the hydraulic conductivity of unsaturated soils. 
+
+Soil science society of America journal , 44(5):892–898, 1980. Nikolaos N Vlassis and WaiChing Sun. Sobolev training of thermodynamic-informed neural networks for interpretable elasto-plasticity models with level set hardening. Computer Methods in Applied Mechanics and Engineering , 377:113695, 2021. 24 Nikolaos N Vlassis, Ran Ma, and WaiChing Sun. Geometric deep learning for computational mechanics part i: Anisotropic hyperelasticity. Computer Methods in Applied Mechanics and Engineering , 371:113299, 2020. Stefan Wagner and Michael Affenzeller. Heuristiclab: A generic and extensible optimization environment. In Adaptive and Natural Computing Algorithms: Proceedings of the International Conference in Coimbra, Portugal, 2005 , pages 538–541. Springer, 2005. Jeannette M Wing. Trustworthy ai. Communications of the ACM , 64(10):64–71, 2021. Qian Zhai, Harianto Rahardjo, Alfrendo Satyanaga, et al. Effect of bimodal soil-water characteristic curve on the estimation of permeability function. Engineering Geology , 230:142–151, 2017. Hu Zhou, Sacha Jon Mooney, and Xinhua Peng. Bimodal soil pore structure investigated by a combined soil water retention curve and x-ray computed tomography approach. Soil Science Society of America Journal ,81(6):1270–1278, 2017. 25

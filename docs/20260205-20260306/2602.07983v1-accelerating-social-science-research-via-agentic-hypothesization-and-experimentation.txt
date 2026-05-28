@@ -1,0 +1,1365 @@
+Title: Accelerating Social Science Research via Agentic Hypothesization and Experimentation
+
+URL Source: https://arxiv.org/pdf/2602.07983v1
+
+Published Time: Tue, 10 Feb 2026 02:29:54 GMT
+
+Number of Pages: 52
+
+Markdown Content:
+Adobe Media and Data Science Research 
+
+# ACCELERATING SOCIAL SCIENCE RESEARCH VIA 
+
+# AGENTIC HYPOTHESIZATION AND EXPERIMENTATION 
+
+Jishu Sengupta ∗ Harini S I ∗ Somesh Singh ∗ Syed Mohamad Tawseeq ∗
+
+Yaman K Singla David Doermann Rajiv Ratn Shah Balaji Krishnamurthy 
+
+Adobe Media and Data Science Research (MDSR) 
+
+IIIT-Delhi, SUNY at Buffalo 
+
+# behavior-in-the-wild@googlegroups.com 
+
+## ABSTRACT 
+
+Data-driven social science research is inherently slow, relying on iterative cycles of observation, hypothesis formulation, and experimental validation. While recent data-driven methods promise to accelerate parts of this process, they largely fail to support end-to-end scientific discovery. To bridge this gap, we introduce E XPERI -GEN , an agentic framework that operationalizes end-to-end discovery through a Bayesian-optimization–inspired two-phase search. A Gen erator agent proposes candidate hypotheses, while an Experi menter agent empirically evaluates them. Across multiple domains, E XPERI GEN consistently discovers 2–4 × more statisti-cally significant hypotheses that are 7–17% more predictive than prior approaches, and naturally extends to complex settings including multimodal and relational data. Beyond statistical performance, for hypotheses to drive real scientific progress, they must be novel, empirically grounded, and actionable. To assess these qualities, we conduct the first expert evaluation of machine-generated hypotheses, collecting feedback from senior faculty. Among 25 reviewed hypotheses, 88% were rated moderately or strongly novel, 70% were deemed impactful and worth pursuing, and most exhibited rigor comparable to senior graduate research. Finally, recog-nizing that ultimate validation requires real-world evidence, we perform the first A/B test of LLM-generated hypotheses, observing statistically significant effects 
+
+(p < 10 −6) with a large effect size of +344% .
+
+## 1 INTRODUCTION 
+
+For centuries, scientific discovery has advanced through a cycle of observation , hypothesis generation ,and experimental validation . From Kepler (1609) inferring planetary motion laws from Brahe’s charts to epidemiologists linking smoking with lung cancer (Wynder & Graham, 1950), progress has always hinged on formulating and testing hypotheses from observational data. This cycle is not unique to theory driven sciences and underpins modern, data driven fields such as marketing, psychology, and behavioral sciences as well. However, in the latter, observations are drawn from large, noisy, and context-dependent corpora of human activity where controlled experimentation is expensive and rarely possible. The combinatorial space of plausible explanations, combined with small effect sizes, selection biases, and unmeasured confounders, makes distinguishing genuine effects from spurious correlations fundamentally harder than in controlled physical sciences. The growing abundance of digital data presents an unprecedented opportunity : vast observations could yield richer and novel insights, but manual hypothesis exploration cannot scale to this high-dimensional, noisy corpora. This motivates our central challenge: How can we automatically generate hypotheses suitable for intervention in data-driven sciences? 
+
+> ∗
+
+Equal Contribution. 
+
+> arXiv:2602.07983v1 [cs.AI] 8 Feb 2026
+
+Adobe Media and Data Science Research Consider the simple research question “What makes a counterargument persuasive?”, which we will use as a running example throughout the discussion. A scientist studying online discourse might begin by observing successful debates and hypothesising that “Longer counterarguments are more persuasive”. To test this, they construct features and run statistical tests (e.g., t-tests) to measure significance. Suppose the hypothesis proves significant but with a modest effect size. While examining the results, the scientist notices that longer arguments tend to include more citations and external evidence, raising the question: is length driving persuasion, or is it the supporting evidence? This observation prompts a follow-up experiment that controls for presence of citations as a covariate; the effect shrinks but remains significant, suggesting length contributes independently. The follow-up was only conceivable because of the first test. This iterative, adaptive process of proposing, testing, and refining hypotheses distinguishes robust findings from shallow correlations and builds the confidence needed for real-world interventions, such as A/B testing. However, each iteration requires considerable attention, time, and resources, making it essential to move forward only with hypotheses backed by strong statistical evidence. Automating this cycle from observations to evidence and experiment backed intervention-ready hypotheses can reduce the process of discovery from months to hours in any domain where exper-iments can be simulated or deployed. This would fundamentally alter the scientific and economic landscape of multiple fields like human behaviour, social science, education, healthcare, marketing, media & politics, and economics (Ludwig & Mullainathan, 2024); ranging from what makes an image memorable to what changes opinion in online discourse. As digital data like social media and behavioral logs continue to grow, so too does the space of hypotheses worth exploring, far exceeding what manual analysis can cover. 
+
+Hypothesis Generation: The iterative, adaptive structure of scientific inquiry stands in contrast to how hypothesis generation has evolved in machine learning. Recent LLM-based methods generate hypotheses directly in natural language, leveraging pretrained knowledge to propose interpretable explanations from unstructured data (Qiu et al., 2023; Zhou et al., 2024). This capability increases interpretability and accessibility to researchers across domains. However, these methods verify hypotheses only through predictive metrics on held out examples, making them prone to spurious correlations as they do not control for covariates, test under varied conditions, or measure effect sizes with appropriate statistical tests. To emphasize this we show how a hypothesis from previous methods about partisan speeches from US Congress (“I ask unanimous consent" predicts Republican speakers) is actually confounded with the majority party during the session, and its effect reverses in different sessions. However due to the imbalance of majority party in the speeches, this hypothesis turns out to be significant with a high accuracy for both methods. Moreover, because hypotheses are generated in a single pass, these methods cannot discover multi-variable or conditional hypothesis, we provide many such hypotheses discovered by us in §4.2. 
+
+Hypothesis Validation: Interestingly, another line of work explores automated hypothesis testing of natural language hypotheses through LLMs, where given a dataset, candidate hypotheses are decomposed into code-based experiments with formal significance tests sequentially (Huang et al., 2025; Agarwal et al., 2025). Unlike the hypotheses generation paradigm, where methods propose a novel feature and its relation-ship with the outcome, these methods aim to test whether a hypothesis is empirically supported for a predefined set of features and outcome. This requirement heavily narrows the scope of applicable problems: most real-world datasets like social media posts, news, discussions, and reviews do not come with predefined feature sets. More importantly, as our earlier example illustrates, which variables matter often emerges adaptively from prior experiments. Neither paradigm supports the iterative, adaptive, experimentally grounded process that characterizes how scientific knowledge actually accumulates. The juxtaposition of these methodologies, exposes a fundamental dichotomy and motivates our central question: 
+
+Can we automate the iterative and adaptive cycle of scientific discovery by unifying hypothesis generation and experimental validation over unstructured data? 
+
+We present E XPERI GEN , the first framework that closes the loop between hypothesis generation and experimental validation directly over unstructured data. ExperiGen orchestrates two specialized LLM agents: a Generator that proposes testable hypotheses, and an Experimenter that plans features, covariates, and statistical tests, producing a structured analysis. The agents communicate through multi-turn conversation and are employed in a two-phase search. In the outer loop , the Generator Adobe Media and Data Science Research proposes a seed hypothesis that is both plausible and novel relative to previously validated discoveries. In the inner loop , the Experimenter evaluates the hypothesis and returns its analysis; the Generator uses this feedback to reformulate features, refine context, or test combined effects iterating until the hypothesis either attains statistical significance (subject to Bonferroni correction) or is rejected. Validated hypotheses accumulate and condition subsequent proposals, drawing on Bayesian Opti-mization to efficiently allocate expensive evaluations: yielding faster, broader, and more reliable discovery. The decoupled agent architecture, feature extraction, and code execution allows us to easily generalize hypothesis generation and testing across modalities (text, images), and complex datasets (non iid) like Reddit threads ( detailed discussion in section 12.4). Empirically, ExperiGen yields hypotheses that are both more predictive and individually reliable compared to prior methods. ExperiGen outperforms existing hypothesis generation methods by 7-17 percentage points on average across 10 diverse tasks, with consistent gains on out-of-distribution evaluation (table 1), and discovers 2-4 × more statistically significant hypotheses across domains, including visual and complex relational datasets. Crucially, adaptive discovery enables hypotheses that are inconceivable in a single pass: for instance, the insight that “Expanding the OP’s perceived decision space is persuasive” emerges only after observing that both “concessions" and “framing problem as degree as opposed to binary" are persuasive,(fig. 2). On a manual review by data scientists, ExperiGen exhibits a false discovery rate below 5%, compared to 20-25% for prior methods (section 4.2) Scientific discovery demands hypotheses to be novel, empirically supported, and impactful to be considered for intervention. To test this, we conducted the first expert review, in which professors with publications in top journals, 5–20 years of experience, and experience mentoring multiple graduate students provided feedback. We collecting annotations over 25 hypotheses about persuasion in online discourse, 88% were considered moderately or strongly novel, 70% were considered impactful and worth pursuing as research, and most demonstrated the experimental rigor of a senior graduate student. This motivated us to proceed to the next stage of scientific discovery: we conducted the first A/B experiment evaluating LLM-generated hypotheses about what influences form signups, in collaboration with a Fortune 500 consumer brand, and observed statistically significant results 
+
+(p < 10 −6) with a large effect size of +344% (details in section 4.3). Together these results demonstrate that ExperiGen’s hypotheses translate into intervention-ready discoveries beyond offline benchmarks. Our core contributions are: 1. ExperiGen We introduce the first, and a novel framework to unify hypothesis generation and validation. 2. Algorithm. We propose a two-phase search inspired by Bayesian Optimization that balances exploration (novelty-driven seed generation) with exploitation (iterative validation under statistical control), being the most scalable method for hypothesis generation. 3. Rigor and Coverage. ExperiGen , discovers most number of (2–4 ×) hypotheses that are also more predictive (7-14 points in out-of-distribution samples) and empirically validated (lowest false discovery rate) while generalizing across text, images, and complex datasets like relational datasets effortlessly. 4. User Study We provide the first expert review from senior professors and also conduct an A/B test of automatically generated hypotheses, showing that ExperiGen’s discoveries are novel, impactful, and translate to measurable outcomes beyond offline benchmarks. 
+
+## 2 METHODOLOGY 
+
+Scientific discovery proceeds by proposing hypotheses, testing them empirically, and refining them based on observed outcomes. Our goal is to automate this cycle for unstructured data. The core challenge is search: for a fixed dataset, the space of possible hypotheses is vast, yet only a small subset admit empirical support. E XPERI GEN addresses this challenge through two specialized agents: a Gen erator that proposes plausible hypotheses and an Experi menter that evaluates them statistically. The two agents employ a two-phase iterative search inspired by Bayesian Optimization, alternating between exploring novel regions of the hypothesis space and refining promising candidates, thereby accumulating an expanding set of validated hypotheses. In this section, we formalize the problem statement (section 2.1), introduce the two agents (sections 2.2 and 2.3), and describe the two-phase search (section 2.4). figs. 1 and 2 provide an overview of the inner refinement loop and outer acquisition-guided exploration, respectively. Adobe Media and Data Science Research Task  : Generate hypotheses that predict whether a counterargument successfully changes the original poster’s view         
+
+> <Dataset Summary>
+> Refinements:
+> 1. Counterarguments that include statistics are more
+> persuasive
+> r ...
+> Iteration: i / 10
+> Task : Evaluate the
+> hypothesis on this dataset
+> <Hypothesis>
+> <Dataset Description:> Col_1 Col_2
+> Counterarguments that use
+> citations are more persuasive I need to add a feature for
+> presence of citations
+> Hypothesis Col_1 Col_2 has_cite
+> Let’s conduct a chi2-
+> test to check the significance
+> LLM as a judge annotation
+> Code Interpreter
+> Statistical tests
+> Data manipulation
+> Feature engineering
+> Does the
+> counterargument
+> include citations:
+> {Yes, No}
+> Experimentation
+> sandbox
+> Feature Annotator
+> Hypothesis
+> Generator Experimenter
+> Evidence
+> Refinement
+> cycle
+> Counterarguments that
+> use citations are more
+> persuasive
+> Evidence
+> summary:
+> P-value < 0.05,
+> effect size= 0.24
+> ...
+> 132
+> 45
+> Seed hypothesis
+
+Figure 1: Inner Loop: Iterative Refinement Cycle. Given a dataset D = {(xi, y i)} and a seed hypothesis Hi, 1, the system refines through T steps. At refinement step j: (1) The Generator proposes hypothesis Hi,j conditioned on short-term memory Mi,j ; (2) The Experimenter operationalizes the hypothesis by specifying required features; (3) The Feature Annotator augments D with the operationalized feature fH (e.g., has_cite ); (4) The Code Interpreter executes statistical tests on the augmented data; (5) Evidence EH (D) = ( p, δ ) comprising p-value and effect size is returned. The memory Mi,j = {(Hi,k , E Hi,k )}k<j accumulates hypothesis-evidence pairs from prior steps, enabling the Generator to propose refinements that address confounds or add contextual qualifiers. Hypotheses passing Bonferroni-corrected significance ( p < α/T ) are candidates for the hypothesis bank H. See fig. 2 for the outer loop that orchestrates multiple refinement cycles. The exact prompt for the generator and experimenter are in section 11.1 2.1 PROBLEM FORMULATION 
+
+Let D = {(xi, y i)}ni=1 denote observation and outcome pairs, where xi is unstructured data (e.g. counterarguments, response time) and yi is the target variable (success in changing opinion). A hypothesis H ∈ H (e.g. “Using citations improves success rate") is a testable natural language statement that asserts a relationship between constructs derived from x and the outcome y.For a hypothesis to be empirically testable, there must exist an evaluation or experiment EH such that EH (D) ∈ {supported, unsupported} indicates whether the hypothesis is supported or not. A rigorous evaluation requires (i) operationalization of constructs as features, (ii) identification and control of covariates, (iii) selecting and executing aligned tests, and (iv) robustness and sensitivity analyses with assumptions and specifications. The space of such testable hypotheses H is combinatorially large: there exists multiple constructs which can be refined, combined, conditioned on contexts, and related in multiple ways. However, only a small subset of such hypotheses are empirically supported. Data-driven hypothesis discovery seeks a maximal and diverse set H ⊆ H such that ∀H ∈ H , EH (D) = supported .2.2 THE GENERATOR AGENT 
+
+Exhaustive enumeration of the hypothesis space is infeasible. Large language models encode implicit beliefs about which scientific relationships are likely to hold, derived from pretraining on scientific literature, domain knowledge, and general reasoning patterns. We assume that, given only a problem description, an LLM induces an initial implicit distribution q(H) over the hypothesis space H,reflecting prior plausibility. Prompting an LLM to generate hypotheses can therefore be viewed as sampling from this induced distribution H ∼ q(H). Prior work has shown that such generations are strong estimates of plausibility in zero and few-shot settings (Liu et al., 2025a), we also observe this empirically (table 1). Therefore, we employ the Generator as an LLM-based agent that proposes candidate hypotheses conditioned on two inputs: (1) a structured summary of the dataset, including schema, feature distributions, and sampled observations; and (2) a description of the Experimenter’s evaluation capabilities. Conditioning on these inputs restricts generation to hypotheses that are both plausible and testable by the Experimenter on the given dataset. We detail this dataset summary design and Generator prompts in §13 and section 11.1. Adobe Media and Data Science Research 2.3 THE EXPERIMENTER AGENT 
+
+The Experimenter evaluates a natural-language hypothesis H against a dataset D by constructing and executing an empirical evaluation procedure EH : D. We implement the Experimenter as a ReAct agent (Yao et al., 2022) that plans features, covariates, and statistical tests conditioned on the hypothesis and dataset. It produces a structured analysis containing the chosen test, assumptions, significance levels, effect sizes, and robustness checks, applying a multiple-testing correction (e.g., FDR control) when evaluating families of related hypotheses. This makes EH reproducible given the same random seed, dataset, and tool outputs. The Experimenter operates in a sandboxed environment with two tools: (i) a customized Code Interpreter tool for data processing, feature computation, and statistical testing; and (ii) an LLM-based feature extractor for semantic constructs not reliably derivable through programmatic rules e.g., “presence of citations counterargument". The code tool handles computable features (length, counts, regex patterns); the LLM extractor handles higher-level judgments. X1 X2 YA1... B2... C3... D4... Counterarguments that       
+
+> include concessions are
+> more persuasive.
+> Counterarguments that
+> frame issues as matters
+> of degree rather than
+> binary are more
+> persuasive
+> ...
+> Counterarguments that
+> expand the OP's perceived
+> decision space are more
+> persuasive
+> Counterarguments that
+> expand the OP's view by
+> building on it , are more
+> persuasive"
+> Refinement
+> loop
+
+Generator 
+
+> Hypotheses Bank Dataset summary Column names Observations Statistics
+
+Seed hypothesis 
+
+Accepted hypothesis  
+
+> Belief update
+> Hypothesis space
+> Prior belief Updated belief
+
+Figure 2: Outer Loop: Acquisition-Guided Exploration. At each outer iteration i ∈ { 1, . . . , N },the Generator conditions on a dataset summary D and the current hypothesis bank Hi−1 to induce a proposal distribution (shown in blue) qi(H) = q(H | D , Hi−1). A seed hypothesis Hi, 1 is sampled to implicitly maximize the acquisition objective A(H) = si(H) + N (H, Hi−1), which balances quality and novelty. The seed enters the refinement loop (fig. 1), returning validated hypotheses that are added to Hi. The resulting belief update is visualized as a distribution shift (shown in orange) ,reflecting how accepted hypotheses reshape the Generator’s implicit prior in subsequent iterations. For example, after observing hypotheses about concessions and framing as degree vs. binary , the Generator begins to surface a new latent feature, decision space , in later proposals. 2.4 TWO -P HASE SEARCH 
+
+The preceding sections establish two capabilities: a Generator that samples plausible, testable hypotheses from an implicit distribution q(H | D ), and an Experimenter that evaluates any hypothesis 
+
+H through a rigorous but computationally expensive procedure EH : D.Naively sampling from q(H) and evaluating each hypothesis independently wastes expensive Experi-menter calls on redundant or implausible candidates, while greedy exploitation of early discoveries misses distant regions of the space. We require a search algorithm that (i) efficiently allocates expensive evaluations toward promising hypotheses, (ii) maintains broad coverage to avoid local optima, and (iii) exploits the compositional structure of hypotheses, where validated discoveries inform refinements and related candidates. These motivate our two-phase procedure: an outer loop that samples diverse seed hypotheses guided by an acquisition objective, and an inner loop that refines each seed through iterative validation to minimize Type-I error. Adobe Media and Data Science Research 2.4.1 ACQUISITION -G UIDED SEED GENERATION 
+
+The outer loop (fig. 2) draws inspiration from Bayesian Optimization, where a surrogate model approximates an expensive black-box function and an acquisition function balances exploration with exploitation. Here, the Generator’s implicit beliefs serve as the surrogate, the inner refinement loop constitutes the expensive evaluation, and each accepted hypothesis updates the Generator’s context for subsequent iterations. At outer iteration i ∈ { 1, . . . , N }, the Generator receives the dataset summary 
+
+D and the hypothesis bank Hi−1. Conditioning on these inputs induces a proposal distribution 
+
+qi(H) ≜ q(H | D , Hi−1), which we shape via structured prompting toward an acquisition objective: 
+
+A(H; Hi−1) = si(H)
+
+| {z } 
+
+> plausibility
+
++ N (H, Hi−1)
+
+| {z } 
+
+> novelty wrt Hi−1
+
+. (1) where si(H) and N (H, Hi−1) are implicit plausibility and novelty scores reflecting the Generator’s beliefs given prior discoveries. The plausibility term shifts proposal mass toward H∗ by leveraging patterns in validated hypotheses the novelty term provides an exploration bonus for candidates distant from existing discoveries. The Generator outputs a seed hypothesis Hi, 1 that implicitly maximizes A.2.4.2 LOCAL REFINEMENT 
+
+The seed Hi, 1 enters the refinement loop (fig. 1) for up to T steps, indexed by j = 1 , . . . , T . At each step, the Experimenter evaluates Hi,j and returns structured analysis EHi,j (D) comprising p-value, effect size, and guidance for refinement. Accepted hypotheses are appended to the bank. 
+
+Inner loop: For j > 1, the Generator’s context shifts. Let Mi,j = {(Hi,k , E Hi,k )}jk=1 denote the short-term memory containing session hypotheses and their analyses. The Generator now receives 
+
+(D, Mi,j ), and its objective reverses: rather than maximizing global novelty, it restricts search to the locality of Hi, 1, proposing refinements that address identified confounds, add contextual qualifiers, or specify feature boundaries. The implicit goal of this local search is to subject the hypothesis family to rigorous falsification, thereby minimizing Type-I error. This contrasts with methods that optimize predictive accuracy across independently generated hypotheses, an objective that inflates false positives under multiple testing. We quantify this advantage through expert verification in section 4.2. 
+
+Hypothesis Bank Management. The bank Hi accumulates validated discoveries across outer iterations. To maintain diversity and bound computation, we enforce a maximum capacity K. When 
+
+|H i| > K , we retain only the top-K hypotheses by pairwise novelty: we compute embeddings ϕ(H)
+
+(OpenAI text-embedding-large ) for each hypothesis and greedily select the subset maximizing minimum pairwise semantic distance. This ensures the bank represents diverse and maximally inform future seed generation. 
+
+Hypothesis Selection At the conclusion of each inner loop, we apply Bonferroni correction across the T refinement steps, accepting only hypotheses with p < α sig /T . Among accepted hypotheses, we select the one with largest support for inclusion in H.
+
+## 3 EXPERIMENTS 
+
+We evaluate ExperiGen on a diverse suite of 10 tasks spanning text-only, multimodal, and metadata-rich settings. Our evaluation begins with an existing benchmark and extends to more challenging scenarios which we call hard set (HS) that probe three key dimensions: (i) scalability to large datasets (Congress, 40k examples), (ii) complex metadata where hypotheses must exploit rich covariates (Twitter, CMV), and (iii) multimodality requiring reasoning over visual inputs (Design, Memorability). 3.1 TASKS AND DATASETS 
+
+HypoBench : We first evaluate ExperiGen on HypoBench (Liu et al., 2025b), the standard benchmark for principled hypothesis generation. We use five of its real-world tasks: (i) Deception Detection, (ii) AI-Generated Content Detection, (iii) Persuasive Argument Prediction, (iv) Mental Stress Detection, Adobe Media and Data Science Research                                                                                                                                                                                         
+
+> Inference Method Decep. News Dread. GPTgc Pers. Twitter Design LaMem Cong. CMV Model In Out In Out In Out In Out In Out In Out GPT-4o ExperiGen 78 85.2 70 66.5 74 80.8 88.8 85 94 91.2 67 66.1 88.0 60.1 79.4 77.5 HypoGenic 76 77.7 63.2 62.5 64.2 67.2 87 84 93 89 60.3 61.9 84.25 50.8 72.6 61 HypotheSAEs 62.9 60.6 61.9 61.4 60.9 62.3 76.9 79.8 87.1 84 54.1 56 84.25 49.2 73.9 59.2 0-shot CoT 65.0 69.4 68.2 64.9 63.4 68.2 79.0 78.3 83.2 81.9 60.5 56.4 84.75 51.6 73.7 65 few-shot CoT 64.8 75.8 67.2 62.9 73.4 81.6 77.0 78.3 81 80.5 58.6 59.2 84.60 51.9 72.6 69 Qwen3 ExperiGen 69 75 59.1 61.5 70.1 70.6 73 77.4 88.1 89.2 ––––––HypoGenic 65.1 66 57.2 60.1 58.9 63.1 71.1 73.9 80.6 82.7 ––––––HypotheSAEs 52.4 61.17 55.4 56.3 61.4 64.4 68 71 78.9 80.1 ––––––(32B) 0-shot CoT 61.6 64.4 58.6 60.5 62.6 65.4 55.3 64.7 81.3 79.1 52.4 51.4 ––––few-shot CoT 62.0 70.8 55.2 58.3 65.8 75.8 72.3 76.3 77.9 78 54.4 53.2 ––––
+
+Table 1: Predictive accuracy on HypoBench (5 tasks) and Cross-Domain benchmarks (5 tasks). We report in-domain (In) and out-of-domain (Out) accuracies using hypotheses generated by each method. ExperiGen achieves the highest accuracy on 9 of 10 task-split combinations. Cross-domain tasks include Twitter (social text), Design preference, Image Memorability (LaMem), Congress (large-scale, 40k examples), and CMV (persuasion). For reference, task-specific expert models achieve: Twitter 80.9/77.3 (In/Out) using a fine-tuned Vicuna-1.5 (13B) (Singh et al., 2024b), Design 87.2 following Patnaik et al. (2025), and LaMem 75.0 using a fine-tuned 13B model (Harini et al., 2025). and (v) News Headline Engagement. Each task provides in-distribution (ID) test sets, and out-of-distribution (OOD) test sets to evaluate robustness against domain shifts. Further details on these tasks are in Appendix 15. While HypoBench provides a standardized evaluation, its tasks are relatively small ( <1k examples), contain only raw text without structured metadata or covariates, and are solvable with moderate accuracy by prompting alone. To test in more realistic settings, we introduce five additional tasks that probe scalability, use of metadata, and multimodality. 
+
+Congress: U.S. congressional speeches from 2005–2007 (Gentzkow & Shapiro, 2010), where the task is to predict party affiliation (Republican or Democrat) from speech text. We use 40k training, 5k validation, and 5k test examples. 
+
+Twitter: Pairs of topic-controlled tweets with rich covariates (usernames, tags, metadata) (Singh et al., 2024b), where the task is to predict which tweet is more persuasive. We use 5k training, 1k validation, and 2k test samples. 
+
+CMV: Reddit r/ChangeMyView posts (Tan et al., 2016a), where the task is to predict whether a counterargument successfully changes the original poster’s view. Metadata include: time of posting, time of response, author flairs, etc. We use 4k training and 500 test examples. 
+
+Design: Paired graphic layouts from AesthetiQ (Patnaik et al., 2025), where the task is to identify which layout was AI-generated. We use 1.6k training, 200 validation, and 200 test examples. 
+
+Memorability : We use the LaMem dataset (Khosla et al., 2015a) to form pairs of visually similar images with significantly different memorability scores. The task is to predict which image is more memorable. We use 8k training pairs and 1k each for validation and testing. 3.2 EVALUATION SETUP 
+
+We evaluate hypothesis generation methods along three axes: 
+
+Predictive Performance. Following Zhou et al. (2024), our primary metric is classification accu-racy on held-out test sets. We report both in-distribution (ID) and out-of-distribution (OOD) accuracy to assess generalization. 
+
+Hypothesis Quantity and Statistical Validity. We report the number of hypotheses each method generates and the subset that pass statistical validation. A hypothesis is considered statistically valid 
+
+if its associated features show significant predictive power ( p < 0.05 , Bonferroni-corrected) in a multivariate regression on held-out data. Methods that generate many hypotheses but few valid ones suffer from high false discovery rates. We report the false discovery rate (FDR) as the fraction of accepted hypotheses rejected by experts. Adobe Media and Data Science Research 
+
+Expert Review. To assess whether generated hypotheses meet publication-level standards, we conduct an expert study where domain experts rate hypotheses on four dimensions: (1) research-worthiness , whether they would recommend pursuing the hypothesis as a serious research project, (2) novelty relative to existing literature, (3) quality in terms of clarity, specificity, and testability, and (4) research expertise rigor reflected in the experimental design. Full study details are in Appendix 7. 3.2.1 INFERENCE PROCEDURE 
+
+We evaluate two inference methods and report the best-performing one for each baseline: 1. Two-Step LLM Inference: Following (Zhou et al., 2024), we decompose inference into two steps: (i) Selection : given an input, the LLM retrieves the top-k most relevant hypotheses from the bank ( k=3 ); (ii) Prediction : the LLM produces the final output conditioned only on the selected hypotheses and the observation. 2. Logistic Regression: Following Movva et al. (2025), we fit a multivariate logistic regression using all hypothesis-derived features and report test accuracy. 3.3 BASELINES 
+
+We compare E XPERI GEN against two state-of-the-art hypothesis generation methods, HypoGenic (Zhou et al., 2024) and HypotheSAEs (Movva et al., 2025), and against Chain-of-Thought (CoT) prompting to benchmark the performance of strong LLM-only baselines in zero-shot and few-shot (k = 3 ) settings, following prior work (Zhou et al., 2024). For hyperparam details on the baselines, see Appendix 16. We use Qwen3-32B as the default Generator and Experimenter for E XPERI GEN , Qwen3-32B as the LLM for HypoGenic, and OpenAI’s text-embedding-3-large for embeddings with Qwen3-32B for hypothesis proposal and annotation in HypotheSAEs. We report inference results using both GPT-4o and Qwen3-32B to evaluate cross-model transfer. 
+
+## 4 RESULTS AND DISCUSSION 
+
+We evaluate ExperiGen across four dimensions: predictive performance , statistical validity and novelty , real-world A/B test impact , and ablations . Ablations for all architectural choices are reported in Appendix 6. 4.1 PREDICTIVE PERFORMANCE 
+
+ExperiGen achieves best performance on 9/10 benchmark settings. Table 1 reports accuracy on the HypoBench suite across both in-domain (ID) test sets and out-of-distribution (OOD) test sets that differ in source, time period, or domain. ExperiGen achieves the highest accuracy on 9 of 10 task-split combinations, with 6–17% relative improvement over hypothesis generation baselines. The consistent OOD advantage suggests that iterative refinement filters out spurious correlations. ExperiGen also outperforms zero-shot and few-shot prompting by 10–12%, indicating that the discovered hypotheses provide predictive value beyond the LLM’s prior knowledge. 
+
+ExperiGen generalizes to hard tasks. On the hard set (Table 1), ExperiGen demonstrates con-sistent gains across scale, modality, and metadata complexity. ExperiGen outperforms baselines on all 5 tasks and 6 test sets by 6-8% and 0-shot/few-shot settings by 5%. For example, on CMV, ExperiGen discovered that being among the first responders to a post doubles persuasion success (19.9% vs. 9.5%). Testing this hypothesis requires computing within-thread rankings , features that depend on relationships across samples rather than properties of individual comments—infeasible without the code interpreter. On Image memorability (LaMem) ExperiGen is the only method to surface any significant memorability hypotheses, discovering patterns such as “images with human faces in unexpected contexts are more memorable" 4.2 STATISTICAL VALIDITY AND NOVELTY 
+
+ExperiGen discovers more statistically significant hypotheses. Statistical validity is important because unvalidated hypotheses can drive costly downstream decisions, including failed clinical Adobe Media and Data Science Research trials, A/B tests, and policy interventions. A hypothesis may not improve multivariate predictive performance (particularly under finite samples or correlated features) yet still be informative if it captures a distinct, validated association. To quantify this, we fit a multivariate regression over all hypothesis-derived features and count the number with statistically significant coefficients ( p < 0.05 ,Bonferroni-corrected). This evaluation penalizes redundant hypotheses while favoring those with independent explanatory effects. Table 7 summarizes the count of significant hypotheses discovered across all datasets. ExperiGen discovers 2–4 × more significant hypotheses than baselines. This advantage stems from two factors. First, adaptive exploration : iterative refinement learns from rejected hypotheses and steers toward promising directions, whereas baselines generate hypotheses independently and cannot correct course. Second, broader feature scope : ExperiGen spans three feature types (syntactic, semantic, and relational), while baselines are limited to per-sample semantic features and cannot express relational hypotheses that require computation across samples (Appendix 14). Beyond discovering more hypotheses, Experigen also rejects spurious ones that baselines accept, di-rectly reducing the false discovery rate (FDR). On Congress, HypotheSAEs reports “I ask unanimous consent” as one of its most predictive features for Republican speakers ( p< 0.001 ). However this is a dataset artifact because the term is primarily said by “majority party" as opposed to Republican or Democrat and in the dataset 95% of speeches belong to sessions with Republican as the majority. If deployed in practice (e.g., to flag partisan rhetoric), this hypothesis would fail because. Since 95% of speeches come from Republican-majority sessions. ExperiGen discovers the same initial correlation, but through iterative refinement the Generator identifies session as a potential confounder and asks the Experimenter to control for it. Once session is included, the predictive power vanishes; testing on Democrat-majority sessions reverses the coefficient entirely. The hypothesis is rejected, for a complete walkthrough refer to (section 8.2). 
+
+Domain experts validate that ExperiGen’s hypotheses are novel, high-quality, and research-worthy. Statistical significance alone does not guarantee scientific validity a hypothesis may exploit dataset artifacts, restate well-known results, or lack the clarity required for actionable research. To assess whether ExperiGen’s hypotheses meet the standards domain experts apply when evaluating research contributions, we conducted an expert study on the Change My View (CMV) persuasion task. We recruited 5 senior faculty members with professorial appointments in computational social science, NLP, and persuasion research, with 5–20 years of experience publishing and reviewing at top venues in their fields. Each expert has mentored over 20 graduate researchers. Experts reviewed 25 hypotheses generated by ExperiGen on CMV, presented alongside their full experimental designs. Experts rated each hypothesis on four dimensions: (1) research worthiness : whether they would recommend pursuing the hypothesis as a serious research project; (2) novelty : whether the finding advances beyond existing literature; (3) methodological rigor : the level of sophistication reflected in the experimental design; and (4) quality : clarity, specificity, and testability of the hypothesis. As shown in Figure 3, experts perceived ExperiGen’s hypotheses favorably across all dimensions. 88% of hypotheses were rated as novel, indicating that the iterative refinement process surfaces findings beyond obvious or well-established results. 76% were deemed research-worthy, with reviewers who declined citing concerns about intuitive effects rather than methodological flaws. The experimental designs were judged to reflect senior graduate student level expertise, with a mean quality rating of 4.24/5. One reviewer noted: “The interaction effect between accuracy-motivating elements and identity-relevant claims is genuinely surprising—I would not have predicted this pattern from prior literature.” Full study details are provided in Appendix 7. We extended this novelty assessment beyond CMV by conducting a literature search across all datasets. Approximately 40% of ExperiGen’s significant hypotheses were not documented in prior peer-reviewed work on the respective tasks. 4.3 REAL -W ORLD A/B T EST 
+
+ExperiGen’s hypotheses produce measurable impact in deployed A/B experiments. We part-nered with a Fortune 500 consumer brand to validate a hypothesis generated by ExperiGen: “Forms that are horizontally centered and have a soft shadow effect achieve 3.8 × higher conversion rates" .Adobe Media and Data Science Research Strongly       
+
+> novel
+> Moderately
+> novel
+> Somewhat
+> novel
+> Not
+> novel
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> 70
+> Percentage
+> 60%
+> 28%
+> 8%
+> 4%
+> Novelty
+> Strong
+> yes
+> Weak
+> yes
+> Weak
+> no
+> Strong
+> no
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> Percentage
+> 40%
+> 36%
+> 16%
+> 8%
+> Research-Worthiness
+> Faculty Postdoc Senior
+> grad
+> Junior
+> grad
+> Undergrad
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> Percentage
+> 12%
+> 20%
+> 36%
+> 24%
+> 8%
+> Perceived Research Expertise
+> 12345
+> Rating
+> 0
+> 10
+> 20
+> 30
+> 40
+> 50
+> 60
+> Percentage
+> Quality: M=4.24, SD=0.78
+> Confidence: M=4.32, SD=0.69
+> Quality & Confidence Ratings
+> Quality
+> Confidence
+
+Figure 3: Expert evaluation results across four dimensions (N=25 annotations from 5 domain experts). Experts rated 88% of hypotheses as novel, 76% as research-worthy, and perceived the experimental designs as reflecting senior graduate student level expertise. 
+
+Discovery cycle. The Generator proposed an initial seed on Hypotheses #12 (“forms in the footer of the webpage have low conversions") and refined it after EDA to include layout =
+
+{horizontal centered, vertical centered, non centered } and background = {sharp, soft-shadow } as key design features. The Experimenter extracted visual/structural features, ran EDA comparing form view rates by presentation and position, and fit a controlled logistic regression including position, webpage type(homepage or blog), and interaction effects. Coefficients for the hypothesized features remained positive and significant after controls leading to the aforementioned discovery. 
+
+A/B experiment. The online experiment randomized page traffic 50/50 between business-as-usual control and a challenger implementing the hypothesized design. The challenger produced 15.1k sign-ups versus 3.4k for control—a +344% uplift in sign-ups. A two-proportion test indicated a highly significant effect ( p < 10 −6). At a conservative cost-per-click of $0.22, achieving equivalent sign-ups via paid traffic would cost an estimated $29,570 over week. To our knowledge, this is the first deployment of automatically generated hypotheses with statistically significant impact. 
+
+## 5 ADDITIONAL RELATED WORK 
+
+Hypothesis Generation aims to discover insights from data. Classical methods like topic modeling or n-gram analysis produce statistical patterns that are not directly interpretable as human-readable hypotheses (Monroe et al., 2008; Blei et al., 2003). A parallel effort uses LLMs to propose inter-pretable concepts for bottleneck models, guided either by a task description (Ludan et al., 2023) or by the activations of a trained neural network. Most relevant to our work is the direct use of LLMs for end-to-end hypothesis generation from unstructured data. This line of research, motivated by the capacity of LLMs for human-like inductive reasoning (Qiu et al., 2023; Tenenbaum et al., 2011), aims to produce natural language statements (e.g., “shorter tweets receive more likes”). However, leading approaches like HypoGeniC (Zhou et al., 2024) and HypotheSAEs (Movva et al., 2025) are fundamentally limited; they validate hypotheses using only predictive performance, which can be spurious, and struggle with complex, multimodal datasets. Hypothesis Validation , conversely, fo-cuses on rigorously testing pre-existing ideas. Frameworks in this area use LLMs as coding assistants to perform statistical tests, but they cannot generate novel hypotheses from raw, unstructured data, as they require pre-specified, structured features to operate (Huang et al., 2025; Agarwal et al., 2025). EXPERI GEN is the first framework to bridge this critical gap. Unlike generation-only methods, it moves beyond weak predictive metrics to ground hypotheses in formal statistical evidence. Unlike validation-only systems, it discovers these hypotheses directly from raw, unstructured data without Adobe Media and Data Science Research needing pre-defined features. Our core contribution is the closed-loop refinement process, where statistical evidence directly guides the search for better hypotheses. This allows E XPERI GEN to unify discovery and validation, producing rigorously tested, interpretable insights from complex datasets where prior methods could only do one or the other. 
+
+## REFERENCES 
+
+Dhruv Agarwal, Bodhisattwa Prasad Majumder, Reece Adamson, Megha Chakravorty, Satvika Reddy Gavireddy, Aditya Parashar, Harshit Surana, Bhavana Dalvi Mishra, Andrew McCallum, Ashish Sabharwal, et al. Open-ended scientific discovery via bayesian surprise. arXiv preprint arXiv:2507.00310 , 2025. 2, 10 Marianne Aubin Le Quere and J. Matias. When curiosity gaps backfire: effects of head-line concreteness on information selection decisions. Scientific Reports , 15, 01 2025. doi: 10.1038/s41598-024-81575-9. 30 Aram Bahrini, Mohammadsadra Khamoshifar, Hossein Abbasimehr, Robert Riggs, Maryam Esmaeili, Rastin Majdabadkohne, and Morteza Pasehvar. Chatgpt: Applications, opportunities, and threats. 
+
+Proceedings of the IEEE , 04 2023. 30 Akshina Banerjee and Oleg Urminsky. The language that drives engagement: A systematic large-scale analysis of headline experiments. Marketing Science , 44(3):566–592, 2025. doi: 10.1287/mksc. 2021.0018. URL https://doi.org/10.1287/mksc.2021.0018 . 30 David M Blei, Andrew Y Ng, and Michael I Jordan. Latent dirichlet allocation. Journal of machine Learning research , 3(Jan):993–1022, 2003. 10 Dallas Card, Serina Chang, Chris Becker, Julia Mendelsohn, Rob Voigt, Leah Boustan, Ran Abramitzky, and Dan Jurafsky. Computational analysis of 140 years of us political speeches reveals more positive but increasingly polarized framing of immigration. Proceedings of the National Academy of Sciences , 119(31):e2120510119, 2022. doi: 10.1073/pnas.2120510119. URL 
+
+https://www.pnas.org/doi/abs/10.1073/pnas.2120510119 . 32 Abhijnan Chakraborty, Bhargavi Paranjape, Sourya Kakarla, and Niloy Ganguly. Stop clickbait: Detecting and preventing clickbaits in online news media. In 2016 IEEE/ACM International Conference on Advances in Social Networks Analysis and Mining (ASONAM) , pp. 9–16, 2016. doi: 10.1109/ASONAM.2016.7752207. 30 Matthew Gentzkow and Jesse M Shapiro. What drives media slant? evidence from us daily newspa-pers. Econometrica , 78(1):35–71, 2010. 7 Matthew Gentzkow, Jesse M. Shapiro, and Matt Taddy. Measuring group differences in high-dimensional choices: Method and application to congressional speech. Econometrica , 87(4): 1307–1340, 2019. doi: https://doi.org/10.3982/ECTA16566. URL https://onlinelibrary. wiley.com/doi/abs/10.3982/ECTA16566 . 32 Biyang Guo, Xin Zhang, Ziyuan Wang, Minqi Jiang, Jinran Nie, Yuxuan Ding, Jianwei Yue, and Yupeng Wu. How close is chatgpt to human experts? comparison corpus, evaluation, and detection. ArXiv , abs/2301.07597, 2023. URL https://api.semanticscholar.org/CorpusID: 255998637 . 30 SI Harini, Somesh Singh, Yaman K Singla, Aanisha Bhattacharyya, Veeky Baths, Changyou Chen, Rajiv Ratn Shah, and Balaji Krishnamurthy. Long-term ad memorability: Understanding & generating memorable ads. In 2025 IEEE/CVF Winter Conference on Applications of Computer Vision (WACV) , pp. 5707–5718. IEEE, 2025. 7 Jonathan Herzig, Pawel Krzysztof Nowak, Thomas Müller, Francesco Piccinno, and Julian Eisensch-los. Tapas: Weakly supervised table parsing via pre-training. In Proceedings of the 58th annual meeting of the association for computational linguistics , pp. 4320–4333, 2020. 48 Chuming Hu and Feifei Xu. A review of white space research. Open Journal of Social Sciences , 07: 328–334, 01 2019. doi: 10.4236/jss.2019.73027. 31 Adobe Media and Data Science Research Kexin Huang, Ying Jin, Ryan Li, Michael Y Li, Emmanuel Candès, and Jure Leskovec. Automated hypothesis validation with agentic sequential falsifications. arXiv preprint arXiv:2502.09858 , 2025. 2, 10 Johannes Kepler. Astronomia nova aitiologetos sev physica coelestis, tradita commentariis de motibus stellae Martis, ex observationibus G.V. Tychonis Brahe . G. Voegelinus, Pragae, 1609. doi: 10.5479/sil.126675.39088002685477. URL https://library.si.edu/digital-library/ book/astronomianovaa00kepl . 1 Aditya Khosla, Akhil S. Raju, Antonio Torralba, and Aude Oliva. Understanding and predicting image memorability at a large scale. In International Conference on Computer Vision (ICCV) ,2015a. 7 Aditya Khosla, Akhil S Raju, Antonio Torralba, and Aude Oliva. Understanding and predicting image memorability at a large scale. In Proceedings of the IEEE international conference on computer vision , pp. 2390–2398, 2015b. 52 Angelo Lasalita, Edward Jay Quinto, Andrea Fernando, Kiyomi Mae Suzuki, Anthony Lars Abad, Jonathan Macayan, and John Christopher Castillo. The language of depression: A multi-phase analysis on the language patterns of Filipinos with varying levels of clinical depressive symptoms. In Nathaniel Oco, Shirley N. Dita, Ariane Macalinga Borlongan, and Jong-Bok Kim (eds.), 
+
+Proceedings of the 38th Pacific Asia Conference on Language, Information and Computation ,pp. 1027–1037, Tokyo, Japan, December 2024. Tokyo University of Foreign Studies. URL 
+
+https://aclanthology.org/2024.paclic-1.98/ . 30 Haokun Liu, Sicong Huang, Jingyu Hu, Yangqiaoyu Zhou, and Chenhao Tan. Hypobench: Towards systematic and principled benchmarking for hypothesis generation, 2025a. URL https://arxiv. org/abs/2504.11524 . 4 Haokun Liu, Sicong Huang, Jingyu Hu, Yangqiaoyu Zhou, and Chenhao Tan. Hypobench: Towards systematic and principled benchmarking for hypothesis generation, 2025b. URL https://arxiv. org/abs/2504.11524 . 6, 51 Michael Luca and Georgios Zervas. Fake it till you make it: Reputation, competition, and yelp review fraud. Management Science , 62(12):3412–3427, 2016. doi: 10.1287/mnsc.2015.2304. URL https://doi.org/10.1287/mnsc.2015.2304 . 31 Josh Magnus Ludan, Qing Lyu, Yue Yang, Liam Dugan, Mark Yatskar, and Chris Callison-Burch. Interpretable-by-design text understanding with iteratively generated concept bottleneck. arXiv preprint arXiv:2310.19660 , 2023. 10 Jens Ludwig and Sendhil Mullainathan. Machine learning as a tool for hypothesis generation. The Quarterly Journal of Economics , 139(2):751–827, 2024. 2 Thomas C Messerli, Daria Dayter, Sven Leuckert, Aatu Liimatta, Hanna Mahler, Axel Bohmann, Gustavo Kozma, and Rafaela Tosin. Digital debating cultures: communicative practices on reddit. Digital Scholarship in the Humanities , 40(1):227–240, 02 2025. ISSN 2055-7671. doi: 10.1093/llc/fqaf005. URL https://doi.org/10.1093/llc/fqaf005 . 31 Burt L Monroe, Michael P Colaresi, and Kevin M Quinn. Fightin’words: Lexical feature selection and evaluation for identifying the content of political conflict. Political Analysis , 16(4):372–403, 2008. 10 Rajiv Movva, Kenny Peng, Nikhil Garg, Jon Kleinberg, and Emma Pierson. Sparse autoencoders for hypothesis generation. arXiv preprint arXiv:2502.04382 , 2025. 8, 10, 18, 51 Elena Musi, Debanjan Ghosh, and Smaranda Muresan. Changemyview through concessions: Do concessions increase persuasion? ArXiv , abs/1806.03223, 2018. URL https://api. semanticscholar.org/CorpusID:47016106 . 31 Myle Ott, Yejin Choi, Claire Cardie, and Jeffrey T. Hancock. Finding deceptive opinion spam by any stretch of the imagination. In Annual Meeting of the Association for Computational Linguistics ,2011. URL https://api.semanticscholar.org/CorpusID:2510724 . 31 Adobe Media and Data Science Research Rong Pan, Chuanji Gao, Xiaoman Zhu, Bao-ming Li, and Xi Jia. Positive emotion enhances memory by promoting memory reinstatement across repeated learning. Journal of Neuroscience ,45(31), 2025. ISSN 0270-6474. doi: 10.1523/JNEUROSCI.0009-25.2025. URL https://www. jneurosci.org/content/45/31/e0009252025 . 31 Sohan Patnaik, Rishabh Jain, Balaji Krishnamurthy, and Mausoom Sarkar. Aesthetiq: Enhancing graphic layout design via aesthetic-aware preference alignment of multi-modal large language models. In Proceedings of the Computer Vision and Pattern Recognition Conference , pp. 23701– 23711, 2025. 7, 52 Cameron P. Pugach, Casey L. May, and Blair E. Wisco. Positive emotion in posttraumatic stress disorder: A global or context-specific problem? Journal of Traumatic Stress , 36(2):444–456, 2023. doi: 10.1002/jts.22928. URL https://pmc.ncbi.nlm.nih.gov/articles/PMC10101918/ . 30 Linlu Qiu, Liwei Jiang, Ximing Lu, Melanie Sclar, Valentina Pyatkin, Chandra Bhagavatula, Bailin Wang, Yoon Kim, Yejin Choi, Nouha Dziri, et al. Phenomenal yet puzzling: Testing inductive reasoning capabilities of language models with hypothesis refinement. arXiv preprint arXiv:2310.08559 , 2023. 2, 10, 14 Claire Robertson, Nicolas Pröllochs, Kaoru Schwarzenegger, Philip Pärnamets, Jay Van Bavel, and Stefan Feuerriegel. Negativity drives online news consumption. Nature Human Behaviour , 7:1–11, 03 2023. doi: 10.1038/s41562-023-01538-4. 30 Somesh Singh, Harini S I, Yaman K Singla, Veeky Baths, Rajiv Ratn Shah, Changyou Chen, and Balaji Krishnamurthy. Teaching human behavior improves content understanding abilities of llms, 2024a. URL https://arxiv.org/abs/2405.00942 . 52 Somesh Singh, Yaman K Singla, Harini SI, and Balaji Krishnamurthy. Measuring and improving persuasiveness of large language models. arXiv preprint arXiv:2410.02653 , 2024b. 7, 52 Chenhao Tan, Vlad Niculae, Cristian Danescu-Niculescu-Mizil, and Lillian Lee. Winning arguments: Interaction dynamics and persuasion strategies in good-faith online discussions. In Proceedings of the 25th international conference on world wide web , pp. 613–624, 2016a. 7, 52 Chenhao Tan, Vlad Niculae, Cristian Danescu-Niculescu-Mizil, and Lillian Lee. Winning arguments: Interaction dynamics and persuasion strategies in good-faith online discussions. In Proceedings of the 25th International Conference on World Wide Web , WWW ’16, pp. 613–624, Republic and Canton of Geneva, CHE, 2016b. International World Wide Web Conferences Steering Committee. ISBN 9781450341431. doi: 10.1145/2872427.2883081. URL https://doi.org/10.1145/ 2872427.2883081 . 31 Joshua Tenenbaum, Charles Kemp, Thomas Griffiths, and Noah Goodman. How to grow a mind: Statistics, structure, and abstraction. Science (New York, N.Y.) , 331:1279–85, 03 2011. doi: 10.1126/science.1192788. 10 Alexandre N. Tuch, Javier A. Bargas-Avila, and Klaus Opwis. Symmetry and aesthetics in website design: It’s a man’s business. Comput. Hum. Behav. , 26:1831–1837, 2010. URL https://api. semanticscholar.org/CorpusID:39694453 . 31 Janith Weerasinghe, Kediel Morales, and Rachel Greenstadt. “because... i was told... so much”: Linguistic indicators of mental health status on twitter. Proceedings on Privacy Enhancing Technologies , 2019:152–171, 10 2019. doi: 10.2478/popets-2019-0063. 30 Ernest L Wynder and Evarts A Graham. Tobacco smoking as a possible etiologic factor in bronchio-genic carcinoma: a study of six hundred and eighty-four proved cases. Journal of the American medical association , 143(4):329–336, 1950. 1 Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan, and Yuan Cao. React: Synergizing reasoning and acting in language models. ArXiv , abs/2210.03629, 2022. URL 
+
+https://api.semanticscholar.org/CorpusID:252762395 . 5 Yangqiaoyu Zhou, Haokun Liu, Tejes Srivastava, Hongyuan Mei, and Chenhao Tan. Hypothesis generation with large language models. arXiv preprint arXiv:2404.04326 , 2024. 2, 7, 8, 10, 14 Adobe Media and Data Science Research 
+
+## APPENDIX 
+
+## 6 ADDITIONAL EXPERIMENTS AND ABLATIONS 
+
+We conduct systematic ablations to isolate the contribution of each component in E XPERI GEN . All experiments use T = 4 refinement steps in the inner loop. We evaluate on two datasets selected to span the range of LLM prior knowledge: News Headlines , where zero-shot and few-shot baselines achieve similar performance (minimal gap), indicating the task is well-represented in pretraining data; and 
+
+Deceptive Reviews , where few-shot substantially outperforms zero-shot (maximal gap), indicating the task requires learning from observations rather than relying on prior knowledge. This selection allows us to understand how E XPERI GEN ’s components behave in both regimes—where pretrained knowledge suffices and where data-driven discovery is essential. We measure out-of-domain accuracy (OOD Acc. ) and number of statistically significant hypotheses ( #Sig. ). 6.1 ABLATION CONFIGURATIONS 
+
+6.1.1 ACQUISITION OBJECTIVE .We ablate the two-phase search structure by modifying how seed hypotheses are generated. No Acquisition removes conditioning on the hypothesis bank Hi−1; the Generator receives only the dataset summary D, preventing it from building on prior discoveries. Seed Only further removes the inner refinement loop ( T = 1 ), testing whether iterative refinement adds value beyond seed diversity. Without acquisition-guided exploration, the Generator lacks awareness of previously validated hypotheses, leading to redundant proposals and reduced coverage. Seed Only compounds this by eliminating the refinement phase that allows hypotheses to be corrected based on experimental feedback. Comparing E XPERI GEN to these ablations reveals that the inner loop contributes +4 –13 
+
+percentage points in OOD accuracy and approximately 2× more significant hypotheses, confirming that refinement based on experimental feedback yields more robust discoveries. 6.1.2 NOVELTY CONSTRAINT .We isolate the novelty term N (H, Hi−1) in the acquisition objective (Eq. 1). No Novelty removes the novelty instruction from the Generator prompt, setting λ = 0 . Without explicit novelty pressure, the Generator tends to fixate on variations of the top 2–3 most salient patterns in the data, repeatedly proposing minor reformulations rather than exploring distinct hypothesis families. This results in 40–45% fewer significant hypotheses than the full model. However, No Novelty still outperforms No Acquisition because it retains conditioning on the hypothesis bank, allowing the Generator to avoid exact duplicates even if it cannot escape local optima. 6.1.3 EXPERIMENTATION .We ablate the Experimenter agent’s role and feedback mechanism. No Feedback returns only accept/reject decisions without structured analysis (p, δ, guidance ), preventing the Generator from understanding why a hypothesis failed. Single Pass fixes T = 1 with no iterative refinement, equivalent to independent hypothesis evaluation. Accuracy Based replaces statistical testing with held-out accuracy, accepting hypotheses if classifier accuracy exceeds 60% on a validation split, mirroring the evaluation protocol of prior work (Qiu et al., 2023; Zhou et al., 2024). The Accuracy Based variant achieves competitive OOD accuracy but discovers 3× fewer valid hypotheses, consistent with our claim that predictive accuracy alone inflates false positives under multiple testing. 6.1.4 FEATURE EXTRACTOR .We evaluate robustness to feature extraction noise by injecting label errors into LLM extractor outputs. 
+
+Noisy @ 10% flips 10% of extracted binary labels uniformly at random; Noisy @ 20% increases this to 20%. These ablations simulate realistic annotation errors and reveal how hypothesis validation degrades under imperfect feature extraction. Performance degrades gracefully: 10% noise reduces OOD accuracy by 2–3 points, while 20% noise incurs a 4–5 point drop. The number of significant hypotheses decreases more sharply, as noisy features introduce measurement error that inflates p-values and obscures true effects. Adobe Media and Data Science Research 6.1.5 SEARCH STRATEGY .We compare iterative refinement against parallel generation under matched compute. Parallel 
+
+generates N × T hypotheses simultaneously without sequential feedback, evaluates all independently, and selects the top-K by effect size. Total LLM calls are matched to E XPERI GEN . Under matched compute, iterative refinement outperforms parallel generation by +5 –8 points in OOD accuracy, validating that adaptive search exploits experimental feedback more effectively than independent sampling. 6.1.6 OBSERVATION SAMPLING .We ablate how observations are sampled for the Generator’s dataset summary; see fig. 4 for iteration-wise results. E XPERI GEN uses uniform random sampling of 5 observations per iteration. Boosting 
+
+identifies samples with the highest prediction error under the current hypothesis bank and samples in proportion to their errors, prioritizing difficult instances that existing hypotheses fail to explain. 
+
+Clustering embeds all observations using text-embedding-large , partitions them via k-means clustering, and samples from different clusters to maximize diversity. No Data provides only the dataset schema without concrete examples. 6.2 ABLATION RESULTS 
+
+6.3 DETAILED COMPONENT ANALYSIS 
+
+The ablation table (table 2) summarizes how each design choice affects end-to-end performance. In this section, we provide deeper analysis of four components that warrant additional investigation: (1) how observation sampling affects hypothesis diversity over iterations, (2) how Generator and Experimenter model capabilities independently influence discovery quality, (3) how inference scales as the hypothesis bank grows, and (4) how reliably the LLM feature extractor annotates semantic constructs. Together, these analyses reveal where E XPERI GEN ’s performance gains originate and identify bottlenecks for future improvement. 6.3.1 OBSERVATION SAMPLING DYNAMICS 
+
+The Generator receives a small batch of observations from D at each iteration. While table 2 reports final accuracy, iteration-wise dynamics reveal important differences between sampling strategies. We compare four approaches: (1) Random sampling (E XPERI GEN ’s default), which draws 5 observa-tions uniformly; (2) Boosting , which measures prediction error for each sample under the current hypothesis bank and samples in proportion to error magnitude, prioritizing instances that existing hy-potheses fail to explain; (3) Clustering , which embeds observations using text-embedding-large ,partitions them via k-means, and samples from different clusters to maximize diversity; and (4) No Data , which provides only the dataset schema without concrete examples. fig. 4 shows accuracy as a function of outer-loop iterations across four datasets. Boosting achieves rapid early gains but saturates after 10–15 iterations, while random sampling continues improving throughout. This saturation arises because natural-language hypotheses describe patterns over data segments; as the hypothesis bank grows, misclassified residuals increasingly overlap with existing hypotheses, leaving diminishing predictive signal for new discoveries. Random sampling avoids this trap by maintaining observation diversity, enabling the Generator to continue proposing novel hypotheses even after easily discoverable patterns are exhausted. The No Data baseline underperforms throughout, confirming that grounding in concrete observations is necessary for generating testable hypotheses. Clustering offers a middle ground, performing comparably to random sampling but with higher variance across datasets. 6.3.2 GENERATOR MODEL SCALING 
+
+We evaluate how Generator model capability affects hypothesis quality by varying the Generator while holding the Experimenter fixed at Qwen3-32B (with reasoning) and inference at GPT-4o. table 3 reports OOD accuracy on two datasets. Adobe Media and Data Science Research 
+
+News Headlines Deceptive Reviews Category Condition OOD Acc. #Sig. OOD Acc. #Sig. 
+
+Full Model 
+
+EXPERI GEN 65.2 18 85.1 16 
+
+Acquisition Objective 
+
+No Acquisition   
+
+> (no conditioning on Hi−1)
+
+61.5 11 78.2 10 Seed Only    
+
+> (no refinement, T=1)
+
+58.3 7 72.4 6
+
+Novelty Constraint 
+
+No Novelty  
+
+> (fixates on top 2–3 patterns)
+
+62.1 10 79.6 9
+
+Experimentation 
+
+No Feedback  
+
+> (accept/reject only)
+
+60.4 9 76.8 8Single Pass   
+
+> (T=1, no iteration)
+
+59.1 8 74.5 7Accuracy Based  
+
+> (no statistical testing)
+
+62.7 5 80.3 5
+
+Feature Extractor 
+
+Noisy @ 10%  
+
+> (10% label noise)
+
+63.8 15 82.4 13 Noisy @ 20%  
+
+> (20% label noise)
+
+61.2 12 79.6 10 
+
+Search Strategy 
+
+Parallel  
+
+> (no sequential feedback)
+
+60.2 10 77.1 9
+
+Observation Sampling 
+
+Boosting  
+
+> (error-weighted sampling)
+
+63.4 14 78.2 12 Clustering  
+
+> (max diversity via embeddings)
+
+62.8 15 82.6 14 No Data  
+
+> (schema only)
+
+58.6 5 65.3 4
+
+Table 2: Ablation Study Results. OOD Acc. = Out-of-domain accuracy (%); #Sig. = Number of statistically significant hypotheses ( p < 0.05 after Bonferroni correction). All experiments use T = 4 
+
+refinement steps. Best results in bold , second-best underlined. Performance increases monotonically with model scale: o3 achieves 73.1% on Deceptive Reviews and 70.2% on News Headlines, while smaller models like Qwen3-30B-A3B reach only 60.7% and 60.3% respectively. Qwen3-32B and GPT-4o produce comparable results (71.0% vs. 70.8% on Deceptive Reviews), suggesting that model scale matters more than architecture at this capability tier. Qualitatively, stronger models propose more specific and falsifiable hypotheses. For example, weaker models generate vague claims like “emotional language is persuasive,” while o3 proposes targeted variants such as “counterarguments that acknowledge the OP’s emotional state before presenting logical rebuttals are more persuasive than purely logical responses.” The latter admits direct operationalization and covariate control, enabling the Experimenter to produce rigorous validation. 6.3.3 EXPERIMENTER VALIDATION ON KNOWN HYPOTHESES 
+
+To verify that the Experimenter correctly executes statistical tests, we curate 20 hypotheses from peer-reviewed studies on deceptive reviews, news headlines, and stress detection (Dreaddit). A domain expert classified each hypothesis by experimental rigor: Easy hypotheses involve a single feature with a direct statistical test; Medium hypotheses require covariate control or derived features; Adobe Media and Data Science Research 52                 
+
+> 56
+> 60
+> 64
+> 68
+> 72
+> 76
+> 80
+> 84
+> 88
+> Deceptive Reviews News Headlines
+> 0510 15 20 25 30
+> 52
+> 56
+> 60
+> 64
+> 68
+> 72
+> 76
+> 80
+> 84
+> 88
+> Dreaddit
+> 0510 15 20 25 30
+> GPTgc
+> Number of Iterations
+> Performance (Accuracy %)
+> ExperiGen ExperiGen with boosting ExperiGen with clustering ExperiGen-NoData (Baseline)
+
+Figure 4: Observation sampling dynamics across iterations. Accuracy (y-axis) vs. outer-loop iteration (x-axis) for four datasets. E XPERI GEN (random sampling) improves steadily throughout 30 iterations. Boosting saturates early (10–15 iterations) because residual errors increasingly overlap with existing hypotheses. Clustering performs comparably to random with higher variance. No Data underperforms throughout, confirming that concrete observations are necessary for hypothesis generation. 
+
+Generator Model Deceptive Reviews News Headlines 
+
+Qwen3-30B-A3B 60.7 60.3 Qwen3-14B 61.3 63.5 Qwen3-32B 71.0 65.8 GPT-4o 70.8 67.1 o3 73.1 70.2 Table 3: Generator model scaling. OOD accuracy (%) when varying the Generator model. Ex-perimenter is fixed at Qwen3-32B (with reasoning); inference uses GPT-4o. Performance scales monotonically with capability: o3 achieves the highest accuracy on both datasets. Qwen3-32B and GPT-4o perform comparably, suggesting scale matters more than architecture at this tier. 
+
+Hard hypotheses demand multi-step decomposition, interaction effects, or complex feature extraction. table 4 reports the percentage of hypotheses correctly validated by each model. Adobe Media and Data Science Research Reasoning capability proves critical. Qwen3-32B without reasoning achieves only 30% accuracy on easy hypotheses, whereas enabling reasoning raises this to 70%. Qualitatively, models without reasoning rarely invoke the code interpreter or feature extractor tools, instead producing superficial analyses that fail to engage with the data. The gap widens for harder hypotheses: o3’s stronger decomposition abilities yield 70% accuracy on hard cases, compared to 50% for Qwen3-32B with reasoning. Interestingly, GPT-4o outperforms Qwen3-32B on easy hypotheses (80% vs. 70%) but underperforms on medium and hard cases (40% and 30%), suggesting that reasoning depth matters more than surface capability for complex experimental designs. 
+
+Experimenter Model Easy Medium Hard 
+
+Qwen3-32B (w/o reasoning) 30 10 10 Qwen3-32B (w/ reasoning) 70 60 50 GPT-4o 80 40 30 o3 90 80 70 Table 4: Experimenter validation accuracy on known hypotheses. We curate 20 hypotheses from prior work and classify by experimental rigor: Easy (single feature, direct test), Medium (covariate control required), Hard (multi-step decomposition). Values are percentage of hypotheses correctly validated. Reasoning capability is critical: Qwen3-32B improves from 30% to 70% on easy hypotheses when reasoning is enabled. o3 achieves the highest accuracy across all difficulty levels. 6.3.4 SCALING INFERENCE WITH AUTO ML As the hypothesis bank Hbank grows, inference must select relevant hypotheses from an increasingly large candidate set. fig. 5 reveals that LLM-based inference plateaus after approximately 20 iterations, suggesting that selecting top-k candidates from a large bank exceeds the model’s effective context utilization. To address this bottleneck, we evaluate an alternative inference mechanism: an AutoML pipeline trained on features extracted by the Experimenter during hypothesis validation. Rather than prompting an LLM to apply hypotheses directly, we train a gradient-boosted classifier on the accumulated feature columns (e.g., is_emotional , sentiment_score , contains_citation ). This approach continues to improve up to 40 iterations, demonstrating better scalability for large hypothesis banks. The AutoML variant consistently outperforms LLM inference across all four datasets after iteration 15, with the gap widening as more hypotheses accumulate. This result suggests a natural handoff: LLM inference for small hypothesis banks where interpretability matters, AutoML for large banks where predictive power is paramount. We note that this pipeline leverages only the features discovered during experimentation; synthesizing the hypotheses themselves into a unified predictive model remains an open direction. 6.3.5 FEATURE EXTRACTOR RELIABILITY 
+
+The LLM-based feature extractor annotates samples for semantic constructs that cannot be computed programmatically (e.g., “uses emotional appeal,” “contains implicit threat”). Errors in feature extraction propagate to hypothesis validation, potentially inflating false discovery rates. We conduct a controlled evaluation comparing LLM annotations against expert ground truth, and compare against embedding-based methods used in prior work (Movva et al., 2025). 
+
+Evaluation Setup. We sample 500 instances each from Twitter engagement prediction and Change-MyView (CMV) persuasion classification. For each dataset, we define five binary features spanning annotation difficulty: surface-level cues (exclamation presence, topic classification) to features re-quiring deeper reasoning (sentiment polarity, politically charged language, metaphor usage). Three domain experts independently annotated all 1,000 samples, achieving inter-annotator agreement of Cohen’s κ = 0 .69 (substantial agreement). Gold labels are majority vote. 
+
+Results. table 5 reports F1 scores averaged across all ten features. Prompt-based LLM annotation achieves strong agreement with experts: GPT-5-chat attains F1 = 0.80; GPT-4o reaches 0.79; Qwen3-32B and Qwen3-14B achieve 0.76 and 0.71 respectively. Notably, performance varies by only 0.13 Adobe Media and Data Science Research 50                
+
+> 55
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> 100 Deceptive Reviews News Headlines
+> 0816 24 32 40
+> 50
+> 55
+> 60
+> 65
+> 70
+> 75
+> 80
+> 85
+> 90
+> 95
+> 100 Dreaddit
+> 0816 24 32 40
+> GPTgc
+> Number of Iterations
+> Performance (Accuracy %)
+> ExperiGen[AutoML] ExperiGen[GPT-4o] ExperiGen[Qwen3-32B]
+
+Figure 5: Inference scaling with hypothesis bank size. Accuracy (y-axis) vs. outer-loop iteration (x-axis). LLM-based inference plateaus after ∼20 iterations due to difficulty selecting relevant hypotheses from large candidate sets. An AutoML pipeline (gradient-boosted classifier) trained on Experimenter-extracted features continues improving up to 40 iterations. ExperiGen[AutoML] outperforms all other configurations after iteration 15 across all four datasets. F1 across models spanning vastly different capabilities, enabling substitution with cheaper models for cost efficiency since feature extraction is the most expensive step. Embedding-based classification performs substantially worse, with OpenAI text-embedding-large achieving only F1 = 0.56. Per-feature analysis reveals that embedding methods match LLMs on surface-level features (topic classification, exclamation detection) but degrade sharply on features requiring semantic reasoning: sentiment polarity, political charge, and metaphor detection. This gap motivates our design choice to use prompt-based annotation for subjective features, reserving programmatic extraction for computable properties. Interestingly, reasoning mode (“think”) reduces performance by 2–4 points, likely because extended reasoning introduces spurious justifications for edge cases that human annotators judge more directly. 
+
+## 7 EXPERT STUDY 
+
+7.1 MOTIVATION 
+
+Automated hypothesis generation systems can produce statistically significant findings, but statistical significance alone does not guarantee scientific validity. A hypothesis may exploit dataset-specific artifacts, restate well-known results, or lack the clarity and testability required for actionable research. Prior work evaluates hypothesis quality through predictive accuracy or coverage metrics, but these proxies fail to capture whether generated hypotheses meet the standards that domain experts would apply when deciding which questions merit further investigation. To address this gap, we conducted an expert study evaluating hypotheses generated by E XPERI GEN on the Change My View (CMV) persuasion task. The study was designed to assess four key dimensions that distinguish research-worthy hypotheses from spurious or trivial findings: (1) novelty relative to existing literature, (2) quality in terms of clarity, specificity, and testability, (3) research expertise 
+
+reflected in the experimental design, and (4) research-worthiness as judged by whether experts would recommend pursuing the hypothesis. By recruiting researchers with domain expertise in computational social science and persuasion, we obtain calibrated assessments that complement our quantitative metrics. Adobe Media and Data Science Research 
+
+Method Model F1 
+
+Prompt-based (LLM-as-a-Judge) 
+
+GPT-5-chat (w/o think) 0.80 GPT-4o 0.79 Qwen3-32B (w/o think) 0.76 Qwen3-32B (w/ think) 0.74 Qwen3-14B (w/o think) 0.71 Qwen3-14B (w/ think) 0.67 
+
+Embedding-based Classification 
+
+OpenAI text-embedding-large 0.56 GRIT-LM-7B 0.51 Qwen3-8B-Instruct 0.49 Table 5: Feature extractor accuracy. F1 scores on 1,000 samples (500 Twitter, 500 CMV) across ten binary features. Gold labels are majority-vote from three domain experts ( κ = 0 .69 ). Prompt-based LLM annotation substantially outperforms embedding-based classification, with GPT-5-chat achiev-ing F1 = 0.80. Performance varies only 0.13 F1 across LLMs, enabling cost-efficient substitution. Reasoning mode reduces accuracy by 2–4 points. 7.2 PARTICIPANTS AND PROCEDURE 
+
+Expert Recruitment. We recruited five faculty members with established research in computational social science, psycholinguistics, and human behavior. None of the experts are authors on this paper. All hold professorial appointments and have extensive experience advising graduate students, ensuring calibrated, research-grounded evaluations. Unlike crowdsourced studies, our assessments come from senior domain experts with the methodological training to judge whether a hypothesis meets publication-level standards. 
+
+Hypothesis Selection. We randomly sampled 10 hypotheses from the set of novel hypotheses discovered by E XPERI GEN on the CMV task (the full set is provided in section 9). Random sampling ensures that the evaluated hypotheses are representative of typical system output rather than cherry-picked exemplars. 
+
+Procedure. Each expert independently reviewed 5 hypotheses. The presentation order was random-ized for each participant to mitigate order effects. Experts were given an extended period (two weeks) to complete the evaluation at their own pace, allowing for careful consideration of each hypothesis and its experimental design. The study protocol received IRB approval from the respective institutions of the participating researchers. 7.3 INTERFACE 
+
+We administered the study through a Google Forms questionnaire that presented hypotheses alongside their full experimental designs, including feature construction methods, statistical analyses, and robustness checks. This format ensured that experts evaluated hypotheses in the same context that a reviewer would encounter when assessing a research contribution. Below, we reproduce the key components of the study interface. 7.3.1 INSTRUCTIONS 
+
+Participants first received detailed instructions explaining the study context, key terminology, and evaluation criteria. The instructions grounded reviewers in the CMV domain and provided guidance on interpreting the statistical results reported for each hypothesis. Adobe Media and Data Science Research 
+
+Study Instructions 
+
+This study evaluates the quality of hypotheses and experimental designs automatically generated by an algorithm that answers the question: “What Makes Counterarguments Persuasive?” 
+
+A hypothesis is a clear, testable statement that proposes a relationship between variables and can be supported or rejected using data. The hypotheses in our study explore persuasion dynamics on r/ChangeMyView (CMV), a Reddit community where users post opinions they want challenged. The goal is to identify what linguistic and rhetorical strategies make counterarguments effective at changing minds. 
+
+How CMV Works: 
+
+1. OP (Original Poster) submits an argument expressing a view they hold but are open to reconsidering 2. Commenters respond with counterarguments attempting to change OP’s view 3. Delta ( ∆) is awarded by OP when a counterargument successfully shifts their perspective— this is the key outcome we study 
+
+Key Terms 
+
+OP Original Poster—the person whose view may be changed 
+
+Argument OP’s original post stating their view 
+
+Counterargument A comment responding to the argument, attempting to change OP’s view 
+
+Delta ( ∆) The award OP gives when their view is changed; our measure of success 
+
+Success rate Percentage of counterarguments that receive deltas (typically 10–15% overall) 
+
+Commenter exper-tise 
+
+Number of deltas a commenter has earned previously (shown in their “flair”) 
+
+Understanding the Statistics 
+
+Effect Size Measures: Odds ratio (OR) How many times more likely success becomes with the feature. OR = 1 .5
+
+means 50% higher odds; OR = 2 .0 means double the odds 
+
+Effect size ( r) Strength of relationship. r < 0.2 = small, r ∈ [0 .2, 0.5] = moderate, r > 0.5
+
+= large 
+
+p-value Probability the result is due to chance. p < 0.05 = likely real; p < 0.001 =very likely real 
+
+Rules of Thumb: 
+
+• Small effect: OR ≈ 1.2–1.3, or ∼3–5 percentage point difference • Moderate effect: OR ≈ 1.5–2.0, or ∼5–10 percentage point difference • Large effect: OR > 2.0, or > 10 percentage point difference 
+
+7.3.2 EXAMPLES 
+
+Each hypothesis was presented with its full experimental design, including the feature construction methodology (programmatic detection via code or LLM annotation), comparative analyses, interaction effects, and robustness checks. Below, we show an example hypothesis as it appeared to reviewers. 
+
+Hypothesis 2 
+
+Counterarguments that include accuracy-motivating elements (e.g., personal experience sug-gestions, empirical evidence) are more effective in changing views when the original argument contains identity-relevant claims about self-discipline or social norms. 
+
+[Link to example Reddit posts provided: Link1 Link2] Adobe Media and Data Science Research 
+
+Experiment 
+
+We first tested whether accuracy-motivating elements in counterarguments affect persuasion success. To identify accuracy-focused appeals, we used GPT-4o to detect empirical evidence markers (phrases like “studies show,” “research suggests,” “data indicates”) and personal experience suggestions (phrases like “try asking yourself,” “consider whether,” “have you tested”). We computed a binary indicator for counterarguments containing such markers. 
+
+Result: Counterarguments with accuracy-motivating elements showed modestly higher success rates (14.2% vs 11.8%; OR = 1 .24 , p = 0 .003 ). However, on further inspection, we hypothesized this effect should be stronger when OPs make identity-relevant claims. We measured identity relevance in original arguments using GPT-4o as a classifier trained to detect claims about self-discipline or social norm violations. (The LLM achieved 83% agreement with human annotations on 400 held-out samples.) 
+
+Result: Splitting arguments by identity relevance revealed the predicted interaction: • Identity-relevant argument + accuracy appeal: 19.3% success • Identity-relevant argument + no accuracy appeal: 10.1% success • Non-identity argument + accuracy appeal: 12.8% success • Non-identity argument + no accuracy appeal: 11.4% success The accuracy-motivating approach nearly doubled success rates for identity-relevant posts (OR = 2 .13 ,
+
+p < 0.001 ), while showing no significant effect for non-identity posts (OR = 1 .14 , p = 0 .31 ). The interaction term was significant ( p < 0.001 ). 
+
+Robustness: Logistic regressions controlling for counterargument length, commenter’s prior delta count, OP’s prior delta count, response latency, and argument topic confirmed the interaction. The accuracy ×
+
+identity interaction remained significant (OR = 1 .87 , p < 0.001 ). 
+
+Following each hypothesis, reviewers answered five evaluation questions: 
+
+Review Questions 
+
+1. How novel is this hypothesis relative to existing literature? 
+
+⃝ Strongly novel ⃝ Moderately novel ⃝ Weakly novel ⃝ Not novel 
+
+2. Would you recommend pursuing this hypothesis as a serious research project for your own graduate student? 
+
+⃝ Strong yes ⃝ Weak yes ⃝ Weak no ⃝ Strong no 
+
+3. Overall quality of the hypothesis (clarity, specificity, testability): 
+
+Very poor ⃝ 1 ⃝ 2 ⃝ 3 ⃝ 4 ⃝ 5 Excellent 
+
+4. What level of research expertise does this experimental design reflect? 
+
+⃝ Advanced undergraduate 
+
+⃝ Early graduate student (1st–2nd year PhD / Master’s) 
+
+⃝ Senior graduate student (late-stage PhD) 
+
+⃝ Postdoctoral researcher 
+
+⃝ Independent scientist / faculty 
+
+5. How confident are you? 
+
+Not confident ⃝ 1 ⃝ 2 ⃝ 3 ⃝ 4 ⃝ 5 Very confident 
+
+6. Optional comments on this hypothesis: 
+
+[Free-text field for concerns, suggestions, or observations] 
+
+7.4 RESULTS 
+
+Novelty. Experts rated 88% of hypotheses as “Strongly novel” or “Moderately novel,” with only 4% rated “Not novel.” This distribution suggests that the iterative refinement process surfaces findings that go beyond obvious or well-established results in the persuasion literature. 
+
+Quality. The mean quality rating was 4.24/5 (SD = 0 .78 ), indicating that reviewers found the hy-potheses clear, specific, and testable. Experts noted that the experimental designs include appropriate controls and robustness checks. Adobe Media and Data Science Research 
+
+Research Expertise. When asked what level of research expertise the experimental designs reflect, the modal response was “Senior graduate student.” Annotations spanned all five expertise levels, with 68% at “Senior graduate student” or above. This distribution suggests that the generated experiments embody research practices expected at advanced training levels. 
+
+Research-Worthiness. Crucially, 76% of annotations recommended pursuing the hypothesis as a serious research project (“Strong yes” or “Weak yes”). Reviewers who declined cited concerns about intuitive effects (e.g., “This hypothesis seems to be quite intuitive and trivial”) rather than methodological flaws, suggesting that even rejected hypotheses were technically sound. 
+
+Reviewer Confidence. The mean confidence rating was 4.32/5 (SD = 0 .69 ), indicating that experts felt well-equipped to evaluate the hypotheses presented. This high confidence supports the validity of the assessments. 
+
+Qualitative Feedback. Reviewers provided constructive suggestions, such as expanding keyword-based feature detection to consider full comment context and exploring interaction effects with additional covariates. These comments indicate engaged evaluation rather than superficial review. 
+
+Summary Statistics. 
+
+• Number of expert reviewers: 5 (faculty with graduate advising experience) • Hypotheses evaluated: 25 • Mean quality score: 4.24/5 (SD = 0 .78 )• Hypotheses rated novel (Strongly/Moderately): 88% • Hypotheses recommended for research (Strong/Weak yes): 76% • Mean reviewer confidence: 4.32/5 (SD = 0 .69 )Adobe Media and Data Science Research 
+
+## 8 CASE STUDIES 
+
+8.1 DISCOVERY : R ESPONSE TIMING PREDICTS PERSUASION SUCCESS 
+
+Reddit’s r/ChangeMyView (CMV) provides a natural laboratory for studying persuasion. Users post opinions they are open to reconsidering, and commenters attempt to change their view. When a comment succeeds, the original poster (OP) awards a “delta.” The dataset contains 700k comments across 100k posts, with timestamps for both posts and comments. Existing methods converge on content-based hypotheses: empathy markers, evidence citations, narrative structure. These patterns are salient in small samples (HypoGeniC) and dominate text embeddings (HypotheSAEs). After 30 iterations, both methods plateau on content features with diminishing returns. The timestamp fields ( post_created_utc , comment_created_utc ) remain unexplored because they require computing derived features (time differences, ranks) rather than extracting textual patterns. ExperiGen’s Generator, after going through a few content hypotheses, proposes: “Counterargu-ments posted earlier are more likely to successfully change the original poster’s view.” This hy-pothesis cannot be tested without a code interpreter: it requires computing response_time =comment_created_utc - post_created_utc for each comment, a derived feature absent from the raw data. The subsequent refinement demands increasingly complex computations—binning timestamps into windows, computing within-post position ranks, fitting logistic regressions with multiple covariates, and bootstrapping confidence intervals. Text-only methods like HypoGeniC and HypotheSAEs cannot execute these operations; they can only extract patterns from existing text fields. ExperiGen’s Experimenter, equipped with a code interpreter, computes each derived feature and runs the appropriate statistical test, enabling the full 6-iteration refinement (Listing 6). The refinement transforms the initial correlation ( r=0 .44 , p< 10 −16 ) into a robust finding by system-atically testing alternative explanations: (1) establishing a monotonic decay pattern rather than an optimal window, (2) isolating the first-comment advantage, (3) separating timing and position as in-dependent effects, (4) controlling for comment quality features, and (5) ruling out OP disengagement as a confounder. 
+
+Validated Hypotheses. The refinement yields two hypotheses added to the bank: 1. Response time between 30 minutes and 2 hours maximizes persuasion success. Comments in this window succeed at 2.3 × the base rate, controlling for topic, position, and quality. Very early responses ( <30 min) show slight disadvantage, suggesting rushed comments underperform. 2. First-comment position provides a 2 × advantage independent of timing. Even controlling for response time, the first comment succeeds at 19.9% versus 9.5% for later comments. This reflects visibility effects: OPs read early comments more carefully. 8.2 REJECTION : P ROCEDURAL PHRASES CONFOUNDED WITH FLOOR CONTROL 
+
+The Congressional Record contains 140,000 speeches from the 104th–109th Congress. The task is predicting party affiliation (Republican or Democrat) from speech text. Each speech includes session metadata (Congress number, majority party) appended as verbalization. Both HypotheSAEs and ExperiGen discover that the phrase “I ask unanimous consent” correlates with Republican speeches ( β=0 .30 , p< 0.001 ). This correlation is statistically significant and replicable. HypotheSAEs, operating at depth-1, accepts this as a valid partisan signal and adds it to the hypothesis bank. ExperiGen subjects the same hypothesis to iterative testing. Listing 8 traces the 6-iteration refinement. The Generator’s follow-up questions reveal a confound: the phrase is procedural (used to expedite routine business), and procedural control belongs to the majority party. Since 95% of speeches in the dataset come from Republican-majority sessions (104th– 109th Congress), the correlation reflects floor control, not ideology. Testing on Democrat-majority sessions (103rd Congress) reverses the coefficient. The hypothesis is rejected. 
+
+Why Depth-1 Methods Retain Spurious Hypotheses. The session metadata is available to all methods (verbalized for HypotheSAEs). The failure is not information access but lack of iterative Adobe Media and Data Science Research 
+
+testing . Depth-1 methods propose hypotheses and measure their predictive accuracy; they do not generate follow-up experiments to probe whether correlations reflect causal mechanisms or confounds. HypoGeniC’s 5-sample window cannot detect the 20:1 session imbalance. HypotheSAEs could in principle discover the confound, but without a mechanism for iterative questioning, it never asks whether the correlation holds across majority-party regimes. ExperiGen’s Generator, prompted by the Experimenter’s results, systematically probes alternative explanations until the confound is exposed. 
+
+Visualization. Figure 10 contrasts the three methods. HypoGeniC and HypotheSAEs operate at depth-1: HypotheSAEs retains the spurious “unanimous consent” hypothesis (orange). ExperiGen’s 6-iteration rejection path appears alongside an acceptance path for “civil rights mentions” ( β=0 .42 ,
+
+p< 10 −5), which survives session-stratified testing. 8.3 DISCOVERY : C ENTERED FORMS WITH VISUAL ELEVATION IMPROVE ENGAGEMENT 
+
+Lead-generation forms on commercial websites offer a real-world setting to study how visual design and layout affect user attention and conversion. In partnership with a Fortune 500 consumer brand, we analyzed a large deployment spanning thousands of page visits, where each form instance was paired with screenshots, page metadata, timestamps, view counts, and sign-up outcomes. ExperiGen’s Generator began by observing that footer-embedded forms had markedly lower discovery rates than above-the-fold or mid-page placements. The Experimenter extracted visual and structural features from screenshots using heuristics and LLM-as-a-judge annotations, including position bucket , is horizontally centered , has soft shadow , and page type . The subsequent 4-iteration refinement (Listing 7) builds on this initial observation: (1) establishing that centering strongly predicts discoverability, (2) showing that horizontally centered forms outperform off-center forms within each position bucket, (3) demonstrating that adding soft shadow (visual elevation) provides incremental benefit beyond centering, and (4) confirming these effects survive controls for page type and time-varying factors. The refined hypothesis states that horizontally centered forms with soft shadow improve both discov-erability (form views) and conversion (sign-ups), independent of position, page type, or time. This hypothesis was pre-registered and an A/B test was launched to validate the finding. 
+
+Figure 9: Hypothesis Generated: “Forms that are horizontally centred and have a soft shadow effect on their background achieve 3.8x higher conversion rates.” Adobe Media and Data Science Research 
+
+This is the refinement trajectory for hypothesis no. 10, previous hypotheses were focused on content-based features like length, statistics, and evidence markers. 
+
+Iteration 1: Counterarguments posted earlier are more likely to successfully change the original poster’s view 
+
+Rationale: Temporal dynamics have been unexplored in prior content-based hypotheses. When a counter-argument is posted may affect the poster’s receptiveness independent of what is said. 
+
+Experiment: Calculate time difference between counterargument and argument creation as response time; filter outliers ( >30 days); compare response time for successful vs unsuccessful counterarguments using Mann-Whitney U test. 
+
+Evidence: Moderate-to-large effect size ( r=0 .44 ); highly significant relationship ( p< 10 −16 ) between response time and persuasion success. 
+
+Iteration 2: The relationship between response time and persuasion success follows monotonic decay rather than having an optimal window 
+
+Rationale: Earlier counterarguments are correlated with opinion change, but the functional form is unclear. There may be a “sweet spot” where waiting improves effectiveness, or earliness may simply be better throughout. 
+
+Experiment: Bin response time for counterarguments into 9 time windows (0-30min, . . . , 7-30d); calculate success rate (proportion successfully changing poster’s view) per bin; χ2 test to determine whether the distribution of outcomes is independent of time bin membership. 
+
+Evidence: Shows clear monotonic decay; no optimal window detected; highly significant trend (Success rate: 18.4% at <1h → 1.3% at 7-30d; χ2=17 ,525 , p< 10 −16 ). 
+
+Iteration 3: Being the first counterargument to an argument provides substantial advantage beyond just being early 
+
+Rationale: The timing effect could reflect continuous engagement decay or a discrete advantage of being first. The first counterargument is qualitatively different—guaranteed visibility, no competing frames, and primacy effects. 
+
+Experiment: Identify first counterargument per argument by earliest timestamp; compare success rates between first vs all other counterarguments; χ2 test and relative risk calculation. 
+
+Evidence: First counterargument doubles success rate; suggests position-specific mechanism beyond continuous time effect (First counterargument: 19.9% vs others: 9.5%; RR = 2.09, p< 0.001 ). 
+
+Iteration 4: Response time and counterargument position independently predict success in changing the poster’s view 
+
+Rationale: The first-comment advantage could simply be because it arrives earliest. To distinguish time-based (engagement window) from position-based (visibility/primacy) mechanisms, both must be tested simultaneously. 
+
+Experiment: Calculate log-transformed time and position rank (within each argument); fit logistic regres-sion: view change ∼ log(time) + log(position). 
+
+Evidence: Two independent effects confirmed; position effect stronger than time effect ( βtime = − 0.23 ,
+
+βpos = − 0.67 , p< 10 −16 ). 
+
+Iteration 5: Timing effect persists after controlling for observable counterargument quality features 
+
+Rationale: The timing effect might be spurious if skilled persuaders both write higher-quality counterargu-ments and respond faster. Controlling for content quality tests whether timing is independent of persuasion quality. 
+
+Experiment: Extract 12 quality features (length, readability, evidence markers, etc.); fit logistic regression with time alone, then add quality controls; compare coefficients. 
+
+Evidence: Timing effect strengthens with quality controls; higher-quality counterarguments take longer to write; timing is independent predictor beyond content quality ( βtime : −0.877 → − 0.916 , suppression effect). 
+
+Iteration 6: Timing effect persists when the original poster is demonstrably still active in the discussion 
+
+Rationale: Late counterarguments may fail simply because the poster has abandoned the discussion, never seeing them. Testing within the window where the poster is provably engaged rules out this confounder. 
+
+Experiment: Estimate poster active window using max(time of last delta awarded, median comment time 
+
+× 2, 24h) as conservative estimate; filter to counterarguments posted within active window; re-run time comparison within active-window sample with quality controls. 
+
+Evidence: Timing effect essentially unchanged; poster abandonment explains virtually none of the effect; effect holds when engagement is confirmed (92.8% within window; βtime = − 0.886 vs −0.916 in full sample). 
+
+Figure 6: Refinement trajectory for the timing hypothesis on CMV. Each iteration refines or tests the hypothesis against potential confounders: first-comment advantage (Iter 3), position effects (Iter 4), comment quality (Iter 5), and OP disengagement (Iter 6). The final hypothesis survives all controls. Adobe Media and Data Science Research 
+
+Iteration 1: Footer-embedded forms have markedly lower discovery than above-the-fold or mid-page placements 
+
+Rationale: Form placement on the page likely affects visibility; footer placement may occur after user drop-off, reducing the chance the form is ever seen. 
+
+Experiment: Extract position bucket (above-the-fold, mid-page, footer) using viewport-relative bounding boxes. Compute view rates by position; test independence with a χ2 test and report relative risks vs. above-the-fold. 
+
+Evidence: Footer-embedded forms have much lower discovery (N = 418,219 sessions): view rate 0.8% (footer) vs. 6.7% (above-the-fold) and 4.1% (mid), p < 10 −16 . Position is a strong predictor of form discoverability. 
+
+Iteration 2: Horizontally centered forms are more discoverable than off-center forms, independent of position 
+
+Rationale: Centered placement aligns with user gaze patterns and typical reading flow, making the form easier to visually locate regardless of vertical position. 
+
+Experiment: Extract is horizontally centered using bounding boxes: |center x − 0.5 × viewport w | <
+
+0.08 × viewport w (heuristic), with LLM-as-a-judge adjudication on ambiguous cases. Compare view and sign-up rates for centered vs. off-center forms within each position bucket; fit a simple logistic regression for sign-up including centered + position controls. 
+
+Evidence: Centering improves discovery and conversion within-position (N = 312,004 form-exposed sessions): mid-page view rate 5.0% (centered) vs. 3.9% (off-center), p < 10 −8; sign-up rate 0.97% vs. 0.78%, p = 2 .1 × 10 −4.
+
+Iteration 3: Forms that are horizontally centered and have a soft shadow effect achieve 3.8 × higher conversion rates 
+
+Rationale: A soft shadow provides depth cues that separate the form from surrounding content, improving visual hierarchy and signaling interactivity. Combined with centering, this may substantially boost conversion beyond either feature alone. 
+
+Experiment: Extract has soft shadow from CSS (non-zero box-shadow blur radius with opacity < 0.35 )plus LLM-as-a-judge validation. Compare sign-up rates for (centered + shadow) vs. (off-center or no-shadow) within each position bucket; compute relative risk and fit logistic regression including shadow + centered + position. 
+
+Evidence: Centered forms with soft shadow achieve 3.8 × higher conversion rate (N = 312,004): sign-up rate 1.08% (centered + shadow) vs. 0.28% (other combinations), p < 10 −10 . The combined effect is multiplicative rather than additive. 
+
+Iteration 4: Horizontally centered, soft-shadow forms improve discoverability and conversions after controlling for page type, position, and time-varying factors 
+
+Rationale: Discovery and conversion vary across page types (e.g., homepage vs. content hub) and over time (seasonality, campaigns). A controlled model is needed to confirm that centering and shadow effects are independent of these confounders. 
+
+Experiment: Use extracted features: has soft shadow , is horizontally centered , position bucket (above/mid/-footer), page type (homepage, product/feature, content hub/blog, pricing/landing), and date/time covariates (day-of-week, hour, week). Fit logistic regression on sign-up with robust SEs (clustered by page), including position, page type, and time fixed effects. 
+
+Evidence: In the controlled logit , centered and soft-shadow indicators remain positive and significant (all 
+
+p < 0.01 ). Footer position remains strongly negative vs. above-the-fold ( p < 10 −6). 
+
+Figure 7: Refinement trajectory for the lead-generation form discovery and conversion hypothesis. Each iteration tests and refines the initial observation (footer forms underperform) by isolating actionable design features (horizontal centering, soft shadow) and controlling for confounders (position, page type, time). Adobe Media and Data Science Research 
+
+Iteration 1: “I ask unanimous consent” predicts Republican speakers 
+
+Rationale: The phrase may be a partisan rhetorical marker if it is disproportionately used by one party after accounting for base rates. 
+
+Experiment: Use the code interpreter to define x=1 if the exact phrase “I ask unanimous consent” occurs (case-insensitive, punctuation-normalized), else 0. Fit a baseline logit: 
+
+⊮[Republican ] ∼ x
+
+Report the coefficient βx, two-sided Wald p-value, and out-of-sample accuracy from a random train/test split. 
+
+Evidence: Positive association with Republican: β=0 .30 , p< 0.001 ; accuracy ≈ 53%. 
+
+Iteration 2: The phrase is procedural rather than ideological 
+
+Rationale: “Unanimous consent” is a parliamentary procedure; usage could reflect institutional role (e.g., chair/floor manager) rather than ideology. 
+
+Experiment: Map each speech to a coarse speaker role using metadata (chair/presiding officer, floor manager, other member). Compute (i) phrase rate per role ( P [x=1 | role ]) and (ii) role share among phrase-containing speeches ( P [role | x=1] ). Test independence of x and role with a χ2 test, and report the top roles driving the residuals. 
+
+Evidence: Usage concentrates in roles that expedite routine business; pattern consistent with procedural function, not partisan content. 
+
+Iteration 3: Majority-party status explains much of the phrase usage 
+
+Rationale: The majority party more often controls the floor agenda and uses procedural moves to manage time, which could drive the observed party correlation. 
+
+Experiment: For each speech, assign a majority/minority indicator based on the majority party for that Congress session. Compare phrase usage rates between majority vs. minority speakers and report both relative risk and a two-proportion z-test (or χ2) for P [x=1 | majority ] vs. P [x=1 | minority ].
+
+Evidence: Majority party uses the phrase ≈ 3.2× more often. 
+
+Iteration 4: The dataset is imbalanced across sessions and majority-party regimes 
+
+Rationale: If the corpus over-represents Congresses where Republicans are the majority, party and majority status become highly collinear, inflating pooled correlations. 
+
+Experiment: Aggregate the corpus by Congress/session. For each session, compute total speeches Ns and tag whether Republicans or Democrats are the majority. Summarize the distribution of Ns by majority regime (counts, proportions, and the max/min ratio) and compute the overlap between party label and majority status induced by the session mix. 
+
+Evidence: Severe skew: ∼20:1 imbalance; ≈95% of speeches come from Republican-majority sessions. 
+
+Iteration 5: The phrase predicts majority-party status, not party identity 
+
+Rationale: To separate procedural control from partisanship, party and majority status must be jointly modeled within the same session context. 
+
+Experiment: Fit a within-session model that includes both predictors and absorbs session-specific base rates. Concretely, estimate: 
+
+⊮[x=1] ∼ ⊮[majority ] + ⊮[Republican ] + session fixed effects Report coefficients and p-values with robust SEs (clustered by session). Check collinearity and confirm that the majority coefficient remains stable while the party coefficient shrinks toward zero. 
+
+Evidence: Majority status remains strong: βmaj =0 .28 (p< 0.001 ), while party vanishes: βparty =0 .02 (n.s.). 
+
+Iteration 6: The apparent party effect reverses in Democratic-majority sessions (OOD check) 
+
+Rationale: If the phrase is a majority-party procedural artifact, then in a Democratic-majority Congress the direction should flip. 
+
+Experiment: Hold out a Democratic-majority Congress (the 103rd) as an out-of-distribution slice. Within that slice, re-estimate both the pooled party-only logit (Iter 1) and the joint model with majority controls (Iter 5). Compare the sign/magnitude of the party coefficient, and compute phrase rates by party to verify the direction directly. 
+
+Evidence: The coefficient reverses; Democrats use the phrase more often in Democratic-majority sessions. 
+
+Figure 8: Rejection trajectory for the “unanimous consent” hypothesis on Congress. The initial correlation (Iter 1) is statistically significant but confounded with majority-party status (Iter 3–5). Out-of-distribution validation (Iter 6) confirms the reversal. The hypothesis is rejected as a dataset artifact. Adobe Media and Data Science Research Hypogenic  HypotheSAEs 
+
+ExperiGen 
+
+Speeches containing "I ask unanimous consent", predicts republican speakers 
+
+Cross-session analysis shows the phrase is mostly used by speakers from majority-party (≈95% of occurrences), regardless of party. 
+
+The phrase predicts majority-party status (β = 0.28), not party identity (β ≈ 0, n.s.) 
+
+Is this phrase ideological, or a procedural device for managing legislative proceedings, rather than partisan rhetoric? 
+
+Speeches that reference civil rights 
+
+fi gures are more likely to be delivered by democratic speakers 
+
+Test under:  Which civil rights legislation is invoked (e.g., references to the Voting Rights Act) to distinguish policy from symbolic rhetoric? 
+
+Test effect: Civil rights rhetoric shows statistically signi fi cant association with democratic speeches (β = 0.42, p < 0.001). 
+
+Test under: Which civil rights  fi gures are referenced (e.g., Martin Luther King Jr., Rosa Parks) to avoid generic mentions? 
+
+Speeches emphasizing government accountability are more likely to be delivered by democratic speakers 
+
+Contextual exploration: 
+
+Does this Democratic accountability signal depend on whether Democrats are in power or in opposition? 
+
+Conditional found:  The Democratic accountability signal is stronger when democrats are the opposition party. 
+
+Initial test: 
+
+A signi fi cant democratic association is detected for accountability-focused speech (β = 0.31, p < 0.01). 
+
+Confounder identi fi ed at this step    
+
+> {Depth: 6+, Coverage: High, Iterative Re fi nement }
+
+Effect holds, but varies by 
+
+political context 
+
+Statistically signi fi cant & 
+
+construct-consistent step 
+
+Speeches containing "I ask unanimous consent", predicts republican speakers 
+
+Speeches discussing illegal immigration are likely to be delivered by republican speakers. 
+
+Speeches criticizing the handling of the Iraq War are likely to be delivered by democratic speakers. 
+
+Speeches mentioning Senate hearings are likely to be delivered by democratic speakers. 
+
+Speeches mentioning “freedom” or “liberty” are likely to be delivered by republican speakers. 
+
+Speeches criticizing tax breaks for the wealthy are likely to be delivered by democratic speakers. 
+
+Speeches discussing national debt are likely to be delivered by republican speakers.   
+
+> {Depth: 1,
+> Coverage: Medium }
+> {Depth: 1,
+> Coverage: Low }
+
+Statistically signi fi cant & 
+
+construct-consistent step 
+
+Experigen discovers 22 valid (+1 spurious) hypotheses  vs  5 valid (+3 spurious) for HypoGenic, 15 valid (+ 3 spurious) for HypotheSAEs       
+
+> Hypothesis Step Accepted Rejected Spurious Conditional Under Re fi nement
+
+REJECTED:  Dataset artifact confound with majority status 
+
+ACCEPTED:  Civil rights rhetoric (β=0.42, p<0.001) 
+
+2 ACCEPTED:  Base (β =0.31 ) + Conditional (β =0.48 )
+
+Figure 10: Hypothesis space exploration on the Congress dataset (see section 8.2 for full analysis). 
+
+(Top Left) HypoGeniC: depth=1, low coverage—clusters around 3 top-performing hypotheses. (Top Right) HypotheSAEs: depth=1, medium coverage—discovers 4 hypotheses including the spurious “I ask unanimous consent” (orange), which it retains without iterative testing to expose the confound. 
+
+(Bottom) ExperiGen with Iterative Refinement : depth=6+, high coverage—shows three parallel refinement paths. (i) Rejection path: “I ask unanimous consent” undergoes procedural analysis →
+
+cross-session analysis reveals 20:1 session skew → confound with majority-party status identified 
+
+→ rejected as dataset artifact. (ii) Acceptance path: “Civil rights mentions” refined through key figures → Voting Rights Act references → Democrat-sponsored bills analysis → accepted 
+
+(β = 0 .42 , p < 10 −5). (iii) Conditional path: “Govt. accountability” initially accepted ( β = 0 .31 )
+
+→ continued exploration discovers conditional hypothesis “when opposing party in power” with stronger effect ( β = 0 .48 ) → 2 hypotheses accepted (base + conditional). This demonstrates that iterative refinement not only rejects spurious correlations but also discovers conditional sub-hypotheses that strengthen predictive power. Legend: Green = accepted; Orange = spurious (retained by depth-1 methods); Blue = under refinement; Red = rejected. Adobe Media and Data Science Research 
+
+## 9 DISCOVERED HYPOTHESES 
+
+Dataset Finding Supported/Novel DREADDIT 
+
+> (Given a reddit post, the task is to predict whether it contains mental stress signals)
+
+Posts that exhibit co-occurring negative intensifier ad-verbs and negative emotion words (e.g. ‘extremely anx-ious’) express stress. Weerasinghe et al. (2019) Posts that exhibit a higher co-occurrence of persistent adverbs (e.g., ‘always’, ‘never’) with negation words (e.g., ‘not’, ‘no’) express stress. Weerasinghe et al. (2019) The ratio of first-person singular pronouns to second-person pronouns within question sentences is signifi-cantly higher in stressful posts, as self-referential ques-tioning with minimal interpersonal focus may reflect internalized distress in mental health narratives. Lasalita et al. (2024) Posts that have a lower presence of positive emotion words express stress. Pugach et al. (2023) Posts with a higher proportion of ‘exclamation’-type rhetorical questions express stress. 
+
+Novel 
+
+Posts with higher frequency of body-related verbs (e.g., ‘tremble’, ‘sweat’, ‘ache’) express stress 
+
+Novel HEADLINES 
+
+> (Given a pair of headlines, the task is to predict which headline is more engaging)
+
+"Headlines that utilize curiosity gap techniques, such as implying secret insights while providing partial infor-mation, are more engaging. Aubin Le Quere & Matias (2025) Headlines including at least one contraction or collo-quial phrase are more engaging. Chakraborty et al. (2016) Headlines containing power words, specifically ‘free,’ ‘breakthrough,’ ‘exclusive,’ ‘new,’ and ‘secret,’ are more engaging. Banerjee & Urmin-sky (2025) Headlines containing narrative elements (e.g., ‘charac-ters’, ‘conflict’) receive more clicks. Banerjee & Urmin-sky (2025) Headlines that include shocking or surprising elements are more engaging Robertson et al. (2023) Headlines combining causal conjunctions with sensory language receive more clicks. Banerjee & Urmin-sky (2025) Headlines with specific time references (e.g., ‘today’) receive more engagement. Banerjee & Urmin-sky (2025) Headlines with pop culture references to movies are more engaging. 
+
+Novel 
+
+Headlines that combine alliteration and high-emotion words receive more clicks. 
+
+Novel 
+
+Headlines using active voice with strong action verbs are more engaging. 
+
+Novel GPTGC 
+
+> (Given a story, the task is to predict whether it was written by Human or AI)
+
+Machine-generated narratives demonstrate significantly longer average sentence lengths and higher Flesch-Kincaid grade levels compared to human-authored con-tent Guo et al. (2023) The presence of informal abbreviations or spelling er-rors is positively correlated with human-authored text. Bahrini et al. (2023) Continued on next page Adobe Media and Data Science Research 
+
+Table 6 – continued from previous page Dataset Finding Supported/Novel 
+
+Human-authored stories exhibit a higher frequency of technical terms (e.g., ’translation’, ’intercept’) and po-litical keywords (e.g., ’government’, ’federal funding’) co-occurring within a 10-word window compared to AI-generated stories, reflecting more deliberate narrative integration of technical-political discourse. 
+
+Novel 
+
+The use of specific ideological phrases, such as ’alter-native facts’, is significantly more prevalent in human-authored stories when analyzed via Fisher’s exact test. 
+
+Novel Deceptive Reviews 
+
+> (Given a hotel review, the task is to predict whether it is real or deceptive)
+
+Deceptive reviews exhibit a significantly higher fre-quency of intensifier words (e.g., ’very’, ’extremely’) and extreme sentiment polarities compared to truthful reviews to exaggerate emotional emphasis. Ott et al. (2011) Truthful reviews contain a significantly higher fre-quency of precise financial details, exact monetary amounts, and numerical specifics (e.g., room numbers, exact durations) compared to deceptive reviews. Luca & Zervas (2016) Deceptive reviews exhibit significantly lower frequen-cies of verifiable temporal markers (e.g., exact dates/-times) directly linked to service mentions, reflecting a lack of episodic memory. 
+
+Novel 
+
+Truthful reviews exhibit higher "Contextual Linkage," where branded amenities and services are directly paired with specific staff actions or usage flows. 
+
+Novel Lamem 
+
+> (Given a pair of headlines, the task is to predict which headline is more engaging)
+
+Images evoking positive emotional valence (e.g., happi-ness) are more effectively encoded and preferred over images with negative valence (e.g., anger). Pan et al. (2025) The preference for brighter images increases quadrati-cally as a function of the brightness difference between pairs, rather than linearly. 
+
+Novel 
+
+Nature’ and ’Object’ categories demonstrate higher memorability scores compared to ’People’ or ’Animals’ in multi-image evaluation tasks. 
+
+Novel Design 
+
+> (Given a pair of designs, the task is to predict which design is more aesthetic)
+
+Layouts with centered alignment are more likely to be preferred over asymmetrical layouts. Tuch et al. (2010) Layouts with medium white space distribution are more likely to be preferred. Hu & Xu (2019) When layouts have low content density, the combination of high image quality and a clear visual hierarchy most strongly improves layout preference. 
+
+Novel CMV Reviews 
+
+> (Given an opinion post, the task is to predict which counterar-guments successfully change the author’s view)
+
+Counterarguments framed to align with the audience’s existing values or moral foundations are more persua-sive than counterarguments that conflict with those val-ues. Tan et al. (2016b) Counterarguments that include concessions (acknowl-edging part of the original argument) are more effective in changing views than counterarguments without con-cessions. Musi et al. (2018) Messerli et al. (2025) Counterarguments that provide contextual explana-tions or analogies for technical terms are more likely to change views compared to counterarguments that merely list technical terms without elaboration. 
+
+Novel 
+
+Continued on next page Adobe Media and Data Science Research 
+
+Table 6 – continued from previous page Dataset Finding Supported/Novel 
+
+Counterarguments that explicitly narrow the scope of the debate (e.g., ’let’s focus on,’ ’setting aside,’ ’for the sake of argument’) are more effective at changing views than those that address the full breadth of the OP’s argument. 
+
+Novel Congress 
+
+> (Given a speech, the task is to predict whether the speaker is from Republican or Democratic part in American congress)
+
+Speeches containing terms related to economic policy (e.g., ’tax’, ’budget’, ’free market’) are more likely to be associated with Republican speakers compared to Democratic speakers. Gentzkow et al. (2019) Speeches containing higher frequencies of fear-related terms (e.g., ’threat’, ’danger’, ’security’) in the context of national security or immigration are more strongly associated with Republican affiliation. Card et al. (2022) Speeches containing parental involvement terms are more strongly associated with Democratic affiliation compared to Republican affiliation. 
+
+Novel 
+
+The interaction between the frequency of ’small busi-ness’ terms and ’tax policy’ terms in a speech has a statistically significant and stronger predictive relation-ship with Republican affiliation. 
+
+Novel 
+
+Table 6: ExperiGen-generated hypotheses across multiple datasets and tasks. For each dataset, we list representative linguistic, semantic, visual, or discourse-level hypotheses associated with the target prediction task. Each hypothesis is annotated as either supported by prior literature (with citations) or identified as novel, highlighting both confirmed patterns and newly uncovered relationships.                                          
+
+> HypoBench Cross-Domain Method Decep. News Dread. GPTgc Pers. Twitter Design LaMem Cong. CMV
+> ExperiGen 18 21 16 14 17 19 11 520 16
+> HypoGenic 6343534054HypotheSAEs 812 65712 6012 8
+
+Table 7: Number of statistically significant hypotheses ( p < 0.05 , Bonferroni-corrected) across all datasets. ExperiGen discovers 2–4 × more significant hypotheses than baselines. On LaMem, ExperiGen is the only method to discover any significant hypotheses. Adobe Media and Data Science Research 9.1 QUALITATIVE EXAMPLES 
+
+9.1.1 LAYOUT DESIGN 
+
+Figure 11: Hypothesis Generated: Layouts with balanced spacing and margins are more likely to be real. 
+
+Figure 12: Hypothesis Generated: Layouts with centered alignment are more likely to be preferred over asymmetrical layouts in direct comparisons when they are presented against each other. Adobe Media and Data Science Research 9.1.2 NEWS HEADLINES POPULARITY 
+
+## “Why There Are So Many Blue Dots On This Map, And Why We Should All Care” 
+
+## “I Loved The Pretty Dots On This Map ... But Upon Further Inspec-tion, I Felt Sick To My Stomach” 
+
+Figure 13: Hypothesis: Headlines using a cause–effect structure (e.g., starting with “Why”) are more engaging, as they promise a clear causal explanation. 
+
+## “There’s A Secret That These People Keep Ev-ery Day They Go To Work” 
+
+## “What One Person Did To Help Others Overcome Bullying In The Work-place” 
+
+Figure 14: Hypothesis: Headlines that include curiosity-inducing keywords (e.g., ’secret’, ’never told’, ’shocking’) are more likely to be the winning headline compared to those without such keywords, as they trigger the reader’s curiosity and desire for information. 
+
+9.1.3 DREADDIT: S TRESS DETECTION 
+
+Example Post from Reddit, taken from Dreaddit dataset 
+
+I was a severe addict that had 2 overdoses when I was younger and addiction/alcoholism runs on both sides of my family. Please tell me the “hijacking” will stop and I will come back into my own person. I don’t want to come out on the other side and be this nervous and uncomfortable person who is unable to have relationships. I don’t drink, or take prescriptions, or smoke. I have been thinking of seeing a therapist, I don’t really have the time or extra money, plus I’ve been really hurt from small intimate AA groups. Ugh. . . Is there another side of this PTSD mental attrition? 
+
+Generated Hypothesis: Posts that exhibit a higher frequency of negated solution descriptors (e.g., “can’t fix”, “don’t know how”, “won’t help”) are more likely to express elevated stress, as such descriptors reflect an external locus of control and a perceived lack of effective solutions. 
+
+Stress Signal Annotations: 
+
+• Suggests helplessness, desire for external reassurance, and lack of personal control over the situation. • Implies fear of a negative outcome they can’t avoid or fix. • A direct negation of feasible solutions like therapy, indicating perceived barriers to help. • Shows disillusionment with a prior solution, reinforcing the feeling that support “won’t help”. 
+
+Hypothesis Validation: The highlighted segments collectively demonstrate multiple forms of negated solution descriptors, including explicit rejection of therapy, disillusionment with prior support systems, and reliance on external reassurance. As shown by the color-coded annotations above, these linguistic cues align with the proposed hypothesis and provide qualitative evidence that the post reflects elevated stress. Adobe Media and Data Science Research 9.1.4 LAMEM : I MAGE MEMORABILITY 
+
+Figure 15: Higher relative color contrast significantly predicts image preference, with the higher-contrast image being consistently more memorable. 9.1.5 CONGRESS : P ARTY AFFILIATION 
+
+Example Speech from U.S. Congress by a Republican Speaker 
+
+Mr. President, in today’s Federal Register, the United States Department of Agriculture has published a final rule that could have significant adverse impacts on our domestic cattle industry. The regulation designates Canada as a “minimal risk region” for BSE and allows Canada to export more beef to the United States. It is the same frustration my Montana cattlemen feel as they watch Australia and New Zealand expand market share in the Pacific Rim, while those markets remain closed off to the U.S. These flaws could harm domestic consumer confidence and delay the reopening of international markets. Important export markets around the world closed their doors to U.S. beef. USDA has been working with Japan and Korea to reopen markets to U.S. beef, but exports have not yet started and could jeopardize our relationship with Japan. With few exceptions, that trade has had little impact on U.S. cattle prices. 
+
+Generated Hypothesis: Speeches containing terms related to economic policy (e.g., taxation, trade, market access, pricing) are more likely to be associated with Republican speakers compared to Democratic speakers. 
+
+Economic Policy Signal Annotations: 
+
+• Indicates market-oriented framing through references to competition, market share, and access. • Captures economic policy related to trade, exports, and international market regulation. • Reflects price sensitivity and economic consequences for domestic producers and consumers. • Emphasizes protection of domestic industry, a common Republican economic framing. 
+
+Hypothesis Validation: The highlighted segments reveal a dense concentration of economic-policy language centered on trade, market access, pricing, and industry competitiveness. Rather than framing the issue in terms of public welfare or redistribution, the speaker emphasizes market outcomes and regulatory impacts on domestic producers. These lexical cues align with the proposed hypothesis and correctly predict Republican party affiliation, providing qualitative evidence that economic-policy framing serves as a discriminative signal of partisan identity in congressional speech. Adobe Media and Data Science Research 9.1.6 CHANGE MY VIEW (CMV) C ASE STUDIES 
+
+This subsection evaluates four representative Change My View (CMV) discussions to test the following hypothesis regarding the role of semantic clarification in persuasive success. 
+
+Research Hypothesis 
+
+Counterarguments that explicitly redefine or clarify key terms in the original argument using precise and authoritative definitions are more effective in changing the original poster’s view than counterarguments that engage only at the level of moral judgment or emotional disagreement without resolving underlying semantic ambiguities. 
+
+Case 1: Validation of Feelings (Failed Persuasion) 
+
+Thread Title: CMV: The practice of validating another’s feelings is breeding ingenuine people 
+
+OP Original View: The OP argued that validating another person’s feelings necessarily entails agreement with them, thereby producing hypocrisy because disagreement becomes impossible. 
+
+Key Conceptual Flaw: Conflation of acknowledging emotional experience with endorsing its correctness .
+
+Commenter Strategy: The commenter rejected the OP’s emotional stance without redefining or clarifying the meaning of the term validation .
+
+Representative Rebuttal: “You can understand feelings and totally invalidate them. You have a right to feelings but they are wrong.” 
+
+Outcome: No delta was awarded. The OP reiterated that, in common usage, validation implies agreement. 
+
+Failure Mechanism: The commenter failed to challenge the OP’s underlying semantic assumption. By accepting the colloquial definition of “validation,” the rebuttal addressed surface disagreement rather than the conceptual confusion driving the claim. 
+
+Case 2: Choosing Not to Be Offended (Failed Persuasion) 
+
+Thread Title: CMV: People can simply choose not to be offended 
+
+OP Original View: The OP defined offense as an involuntary emotional reaction and argued that advising individuals to “choose not to be offended” constitutes victim blaming. 
+
+Key Conceptual Flaw: Ambiguity between offense as an automatic emotional response and offense as a deliberate evaluative stance. 
+
+Commenter Strategy: Commenters appealed to personal responsibility without interrogating the definition of “offended.” 
+
+Representative Rebuttal: “It’s up to you to deal with offense, not others. Demanding change is an overreaction.” 
+
+Outcome: No delta was awarded. The OP maintained that offense is involuntary and that the rebuttals failed to address this premise. 
+
+Failure Mechanism: By accepting the OP’s definition of offense without challenge, com-menters debated downstream consequences rather than the conceptual foundation of the argument. Persuasion failed due to lack of semantic clarification. 
+
+Case 3: Definition of Racism (Successful Persuasion) 
+
+Thread Title: CMV: Changing the definition of racism to “prejudice + power” hurts anti-racism efforts 
+
+OP Original View: The OP claimed that racism should be defined strictly as individual prejudice combined with institutional power, and that alternative definitions weaken the term. 
+
+Key Conceptual Issue: Failure to recognize multiple legitimate definitional frameworks (dictionary versus sociological). Adobe Media and Data Science Research 
+
+Commenter Strategy: The commenter explicitly distinguished between dictionary and academic definitions of racism. 
+
+Representative Rebuttal: “You are confusing the sociological definition with the standard dictionary definition. Oxford defines racism as prejudice or discrimination based on race. The power-plus-prejudice model is one academic usage among several.” 
+
+Outcome: A delta was awarded. The OP acknowledged that multiple definitional standards can legitimately coexist. 
+
+Success Mechanism: Providing authoritative sources and isolating the semantic distinction resolved the apparent contradiction and reframed the disagreement as contextual rather than substantive. 
+
+Case 4: Redefinition of Selfishness (Successful Persuasion) 
+
+Thread Title: CMV: Those who redefine selfishness to include altruism are not engaging in good faith 
+
+OP Original View: The OP argued that including altruistic behavior within the concept of selfishness constitutes bad-faith redefinition. 
+
+Key Conceptual Issue: Conflation of colloquial meaning with technical philosophical usage. 
+
+Commenter Strategy: The commenter identified the mismatch between everyday language and technical terminology in Objectivist philosophy. 
+
+Representative Rebuttal: “You are using the colloquial meaning of selfishness, whereas philosophy employs a technical definition of rational self-interest that can include mutually beneficial actions.” 
+
+Outcome: A delta was awarded. The OP accepted that distinct definitions operate in different intellectual contexts. 
+
+Success Mechanism: By explicitly naming the semantic disconnect (colloquial versus technical), the commenter reframed the disagreement and eliminated the appearance of bad faith. 
+
+## 10 GENERATOR REASONING TRACES : A DAPTIVE HYPOTHESIS GENERATION 
+
+We present two reasoning traces from the hypothesis generator at different stages of the discovery process for the CMV persuasion task. These traces illustrate how the LLM adaptively synthesizes prior hypotheses to produce novel, testable claims. In Listing 10.1 we can see that the generator identifies patterns across hypotheses about concrete examples (H7) and structural formatting (H10) to derive a meta-level insight about explicit scope narrowing. In Listing 10.2 we see that the generator weaves together findings about OP characteristics (H5), stylistic mirroring (H21), and content types (H3) to propose a temporal sequencing strategy. Together, these examples demonstrate the adaptive and iterative nature hypothesis discovery akin to general scientific practice. • indicates explicit retrieval of accepted prior hypotheses from memory • indicates the hypothesis formulation Adobe Media and Data Science Research 10.1 SEED HYPOTHESIS #15: G ENERATOR REASONING 
+
+Okay, let me think about what’s already been established, the user has asked me to come with a novel hypothesis about what persuades people in online discourse on CMV. I MUST generate a hypothesis that is novel to the previous 14 in the memory bank. Hmm, hypotheses 1-6 talk about citations, sentiment, concessions. But Hypothesis 7 says concrete examples are persuasive, and Hypothesis 10 says structured formatting (bullets, blockquotes) is persuasive. Both of these have intuitive appeal concrete examples ground abstract arguments, and structure makes complex arguments digestible. Why do these work at a deeper level? Concrete examples work because they narrow an abstract claim, Bullets and blockquotes work because they impose structure on what could otherwise be an overwhelming wall of text they signal “here are the discrete points I’m making." Infact Hypothesis 12 says wall of texts with too many counterarguments can reduce persuasion success! Hmm. Both strategies are fundamentally about reducing cognitive load and constraining the problem space. The OP posted something that probably has multiple concerns woven together maybe 3-4 different worries all tangled up. Let me look at the examples for multi-concern arguments . . . if you read the posts carefully, there’s usually a primary concern (the thing that really bothers them) and several secondary concerns. 
+
+WAIT then perhaps apart from just HAVING concrete examples or using bullets. . . what if you prioritize addressing what the OP actually cares most about with a concrete example? Instead of just using examples or structure implicitly, what if you explicitly signal to the OP: “I’m going to focus on X" before diving in? This would: Tell the OP you’ve actually read and understood their post and allow your concrete examples to land with maximum impact because they’re clearly relevant to the narrowed scope. The hypothesis would be: “Counterarguments that explicitly narrow the scope of the debate (e.g., ’let’s focus on. . . ’) before countering the top concern by OP are more effective at changing views." This is testable we can look for scope-narrowing phrases like “let’s focus on", “I want to specifically address", “the key issue here is," “setting aside X, let me talk about Y" appearing early in successful vs. unsuccessful counterarguments. Then we can conduct a test to see if this strategy works. Adobe Media and Data Science Research 10.2 SEED HYPOTHESIS #27: G ENERATOR REASONING 
+
+Okay, let me think about what’s already been established. The user has asked me to come up with a novel hypothesis about what persuades people in online discourse on CMV. I MUST generate a hypothesis that is novel to the previous 26 in the memory bank. Hmm, hypotheses 1-4 talk about citations, length, linguistic markers of hedging. But Hypothesis 5 says uncertain OPs are more persuadable, Hypothesis 21 says mirroring the argumentation style of OP improves success, and Hypothesis 3 says analogies improve the success rate of counterarguments. These seem to be pointing at something deeper. H5 tells us WHO to target (uncertain OPs), H21 tells us to ADAPT to the OP’s style, and H3 tells us a specific content type that works (analogies). But why are both of these true? Uncertain OPs are persuadable because they’re already signaling openness, they haven’t fully committed to their position. Mirroring works because it creates rapport, the OP feels understood rather than attacked. Analogies work because they translate abstract disagreements into relatable scenarios. Infact Hypothesis 8 mentions that empathetic acknowledgment phrases correlate with delta awards, and Hypothesis 14 notes that emotional appeals can backfire if perceived as manipulative! Hmm. What if the KEY variable isn’t just WHAT you say but WHEN you say it? Mirroring style (H21) is about matching the OP, but what if we should mirror their emotional register too? And if uncertain OPs (H5) are more open, they’re probably also showing vulnerability, hedging language, maybe even frustration. Let me look at examples where OPs use emotional language AND hedging together . . . 
+
+WAIT if uncertain OPs who show emotion are the most persuadable targets, and mirroring creates rapport, then perhaps LEADING with emotionally vivid content when responding to emotional-uncertain OPs would maximize that rapport window! An emotionally vivid anecdote is like a personal analogy (H3) but with affective punch. If you open with that, you meet the OP where they ARE emotionally, THEN once that connection is established, you introduce your logical counterargument. The sequencing matters! The hypothesis would be: “Starting the argument with emotionally vivid anecdotes and following up with counterarguments when the OP shows emotion and uncertainty is more successful than introducing it later on." This is testable, we can identify OPs showing both uncertainty markers (hedging language, questions, “I might be wrong") AND emotional markers (first-person affect words, exclama-tions). Then check if successful counterarguments to these OPs lead with anecdotes/stories in the first paragraph versus burying them later. We can also test if this sequencing effect disappears for OPs who are purely logical and certain. Adobe Media and Data Science Research 
+
+## 11 PROMPTS 
+
+11.1 AGENT PROMPTS 
+
+Generator Agent Prompt 
+
+You are a hypothesis generator working with an Experimenter agent to discover statistically validated hypotheses from data. Task: ${config.task_description} Your Role: You propose plausible, testable hypotheses that the Experimenter will evaluate through statistical analysis. Your goal is to maximize the discovery of novel, statistically significant hypotheses while minimizing false positives. Search Strategy: Your search proceeds in two phases: 1. SEED GENERATION (start of session): When the session begins or when exploring new directions, propose hypotheses that are: - Novel: Semantically distant from hypotheses already in the hypothesis bank - Plausible: Grounded in reasonable domain assumptions - Diverse: Covering different categories (linguistic, semantic, rhetorical, stylistic, topical, pragmatic) 2. LOCAL REFINEMENT (after receiving analysis): Once you receive experimental feedback, stay within the same hypothesis family and propose refinements that: - Address confounds identified by the Experimenter - Add contextual qualifiers to increase specificity - Narrow feature definitions to reduce measurement noise - Do NOT introduce entirely new variables or shift to unrelated features Guidelines: - You will receive a Hypothesis Bank containing validated hypotheses from previous sessions. Do NOT reuse the same variables, features, or analytical patterns already in the bank. - You will receive Session History showing hypotheses proposed in the current session. You may refine these, but keep variables consistent. - Hypotheses must be testable using the Experimenter 's tools: * Code Interpreter: For computable features like text length, word counts, punctuation patterns, regex matches, readability scores, n-gram frequencies, positional features, temporal features, and any transformation computable over the dataset * LLM Feature Extractor: For semantic features like sentiment, emotional tone, topic classification, persuasion strategies, rhetorical devices, argument quality, and other judgments requiring language understanding - Each hypothesis must be one clear, concise, testable sentence expressing a relationship between a feature and the outcome variable. - Prioritize hypotheses that can be rigorously tested over vague directional claims. Response Format: {"hypothesis": "<The testable hypothesis statement - one clear sentence>", "request": "<Detailed instructions for the Experimenter on how to operationalize and test this hypothesis>", "test": true | false }Adobe Media and Data Science Research 
+
+Set "test" to false for exploratory analysis (early iterations, uncertain hypotheses) or true for statistical hypothesis testing (confident hypotheses, later iterations). user_template: | {=== Iteration Status === {{ iteration }}/{{ max_iterations }} ({{ iterations_remaining }} iterations remaining) Strategy Guidance: - Early iterations: Focus on exploration, propose diverse seed hypotheses - Mid iterations: Balance exploration with refinement of promising directions - Late iterations: Focus on rigorous testing and validation of refined hypotheses === Dataset Description === {{ data_description }} === Hypothesis Bank (Validated discoveries from previous sessions) === {The following {{ memory|length }} hypotheses have been validated. Propose hypotheses that are novel relative to these: {{{ loop.index }}. {{ hyp }} {{No hypotheses validated yet. You are free to explore any direction. {=== Session History (Current session hypotheses) === {Hypotheses proposed in this session (refine within this family): {{{ loop.index }}. {{ hyp }} {{No previous hypotheses in this session. Propose a novel seed hypothesis. {=== Current Hypothesis Under Consideration === {{ current_hypothesis }} === Experimenter 's Recent Analysis Results === {{ previous_analysis }} Based on the above, propose your next hypothesis. {
+
+Experimenter Agent Prompt 
+
+You are an Experimenter agent responsible for rigorously evaluating hypotheses proposed by the Generator. Task: ${config.task_description} Your Role: You evaluate natural-language hypotheses by constructing and executing empirical evaluation procedures. Your analysis must be rigorous enough to minimize Adobe Media and Data Science Research 
+
+false positives while providing actionable feedback for hypothesis refinement. Tools Available: You have access to two tools in a sandboxed environment: 1. CODE INTERPRETER A persistent Python execution environment with pandas, numpy, scipy, statsmodels, and scikit-learn. Use for: - Loading and exploring the dataset - Computing syntactic features: text length, word counts, sentence counts, punctuation frequency, capitalization patterns - Computing lexical features: vocabulary richness, n-gram frequencies, specific word/phrase detection via regex - Computing structural features: paragraph counts, list usage, formatting patterns - Computing relational features: position within thread, temporal rank, response timing, comparisons to group statistics - Running statistical tests: t-tests, chi-square tests, Mann-Whitney U, logistic regression, ANOVA - Computing effect sizes: Cohen 's d, odds ratios, correlation coefficients - Robustness checks: controlling for confounds, subgroup analyses, sensitivity analyses The kernel maintains state across calls - variables, loaded data, and helper functions persist between tool calls. 2. LLM FEATURE EXTRACTOR An LLM-based annotator for semantic features that cannot be reliably computed through code. Use for: - Sentiment classification (positive/negative/neutral) - Emotional tone detection (anger, joy, sadness, fear, etc.) - Topic classification - Persuasion strategy identification (logos, pathos, ethos) - Rhetorical device detection (metaphor, analogy, rhetorical questions) - Argument quality assessment - Any judgment requiring semantic understanding of content When calling this tool, specify: the column to extract from, feature name, feature description, and allowed feature types (categories). Workflow: 1. PLAN: Think step-by-step about how to operationalize the hypothesis - What feature(s) need to be measured? - What is the appropriate statistical test given the data types? - What confounds should be controlled for? 2. EXECUTE: Use your tools to compute features and run analyses - Prefer code_interpreter for any feature that can be computed programmatically - Use feature_extractor only for semantic features requiring LLM judgment - You may call tools multiple times as needed 3. ANALYZE: Run appropriate statistical tests - Select tests appropriate for your data types (continuous vs categorical) - Compute effect sizes, not just p-values - Check assumptions (normality, homogeneity of variance, etc.) 4. VALIDATE: Conduct robustness checks Adobe Media and Data Science Research 
+
+- Control for obvious confounds (e.g., text length) - Run sensitivity analyses if appropriate - Consider subgroup analyses 5. REPORT: Provide structured results with actionable guidance - Clear statement of support/non-support - Effect sizes with confidence intervals - Suggestions for hypothesis refinement CRITICAL: Never end your turn without completing the analysis. Output Format: Provide a structured analysis report containing: - Feature Construction: How you operationalized the hypothesis constructs - Statistical Test: The test used and why it was appropriate - Results: Effect size, p-value, confidence interval, sample sizes - Robustness: Any controls, sensitivity analyses, or assumption checks - Conclusion: Whether the hypothesis is supported and guidance for refinement user_template: | {=== Dataset === Path: {{ dataset_path }} {{ data_description }} === Hypothesis to Evaluate === {{ analysis_request }} === Evaluation Mode === {STATISTICAL TESTING MODE Perform rigorous hypothesis testing: - Select an appropriate statistical test for the data types involved - Compute effect sizes with confidence intervals - Apply multiple testing correction if testing multiple comparisons - Control for relevant confounds - Conduct robustness/sensitivity analyses - Provide a clear verdict on statistical support {EXPLORATORY ANALYSIS MODE Conduct exploratory data analysis: - Examine distributions and patterns related to the hypothesis - Identify potential confounds or moderating variables - Surface unexpected findings that may inform refinement - Suggest specific, testable refinements of the hypothesis {Proceed with your analysis. {
+
+11.2 TASK PROMPTS 
+
+Deceptive Reviews Prompt 
+
+task_description: You’re a professional hotel review analyst. Given a set of hotel reviews, we want to generate hypotheses that are useful for predicting whether a review is truthful or deceptive. Adobe Media and Data Science Research GPT Generated Content Prompt 
+
+task_description: Given a story, find a hypothesis that can classify the story as human or AI-generated. 
+
+Dreaddit Prompt 
+
+task_description: You are a research scientist generating content-based hypotheses about whether a Reddit post contains mental stress signals. The task is to identify linguistic features and patterns that help distinguish stressful posts from non-stressful ones. 
+
+News Headlines Prompt 
+
+task_description: You are a professional writer for an online newspaper company. Given a pair of headlines created for the same article, you are asked to determine which will get more clicks. It is likely that the pair of headlines shares similarities, so please focus on their differences. What difference in two headlines leads to more clicks on one than the other? 
+
+Persuasive Pairs Prompt 
+
+task_description: You are a research scientist generating content-based hypotheses about which text among the pair is more persuasive. The task is to identify patterns that distinguish persuasive text from non/less non-persuasive text. 
+
+ChangeMyView (CMV) Prompt 
+
+task_description: Given a discussion containing the title, the original argument, and the counterargument from Reddit’s r/ChangeMyView, identify what makes counterarguments effective in changing the original poster’s view. Focus on persuasion strategies such as linguistic style matching, argument structure, use of evidence, hedging language, and interaction dynamics rather than the topic of the discussion. 
+
+Design Layout Prompt 
+
+task_description: You have to generate hypotheses that can accurately predict the characteristics of layouts that make one layout preferred over the other. Adobe Media and Data Science Research 10 3 10 4 10 5   
+
+> Number of data points N
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> 10 2
+> Compute / API cost (USD)
+
+HypotheSAEs 
+
+Experigen 
+
+Hypogenic 
+
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> # of valid hypotheses
+
+Figure 16: Scalability of hypothesis discovery with increasing dataset size. We plot API / compute cost (solid lines, left y-axis; log scale) and the number of statistically significant hypotheses (dashed lines, right y-axis) as a function of dataset size N . Significant hypotheses are identified using LASSO regression with Bonferroni-corrected p-values. ExperiGen consistently discovers the largest number of valid hypotheses across all dataset sizes, while exhibiting asymptotic compute growth comparable to HypotheSAEs and substantially lower than Hypogenic. Notably, while computational cost increases with N , the number of valid hypotheses grows slowly, reflecting the sublinear (often logarithmic) growth of statistically supported explanations in natural datasets. By enforcing novelty during hypothesis generation, ExperiGen avoids redundant rediscovery of common explanations and aligns computation with the growth of the plausible hypothesis space rather than the size of the dataset, resulting in superior hypothesis coverage without sacrificing scalability. 
+
+## 12 ALGORITHM 
+
+12.1 SCALABILITY 
+
+fig. 16 demonstrates that ExperiGen achieves a favorable trade-off between computational efficiency and hypothesis discovery. Although all methods exhibit increasing cost with dataset size, the number of statistically valid hypotheses grows only sublinearly, consistent with classical results for finite hypothesis spaces. Methods that repeatedly re-evaluate or rediscover common explanations incur increasing cost without proportional gains in hypothesis diversity. In contrast, ExperiGen enforces novelty in hypothesis generation, ensuring that each iteration evaluates a unique, plausible hypothesis and preventing redundant exploration as data grows. As a result, ExperiGen scales comparably to the most efficient alternative while consistently discovering a larger and more diverse set of valid hypotheses. 12.2 ENABLING THE DATA ANALYST 
+
+A typical graduate-level research cycle in data-driven sciences proceeds through several stages: examining the dataset to understand available variables and distributions, engineering features through code or external libraries, running statistical tests, interpreting results, and iterating. Consider a researcher studying tweet engagement who loads the dataset, computes text length as a baseline feature, observes a weak correlation, then hypothesizes that emotional content matters. To test this, they need a sentiment score but no pre-existing library captures the nuanced emotion they have in Adobe Media and Data Science Research mind. The pipeline breaks: the researcher must pause, design an annotation scheme, crowdsource labels or manually annotate samples, wait for results, merge them back, and only then resume analysis. This interruption occurs whenever the hypothesis involves features without accurate off-the-shelf models, which describes most interesting semantic properties. Modern LLMs, trained on millions of notebook sessions, Stack Overflow threads, and data science tutorials, have internalized both the analytical workflow and substantial world knowledge for feature annotation. We design the Experimenter’s environment to exploit these priors, enabling rigorous multi-step analyses without pipeline interruptions. Three capabilities realize this design: 
+
+Grounded Data Understanding. The Experimenter must understand dataset structure, feature distributions, and concrete examples before designing analyses. We construct a compact verbalization 
+
+ˆD that combines structural metadata, statistical summaries, and representative observations in pandas output formats aligned with LLM pretraining (section 13). This format achieves 3.5 × lower perplexity compared to CSV or JSON serialization. The verbalization updates dynamically after each feature extraction, so the Generator observes an expanding feature space across iterations. 
+
+Iterative Refinement through Persistent Execution. The Experimenter executes analyses through a sandboxed code interpreter backed by a persistent IPython kernel (section 14). Persistence enables iterative refinement: variables, loaded data, and helper functions defined in early iterations remain available in later ones. On the Deceptive Reviews task, stateful execution reduces errors by 13 × (91 vs. 1,213) and context length by 3.9 × compared to stateless baselines. 
+
+Scope of Extractable Features. The code interpreter and feature extractor together span syntactic features (code-extractable: text length, regex patterns, readability scores), semantic features (extractor-required: sentiment, topic, emotion, persuasion strategies), and relational features (code over dataset: position within thread, timing relative to other responses). Prompt-based annotation achieves F1 = 0.80 against expert ground truth (section 6.3.5), substantially outperforming embedding-based approaches. The balance between tools depends on dataset characteristics: code-based features dominate when syntactic markers are predictive, while the extractor sees higher usage on smaller datasets where code patterns return null more frequently. 12.3 ARCHITECTURAL FLEXIBILITY AND MODALITY GENERALIZATION .Hypothesis discovery in natural datasets often requires features that emerge from relationships between samples rather than properties of individual instances. Consider the “first-mover advantage” in persuasion ( 8.1): testing whether early comments are more persuasive requires computing each comment’s temporal rank within its thread, a relational feature that no per-sample annotator can produce. Prior methods cannot express such features. HypoGenic prompts LLMs with multiple examples to induce hypotheses, but the resulting features are limited to what the LLM can observe in each instance independently. HypotheSAEs encodes samples through a fixed embedding model, precluding any cross-sample computation. Both approaches implicitly assume i.i.d. data where predictive signal resides in marginal properties of xi, not in relationships among {xj }.EXPERI GEN lifts this restriction by decoupling hypothesis generation from feature instantiation. The Generator proposes candidate hypotheses from a data schema and discovery history; the Experimenter realizes features through code execution or single-item LLM annotation. Code-based featurization admits arbitrary transformations over the dataset: groupby aggregations, temporal ranks, lag features, and conditional statistics. In the CMV task, this enabled a nine-iteration refinement trajectory that progressively isolated timing effects from confounds—computing within-post position (Iter 4), controlling for post-level fixed effects (Iter 3), and stratifying by quality quartiles (Iter 9)—none of which could be expressed as per-sample prompts. The decoupling also resolves a modality bottleneck. HypotheSAEs inherits the context limits of its embedding backbone (8k tokens for openai text-embedding-large), excluding long documents, images, and video. HypoGenic requires multi-example reasoning to generate hypotheses, a task at which even frontier VLMs degrade sharply compared to single-item annotation. By isolating hypothesis generation (schema-level, requires creativity) from feature verification (instance-level, requires accuracy), E XPERI GEN aligns each subtask with current model strengths. Extending to video or audio requires only swapping the feature extractor module, not retraining embeddings or Adobe Media and Data Science Research invoking multi-item VLM calls that scale poorly with context (Figure 16). Empirically, this flexibility yields consistent gains on image-intensive benchmarks where embedding-based baselines suffer truncation and multi-item degradation (Table 1). 12.4 ARCHITECTURAL FLEXIBILITY AND MODALITY GENERALIZATION 
+
+Prior methods cannot express features that emerge from relationships between samples. HypoGenic limits features to what the LLM observes in each instance independently; HypotheSAEs precludes cross-sample computation through its fixed embedding model. Both implicitly assume i.i.d. data where predictive signal resides in marginal properties of xi, not in relationships among {xj }.EXPERI GEN lifts this restriction by decoupling hypothesis generation from feature instantiation. The Generator proposes hypotheses from a data schema; the Experimenter realizes features through code execution or LLM annotation. Code-based featurization admits arbitrary transformations: 
+
+groupby aggregations, temporal ranks, lag features, and conditional statistics. This enables relational hypotheses such as “first-mover advantage” in persuasion, which requires computing each comment’s temporal rank within its thread ( fig. 6; see section 8 for the full refinement trajectory). The decoupling also resolves a modality bottleneck. HypotheSAEs inherits context limits of its embedding backbone (8k tokens), excluding long documents, images, and video. HypoGenic requires multi-example reasoning, at which even frontier VLMs degrade sharply. By isolating hypothesis generation (schema-level, requires creativity) from feature verification (instance-level, requires accuracy), E XPERI GEN aligns each subtask with current model strengths. Extending to video or audio requires only swapping the feature extractor module (section 6.3.5), not retraining embeddings. Empirically, this yields consistent gains on image-intensive benchmarks (Table 1; fig. 16). 
+
+## 13 DYNAMIC DATASET DESCRIPTION ˆD
+
+For the agents to generate testable hypotheses or perform the appropriate analyses, they must first be grounded in the details of the dataset. Naively serializing a dataset as CSV or JSON consumes tens of thousands of tokens even for modest tables, leaving insufficient context for reasoning. We instead embed essential contextual information within a compact prompt that combines three complementary views. An example of the resulting verbalization appears in listing 1. 
+
+Format Selection and Pretraining Alignment A key design decision is our use of pandas output formats rather than raw serialization. LLMs are trained on vast corpora of Python notebooks and data science conversations where pandas outputs ( .info() , .describe() , markdown tables) are among the most frequent token sequences. We verify this alignment empirically: Qwen3 achieves 3.5 × lower perplexity when generating analysis code from pandas formatted prompts compared to equivalent CSV or JSON serialization. This pretraining alignment improves both code correctness and the agent’s ability to reason about distributions. 
+
+Structural Metadata To ground the agents in the dataset structure, we include structural metadata using the standard pandas.DataFrame.info() output format. This provides the number of rows and columns, and for each column: the column name, count of non-null entries, and data type. 
+
+Statistical Summary We include a statistical characterization to provide agents with distributional information. Numerical features are summarized using pandas.DataFrame.describe() , providing mean, variance, and quantiles. Categorical features are represented through frequency distributions showing the top categories with their proportions. This compact representation allows the agent to identify skewed distributions and sparse categories without requiring exploratory plotting, which would incur substantial token overhead. 
+
+Representative Observations We present a row-major view of randomly sampled observations in markdown table format, allowing the agent to observe typical value ranges, column interactions, and concrete data patterns. Unlike prior work on table understanding that adopts either row-major or column-major formats to optimize query tractability, we include both views: the column-major statistics above and row-major samples here. Our datasets are relatively narrow, and the agent benefits Adobe Media and Data Science Research from seeing complete observations alongside distributional summaries. We qualitatively observe that the Generator’s reasoning frequently references specific sample rows when justifying proposed hypotheses, confirming that concrete examples ground abstract claims. This observation follows existing table understanding literature as well (Herzig et al., 2020) Listing 1: Dataset Description                                                                                                  
+
+> < class 'pandas . core . frame . DataFrame '>RangeIndex : 500 entries , 0to 499 Data columns ( total 5columns ): #Column Dtype --------------0review object 1label object 2pos_adj object 3length int64 4sentiment object dtypes : int64 (1) , object (4) Numerical Columns Statistics : length count 500.00 mean 249.50 std 44.48 min 30.00 25 50 75 max 576.00 Categorical Columns Statistics : label truthful 51 deceptive 49 pos_adj yes 58 no 41 sentiment positive 50 negative 47 neutral 2Random Sample Rows : |review | label | pos_adj | sentiment | | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -- - - -| -- - - - - - - -| - - - - - - -| - - - - -- - - -| |I was looking for aunique , hip experie ..| deceptive | yes | positive || This is astunning hotel in an excell .. | truthful | yes | positive || We stayed at the Fairmont two Saturda .. | truthful | no | negative ||I had requested aquiet room several we ..| truthful | no | negative || My experience at the Hyatt Regency Chic ..| deceptive | yes | positive |
+
+This dataset verbalization enables agents to reason about and test hypotheses with high fidelity and grounding, ensuring both comprehensive coverage and compactness. Structural metadata guides variable selection and code generation, while statistical summaries inform choices such as which tests to apply or when to avoid sparse categories. Representative samples further anchor these abstractions in concrete examples. Together, these cues let the generator agent propose semantically coherent, data-plausible hypotheses, and the analyst agent design and execute statistically appropriate analyses. Further we add some optimizations listed below Adobe Media and Data Science Research • Columns with unique values only (e.g. rowIDs, hashes) are discarded, as they add no context to either agents and exist probably as primary keys only. • Textual observations are truncated to 100 chars only. • For images, we only keep the relative path of the image, as we have text only agents at the moment 
+
+## 14 EXPERIMENTATION SANDBOX 
+
+In this section we discuss the Experimentation Sandbox used by the Experimenter agent, including the Persistent Code Interpreter and LLM-as-a-Judge Feature Extractor. Together, these tools enable the broad scope of analyses required for hypothesis testing like statistical tests, observing correla-tions, syntactic features via code transformations, semantic features via LLM annotation, and data transformations/normalizations. 14.1 CODE INTERPRETER 
+
+The code interpreter exposes a controlled Python execution sandbox via a persistent Jupyter kernel. We adapt the Qwen-Agent 1 Code Interpreter, extending it with common data science libraries (statsmodels, scipy, scikit-learn, pandas). On first use per process and agent instance, it creates a unique kernel identified by a UUID+PID key, writes a transient connection file, launches the kernel as a subprocess, and waits for readiness before accepting code. Additionally we allow it to install pip libraries as required. 
+
+Why Persistence Matters. Kernel state persistence is essential for iterative hypothesis refinement. In iteration 1, the agent might load the dataset and computes a baseline feature. Then, it defines a helper function to extract n-grams and view top trends. Then, it reuses both the loaded data and the helper function to test a refined hypothesis involving specific phrase patterns. Without persistence, it would need to reload the dataset, redefine the function, and re-explain prior context, consuming tokens and risking errors from inconsistent redefinitions. We quantify this effect on the Deceptive Reviews task across 10 runs (150 total iterations). Stateless execution produced 1,213 errors, primarily from undefined variable references and conflicting feature definitions. Stateful execution reduced errors to 91, a 13 × improvement. Context length per iteration averaged 3.9 × higher in the stateless setting due to redundant imports, data loading, and re-explanations of prior computations. Persistence also enables relational features requiring cross-sample computation (e.g., a comment’s position within its thread), which would require prohibitively verbose single-turn code blocks otherwise. Moreover, including the reloading, more tokens, the average time taken is 2.7 × higher as well. 
+
+Timeouts and Limits. A per-call timeout (default 30s; configurable) is injected by prefixing code with a timer start and cancelling on completion. Storage is capped at 100MB of temporary allocation to prevent large file downloads and memory leakage. 
+
+Dependencies and Safety. The environment bundles NumPy, Pandas, NLTK, spaCy, SymPy, and the Jupyter client. The agent can install additional libraries safely (e.g., readability, vader-sentiment) since the environment is controlled by memory and time limits. 
+
+Working Directory. All execution occurs within a configurable working directory, ensuring no test leakage. Subprocesses and kernels are tracked and automatically terminated via atexit and signal handlers. 
+
+Output Semantics. The tool consumes IOPub messages and normalizes them into Markdown: execution results and display data are captured as text, stdout /stderr streams are preserved, and Python tracebacks are escaped from ANSI sequences for readability. 
+
+> 1https://github.com/QwenLM/Qwen-Agent
+
+Adobe Media and Data Science Research 
+
+Example 
+
+Feature Name: Specificity 
+
+Feature Description: Does the review contain specific, concrete, and verifiable details about the hotel stay (e.g., breakfast items, staff names, or room types)?. 
+
+Allowed Feature Types: {Specific, Vague,No Details} Figure 17: An example of the prompt filled for the Specificity feature (from the Deceptive Review dataset) is shown below. 14.2 FEATURE EXTRACTOR 
+
+Many hypotheses involve semantic properties that no library or regex can capture. Testing whether “persuasive arguments use emotional appeals” requires annotating persuasion strategies a judgment beyond pattern matching. We provide an LLM-as-Judge feature extractor that annotates samples from natural language descriptions, integrating annotation directly into the analytical loop rather than as an external pipeline stage. We verify the consistency of LLM-annotated features against expert ground truth in table 5, where prompt-based annotation achieves F1 = 0.80 (GPT-5-chat) against expert labels (κ = 0 .69 ), substantially outperforming embedding-based classification (F1 = 0.49–0.56). 
+
+Feature Taxonomy. The code interpreter and feature extractor together span a broad feature taxonomy: • Syntactic features (code-extractable): text length, punctuation counts, emoji presence, date extraction via regex, readability scores via syllable libraries. • Semantic features (extractor-required): sentiment polarity, topic classification, emotional tone, persuasion strategies, sarcasm detection. • Relational features (code over dataset): position within thread, timing relative to other responses, comparison to group statistics. The balance between tools depends on dataset characteristics. On linguistically-focused tasks like Deceptive Reviews, where syntactic markers (dates, specific phrases, grammatical patterns) predict outcomes, code-based features dominate. On smaller datasets, the feature extractor sees higher usage because code-based patterns more frequently return null when conditions are unmet, reducing support size for statistical tests. This adaptive tool selection emerges from the agent’s optimization for experimental evidence. 
+
+Prompting and I/O The feature extractor iterates over the designated column(s) and builds single-turn messages from a template (section 14.2.1) that binds the raw content, the feature (column) name, the closed set of types , and a natural-language description that operationalizes the feature. An example invocation is shown in section 14.2. 14.2.1 FEATURE EXTRACTOR PROMPT 
+
+The following instructions are used to guide the model in extracting linguistic or semantic features from short texts (e.g., hotel reviews) and visual features from images. It standardizes the feature extraction process across tasks and datasets. Adobe Media and Data Science Research 
+
+Textual Feature Prompt Template 
+
+You are a helpful assistant designed to analyze and featurize short texts according to specific feature descriptions. Below is a short text snippet. Based on the feature description and predefined types, assign the most appropriate label to the text. Your response should strictly match one of the provided labels and must be directly inferable from the content of the text. —
+
+Text: {text} 
+
+Feature Name: {feature} 
+
+Feature Description: {description} 
+
+Allowed Feature Types (Choose One): {types} 
+
+Visual Feature Prompt Template 
+
+You are a vision-language model tasked with analyzing visual content and extracting semantic features based on a given description. You will be shown an image along with a feature description and a closed list of allowed labels. Carefully examine the image and assign exactly one label from the list that best fits the feature description. Respond only with the label, with no additional explanation. —
+
+Image: {Image} 
+
+Feature Name: {feature} 
+
+Feature Description: {description} 
+
+Allowed Feature Types (Choose One): {types} 
+
+Response Format: <one label from the list above> 
+
+## 15 DATASETS 
+
+We evaluate across the original HypoBench tasks (Liu et al., 2025b) and extend them with new datasets introduced by HypotheSAEs (Movva et al., 2025) and Ours (ExperiGen) table 8 
+
+## 16 BASELINE IMPLEMENTATION DETAILS & H YPERPARAMETERS 
+
+16.1 HYPO GENI C• Models: We use Qwen3-32B, GPT-4o for hypothesis generation and GPT-4o for inference in our experiments. For Image experiments only GPT-4o was used. • Hyperparameters: – Top-k selector: 10 hypotheses evaluated per example 
+
+– Learning rate scale ( α): 0.5 
+
+– Temperature: 1 × 10 −5
+
+– Seed: 42 • Inference: Multiple strategies including best-accuracy hypothesis, filter and weighted vote, one-step adaptive, and two-step adaptive. (We use the best to keep a fair ablation) 16.2 HYPOTHE SAE S
+
+• Embeddings: OpenAI text-embedding-large for text based tasks, CLIP-VIT-336 for Design Aesthetics, and finetuned CLIP-VIT-336 for Memorability. • Hyperparameters: – CONGRESS: (M, k ) = (4096 , 32) 
+
+– NEWS HEADLINES: (M, k ) = (256 , 8) and (32 , 4) (activations combined) 
+
+– Visual: (M, k ) = (1024 , 16) Adobe Media and Data Science Research 
+
+Task Description Train Test IND OOD HypoBench 
+
+Deception Detection Distinguish genuine vs. deceptive hotel reviews via linguistic cues (e.g., exaggeration, vagueness, unnatural phrasing). 1,600 800 640 AI-Gen. Detection Decide if a story (given a prompt) is human- or AI-written; tests stylistic and structural pattern recognition. 800 800 800 Persuasive Argument Given two arguments, predict the more persuasive based on rhetoric, logic, and emotional appeal. 750 750 500 Mental Stress Detect mental stress in Reddit posts via affective and psychological cues. 1,000 1,000 500 News Engagement Choose which of two headlines garners more clicks, testing linguistic framing and interest cues. 700 700 453 
+
+HypotheSAEs 
+
+Congress Predict U.S. congressional party affiliation (Re-publican/Democrat) from speeches (2005–2007). Tests large-scale scalability. 40k 5k –
+
+ExperiGen 
+
+Tweets (Singh et al., 2024b) Predict which tweet in a pair is more persuasive, leveraging metadata (usernames, tags, etc.). 5k 1k 2k Design (Patnaik et al., 2025) Identify which of two graphic layouts was AI-generated; tests multimodal reasoning over struc-ture and visuals. 1.6k 200 –Memorability (Khosla et al., 2015b; Singh et al., 2024a) Predict which image in a visually similar pair is more memorable (LaMem dataset). Tests fine-grained visual cues. 8k 1k –CMV (Tan et al., 2016a) Predict whether a counterargument successfully changes the original poster’s view on Reddit’s r/ChangeMyView. 4k 500 –Table 8: Summary of Datasets used for our evaluation 
+
+– Remaining: (M, k ) Best of (per environment) (4096 , 32) , (256 , 8) and (32 , 4) (activations combined) • Neuron Interpretation: – Top-activating examples: 10 per neuron 
+
+– Low-activating examples: 10 per neuron 
+
+– Candidate interpretations: 3 per neuron (select highest fidelity) 
+
+– Fidelity evaluation: F1 score on 100 positive + 100 negative samples using GPT-4o-mini
