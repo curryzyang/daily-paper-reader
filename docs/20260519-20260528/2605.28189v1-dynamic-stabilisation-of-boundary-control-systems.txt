@@ -1,0 +1,1993 @@
+Title: Dynamic Stabilisation of Boundary Control Systems
+
+URL Source: https://arxiv.org/pdf/2605.28189v1
+
+Published Time: Thu, 28 May 2026 01:20:48 GMT
+
+Number of Pages: 26
+
+Markdown Content:
+DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 
+
+MOHAMED FKIRINE AND LASSI PAUNONEN 
+
+Abstract. We design observer-based controllers to stabilise abstract linear boundary control systems on Hilbert spaces. Our main results in-troduce conditions for exponential, strong, and polynomial stability, and establish external well-posedness of the closed-loop system. We design controllers for a one-dimensional wave equation, a two-dimensional wave equation with distributed control and observation, and a non-uniform SCOLE model. 
+
+1. Introduction 
+
+In this paper we design controllers for controlled linear partial differential equations (PDEs) and infinite-dimensional linear systems. Our main interest is in stabilising PDE systems with boundary inputs. Majority of such models can be represented as abstract boundary control systems [34, 25] of the form ˙x(t) = Ax(t) + Biu(t), x(0) = x0(1.1a) 
+
+Bx(t) = Qu (t)(1.1b) 
+
+y(t) = Cx(t)(1.1c) on a Hilbert space X. Here (1.1b) describes the effect of the boundary input on the system, and the second term on the right-hand side of (1.1a) models the possible in-domain control inputs. We stabilise the boundary control system (1.1) using an observer-based dynamic feedback controller of the form ˙ˆx(t) = Aˆx(t) + Biu(t) + Li(ˆ y(t) − y(t)) , ˆx(0) = ˆ x0(1.2a) 
+
+Bˆx(t) = Qu (t) + L(ˆ y(t) − y(t)) (1.2b) ˆy(t) = Cˆx(t)(1.2c) 
+
+u(t) = Kˆx(t).(1.2d) Here L and Li are output injection gains which facilitate the state estimation and K is a stabilising state feedback gain operator. Observer-based stabilisa-tion of infinite-dimensional systems with boundary inputs has been studied earlier in the setting of regular linear systems in [44] and well-posed linear systems in [37]. In this work we utilise the framework of boundary control systems which often have a beneficially close connection to the underlying PDE model. In particular, the boundary trace operator B in (1.1) is easier to construct than the input operator in the state equations of a well-posed 
+
+2020 Mathematics Subject Classification. 93C25, 93D15, 35B35 (93C20, 47D06, 47A10). 
+
+Key words and phrases. Dynamic stabilisation, boundary control system, feedback, poly-nomial stability, wave equation, SCOLE model. This work was supported by the Research Council of Finland Grant number 349002.  
+
+> 1
+> arXiv:2605.28189v1 [math.OC] 27 May 2026 2M. FKIRINE AND L. PAUNONEN
+
+system. In addition, our framework also facilitates stabilisation of systems which are not well-posed. Hyperbolic partial differential equations with boundary inputs and in-domain measurements (or vice versa) can only rarely be stabilised exponen-tially. We show that under mild assumptions our controller (1.2) instead achieves polynomial or non-uniform stability [3, 4, 33]. Indeed, the sepa-ration principle of observer-based stabilisation implies that closed-loop sta-bility is based on the stability of the observer error dynamics, described by a strongly continuous semigroup TL, and the stability of the system under state feedback, described by a semigroup TK . In a hyperbolic PDE with boundary control and in-domain observation, we may achieve exponential stability of TK , but not of TL. We show that if one of the semigroups is exponentially stable and the other one is non-uniformly stable, then the closed-loop system is non-uniformly stable, and we obtain a rate of decay for its classical state trajectories. Our boundary control system (1.1) differs slightly from the typical form where Q = I and Bi = 0. Our class with the bounded operator Bi can be used to study PDEs with control both at the boundary and the in interior of the spatial domain. Moreover, for parabolic systems — even with bound-ary measurements — we may often use an output injection described by a bounded operator, and this way the class (1.1) is large enough to also con-tain the controllers of classical boundary control systems. The role of Q is to model the situation where the control input u(t) does not affect all bound-ary conditions of the PDE. These uncontrolled boundary conditions could alternatively be included in the domain of A, but the formulation in (1.1b) facilitates their use for boundary output injections in (1.2b). Our two main stabilisation results are for systems (1.1) with different lev-els of external well-posedness defined in terms of boundedness of the input, output, and input-output maps. Under stronger well-posedness assumptions our results also establish external well-posedness of the closed-loop system. An important feature of observer-based stabilisation is that the Luenberger-type controller may not have well-defined dynamics when disconnected from the system. Instead, the controller should be considered to have an inter-nal loop [44, 7] which can be broken into an additional input-output pair to guarantee well-defined dynamics of the controller. We show that our controller (1.2) has an internal loop in the sense of [44, 7]. We illustrate the controller design for PDE systems by considering three concrete models. We first consider a two-dimensional wave equation with in-domain control and observation on different parts of the rectangular spatial domain. In the case where only one of these subdomains satisfies the Geo-metric Control Condition, the system cannot be stabilised exponentially, but we achieve polynomial stability. We also stabilise a one-dimensional wave equation with non-collocated boundary input and output and estab-lish external well-posedness of the resulting closed-loop system. Finally, we stabilise a non-uniform SCOLE model [23] consisting of an undamped beam equation with tip mass dynamics. Since the control acts through the finite-dimensional part of the model, exponential stabilisation is not possible, but our controller stabilises the system polynomially. DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 3
+
+Observer design and observer-based stabilisation of infinite-dimensional linear systems are understood well in the case of systems with bounded in-put and output operators [8, Sec. 8.3]. These techniques have also been extended to systems covering PDEs with boundary control and observation, most notably for Pritchard–Salamon systems in [9, 24], regular linear systems in [44], and for well-posed systems in [37]. In addition, finite-dimensional controllers have been introduced for parabolic systems with unbounded in-put and output operators in [21, Sec. 4B] and second order observers have been designed for abstract wave equations in [11]. Also abstract boundary control systems were treated in [1] by converting them first to their state space representation. For abstract boundary control systems the observer design problem without stabilisation has been studied in [42, 41] (with fo-cus on bilinear systems) and in [12, 13]. We extend and unify these earlier studies of observer-based stabilisation of boundary control systems. More-over, observer-based polynomial stabilisation has previously only been stud-ied for a one-dimensional wave equation in [31], and we extend the approach in [31] to the general class of boundary control systems. Besides the ab-stract infinite-dimensional setting, observer-based stabilisation has been in-vestigated actively for PDE models with boundary control and observation, e.g., in [35] using PDE backstepping, in [16] using spectral analysis, and in [26] using linear matrix inequalities. In our view, the class of abstract boundary control systems offers a convenient framework for controller design, because the representation in the form (1.1) is relatively easy to construct compared to the regular or well-posed linear system settings, and because the controller (1.2) has an immediate interpretation as a PDE system. The abstract framework and our main results allow taking advantage of the sep-aration principle to reduce the controller design problem to the design of the stabilising feedback and output injection gains for the PDE model. The paper is organised as follows. In Section 2 we formulate background results on the well-posedness, stability and feedback for boundary control systems. Our main results on controller design for abstract systems are presented in Section 3. In Section 4 we apply our results in the stabilisation of PDE systems. 
+
+Notation. If X and Y are Banach spaces and A : D(A) ⊂ X → Y is a linear operator we denote by D(A), Ker( A), and Ran( A) the domain, the kernel, the and range of A, respectively. The space of bounded linear operators from X to Y is denoted by L(X, Y ) and we write L(X) for L(X, X ). If A :
+
+D(A) ⊂ X → X, then σ(A) and ρ(A) denote the spectrum and the resolvent set of A, respectively. The inner product on a Hilbert space is denoted by 
+
+⟨· , ·⟩ . For T ∈ L (X) on a Hilbert space X we define Re T = 12 (T + T ∗), and for c ≥ 0 we write T ≥ cI when T − cI ≥ 0. The growth bound of a strongly continuous semigroup T is denoted by ω0(T ). We denote f (x) ≲ g(x) if there exists M > 0 such that f (x) ≤ M g (x) for all parameters x. The truncation of a function f : I → X defined on an interval I ⊃ [0 , t ] to the interval [0 , t ] is denoted by Ptf : [0 , t ] → X. For β ∈ R we define C+ 
+
+> β
+
+= { λ ∈ C | Re λ > β }
+
+and H∞(C+ 
+
+> β
+
+; X) = { f : C+ 
+
+> β
+
+→ X | f analytic and sup Re λ>β ∥f (λ)∥ < ∞ } .4 M. FKIRINE AND L. PAUNONEN 
+
+2. Boundary Nodes 
+
+In this section we present background results for abstract boundary con-trol systems of the form (1.1) with a state space X, an input space U , and an output space Y . Our main assumption is that the operators of the system form a boundary node defined below. 
+
+Definition 2.1. The tuple ( B, A, C, Q, B i) is said to be a boundary node on the Hilbert spaces ( Ub, U, X, Y ) if the following hold. (i) A : D(A) ⊂ X → X, B ∈ L (D(A), U b), C ∈ L (D(A), Y ), Q ∈L(U, U b), and Bi ∈ L (U, X ). (ii) The restriction A = A|Ker( B) with domain D(A) = Ker( B) generates a strongly continuous semigroup on X.(iii) B has a bounded right-inverse, i.e., there exists Br ∈ L (Ub, D (A)) such that BB r = I.We define the transfer functions H : ρ(A) → L (U, X ) and P : ρ(A) →L(U, Y ) of the boundary node so that for λ ∈ ρ(A) and u ∈ U we have 
+
+H(λ)u := x and P (λ)u := Cx when x ∈ D(A) is the unique element such that ( λ − A)x = Biu and Bx = Qu . The existence and analyticity of the transfer functions follow from [28, Prop. 2.4]. We also note that H(λ) = 
+
+Hb(λ)Q + ( λ − A)−1Bi and P (λ) = Pb(λ)Q + C(λ − A)−1Bi, where Hb
+
+and Pb are the transfer functions of the boundary node ( B, A, C, I, 0) on (Ub, U b, X, Y ). We have H(λ) ∈ L (U, D (A)), BH(λ) = Q, P (λ) = CH(λ)and ( λ − A)H(λ) = Bi for λ ∈ ρ(A) by [28, Prop. 2.4]. 
+
+Definition 2.2. Let ( B, A, C, Q, B i) be a boundary node on ( Ub, U, X, Y ). A triple ( x, u, y ) is called a classical solution of (1.1) ( on [0 , ∞)) if 
+
+• x ∈ C1([0 , ∞); X) satisfies x(0) = x0, u ∈ C([0 , ∞); U ), and y ∈
+
+C([0 , ∞); Y )
+
+• x(t) ∈ D(A) and (1.1) hold for all t ≥ 0. A triple ( x, u, y ) is called a generalised solution of (1.1) ( on [0 , ∞)) if 
+
+• x ∈ C([0 , ∞); X) satisfies x(0) = x0, u ∈ L2loc (0 , ∞; U ), and y ∈
+
+L2loc (0 , ∞; Y )
+
+• there exist classical solutions ( xk, u k, y k), k ∈ N, of (1.1) on [0 , ∞)such that ( Pτ xk, Pτ uk, Pτ yk)⊤ → (Pτ x, Pτ u, Pτ y)⊤ for every τ > 0as k → ∞ in C([0 , τ ]; X) × L2(0 , τ ; U ) × L2(0 , τ ; Y ). In Section 3 we are interested in designing a controller which stabilises the original unstable system (1.1) in such a way that the closed-loop semigroup is either exponentially stable, strongly stable, or polynomially stable [3, 4]. A polynomially stable semigroup is also strongly stable by [3, Thm. 1.1]. 
+
+Definition 2.3. A strongly continuous semigroup T generated by A : D(A) ⊂
+
+X → X on a Hilbert space X is polynomially stable (with exponent α > 0) if 
+
+T is bounded, i.e., sup t≥0∥T (t)∥ < ∞, and if there exist M, t 0 > 0 such that 
+
+∥T (t)x∥ ≤ Mtα (∥Ax ∥ + ∥x∥) , t ≥ t0, x ∈ D(A).
+
+2.1. Well-Posedness of Boundary Nodes. When ( B, A, C, Q, B i) is a boundary node on ( Ub, U, X, Y ), we have from [25, Lem. 2.6] that for every 
+
+x0 ∈ D(A) and u ∈ C2([0 , τ ]; U ) satisfying Bx0 = Qu (0) the equation (1.1) DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 5
+
+has a unique classical solution ( x, u, y ). We use these solutions to define the 
+
+input map Φτ : C2 
+
+> ℓ
+
+([0 , τ ]; U ) → X, output map Ψτ : D(A) → L2(0 , τ ; Y ), and input-output map Fτ : C2 
+
+> ℓ
+
+([0 , τ ]; U ) → L2(0 , τ ; Y ), where τ > 0 and 
+
+C2 
+
+> ℓ
+
+([0 , τ ]; U ) := { f ∈ C2([0 , τ ]; U ) | u(0) = 0 }. More precisely, we de-fine Φ τ u = x(τ ) and Fτ u = Pτ y, where ( x, u, y ) is the classical solution of (1.1) corresponding to u ∈ C2 
+
+> ℓ
+
+([0 , τ ]; U ) and x0 = 0. Moreover, we define Ψτ x0 = Pτ y where ( x, u, y ) is the classical solution of (1.1) with u ≡ 0 and 
+
+x0 ∈ D(A). We define the well-posedness of a boundary node following [18, Def. 13.1.3] and [36]. 
+
+Definition 2.4. Let ( B, A, C, Q, B i) be a boundary node on ( Ub, U, X, Y ). 
+
+• The boundary node is (externally) well-posed if there exist τ > 0and Mτ > 0 such that for all x0 ∈ D(A) and u ∈ C2([0 , τ ]; U ) with 
+
+Bx0 = Qu (0) the classical solution ( x, u, y ) of (1.1) satisfies 
+
+∥x(τ )∥2 
+
+> X
+
++
+
+Z τ
+
+> 0
+
+∥y(t)∥2 
+
+> Y
+
+dt ≤ Mτ
+
+
+
+∥x0∥2 
+
+> X
+
++
+
+Z τ
+
+> 0
+
+∥u(t)∥2 
+
+> U
+
+dt 
+
+
+
+.
+
+• The boundary node has a well-posed input map if there exist τ > 0and Mτ > 0 such that ∥Φτ u∥ ≤ Mτ ∥u∥L2(0 ,τ ) for all u ∈ C2 
+
+> ℓ
+
+([0 , τ ]; U ). 
+
+• The boundary node has a well-posed output map if there exist τ > 0and Mτ > 0 such that ∥Ψτ x0∥L2(0 ,τ ) ≤ Mτ ∥x0∥X for all x0 ∈ D(A). By definition, a well-posed boundary node has a well-posed input map and a well-posed output map. The results in [25] and the theory of well-posed linear systems [36, 40] show that if one of the estimates in Definition 2.4 holds for some τ > 0, then it also holds for every τ > 0 (with a modified constant 
+
+Mτ > 0). If a boundary node has a well-posed input map, then Φ τ extend to operators Φ τ ∈ L (L2(0 , τ ; U ), X ), and if it has a well-posed output map, then Ψτ extend to operators Ψ τ ∈ L (X, L 2(0 , τ ; Y )). Finally, if the boundary node is well-posed, then Fτ extend to operators Fτ ∈ L (L2(0 , τ ; U ), L 2(0 , τ ; Y )). In the latter case the tuple ( T, Φ, Ψ, F) with Φ = (Φ τ )τ ≥0, Ψ = (Ψ τ )τ ≥0, and 
+
+F = ( Fτ )τ ≥0 is a well-posed linear system in the sense of [40]. 
+
+Proposition 2.5. Let (B, A, C, Q, B i) be a well-posed boundary node on 
+
+(Ub, U, X, Y ) and let (T, Φ, Ψ, F) be the associated well-posed linear system. If x0 ∈ D(A) and u ∈ H1
+
+> loc
+
+(0 , ∞; U ) satisfy Bx0 = Qu (0) , then (1.1) has a unique classical solution (x, u, y ) on [0 , ∞). This solution is defined by 
+
+x(t) = T (t)x0 + Φ tPtu, t ≥ 0(2.1a) 
+
+Pty = Ψ tx0 + FtPtu, t ≥ 0(2.1b) 
+
+and we have y ∈ H1
+
+> loc
+
+(0 , ∞; Y ). If x0 ∈ X and u ∈ L2
+
+> loc
+
+(0 , ∞; U ), then (1.1) 
+
+has a unique generalised solution (x, u, y ) on [0 , ∞) which is defined by (2.1) .Proof. By [25, Thm. 2.3] the boundary node ( B, A, C, Q, B i) defines a system node [36, Sec. 4.7] 
+
+S =
+
+AC
+
+  I
+
+B
+
+−1 I 00 Q
+
+
+
++
+
+0 Bi
+
+0 0
+
+
+
+(2.2) on the spaces ( U, X, Y ) with domain D(S) = { (x, u )⊤ ∈ D(A) × U | Bx =
+
+Qu }. The result [25, Thm. 2.3] and our assumption that the boundary node (B, A, C, Q, B i) is well-posed implies that S is well-posed in the sense of [36, 6 M. FKIRINE AND L. PAUNONEN 
+
+Def. 4.7.2] and its associated well-posed system is exactly Σ = ( T, Φ, Ψ, F). The claims follow from [40, Prop. 4.16 & 4.17] and the relationship between the boundary node and the system node S in [25, Thm. 2.3]. □
+
+Remark 2.6. If ( B, A, C, Q, B i) is a well-posed boundary node, then [25, Thm. 2.3] and the results in [40, Sec. 3 & 4] imply that for any ω > ω 0(T )its transfer functions H and P satisfy P ∈ H∞(C+ 
+
+> ω
+
+; L(U, Y )) and ∥H(λ)∥ ≤ 
+
+M1(Re λ − ω)−1/2 and ∥C(λ − A)−1∥ ≤ M2(Re λ − ω)−1/2 for some constants 
+
+M1, M 2 > 0 and for all λ ∈ C+ 
+
+> ω
+
+.
+
+Remark 2.7. If a system does not have boundary inputs, then in the bound-ary node ( B, A, C, Q, B i) we can let Ub = {0}, in which case B = 0 and 
+
+Q = 0. Then A = A|Ker( B) = A and the system (1.1) has the form ˙x(t) = Ax (t) + Biu(t), x(0) = x0
+
+y(t) = Cx(t).
+
+In this case the boundary node automatically has a well-posed input map. Analogously, if C ∈ L (X, Y ), then ( B, A, C, Q, B i) has a well-posed output map. More generally, the well-posedness of the output map means that C := 
+
+C|Ker( B) is an admissible observation operator for the semigroup generated by A [39, Sec. 4.3]. The next result can be used in proving well-posedness of a boundary node. 
+
+Lemma 2.8. Let (B, A, C, I, 0) be a boundary node on the Hilbert spaces 
+
+(U, U, X, U ) with transfer function P and let K ∈ L (U ) be such that Re K ≥
+
+cI for some c > 0. If 
+
+Re ⟨Ax, x ⟩ ≤ Re ⟨Bx, Cx⟩, x ∈ D(A),(2.3) 
+
+then A generates a contraction semigroup on X and the following hold. 
+
+(a) ( B, A, C, I, 0) is well-posed if and only if sup s∈R∥P (ω + is )∥ < ∞ for some ω > 0.
+
+(b) ( B + KC, A, C, I, 0) is a well-posed boundary node. 
+
+(c) ( I + KP (·)) −1 ∈ H∞(C+0 ; L(U )) .Proof. Condition (2.3) implies that A is dissipative, and thus the semi-group generated A is contractive. In (a), the “only if” part follows from Remark 2.6. Assume now that P ∈ H∞(C+ 
+
+> ω
+
+; L(U )) for some ω > 0. By [25, Thm. 2.3] the boundary node ( B, A, C, I, 0) defines a system node [36, Sec. 4.7] 
+
+S =
+
+AC
+
+  I
+
+B
+
+−1
+
+on the spaces ( U, X, U ) with domain D(S) = Ran(  I
+
+> B
+
+) = { (x, u )⊤ ∈
+
+D(A) × U | Bx = u }. The semigroup generator of S is exactly A and the transfer function of S coincides with P on C+0 . Moreover, the property (2.3) implies that for every ( x, u )⊤ ∈ D(S) we have Bx = u and  I
+
+> B
+
+−1[ xu ] = x
+
+and therefore (2.3) implies Re 
+
+ xu
+
+
+
+,
+
+I 00 −I
+
+
+
+S
+
+xu
+
+ 
+
+> X×U
+
+= Re ⟨x, Ax⟩X − Re ⟨u, Cx⟩U ≤ 0.DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 7
+
+Thus [38, Thm. 4.2] implies that S is impedance passive in the sense of [38, Def. 4.1]. Our boundedness assumption on P and [38, Thm. 5.1] imply that S
+
+is a well-posed system node in the sense of [38, Def. 2.6]. This together with the structure of the system node S implies that ( B, A, C, I, 0) is well-posed. The result in part (b) follows from [28, Prop. 2.6] and part (a). For part (c), let λ ∈ C+0 be arbitrary. We have Re P (λ) ≥ 0 by [28, Prop. 2.4(b)]. Since Re K ≥ cI with c > 0, K is boundedly invertible and Re K−1 ≥ c∥K∥−2I by [30, Lem. A.1(a)]. Thus Re( K−1 + P (λ)) ≥ c∥K∥−2I
+
+and [30, Lem. A.1(a)] implies that K−1 + P (λ) is boundedly invertible and 
+
+∥(K−1 + P (λ)) −1∥ ≤ ∥ K∥2/c . Since λ ∈ C+0 was arbitrary, the identity 
+
+I + KP (λ) = K(K−1 + P (λ)) implies the claim. □
+
+2.2. Feedback Theory for Boundary Nodes. In this section we inves-tigate well-posedness and stability of boundary nodes arising from feed-back. Our first result concerns the system (1.1) under output feedback 
+
+u(t) = Ky (t). 
+
+Proposition 2.9. Assume that (B, A, C, Q, B i) is a well-posed boundary node on the Hilbert spaces (Ub, U, X, Y ) with transfer function P . If K ∈L(Y, U ) and (I − KP (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) for some β ∈ R, then (B −
+
+QK C, A + BiKC, C, Q, B i) is a well-posed boundary node (Ub, X, Y, U ).Proof. The proof is based on the feedback theory of well-posed linear sys-tems [43]. Let H and P be the transfer functions of ( B, A, C, Q, B i) and de-fine AK = ( A + BiKC)|Ker( B−QK C) with domain D(AK ) = Ker( B − QK C). We can assume β > ω 0(T ), where T is the semigroup generated by A. We will first show that C+ 
+
+> β
+
+⊂ ρ(AK ) and that B − QK C has a bounded right inverse. For λ ∈ C+ 
+
+> β
+
+, I − KP (λ) (and thus also I − P (λ)K) is boundedly invertible by assumption and we can define 
+
+R(λ) = ( λ − A)−1 + H(λ)( I − KP (λ)) −1KC(λ − A)−1.
+
+A straightforward computation using the properties of boundary nodes and the transfer function H in [28, Prop. 2.4] can be used to verify that Ran( R(λ)) 
+
+⊂ D(AK ), and that ( λ − AK )R(λ) = I and R(λ)( λ − AK )x = x for all 
+
+x ∈ D(AK ). Thus λ ∈ ρ(AK ) and ( λ − AK )−1 = R(λ). Since λ ∈ C+ 
+
+> β
+
+was arbitrary, we have C+ 
+
+> β
+
+⊂ ρ(AK ). Moreover, if λ ∈ C+ 
+
+> β
+
+and Br ∈ L (Ub, D (A)) is a right inverse of B, then a direct computation using BH(λ) = Q shows that (B − QK C)( Br + H(λ)( I − KP (λ)) −1KCB r)= I − QK CB r + Q(I − KP (λ)) −1KCB r − QKP (λ)( I − KP (λ)) −1KCB r
+
+= I. 
+
+Thus Br + H(λ)( I − KP (λ)) −1KCB r ∈ L (Ub, D (A)) is a right inverse of 
+
+B − QK C, as required. Similarly as in the proof of Proposition 2.5, ( B, A, C, Q, B i) defines the sys-tem node S in (2.2) on the spaces ( U, X, Y ) with domain D(S) = { (x, u )⊤ ∈
+
+D(A) × U | Bx = Qu }. By [25, Thm. 2.3] the semigroup generator of S is exactly A, its output operator is C = C|D(A), and its input operator B sat-isfies H(λ) = ( λ − A)−1B for λ ∈ ρ(A) (here A is considered as its extension to X, see [39, Sec. 4.2] for details). The transfer function of S coincides with 8 M. FKIRINE AND L. PAUNONEN 
+
+P on the largest right half-plane of C contained in ρ(A). The result [25, Thm. 2.3] and our assumption that the boundary node ( B, A, C, Q, B i) is well-posed implies that S is well-posed in the sense of [36, Def. 4.7.2] and its associated well-posed system Σ = ( T, Φ, Ψ, F) is composed of the input, output, and input-output maps of the boundary node. Since ( I − KP (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )), we have from [40, Prop. 5.15] and [36, Thm. 7.1.8] that K is an admissible feedback operator for Σ in the sense of [36, Def. 7.1.1]. Because of this, there exists a well-posed linear system Σ K = ( T K , ΦK , ΨK , FK ) such that 
+
+TK (τ ) ΦKτ
+
+ΨKτ FKτ
+
+
+
+−
+
+T (τ ) Φτ
+
+Ψτ Fτ
+
+
+
+=
+
+T (τ ) Φτ
+
+Ψτ Fτ
+
+  0 00 K
+
+  TK (τ ) ΦKτ
+
+ΨKτ FKτ
+
+
+
+for all τ ≥ 0. We have from [36, Thm. 7.4.1 & Lem. 7.4.4(iii)] that the semigroup generator AK , the input operator BK , the output operator CK ,and the transfer function P K of the system node SK associated to Σ K satisfy 
+
+ (λ − AK )−1 (λ − AK )−1BK
+
+CK (λ − AK )−1 P K (λ)
+
+
+
+(2.4) =
+
+ R(λ) H(λ)( I − KP (λ)) −1
+
+(I − P (λ)K)−1C(λ − A)−1 P (λ)( I − KP (λ)) −1
+
+
+
+on some open right half-plane contained in ρ(A) ∩ ρ(AK ). The formula in particular implies that ( λ − AK )−1 = R(λ) = ( λ − AK )−1 for λ on some right half-plane, and thus AK = AK is the generator of the semigroup TK .This implies that ( B − QK C, A + BiKC, C, Q, B i) is a boundary node. De-noting the transfer functions of this boundary node by HK and PK , similar computations as in the proof of [28, Prop. 2.6] show that, for every λ ∈ C+ 
+
+> β
+
+,
+
+HK (λ) = H(λ)( I − KP (λ)) −1
+
+C(λ − AK )−1 = ( I − P (λ)K)−1C(λ − A)−1
+
+PK (λ) = P (λ)( I − KP (λ)) −1
+
+This and (2.4) imply that the system node associated to this boundary node via [25, Thm. 2.3] is SK . In particular, the input, output, and input-output maps of the boundary node ( B − QK C, A + BiKC, C, Q, B i) are exactly Φ Kτ ,ΨKτ , and FKτ , respectively. Since Σ K is a well-posed system, the boundary node ( B − QK C, A + BiKC, C, Q, B i) is well-posed. □
+
+The following result presents sufficient conditions for well-posedness of cascaded and coupled systems. 
+
+Proposition 2.10. Let (B1, A1, C1, Q 1, B i1) be a well-posed boundary node on (Ub1, U 1, X 1, Y 1) with transfer function P1 and let (B2, A2, C2, Q 2, B i2) be a well-posed boundary node on (Ub2, U 2, X 2, Y 2) with transfer function P2.
+
+(a) If K ∈ L (Y2, U 1), then 
+
+ B1 −Q1KC2
+
+0 B2
+
+
+
+,
+
+A1 Bi1KC2
+
+0 A2
+
+
+
+,
+
+C1 00 C2
+
+
+
+,
+
+Q1 00 Q2
+
+
+
+,
+
+Bi1 00 Bi2
+
+ 
+
+is a well-posed boundary node on (Ub1 ×Ub2, U 1 ×U2, X 1 ×X2, Y 1 ×Y2)DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 9
+
+(b) If K1 ∈ L (Y2, U 1) and K2 ∈ L (Y1, U 2) and if (I−K2P1(·)K1P2(·)) −1 ∈
+
+H∞(C+ 
+
+> β
+
+; L(U2)) for some β ∈ R, then 
+
+ B1 −Q1K1C2
+
+−Q2K2C1 B2
+
+
+
+,
+
+ A1 Bi1K1C2
+
+Bi2K2C1 A2
+
+
+
+,
+
+C1 00 C2
+
+
+
+,
+
+Q1 00 Q2
+
+
+
+,
+
+Bi1 00 Bi2
+
+ 
+
+is a well-posed boundary node on (Ub1 ×Ub2, U 1 ×U2, X 1 ×X2, Y 1 ×Y2).Proof. Part (a) follows from part (b) with the choices K1 = K and K2 = 0. To prove part (b), denote A1 = A1|Ker( B1), A2 = A2|Ker( B2), X = X1 × X2,
+
+U = U1 ×U2, Y = Y1 ×Y2, and Ub = Ub1 ×Ub2. Define Ao : D(Ao) ⊂ X → X,
+
+Bo ∈ L (D(Ao), U b), Co ∈ L (D(Ao), U ), and Bio ∈ L (U, X ) by D(Ao) = 
+
+D(A1) × D(A2), Ao = diag( A1, A2), Bio = diag( B1, B2), Co = diag( C1, C2), 
+
+Qo = diag( Q1, Q 2) and Bo = diag( Bi1, B i2). It is straightforward to verify that ( Bo, Ao, Co, Q, B io ) is a well-posed boundary node on ( Ub, U, X, Y ) and that its transfer function is P = diag( P1, P 2) defined on ρ(Ao|Ker( Bo)) = 
+
+ρ(A1) ∩ ρ(A2). Define Ko =
+
+h 0 K1 
+
+> K20
+
+i
+
+∈ L (Y, U ). If β ∈ R is such that ( I −
+
+K2P1(·)K1P2(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U1)), then for every λ ∈ C+ 
+
+> β
+
+the operator 
+
+I − KoP (λ) has a bounded inverse (I − KoP (λ)) −1 =
+
+I K 1P2(λ)0 I
+
+ I 00 ( I − K2P1(λ)K1P2(λ)) −1
+
+ I 0
+
+K2P1(λ) I
+
+
+
+.
+
+Remark 2.6 implies that ( I − K0P (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) and the claim in part (b) follows from Proposition 2.9. □
+
+The following proposition concerning the stability properties of a cascade of two boundary nodes ( B1, A1, C1, Q 1, B i1) and ( B2, A2, C2, Q 2, B i2) is the basis of our stability analysis in Section 3. In the result we denote by T1
+
+and T2 the semigroups generated by A1 = A1|Ker( B1) and A2 = A2|Ker( B2),respectively. Observability-type conditions for showing the polynomial sta-bility of the semigroups T1 and T2 have been presented in [2, 19, 5]. 
+
+Proposition 2.11. Assume that (B1, A1, C1, Q 1, B i1) is a boundary node with a well-posed input map on (Ub1, U 1, X 1, Y 1) and that (B2, A2, C2, Q 2, B i2)
+
+is a boundary node with a well-posed output map on (Ub2, U 2, X 2, Y 2). Then the operator defined by 
+
+A =
+
+A1 Bi1C2
+
+0 A2
+
+
+
+, D(A) = Ker 
+
+ B1 −Q1C2
+
+0 B2
+
+ 
+
+generates a strongly continuous semigroup T on X = X1 × X2. In addition, the following hold. 
+
+(a) If T1 and T2 are exponentially stable, then T is exponentially stable with growth bound ω0(T ) = max {ω0(T1), ω 0(T2)}.
+
+(b) If T1 is strongly stable and T2 is exponentially stable (or vice versa), then T is strongly stable. 
+
+(c) If T1 is polynomially stable with exponent α > 0 and T2 is expo-nentially stable (or vice versa), then T is polynomially stable with exponent α > 0.Finally, ρ(A) = ρ(A1) ∩ ρ(A2) and for every β > min {ω0(T1), ω 0(T2)} there exists M > 0 such that 
+
+∥(λ − A)−1∥ ≤ M (1 + max {∥ (λ − A1)−1∥, ∥(λ − A2)−1∥} )(2.5) 10 M. FKIRINE AND L. PAUNONEN 
+
+for all λ ∈ ρ(A) with Re λ ≥ β.
+
+Remark 2.12. By the choice of β, one of the resolvent norms on the right-hand side of (2.5) is uniformly bounded with respect to λ with Re λ ≥ β.This estimate implies that the claim regarding the polynomial stability of 
+
+T also immediately extends to non-uniform stability in the sense of [3, 33]. Indeed, if T1 is non-uniformly stable in the sense that T1 is bounded, iR ⊂
+
+ρ(A1), and ∥(is − A1)−1∥ ≤ N (s), s ∈ R, for some non-decreasing function 
+
+N : R → [1 , ∞) and if T2 is exponentially stable, then T is bounded (by part (b)), iR ⊂ ρ(A), and ∥(is − A)−1∥ ≲ N (s), s ∈ R. An analogous conclusion holds if the roles of T1 and T2 are reversed. The proof of Proposition 2.11 is based on the following lemma. This result is a variation of [29, Lem. 12] where the assumption of “infinite-time admissibility” is replaced with a stronger condition on the function u.
+
+Lemma 2.13. Let Φt ∈ L (L2(0 , t ; U ), X ), t ≥ 0, be well-posed input maps associated with a strongly stable semigroup T . If u ∈ L2
+
+> loc
+
+(0 , ∞; U ) satisfies 
+
+(∥u∥L2(k,k +1) )∞ 
+
+> k=0
+
+∈ ℓ1(C), then ΦtPtu → 0 as t → ∞ .Proof. Let u ∈ L2loc (0 , ∞; U ) be such that ( ∥u∥L2(k,k +1) )∞ 
+
+> k=0
+
+∈ ℓ1(C). Let 
+
+t > 1 be arbitrary and let t0 ∈ [0 , 1) and n ∈ N be such that t = t0 + n.Moreover, let m ∈ N0 be such that m < n . The composition property [39, Sec. 4.2] of the input maps Φ t implies that ΦtPtu = T (t − m)Φ mPmu + Φ t−mPt−mu(· + m).(2.6) The composition property further implies that the second term satisfies Φt−mPt−mu(· + m)= Φ t0 Pt0 u(· + n) + 
+
+> n−m−1
+
+X
+
+> k=0
+
+T (t + m − k − 1)Φ 1P1u(· + k + m).
+
+Since T is strongly stable, there exists M ≥ 1 such that ∥T (s)∥ ≤ M , s ≥ 0. Since ∥Φt0 ∥ ≤ ∥ Φ1∥ ≤ κ for some κ > 0 by [39, Sec. 4.2], we can estimate 
+
+∥Φt−mPt−mu(· + m)∥ ≤ κ∥u(· + n)∥L2(0 ,t 0) + M κ 
+
+> n−m−1
+
+X
+
+> k=0
+
+∥u(· + k + m)∥L2(0 ,1) 
+
+≤ M κ 
+
+> n
+
+X
+
+> k=m
+
+∥u(· + k)∥L2(0 ,1) ≤ M κ 
+
+> ∞
+
+X
+
+> k=m
+
+∥u∥L2(k,k +1) .
+
+Let ε > 0. Since ( ∥u∥L2(k,k +1) )∞ 
+
+> k=0
+
+∈ ℓ1(C) by assumption, there exists 
+
+m ∈ N such that the right-hand side is less than ε/ 2. Since Φ mPmu is a fixed element of X and T is strongly stable, there exists tε > m such that 
+
+∥T (t − m)Φ mPmu∥ < ε/ 2 for all t ≥ tε. Together with (2.6) these properties imply that ∥ΦtPtu∥ → 0 as t → ∞ as claimed. □
+
+Proof of Proposition 2.11 . The property that A generates a strongly con-tinuous semigroup on X follows from applying Proposition 2.10(a) to the well-posed boundary nodes ( B1, A1, 0, Q 1, B i1) (on ( Ub1, U 1, X 1, {0})) and (B2, A2, C2, 0, 0) (on ( Ub2, {0}, X 2, U 1)) with K1 = I ∈ L (U1). Let H1 be DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 11 
+
+the transfer function of ( B1, A1, 0, Q 1, B i1) and denote A1 = A1|Ker( B1),
+
+A2 = A2|Ker( B2), and C2 = C2|D(A2). For λ ∈ ρ(A1) ∩ ρ(A2) we define 
+
+R(λ) = 
+
+(λ − A1)−1 H1(λ)C2(λ − A2)−1
+
+0 (λ − A2)−1
+
+
+
+∈ L (X).(2.7) A straightforward computation using the properties of the boundary nodes and the transfer function H1 in [28, Prop. 2.4] can be used to verify that Ran( R(λ)) ⊂ D(A), and that ( λ − A)R(λ) = I and R(λ)( λ − A)x = x for all 
+
+x ∈ D(A). Thus λ ∈ ρ(A) and ( λ − A)−1 = R(λ). Conversely, if λ ∈ ρ(A), then for every y = ( y1, y 2)⊤ ∈ X there exists a unique x = ( x1, x 2)⊤ ∈ D(A)such that ( λ − A)x = y. Since A1 and A2 are closed operators, choosing 
+
+y1 = 0 and letting y2 ∈ X2 be arbitrary shows that λ ∈ ρ(A2), and choosing 
+
+y2 = 0 and letting y1 ∈ X1 be arbitrary shows that λ ∈ ρ(A1). Thus 
+
+ρ(A) = ρ(A1) ∩ ρ(A2). We will now estimate the resolvent of A. Let β > min {ω0(T1), ω 0(T2)}.Remark 2.6 shows that the norms ∥H1(λ)∥ and ∥C2(λ−A2)−1∥ are uniformly bounded with respect to λ ∈ C satisfying Re λ ≥ max {ω0(T1), ω 0(T2)}. The resolvent identity implies H1(λ) = 1 + δ(λ − A1)−1 H1(λ + δ) and C2(λ −
+
+A2)−1 = C2(λ + δ − A2)−1 1 + δ(λ − A2)−1 whenever λ, λ + δ ∈ ρ(A1) ∩
+
+ρ(A2), and thus ∥H1(λ)∥ ≲ 1 + ∥(λ − A1)−1∥ and ∥C2(λ − A2)−1∥ ≲ 1 + 
+
+∥(λ − A2)−1∥ for λ ∈ ρ(A1) ∩ ρ(A2) with Re λ ≥ β. This, the fact that either 
+
+∥(λ − A1)−1∥ or ∥(λ − A2)−1∥ is uniformly bounded with respect to λ ∈ C
+
+with Re λ ≥ β, and the form (2.7) of the resolvent operator ( λ − A)−1 imply the estimate for ∥(λ − A)−1∥ in the claim. To complete the proof, we will analyse the stability of the semigroup T .A direct computation using the feedback identity for Σ K in the proof of Proposition 2.9 shows that for every t ≥ 0 and x = ( x1, x 2)⊤ ∈ X we have 
+
+T (t)x = ( T1(t)x1 + Φ 1 
+
+> t
+
+Ψ2 
+
+> t
+
+x2, T 2(t)x2)⊤. If T1 is strongly stable and T2 is exponentially stable, there exists M, ω > 0 such that ∥T2(t)∥ ≤ M e −ωt ,
+
+t ≥ 0. For every x ∈ X2 the function u ∈ L2loc (0 , ∞; U1) defined so that 
+
+Ptu = Ψ 2 
+
+> t
+
+x for t ≥ 0 satisfies ∥u∥L2(k,k +1) = ∥Ψ21T2(k)x∥L2(0 ,1) ≲ e−ωk ,which implies ( ∥u∥L2(k,k +1) )∞ 
+
+> k=0
+
+∈ ℓ1(C). Thus Φ 1 
+
+> t
+
+Ψ2 
+
+> t
+
+x = Φ 1 
+
+> t
+
+Ptu → 0 as 
+
+t → ∞ by Lemma 2.13. Since x ∈ X2 was arbitrary, this implies that T
+
+is strongly stable. We will next analyse the case where T1 is exponentially stable and T2 is either strongly or exponentially stable. Let 0 > ω 1 > ω 0(T1)and M ≥ 1 be such that ∥T1(t)∥ ≤ M e ω1t, t ≥ 0 and let x ∈ X2. The composition properties of the input and output map [39, Sec. 4.2 & 4.3] imply that if t = t0 + n with t0 ∈ [0 , 1) and n ∈ N0, then Φ1 
+
+> t
+
+Ψ2 
+
+> t
+
+x = Φ 1 
+
+> t0
+
+Ψ2 
+
+> t0
+
+T2(n)x +
+
+> n−1
+
+X
+
+> k=0
+
+T1(t0 + n − 1 − k)Φ 11Ψ21T2(k)x. 
+
+If we denote ak = ∥T2(k)x∥, k ∈ N0, then ∥Φ1 
+
+> t0
+
+∥ ≤ ∥ Φ11∥ and ∥Ψ2 
+
+> t0
+
+∥ ≤ ∥ Ψ21∥
+
+(see [39, Sec. 4.2 & 4.3]) imply that 
+
+∥Φ1 
+
+> t
+
+Ψ2 
+
+> t
+
+x∥ ≲ an +
+
+> n−1
+
+X
+
+> k=0
+
+eω1(n−1−k)ak ≲
+
+> n
+
+X
+
+> k=0
+
+eω1(n−k)ak = ( a ∗ b)n,
+
+where a = ( ak)∞ 
+
+> k=0
+
+and b = ( eω1k)∞
+
+> k=0
+
+. If T2 is strongly stable, then ak → 0as k → ∞ and thus ( a ∗ b)n → 0 as n → ∞ . This implies that ∥Φ1 
+
+> t
+
+Ψ2 
+
+> t
+
+x∥ → 012 M. FKIRINE AND L. PAUNONEN 
+
+as t → ∞ , and since x ∈ X2 was arbitrary, T is strongly stable. On the other hand, if T2 is exponentially stable, for any 0 > ω 2 > ω 0(T2)and ω > max {ω0(T1), ω 0(T2)} we have ak ≲ eω2k∥x∥ and |(a ∗ b)n| ≲
+
+eωn ∥x∥. This implies that ∥Φ1 
+
+> t
+
+Ψ2 
+
+> t
+
+∥ ≲ eωt for t ≥ 0 and thus T is ex-ponentially stable. Since we clearly have ω0(T ) ≥ max {ω0(T1), ω 0(T2)},the fact that ω > max {ω0(T1), ω 0(T2)} was arbitrary shows that ω0(T ) = max {ω0(T1), ω 0(T2)}.Finally, consider the case where T1 is exponentially stable and T2 is poly-nomially stable with exponent α > 0. Since a polynomially stable semi-group is strongly stable, T is strongly stable and in particular uniformly bounded by part (b). Moreover, iR ⊂ ρ(A2) by [3, Thm. 1.1], and thus 
+
+iR ⊂ ρ(A1) ∩ ρ(A2) = ρ(A). Exponential stability of T1 and [4, Thm. 2.4] imply ∥(is − A1)−1∥ ≲ 1 and ∥(is − A2)−1∥ ≲ 1 + |s|1/α for s ∈ R. Thus (2.5) implies that ∥(is − A)−1∥ ≲ 1 + |s|1/α , and [4, Thm. 2.4] shows that T is polynomially stable with exponent α. A completely analogous argument ap-plies in the situation where T1 is polynomially stable with exponent α > 0and T2 is exponentially stable. □
+
+3. Stabilising Controller Design 
+
+In this section we design a stabilising controller for the system ˙x(t) = Ax(t) + Biu(t), x(0) = x0(3.1a) 
+
+Bx(t) = Qu (t)(3.1b) 
+
+y(t) = Cx(t),(3.1c) where ( B, A, C, Q, B i) is a boundary node on the Hilbert spaces ( Ub, U, X, Y ). Our observer-based controller has the form ˙ˆx(t) = ( A + BiK + LiC)ˆ x(t) + Biu1(t) + Li(u2(t) − y(t)) (3.2a) (B − QK − LC)ˆ x(t) = Qu 1(t) + L(u2(t) − y(t)) (3.2b) ˆy(t) = Cˆx(t)(3.2c) 
+
+u(t) = Kˆx(t) + u1(t)(3.2d) with initial state ˆ x(0) = ˆ x0. Here u and y are the input and output, respec-tively, of the system (3.1), u1 and u2 are external inputs, and ˆ y and u are the outputs of the controller (see Figure 1). System Controller u
+
+ˆy yu1
+
+u2 −
+
+Figure 1. The control scheme. The parameters of the controller are the state feedback gain K and the output injection gains L and Li. Roughly stated, these parameters should be chosen so that the operators AK := ( A + BiK)|Ker( B−QK) and AL := (A + LiC)|Ker( B−LC) generate stable semigroups. Our first main results in Theorem 3.1 and Proposition 3.2 provide conditions for the stability and well-posedness of the closed-loop system consisting of (3.1) and (3.2). Later DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 13 
+
+in Corollary 3.4 we also stabilise the closed-loop system under weaker as-sumptions and without external well-posedness. We note that the controller does not need to be associated to a boundary node when it is not connected to the system (3.1). We explain this aspect in detail after Proposition 3.2. If we define xe(t) = ( x(t), ˆx(t)) ⊤ ∈ Xe := X ×X, ue(t) = ( u1(t), u 2(t)) ⊤ ∈
+
+Ue := U ×Y , ye(t) = ( y(t), ˆy(t), u (t)) ⊤ ∈ Ye := Y ×Y ×U , and Ube := Ub ×Ub,then the closed-loop dynamics of (3.1) and (3.2) are described by ˙xe(t) = Aexe(t) + Bei ue(t), xe(0) = xe0(3.3a) 
+
+Bxe(t) = Qeue(t)(3.3b) 
+
+ye(t) = Cexe(t),(3.3c) where Ae : D(Ae) ⊂ Xe → Xe with domain D(Ae) = D(A) × D(A), Be ∈L(D(Ae), U be ), Ce ∈ L (D(Ae), Y e), Bei ∈ L (Ue, X ), and Qe ∈ L (Ue, U be ) are 
+
+Ae =
+
+ A BiK
+
+−LiC A + BiK + LiC
+
+
+
+, Be =
+
+ B −QK
+
+LC B − QK − LC
+
+
+
+,(3.4a) 
+
+Bei =
+
+Bi 0
+
+Bi Li
+
+
+
+, Qe =
+
+Q 0
+
+Q L
+
+
+
+, Ce =
+
+C 00 C
+
+0 K
+
+ .(3.4b) Our main result below introduces conditions under which the closed-loop system is associated with a well-posed system node ( Be, Ae, Ce, Q e, B ei ) on (Ube , U e, X e, Y e) and provides conditions for the stability of the semigroup Te
+
+generated by Ae := Ae|Ker( Be). Here we denote AK := ( A + BiK)|Ker( B−QK)
+
+and AL := ( A+LiC)|Ker( B−LC). Observability-type conditions for polynomial stability of the semigroups TK and TL have been presented in [2, 19, 5]. More-over, Lemma 2.8(c) can be used in verifying the conditions on the transfer functions PK and PL arising from collocated feedbacks and output injections. 
+
+Theorem 3.1. Let (B, A, C, Q, B i) be a boundary node on the Hilbert spaces 
+
+(Ub, U, X, Y ) and let K ∈ L (D(A), U ), L ∈ L (Y, U b), and Li ∈ L (Y, X ).Assume that (B, A,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node on 
+
+(Ub, U e, X, Y × U ) and that there exists β ∈ R such that 
+
+(I − PK (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) and (I − PL(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(Y )) ,
+
+where PK and PL are the transfer functions of (B, A, K, Q, B i) and (B, A, C,L, L i), respectively. Then (Be, Ae, Ce, Q e, B ei ) is a well-posed boundary node on (Ube , U e, X e, Y e) and AK and AL generate strongly continuous semigroups 
+
+TK and TL, respectively. Moreover, the following hold. 
+
+(a) If TK and TL are exponentially stable, then Te is exponentially stable with growth bound ω0(Te) = max {ω0(TK ), ω 0(TL)}.
+
+(b) If TK is strongly stable and TL is exponentially stable (or vice versa), then Te is strongly stable. 
+
+(c) If TK is polynomially stable with exponent α > 0 and TL is expo-nentially stable (or vice versa), then Te is polynomially stable with exponent α > 0.Proof. We will establish the boundary node property and well-posedness of (Be, Ae, Ce, Q e, B ei ) by applying output feedback of the form in Proposi-tion 2.9 to an open-loop boundary node ( Bo, Ao, Ce, Q e, B ei ) on the spaces 14 M. FKIRINE AND L. PAUNONEN 
+
+(Ube , U e, X e, Y e). Indeed, if we define Ao : D(Ao) ⊂ Xe → Xe, with domain 
+
+D(Ao) = D(A) × D(A), Bo ∈ L (D(Ao), U be ), and K ∈ L (Ye, U e) by 
+
+Ao =
+
+A 00 A
+
+
+
+, Bo =
+
+B 00 B
+
+
+
+, K =
+
+ 0 0 I
+
+−I I 0
+
+
+
+,
+
+then Ae = Ao + Bei KCe with D(Ae) = D(Ao) and Be = Bo − QeKCe. It is easy to check that ( Bo, Ao, Ce, Q e, B ei ) is a well-posed boundary node. To apply Proposition 2.9 we analyse I − KP o(λ), where Po is the transfer function of ( Bo, Ao, Ce, Q e, B ei ). For λ ∈ ρ(Ao|Ker( Bo)) = ρ(A) a direct computation shows that 
+
+I − KP o(λ) = I − K
+
+ P (λ) 0
+
+P (λ) PL(λ)
+
+PK (λ) PKL (λ)
+
+ =
+
+I − PK (λ) −PKL (λ)0 I − PL(λ)
+
+
+
+,
+
+where PKL is the transfer function of ( B, A, K, L, L i). If ω > max {ω0(T ), β },then PKL ∈ H∞(C+ 
+
+> ω
+
+; L(Y, U )) by Remark 2.6 and our assumptions im-ply ( I − KP o(·)) −1 ∈ H∞(C+ 
+
+> ω
+
+; L(Ue)). Proposition 2.9 thus shows that (Be, Ae, Ce, Q e, B ei ) is a well-posed boundary node on ( Ube , U e, X e, Y e). To study the stability of the semigroup Te, define S ∈ L (Xe) such that 
+
+Sx = ( x1, x 2 − x1)⊤ and S−1x = ( x1, x 1 + x2)⊤ for x = ( x1, x 2)⊤ ∈ Xe.Then ˜Ae = SA eS−1 with domain D( ˜Ae) = S(D(Ae)) is the generator of the semigroup ST eS−1 and the stability properties of Te and ST eS−1 coincide. For ( x1, x 2)⊤ ∈ D(A) × D(A) we have x = ( x1, x 2)⊤ ∈ D( ˜Ae) if and only if 
+
+S−1x = ( x1, x 1 + x2)⊤ ∈ D(Ae) = Ker( Be)
+
+⇔
+
+(
+
+Bx1 − QK(x1 + x2) = 0 
+
+LCx1 + ( B − QK − LC)( x1 + x2) = 0 
+
+⇔
+
+(
+
+(B − QK)x1 − QKx2 = 0 (B − LC)x2 = 0 .
+
+For ( x1, x 2)⊤ ∈ D( ˜Ae) a direct computation shows that ˜Ae
+
+x1
+
+x2
+
+
+
+= SAe
+
+ x1
+
+x1 + x2
+
+
+
+=
+
+(A + BiK)x1 + BiKx2
+
+(A + LiC)x2
+
+
+
+.
+
+We will use Proposition 2.11 in the analysis of ˜Ae. Since ( I − PK (·)) −1 ∈
+
+H∞(C+ 
+
+> β
+
+; L(U )) and since ( B, A, K, Q, B i) is a well-posed boundary node, Proposition 2.9 implies that ( B − QK, A + BiK, K, Q, B i) is a well-posed boundary node (and it in particular has a well-posed input map). More-over, ( B, A,  CK
+
+, L, L i) is a well-posed boundary node with transfer function h PL
+
+> PKL
+
+i
+
+. We have I − I, 0 h PL
+
+> PKL
+
+i
+
+= I − PL and thus our assumption (I − PL(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(Y )) and Proposition 2.9 imply that ( B − LC, A +
+
+LiC,  CK
+
+, L, L i) is a well-posed boundary node (which has a well-posed out-put map). These properties in particular imply that AK and AL generate strongly continuous semigroups and the claims regarding the stability of Te
+
+follow from the structure of ˜Ae and Proposition 2.11. □
+
+Polynomial stability of both TK and TL leads to polynomial closed-loop stability for a class of systems with collocated inputs and outputs. DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 15 
+
+Proposition 3.2. Assume that (B, A, C, I, 0) is a well-posed boundary node on the Hilbert spaces (Ub, U, X, U ) and that Re ⟨Ax, x ⟩X ≤ Re ⟨Bx, Cx⟩U ,
+
+x ∈ D(A). If we choose K = −KC, K ∈ L (U ), L ∈ L (U ), and Li = 0 so that 
+
+Re K ≥ c1I and − Re L ≥ c2I for some c1, c 2 > 0, then (Be, Ae, Ce, Q e, B ei )
+
+is a well-posed boundary node on (Ube , U e, X e, Y e) and AK and AL generate strongly continuous semigroups TK and TL, respectively. If TK and TL are polynomially stable with exponents αK > 0 and αL > 0, respectively, then 
+
+Te generated by Ae = Ae|Ker( Be) is polynomially stable with exponent α =min {αK , α L}.Proof. Denote the transfer function of ( B, A, C, I, 0) by P0. The bound-ary node ( B, A,  CK
+
+, [I, L ], [0 , 0]) is well-posed, and the transfer functions 
+
+PK and PL in Theorem 3.1 satisfy PK (·) = −KP 0(·) and PL(·) = P0(·)L.Lemma 2.8(c) and Theorem 3.1 imply that ( Be, Ae, Ce, Q e, B ei ) is a well-posed boundary node on ( Ube , U e, X e, Y e) and AK and AL generate strongly continuous semigroups. To analyse the stability of Te generated by Ae, we denote by Φ Kt , t ≥ 0, the input maps of ( B − K, A, C, I, 0) and by Ψ Lt , t ≥ 0, the output maps of ( B−LC, A, K, L, 0). The proof of Proposition 2.9 and [17, Thm. 2.5] (see also [38, Cor. 6.1]) imply that ∥ΦKt ∥ and ∥ΨLt ∥ are uniformly bounded with respect to t ≥ 0. If ˜Ae is as in the proof of Theorem 3.1, then as in the proof of Proposition 2.11 the semigroup ˜Te generated by ˜Ae has the form ˜Te(t)x = ( TK (t)x1 + Φ Kt ΨLt x2, T L(t)x2)⊤, ( x1, x 2)⊤ ∈ Xe, t ≥ 0. Since 
+
+TK and TL are strongly stable, [36, Thm. 8.1.6(a)] implies that for every 
+
+x ∈ X the function u : [0 , ∞) → U defined by Ptu = Ψ Lt x, t ≥ 0, satisfies 
+
+u ∈ L2(0 , ∞; U ) and Φ Kt ΨLt x → 0 as t → ∞ . Thus ˜Te is strongly stable and bounded. The proof of Proposition 2.11 shows iR ⊂ ρ( ˜Ae) and (is − ˜Ae)−1 =
+
+(is − AK )−1 HK (is )K(is − AL)−1
+
+0 (is − AL)−1
+
+
+
+, s ∈ R,
+
+where HK is the transfer function of ( B − K, A, C, I, 0). We have from [28, Prop. 2.6] that ∥HK (is )∥ ≲ ∥(is − AK )−1∥1/2 and ∥K(is − AL)−1∥ ≲ ∥(is −
+
+AL)−1∥1/2. This and the structure of ( is − ˜Ae)−1 imply that ∥(is − ˜Ae)−1∥ ≲
+
+1+ |s|1/α for α = min {αK , α L}. Thus ˜Te is polynomially stable with exponent 
+
+α by [4, Thm. 2.4], and by similarity the same is true for Te. □
+
+As mentioned above, the controller (3.2) does not need to have well-defined dynamics when disconnected from the system (3.1). In particular, the re-striction of A + BiK + LiC to Ker( B − QK − LiC) is not required to generate a strongly continuous semigroup on X. Instead, we consider (3.2) as a con-troller with an internal loop in the sense of [44, 10, 27]. In this setting, the controller is considered to be equipped with two inputs uc1, and uc2 and two outputs ˆ y and yc so that ˙ˆx(t) = Aˆx(t) + Biuc1(t) + Li(Cˆx(t) + uc2(t)) , ˆx(0) = ˆ x0(3.5a) 
+
+Bˆx(t) = Qu c1(t) + L(Cˆx(t) + uc2(t)) (3.5b) ˆy(t) = Cˆx(t)(3.5c) 
+
+yc(t) = Kˆx(t).(3.5d) The system (3.1) and the controller (3.5) are connected in two steps: 16 M. FKIRINE AND L. PAUNONEN 
+
+1. We connect uc2(t) = −y(t) + u2(t), where u2 is an external input, and set uc1(t) = u(t)2. We connect u(t) = yc(t) + u1(t) in the system and the controller to arrive at the final closed-loop system in Figure 1. The following result shows that under the assumptions of Theorem 3.1 the controller (3.5) and the system in Step 1 are associated with well-posed boundary nodes. 
+
+Proposition 3.3. Let the assumptions of Theorem 3.1 hold. The con-troller (3.5) is associated with a well-posed boundary node (B − LC, A +
+
+LiC,  CK
+
+, [Q, L ], [Bi, L i]) on (Ub, U e, X, Y ×U ). Moreover, the composite sys-tem consisting of (3.1) and (3.5) with the connections uc2(t) = −y(t) + u2(t)
+
+and uc1(t) = u(t) defines a well-posed boundary node on (Ube , U e, X e, Y e) with input (u, u 2)⊤ and output (y, ˆy, y c)⊤.Proof. Denote the transfer function of the boundary node ( B, A, K, L, L i)by PKL . Since ( B, A,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node by assumption and since I −
+
+h 0 0  
+
+> I0
+
+ih P PL 
+
+> PKPKL
+
+i
+
+=
+
+h I 0
+
+> −P I −PL
+
+i
+
+, our assumption ( I −
+
+PL(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(Y )), Remark 2.6, and Proposition 2.9 imply that ( B−
+
+LC, A + LiC,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node. If we define 
+
+x0(t) = ( x(t), ˆx(t)) ⊤, u0(t) = ( u(t), u 2(t)) ⊤, and y0(t) = ( y(t), ˆy(t), y c(t)) ⊤,then the system consisting of (3.1) and (3.5) on Xe has the form ˙x0(t) = A1x0(t) + Bei u0(t)
+
+B1x0(t) = Qeu0(t)
+
+y0(t) = Cex0(t),
+
+where A1 : D(A1) ⊂ Xe → Xe with domain D(A1) = D(A) × D(A) and 
+
+B1 ∈ L (D(A1), U be ) are defined by 
+
+A1 =
+
+ A 0
+
+−LiC A + LiC
+
+
+
+, B1 =
+
+ B 0
+
+LC B − LC
+
+
+
+and where Bei , Qe, and Ce are as in (3.4b). If we also let Ao, Bo and Po be as in the proof of Theorem 3.1 and define K =  0 0 0  
+
+> −I I 0
+
+, then ( Bo, Ao, Ce, Q e, B ei )is again a well-posed boundary node and A1 = Ao + Bei KCe and B1 =
+
+Bo − QeKCe. For λ ∈ ρ(A) = ρ(Ao|Ker( Bo)) we have 
+
+I − KP o(λ) = I − K
+
+ P (λ) 0
+
+P (λ) PL(λ)
+
+PK (λ) PKL (λ)
+
+ =
+
+I 00 I − PL(λ)
+
+
+
+.
+
+Thus ( I − KP o(·)) −1 ∈ H∞(C+ 
+
+> ω
+
+; L(Ue)) and Proposition 2.9 shows that (B1, A1, Ce, Q e, B ei ) is a well-posed boundary node on ( Ube , U e, X e, Y e). □
+
+If we do not require external well-posedness of the closed-loop system, it is possible to achieve the semigroup property and stability of the closed-loop system under strictly weaker assumptions than in Theorem 3.1. In this situation we consider the closed-loop system consisting of (3.1) and (3.2) with u1 ≡ 0 and u2 ≡ 0 and without any outputs. The dynamics of the DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 17 
+
+closed-loop state xe(t) = ( x(t), ˆx(t)) ⊤ ∈ Xe are then described by ˙xe(t) = Aexe(t), xe(0) = xe0
+
+Bxe(t) = 0 ,
+
+where Ae := Ae|Ker( Be). The following result presents conditions under which 
+
+Ae generates an exponential, strong, or polynomially stable semigroup. We denote the semigroups generated by AK and AL by TK and TL, respectively. 
+
+Corollary 3.4. Let (B, A, C, Q, B i) be a boundary node on the Hilbert spaces 
+
+(Ub, U, X, Y ). Let K ∈ L (D(A), U ), L ∈ L (Y, U b), and Li ∈ L (Y, X ) be such that (B − QK, A + BiK, C, Q, B i) is a boundary node with a well-posed input map and (B − LC, A + LiC, K, Q, B i) is a boundary node with a well-posed output map. Then Ae generates a strongly continuous semigroup Te on Xe
+
+and the following hold. 
+
+(a) If TK and TL are exponentially stable, then Te is exponentially stable with growth bound ω0(Te) = max {ω0(TK ), ω 0(TL)}.
+
+(b) If TK is strongly stable and TL is exponentially stable (or vice versa), then Te is strongly stable. 
+
+(c) If TK is polynomially stable with exponent α > 0 and TL is expo-nentially stable (or vice versa), then Te is polynomially stable with exponent α > 0.Proof. Let S, S −1 ∈ L (Xe) be as in the proof of Theorem 3.1. The operator 
+
+Ae generates a strongly continuous semigroup if and only if ˜Ae = SA eS−1
+
+with domain D( ˜Ae) = S(D(Ae)) generates a semigroup and the stability properties of the two semigroups coincide. The computations in the proof of Theorem 3.1 show that ˜Ae =
+
+A + BiK BiK
+
+0 A + LiC
+
+
+
+, D( ˜Ae) = Ker 
+
+ B − QK −QK
+
+0 B − LC
+
+ 
+
+.
+
+The claims therefore follow from our assumptions and Proposition 2.11. □
+
+Remark 3.5. Polynomial closed-loop stability generalises immediately to non-uniform stability with decay rates described by general resolvent bounds on iR. The proofs of Theorem 3.1 and Corollary 3.4 with Remark 2.12 imply that if TK is exponentially stable and TL is strongly stable so that 
+
+iR ⊂ ρ(AL) (or vice versa), the closed-loop resolvent satisfies ∥(is −Ae)−1∥ ≲
+
+1 + max {∥ (is − AK )−1∥, ∥(is − AL)−1∥} , s ∈ R. This leads to decay rates of the classical closed-loop solutions via [3, 33]. As the proof shows, this same estimate also holds under the assumptions of Proposition 3.2 in the case where TK and TL are strongly stable so that iR ⊂ ρ(AK ) and iR ⊂ ρ(AL). 4. Stabilisation of PDE Systems 
+
+4.1. A Two-Dimensional Wave Equation. In this example we consider a wave equation on the square Ω = [0 , 1] ×[0 , 1]. The wave profile is controlled over the subdomain Ω c = [1 /4, 3/4] × [1 /4, 3/4], and the observation is taken over the rest of the domain, Ω o = Ω \ Ωc. The system is defined as 
+
+wtt (ξ, t ) = ∆ w(ξ, t ) + χΩc (ξ)u(ξ, t ), ξ ∈ Ω, t > 0(4.1a) 
+
+w(ξ, t ) = 0 , ξ ∈ ∂Ω, t > 0(4.1b) 
+
+y(t) = wt(·, t )|Ωo t > 0(4.1c) 18 M. FKIRINE AND L. PAUNONEN 
+
+with initial conditions w(·, 0) = w0 ∈ H10 (Ω) and wt(·, 0) = w1 ∈ L2(Ω), where χΩc is the characteristic function of Ω c. The wave equation can be re-cast as a control system of the form (1.1) with state x(t) = ( w(·, t ), w t(·, t )) ⊤
+
+on X = H10 (Ω) × L2(Ω) with norm ∥(x1, x 2)⊤∥2 
+
+> X
+
+= ∥∇ x1∥2 
+
+> L2
+
++ ∥x2∥2 
+
+> L2
+
+, and with U = L2(Ω c) and Y = L2(Ω o). Since the wave equation does not have boundary inputs, we let Ub = {0}, B = 0, and Q = 0. Moreover, we de-fine A = A =  0 I
+
+> ∆ 0
+
+ with D(A) = ( H10 (Ω) ∩ H2(Ω)) × H10 (Ω) and define 
+
+Bi ∈ L (U, X ) and C ∈ L (X, Y ) so that Biu = (0 , χ Ωc u)⊤, u ∈ U , and 
+
+Cx = x2|Ωo for x = ( x1, x 2)⊤ ∈ X. The controller in the following result stabilises the wave equation. Since the control region Ω c does not satisfy the Geometric Control Condition, exponential stabilisation is not possible. 
+
+Proposition 4.1. The observer based controller 
+
+ˆwtt (ξ, t ) = ∆ ˆ w(ξ, t ) − χΩc (ξ) ˆ wt(ξ, t ) − χΩo (ξ)( ˆ wt(ξ, t ) − wt(ξ, t )) , ξ ∈ Ωˆw(ξ, t ) = 0 , ξ ∈ ∂Ω
+
+u(t) = − ˆwt(·, t )|Ωc
+
+with initial conditions ˆw(·, 0) ∈ H10 (Ω) and ˆwt(·, 0) ∈ L2(Ω) stabilises the wave equation (4.1) in such a way that the closed-loop semigroup is polyno-mially stable with exponent α = 1 /2.Proof. The controller has the form (3.2) with u1 ≡ 0 and u2 ≡ 0, with 
+
+L = 0, and with K ∈ L (X, U ) and Li ∈ L (Y, X ) defined by Kx = −x2|Ωc ,
+
+x = ( x1, x 2)⊤ ∈ X, and Liy = (0 , −χΩo y)⊤, y ∈ Y . In particular, K = −B∗
+
+> i
+
+and Li = −C∗. We have from [2, Thm. 2.3 & p. 165] that the semigroup TK
+
+is polynomially stable with exponent α = 1 /2. Moreover, the pair ( C, A ) is exactly observable (in some time τ > 0) by [39, Thm. 7.4.1], and therefore TL
+
+generated by AL = A+LiC = A−C∗C is exponentially stable by [5, Thm. 3.2 & p. 1104]. Since B = 0, C ∈ L (X, Y ) and K ∈ L (X, U ), ( B − QK, A +
+
+BiK, C, Q, B i) and ( B−LC, A+LiC, K, Q, B i) are well-posed boundary nodes and the claim follows from Corollary 3.4. □
+
+Remark 4.2. The geometry of the spatial domain has a direct effect on the stabilisation of the wave equation (4.1). For instance, we may let Ω be the unit disk Ω = B(0 , 1) and define the control and observation regions as Ω c = B(0 , 1/2) and Ω o = Ω \ Ωc. Then the pair ( C, A ) is again exactly observable and ( A, B i) is only approximately controllable since Ω c does not satisfy the Geometric Control Condition. The choices L = 0 and Li = −C∗
+
+lead to an exponentially stable TL by [39, Thm. 7.4.1]. With the choice K =
+
+−B∗ 
+
+> i
+
+∈ L (X, U ) the semigroup TK is non-uniformly stable and its resolvent is exponentially bounded on iR by [22, Thm. 1]. By Proposition 2.11 and the proof of Theorem 3.1 the closed-loop resolvent has an exponential growth bound on the imaginary axis, and therefore the classical solutions of the closed-loop system decay with logarithmic rates as t → ∞ by [3, Thm. 1.5]. DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 19 
+
+4.2. A One-Dimensional Wave Equation. We consider the stabilisation of the undamped wave equation on the interval (0 , 1), 
+
+wtt (ξ, t ) = wξξ (ξ, t ), ξ ∈ (0 , 1) , t > 0(4.2a) 
+
+−wξ(0 , t ) = u(t), wξ(1 , t ) = 0 t > 0(4.2b) 
+
+y(t) = 
+
+ w(1 , t )
+
+wt(1 , t )
+
+
+
+t > 0(4.2c) with initial conditions w(·, 0) = w0 ∈ H1(0 , 1) and wt(·, 0) = w1 ∈ L2(0 , 1). The two Neumann boundary conditions lead to linearly growing solutions of the uncontrolled equation. Moreover, the system cannot be stabilised with static output feedback because its input and output are located at the opposite ends of the spatial interval. Our main result below introduces an observer-based stabilising controller. 
+
+Proposition 4.3. For every ℓb > 0 there exists ℓ∗ 
+
+> i
+
+> 0 such that if κ0, κ 1, > 0
+
+and 0 < ℓ i ≤ ℓ∗ 
+
+> i
+
+, then the observer-based controller 
+
+ˆwtt (ξ, t ) = ˆ wξξ (ξ, t ) − ℓi( ˆ w(1 , t ) − w(1 , t ) + u2(t)) (4.3a) 
+
+− ˆwξ(0 , t ) = u(t), ˆwξ(1 , t ) = −ℓb( ˆ wt(1 , t ) − wt(1 , t ) + u3(t)) (4.3b) 
+
+u(t) = −κ0 ˆw(0 , t ) − κ1 ˆwt(0 , t ) − κ0κ1
+
+Z 10
+
+ˆwt(ξ, t )dξ + u1(t)(4.3c) 
+
+with initial conditions ˆw(·, 0) = ˆ w0 ∈ H1(0 , 1) and ˆwt(·, 0) = ˆ w1 ∈ L2(0 , 1) 
+
+stabilises the wave equation (4.2) exponentially. The closed-loop system with input (u1(t), u 2(t), u 3(t)) ⊤ and output (wt(0 , t ), w t(1 , t ), ˆwt(0 , t )) ⊤ is exter-nally well-posed in the sense that for every t > 0 there exists Mt > 0 such that the generalised solutions of the closed-loop system satisfy 
+
+w(·, t )ˆw(·, t )
+
+ 2
+
+> H1
+
++
+
+wt(·, t )ˆwt(·, t )
+
+ 2
+
+> L2
+
++
+
+wt(0 , ·)
+
+wt(1 , ·)ˆwt(0 , ·)
+
+
+
+> 2
+> L2(0 ,t )
+
+≤ Mt
+
+w0
+
+ˆw0
+
+ 2
+
+> H1
+
++
+
+w1
+
+ˆw1
+
+ 2
+
+> L2
+
++
+
+u1
+
+u2
+
+u3
+
+
+
+> 2
+> L2(0 ,t )
+
+ .
+
+Proof. The natural state space of the wave equation is H1(0 , 1) × L2(0 , 1). However, to deal with the generalised eigenvector associated to the spectral point 0, we choose the states x(t) and ˆ x(t) of the system and the con-troller as x(t) = ( R 10 w(ξ, t )dξ, w (·, t ) − R 10 w(ξ, t )dξ, w t(·, t )) ⊤ and ˆ x(t) = (R 10 ˆw(ξ, t )dξ, ˆw(·, t ) − R 10 ˆw(ξ, t )dξ, ˆwt(·, t )) ⊤ on the space X = C × V ×
+
+L2(0 , 1) with V = { f ∈ H1(0 , 1) | R 10 f (ξ)dξ = 0 }. We equip X with the norm ∥(x1, x 2, x 3)⊤∥2 
+
+> X
+
+= |x1|2 + ∥x′
+
+> 2
+
+∥2 
+
+> L2(0 ,1)
+
++ ∥x3∥2
+
+> L2(0 ,1)
+
+. We can re-cast the closed-loop system consisting of (4.2) and (4.3) with input ue(t) = (u1(t), u 2(t), u 3(t)) ⊤ and output ye(t) = ( wt(0 , t ), w t(1 , t ), ˆwt(0 , t )) ⊤ as a boundary control system of the form (3.3) on Xe = X × X, U = C, Y = C2,and Ub = C2 with operators of the form (3.4) if we define A : D(A) ⊂ X →
+
+X, B ∈ L (D(A), U b), C ∈ L (D(A), Y ), K ∈ L (D(A), U ), Q ∈ L (U, U b), 20 M. FKIRINE AND L. PAUNONEN 
+
+Bi ∈ L (U, X ), L ∈ L (Y, U b), and Li ∈ L (Y, X ) by 
+
+Ax =
+
+R 10 x3(ξ)dξ x3 − R 10 x3(ξ)dξ x′′ 
+
+> 2
+
+ , Bx =
+
+−x′
+
+> 2
+
+(0) 
+
+x′
+
+> 2
+
+(1) 
+
+
+
+, Li =
+
+ 0 00 0
+
+−ℓi1 0
+
+
+
+Cx =
+
+x1 + x2(1) 
+
+x3(1) 
+
+
+
+, Kx = −κ0(x1 + x2(0)) − κ1x3(0) − κ0κ1⟨x3, 1⟩L2
+
+for x = ( x1, x 2, x 3)⊤ ∈ D(A) := C × (H2(0 , 1) ∩ V ) × H1(0 , 1) and Bi =0 ∈ L (U, X ), Q = [ 10 ], and L =  0 00 −ℓb
+
+. Employing an invertible change of coordinates ( x1, x 2, x 3)⊤ → (x2 + x1 · 1, x 3)⊤ and equivalence of norms, we have from [8, Ex. 3.2.17] that A = A|Ker( B) generates a semigroup T on X
+
+with growth bound ω0(T ) = 0. The same equivalence of the norms shows that the claims of our result follow from Theorem 3.1 once we show that (B, A,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node on ( Ub, U e, X, Y e), that ( I − PK (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) and ( I − PL(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(Y )) for some β > 0, and that the semigroups generated by AK := A|Ker( B−QK) and 
+
+AL := ( A + LiC)|Ker( B−LC) are exponentially stable. We begin by showing that ( B, A, Cb, I, 0) is a well-posed boundary node on (Ub, U b, X, U b), where Cb ∈ L (D(A), U b) is defined by Cbx = ( x3(0) , x 3(1)) ⊤
+
+for x = ( x1, x 2, x 3)⊤ ∈ D(A). We have X = C × X0 with X0 = V × L2(0 , 1) and with norm ∥(x2, x 3)⊤∥2 
+
+> X0
+
+= ∥x′
+
+> 2
+
+∥2 
+
+> L2(0 ,1)
+
++ ∥x3∥2
+
+> L2(0 ,1)
+
+, and 
+
+A =
+
+0 C1
+
+0 A0
+
+
+
+, B = 0, B0
+
+ , and Cb = 0, C0
+
+ ,
+
+with A0 : D(A0) ⊂ X0 → X0, B0, C0 ∈ L (D(A0), U b), and C1 ∈ L (X0, C)defined by C1x = R 10 x3(ξ)dξ ,
+
+A0x =
+
+x3 − 1 R 10 x3(ξ)dξ x′′ 
+
+> 2
+
+
+
+, B0x =
+
+−x′
+
+> 2
+
+(0) 
+
+x′
+
+> 2
+
+(1) 
+
+
+
+, and C0x =
+
+x3(0) 
+
+x3(1) 
+
+
+
+for x = ( x2, x 3)⊤ ∈ D(A0) := ( H2(0 , 1) ∩ V ) × H1(0 , 1). To show that (B0, A0, C0, I, 0) is a well-posed boundary node on ( C2, C2, X 0, C2) we note that for x = ( x2, x 3)⊤ ∈ D(A0) integration by parts yields Re ⟨A0x, x ⟩X0 = Re ⟨x′
+
+> 3
+
+, x ′
+
+> 2
+
+⟩L2 + ⟨x′′  
+
+> 2
+
+, x 3⟩L2
+
+ = Re 
+
+h
+
+x′
+
+> 2
+
+(1) x3(1) − x′
+
+> 2
+
+(0) x3(0) 
+
+i
+
+= Re ⟨B0x, C0x⟩C2 .
+
+Since A = A|Ker( B) generates a semigroup on X, the structures of A and B
+
+imply that A0 := A0|Ker( B0) satisfies Ran( λ−A0) = X0 for some λ > 0. Thus 
+
+A0 is maximally dissipative, and it generates a contraction semigroup on 
+
+X0 by the Lumer–Phillips theorem. Moreover, B0 is clearly surjective, and since its codomain is finite-dimensional, B0 has a bounded right inverse Br 
+
+> 0
+
+∈L(Ub, D (A0)). Thus ( B0, A0, C0, I, 0) is a boundary node on ( Ub, U b, X 0, U b). We will show that its transfer function P0 satisfies sup s∈R∥P0(ω + is )∥ < ∞
+
+for some ω > 0, which will imply well-posedness by Lemma 2.8(a). For 
+
+λ ∈ C+0 and u = ( u1, u 2)⊤ ∈ C2 we have P0(λ)u = C0x, where x ∈ D(A0) is such that ( λ − A0)x = 0 and B0x = u. Denoting x = ( x2, x 3)⊤ ∈ X0 and DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 21 
+
+u = ( u1, u 2)⊤ ∈ C2 and defining z2 = x2 + λ−1⟨1, x 3⟩1 ∈ H2(0 , 1) we have 
+
+(
+
+(λ − A0)x = 0 
+
+B0x = u ⇔
+
+
+
+λz 2 − x3 = 0 
+
+λx 3 − z′′  
+
+> 2
+
+= 0 
+
+−z′
+
+> 2
+
+(0) = u1, z′
+
+> 2
+
+(1) = u2.
+
+Solving the last system of equations for ( z2, x 3) ∈ H2(0 , 1) × H1(0 , 1) and recalling that P0(λ)u = ( x3(0) , x 3(1)) ⊤ shows that 
+
+P0(λ) = 
+
+" 1tanh( λ)1sinh( λ)1sinh( λ)1tanh( λ)
+
+#
+
+.
+
+Since sup s∈R∥P0(ω + is )∥ < ∞ for ω > 0, ( B0, A0, C0, I, 0) is well-posed by Lemma 2.8(a). Moreover, since C1 ∈ L (X0, C), Proposition 2.10(a) implies that ( B, A, Cb, I, 0) is a well-posed boundary node on ( Ub, U b, X, Y e). Finally, 
+
+C =
+
+ C2
+
+[0 , 1] Cb
+
+
+
+and K = [ −κ1, 0] Cb + K1,
+
+where C2 ∈ L (X, C) and K1 ∈ L (X, U ) are defined by C2x = x1 + x2(1) and 
+
+K1x = −κ0(x1 + x2(0)) − κ0κ1⟨x3, 1⟩L2 for x = ( x1, x 2, x 3)⊤ ∈ X. These properties imply that ( B, A,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node on ( Ub, U e, X, Y e). We will next analyse the transfer functions PK and PL in Theorem 3.1. If we denote the transfer functions of ( B, A, Cb, I, 0) by Hb and Pb, then a direct computation shows that Pb(λ) = P0(λ), PK (λ) = [ −κ1, 0] P0(λ)Q +
+
+K1Hb(λ)Q, and 
+
+PL(λ) = 
+
+ C2Hb(λ)[0 , 1] P0(λ)
+
+
+
+L + C(λ − A)−1Li
+
+for all λ ∈ C+0 . Since ( B, A, Cb, I, 0) is well-posed and ω0(T ) = 0, Remark 2.6 implies that ∥Hb(λ)∥ ≤ M1/√Re λ − 1 and ∥C(λ − A)−1∥ ≤ M2/√Re λ − 1for some constants M1, M 2 > 0 and for all λ ∈ C+1 . Because of this and the structures of Q and L, ( I − PK (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) and ( I − PL(·)) −1 ∈
+
+H∞(C+ 
+
+> β
+
+; L(Y )) for some β > 1 if the values of λ 7 → 1 + κ1/ tanh( λ) and 
+
+λ 7 → 1 + ℓb/ tanh( λ) are uniformly bounded away from zero on some right half-plane. But this is true since Re(1 / tanh( λ)) ≥ 0 for all λ ∈ C+0 .Finally, we will analyse the semigroups TK and TL generated by AK =
+
+A|Ker( B−QK) and AL = ( A + LiC)|Ker( B−LC), respectively. Exponential sta-bility of TK follows from [20, Sec. 7.2]. On the other hand, for a fixed ℓb > 0we have 
+
+AL =
+
+ 0 C1
+
+Li0 AL0 + Li0Cd
+
+
+
+,
+
+where AL0 = A0|Ker( B0−LC0), Li0 =  0
+
+> −ℓi
+
+, and Cd(x2, x 3)⊤ = x2(1) for (x2, x 3)⊤ ∈ X0. Since AL0 generates an exponentially stable semigroup by [6, Thm. 10.1] and since Cd ∈ L (X0, C) and ∥Li0∥ = ℓi, analysis of the block operator AL can be used to show that there exists ℓ∗ 
+
+> i
+
+> 0 such that TL
+
+is exponentially stable for every ℓi ∈ (0 , ℓ ∗ 
+
+> i
+
+]. Crucially, explicit computations and Rouch´ e’s theorem can be used to show that for all sufficiently small ℓi >
+
+0 the Schur complement λ 7 → S(λ) = λ − C1(λ − AL0 − Li0Cd)−1Li0Cd1 ∈ C
+
+of λ − AL0 − Li0Cd in the block operator λ − AL only has zeros with negative 22 M. FKIRINE AND L. PAUNONEN 
+
+real parts, and that its inverse is uniformly bounded on C+0 . Together with Theorem 3.1 this completes the proof. □
+
+4.3. The SCOLE Model. In this section we stabilise the SCOLE model [23] which consist of an Euler–Bernoulli beam coupled to an ordinary differential equation modeling the dynamics of a tip mass. Our equation 
+
+
+
+ρ(ξ)wtt (ξ, t ) = −(EIw ξξ )ξξ (ξ, t ), ξ ∈ (0 , 1) , t > 0
+
+w(0 , t ) = 0 , wξ(0 , t ) = 0 
+
+mw tt (1 , t ) − (EIw ξξ )ξ(1 , t ) = 0 
+
+Jw ξtt (1 , t ) + EI (1) wξξ (1 , t ) = u(t)
+
+y(t) = EI (1) wξξ (1 , t )(4.4) with initial data w(·, 0) ∈ H2 
+
+> ℓ
+
+(0 , 1) := { f ∈ H2(0 , 1) | f (0) = f ′(0) = 0 },
+
+wt(·, 0) ∈ L2(0 , 1), wt(1 , 0) ∈ C, and wξt (1 , 0) ∈ C can be used as a simplified model for the dynamics of a monopile wind turbine tower with a heavy nacelle [45]. The torque input u(t) acts on the tip mass and the output measures the bending moment at ξ = 1. The spatially varying parameters 
+
+ρ, EI ∈ C4([0 , 1]) are strictly positive and m > 0 and J > 0. We will rewrite (4.4) as a boundary control system of the form (3.1) with state x(t) = ( w(·, t ), w t(·, t ), w t(1 , t ), w ξt (1 , t )) ⊤ on the Hilbert space 
+
+X = H2 
+
+> ℓ
+
+(0 , 1) × L2(0 , 1) × C2. We equip X with the norm 
+
+∥x∥2 
+
+> X
+
+=
+
+Z 10
+
+EI (ξ)|w′′ (ξ)|2dξ +
+
+Z 10
+
+ρ(ξ)|v(ξ)|2dξ + m|p|2 + J|q|2
+
+for x = ( w, v, p, q )⊤ ∈ X. Moreover, we define U = C, Y = C, and Ub = C
+
+and define A : D(A) ⊂ X → X, B ∈ L (D(A), U b), and C ∈ L (D(A), Y ) by 
+
+Bx = v′(1) − q, Cx = EI (1) w′′ (1), and 
+
+Ax =
+
+
+
+v
+
+−ρ−1(EIw ′′ )′′ 
+
+m−1(EIw ′′ )′(1) 
+
+−J−1EI (1) w′′ (1) 
+
+
+
+for x = ( w, v, p, q )⊤ ∈ D(A) := { (w, v, p, q )⊤ ∈ (H2 
+
+> ℓ
+
+(0 , 1) ∩ H4(0 , 1)) ×
+
+H2 
+
+> ℓ
+
+(0 , 1) × C2 | p = v(1) }. Since the control acts through the finite-dimensional part of the model, we choose Q = 0 ∈ L (U, U b) and define 
+
+Bi ∈ L (U, X ) by Biu = (0 , 0, 0, J −1u)⊤, u ∈ U . With these choices (4.4) has the form (3.1). Our first result establishes the well-posedness of the system. 
+
+Proposition 4.4. (B, A, C, I, 0) is a well-posed boundary node on the Hilbert spaces (Ub, U, X, Y ) and Re ⟨Ax, x ⟩X = Re ⟨Bx, Cx⟩C for all x ∈ D(A).Proof. By [15, Eq. (22) and the subsequent paragraph] the operator A := 
+
+A|Ker( B) is skew-adjoint and therefore generates a unitary group on X.Moreover, we have B, C ∈ L (D(A), C) and since Ub is finite-dimensional, 
+
+B has a right inverse Br ∈ L (Ub, D (A)). Therefore ( B, A, C, I, 0) is a boundary node on ( Ub, U, X, Y ). For x1 = ( w1, v 1, p 1, q 1)⊤ ∈ D(A) and 
+
+x2 = ( w2, v 2, p 2, q 2)⊤ ∈ D(A) integrating by parts shows that 
+
+⟨Ax1, x 2⟩X + ⟨x1, Ax2⟩X =  v′
+
+> 1
+
+(1) − q1
+
+EI (1) w′′  
+
+> 2
+
+(1) + EI (1) w′′  
+
+> 1
+
+(1)( v′
+
+> 2
+
+(1) − q2).
+
+(4.5) DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 23 
+
+Since Bx1 = v′
+
+> 1
+
+(1) − q1 and Cx1 = EI (1) w′′  
+
+> 1
+
+(1), setting x2 = x1 yields the claimed identity Re ⟨Ax, x ⟩X = Re ⟨Bx, Cx⟩C, x ∈ D(A). Moreover, Lemma 2.8(a) shows that ( B, A, C, I, 0) is well-posed provided that its trans-fer function P satisfies sup s∈R |P (ω + is )| < ∞ for some ω > 0. For λ ∈ C+0 we have P (λ)u = Cx, where x ∈ D(A) satisfies ( λ − A)x = 0 and Bx = u. If we define eu = (0 , 0, 0, u )⊤ ∈ D(A) and z = x + eu, then 
+
+z ∈ Ker( B) = D(A) and Cz = Cx. By [15, Lem. 3.1 and the subsequent paragraph] the eigenvectors of A can be chosen to form an orthogonal basis (ϕk)k∈Z of X. We write Aϕ k = iμ kϕk, iμ k ∈ iR \ { 0}, and denote γk := Cϕk.Setting x1 = x and x2 = ϕk ∈ D(A) in (4.5) yields 
+
+⟨Ax, ϕ k⟩X + ⟨x, Aϕ k⟩X = ⟨Bx, Cϕk⟩C = uγ k.
+
+Using Ax = λx and Aϕ k = iμ kϕk implies ⟨x, ϕ k⟩X = γku/ (λ − iμ k). Simi-larly, the identity (4.5) applied with x1 = eu ∈ D(A) and x2 = ϕk ∈ D(A)together with Aeu = 0 and Beu = −u shows that ⟨eu, ϕ k⟩X = −iγ ku/μ k.Since the expansion of z in the basis ( ϕk)k∈Z converges in the graph norm of A and since C|D(A) ∈ L (D(A), Y ), we have 
+
+P (λ)u = Cx = Cz = X
+
+> k∈Z
+
+⟨z, ϕ k⟩γk = u X
+
+> k∈Z
+
+|γk|2
+
+ 1
+
+λ − iμ k
+
+− iμk
+
+
+
+.
+
+By [15, Lem. 2.3] there exist N0 ∈ N and a, b, c > 0 such that a|k| − b ≤p|μk| ≤ a|k| + c and μ−k = −μk whenever |k| ≥ N0. Moreover, [15, Lem. 3.1] implies that sup k∈Z|γk| < ∞. Therefore [32, Thm. 2.7] implies sup s∈R|P (ω + is )| < ∞ for every ω > 0, and thus ( B, A, C, I, 0) is well-posed by Lemma 2.8(a). □
+
+Our main result introduces a polynomially stabilising controller for (4.4). 
+
+Proposition 4.5. If κ > 0 and ℓ > 0, then the observer-based controller 
+
+
+
+ρ(ξ) ˆ wtt (ξ, t ) = −(EI ˆwξξ )ξξ (ξ, t ), ξ ∈ (0 , 1) , t > 0,
+
+ˆw(0 , t ) = 0 , ˆwξ(0 , t ) = 0 
+
+m ˆwtt (1 , t ) − (EI ˆwξξ )ξ(1 , t ) = 0 
+
+J ˙ˆq(t) + EI (1) ˆ wξξ (1 , t ) = −κˆq(t) + u1(t)
+
+J ˆwξt (1 , t ) = J ˆq(t) − ℓEI (1)   ˆwξξ (1 , t ) − wξξ (1 , t ) + ℓu 2(t)
+
+u(t) = −κˆq(t) + u1(t)(4.6) 
+
+with initial data ( ˆ w(·, 0) , ˆwt(·, 0) , ˆwt(1 , 0) , ˆq(0)) ⊤ ∈ H2 
+
+> ℓ
+
+(0 , 1) × L2(0 , 1) × C2
+
+stabilises the SCOLE system (4.4) in such a way that the closed-loop semi-group is polynomially stable with exponent α = 1 /2. Moreover, the closed-loop system with input (u1(t), u 2(t)) ⊤ and output (wξξ (1 , t ), ˆwξξ (1 , t )) ⊤ is externally well-posed in the sense that for every t > 0 there exists Mt > 0
+
+such that the generalised solutions of the closed-loop system satisfy 
+
+∥x(t)∥2 
+
+> X
+
++ ∥ˆx(t)∥2 
+
+> X
+
++ ∥(wξξ (1 , ·), ˆwξξ (1 , ·)) ⊤∥2
+
+> L2(0 ,t )
+
+≤ Mt
+
+
+
+∥x(0) ∥2 
+
+> X
+
++ ∥ˆx(0) ∥2 
+
+> X
+
++ ∥(u1, u 2)⊤∥2
+
+> L2(0 ,t )
+
+
+
+,
+
+where ˆx(t) = ( ˆ w(·, t ), ˆwt(·, t ), ˆwt(1 , t ), ˆq(t)) ⊤.24 M. FKIRINE AND L. PAUNONEN 
+
+Proof. If we define K ∈ L (X, U ) by Kx = −κq for x = ( w, v, p, q )⊤ ∈ X
+
+and choose L = −ℓ/J ∈ L (Y, U b) and Li = 0 ∈ L (Y, X ), then the abstract representation of (4.6) with state ˆ x(t) = ( ˆ w(·, t ), ˆwt(·, t ), ˆwt(1 , t ), ˆq(t)) ⊤ ∈ X
+
+has the form of the observer-based controller (3.2). We will verify the as-sumptions in Theorem 3.1. We have from Proposition 4.4 that ( B, A, C, I, 0) is well-posed, and since K ∈ L (X, U ), ( B, A,  CK
+
+, [Q, L ], [Bi, L i]) is a well-posed boundary node on ( Ub, U e, X, Y × U ). We will next investigate the transfer functions PK and PL in Theorem 3.1. Since Q = 0, we have 
+
+PK (λ) = K(λ − A)−1Bi, λ ∈ ρ(A), and thus K ∈ L (X, U ) and ∥(λ − A)−1∥ ≤ 
+
+1/ Re λ for λ ∈ C+0 imply ( I − PK (·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(U )) for some β > 0. Moreover, if we denote the transfer function of ( B, A, C, I, 0) by P0, then 
+
+I − PL(λ) = I − P0(λ)L = I + ℓJ P0(λ) for λ ∈ C+0 . Therefore Proposition 4.4 and Lemma 2.8(c) imply that ( I − PL(·)) −1 ∈ H∞(C+ 
+
+> β
+
+; L(Y )) for all β > 0. Finally, we will analyse the stability of the semigroups TK and TL gen-erated by AK = ( A + BiK)|Ker( B) and AL = A|Ker( B−LC), respectively. For x = ( w, v, p, q ) ∈ D(A) the condition Bx = LCx is equivalent to 
+
+Jq = Jv ′(1) + ℓEI (1) w′′ (1). Because of this, the semigroup TL is expo-nentially stable by [15, Thm. 4.2]. On the other hand, the structure of K
+
+together with [14, Thm. 3.3] implies that TK is polynomially stable with exponent α = 1 /2. The claims regarding the well-posedness and stability of the closed-loop system now follow from Theorem 3.1. □
+
+Declaration of AI use. Generative AI (Claude Sonnet 4.6) was used to assist in constructing the Rouch´ e argument in the proof of Proposition 4.3. The authors verified all parts of the AI-assisted argument manually. 
+
+References 
+
+[1] I. Aksikas. Duality-based optimal compensator for boundary control hyperbolic PDEs system: application to a tubular cracking reactor. J. Franklin Inst. , 357(14):9692– 9708, 2020. [2] N. Anantharaman and M. L´ eautaud. Sharp polynomial decay rates for the damped wave equation on the torus. Anal. PDE , 7(1):159–214, 2014. With an appendix by S. Nonnenmacher. [3] C. J. K. Batty and T. Duyckaerts. Non-uniform stability for bounded semi-groups on Banach spaces. J. Evol. Equ. , 8:765–780, 2008. [4] A. Borichev and Yu. Tomilov. Optimal polynomial decay of functions and operator semigroups. Math. Ann. , 347(2):455–478, 2010. [5] R. Chill, L. Paunonen, D. Seifert, R. Stahn, and Yu. Tomilov. Non-uniform stability of damped contraction semigroups. Anal. PDE , 16(5):1089–1132, 2023. [6] S. Cox and E. Zuazua. The rate at which energy decays in a string damped at one end. Indiana Univ. Math. J. , 44(2):545–573, 1995. [7] R. Curtain, G. Weiss, and M. Weiss. Coprime factorization for regular linear systems. 
+
+Automatica J. IFAC , 32(11):1519–1531, 1996. [8] R. Curtain and H. Zwart. Introduction to Infinite-Dimensional Systems Theory , vol-ume 71 of Texts in Applied Mathematics . Springer-Verlag New York, 2020. [9] R. Curtain. Robust stabilizability of normalized coprime factors: the infinite-dimensional case. Internat. J. Control , 51(6):1173–1190, 1990. [10] R. Curtain, G. Weiss, and M. Weiss. Stabilization of irrational transfer functions by controllers with internal loop. In Systems, approximation, singular integral operators, and related topics (Bordeaux, 2000) , volume 129 of Oper. Theory Adv. Appl. , pages 179–207. Birkh¨ auser, Basel, 2001. [11] M. Demetriou. Natural second-order observers for second-order distributed parameter systems. Systems Control Lett. , 51(3-4):225–234, 2004. DYNAMIC STABILISATION OF BOUNDARY CONTROL SYSTEMS 25 
+
+[12] Z. Emirsajlow. Boundary observers for boundary control systems. In Advanced, con-temporary control , volume 1196 of Adv. Intell. Syst. Comput. , pages 92–104. Springer, Cham, 2020. [13] Z. Emirsajlow. Discrete-time output observers for boundary control systems. Int. J. Appl. Math. Comput. Sci. , 31(4):613–626, 2021. [14] M. Fkirine and L. Paunonen. Polynomial stability of wind turbine tower models. SIAM J. Control Optim. , accepted for publication, preprint: https://arxiv.org/abs/2503.22432. [15] Bao-Zhu Guo. On the boundary control of a hybrid system with variable coefficients. 
+
+J. Optim. Theory Appl. , 114(2):373–395, 2002. [16] Bao-Zhu Guo, Jun-Min Wang, and Kun-Yi Yang. Dynamic stabilization of an Euler-Bernoulli beam under boundary control and non-collocated observation. Systems Con-trol Lett. , 57(9):740–749, 2008. [17] A. Hastir and L. Paunonen. Well-posedness and stability of infinite-dimensional sys-tems under monotone feedback. arXiv e-prints , page arXiv:2503.16092, March 2025. [18] B. Jacob and H. Zwart. Linear Port-Hamiltonian Systems on Infinite-Dimensional Spaces , volume 223 of Operator Theory: Advances and Applications . Birkh¨ auser, Basel, 2012. [19] R. Joly and C. Laurent. Decay of semilinear damped wave equations: cases without geometric control condition. Ann. H. Lebesgue , 3:1241–1289, 2020. [20] M. Krstic and A. Smyshlyaev. Boundary control of PDEs: A course on backstepping designs , volume 16 of Advances in Design and Control . SIAM, Philadelphia, 2008. [21] I. Lasiecka and R. Triggiani. Control Theory for Partial Differential Equations: Con-tinuous and Approximation Theories , volume 1 of Encyclopedia of Mathematics and Its Applications . Cambridge University Press, 2000. [22] G. Lebeau. ´Equation des ondes amorties. In Algebraic and geometric methods in math-ematical physics (Kaciveli, 1993) , volume 19 of Math. Phys. Stud. , pages 73–109. Kluwer Acad. Publ., Dordrecht, 1996. [23] W. Littman and L. Markus. Exact boundary controllability of a hybrid system of elasticity. Arch. Rational Mech. Anal. , 103(3):193–236, 1988. [24] H. Logemann. Stabilization and regulation of infinite-dimensional systems using co-prime factorizations. In Analysis and optimization of systems: state and frequency domain approaches for infinite-dimensional systems (Sophia-Antipolis, 1992) , volume 185 of Lect. Notes Control Inf. Sci. , pages 102–139. Springer, Berlin, 1993. [25] J. Malinen and O. Staffans. Conservative boundary control systems. J. Differential Equations , 231(1):290–312, 2006. [26] K. Mathiyalagan, A. Shree Nidhi, H. Su, and T. Renugadevi. Observer and bound-ary output feedback control for coupled ODE-transport PDE. Appl. Math. Comput. ,426:Paper No. 127096, 19, 2022. [27] K. Mikkola. Infinite-Dimensional Linear Systems, Optimal Control and Algebraic Ric-cati Equations . PhD thesis, Helsinki University of Technology, 2002. [28] S. Nicaise, L. Paunonen, and D. Seifert. Stability of abstract coupled systems. J. Funct. Anal. , page 110909, 2025. [29] J. Oostveen and R. Curtain. Riccati equations for strongly stabilizable bounded linear systems. Automatica J. IFAC , 34(8):953–967, 1998. [30] L. Paunonen. Stability and robust regulation of passive linear systems. SIAM J. Con-trol Optim. , 57(6):3827–3856, 2019. [31] L. Paunonen and J.-P. Humaloja. Dynamic polynomial stabilization of a 1D wave equation. In Proceedings of the SIAM Conference on Control and Its Applications ,Chengdu, China, June 19–21, 2019. [32] R. Rebarber. Exponential stability of coupled beams with dissipative joints: a fre-quency domain approach. SIAM J. Control Optim. , 33(1):1–28, 1995. [33] J. Rozendaal, D. Seifert, and R. Stahn. Optimal rates of decay for operator semigroups on Hilbert spaces. Adv. Math. , 346:359–388, 2019. [34] D. Salamon. Infinite-dimensional linear systems with unbounded control and obser-vation: A functional analytic approach. Trans. Amer. Math. Soc. , 300(2):383–431, 1987. 26 M. FKIRINE AND L. PAUNONEN 
+
+[35] A. Smyshlyaev and M. Krstic. Backstepping observers for a class of parabolic PDEs. 
+
+Systems Control Lett. , 54(7):613–625, 2005. [36] O. Staffans. Well-Posed Linear Systems . Cambridge University Press, 2005. [37] O. Staffans. Coprime factorizations and well-posed linear systems. SIAM J. Control Optim. , 36(4):1268–1292, 1998. [38] O. Staffans. Passive and conservative continuous-time impedance and scattering sys-tems. Part I: Well-posed systems. Math. Control Signals Systems , 15(4):291–315, 2002. [39] M. Tucsnak and G. Weiss. Observation and Control for Operator Semigroups .Birkh¨ auser Basel, 2009. [40] M. Tucsnak and G. Weiss. Well-posed systems—The LTI case and beyond. Automatica J. IFAC , 50(7):1757–1779, 2014. [41] D. Vries, K. Keesman, and H. Zwart. Luenberger boundary observer synthesis for Sturm-Liouville systems. Internat. J. Control , 83(7):1504–1514, 2010. [42] D. Vries, K. Keesman, and H. Zwart. A Luenberger observer for an infinite dimensional bilinear system: a UV disinfection example. IFAC Proceedings Volumes , 40(20):667– 672, 2007. 3rd IFAC Symposium on System Structure and Control. [43] G. Weiss. Regular linear systems with feedback. Math. Control Signals Systems ,7(1):23–57, 1994. [44] G. Weiss and R. Curtain. Dynamic stabilization of regular linear systems. IEEE Trans. Automat. Control , 42(1):4–21, 1997. [45] Xiaowei Zhao and G. Weiss. Suppression of the vibrations of wind turbine towers. 
+
+IMA J. Math. Control Inform. , 28(3):377–389, 2011. (M. Fkirine) Mathematics Research Centre, Tampere University, P.O. Box 553, 33101 Tampere, Finland 
+
+Email address : mohamed.fkirine@tuni.fi 
+
+(L. Paunonen) Mathematics Research Centre, Tampere University, P.O. Box 553, 33101 Tampere, Finland 
+
+Email address : lassi.paunonen@tuni.fi

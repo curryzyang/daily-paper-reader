@@ -1,0 +1,69 @@
+{
+  "label": "2026-05-19 ~ 2026-05-28",
+  "date": "2026-05-19 ~ 2026-05-28",
+  "generated_at": "2026-05-28T08:01:51",
+  "count": 4,
+  "papers": [
+    {
+      "paper_id": "20260519-20260528/2605.19992v1-robust-synchronization-for-multi-agent-systems-governed-by-pdes-with-observable-and-unobservable-disturbances",
+      "section": "deep",
+      "title_en": "Robust synchronization for multi-agent systems governed by PDEs with observable and unobservable disturbances",
+      "authors": "Yongchun Bi, Jun Zheng, Guchuan Zhu, Jiye Zhang",
+      "date": "2026-05-19",
+      "pdf": "https://arxiv.org/pdf/2605.19992v1",
+      "score": "9.0",
+      "evidence": "多智能体系统受偏微分方程支配，边界控制，同步",
+      "tldr": "针对抛物型PDE多智能体系统，存在可观测与不可观测干扰时，提出基于边界输出的干扰观测器估计可观测Dirichlet干扰，并保证观测器误差系统对域内不可观测干扰的鲁棒性。利用参考信号和局部输出设计分布式同步控制器，实现无不可观测干扰时的指数跟踪及有干扰时的鲁棒同步。进一步分析不可观测Dirichlet-Robin边界干扰的影响，证明同步误差系统解的有界性，并建立闭环系统的输入到状态稳定性(ISS)。采用广义Lyapunov方法、递归技术、提升技术和半群理论进行稳定性分析与适定性证明。",
+      "tags": "query:pde-swarm",
+      "abstract_en": "This paper investigates robust synchronization for multi-agent systems (MASs) governed by parabolic partial differential equations in the presence of both observable and unobservable disturbances. Using only boundary output measurements, a disturbance observer is designed to estimate observable Dirichlet boundary disturbances while ensuring robustness of the observer error system with unobservable disturbances occurring in the domain. Using only the reference signal and local output information, distributed synchronization controllers are then constructed to enable all agents to track the reference trajectory. In particular, exponential tracking is achieved in the absence of unobservable disturbances, while robustness is preserved when additional unobservable disturbances occur during controller implementation. We further analyze the impact of unobservable Dirichlet-Robin boundary disturbances on synchronization performance by proving the boundedness of solutions to the synchronization error system. Moreover, to characterize the influence of all disturbances, input-to-state stability (ISS) is established for the closed-loop system. For the involved systems, the generalized Lyapunov method and the recursion technique are extensively employed in the stability analysis, and the lifting technique and semigroup theory are used to prove the well-posedness. Simulation results validate the proposed control scheme, demonstrating effective disturbance estimation and rejection, robust synchronization, and the ISS properties under various scenarios.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "20260519-20260528/2605.25867v1-cinoc-cardinality-invariant-neural-operator-policies-for-scalable-pde-control",
+      "section": "deep",
+      "title_en": "CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control",
+      "authors": "Pietro Zanotta, Dibakar Roy Sarkar, Honghui Zheng, Somdatta Goswami, Ján Drgoňa",
+      "date": "2026-05-25",
+      "pdf": "https://arxiv.org/pdf/2605.25867v1",
+      "score": "9.0",
+      "evidence": "偏微分方程控制策略可适应不同智能体数量，与使用偏微分方程控制蜂群机器人相关",
+      "tldr": "PDE控制中策略通常受限于固定维度配置，无法扩展至不同传感器、执行器或智能体数量。本文提出基数不变神经算子控制（CINOC），将控制问题重构为算子学习，端到端训练将状态场映射为连续控制函数，使得策略自然适应可变配置。CINOC在小规模群体上训练后能零样本迁移至大规模群体，并对部分智能体失效具有鲁棒性。理论证明基于平均场的策略梯度收敛，实验验证了在多种PDE上的有效性。",
+      "tags": "query:pde-swarm",
+      "abstract_en": "Controlling partial differential equations (PDEs) with learning-based policies remains fundamentally limited by fixed-dimensional representations: policies trained for a specific sensor, actuator, or agent configuration typically fail when the configuration changes. This limitation is particularly severe in multi-agent PDE control, where policies do not scale across population sizes without retraining. We address this challenge by introducing Cardinality Invariant Neural Operator Control (CINOC), reformulating PDE control as an operator learning problem that maps state fields to continuous control functions and trains them end-to-end through differentiable PDE solvers, yielding policies that naturally adapt to varying sensor and actuator configurations. Remarkably, CINOC policies trained on small swarms exhibit cardinality invariance, allowing for zero-shot transfer to significantly larger populations as well as robustness to partial agent failure. This scalability arises from agents sharing a common policy and coordinating through their physical environment, which produces an emergent self-normalization effect. To explain this phenomenon, we provide a theorem grounded in mean-field theory demonstrating that policy gradients computed from finite-agent systems converge to those of a continuous control limit. Empirically, we validate CINOC on tracking, stabilization, and density transport across linear, nonlinear, chaotic, and turbulent PDEs.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "20260519-20260528/2605.20718v1-policy-gradient-for-continuous-time-mean-field-control",
+      "section": "quick",
+      "title_en": "Policy Gradient for Continuous-Time Mean-Field Control",
+      "authors": "Erhan Bayraktar, Martin Hernandez, Qinxin Yan, Yuhua Zhu",
+      "date": "2026-05-20",
+      "pdf": "https://arxiv.org/pdf/2605.20718v1",
+      "score": "7.0",
+      "evidence": "使用McKean-Vlasov偏微分方程进行平均场控制，适用于多智能体系统",
+      "tldr": "针对连续时间平均场控制问题，现有策略梯度方法需求解伴随方程。本文在熵正则化折扣无限时域下，考虑随机反馈策略与耦合代表粒子-种群McKean-Vlasov系统，提出直接基于值函数的显式策略梯度公式，通过瞬时优势函数导出Gateaux梯度。基于此设计模型驱动演员-评论家算法：评论家求解线性稳态HJB方程，演员依梯度更新。分析了PDE在多项式增长函数类中的适定性。在LQR和人群运动问题中验证了方法有效性，首次实现无需额外方程的策略梯度计算，为平均场控制提供高效求解途径。",
+      "tags": "query:pde-swarm",
+      "abstract_en": "This paper develops a policy gradient method for entropy-regularized mean-field control in the discounted infinite-horizon setting. We consider randomized feedback policies and a coupled representative-particle/population system, in which the representative state evolves jointly with a population law governed by a McKean--Vlasov equation. The resulting value function is therefore defined on the product space $\\mathbb R^d \\times \\mathcal P_2(\\mathbb R^d)$.   A key distinction from existing policy gradient methods for mean-field control is that, after computing the value function under a fixed policy, our approach does not require solving an additional equation to obtain the policy gradient. Instead, we derive an explicit policy gradient formula directly in terms of the value function. The formulation is based on an instantaneous advantage function, which quantifies the gain of taking a given action relative to the current randomized policy. We establish a Gâteaux policy-gradient formula, which gives the first-order variation of the objective along arbitrary policy perturbations, and then derive the corresponding ascent direction under finite-dimensional policy parametrization.   The resulting formula leads to a model-based actor--critic scheme. The critic is obtained by solving the associated linear stationary Hamilton--Jacobi--Bellman equation for the value function, using cylindrical functions to represent dependence on the population law. The actor is then updated according to the derived policy-gradient formula. We further analyze the well-posedness of the PDE in a polynomial-growth function class. Finally, we illustrate the proposed method through numerical experiments on an LQR model and a crowd-motion problem.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    },
+    {
+      "paper_id": "20260519-20260528/2605.28189v1-dynamic-stabilisation-of-boundary-control-systems",
+      "section": "quick",
+      "title_en": "Dynamic Stabilisation of Boundary Control Systems",
+      "authors": "Mohamed Fkirine, Lassi Paunonen",
+      "date": "2026-05-27",
+      "pdf": "https://arxiv.org/pdf/2605.28189v1",
+      "score": "7.0",
+      "evidence": "适用于群体机器人的PDE边界控制方法",
+      "tldr": "针对Hilbert空间上的抽象线性边界控制系统，提出基于观测器的动态稳定策略。通过引入指数、强及多项式稳定性条件，确保闭环系统外部适定性。该方法成功应用于一维波动方程、分布式控制二维波动方程及非均匀SCOLE模型，验证了理论有效性。",
+      "tags": "query:pde-swarm",
+      "abstract_en": "We design observer-based controllers to stabilise abstract linear boundary control systems on Hilbert spaces. Our main results introduce conditions for exponential, strong, and polynomial stability, and establish external well-posedness of the closed-loop system. We design controllers for a one-dimensional wave equation, a two-dimensional wave equation with distributed control and observation, and a non-uniform SCOLE model.",
+      "source": "arxiv",
+      "selection_source": "fresh_fetch"
+    }
+  ],
+  "errors": []
+}

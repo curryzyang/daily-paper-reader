@@ -1,0 +1,4119 @@
+Title: Policy Gradient for Continuous-Time Mean-Field Control
+
+URL Source: https://arxiv.org/pdf/2605.20718v1
+
+Published Time: Thu, 21 May 2026 00:34:33 GMT
+
+Number of Pages: 38
+
+Markdown Content:
+POLICY GRADIENT FOR CONTINUOUS-TIME MEAN-FIELD CONTROL 
+
+ERHAN BAYRAKTAR 1, MARTIN HERNANDEZ 2,* , QINXIN YAN 3, AND YUHUA ZHU 2
+
+Abstract. This paper develops a policy gradient method for entropy-regularized mean-field control in the discounted infinite-horizon setting. We consider randomized feedback policies and a coupled representative-particle/population system, in which the representative state evolves jointly with a pop-ulation law governed by a McKean–Vlasov equation. The resulting value function is therefore defined on the product space Rd × P 2(Rd). A key distinction from existing policy gradient methods for mean-field control is that, after com-puting the value function under a fixed policy, our approach does not require solving an additional equation to obtain the policy gradient. Instead, we derive an explicit policy gradient formula directly in terms of the value function. The formulation is based on an instantaneous advantage function, which quantifies the gain of taking a given action relative to the current randomized policy. We establish a Gˆ ateaux policy-gradient formula, which gives the first-order variation of the objective along arbitrary policy perturbations, and then derive the corresponding ascent direction under finite-dimensional policy parametrization. The resulting formula leads to a model-based actor–critic scheme. The critic is obtained by solving the associated linear stationary Hamilton–Jacobi–Bellman equation for the value function, using cylin-drical functions to represent dependence on the population law. The actor is then updated according to the derived policy-gradient formula. We further analyze the well-posedness of the PDE in a polynomial-growth function class. Finally, we illustrate the proposed method through numerical experiments on an LQR model and a crowd-motion problem. 
+
+Contents 
+
+1. Introduction 22. Problem Formulation 53. The Stationary HJB Equation 63.1. The infinitesimal generator and stationary HJB equation 74. Policy Gradient 84.1. Policy gradient theorem 84.2. Parametric policy gradient 10 5. Actor-Critic Algorithm 11 5.1. Policy evaluation via Galerkin approximation 11 5.2. Cylindrical basis functions and moment features 12 5.3. Policy gradient 13 6. Infinite-Time Mean-Field Linear Quadratic Regulator 14 6.1. Problem setting 14 7. Numerical Examples 15 7.1. Example 1: Mean-field systemic risk model 15 7.2. Example 2: Crowd-aversion transport 17 8. Acknowledgements 20 Appendix A. Proofs of the Main Results 20 A.1. Proofs for Section 3 20 A.2. Proofs for Section 4 27 A.3. Proofs for Section 6 33 References 36  
+
+> 1
+
+Department of Mathematics, University of Michigan, Ann Arbor, MI, USA.  
+
+> 2
+
+Department of Statistics and Data Science, University of California, Los Angeles, CA, USA.  
+
+> 3
+
+Program in Applied and Computational Mathematics, Princeton University, Princeton, NJ, USA.  
+
+> *
+
+Corresponding author ( martinh@ucla.edu ). 
+
+> 1
+> arXiv:2605.20718v1 [math.OC] 20 May 2026
+
+1. Introduction 
+
+Many control problems involve a large population of identical agents whose dynamics interact weakly, and only through the empirical distribution of the population. Such models arise naturally in applications including opinion formation [75, 40], biological swarming and flocking [34, 31], crowd dynamics [30], and financial systemic risk [27]. See also [24, 25, 17] for general background. When the number of agents N
+
+is large, directly optimizing the full interacting N -particle system becomes prohibitively difficult, both computationally and analytically. The mean-field viewpoint then replaces the full microscopic system by a limiting problem in which a representative agent interacts with the distribution of the population. This limit is closely related to the theory of interacting particle systems, propagation of chaos, and McKean– Vlasov (MKV) stochastic differential equations, where under suitable assumptions, the empirical measure of the N -particle system converges to a measure-valued limit, and the state of a representative particle is then described by a stochastic differential equation whose coefficients depend on its own law; see, for instance, [24, 49]. From this large-population perspective, two different limiting formulations emerge. If one starts from a central control problem for the full population, or equivalently takes the mean-field limit of a socially optimal large-agent control problem, one is led to mean-field control (MFC), which is also known as McKean–Vlasov optimal control. If instead each agent optimizes an individual objective against the population and one then passes to the limit, one obtains a mean-field game (MFG), whose solution concept is Nash equilibrium. In this sense, MFC and MFG should be viewed as two distinct asymptotic regimes of large-population systems of exchangeable interacting agents. The key difference lies in whether the optimization is collective or strategic, and in the order in which optimization and passage to the limit are performed; see [26, 49, 50, 22, 17]. The present paper is concerned exclusively with the control formulation, namely MFC. A distinctive feature of the present framework is the formulation of the controlled dynamics through a decoupled system : a MKV equation governing the evolution of the population law, coupled with an independent stochastic differential equation for a representative agent [20, 8]. In this formulation, the population flow ( μt)t≥0 is generated by the MKV equation and is deterministic, while the representative agent evolves according to its own SDE driven by an independent Brownian motion. A key advantage of this decoupled structure is that it allows the value function to be defined not only at the level of the population distribution, as is standard in the Wasserstein-space formulation [57], but also for any given initial position of the representative agent. The value function therefore takes as arguments both an initial state s ∈ Rd for the representative agent and an initial population law μ ∈ P 2(Rd), a joint dependence that plays a central role in the derivation of the policy gradient and in the design of the actor-critic algorithm. We work in the infinite-horizon discounted setting with entropy regularization and randomized feed-back policies. This choice is natural for several reasons. First, entropy regularization promotes explo-ration and smooths the optimization over policies, a feature that is central in continuous-time reinforce-ment learning and remains analytically useful even when the controlled dynamics are known [76, 45, 46]. Second, the temperature parameter λ > 0 connects the regularized problem to the classical deterministic formulation and yields a family of problems with better structural properties. Third, in the linear-quadratic setting, entropy regularization leads to explicit Gaussian optimal policies, which provide a tractable benchmark for the general theory. The goal of this paper is to develop a model-based actor–critic method for mean-field control problems. Actor–critic methods are a standard class of algorithms in reinforcement learning, combining a critic, which evaluates the current policy, with an actor, which updates the policy [70, Chapter 13]. In our setting, for a fixed randomized feedback policy, the critic evaluates its performance through a HJB equation. The actor then improves the policy within a parametrized class, using a policy gradient formula for the performance functional, which is derived from a policy gradient theorem. We work in the model-based setting, that is, the dynamics are known. This allows us to focus on the analytic structure of the problem and provides a foundation for future data-driven extensions in [12]. A key difficulty is the structure of the policy gradient. In classical single-agent control, the gradient of the performance functional with respect to the policy parameters depends only on the state process and the corresponding advantage function. In the mean-field setting, by contrast, the performance functional depends on the policy through both the representative dynamics and the population flow induced by the same policy. As a result, the policy gradient theorem provided in this work decomposes into two structurally distinct contributions: a representative term , capturing the direct effect of the policy through 
+
+> 2
+
+the state dynamics, and a population term , capturing the indirect effect through the dependence of the value function on the population law. This decomposition has no counterpart in the standard single-agent theory and is one of the main contributions of the present paper. Contributions. (1) Policy gradient theorem. We derive a rigorous policy gradient theorem for the coupled representative agent-population system in the infinite-horizon setting. The resulting formula separates the representative and population contributions to the gradient of the performance functional, expressed in terms of two advantage functions: the representative advantage function, which extends the classical single-agent structure, and the population advantage function, which is specific to the mean-field framework and involves the derivative of the value function on probability measure space. We also establish a parametric version of this formula for families of randomized policies, providing a rigorous basis for gradient-based policy improvement. (2) Policy evaluation and infinite-horizon mean-field LQR. We analyze the linear stationary Hamilton–Jacobi–Bellman equation on Rd × P 2(Rd) arising in the policy evaluation step and establish classical well-posedness results. We also study the infinite-horizon entropy-regularized mean-field LQR problem, deriving an explicit characterization of the optimal value function and the associated optimal Gaussian policy. This LQR analysis provides both an explicit benchmark for the general theory and a natural reference setting for the numerical experiments. (3) Actor-critic algorithm and numerical experiments. Based on the theoretical analysis, we introduce a finite-dimensional actor-critic algorithm combining a Galerkin approximation of the stationary HJB equation for policy evaluation with the policy gradient formula for policy improvement. Basis functions are constructed using cylindrical functions of the population law, for which the Lions derivatives entering the HJB operator can be evaluated in closed form. Nu-merical experiments on the mean-field systemic risk model and on a nonlinear two-dimensional crowd-aversion problem corroborate the theoretical results and demonstrate the practical effec-tiveness of the proposed method. 
+
+Related work. Mean-field limits, propagation of chaos, and McKean–Vlasov control. The mean-field de-scription of large populations of exchangeable interacting particles is classically tied to propagation of chaos and McKean–Vlasov (MKV) dynamics; see, for instance, [72, 16, 32, 24]. In the uncontrolled set-ting, the connection between MKV SDEs and associated PDEs was developed in [20]. In the controlled setting, rigorous limit theory linking finite-agent control problems with MKV control was established in [49] and further developed in [35]. The distinction between the cooperative mean-field control limit and the strategic mean-field game limit was clarified in [26]; see also [50, 22, 17, 25] for general background. The theoretical foundations of MKV optimal control are well developed, particularly in finite time horizon. The stochastic Pontryagin maximum principle was derived in [23]; see also [18, 3, 19] for dynamics depending on moments of the law. The dynamic programming approach, leading to HJB equations on the Wasserstein space, was initiated in [57, 52]. Feynman–Kac representations for HJB equations on Wasserstein spaces were obtained in [8, 33]. Viscosity-solution results for MKV control were first studied in [39] for a problem from classical mechanics, and were later developed through the Lions lifting in [57, 58]. Related viscosity theories for equations on the Wasserstein space include the Eikonal equation [64, 65], comparison results for second-order PDEs [10, 9], and a fully second-order HJB theory [7]. We also refer to [21] for viscosity solutions in the setting of controlled MKV jump-diffusions. Infinite-horizon problems on Wasserstein spaces have been studied, for instance, in [43], although most of the above theory is formulated in finite time horizon. Our analysis is complementary to this literature. Motivated by policy iteration (see [41, 70]), we focus on the linear stationary HJB equation associated with a fixed randomized policy. While most of the above works study HJB equations on P2(Rd), our coupled system leads to a linear stationary HJB on 
+
+Rd × P 2(Rd), for which we establish existence and uniqueness of classical solutions. 
+
+Numerical methods for mean-field control and policy gradient. A broad range of numerical methods has been developed for mean-field control problems with known dynamics. PDE-based and augmented-Lagrangian methods have been proposed for mean-field type control problems with congestion effects [1, 2], while MKV control problems have also been approached through numerical schemes for the associated forward-backward stochastic differential equations [33]. We refer to [51] for a comprehensive survey on FBSDE for MKV, and dynamic programming based methods, including particle methods, and PDE-based discretizations. Related particle approximations for second-order PDEs on the Wasserstein 
+
+> 3
+
+space have been studied in [11]. In high-dimensional regimes, these methods are complemented by a growing literature based on deep learning and neural-network parametrizations; see, for instance, [62, 28, 63]. A related approximation paradigm, in the context of actor-critic, is linear value-function approxima-tion, which is classical in reinforcement learning and is widely used to make policy evaluation and policy iteration computationally feasible in large or continuous state spaces; see, for instance, [71, 48, 4, 80]. In the mean-field-control setting, [15] develops learning algorithms with linear function approximation for finite-state, finite-action MFC problems and proves quantitative performance bounds. In the linear-quadratic setting, convergence and error analyses of policy-gradient methods have been studied in both discrete and continuous time [29, 77, 38]. The present paper is complementary to these works. Methods developed for discrete-time MDPs or mean-field MDPs do not transfer directly to the continuous-time diffusion setting. Indeed, the conventional state-action value function collapses to the value function as the sampling interval tends to zero, so that its action dependence survives only at the infinitesimal level through an instantaneous advantage rate; see [74, 47]. This motivates formulations of actor-critic methods that are intrinsic to the continuous-time dynamics. We would like to mention two lines of work that is most related to this paper (also see Remarks 4.3, 4.7 and 4.10 for more detailed discussion). [37] derived a policy gradient formula for MFC in finite horizon by differentiating the HJB characterization of the value function with respect to the policy parameter, and more recently, they generalized this algorithm to moment neural network approximations [56]. Our work is closest in spirit to the above two works. Differentiating the HJB provides a natural route for parametric actor–critic methods, but it also requires solving an additional sensitivity equation, or equivalently an additional critic-type problem, to compute the ascent direction. In contrast, our approach derives an explicit policy-gradient formula directly in terms of the value function. This avoids the need for a separate sensitivity equation and leads to a simpler actor update. In addition, our formulation is first developed at the level of randomized feedback policies themselves. We characterize the Gˆ ateaux policy gradient, namely the first-order variation of the objective along arbitrary admissible policy perturbations, before specializing it to finite-dimensional policy parametrizations. This gives a parameterization-free description of policy improvement and then yields an explicit ascent direction for parametrized policies. Finally, the policy gradient formulation is expressed through two instantaneous advantage functions, one for the representative-agent dynamics and one for the population-law dynamics. These advantages are defined from the value function and the infinitesimal generators, and do not require derivatives of the drift or diffusion with respect to the policy parameters. This form is closer to the classical policy-gradient structure in reinforcement learning, where the policy gradient is expressed in terms of an advantage function. On the other hand, [78] also derives a related instantaneous advantage q-function for mean-field control. Their formulation is population-based, whereas ours is built on the coupled representative-agent/population system. More importantly, the advantage function plays a different role. [78] uses the instantaneous advantage to construct the integrated q-functions for all test policies in a neighbourhood of the target policy. Then the martingale property of the integrated q-functions is used to solve the MFC. This integrated q-function approach has been further developed in [79] for MFG and MFC problems, including jump-diffusion dynamics. More recent works extend this continuous-time q-learning framework to MFC with controlled common noise [60, 61]. In that setting, the conditional population law is sto-chastic and the policy-improvement step becomes more implicit, leading to fixed-point characterizations of the optimal policy. In contrast with these papers, we use the pointwise-in-action q-function directly to derive the policy-gradient formula, yielding an explicit actor update once V π and its derivatives are available. Thus, our actor–critic pipeline does not require an auxiliary integrated q-function or testing over a neighborhood of policies. 
+
+Mean-field linear-quadratic control. The linear-quadratic structure has played a central role in mean-field control theory. In the finite-horizon setting, Riccati-based characterizations for mean-field stochastic linear-quadratic control were developed in [81], while the infinite-horizon problem with de-terministic coefficients was studied in [42]. Subsequent works investigated the structural solvability of mean-field linear-quadratic problems, including closed-loop solvability [53], open-loop solvability [66], and weak closed-loop solvability [67]. Extensions to conditional McKean–Vlasov dynamics with random coefficients and common noise were obtained in [55, 6]. [37] analyze the entropy regularized finite-time mean-field LQR. More recently, long-time asymptotic properties, including turnpike behavior, have been studied in [13, 14]. We complement this literature by analyzing an entropy-regularized infinite-horizon 
+
+> 4
+
+mean-field LQR problem with stationary randomized policies, for which the optimal Gaussian policy and the optimal value function are characterized explicitly through a coupled algebraic Riccati system. 2. Problem Formulation 
+
+Let d, n, m ∈ N. The state space is Rd, the action space is a Borel set A ⊆ Rm, and the population state is described by a measure in P2(Rd), the set of Borel probability measures on Rd with finite second moment. We equip P2(Rd) with the 2-Wasserstein distance 
+
+W2(μ, ϱ ) := inf 
+
+> γ∈Γ( μ,ϱ )
+
+Z 
+
+> Rd×Rd
+
+|x − y|2 γ(dx, dy )
+
+1/2
+
+.
+
+We consider an infinite-horizon discounted mean-field optimal control problem. Starting from an initial condition ( s, μ ) ∈ Rd × P 2(Rd), where s denotes the state of a representative agent and μ the distribution of the population, a social planner seeks to optimize the collective performance of the system over time. The objective is to maximize the expected discounted reward generated by the controlled mean-field dynamics. This leads to the optimal value function over an admissible set Π add 
+
+V ∗(s, μ ) := sup 
+
+> π∈Πadd
+
+V π (s, μ ), (s, μ ) ∈ Rd × P 2(Rd). (1) Here V π (s, μ ) denotes the value associated with a policy π ∈ Πadd when the system starts from ( s, μ ). Whenever there exists a policy π∗ ∈ Πadd such that V ∗(s, μ ) = V π∗
+
+(s, μ ) for all ( s, μ ) ∈ Rd × P 2(Rd), we call π∗ an optimal policy. More precisely, for a given policy π ∈ Πadd , the corresponding value is defined by 
+
+V π (s, μ ) := E
+
+Z ∞
+
+> 0
+
+e−βt rπλ (st, μ t) d t s0 = s, μ 0 = μ
+
+
+
+, (2) where β > 0 is the discount factor, rπλ is the running reward, and ( st, μ t)t≥0 denotes the controlled representative-population state process. In classical mean-field control, one often works with determin-istic feedback controls. In the present work, by contrast, we allow for randomized feedback policies. This choice is natural in reinforcement learning, where exploration plays a central role and is naturally encoded through Markov kernels. Accordingly, we take Π add to be the class of Markov kernels 
+
+π : Rd × P 2(Rd) −→ P (A), (x, μ ) 7 −→ π(·| x, μ ),
+
+such that π(·| x, μ ) ≪ ν for every ( x, μ ), with jointly measurable density pπ (·| x, μ ), where ν denotes a 
+
+σ-finite reference measure on ( A, B(A)). The running reward in (2) is the entropy-regularized averaged reward 
+
+rπλ (x, μ ) := rπ (x, μ ) + λ H π(·| x, μ )
+
+:= 
+
+Z
+
+> A
+
+r(x, μ, a ) π(d a|x, μ ) − λ
+
+Z
+
+> A
+
+log pπ (a|x, μ ) π(d a|x, μ ), (3) where λ > 0 is the temperature parameter. Entropy regularization is standard in continuous-time reinforcement learning and promotes exploration; see, for instance, [76, 45, 46, 47, 78, 37]. We now introduce the controlled dynamics associated with a policy π ∈ Πadd . Let b : Rd × P 2(Rd) ×A → Rd and σ : Rd × P 2(Rd) × A → Rd×n be measurable coefficients. The averaged drift and diffusion matrix induced by π are defined by 
+
+bπ (x, μ ) := 
+
+Z
+
+> A
+
+b(x, μ, a ) π(d a|x, μ ), Σπ (x, μ ) := 
+
+Z
+
+> A
+
+σ(x, μ, a )σ(x, μ, a )⊤ π(d a|x, μ ),
+
+and we write σπ (x, μ ) :=  Σπ (x, μ )1/2 ∈ Rd×d for the symmetric positive semidefinite square root of Σπ . The representative state process then solves dst = bπ (st, μ t) d t + σπ (st, μ t) d Bt, s0 = s, (4) while the population distribution μt is generated by the McKean-Vlasov equation d˜ st = bπ (˜ st, μ t) d t + σπ (˜ st, μ t) d ˜Bt, ˜s0 ∼ μ, μt = Law(˜ st), (5) where B and ˜B are independent d-dimensional Brownian motions. The pair ( st, μ t) appearing in (2) is therefore obtained by coupling a representative agent with the population law generated by (5). 
+
+> 5
+
+Formally, for each initial condition ( s, μ ) ∈ Rd × P 2(Rd) and each horizon T > 0, we work on a probability space (Ω , F, P) endowed with a filtration F = ( Ft)0≤t≤T such that F0 contains all P-null sets of F, the filtration is right-continuous, and (Ω , F, F, P) supports two independent d-dimensional F-Brownian motions B and ˜B, together with an F0-measurable random variable ˜ s0 satisfying Law(˜ s0) = μ
+
+and independent of ( B, ˜B). The representative component starts from the deterministic value s. Under Assumption A1 (below), the population equation admits a unique strong F-adapted solution ˜ s, and we then define μt := Law(˜ st); in particular, ( μt)0≤t≤T is a deterministic flow in P2(Rd); see [22, Chapter 4]. Once this flow is fixed, due to Assumption A1, the representative dynamics is an F-adapted stochastic differential equation, and therefore it also admits a unique strong solution. 
+
+Remark 2.1 (On randomized and aggregated formulations) . The state–law formulation adopted here, namely a representative state coupled with a population law flow on Rd × P 2(Rd), is consistent with the general McKean–Vlasov framework of [20] in the uncontrolled case and [8] in the control setting. Given a stochastic policy π : Rd × P 2(Rd) → P (A), the most direct non-averaged formulation is to sample actions continuously in time according to the current state and population law, namely 
+
+dst = b(st, μ t, a st ) d t + σ(st, μ t, a st ) d Bt, ast ∼ π(·| st, μ t), (6) d˜ st = b(˜ st, μ t, a μt ) d t + σ(˜ st, μ t, a μt ) d ˜Bt, aμt ∼ π(·| ˜st, μ t), μt = Law(˜ st) (7) 
+
+Formally, one may realize the sampling through a measurable map Φπ (x, μ, u ) such that Φπ (x, μ, U ) ∼
+
+π(·| x, μ ) for U ∼ Unif[0 , 1] , and then set ast = Φ π (st, μ t, U st ), aμt = Φ π (˜ st, μ t, U μt ). The difficulty is that, on the usual product space, a continuum of independent samples in time need not be jointly measurable in (t, ω ), so the coefficients may fail to be progressively measurable; see [73, Remark 2.1] . A rigorous pathwise construction is nevertheless possible on a suitable enriched product space, for instance a rich Fubini extension in the sense of [69] ; this is precisely the route taken in [37] for (6) –(7) .A different non-averaged interpretation is to sample the action only on a time grid and then keep it constant between intervention times. This produces an SDE with piecewise constant random controls on the usual probability space. Related piecewise constant randomizations also appear in [8] within the ran-domized McKean–Vlasov control problem, while in the continuous-time reinforcement learning literature such sampled dynamics are studied in [73, 44] . In general, discretely sampled dynamics do not coincide with the aggregated dynamics; rather, they converge to them as the mesh size tends to zero; see [44, Theorems 4.1–4.2] .By contrast, the aggregated formulation (4) –(5) is the appropriate law-level representation of the con-tinuously randomized model (6) -(7) . More precisely, whenever (6) -(7) is constructed on an enriched space and is well posed, the law of its state process solves the same McKean–Vlasov martingale problem as the aggregated system (4) –(5) . Hence, under weak uniqueness, both formulations induce the same law and therefore the same value functional; see [78, Lemma A.1] , [36, 49] and [37, Proof of Prop. 2.1] .
+
+Organization of the paper. The rest of the paper is devoted to approximating the optimal policy of (1) through an actor–critic iteration. Given a parametrized randomized policy πω , each iteration consists of two steps: (1) Policy evaluation. For the current policy πω , the critic computes or approximates the value function V πω (s, μ ) by solving the associated linear stationary HJB equation. (2) Policy improvement. The actor updates the policy parameters using a policy gradient formula for the performance functional J(ω) = E[V πω (s, μ )], for instance through the gradient ascent step ω ← ω + α∇ω J(ω). In Section 3, we study the policy-evaluation step and show that, for a fixed admissible policy, the value function is the unique classical solution of the associated stationary Hamilton–Jacobi–Bellman equation. In Section 4, we derive the policy gradient theorem and its parametric version for the coupled representative agent–population system. In Section 5, we describe how the actor–critic method can be implemented in practice in the model-based setting. Section 6 analyzes the entropy-regularized infinite-horizon mean-field linear-quadratic regulator, which provides an explicit benchmark for the general theory. Finally, Section 7 presents numerical examples illustrating our method. 3. The Stationary HJB Equation 
+
+The central object of study in this section is the value function V π defined in (2). Our goal is to characterize it as the unique classical solution of a stationary Hamilton-Jacobi-Bellman (HJB) equation. 
+
+> 6
+
+3.1. The infinitesimal generator and stationary HJB equation. The dynamics of the pair ( st, μ t)under policy π are governed by (4)-(5). To differentiate a function F : Rd × P 2(Rd) → R with respect to the measure argument μ, we rely on the notion of Lions derivative , introduced by Lions in his lectures at the Coll` ege de France [54] and further developed in [24, 22]. Applying the Itˆ o-Lions formula to a smooth function F : Rd × P 2(Rd) → R and taking expectations, one identifies the infinitesimal generator of ( st, μ t) as the operator (Lπb, ΣF )( s, μ ) := bπ (s, μ ) · ∇ sF (s, μ ) + 12 Σπ (s, μ ) : ∇2
+
+> ss
+
+F (s, μ )+
+
+Z
+
+> Rd
+
+h
+
+bπ (ξ, μ ) · ∂μF (s, μ )( ξ) + 12 Σπ (ξ, μ ) : Dξ ∂μF (s, μ )( ξ)
+
+i
+
+μ(d ξ), (8) where ξ 7 → ∂μF (s, μ )( ξ) denotes the Lions derivative of F with respect to μ, evaluated at ( s, μ, ξ ) ∈
+
+Rd × P 2(Rd) × Rd. We also denote by Dξ ∂μF (s, μ )( ξ) the Jacobian matrix of ξ 7 → ∂μF (s, μ )( ξ) with respect to ξ ∈ Rd. For a comprehensive treatment we refer to [24, Chapter 5] and [22, Chapter 1]. Also 
+
+A : B := Tr( A⊤B) is the Frobenius inner product, ∇sF and ∇2
+
+> ss
+
+F are the gradient and Hessian of F
+
+with respect to s ∈ Rd.The generator (8) has two parts: the first line is the classical Itˆ o generator for st driven by bπ and Σπ , that is (4), while the integral term captures the variation of F as the measure μt = L(˜ st) evolves under the McKean-Vlasov equation (5). In order to simplify the exposition we introduce the following class of functions. 
+
+Definition 3.1 (C2,2 functions with polynomial growth) . Let k ∈ N. A map F : Rd × P 2(Rd) → Rk
+
+belongs to C2,2(Rd × P 2(Rd)) if, for every μ ∈ P 2(Rd), the map s 7 → F (s, μ ) is twice continuously differentiable on Rd, and, for every s ∈ Rd, the map μ 7 → F (s, μ ) is Lions differentiable on P2(Rd).Moreover, the maps (s, μ, ξ ) 7 → ∂μF (s, μ )( ξ) and (s, μ, ξ ) 7 → Dξ ∂μF (s, μ )( ξ) are jointly continuous. We say that F ∈ C 2,2poly (Rd × P 2(Rd)) if F ∈ C 2,2(Rd × P 2(Rd)) and there exists a constant CF > 0
+
+such that, for all (s, μ, ξ ) ∈ Rd × P 2(Rd) × Rd,
+
+|F (s, μ )| ≤ CF
+
+ 1 + |s|2 + m2(μ),
+
+∥∇ sF (s, μ )∥ + |∂μF (s, μ )( ξ)| ≤ CF
+
+ 1 + |s| + |ξ| + m2(μ),
+
+∥D2
+
+> ss
+
+F (s, μ )∥ + ∥Dξ ∂μF (s, μ )( ξ)∥ ≤ CF
+
+ 1 + m2(μ),
+
+where mp(μ) denotes the p−th moment of μ.
+
+To establish C2,2poly regularity of V π and the existence of a solution of the HJB equation in the classical sense, we additionally require the following smoothness on the policy-aggregated coefficients. 
+
+(A1) C2,2-regularity of averaged coefficients. Let π ∈ Πadd be fixed. We assume that, for ev-ery component h ∈ { bπi , σ πi,j : i, j = 1 , . . . , d }, the derivatives ∇sh(s, μ ), D2
+
+> ss
+
+h(s, μ ), ∂μh(s, μ )( ξ), and 
+
+Dξ ∂μh(s, μ )( ξ) exist for all ( s, μ, ξ ) ∈ Rd × P 2(Rd) × Rd, are bounded by a constant Kπ , and are locally Lipschitz continuous in ( s, μ, ξ ). Also assume that rπλ ∈ C 2,2poly (Rd × P 2(Rd)) .
+
+Remark 3.2. Using Assumption A1 we can assume for simplicity that Kπ > 0 is big enough such that for all s ∈ Rd and μ ∈ P 2(Rd),
+
+|bπ (s, μ )| + ∥σπ (s, μ )∥ ≤ Kπ
+
+ 1 + |s| + pm2(μ). (9) 
+
+Also, since the bounded derivatives in Assumption A1 ensure the existence of Lπ > 0 such that for all 
+
+s, s ′ ∈ Rd and μ, μ ′ ∈ P 2(Rd),
+
+|bπ (s, μ ) − bπ (s′, μ ′)| + ∥σπ (s, μ ) − σπ (s′, μ ′)∥ ≤ Lπ
+
+ |s − s′| + W2(μ, μ ′).
+
+Moreover, since Σπ = σπ (σπ )⊤, it follows from Assumption A1 and the product rule that Σπ ∈ C 2,2(Rd ×P2(Rd)) , and there exists Cπ > 0 such that, for all (s, μ, ξ ) ∈ Rd × P 2(Rd) × Rd,
+
+∥Σπ (s, μ )∥ ≤ Cπ
+
+ 1 + |s|2 + m2(μ),
+
+∥∇ sΣπ (s, μ )∥ + |∂μΣπ (s, μ )( ξ)| + ∥D2
+
+> ss
+
+Σπ (s, μ )∥ + ∥Dξ ∂μΣπ (s, μ )( ξ)∥ ≤ Cπ
+
+ 1 + |s| + pm2(μ).
+
+(10) We can now state the main result of this section, which characterizes the infinite-horizon value function as the unique classical solution of the stationary Hamilton-Jacobi-Bellman equation. 
+
+> 7
+
+Theorem 3.3 (Hamilton-Jacobi-Bellman equation) . Let π ∈ Πadd be a fixed admissible policy and suppose Assumption A1 holds. Then there exists a constant ¯βπ > 0, depending only on the structural constants in Assumption A1, such that the following holds. If β > ¯βπ , then the value function V π defined in (2) is well defined and belongs to C2,2poly (Rd × P 2(Rd)) . Moreover, V π is a classical solution of 
+
+(Lπb, Σ − β)V π (s, μ ) + rπλ (s, μ ) = 0 , (s, μ ) ∈ Rd × P 2(Rd), (11) 
+
+where Lπb, Σ is given by (8) . Finally, V π is the unique classical solution of (11) in the class C2,2poly (Rd ×P2(Rd)) . Moreover, assume in addition for all (s, μ ) ∈ Rd × P 2(Rd)2 s · bπ (s, μ ) + ∥σπ (s, μ )∥2 
+
+> F
+
+≤ C0 − κ|s|2 + Cdiss m2(μ) (12) 
+
+holds. Then the value function V π is well defined for every β > 0 and there exists Cr > 0 such that 
+
+|rπλ (s, μ )| ≤ Cr (1 + |s|2 + m2(μ)) . Furthermore, if C0 = 0 then V π is also well defined for β = 0 .
+
+The proof of Theorem 3.3 is provided in Section A.1. Several remarks on the above theorem follows. First, the constant ¯βπ in Theorem 3.3 is defined by ¯βπ = max {β0(2) , β var (2) }, where β0(2) and βvar (2) are given explicitly in Remarks A.2 and A.5, and depend only on d and Kπ .Second, once the policy π is fixed, the stationary HJB equation becomes linear. The proof of Propo-sition 6.4 then relies on two preliminary lemmas. The first one provides explicit exponential-in-time Lp
+
+bounds for the state processes, while the second one gives exponential-in-time bounds for the derivatives with respect to the state and measure variables. These estimates are the key input in the infinite-horizon argument, since they quantify precisely how the growth in time interacts with the discount factor. Start-ing from these identities, the proof combines the finite-horizon result of [38] with a passage to the limit as T → ∞ . The previous lemmas ensure that this limit can be performed both at the level of the value function and in the equation itself, which yields the classical solution of the stationary HJB equation together with uniqueness in the polynomial-growth class. The argument is also closely related in spirit to the McKean-Vlasov PDE framework of [20], although the latter deals with finite-horizon problems, whereas here we consider an infinite-horizon discounted setting. 4. Policy Gradient 
+
+This section develops the policy improvement step for the mean-field control problem introduced in Section 2. The policy evaluation step has already been addressed in Section 3: given a feedback randomized policy π, the value function V π is well defined and can be characterized as the unique classical solution of a stationary HJB equation. The goal of the present section is to derive an explicit formula for the gradient of the performance functional with respect to a parametric family of policies. A distinctive feature of the mean-field setting is that the performance functional depends on two initial data: the initial law μ ∈ P 2(Rd) generating the population flow, and the initial distribution μ0 ∈ P 2(Rd)of the representative agent. Throughout this section, μ is fixed and the performance of a policy π is measured by 
+
+Jμ,μ 0 (π) := 
+
+Z
+
+> Rd
+
+V π (s, μ ) μ0(d s).
+
+For a parametric family {πω }ω∈Rp we write 
+
+J(ω) := Jμ,μ 0 (πω ) = 
+
+Z
+
+> Rd
+
+V πω (s, μ ) μ0(d s). (13) The main difficulty is that J(ω) depends on ω both through the representative dynamics and through the induced mean-field flow. In what follows we will provide a policy gradient theorem and a result for the parametrized case. 
+
+Remark 4.1. For any s0 ∈ Rd, the Dirac measure δs0 belongs to P2(Rd). Hence, by choosing μ0 = δs0 ,the results of this section apply to the pointwise performance functional Jμ,s 0 (π) := V π (s0, μ ) as well. 
+
+4.1. Policy gradient theorem. Let π ∈ Πadd and let φ be a measurable signed kernel Rd × P 2(Rd) →M(A) satisfying 
+
+φ(· | s, μ ) ≪ π(· | s, μ ),
+
+Z
+
+> A
+
+φ(d a | s, μ ) = 0 , (s, μ ) ∈ Rd × P 2(Rd), (14) with bounded Radon-Nikodym derivative ψ := d φ/ dπ ∈ L∞. The zero-mass condition in (14) ensures that πε remains a probability kernel for small ε. For |ε| small, define the perturbed kernel 
+
+πε(d a | s, μ ) := π(d a | s, μ ) + ε φ (d a | s, μ ) =  1 + εψ (s, μ, a ) π(d a | s, μ ), (15) 
+
+> 8
+
+and assume πε is an admissible feedback randomized policy for all sufficiently small |ε|.Before introducing the policy gradient theorem, we introduce the following advantage functions. 
+
+Definition 4.2 (Advantage functions) . Let π be a feedback randomized policy with value function V π .For (s, μ, a ) ∈ Rd × P 2(Rd) × A , define the representative advantage function 
+
+qπ
+
+> rep
+
+(s, μ, a ) := r(s, μ, a ) − λ log pπ (a | s, μ ) + b(s, μ, a ) · ∇ sV π (s, μ ) + 12 Σ( s, μ, a ) : D2
+
+> ss
+
+V π (s, μ ),
+
+and for (ξ, a ) ∈ Rd × A , define the population advantage function 
+
+qπ
+
+> pop
+
+(s, μ, ξ, a ) := b(ξ, μ, a ) · ∂μV π (s, μ )( ξ) + 12 Σ( ξ, μ, a ) : Dξ ∂μV π (s, μ )( ξ).
+
+Remark 4.3 (Interpretation of the advantage functions) . In standard reinforcement learning, the ad-vantage function can be written through the Bellman evaluation identity as 
+
+Aπ (s, a ) = r(s, a ) + γ E[V π (S′) | S = s, a = a] − V π (s).
+
+Thus, it compares the effect of taking the action a with the value generated by the policy. In the single-agent continuous-time setting, the same structure is expressed through the infinitesimal generator, so that the corresponding action-dependent term is given by the running reward plus the generator applied to the value function, minus the discount term. The present mean-field setting preserves this structure. The representative advantage function qπ
+
+> rep
+
+is the natural extension of the single-agent continuous-time term: it contains the entropy-regularized instantaneous reward together with the contribution of the generator acting on the state variable [47, 5, 74, 82] . The population advantage function qπ 
+
+> pop
+
+is specific to the mean-field framework and describes the additional contribution coming from the dependence of V π on the population law through its Lions derivatives. In this way, the classical advantage structure is decomposed into a representative part and a population part. Finally, let us note that [78] introduces two q-functions in the McKean–Vlasov control setting, an integrated q-function and an essential q-function. The integrated q-function is a central object in the proposed learning procedure. Since its weak martingale characterization is formulated with respect to all test policies in a neighbourhood of the target policy, its practical implementation relies on averaging the corresponding loss over nearby test policies. The essential q-function plays the role of a pointwise-in-action quantity for policy improvement, and in this respect our kernels qπ 
+
+> rep
+
+and qπ 
+
+> pop
+
+are closer in spirit to that object, although our formulation is for the coupled representative-agent / population system rather than for the population-only formulation. The main difference is that, in our actor–critic pipeline, the policy gradient theorem requires only the pointwise-in-action kernels qπ 
+
+> rep
+
+and qπ
+
+> pop
+
+, which are obtained directly from V π and its derivatives. Therefore, no auxiliary integrated q-function is needed, nor does our approach require testing over a neighbourhood of the target policy. 
+
+Definition 4.4 (Discounted occupancy measure) . Let π ∈ Πadd be a fixed policy, and let (sπt , μ πt )t≥0
+
+be the state-population process associated with (4) -(5) starting from sπ 
+
+> 0
+
+= s ∼ μ0, and μπ 
+
+> 0
+
+= μ. The discounted occupancy measure ρπμ,μ 0 on Rd × P 2(Rd) is defined by 
+
+ρπμ,μ 0 (B) := β E
+
+Z ∞
+
+> 0
+
+e−βt 1{(sπt ,μ πt )∈B} dt
+
+
+
+, B ∈ B  Rd × P 2(Rd).
+
+Remark 4.5 (Equivalent representations of ρπμ,μ 0 ). For t ≥ 0, let P πt (s0, μ ; ·) := Law( sπt | s0, μ ). Then, by Tonelli’s theorem, ρπμ,μ 0 admits the representation 
+
+ρπμ,μ 0 (B) = β
+
+Z ∞
+
+> 0
+
+e−βt 
+
+Z 
+
+> Rd
+
+Z
+
+> Rd
+
+1B (x, μ πt ) P πt (s0, μ ; d x) μ0(d s0)
+
+
+
+dt, B ∈ B (Rd × P 2(Rd)) .
+
+Moreover, denoting by δμπt ∈ P (P2(Rd)) the Dirac measure at μπt , the previous identity can be written equivalently, in measure form, as 
+
+ρπμ,μ 0 (d x, dν) = β
+
+Z ∞
+
+> 0
+
+e−βt 
+
+Z 
+
+> Rd
+
+P πt (s0, μ ; d x) μ0(d s0)
+
+
+
+δμπt (d ν) d t. 
+
+Theorem 4.6 (Gˆ ateaux policy gradient) . Fix a baseline policy π ∈ Πadd . Let φ be a signed kernel satisfying (14) , and let πε be as in (15) , admissible for all |ε| ≤ ε0. Suppose Assumption A1 holds for both π and πε, with |ε| ≤ ε0. Assume μ, μ 0 ∈ P 2(Rd) and β > 2 ¯βπ , where ¯βπ from Theorem 3.3. Then 
+
+> 9
+
+the map ε 7 → J(ε) := R 
+
+> Rd
+
+V πε
+
+(s, μ ) μ0(d s) is differentiable at ε = 0 , with 
+
+ddε J(ε) ε=0 
+
+= 1
+
+β E(s,μ )∼ρπμ,μ 0
+
+Z 
+
+> A
+
+qπ
+
+> rep
+
+(s, μ, a ) φ(d a | s, μ ) + 
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+qπ
+
+> pop
+
+(s, μ, ξ, a ) φ(d a | ξ, μ ) μ(d ξ)
+
+
+
+.
+
+(16) The proof of Theorem 4.6 is provided in Section A.2. 
+
+Remark 4.7. The preceding theorem, together with Theorem 4.9, is a key contribution of this paper and distinguishes our approach from existing policy-gradient methods and related q-function-based algorithms. Compared with [37] , we provide a parameterization-free formulation of the policy gradient, which describes the first-order variation of the objective under arbitrary admissible perturbations of the policy. Compared with [78] , we use the pointwise q-functions to derive the policy-gradient formula directly, while their method requires computing the integrated q-functions for all test policies in a neighbourhood of the target policy. 
+
+4.2. Parametric policy gradient. The Gˆ ateaux gradient formula (16) expresses the directional de-rivative of J in terms of an arbitrary signed kernel φ. In practice, policies are often parametrized by a finite dimensional vector ω ∈ Rp, and one wishes to compute ∇ω J(ω) directly. The parametric policy gradient theorem below reduces this computation to a weighted expectation of the advantage functions against the score function. To state the result precisely, we require the following two assumptions on the parametric family. 
+
+(A2) Parametric differentiability of averaged coefficients. For ν-almost every a ∈ A and every (s, μ ) ∈ Rd × P 2(Rd), the map ω 7 → log pπω (a | s, μ ) is continuously differentiable. Moreover, for every compact set K ⊂ Rp, there exists CK > 0 and a function gK (·, s, μ ) ∈ L1(A, ν ) such that for all ω ∈ K
+
+and all ( s, μ ) ∈ Rd ×P 2(Rd), the maps ω 7 → pπω (· | s, μ ), ω 7 → bπω (s, μ ), ω 7 → Σπω (s, μ ), and ω 7 → rπω 
+
+> λ
+
+(s, μ )are continuously differentiable, satisfying 
+
+∇ω pπω (a | s, μ ) ≤ gK (a, s, μ ) for ν-a.e. a ∈ A .
+
+∥∇ ω bπω (s, μ )∥ ≤ CK
+
+ 1 + |s| + pm2(μ),
+
+∥∇ ω rπω 
+
+> λ
+
+(s, μ )∥ + ∥∇ ω Σπω (s, μ )∥ ≤ CK
+
+ 1 + |s|2 + m2(μ).
+
+(17) 
+
+(A3) Uniform regularity of the parametric family. Assumption A1 holds for every πω , with Lipschitz constant Lπ and regularity constant Kπ independent of ω ∈ Rp.
+
+Remark 4.8 (On the Assumptions A1-A3) . The Gaussian policy πω (· | s, μ ) := N (fω (s, μ ), Σ0), with 
+
+Σ0 ∈ Rm×m positive definite, satisfies Assumptions A1-A3 whenever fω is Lipschitz with linear growth in (s, μ ), belongs to C2,2(Rd × P 2(Rd)) with all spatial and Lions derivatives of at most polynomial growth in (s, μ, ξ ), and ω 7 → fω (s, μ ) is continuously differentiable with at most polynomial growth in (s, μ ); all uniformly in ω on compact sets. In particular, this holds when fω is linear in s and m1(μ), or when 
+
+fω is a cylindrical neural network [59, Section 2.2] with C2 activation function of at most linear growth, such as tanh or GELU .
+
+Theorem 4.9 (Parametric policy gradient) . Let {πω }ω∈Rp be a family of feedback randomized policies satisfying Assumptions A1-A3. Fix ω ∈ Rp and set π := πω . Assume μ, μ 0 ∈ P 2(Rd) and β > eβπ := max( ¯βπ , 2β0(2)) . Then the map ω 7 → J(ω), defined in (13) , is differentiable at ω, and 
+
+∇ω J(ω) = 1
+
+β E(s,μ )∼ρπμ,μ 0
+
+> a∼π(·| s,μ )
+
+h
+
+qπ
+
+> rep
+
+(s, μ, a ) ∇ω log pπ (a|s, μ )
+
+i
+
++ 1
+
+β E(s,μ )∼ρπμ,μ 0
+
+> ξ∼μa∼π(·| ξ,μ )
+
+h
+
+qπ
+
+> pop
+
+(s, μ, ξ, a ) ∇ω log pπ (a|ξ, μ )
+
+i
+
+.
+
+(18) 
+
+Equivalently, this can be written as 
+
+∇ω J(ω) = 1
+
+β E(s,μ )∼ρπμ,μ 0
+
+Z 
+
+> A
+
+qπ
+
+> rep
+
+(s, μ, a ) ∇ω log pπ (a | s, μ ) π(d a | s, μ )
+
+
+
++ 1
+
+β E(s,μ )∼ρπμ,μ 0
+
+Z 
+
+> Rd
+
+Z
+
+> A
+
+qπ
+
+> pop
+
+(s, μ, ξ, a ) ∇ω log pπ (a | ξ, μ ) π(d a | ξ, μ ) μ(d ξ)
+
+
+
+.
+
+(19) The proof of Theorem 4.9 is given in Section A.2. 
+
+Remark 4.10. The identity (18) keeps the classical policy-gradient form of advantage times score ,but now with two terms. The first expectation involves qπ 
+
+> rep
+
+and corresponds to the representative-agent contribution, whereas the second involves qπ 
+
+> pop
+
+and captures the population contribution. 
+
+> 10
+
+From a computational viewpoint, once V π has been evaluated or approximated, the quantities entering 
+
+(18) are obtained directly from V π , bπ , Σπ , and the score function ∇ω log pπ (a | s, μ ). The expectations with respect to ρπμ,μ 0 can then be approximated from trajectories of the controlled dynamics under the cur-rent policy πω , together with samples of actions drawn from πω (· | s, μ ). This is precisely the mechanism underlying the actor–critic algorithm described in Section 5. The formula (18) should be contrasted with the policy-gradient representation in [37] . In [37] , the gradient is obtained by differentiating the HJB characterization of the value function with respect to the policy parameter. As a result, the gradient itself is characterized as the solution of another linear HJB equation, whose source term is constructed from the value function under the current policy. Thus, computing the ascent direction requires solving an additional policy-evaluation-type problem. By contrast, 
+
+(18) gives an explicit gradient formula once V π and its derivatives are available. This makes the actor step more direct. Moreover, the differentiated HJB equation in [37] contains an additional term Hω [J], which involves the derivatives ∇ω bπω and ∇ω Σπω . As emphasized in [37, Remark 3.3] , when the underlying dynamics are unknown, this term is explicitly computable only in special settings, such as separable models. In contrast, our gradient formula is expressed directly through the pointwise-in-action kernels derived from 
+
+V π and its derivatives. This form avoids differentiating the aggregated drift and diffusion with respect to the policy parameters, and is therefore better suited for the model-free extensions developed in the follow-up paper [12] .Finally, we note that Theorem 3.1 of [37] is equivalent to our parametric policy-gradient formula (18) .When our initial distribution μ0 of the representative state is taken to be a Dirac measure μ0 = δs, our pointwise form of (18) agrees with their gradient G(s, μ ). For a general initial distribution μ0, averaging their pointwise gradient Es∼μ0 [G(s, μ )] gives exactly our gradient ∇ω J defined in (18) .
+
+5. Actor-Critic Algorithm 
+
+We now use the previous results to formulate an actor–critic algorithm. For a fixed policy πω , the critic provides a finite-dimensional approximation of the value function V πω solving (11), while the actor updates ω through the policy gradient formula derived in Section 4. For the critic, we use a linear finite-dimensional ansatz on Rd ×P 2(Rd), with cylindrical basis functions to encode the dependence on the population law. This choice is consistent with classical linear value-function approximation in reinforcement learning for large state spaces [71, 48, 4, 80], as well as with related approximation methods in mean-field control [15]. Once such a finite-dimensional critic has been obtained, either by the Galerkin procedure below or by any other method, the policy gradient theorem can be applied directly. This yields an actor update that retains both the representative-agent and the population-law contributions of the coupled mean-field problem. 5.1. Policy evaluation via Galerkin approximation. Before introducing the Galerkin approxima-tion, we emphasize that our actor-critic algorithm is not tied to a particular numerical method for solving the linear HJB equation. In principle, the critic can be computed using other approximation schemes, such as nonlinear function approximation with deep neural networks [56], or estimated through martingale-based characterizations of the value function [78]. The Galerkin method presented here should therefore be viewed as one possible critic approximation scheme, corresponding to linear function approximation. We focus on the Galerkin approach for two reasons. First, it gives a transparent and sta-ble way to approximate the value function through projection onto a finite-dimensional function space. Second, this linear-projection structure is well suited for our subsequent extension to the model-free reinforcement-learning setting [12], where the dynamics are unknown and the critic must be estimated from data. In that setting, nonlinear function approximation for Bellman-type equations can suffer from the double-sampling issue, which may introduce instability in policy evaluation. By contrast, the Galerkin formulation leads to a more tractable projected critic equation and provides a useful starting point for developing stable model-free algorithms. Let {ϕ1, . . . , ϕ n} be smooth functions on Rd×P 2(Rd) and define the trial space Vn := span {ϕ1, . . . , ϕ n}.
+
+We approximate the value function by 
+
+Vθ (s, μ ) := 
+
+> n
+
+X
+
+> i=1
+
+θi ϕi(s, μ ) = θ⊤Φ( s, μ ), Φ := ( ϕ1, . . . , ϕ n)⊤, (20) 
+
+> 11
+
+where θ ∈ Rn is the vector of critic coefficients. Although the basis functions are defined on Rd × P 2(Rd), the approximation is finite-dimensional because only finitely many of them are used. In practice, the dependence on μ will be chosen through cylindrical functions, as explained in Subsection 5.2. For a fixed policy πω , we impose the HJB residual associated with Vθ to be orthogonal to the trial space with respect to the reference measure m. Thus, we seek θ∗(ω) ∈ Rn such that for every j = 1 , . . . , n ,
+
+Z
+
+> Rd×P 2(Rd)
+
+
+
+(Lπω
+
+> b, Σ
+
+Vθ∗(ω))( s, μ ) − βV θ∗(ω)(s, μ ) + rπω 
+
+> λ
+
+(s, μ )
+
+
+
+ϕj (s, μ ) m(d s, dμ) = 0 , (21) where m is a fixed Borel probability measure on Rd × P 2(Rd). Since the equation is linear in V , (21) is equivalent to the linear system 
+
+A(ω) θ∗(ω) = b(ω), (22) where 
+
+Aji (ω) = 
+
+Z
+
+> Rd×P 2(Rd)
+
+ϕj (s, μ )
+
+
+
+β ϕ i(s, μ ) − (Lπω
+
+> b, Σ
+
+ϕi)( s, μ )
+
+
+
+m(d s, dμ),bj (ω) = 
+
+Z
+
+> Rd×P 2(Rd)
+
+rπω 
+
+> λ
+
+(s, μ ) ϕj (s, μ ) m(d s, dμ).
+
+(23) Consequently, whenever A is invertible, the solution of (22) is given by θ∗(ω) = ( A(ω)) −1b(ω). In any case, independently of the particular approximation used for A(ω) and b(ω), the corresponding critic is obtained as the Galerkin approximation 
+
+V πω 
+
+> n
+
+(s, μ ) := Vθ∗(ω)(s, μ ). (24) 5.2. Cylindrical basis functions and moment features. A central issue in the mean-field setting is the representation of the measure variable. A convenient class of functions is given by cylindrical functions, for which the Lions derivatives can be computed explicitly. This makes them particularly attractive for Galerkin approximations of the HJB equation. Let k ∈ N and fix feature functions φ1, . . . , φ k ∈ C2 
+
+> b
+
+(Rd). We define the associated moment map 
+
+m(μ) :=  m1(μ), . . . , m k(μ) ∈ Rk, mi(μ) := 
+
+Z
+
+> Rd
+
+φi(ξ) μ(d ξ), i = 1 , . . . , k. 
+
+A function F : Rd × P 2(Rd) → R is called cylindrical with respect to the feature family {φi}ki=1 if there exists a smooth map Ψ : Rd × Rk → R such that 
+
+F (s, μ ) = Ψ  s, m (μ).
+
+Thus, the dependence on μ is reduced to finitely many moments or, more generally, finitely many linear observables of μ.This construction is useful for the policy-evaluation step for two reasons. First, it leads to a finite-dimensional parametrization of the measure argument. Second, the derivatives entering the HJB operator become explicit. Indeed, if F (s, μ ) = Ψ( s, m (μ)), then 
+
+∇sF (s, μ ) = ∇sΨ s, m (μ), D2
+
+> ss
+
+F (s, μ ) = D2
+
+> ss
+
+Ψ s, m (μ),∂μF (s, μ )( ξ) = 
+
+> k
+
+X
+
+> i=1
+
+∂mi Ψ s, m (μ) ∇φi(ξ), Dξ ∂μF (s, μ )( ξ) = 
+
+> k
+
+X
+
+> i=1
+
+∂mi Ψ s, m (μ) D2 
+
+> ξξ
+
+φi(ξ). (25) Therefore, once the feature functions φi are fixed, the operator Lπω
+
+> b, Σ
+
+F can be evaluated explicitly for cylindrical functions. This motivates choosing, in the Galerkin approximation (21), basis functions of the form ϕj (s, μ ) = ψj
+
+ s, m (μ), j = 1 , . . . , n , with ψj smooth on Rd × Rk. In this setting, the problem is naturally expressed in terms of the reduced variables ( s, m (μ)) ∈ Rd × Rk, and the reference measure may therefore be chosen as a Borel probability measure m on Rd × Rk, built from N > 0 observations 
+
+{(sτ , m τ )}Nτ =1 , with mτ = m(μτ ) , sampled on the time grid tτ = ( τ − 1)∆ t along the trajectories of (4)–(5). A natural choice is to take m as the empirical discounted occupancy measure on the reduced space, namely 
+
+m = β
+
+> N
+
+X 
+
+> τ=1
+
+e−βt τ ∆t δ (sτ ,m (μτ )) , or m = 1
+
+N
+
+> N
+
+X 
+
+> τ=1
+
+δ(sτ ,m (μτ )) , (26) the latter corresponding to the empirical undiscounted measure on the finite observation window. In Section 7.1, we also implemented the undiscounted measure. Our numerical results indicate that the algorithm is robust with respect to the choice of measure m.
+
+> 12
+
+In practice, one may average over L > 0 independent trajectories in order to reduce the variance of the empirical estimator. This is naturally reflected in the definition of m by averaging the empirical measure across trajectories. Consequently, if {(sη , m η )}ND
+
+> η=1
+
+, with ND = N · L, denotes the collection of 
+
+N observations obtained from these L trajectories, then one empirical approximation of (23), based on the undiscounted measure, is given by 
+
+bAji (ω) := 1
+
+NDNDX
+
+> η=1
+
+ψj (sη , m η )
+
+
+
+β ψ i(sη , m η ) − (Lπω
+
+> b, Σ
+
+ϕi)( sη , m η )
+
+
+
+,
+
+bbj (ω) := 1
+
+NDNDX
+
+> η=1
+
+rπω 
+
+> λ
+
+(sη , m η ) ψj (sη , m η ),
+
+for i, j = 1 , . . . , n . From a modeling viewpoint, the choice of the features φ1, . . . , φ k should reflect the expected structure of the value function. In linear-quadratic problems, moment-based features are espe-cially natural, because the value function depends on μ through a small number of low-order moments; see Proposition 6.4. For more general problems, one may enrich the family of features by adding nonlinear observables of the population distribution. 5.3. Policy gradient. Let πω be a parametrized policy, with parameter ω ∈ Rp, and let V πω 
+
+> n
+
+be either the critic obtained from (24), or, more generally, any finite-dimensional approximation of V πω for which the derivatives entering the policy gradient formula are well defined and can be evaluated. The policy gradient theorem from Section 4 provides an exact gradient formula in terms of a representative contribution and a population contribution. For implementation, we keep exactly the same structure, but replace the exact value function V πω by its approximation V πω 
+
+> n
+
+.Accordingly, we define qπω 
+
+> rep ,n
+
+and qπω 
+
+> pop ,n
+
+as in Definition 4.2, with V π replaced by V πω 
+
+> n
+
+. The resulting approximate policy-gradient direction is 
+
+∇ω Jπω 
+
+> n
+
+:= 1
+
+β
+
+Z
+
+> Rd×P 2(Rd)
+
+Z
+
+> A
+
+qπω
+
+> rep ,n
+
+(s, μ, a ) ∇ω log pπω (a | s, μ ) πω (d a | s, μ )+
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+qπω
+
+> pop ,n
+
+(s, μ, ξ, a ) ∇ω log pπω (a | ξ, μ ) πω (d a | ξ, μ ) μ(d ξ)
+
+!
+
+ρπω (d s, dμ).
+
+(27) When the critic is expanded in cylindrical basis functions, qπω 
+
+> rep ,n
+
+and qπω 
+
+> pop ,n
+
+can be evaluated explicitly. Indeed, in that case the derivatives of V πω 
+
+> n
+
+are given directly by the formulas in (25). For numerical purposes, (27) may be approximated from a finite collection of observations {(sη , μ η )}ND 
+
+> η=1
+
+⊂ Rd × P 2(Rd)together with nonnegative weights {wη }ND
+
+> η=1
+
+. This yields the empirical approximation 
+
+\∇ω Jπω 
+
+> n
+
+:= 1
+
+β
+
+> ND
+
+X
+
+> η=1
+
+wη
+
+Z
+
+> A
+
+qπω
+
+> rep ,n
+
+(sη , μ η , a ) ∇ω log pπω (a | sη , μ η ) πω (d a | sη , μ η )+
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+qπω
+
+> pop ,n
+
+(sη , μ η , ξ, a ) ∇ω log pπω (a | ξ, μ η ) πω (d a | ξ, μ η ) μη (d ξ)
+
+!
+
+.
+
+(28) Several remarks on numerically computing the above gradient are in order. First, the integral can be approximated by empirical mean through sampling actions aj from the current policy and sampling states 
+
+si from the current μη (ξ). Second, regarding the weight wη , when the measure in (27) is chosen as the discounted occupancy measure ρπω , we consider L independent trajectories {(sℓτ , μ ℓτ )}N −1  
+
+> τ=0
+
+, ℓ = 1 , . . . , L ,of the controlled process ( sπω 
+
+> t
+
+, μ πω 
+
+> t
+
+) sampled on the time grid tτ = τ ∆t, and identify the observations in (28) with these data, so that ND = LN and wℓτ = 1 
+
+> L
+
+e−βt τ ∆t. However, numerically we found that simply setting wη = 1 
+
+> ND
+
+also provides a good approximation of the ascent direction. Finally, regardless of the specific approximation used for ∇ω Jπω 
+
+> n
+
+, the parameter update is of the form 
+
+ω(k+1) = ω(k) + αk \∇ω Jπω 
+
+> n
+
+,
+
+where αk > 0 is the stepsize. The discussion above leads to Algorithm 1. 
+
+> 13
+
+Algorithm 1 Computational policy iteration for the coupled system  
+
+> 1:
+
+Choose a parametrized policy family {πω }ω∈Rp . 
+
+> 2:
+
+Choose a finite-dimensional trial space Vn = span {ϕ1, . . . , ϕ n}, preferably with cylindrical basis functions in the measure variable.  
+
+> 3:
+
+Initialize the actor parameter ω(0) . 
+
+> 4:
+
+for k = 0 , 1, . . . , K − 1 do  
+
+> 5:
+
+Policy evaluation: solve the linear Galerkin system (22) and define 
+
+V πω(k) 
+
+> n
+
+(s, μ ) := ( θ(k))⊤Φ( s, μ ). 
+
+> 6:
+
+Policy improvement: construct the approximate advantage functions qπω 
+
+> rep ,n
+
+and qπω 
+
+> pop ,n
+
+using 
+
+V πω(k) 
+
+> n
+
+. 
+
+> 7:
+
+Estimate the gradient direction bJn(ω(k)) from (28).  
+
+> 8:
+
+Update the actor by 
+
+ω(k+1) = ω(k) + αk \∇ω Jπω 
+
+> n
+
+. 
+
+> 9:
+
+end for  
+
+> 10:
+
+Return the final policy πω(K) and the associated critic V πω(K) 
+
+> n
+
+.6. Infinite-Time Mean-Field Linear Quadratic Regulator 
+
+In this section we analyze the infinite-horizon mean-field linear-quadratic regulator with stationary randomized feedback policies and entropy regularization. Our aim is to derive an explicit characterization of the optimal policy and of the associated value function in terms of a stationary algebraic Riccati system. Besides its intrinsic interest as a solvable class of mean-field control problems, this model is also relevant as a benchmark for entropy-regularized reinforcement learning, where randomized policies and Shannon regularization naturally arise in connection with exploration. 6.1. Problem setting. Let d, m ∈ N and set A = Rm. For notational simplicity we take a one-dimensional Brownian motion; the extension to a multi-dimensional Brownian motion is immediate by interpreting ∥ · ∥ F and σσ ⊤ accordingly. Fix ( s, μ ) ∈ Rd × P 2(Rd) and consider the representative and population dynamics introduced in (4)-(5), where ˜ s0 ∼ μ and s0 = s, with coefficients 
+
+b(x, μ, a ) = Ax + ¯A ¯μ + Ba, σ(x, μ, a ) = γ + Dx + ¯D ¯μ + F a, ¯μ := 
+
+Z
+
+> Rd
+
+x μ (d x), (29) for fixed matrices A, ¯A, D, ¯D ∈ Rd×d, B, F ∈ Rd×m, and γ ∈ Rd. Let Q, ¯Q ∈ Sd
+
+> +
+
+, N ∈ Sm
+
+> ++
+
+, I ∈ Rm×d,and M ∈ Rd, H ∈ Rm. We consider the running reward 
+
+r(x, μ, a ) = −
+
+
+
+x⊤Qx + ¯ μ⊤ ¯Q ¯μ + a⊤N a + 2 a⊤Ix + 2 M ⊤x + 2 H⊤a
+
+
+
+, (30) and, for λ > 0, the entropy-regularized reward rλ introduced in (3). For β > 0 we define 
+
+V π (s, μ ) := Es,μ,π 
+
+Z ∞
+
+> 0
+
+e−βt rλ(st, μ t, a st ) d t
+
+
+
+, V ∗(s, μ ) := sup 
+
+> π∈Πadd
+
+V π (s, μ ),
+
+where Π add denotes the class of all stationary randomized feedback policies π : Rd × P 2(Rd) → P (Rm)such that π(· | x, μ ) admits a density pπ (x, μ, ·) with respect to Lebesgue measure, V π (s, μ ) < ∞ for every ( s, μ ), and, for every initial condition ( s, μ ), lim t→∞ e−βt  E|st|2 + m2(μt) = 0 .
+
+Remark 6.1. A sufficient, but not necessary, condition to ensure that π ∈ Πadd is that bπ , σπ , and rπλ
+
+satisfy Assumption A1, and that the dissipativity estimate (12) holds. Thus, π ∈ Πadd by Theorem 3.3. In the LQ setting, Assumption A1 is ensured by assuming that mπ ∈ C 2,2 with bounded derivatives, that 
+
+qπ and H π(· | x, μ ) belong to C2,2poly , and that mπ has at most linear growth in (x, pm2(μ)) , where 
+
+mπ (x, μ ) := 
+
+Z
+
+> A
+
+a π (d a | x, μ ), qπ (x, μ ) := 
+
+Z
+
+> A
+
+a⊤N a π (d a | x, μ ),
+
+and H π(· | x, μ ) is defined in (3) . A sufficient condition for (12) is that 2 x⊤Ax + ∥Dx ∥2 
+
+> F
+
+≤ c0 − α|x|2
+
+for all x ∈ Rd, for some c0 ≥ 0 and some α > 0 such that the remaining terms involving ¯A, ¯D, B, F and 
+
+mπ can be absorbed by Young’s inequality. 
+
+Definition 6.2 (Stabilizability, detectability, and mean-square stabilizability) . The pair (A, B ) ∈ Rd×d ×
+
+Rd×m is stabilizable if there exists Θ ∈ Rm×d such that A + BΘ is Hurwitz. The pair (A, H ) ∈
+
+Rd×d × Rq×d is detectable if there exists L ∈ Rd×q such that A − LH is Hurwitz. 
+
+> 14
+
+(A4) Discounted LQ conditions. Let Aβ := A − β 
+
+> 2
+
+Id, and ˜Aβ := A + ¯A − β 
+
+> 2
+
+Id. We assume that the following conditions hold: (H1) N ∈ Sm 
+
+> ++
+
+and 
+
+Q − I⊤N −1I ∈ Sd
+
+> ++
+
+, Q + ¯Q − I⊤N −1I ∈ Sd
+
+> ++
+
+.
+
+(H2) The pair ( ˜Aβ , B ) is stabilizable, and there exist Θ ∈ Rm×d and P0 ∈ Sd 
+
+> ++
+
+such that (Aβ + BΘ) ⊤P0 + P0(Aβ + BΘ) + ( D + F Θ) ⊤P0(D + F Θ) ⪯ − Id.
+
+Remark 6.3. Assumption (H1) implies in particular that the pairs (Aβ , (Q−I⊤N −1I)1/2) and ( ˜Aβ , (Q+¯Q − I⊤N −1I)1/2) are detectable. On the other hand, when D = F = 0 , condition (H2) is equivalent to assuming that both pairs (Aβ , B ) and ( ˜Aβ , B ) are stabilizable. 
+
+Let us consider the quadratic function 
+
+V (s, μ ) = −
+
+
+
+(s − ¯μ)⊤K(s − ¯μ) + ¯ μ⊤Λ ¯ μ + 2 Y ⊤s + R
+
+
+
+, (31) where K, Λ ∈ Sd
+
+> +
+
+, Y ∈ Rd, and R ∈ R satisfy the algebraic system 
+
+
+
+βK = Q + KA + A⊤K + D⊤KD − U ⊤S−1U, βΛ = Q + ¯Q + Λ( A + ¯A) + ( A + ¯A)⊤Λ + ( D + ¯D)⊤K(D + ¯D) − W ⊤S−1W, βY = M + A⊤Y + D⊤Kγ − U ⊤S−1O, βR = γ⊤Kγ − O⊤S−1O − λ
+
+2
+
+
+
+m log( π0λ) − log det S
+
+
+
+,
+
+(32) (33) (34) (35) where 
+
+S := N + F ⊤KF, O := H + B⊤Y + F ⊤Kγ, (36) and 
+
+U := I + B⊤K + F ⊤KD, W := I + B⊤Λ + F ⊤K(D + ¯D). (37) Here π0 denotes the mathematical constant. 
+
+Proposition 6.4. Assume Assumption A4 and let (K, Λ, Y, R ) be a solution of (32) -(35) . Let V be given by (31) , and let π∗ be defined as 
+
+π∗(· | s, μ ) = N
+
+
+
+−S−1 U s + ( W − U )¯ μ + O, λ
+
+2 S−1
+
+
+
+. (38) 
+
+Then 
+
+V ∗(s, μ ) = V π∗
+
+(s, μ ) = V (s, μ ) for all (s, μ ) ∈ Rd × P 2(Rd),
+
+and π∗ is the unique optimal stationary feedback policy in Πadd .
+
+The proof of Proposition 6.4 is provided in Section A.3. 7. Numerical Examples 
+
+7.1. Example 1: Mean-field systemic risk model. Mean-field models of systemic risk describe a large population of interacting agents whose individual states are attracted to the current population average, while each agent can act through a control representing, for instance, borrowing or lending to the system; See [27, 24]. In our stationary discounted setting introduced in Section 6, this leads to a one-dimensional linear-quadratic specification in which the state is penalized through its deviation from the population mean and the control is penalized quadratically. 7.1.1. Problem setup. We consider the one-dimensional mean-field LQR dynamics in the particular sys-temic risk configuration, namely dst =  A(st − ¯μt) + Ba t
+
+ dt + γ dBt, at ∼ π(· | st, μ t), ¯μt := 
+
+Z
+
+> R
+
+x μ t(d x),
+
+where μt = Law(˜ st) is the population law generated by the mean-field environment (5). This corresponds to the general framework of Section 6 with d = m = 1 , ¯A = −A, D = ¯D = F = 0 , and I = M = H = 0 .
+
+We take the running reward 
+
+r(x, μ, a ) = −
+
+
+
+Q(x − ¯μ)2 + ¯Q ¯μ2 + N a 2
+
+, (39) 
+
+> 15
+
+with Q, ¯Q ≥ 0 and N > 0. Our goal is to maximize the expected long-run regularized reward 
+
+V ∗(s, μ ) := sup 
+
+> π∈Πadd
+
+
+
+V π (s, μ ) := E
+
+Z ∞
+
+> 0
+
+e−βt rπλ (st, μ t) d t s0 = s, μ 0 = μ
+
+ 
+
+, (40) for every ( s, μ ) ∈ Rd × P 2(Rd), where the entropy-regularized rπλ (s, μ ) is as in (3) with r(s, μ, a ) defined in (39). Following Proposition 6.4, the optimal policy is given by 
+
+π∗(· | s, μ ) = N
+
+
+
+−N −1B⊤ K(s − ¯μ) + Λ ¯ μ, λ
+
+2 N −1
+
+
+
+. (41) The corresponding optimal value function is 
+
+V ∗(s, μ ) = V π∗
+
+(s, μ ) = −
+
+
+
+(s − ¯μ)⊤K(s − ¯μ) + ¯ μ⊤Λ ¯ μ + R
+
+
+
+, (42) where K, Λ ∈ Sd 
+
+> +
+
+and R ∈ R satisfy the reduced algebraic system 
+
+
+
+βK = Q + KA + A⊤K − KBN −1B⊤K, βΛ = Q + ¯Q − ΛBN −1B⊤Λ,βR = γ⊤Kγ − λ
+
+> 2
+
+
+
+m log( π0λ) − log det N
+
+
+
+.
+
+7.1.2. Policy parametrization and value approximation. Following the theoretical optimal policy (41), we consider the family of Gaussian policies parametrized as 
+
+πω (· | s, μ ) = N  ω1(s − ¯μ) + ω2 ¯μ, λ , (43) where ω = ( ω1, ω 2) ∈ R2. On the other hand, following (42), the value function can be approximated by the quadratic cylindrical ansatz 
+
+Vθ (s, μ ) = θ3 (s − ¯μ)2 + θ2 ¯μ2 + θ1, θ = ( θ1, θ 2, θ 3) ∈ R3, (44) that is, following the notation of (20), we are taking ϕ1(s, μ ) = 1, ϕ2(s, μ ) = ¯ μ2, and ϕ3(s, μ ) = ( s − ¯μ)2.7.1.3. Implementation and numerical results. We implement the model-based actor–critic procedure de-scribed in Section 5 for the scalar mean-field LQR example. The actor is parametrized by the Gaussian policy (43), and the critic is sought in the quadratic space generated by (44). Throughout the experiment we use 
+
+A = −1, B = 1 , Q = 1 , ¯Q = 1 , N = 12 , β = 1 , γ = 0 .5, λ = 0 .2.
+
+The population is initialized with mean ¯ μ0 = 1, and the initial representative state is sampled from 
+
+μ0 = N (1 , 1). Since the population dynamics are closed at the level of the mean ¯ μt, no auxiliary particle approximation of the population law is needed in this example. The representative state is sampled from the exact closed-loop Gaussian transition, while ¯ μt is propagated through the corresponding deterministic mean equation. The discounted integrals are approximated on [0 , T ], with T = 8 and ∆ t = 0 .05. We use 100 Monte Carlo trajectories per actor step, a constant learning rate α = 5 × 10 −2, and run 1000 policy-improvement iterations. For a fixed actor parameter ω = ( ω1, ω 2), the aggregated coefficients are 
+
+bπω (s, μ ) = A(s − ¯μ) + B ω1(s − ¯μ) + ω2 ¯μ, Σπω (s, μ ) = γ2.
+
+Thus, the Galerkin critic is computed by solving the linear system (22), with A(ω) and b(ω) defined in (23), after replacing the general generator Lπω 
+
+> b, Σ
+
+by the present LQR generator. For the basis 
+
+ϕ1(s, μ ) = 1 , ϕ2(s, μ ) = ¯ μ2, ϕ3(s, μ ) = ( s − ¯μ)2,
+
+one obtains 
+
+Lπω
+
+> b, Σ
+
+ϕ1 = 0 , Lπω
+
+> b, Σ
+
+ϕ2 = 2 Bω 2 ¯μ2, Lπω
+
+> b, Σ
+
+ϕ3 = 2( A + Bω 1)( s − ¯μ)2 + γ2.
+
+At each actor step, the identities above are inserted into the Galerkin system (22), with A(ω) and b(ω)defined in (23), to compute the critic coefficients θ(k) and then update the actor through the policy-gradient direction in (28). From a computational viewpoint, in this benchmark the critic space has dimension three, so policy evaluation reduces to solving a 3 × 3 linear system. Moreover, the Gaussian structure of the policy allows the conditional expectation over the action variable in the actor update to be evaluated analytically. The remaining numerical cost comes from the empirical approximation of the discounted occupancy measure along simulated trajectories. Since the closed-loop dynamics are linear                                                 
+
+> 16 3210123
+> s
+> 2
+> 1
+> 0
+> 1
+> 2
+> m=1
+> *(optimal)
+> (learned)
+> 3210123
+> s
+> m= 0
+> 3210123
+> s
+> m= 1 3210123
+> s
+> 5
+> 4
+> 3
+> 2
+> 1
+> 0
+> m=1
+> V*(optimal)
+> V*
+> (learned)
+> 3210123
+> s
+> m= 0
+> 3210123
+> s
+> m= 1
+
+Figure 1. Comparison between the learned and optimal solutions for different values of the population mean ¯ μ. Top row: policy mean induced by the learned actor and optimal Riccati policy mean. Bottom row: value function associated with the learned policy and optimal Riccati value function. 0 200 400 600 800 1000        
+
+> Iteration
+> 1.2
+> 1.0
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> Parameter value
+> 0
+> 1
+> 2
+> *(Riccati) 0200 400 600 800 1000
+> Iteration
+> 1.0
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> Parameter value
+> 1
+> 2
+> *(Riccati)
+
+Figure 2. Convergence of the finite-dimensional parameters in the scalar mean-field LQR example. Left: Galerkin critic coefficients θk compared with the Riccati coefficients 
+
+θ∗. Right: actor coefficients ωk compared with the optimal Riccati feedback coefficients 
+
+ω∗.and Gaussian for each fixed actor parameter, these trajectories are sampled from the exact transition law, while the population mean is propagated through its deterministic closed equation. The closed-form Riccati solution provides a benchmark for the optimal feedback and the optimal value function. Figure 1 compares the final learned policy mean and its induced value function with the Riccati benchmark for several fixed values of the population mean ¯ μ. Figure 2 reports the evolution of the critic and actor coefficients during training. The convergence of both sets of coefficients toward the Riccati values confirms that the HJB–Galerkin actor–critic iteration recovers the quadratic structure of the optimal solution in this benchmark example. We also implement the undiscounted empirical measure m in (26), which can be viewed as a biased empirical approximation of the discounted occupancy measure in (27), since it assigns uniform rather than discounted weights along the finite time window. The corresponding results, shown in Figure 3 with stepsize α = 1 × 10 −1, illustrate the same qualitative behavior as in the discounted case. 7.2. Example 2: Crowd-aversion transport. The second example illustrates the actor–critic method in a nonlinear mean-field setting for which no closed-form Riccati benchmark is available. The objec-tive is to transport a representative agent toward a prescribed target while penalizing trajectories that             
+
+> 17 0200 400 600 800 1000
+> Iteration
+> 1.2
+> 1.0
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> Parameter value
+> 0
+> 1
+> 2
+> *(Riccati) 0200 400 600 800 1000
+> Iteration
+> 1.0
+> 0.8
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> Parameter value
+> 1
+> 2
+> *(Riccati)
+
+Figure 3. Convergence of the finite-dimensional parameters in the scalar mean-field LQR example with undiscounted measure m. Left: Galerkin critic coefficients θk com-pared with the Riccati coefficients θ∗. Right: actor coefficients ωk compared with the optimal Riccati feedback coefficients ω∗.pass through regions of high crowd density. The crowd is described by a population law μt, which is approximated numerically by an empirical measure generated by a finite particle system. 7.2.1. Problem setup. We consider the controlled diffusion on R2
+
+dst = at dt + σ dBt, at ∼ πω (· | st, μ t),
+
+where at ∈ R2 is the control, σ > 0 is a constant volatility, and μt denotes the population distribution observed by the representative agent. The reward is defined by 
+
+r(s, μ, a ) = −
+
+ 12 ∥a∥2 + κ
+
+2 ∥s − star ∥2 + γ (Kη ∗ μ)( s) + ρ
+
+2 ∥s∥2
+
+
+
+, (45) where star ∈ R2 is the target location, κ > 0 controls the strength of the attraction to the target, γ > 0controls the crowd-aversion penalty, and ρ ≥ 0 is a confinement parameter. The crowd-density term is computed through the Gaussian kernel convolution (Kη ∗ μ)( s) := 
+
+Z
+
+> R2
+
+exp 
+
+
+
+− ∥s − s′∥2
+
+2η2
+
+
+
+μ(d s′),
+
+with bandwidth η > 0. The goal is to maximize the corresponding infinite-horizon entropy-regularized objective (2) with reward given by (45). 
+
+Remark 7.1. The four terms in (45) have distinct roles. The first one penalizes large controls, the second one attracts the representative agent toward star , the third one penalizes positions located in high-density regions of the crowd, and the last one adds a mild confinement on the unbounded domain. 
+
+7.2.2. Policy parametrization and value approximation. We use a Gaussian policy on R2 with fixed exploration variance, 
+
+πω (· | s, μ ) = N  mω (s, μ ), σ 2
+
+> a
+
+I2
+
+,
+
+where the mean is parametrized as mω (s, μ ) = W f (s, μ ), with ω ≡ W ∈ R2×df . In order to generate trajectories without an Euler–Maruyama approximation, we use an affine feature map depending on the state and on the empirical population mean, 
+
+f (s, μ ) =  1, s 1, s 2, s 1 − star ,1, s 2 − star ,2, ¯μ1, ¯μ2
+
+, ¯μ := 
+
+Z
+
+> R2
+
+x μ (d x).
+
+With this choice, the finite-particle approximation of the aggregated representative–population system is an affine linear diffusion. Hence, at each actor–critic iteration, the training trajectories are sampled from the exact Gaussian transition of this affine system, computed through the corresponding matrix exponential. The critic is constructed as in the Galerkin policy-evaluation procedure of Section 5.1. To represent the dependence on the population law, we use kernel-embedding features 
+
+uj (μ) := 
+
+Z
+
+> R2
+
+exp 
+
+
+
+− ∥x − cj ∥2
+
+2h2
+
+
+
+μ(d x), j = 1 , . . . , M μ,
+
+> 18
+
+where {cj }Mμ 
+
+> j=1
+
+⊂ R2 are fixed centers and h > 0 is the bandwidth. For the state variable we use Gaussian radial basis functions ψm(s) = exp( −∥ s − zm∥2/(2 s2
+
+> x
+
+)), m = 1 , . . . , M s. The critic basis is then given by 
+
+ϕm, 0(s, μ ) = ψm(s), ϕm,j (s, μ ) = ψm(s) uj (μ), m = 1 , . . . , M s, j = 1 , . . . , M μ.
+
+Thus, with n = Ms(Mμ +1), the value function is approximated in Vn = span {ϕ1, . . . , ϕ n} by V πω 
+
+> n
+
+(s, μ ) = 
+
+θ⊤Φ( s, μ ). 7.2.3. Implementation and numerical results. The implementation follows the actor–critic algorithm of Section 5. For each actor parameter W , the critic is obtained by solving the Galerkin system (22), with 
+
+A(W ) and b(W ) defined as in (23), after replacing the abstract generator Lπω 
+
+> b, Σ
+
+by the known generator of the crowd-aversion dynamics. The resulting critic V πω 
+
+> n
+
+is then inserted into the empirical policy-gradient formula (28) to update the actor. The numerical parameters are 
+
+σ = 0 .2, β = 0 .1, κ = 1000 , γ = 10 , η = 0 .8, ρ = 0 .1.
+
+The entropy parameter is λ = 2, the exploration standard deviation is σa = 0 .25, and the target is 
+
+star = (2 , 0). In the reported experiment, both the initial population law and the initial representative law are centered near ( −2, 0), with Gaussian perturbations of standard deviation 0 .02. The implementation also allows these two initial laws to be chosen independently. The population law is approximated by an empirical measure 
+
+bμNt = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+δXit . (46) Accordingly, the crowd-density term is evaluated as (Kη ∗ bμNt )( st) = 1
+
+N
+
+> N
+
+X
+
+> i=1
+
+exp 
+
+
+
+− ∥st − Xit ∥2
+
+2η2
+
+
+
+.
+
+From an implementation viewpoint, the main additional cost in this crowd-aversion example comes from the particle approximation of the population law. Since bμNt is represented by the empirical measure in (46), several realizations of the coupled representative–population dynamics must be generated to assem-ble the Galerkin system and evaluate the policy-gradient direction. Nevertheless, the implementation exploits the affine structure of the actor with respect to the state and the empirical population mean, which allows us to sample the coupled system from its exact Gaussian transition. At each actor–critic iteration we generate L = 24 independent simulations, each with N = 64 particles representing the crowd. The discounted objective is truncated at T = 5 and evaluated on the time grid ∆t = 0 .05. We run 500 actor updates with constant stepsize α = 5 ×10 −4. The actor matrix is initialized at zero, its entries are clipped for stability, and the Galerkin system is solved with ridge parameter 10 −2.The RBF centers for both the state and measure features are placed on a 5 × 5 Cartesian grid on [ −8, 4] 2.State and particle locations are clipped only when evaluating the RBF features; the simulated dynamics themselves are not clipped. Unlike the LQR example, this nonlinear crowd-aversion problem does not admit a closed-form optimal policy or value function. We therefore assess the method through diagnostics that measure stability and qualitative performance. Figure 4 reports the estimated regularized reward and the norms of the actor, critic, and policy-gradient direction along training. Figure 6 shows the trajectories generated by the final learned policy. The reward curve provides a numerical indication of policy improvement, while the parameter and gradient norms monitor the stability of the actor–critic iteration. The trajectory plot illustrates whether the learned policy transports the representative agent from the initial region near (−2, 0) toward the target while accounting for the crowd-aversion term. Finally, Figure 5 illustrate the convergence when the undiscounted measure ¯ m, defined in (26), is considered. Note that its qualitative behavior is similar to the discounted case shown in Figure 4.                 
+
+> 19 0100 200 300 400 500
+> Iteration k
+> 30000
+> 25000
+> 20000
+> 15000
+> 10000
+> 5000
+> 0
+> estimated regularized reward
+> running mean 0100 200 300 400 500
+> Iteration k
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> norm
+> |W|F
+> ||2
+> |WJ|F
+
+Figure 4. Training diagnostics for the crowd-aversion transport example. Left: esti-mated entropy-regularized reward along the actor–critic iterations. Right: norms of the actor parameters, critic coefficients, and policy-gradient direction. 0 100 200 300 400 500            
+
+> Iteration k
+> 30000
+> 25000
+> 20000
+> 15000
+> 10000
+> 5000
+> 0
+> estimated regularized reward
+> running mean 0100 200 300 400 500
+> Iteration k
+> 10 2
+> 10 1
+> 10 0
+> 10 1
+> 10 2
+> 10 3
+> 10 4
+> 10 5
+> norm
+> |W|F
+> ||2
+> |WJ|F
+
+Figure 5. Training diagnostics for the crowd-aversion transport example using the undiscounted occupancy measure. Left: estimated entropy-regularized reward along the actor–critic iterations. Right: norms of the actor parameters, critic coefficients, and policy-gradient direction. 2 1 0 1 2
+
+> x1
+> 0.6
+> 0.4
+> 0.2
+> 0.0
+> 0.2
+> 0.4
+> x2
+> tagged trajectories
+> tagged mean path
+> population mean path
+> trajectory envelope
+> initial tagged states
+> terminal tagged states
+> target
+
+Figure 6. Simulated trajectories after training. The plot shows representative trajec-tories under the learned policy, together with the empirical population mean path and the target location. 8. Acknowledgements 
+
+E. Bayraktar is supported in part by the NSF grants DMS-2507940, and 2406232, and in part by the Susan M. Smith Professorship. Y. Zhu and M. HERNANDEZ is supported in part by the NSF grants No 2529107. 
+
+Appendix A. Proofs of the Main Results 
+
+A.1. Proofs for Section 3. We first establish well-posedness of the system together with moment es-timates that are explicit in time. Estimates of this type are standard in the literature; see, for instance, 
+
+20 [8, 20]. However, for the infinite-horizon argument we need bounds with an explicit exponential depen-dence on t, so that they can be combined with the discount factor e−βt when passing to the limit as 
+
+T → ∞ . A generic finite-horizon bound of the form CT , with no explicit control of its dependence on T ,would not be sufficient for this purpose. We therefore state and prove the corresponding estimates for general p-moments. 
+
+Lemma A.1 (Well-posedness and exponential moment growth) . Suppose Assumption A1 holds. Fix an even integer p ≥ 2. Then, for every (s, μ ) ∈ Rd × P p(Rd), the system (4) -(5) admits a unique strong solution on [0 , ∞). Moreover, there exist constants Cp ≥ 1 and β0(p) > 0, depending only on p and the structural constants in Assumption A1, such that for all t ≥ 0,
+
+E[|st|p] + E[|˜st|p] ≤ Cp eβ0(p) t 1 + |s|p + mp(μ). (47) 
+
+In particular, for p = 4 , for each T > 0 there exists CT > 0 such that 
+
+sup 
+
+> 0≤t≤T
+
+
+
+Es,μ,π |st|4 + Es,μ,π |˜st|4
+
+≤ Cpeβ0(p)T  1 + |s|4 + m4(μ), (48) 
+
+and sup 0≤t≤T m2(μt) ≤ CT (1 + m4(μ)1/2).Proof. Step 1 (Existence and uniqueness). Under Assumption A1, the McKean-Vlasov SDE (5) has globally Lipschitz and linearly growing coefficients bπ and σπ ; see Remark 3.2. Hence, by the standard well-posedness theory for McKean-Vlasov SDEs, (5) admits a unique strong solution ˜ s for every initial law μ ∈ P 2(Rd). The population flow μt := L(˜ st) is therefore well defined. Conditioning on the deterministic flow ( μt)t≥0, the representative equation (4) is an SDE with progressively measurable coefficients, globally Lipschitz in s and with linear growth, so it also admits a unique strong solution. 
+
+Step 2 ( p-moment bound for ˜st). Let f (x) = |x|p. Since p ≥ 2 is even, f ∈ C2(Rd) and 
+
+∇f (x) = p|x|p−2x, D2f (x) = p(p − 2) |x|p−4xx ⊤ + p|x|p−2Id.
+
+For n ≥ 1, define the stopping time τn := inf {t ≥ 0 : |˜st| > n }. Applying Itˆ o’s formula to f (˜ st) on [0 , t ∧ τn] gives 
+
+|˜st∧τn |p = |˜s0|p +
+
+Z t∧τn
+
+> 0
+
+h
+
+∇f (˜ su) · bπ (˜ su, μ u) + 12 D2f (˜ su) : Σ π (˜ su, μ u)
+
+i
+
+du + Mt∧τn , (49) where Mt is a local martingale, hence E[Mt∧τn ] = 0. Using (9), Cauchy-Schwarz, and Young’s inequality, there exists a constant Cp > 0, depending only on p and Kπ , such that for all ( x, μ ) ∈ Rd × P 2(Rd), 
+
+|∇ f (x) · bπ (x, μ )| ≤ Cp
+
+ 1 + |x|p + m2(μ)p/ 2, D2f (x) : Σ π (x, μ ) ≤ Cp
+
+ 1 + |x|p + m2(μ)p/ 2. (50) Taking expectations in (49) yields 
+
+E[|˜st∧τn |p] ≤ mp(μ) + Cp
+
+Z t
+
+> 0
+
+
+
+1 + E[|˜su∧τn |p] + m2(μu)p/ 2
+
+du. 
+
+Set yn(t) := E[|˜st∧τn |p], y(t) := E[|˜st|p] , and z(t) := sup n≥1 yn(t). Since μu = L(˜ su), H¨ older’s inequality gives 
+
+m2(μu)p/ 2 =
+
+
+
+E[|˜su|2]
+
+p/ 2
+
+≤ E[|˜su|p] = y(u).
+
+Therefore, for every n ≥ 1, 
+
+yn(t) ≤ mp(μ) + Cp
+
+Z t
+
+> 0
+
+ 1 + yn(u) + y(u) du. (51) Now, for each fixed u ≥ 0, Fatou’s lemma implies y(u) = E[lim n→∞ |˜su∧τn |p] ≤ lim inf n→∞ yn(u) ≤ z(u).
+
+Hence (51) implies 
+
+yn(t) ≤ mp(μ) + Cp
+
+Z t
+
+> 0
+
+ 1 + 2 z(u) du, n ≥ 1.
+
+Taking the supremum over n gives 
+
+z(t) ≤ mp(μ) + Cp
+
+Z t
+
+> 0
+
+ 1 + 2 z(u) du. 
+
+By Gr¨ onwall’s inequality, z(t) ≤  mp(μ) + 1 e2Cpt for t ≥ 0. Since y(t) ≤ z(t), we conclude that 
+
+E[|˜st|p] ≤  mp(μ) + 1 eβ0t, β0 := 2 Cp. (52) 
+
+> 21
+
+Step 3 ( p-moment bound for st). Define σn := inf {t ≥ 0 : |st| > n }, and vn(t) := E[|st∧σn |p] .
+
+Repeating the same localized Itˆ o argument for (4), and using (52) to control m2(μt)p/ 2, we obtain 
+
+vn(t) ≤ | s|p + Cp
+
+Z t
+
+> 0
+
+ 1 + vn(u) du + Cp
+
+Z t
+
+> 0
+
+E[|˜su|p] d u. 
+
+Using (52), it follows that 
+
+vn(t) ≤ | s|p + Cp
+
+Z t
+
+> 0
+
+ 1 + vn(u) du + Cp
+
+ mp(μ) + 1  Z t
+
+> 0
+
+eβ0u du. 
+
+Another application of Gr¨ onwall’s inequality yields 
+
+vn(t) ≤ Cpeβ0t 1 + |s|p + mp(μ), t ≥ 0,
+
+after enlarging Cp if necessary. Letting n → ∞ and using Fatou’s lemma gives 
+
+E[|st|p] ≤ Cpeβ0t 1 + |s|p + mp(μ). (53) 
+
+Step 4 (Conclusion). Combining (52) and (53), and enlarging the constant if necessary, we obtain (47). For p = 4, the same argument gives the finite-horizon estimate (48). Finally, for t ∈ [0 , T ], 
+
+m2(μt) = E[|˜st|2] ≤
+
+
+
+E[|˜st|4]
+
+1/2
+
+≤ CT
+
+ 1 + m4(μ)1/2,
+
+which completes the proof. □
+
+Remark A.2 (Explicit value of β0(2)) . Taking p = 2 in Lemma A.1 and applying Young’s inequality to 
+
+(50) , using (u + v + w)2 ≤ 3( u2 + v2 + w2) and the bound (9) , one obtains 
+
+2s · bπ (s, μ ) ≤ Kπ + 4 Kπ |s|2 + Kπ m2(μ), ∥σπ (s, μ )∥2 ≤ 3K2
+
+> π
+
+ 1 + |s|2 + m2(μ),
+
+from which (51) with p = 2 becomes 
+
+ddt E[|˜st|2] ≤ (Kπ + 3 K2 
+
+> π
+
+) + (5 Kπ + 6 K2 
+
+> π
+
+) E[|˜st|2].
+
+Therefore β0 := β0(2) = 5 Kπ + 6 K2 
+
+> π
+
+.
+
+Remark A.3 (A dissipative case) . Assume that there exist constants κ > C diss > 0 and C0 ≥ 0 such that, for all (s, μ ) ∈ Rd × P 2(Rd), (12) holds. Applying Itˆ o’s formula to |˜st|2, one obtains 
+
+ddt m2(μt) ≤ C0 − (κ − Cdiss ) m2(μt),
+
+hence 
+
+m2(μt) ≤ e−(κ−Cdiss )tm2(μ) + C0
+
+κ − Cdiss 
+
+ 1 − e−(κ−Cdiss )t, t ≥ 0.
+
+In particular, m2(μt) is uniformly bounded on [0 , ∞). Applying Itˆ o’s formula to |st|2 and using the previous bound, we deduce that there exists C > 0 independent of t such that 
+
+sup 
+
+> t≥0
+
+Es,μ,π [|st|2] ≤ C 1 + |s|2 + m2(μ).
+
+We next establish differentiability properties of the decoupled flow with respect to the state and measure variables. While such properties are standard in the McKean-Vlasov literature, for our purposes we also need explicit exponential-in-time bounds for the corresponding derivatives. As noted before Lemma A.1, these explicit bounds are essential for the infinite-horizon analysis. 
+
+Lemma A.4 (Exponential bounds for the derivatives of the decoupled flow) . Suppose Assumption A1 holds. Fix an even integer p ≥ 2. For μ ∈ P 2(Rd), let (μt)t≥0 be the measure flow generated by (5) . For each x ∈ Rd, let Xx,μ t denote the unique strong solution of 
+
+dXx,μ t = bπ (Xx,μ t , μ t) d t + σπ (Xx,μ t , μ t) d Bt, Xx,μ  
+
+> 0
+
+= x. 
+
+Then, for every ξ ∈ Rd, the derivatives ∇xXx,μ t , D2
+
+> xx
+
+Xx,μ t , ∂μXx,μ t (ξ), and Dξ ∂μXx,μ t (ξ) exist. Moreover, there exists a constant Cp,d > 0, depending only on p and d, such that with βvar (p) := Cp,d K2 
+
+> π
+
+, one has, for all t ≥ 0, x ∈ Rd, μ ∈ P 2(Rd), and ξ ∈ Rd,
+
+E∥∇ xXx,μ t ∥p + ∥D2
+
+> xx
+
+Xx,μ t ∥p + ∥∂μXx,μ t (ξ)∥p + ∥Dξ ∂μXx,μ t (ξ)∥p ≤ Cp,d (1 + Kpπ )eβvar (p)t. (54) 
+
+> 22
+
+Proof. Under Assumption A1, the coefficients bπ and σπ are twice differentiable with respect to the state variable and Lions differentiable with respect to the measure argument, with bounded derivatives up to second order. Therefore, the differentiability results of [20, Theorem 3.1 and Proposition 4.1] apply, and the derivatives ∇xXx,μ t , D2
+
+> xx
+
+Xx,μ t , ∂μXx,μ t (ξ), and Dξ ∂μXx,μ t (ξ) are well defined. It remains to prove the estimate (54). For simplicity, write 
+
+Jx,μ t := ∇xXx,μ t , Hx,μ t := D2
+
+> xx
+
+Xx,μ t , U x,μ t (ξ) := ∂μXx,μ t (ξ), V x,μ t (ξ) := Dξ ∂μXx,μ t (ξ).
+
+We denote by σπℓ the ℓ-th column of σπ , ℓ = 1 , . . . , d . Since only upper bounds are relevant, we may enlarge Kπ once and for all and assume Kπ ≥ 1. 
+
+Step 1 (Bounds for the first spatial derivative). Differentiating the decoupled SDE with respect to x gives dJx,μ t = ∇sbπ (Xx,μ t , μ t)Jx,μ t dt +
+
+> d
+
+X
+
+> ℓ=1
+
+∇sσπℓ (Xx,μ t , μ t)Jx,μ t dBℓt , Jx,μ  
+
+> 0
+
+= Id. (55) Since each entry of ∇sbπ and ∇sσπℓ is bounded by Kπ , we have 
+
+∥∇ sbπ (Xx,μ t , μ t)∥ ≤ √d K π ,
+
+> d
+
+X
+
+> ℓ=1
+
+∥∇ sσπℓ (Xx,μ t , μ t)∥2 ≤ d2K2 
+
+> π
+
+. (56) Applying Itˆ o’s formula to ∥Jx,μ t ∥p, integrating over [0 , t ], and taking expectations, we obtain 
+
+E[∥Jx,μ t ∥p] = ∥Id∥p + p
+
+Z t
+
+> 0
+
+E∥Jx,μ r ∥p−2 ⟨Jx,μ r , ∇sbπ (Xx,μ r , μ r )Jx,μ r ⟩ dr
+
++ p
+
+2
+
+> d
+
+X
+
+> ℓ=1
+
+Z t
+
+> 0
+
+E∥Jx,μ r ∥p−2∥∇ sσπℓ (Xx,μ r , μ r )Jx,μ r ∥2 dr
+
++ p(p − 2) 2
+
+> d
+
+X
+
+> ℓ=1
+
+Z t
+
+> 0
+
+E
+
+h
+
+∥Jx,μ r ∥p−4 ⟨Jx,μ r , ∇sσπℓ (Xx,μ r , μ r )Jx,μ r ⟩2i
+
+dr. 
+
+Using (56), and ⟨z, Az ⟩ ≤ ∥ A∥ ∥ z∥2, and recalling Kπ ≥ 1, we infer that 
+
+E[∥Jx,μ t ∥p] ≤ dp/ 2 + ap,d K2
+
+> π
+
+Z t
+
+> 0
+
+E[∥Jx,μ r ∥p] d r. 
+
+Gr¨ onwall’s inequality gives 
+
+E[∥Jx,μ t ∥p] ≤ dp/ 2eap,d K2 
+
+> πt
+
+. (57) 
+
+Step 2 (Bounds for the second spatial derivative). Differentiating (55) once more with respect to 
+
+x gives dHx,μ t =
+
+h
+
+∇sbπ (Xx,μ t , μ t)Hx,μ t + D2
+
+> ss
+
+bπ (Xx,μ t , μ t)[ Jx,μ t , J x,μ t ]
+
+i
+
+dt
+
++
+
+> d
+
+X
+
+> ℓ=1
+
+h
+
+∇sσπℓ (Xx,μ t , μ t)Hx,μ t + D2
+
+> ss
+
+σπℓ (Xx,μ t , μ t)[ Jx,μ t , J x,μ t ]
+
+i
+
+dBℓt , Hx,μ  
+
+> 0
+
+= 0 . (58) By Assumption A1, 
+
+∥D2
+
+> ss
+
+bπ (Xx,μ t , μ t)[ Jx,μ t , J x,μ t ]∥ +
+
+> d
+
+X
+
+> ℓ=1
+
+∥D2
+
+> ss
+
+σπℓ (Xx,μ t , μ t)[ Jx,μ t , J x,μ t ]∥ ≤ (d + 1) Kπ ∥Jx,μ t ∥2. (59) Applying Itˆ o’s formula to ∥Hx,μ t ∥p in (58), integrating over [0 , t ], taking expectations, and using (56), (56), (59), and Young’s inequality, we obtain 
+
+E[∥Hx,μ t ∥p] ≤ ap,d K2
+
+> π
+
+Z t
+
+> 0
+
+E[∥Hx,μ r ∥p] d r + Cp,d Kpπ
+
+Z t
+
+> 0
+
+E∥Jx,μ r ∥2p dr. 
+
+Using (57) with 2 p in place of p and then Gr¨ onwall’s inequality, we get 
+
+E[∥Hx,μ t ∥p] ≤ Cp,d (1 + Kpπ )eCp,d K2 
+
+> πt
+
+. (60) 
+
+Step 3 (Bounds for the Lions derivative). Let ( eΩ, eF, eP) be an independent copy of the original 
+
+> 23
+
+probability space, and denote by eXξ,μ t and eJξ,μ t := ∇xXx,μ t x=ξ , the corresponding independent copies of the decoupled flow and its first spatial derivative, started from ξ. Then U x,μ t (ξ) satisfies dU x,μ t (ξ) = 
+
+h
+
+∇sbπ (Xx,μ t , μ t)U x,μ t (ξ) + F x,μ t (ξ)
+
+i
+
+dt +
+
+> d
+
+X
+
+> ℓ=1
+
+h
+
+∇sσπℓ (Xx,μ t , μ t)U x,μ t (ξ) + Gx,μ t,ℓ (ξ)
+
+i
+
+dBℓt (61) where U x,μ  
+
+> 0
+
+(ξ) = 0 , and 
+
+F x,μ t (ξ) := eE
+
+h
+
+∂μbπ (Xx,μ t , μ t)( eXξ,μ t ) eJξ,μ t
+
+i
+
+, Gx,μ t,ℓ (ξ) := eE
+
+h
+
+∂μσπℓ (Xx,μ t , μ t)( eXξ,μ t ) eJξ,μ t
+
+i
+
+.
+
+Since ∂μbπ and ∂μσπℓ are bounded by Kπ , Jensen’s inequality yields 
+
+∥F x,μ t (ξ)∥p ≤ Kpπ eE
+
+h
+
+∥ eJξ,μ t ∥pi
+
+, ∥Gx,μ t,ℓ (ξ)∥p ≤ Kpπ eE
+
+h
+
+∥ eJξ,μ t ∥pi
+
+.
+
+Taking expectations and using (57) with x = ξ, we obtain 
+
+E[∥F x,μ t (ξ)∥p] + 
+
+> d
+
+X
+
+> ℓ=1
+
+E
+
+h
+
+∥Gx,μ t,ℓ (ξ)∥pi
+
+≤ Cp,d Kpπ eCp,d K2 
+
+> πt
+
+. (62) Applying Itˆ o’s formula to ∥U x,μ t (ξ)∥p in (61), integrating over [0 , t ], taking expectations, and using (62), we infer 
+
+E[∥U x,μ t (ξ)∥p] ≤ ap,d K2
+
+> π
+
+Z t
+
+> 0
+
+E[∥U x,μ r (ξ)∥p] d r + Cp,d Kpπ
+
+Z t
+
+> 0
+
+eCp,d K2  
+
+> πr
+
+dr. 
+
+Gr¨ onwall’s inequality gives 
+
+E[∥U x,μ t (ξ)∥p] ≤ Cp,d (1 + Kpπ )eCp,d K2 
+
+> πt
+
+. (63) 
+
+Step 4 (Bounds for Dξ ∂μXx,μ t (ξ)). Let eHξ,μ t := D2
+
+> xx
+
+Xx,μ t x=ξ denote the independent copy of the second spatial derivative started from ξ. Differentiating (61) with respect to ξ yields dV x,μ t (ξ) = 
+
+h
+
+∇sbπ (Xx,μ t , μ t)V x,μ t (ξ) + ¯F x,μ t (ξ)
+
+i
+
+dt +
+
+> d
+
+X
+
+> ℓ=1
+
+h
+
+∇sσπℓ (Xx,μ t , μ t)V x,μ t (ξ) + ¯Gx,μ t,ℓ (ξ)
+
+i
+
+dBℓt , (64) where V x,μ  
+
+> 0
+
+(ξ) = 0 , and ¯F x,μ t (ξ) := eE
+
+h
+
+Dξ ∂μbπ (Xx,μ t , μ t)( eXξ,μ t )[ eJξ,μ t , eJξ,μ t ] + ∂μbπ (Xx,μ t , μ t)( eXξ,μ t ) eHξ,μ t
+
+i
+
+,
+
+¯Gx,μ t,ℓ (ξ) := eE
+
+h
+
+Dξ ∂μσπℓ (Xx,μ t , μ t)( eXξ,μ t )[ eJξ,μ t , eJξ,μ t ] + ∂μσπℓ (Xx,μ t , μ t)( eXξ,μ t ) eHξ,μ t
+
+i
+
+.
+
+Since Dξ ∂μbπ , Dξ ∂μσπℓ , ∂μbπ , and ∂μσπℓ are all bounded by Kπ , Jensen’s inequality gives 
+
+∥ ¯F x,μ t (ξ)∥p ≤ Cp,d Kpπ eE
+
+h
+
+∥ eJξ,μ t ∥2p + ∥ eHξ,μ t ∥pi
+
+,
+
+and similarly for ¯Gx,μ t,ℓ (ξ). Taking expectations, and using (57) with 2 p in place of p together with (60), we obtain 
+
+E∥ ¯F x,μ t (ξ)∥p +
+
+> d
+
+X
+
+> ℓ=1
+
+E
+
+h
+
+∥ ¯Gx,μ t,ℓ (ξ)∥pi
+
+≤ Cp,d (1 + Kpπ )eCp,d K2 
+
+> πt
+
+. (65) Applying Itˆ o’s formula to ∥V x,μ t (ξ)∥p in (64), integrating over [0 , t ], taking expectations, and using (65), we infer 
+
+E[∥V x,μ t (ξ)∥p] ≤ ap,d K2
+
+> π
+
+Z t
+
+> 0
+
+E[∥V x,μ r (ξ)∥p] d r + Cp,d (1 + Kpπ )
+
+Z t
+
+> 0
+
+eCp,d K2  
+
+> πr
+
+dr. 
+
+Gr¨ onwall’s inequality yields 
+
+E[∥V x,μ t (ξ)∥p] ≤ Cp,d (1 + Kpπ )eCp,d K2 
+
+> πt
+
+. (66) Combining (57), (60), (63), and (66), we obtain (54). □
+
+Remark A.5 (Explicit value of βvar (2)) . A careful analysis shows that the constant Cp,d from Lemma A.4 is given by 
+
+Cp,d := 2 2p(1 + dp) 1 + 2 p√d + 2p(2 p − 1) 2 d2 + ( d + 1) p,
+
+In particular, we have that βvar (2) = (32 + 32 d + 64 √d + 144 d2 + 32 d3 + 64 d5/2 + 112 d4)K2 
+
+> π
+
+.
+
+> 24
+
+We can now prove Theorem 3.3. 
+
+Proof of Theorem 3.3 . We proceed in several steps. 
+
+Step 1 (Finite-horizon problem). For each T > 0, define 
+
+V πT (t, s, μ ) := Et,s,μ,π 
+
+"Z Tt
+
+e−β(τ −t) rπλ (sτ , μ τ ) d τ
+
+#
+
+, V πT (T, ·, ·) ≡ 0.
+
+Under Assumption A1, the finite-horizon policy-evaluation problem with coefficients bπ , σπ , running reward rπλ , and terminal cost g ≡ 0 falls under the time-homogeneous version of [37, Assumption 2.1]. Therefore, by [37, Proposition 2.1], V πT ∈ C1,2,2 [0 , T ) × Rd × P 2(Rd) and V πT solves 
+
+∂tV πT + Lπb, ΣV πT − βV πT + rπλ = 0 , 0 ≤ t < T, (67) with terminal condition V πT (T, ·, ·) = 0. Set 
+
+U πT (s, μ ) := V πT (0 , s, μ ) = E
+
+"Z T
+
+> 0
+
+e−βt rπλ (Xs,μ t , μ t) d t
+
+#
+
+.
+
+Step 2 (Well-definedness of V π and convergence of U πT ). Since rπλ ∈ C 2,2poly (Rd ×P 2(Rd)), Definition 3.1 yields 
+
+|rπλ (s, μ )| ≤ Cr
+
+ 1 + |s|2 + m2(μ) (68) for some constant Cr > 0. By Lemma A.1 with p = 2, 
+
+Es,μ,π [|st|2] + Es,μ,π [|˜st|2] ≤ C2eβ0(2) t 1 + |s|2 + m2(μ), t ≥ 0. (69) Since m2(μt) = Es,μ,π [|˜st|2], it follows from (68) and (69) that 
+
+e−βt Es,μ,π [|rπλ (st, μ t)|] ≤ Ce −(β−β0(2)) t 1 + |s|2 + m2(μ). (70) Therefore, if β > ¯βπ , then the right-hand side of (70) is integrable on [0 , ∞), and the value function 
+
+V π (s, μ ) is well defined. Moreover, dominated convergence yields 
+
+U πT (s, μ ) −−−−→  
+
+> T→∞
+
+V π (s, μ ) (71) for every ( s, μ ) ∈ Rd × P 2(Rd). If KR := (s, μ ) ∈ Rd × P 2(Rd) : |s|2 + m2(μ) ≤ R , then (70) also gives sup 
+
+> (s,μ )∈KR
+
+|V π (s, μ ) − U πT (s, μ )| ≤ CR
+
+Z ∞
+
+> T
+
+e−(β−β0(2)) t dt −−−−→  
+
+> T→∞
+
+0. (72) 
+
+Step 3 (Uniform finite-horizon bounds in C2,2poly ). We first record the corresponding moment bound for the decoupled flow Xx,μ t . By the same Itˆ o-Gr¨ onwall argument used in the proof of Lemma A.1, together with (9) and the estimate on m2(μt) coming from (69), there exists a constant C > 0, depending only on the structural constants in Assumption A1, such that 
+
+E|Xx,μ t |2 ≤ Ce β0(2) t 1 + |x|2 + m2(μ), t ≥ 0.
+
+We now estimate the derivatives of U πT . Since U πT is the finite-horizon value function, Step 2 of [37, Appendix A.1] provides explicit representation formulas for ∇sU πT , D2
+
+> ss
+
+U πT , ∂μU πT , and Dξ ∂μU πT . These formulas show that each derivative is given by an integral over [0 , T ] of e−βt times the expectation of a finite linear combination of terms involving derivatives of rπλ evaluated at ( Xs,μ t , μ t) and ( Xξ,μ t , μ t), together with the corresponding derivatives of the flow. To avoid an unnecessarily long proof, we refer to [37, Appendix A.1, Step 2] for the explicit expressions. Therefore, by using Lemma A.4 with p = 2, and the fact that rπλ ∈ C 2,2poly (Rd × P 2(Rd)) we derive the estimates 
+
+E[|∇ srπλ (Xs,μ t , μ t) ∇xXs,μ t |] + E[|∇ srπλ (Xs,μ t , μ t) ∂μXs,μ t (ξ)|] ≤ Ce ¯βπ t 1 + |s| + m2(μ), (73) and 
+
+E ∇srπλ (Xs,μ t , μ t) D2
+
+> xx
+
+Xs,μ t
+
+ + E[|∇ srπλ (Xs,μ t , μ t) Dξ ∂μXs,μ t (ξ)|]+ E D2
+
+> ss
+
+rπλ (Xs,μ t , μ t)[ ∇xXs,μ t , ∇xXs,μ t ]  + E
+
+h
+
+Dξ ∂μrπλ (Xs,μ t , μ t)( Xξ,μ t ) ∇xXξ,μ t
+
+i
+
+≤ Ce ¯βπ t 1 + m2(μ),
+
+> 25
+
+and 
+
+E
+
+h
+
+∂μrπλ (Xs,μ t , μ t)( Xξ,μ t )
+
+i
+
++ E
+
+h
+
+∂μrπλ (Xs,μ t , μ t)( Xξ,μ t ) D2
+
+> xx
+
+Xξ,μ t
+
+i
+
+≤ Ce β0(2) t 1 + |s| + |ξ| + m2(μ).
+
+(74) Integrating (73)-(74) over [0 , T ], multiplying by e−βt , and using β > ¯βπ , we conclude that there exists a constant C > 0, independent of T , such that for all ( s, μ, ξ ) ∈ Rd × P 2(Rd) × Rd,
+
+|U πT (s, μ )| ≤ C 1 + |s|2 + m2(μ), (75) 
+
+|∇ sU πT (s, μ )| + |∂μU πT (s, μ )( ξ)| ≤ C 1 + |s| + |ξ| + m2(μ), (76) 
+
+∥D2
+
+> ss
+
+U πT (s, μ )∥ + ∥Dξ ∂μU πT (s, μ )( ξ)∥ ≤ C 1 + m2(μ). (77) 
+
+Step 4 (Passage to the limit in the derivatives). Let 
+
+KR := (s, μ ) ∈ Rd × P 2(Rd) : |s|2 + m2(μ) ≤ R , BR := {ξ ∈ Rd : |ξ| ≤ R}.
+
+By (72), the family ( U πT )T > 0 is uniformly Cauchy on KR. Using the representation formulas from [37, Ap-pendix A.1, Step 2] together with the estimations (73)-(74), we obtain, for every Dα ∈ { 1, ∇s, ∂ μ, D 2
+
+> ss
+
+, D ξ ∂μ},for all T ′ > T ≥ 0, all ( s, μ ) ∈ KR, and all ξ ∈ BR,
+
+|DαU πT ′ (s, μ ) − DαU πT (s, μ )| ≤ CR
+
+Z T ′
+
+> T
+
+e−(β− ¯βπ )t dt, 
+
+Since β > ¯βπ , the right-hand sides tend to zero as T → ∞ . Hence, for each Dα, the families {DαU πT }T ≥0
+
+are locally uniformly Cauchy and thus converge locally uniformly to continuous limits. By (71), the limit of U πT is precisely V π . The local uniform convergence of U πT , ∇sU πT , and D2
+
+> ss
+
+U πT
+
+implies that V π is twice continuously differentiable in s, with 
+
+∇sV π = lim   
+
+> T→∞
+
+∇sU πT , D2
+
+> ss
+
+V π = lim   
+
+> T→∞
+
+D2
+
+> ss
+
+U πT .
+
+For the measure derivative, let ϑ, ϑ ′ be square-integrable random variables with laws μ and μ′, and set 
+
+ϑλ := ϑ + λ(ϑ′ − ϑ), μλ := Law( ϑλ). Since each U πT is Lions differentiable, the mean-value formula on 
+
+P2(Rd) gives 
+
+U πT (s, μ ′) − U πT (s, μ ) = 
+
+Z 10
+
+E[∂μU πT (s, μ λ)( ϑλ) · (ϑ′ − ϑ)] d λ. (78) Passing to the limit T → ∞ in (78), using the local uniform convergence of U πT and ∂μU πT together with dominated convergence, we obtain that V π is Lions differentiable and 
+
+∂μV π = lim   
+
+> T→∞
+
+∂μU πT .
+
+Applying the same argument to ∂μU πT (s, μ )( ξ) as a function of ξ, and using the local uniform convergence of Dξ ∂μU πT (s, μ )( ξ), we conclude that Dξ ∂μV π exists and is jointly continuous. Therefore, V π ∈ C 2,2(Rd×P2(Rd)) . Letting T → ∞ in (75), (76), and (77), we obtain that V π ∈ C 2,2poly (Rd × P 2(Rd)) .
+
+Step 5 (The stationary HJB equation). Evaluating (67) at t = 0 yields 
+
+ Lπb, Σ − βU πT (s, μ ) + rπλ (s, μ ) = −∂tV πT (0 , s, μ ). (79) Since the problem is time-homogeneous, V πT (t, s, μ ) = U πT −t(s, μ ), and therefore 
+
+−∂tV πT (0 , s, μ ) = ddT U πT (s, μ ) = Ee−βT rπλ (Xs,μ T , μ T ) .
+
+Thus, by (70), 
+
+|∂tV πT (0 , s, μ )| ≤ Ee−βT rπλ (Xs,μ T , μ T ) ≤ Ce −(β−β0(2)) T  1 + |s|2 + m2(μ) −−−−→  
+
+> T→∞
+
+0. (80) It remains to pass to the limit in  Lπb, Σ − βU πT (s, μ ). The terms involving ∇sU πT and D2
+
+> ss
+
+U πT converge pointwise by Step 4. For the Lions terms, using (9), (10), (76), and (77), we obtain 
+
+|bπ (ξ, μ ) · ∂μU πT (s, μ )( ξ)| ≤ Cs,μ (1 + |ξ|2),
+
+|Σπ (ξ, μ ) : Dξ ∂μU πT (s, μ )( ξ)| ≤ Cs,μ (1 + |ξ|2),
+
+with constants independent of T . Since μ ∈ P 2(Rd), the dominating function is μ-integrable, and dominated convergence yields 
+
+ Lπb, Σ − βU πT (s, μ ) −−−−→ 
+
+> T→∞
+
+ Lπb, Σ − βV π (s, μ ). (81) 
+
+> 26
+
+Combining (79), (80), and (81), and letting T → ∞ , we obtain (Lπb, Σ − β)V π (s, μ ) + rπλ (s, μ ) = 0 .
+
+Thus V π is a classical solution of (11). 
+
+Step 6 (Uniqueness). Let U ∈ C 2,2poly (Rd × P 2(Rd)) be another classical solution of (11). Fix ( s, μ ) ∈
+
+Rd × P 2(Rd) and define the stopping times τn := inf {t ≥ 0 : |st| + |˜st| ≥ n}, with n ∈ N. Applying the Itˆ o-Lions formula to e−β(t∧τn)U (st∧τn , μ t∧τn ) on [0 , T ], taking expectations, and using (11), we obtain 
+
+U (s, μ ) = Es,μ,π h
+
+e−β(T ∧τn)U (sT ∧τn , μ T ∧τn )
+
+i
+
++ Es,μ,π 
+
+"Z T ∧τn
+
+> 0
+
+e−βt rπλ (st, μ t) d t
+
+#
+
+. (82) Since U ∈ C 2,2poly (Rd × P 2(Rd)), together with (69), we have 
+
+e−βT Es,μ,π [|U (sT , μ T )|] ≤ Ce −(β−β0(2)) T  1 + |s|2 + m2(μ),
+
+which tends to zero as T → ∞ . Letting first n → ∞ in (82), and then T → ∞ , and using dominated convergence together with (70), we conclude that 
+
+U (s, μ ) = Es,μ,π 
+
+Z ∞
+
+> 0
+
+e−βt rπλ (st, μ t) d t
+
+
+
+= V π (s, μ ).
+
+Hence U = V π , and the classical solution of (11) is unique in the class C2,2poly (Rd × P 2(Rd)). □
+
+A.2. Proofs for Section 4. We turn to the main policy gradient theorem. A technical ingredient is needed: a stability estimate that controls the first-order response of the controlled system to a policy perturbation. 
+
+Lemma A.6 (Stability with respect to policy perturbations) . Suppose Assumption A1 holds. Let π be a fixed feedback policy and φ a signed kernel satisfying (14) with Mψ := ∥ψ∥∞ < ∞. For |ε| small enough that πε is admissible, let (sεt , μ εt ) and (sπt , μ πt ) be the solutions of (4) -(5) under πε and π respectively, with the same initial condition s0 ∼ μ0, με 
+
+> 0
+
+= μπ 
+
+> 0
+
+= μ, and the same driving Brownian motions. Then there exist constants C > 0 and βstab > 0, depending only on Lπ , Mψ , and β0(2) , such that for every 
+
+t ≥ 0,
+
+E|sεt − sπt |2 + W22 (μεt , μ πt ) ≤ C ε 2 eβstab t 1 + |s|2 + m2(μ). (83) 
+
+In particular, E[|sεt − sπt |2] + W22 (μεt , μ πt ) → 0 as ε → 0, for each fixed t ≥ 0.Proof. Set δs t := sεt − sπt and δ˜st := ˜ sεt − ˜sπt . Since both pairs of processes are driven by the same Brownian motions B and ˜B, the differences satisfy d( δs t) =  bπε
+
+(sεt , μ εt ) − bπ (sπt , μ πt ) dt +  σπε
+
+(sεt , μ εt ) − σπ (sπt , μ πt ) dBt,
+
+and analogously for δ˜st.
+
+Step 1: Decomposition of the coefficient differences. By linearity of the averaged coefficients in the control measure: 
+
+bπε
+
+(sε, μ ε) − bπ (sπ , μ π ) = ε b φ(sε, μ ε) + bπ (sε, μ ε) − bπ (sπ , μ π ), (84) where bφ(s, μ ) := R 
+
+> A
+
+b(s, μ, a ) φ(d a|s, μ ). By the linear growth of b in Assumption A1 and the zero-mass condition (14), 
+
+|bφ(s, μ )| ≤ Cb
+
+ 1 + |s| + pm2(μ),
+
+and by the Lipschitz condition of Assumption A1, the second term of (84) is bounded by Lπ (|δs | +
+
+W2(με, μ π )). For the diffusion coefficient, write 
+
+σπε
+
+(sε, μ ε) − σπ (sπ , μ π ) = σπ (sε, μ ε) − σπ (sπ , μ π ) + σπε
+
+(sε, μ ε) − σπ (sε, μ ε). (85) The first bracket is bounded by Lπ (|δs | + W2(με, μ π )) by Assumption A1. For the second bracket, since 
+
+πε = (1 + εψ )π with |ε|Mψ < 1, we have for every ( s, μ ) and every z ∈ Rd:
+
+z⊤Σπε
+
+(s, μ )z =
+
+Z
+
+> A
+
+z⊤Σ( s, μ, a )z  1 + εψ (s, μ, a ) π(d a | s, μ ),
+
+from which (1 − Mψ |ε|) Σ π (s, μ ) ≤ Σπε
+
+(s, μ ) ≤ (1 + Mψ |ε|) Σ π (s, μ ). (86) 
+
+> 27
+
+Since the map A 7 → A1/2 is operator-monotone on the cone of symmetric positive semidefinite matrices (a consequence of the L¨ owner-Heinz inequality, which holds for any semidefinite matrix), taking square roots in (86) gives q
+
+1 − Mψ |ε| σπ (s, μ ) ≤ σπε
+
+(s, μ ) ≤
+
+q
+
+1 + Mψ |ε| σπ (s, μ ).
+
+Using the elementary inequalities 1 − √1 − x ≤ x and √1 + x − 1 ≤ x for x ∈ [0 , 1), we conclude that 
+
+∥σπε
+
+(s, μ ) − σπ (s, μ )∥ ≤ Mψ |ε| ∥ σπ (s, μ )∥.
+
+By the linear growth of σπ from Assumption A1: 
+
+∥σπε
+
+(s, μ ) − σπ (s, μ )∥2 ≤ C ε 2 1 + |s|2 + m2(μ). (87) Note that (87) holds without any ellipticity assumption on Σ π ; the sandwich argument requires only that Σ π be positive semidefinite, which holds automatically. Combining both brackets in (85), we have 
+
+σπε
+
+(sε, μ ε) − σπ (sπ , μ π ) 2 ≤ C
+
+
+
+|δs |2 + W22 (με, μ π ) + ε2 1 + |sε|2 + m2(με)
+
+. (88) 
+
+Step 2: Itˆ o formula, Gr¨ onwall, and exponential bound. Applying Itˆ o’s formula to |δs t|2, taking expectations (the stochastic integral is a true martingale by the moment estimates of Lemma A.1), and using Young’s inequality together with (84)-(88), we obtain ddt E|δs t|2 ≤ C1 E|δs t|2 + C1 W22 (μεt , μ πt ) + C1 ε2 E1 + |sπt |2 + m2(μπt ),
+
+where C1 > 0 depends only on Lπ and Mψ . An identical estimate holds for δ˜st. Since W22 (μεt , μ πt ) ≤
+
+E[|δ˜st|2], setting Φ t := E[|δs t|2] + E[|δ˜st|2] and summing the two estimates gives ddt Φt ≤ C2 Φt + C2 ε2 E1 + |sπt |2 + |˜sπt |2 + m2(μπt ), (89) where C2 depends only on C1. By Lemma A.1 with p = 2, the factor on the right-hand side satisfies 
+
+E1 + |sπt |2 + |˜sπt |2 + m2(μπt ) ≤ Ce β0(2) t 1 + |s|2 + m2(μ).
+
+Since Φ 0 = 0, Gr¨ onwall’s inequality applied to (89) gives Φt ≤ C2ε2(1 + |s|2 + m2(μ)) 
+
+Z t
+
+> 0
+
+eC2(t−r) C e β0(2) r dr ≤ C′ε2emax( C2, β 0(2)) t 1 + |s|2 + m2(μ),
+
+where the last step uses eC2(t−r)eβ0(2) r ≤ emax( C2,β 0(2)) t for r ∈ [0 , t ]. Setting βstab := max( C2, β 0(2)) and recalling W22 (μεt , μ πt ) ≤ E[|δ˜st|2] ≤ Φt gives (83). □
+
+We are now in a position to prove Theorem 4.6. 
+
+Proof of Theorem 4.6 . Since β > eβπ ≥ ¯βπ , Theorem 3.3 applies to both π and πε, giving V π , V πε
+
+∈C2,2poly with polynomial-growth constant bounded by C/ (β − ¯βπ ) uniformly in |ε| ≤ ε0.We fix s ∈ Rd and write ( sπt , μ πt )t≥0 and ( sεt , μ εt )t≥0 for the representative process and population flow under π and πε respectively, both starting from ( s, μ ). Both value functions admit the stochastic representations 
+
+V πε
+
+(s, μ ) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπε 
+
+> λ
+
+(sεt , μ εt ) dt, V π (s, μ ) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π rπλ (sπt , μ πt ) dt, (90) both convergent since β > β 0(2). We split the difference quotient as 
+
+V πε
+
+(s, μ ) − V π (s, μ )
+
+ε = A(ε; s) + B(ε; s), (91) where 
+
+A(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπε 
+
+> λ
+
+(sεt , μ εt ) − Es,μ,π εrπλ (sεt , μ εt )
+
+ε dt, B(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπλ (sεt , μ εt ) − Es,μ,π rπλ (sπt , μ πt )
+
+ε dt. 
+
+Intuitively, A(ε; s) captures the sensitivity of the reward functional to the change in policy. In contrast, 
+
+B(ε; s) captures the effect of the change in dynamics. 
+
+> 28
+
+Step 1: We compute the limit of A(ε; s). We first identify the derivative of ε 7 → rπε 
+
+> λ
+
+(x, ν ) at ε = 0. Writing pπε (a|x, ν ) = (1 + εψ (x, ν, a )) pπ (a|x, ν ), the reward part differentiates as 
+
+ddε ε=0 
+
+Z
+
+> A
+
+r(x, ν, a ) πε(d a|x, ν ) = 
+
+Z
+
+> A
+
+r(x, ν, a ) φ(d a|x, ν ).
+
+For the entropy part, the identity ddf (f log f ) = log f + 1 applied to f = pπε (a|x, ν ) gives ddε ε=0 
+
+
+
+−λ
+
+Z
+
+> A
+
+pπε log pπε ν(d a)
+
+
+
+= −λ
+
+Z
+
+> A
+
+ log pπ (a|x, ν ) + 1  φ(d a|x, ν ).
+
+Since R 
+
+> A
+
+φ(da |x, ν ) = 0 by (14), the constant term vanishes. Combining both parts yields ddε ε=0 
+
+rπε 
+
+> λ
+
+(x, ν ) = 
+
+Z
+
+> A
+
+ r(x, ν, a ) − λ log pπ (a|x, ν ) φ(d a|x, ν ) =: rφλ (x, ν ). (92) By the mean value theorem applied to the differentiable map ε 7 → rπε 
+
+> λ
+
+(x, ν ) and Assumption A1 (with constants uniform in |ε| ≤ ε0), the ratio satisfies 
+
+rπε 
+
+> λ
+
+(x, ν ) − rπλ (x, ν )
+
+ε ≤ Mψ Cr
+
+ 1 + |x|2 + m2(ν), |ε| ≤ ε0,
+
+with Cr > 0 independent of ε. Taking expectations against the πε-dynamics, using Lemma A.1 with 
+
+p = 2, and noting that m2(μεt ) is deterministic since there is no common noise, we obtain 
+
+e−βt Es,μ,π ε
+
+[rπε 
+
+> λ
+
+(sεt , μ εt )] − Es,μ,π ε
+
+[rπλ (sεt , μ εt )] 
+
+ε ≤ Mψ Cr e−(β−β0(2)) t 1 + |s|2 + m2(μ), (93) which is integrable since β > β 0(2). We now split A(ε; s) as A(ε; s) = A1(ε; s) + A2(ε; s), where 
+
+A1(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π ε
+
+ rπε 
+
+> λ
+
+(sεt , μ εt ) − rπλ (sεt , μ εt )
+
+ε − rφλ (sεt , μ εt )
+
+
+
+dt, A2(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrφλ (sεt , μ εt ) dt. 
+
+The integrand of A1 converges pointwise to zero as ε → 0 by (92), and is dominated by twice the right-hand side of (93), so dominated convergence gives A1(ε; s) → 0 as ε → 0. For A2, fix t ≥ 0. Then, for each θ ∈ [0 , 1], define ˜ sθt := (1 − θ)˜ sπt + θ˜sεt , and μθt := Law(˜ sθt ). Since 
+
+rφλ ∈ C 2,2poly , we have 
+
+E[rφλ (sεt , μ εt )] − E[rφλ (sπt , μ πt )] ≤ E
+
+h
+
+rφλ (sεt , μ εt ) − rφλ (sπt , μ εt )
+
+i
+
++ E
+
+h
+
+rφλ (sπt , μ εt ) − rφλ (sπt , μ πt )
+
+i
+
+≤ E
+
+h
+
+|sεt − sπt |
+
+Z 10
+
+∇srφλ
+
+ sπt + θ(sεt − sπt ), μ εt
+
+ dθ
+
+i
+
++
+
+Z 10
+
+E
+
+h
+
+∂μrφλ (sπt , μ θt )(˜ sθt ) |˜sεt − ˜sπt |
+
+i
+
+dθ
+
+≤ C E
+
+h
+
+|sεt − sπt | 1 + |sεt | + |sπt | + m2(μεt )1/2i
+
++ C
+
+Z 10
+
+E
+
+h 1 + |sπt | + |˜sθt | + m2(μθt )1/2|˜sεt − ˜sπt |
+
+i
+
+dθ
+
+≤ C E[|sεt − sπt |2]1/2
+
+1 + E[|sεt |2]1/2 + E[|sπt |2]1/2 + m2(μεt )1/2
+
++ C
+
+Z 10
+
+
+
+1 + E[|sπt |2]1/2 + 2 m2(μθt )1/2
+
+W2(μεt , μ πt ) d θ
+
+≤ C E[|sεt − sπt |2]1/2
+
+1 + E[|sεt |2]1/2 + E[|sπt |2]1/2 + m2(μεt )1/2
+
++ C
+
+
+
+1 + E[|sπt |2]1/2 + m2(μπt )1/2 + m2(μεt )1/2
+
+W2(μεt , μ πt ).
+
+By Lemma A.6, for each fixed t ≥ 0 the right-hand side tends to 0 as ε → 0. Hence Es,μ,π εrφλ (sεt , μ εt ) →
+
+Es,μ,π rφλ (sπt , μ πt ) as ε → 0. The dominating function for dominated convergence over t is the same as in (93) (with rφλ in place of the ratio), and combining both terms gives lim  
+
+> ε→0
+
+A(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π rφλ (sπt , μ πt ) dt. (94) 
+
+Step 2: We derive an exact formula for B(ε; s). We apply the Itˆ o-Lions formula to V π along the πε-dynamics. For n ≥ 1, let τ εn := inf {t ≥ 0 : |sεt | ≥ n}. Applying the Itˆ o-Lions formula to 
+
+> 29
+
+t 7 → e−β(t∧τ εn)V π (sεt∧τ εn , μ εt∧τ εn ) and taking expectations (the stochastic integral has zero expectation since |sεu| ≤ n on [0 , T ∧ τ εn] ensures the integrand is bounded) yields 
+
+Ee−β(T ∧τ εn)V π (sεT ∧τ εn , μ εT ∧τ εn ) − V π (s, μ ) = E
+
+"Z T ∧τ εn
+
+> 0
+
+e−βt (Lπε
+
+− β)V π (sεt , μ εt ) d t
+
+#
+
+.
+
+Since Lπε
+
+= Lπ + εLφ by linearity of the generator in the averaged coefficients, and since ( Lπ − β)V π =
+
+−rπλ by the HJB equation (11), this simplifies to 
+
+Ee−β(T ∧τ εn)V π (sεT ∧τ εn , μ εT ∧τ εn ) − V π (s, μ ) = E
+
+"Z T ∧τ εn
+
+> 0
+
+e−βt  −rπλ + εLφV π (sεt , μ εt ) d t
+
+#
+
+.
+
+As n → ∞ , τ εn → ∞ almost surely. Since |V π (x, ν )| ≤ C(1 + |x|2 + m2(ν)) and E[sup t≤T |sεt |2] < ∞ by (48), dominated convergence gives 
+
+Ee−βT V π (sεT , μ εT ) − V π (s, μ ) = 
+
+Z T
+
+> 0
+
+e−βt E(−rπλ + εLφV π )( sεt , μ εt ) dt. (95) Since V π ∈ C 2,2poly and β > β 0(2), the boundary term satisfies 
+
+e−βT E|V π (sεT , μ εT )| ≤ Ce −(β−β0(2)) T (1 + |s|2 + m2(μ)) → 0 as T → ∞ .
+
+For the right-hand side, since m2(μεt ) is deterministic and Lemma A.1 gives E[|sεt |2] ≤ Ce β0(2) t(1 + |s|2 +
+
+m2(μ)) and m2(μεt ) ≤ Ce β0(2) t(1 + m2(μ)), the generator term satisfies 
+
+e−βt E|L φV π (sεt , μ εt )| ≤ Ce −βt  eβ0(2) t(1 + |s|2 + m2(μ)) + e2β0(2) t(1 + m2(μ)) 2, (96) which is integrable over [0 , ∞) since β > 2β0(2). Similarly for rπλ . Letting T → ∞ in (95) by dominated convergence gives 
+
+V π (s, μ ) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπλ (sεt , μ εt ) − εLφV π (sεt , μ εt ) dt. (97) From the definition of B(ε; s) and the representations (97) and (90), we obtain 
+
+B(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπλ (sεt , μ εt ) − Es,μ,π rπλ (sπt , μ πt )
+
+ε dt
+
+=
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εrπλ (sεt , μ εt ) − Es,μ,π εrπλ (sεt , μ εt ) − εLφV π (sεt , μ εt )
+
+ε dt
+
+=
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π εLφV π (sεt , μ εt ) dt, 
+
+(98) where in the second equality we used (97). This yields (98), valid for all ε̸ = 0. For each fixed t ≥ 0, the same argument applied to A2 above (fundamental theorem of calculus in state, Lions mean value formula in measure) applies here to LφV π ∈ C 2,2poly , using the convergence E[|sεt − sπt |2] + W22 (μεt , μ πt ) → 0as ε → 0 from Lemma A.6, to give 
+
+Es,μ,π εLφV π (sεt , μ εt ) → Es,μ,π LφV π (sπt , μ πt ) as ε → 0.
+
+Since the dominating function from (96) is integrable over [0 , ∞), dominated convergence in (98) gives lim  
+
+> ε→0
+
+B(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π LφV π (sπt , μ πt ) dt. (99) 
+
+Step 3: We identify the limit and conclude. Combining (91), (94), and (99) gives lim 
+
+> ε→0
+
+V πε
+
+(s, μ ) − V π (s, μ )
+
+ε =
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π rφλ (sπt , μ πt ) + ( LφV π )( sπt , μ πt ) dt. (100) 
+
+> 30
+
+Note that by definition of Lφ we deduce by Fubini’s theorem (justified by polynomial growth and As-sumption A1), that 
+
+rφλ (s, μ ) + ( LφV π )( s, μ )=
+
+Z
+
+> A
+
+h
+
+r(s, μ, a ) − λ log pπ (a|s, μ ) + b(s, μ, a ) · ∇ sV π (s, μ ) + 12 Σ( s, μ, a ) : D2
+
+> ss
+
+V π (s, μ )
+
+i
+
+φ(d a|s, μ )+
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+h
+
+b(ξ, μ, a ) · ∂μV π (s, μ )( ξ) + 12 Σ( ξ, μ, a ) : Dξ ∂μV π (s, μ )( ξ)
+
+i
+
+φ(d a|ξ, μ ) μ(d ξ).
+
+=
+
+Z
+
+> A
+
+qπ
+
+> rep
+
+(s, μ, a ) φ(d a|s, μ ) + 
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+qπ
+
+> pop
+
+(s, μ, ξ, a ) φ(d a|ξ, μ ) μ(d ξ) (101) It remains to integrate over μ0. From (93) integrated over [0 , ∞) and (98) bounded via (96), for all 
+
+|ε| ≤ ε0:
+
+V πε
+
+(s, μ ) − V π (s, μ )
+
+ε ≤ | A(ε; s)| + |B(ε; s)|≤ Mψ Cr (1 + |s|2 + m2(μ)) 
+
+β − β0(2) + C
+
+ 1 + |s|2 + m2(μ)
+
+β − β0(2) + (1 + m2(μ)) 2
+
+β − 2β0(2) 
+
+
+
+≤ Kμ(1 + |s|2),
+
+where Kμ > 0 depends on the fixed measure μ and the structural constants but not on s or ε. The factor (1 + m2(μ)) 2 is absorbed into Kμ because m2(μεt ) is deterministic and was already used to bound the expectation; the remaining s-dependence is thus at most quadratic. Since μ0 ∈ P 2(Rd), we have R 
+
+> Rd
+
+Kμ(1 + |s|2) μ0(ds ) = Kμ(1 + m2(μ0)) < ∞. Dominated convergence over μ0(ds ) then gives 
+
+ddε J(ε) ε=0 
+
+= 1
+
+β
+
+
+
+β
+
+Z
+
+> Rd
+
+lim 
+
+> ε→0
+
+V πε
+
+(s, μ ) − V π (s, μ )
+
+ε μ0(d s)
+
+
+
+,
+
+and substituting the pointwise limit (100), and (101), and using Definition 4.4, gives (16). □
+
+We now provide the proof Theorem 4.9. 
+
+Proof of Theorem 4.9 . Fix v ∈ Rp. We show that ddε J(ω + εv )|ε=0 equals the right-hand side of (19) dotted with v; since v is arbitrary, this identifies ∇ω J(ω). 
+
+Directional kernel. Define the signed kernel 
+
+φv (d a | s, μ ) :=  ∇ω log pπ (a | s, μ ) · v π(d a | s, μ ).
+
+The zero-mass condition R 
+
+> A
+
+φv (da | s, μ ) = 0 holds since R 
+
+> A
+
+∇ω log pπω (a | s, μ )πω (da | s, μ ) = ∇ω
+
+R 
+
+> A
+
+pπω ν(da ) = 0, which follows from Assumption A2 and differentiation under the integral sign. We write ( sεv t , μ εv t )t≥0
+
+for the dynamics under πω+εv starting from ( s, μ ), and ( sπt , μ πt )t≥0 for those under πω . By Assump-tion A3, Lemma A.6 applies and gives, for every t ≥ 0, 
+
+E|sεv t − sπt |2 + W22 (μεv t , μ πt ) ≤ Cε 2eβstab t 1 + |s|2 + m2(μ), (102) so both terms tend to zero as ε → 0 for each fixed t ≥ 0. For each fixed s ∈ Rd, we split the difference quotient as 
+
+V πω+εv (s, μ ) − V π (s, μ )
+
+ε = A(ε; s) + B(ε; s), (103) where 
+
+A(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π ω+εv 
+
+rπω+εv  
+
+> λ
+
+(sεv t , μ εv t ) − Es,μ,π ω+εv 
+
+rπλ (sεv t , μ εv t )
+
+ε dt, B(ε; s) := 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π ω+εv 
+
+rπλ (sεv t , μ εv t ) − Es,μ,π rπλ (sπt , μ πt )
+
+ε dt. 
+
+Step 1: We compute the limit of A(ε; s). By Assumption A2, the map ε 7 → rπω+εv  
+
+> λ
+
+(x, ν ) is differen-tiable at ε = 0 with derivative ∇ω rπω 
+
+> λ
+
+(x, ν ) · v. By the zero-mass property of φv , this derivative equals 
+
+rφv 
+
+> λ
+
+(x, ν ) as defined in (92) (with φv in place of φ). By the mean value theorem and the bound (17) on 
+
+∇ω rπω 
+
+> λ
+
+, uniformly in ω on compact sets: 
+
+rπω+εv  
+
+> λ
+
+(x, ν ) − rπλ (x, ν )
+
+ε ≤ CK ∥v∥ 1 + |x|2 + m2(ν), |ε| ≤ ε0. (104) 
+
+> 31
+
+The rest of the argument for A follows the same A1 + A2 decomposition as in Step 1 of Theorem 4.6, using (104) in place of the previous uniform bound and (102) for the convergence of the dynamics. The dominating function is CK ∥v∥e−(β−β0(2)) t(1 + |s|2 + m2(μ)), integrable since β > β 0(2), giving lim  
+
+> ε→0
+
+A(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π rφv 
+
+> λ
+
+(sπt , μ πt ) dt. (105) 
+
+Step 2: We derive a formula for B(ε; s) and compute its limit. 
+
+We apply the Itˆ o-Lions formula to V π along the πω+εv -dynamics. For n ≥ 1, let τ εv n := inf {t ≥ 0 : 
+
+|sεv t | ≥ n}. Applying the formula to t 7 → e−β(t∧τ εv n )V π (sεv t∧τ εv n , μ εv t∧τ εv n ), taking expectations, decomposing 
+
+Lπω+εv = Lπ + ( Lπω+εv − L π ), and substituting the HJB equation ( Lπ − β)V π = −rπλ from (11) gives 
+
+Ee−β(T ∧τ εv n )V π (sεv T ∧τ εv n , μ εv T ∧τ εv n ) − V π (s, μ ) = E
+
+"Z T ∧τ εv n
+
+> 0
+
+e−βt  −rπλ + ( Lπω+εv − L π )V π (sεv t , μ εv t ) d t
+
+#
+
+.
+
+(106) We now bound the generator difference term. By Assumption A2 and the mean value theorem, the ratios bπω+εv −bπ 
+
+> ε
+
+and Σπω+εv −Σπ 
+
+> ε
+
+are bounded by CK ∥v∥(1 + |x| + pm2(ν)) and CK ∥v∥(1 + |x|2 + m2(ν)) respectively, uniformly in |ε| ≤ ε0. Using the polynomial bounds on the derivatives of V π from Definition 3.1 and the growth of bπ , Σ π from Assumptions A1 and A3, each of the four terms in ( Lπω+εv − L π )V π
+
+is bounded in absolute value. The dominant contribution comes from the term involving Σπω+εv −Σπ 
+
+> ε
+
+:
+
+D2
+
+> ss
+
+V π , which satisfies 
+
+(Lπω+εv − L π )V π (x, ν )
+
+ε ≤ CK ∥v∥ 1 + |x|2 + m2(ν)2, |ε| ≤ ε0. (107) The passages n → ∞ and then T → ∞ in (106), with the subsequent recovery of (90), follow by dominated convergence using the same arguments as in Step 2 of Theorem 4.6 (the growth bounds are the same with CK ∥v∥ in place of Mψ , and integrability holds since β > 2β0(2)). Subtracting the stochastic representation (90) and dividing by ε̸ = 0: 
+
+B(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt 1
+
+ε Es,μ,π ω+εv (Lπω+εv − L π )V π (sεv t , μ εv t ) dt. (108) We now pass ε → 0 in (108). By Assumption A2, the ratios bπω+εv −bπ 
+
+> ε
+
+→ ∇ ω bπω · v = bφv and   
+
+> Σπω+εv −Σπ
+> ε
+
+→ ∇ ω Σπω · v = Σ φv pointwise as ε → 0. Applying these limits to each of the four terms of the generator, using the polynomial growth of V π and dominated convergence over ξ in the integral terms (justified by the P2 condition on μ), gives (Lπω+εv − L π )V π (x, ν )
+
+ε −−−→ 
+
+> ε→0
+
+(Lφv V π )( x, ν ) for every ( x, ν ). (109) Combining (109) with (102) and the same continuity argument applied to the polynomial-growth function 
+
+Lφv V π , the integrand in (108) converges for each fixed t ≥ 0. The bound (107) provides a dominating function integrable over [0 , ∞) since β > 2β0(2), so dominated convergence gives lim  
+
+> ε→0
+
+B(ε; s) = 
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π Lφv V π (sπt , μ πt ) dt. (110) 
+
+Step 3: We identify the limit and integrate over μ0.
+
+Combining (103), (105), and (110): lim 
+
+> ε→0
+
+V πω+εv (s, μ ) − V π (s, μ )
+
+ε =
+
+Z ∞
+
+> 0
+
+e−βt Es,μ,π rφv 
+
+> λ
+
+(sπt , μ πt ) + ( Lφv V π )( sπt , μ πt ) dt. (111) We expand rφv 
+
+> λ
+
++ Lφv V π using the definitions of rφv 
+
+> λ
+
+, Lφv , and φv , and Fubini’s theorem (justified by Assumptions A1 and A2 and the polynomial growth of V π ), we deduce (101) with φ replaced by φv .Substituting φv (da |x, ν ) = ( ∇ω log pπ (a|x, ν ) · v) π(da |x, ν ) gives 
+
+rφv 
+
+> λ
+
+(s, μ ) + ( Lφv V π )( s, μ ) = v ·
+
+Z
+
+> A
+
+qπ 
+
+> rep
+
+∇ω log pπ π(d a) + v ·
+
+Z
+
+> Rd
+
+Z
+
+> A
+
+qπ 
+
+> pop
+
+∇ω log pπ π(d a) μ(d ξ),
+
+so (111) gives ddε V πω+εv (s, μ )|ε=0 = v · R(s), where R(s) denotes the right-hand side of (19) at s.It remains to integrate over μ0. From (104) and (107), the difference quotient satisfies 
+
+V πω+εv (s, μ ) − V π (s, μ )
+
+ε ≤ Kμ
+
+ 1 + |s|2, |ε| ≤ ε0,
+
+> 32
+
+where Kμ > 0 absorbs the deterministic factors involving m2(μ) but does not depend on s or ε. Since 
+
+μ0 ∈ P 2(Rd), dominated convergence over μ0(d s) gives ddε J(ω + εv )|ε=0 = v · R 
+
+> Rd
+
+R(s) μ0(d s). Since 
+
+v ∈ Rp is arbitrary, J is differentiable at ω, we deduce that ∇ω J(ω) = R 
+
+> Rd
+
+R(s) μ0(d s), which is (19). □
+
+A.3. Proofs for Section 6. Lemma A.7 (Stationary Riccati system: existence, uniqueness, and stabilizing solution) . Assume As-sumption A4. Then there exists a unique quadruple (K, Λ, Y, R ) ∈ Sd 
+
+> ++
+
+× Sd 
+
+> ++
+
+× Rd × R solving (32) -(35) .Moreover, S = N + F ⊤KF ∈ Sm
+
+> ++
+
+, and the matrices 
+
+Aβ − BS −1U and ˜Aβ − BS −1W (112) 
+
+are Hurwitz. Furthermore, among all solutions of (32) -(35) , this is the unique one for which the matrices in (112) are Hurwitz. Proof. We first rewrite (32)-(33) in shifted form: 0 = Q + KA β + A⊤ 
+
+> β
+
+K + D⊤KD − U ⊤S−1U, (113) 0 = Q + ¯Q + Λ ˜Aβ + ˜A⊤ 
+
+> β
+
+Λ + ( D + ¯D)⊤K(D + ¯D) − W ⊤S−1W. (114) Then, a direct application of [68, Theorem 3.4.1] yields a unique pair ( K, Λ) ∈ Sd 
+
+> ++
+
+× Sd 
+
+> ++
+
+solving (113)-(114), such that S = N + F ⊤KF ∈ Sm 
+
+> ++
+
+and the matrices Aβ − BS −1U, and ˜Aβ − BS −1W are Hurwitz. Once ( K, Λ) is fixed, equation (34) is linear in Y . Since O = H + B⊤Y + F ⊤Kγ, we rewrite (34) as 
+
+
+
+(A − BS −1U )⊤ − βI d
+
+
+
+Y + M + D⊤Kγ − U ⊤S−1(H + F ⊤Kγ ) = 0 .
+
+Because Aβ − BS −1U is Hurwitz, the matrix (A − BS −1U ) − βI d =  Aβ − BS −1U  − β
+
+2 Id
+
+is also Hurwitz, hence invertible. Therefore the above linear equation admits a unique solution Y ∈ Rd.Finally, once ( K, Λ, Y ) is fixed, equation (35) is linear in R, and since β > 0 it admits the unique solution. □
+
+Lemma A.8 (Discounted second-moment bound and transversality under π∗). Assume Assumption A4, and let π∗ be given by (38) . Let (st, ˜st, μ t) be the corresponding solution of (4) -(5) under π∗, with s0 = s,
+
+˜s0 ∼ μ, and μt = Law(˜ st). Set ξt := st − ¯μt, and ˜ξt := ˜ st − ¯μt. Then there exist constants C ≥ 1 and 
+
+κ > 0, independent of t, such that for all t ≥ 0,
+
+e−βt 
+
+E|ξt|2 + E| ˜ξt|2 + |¯μt|2
+
+≤ C e −2κt 
+
+1 + |s|2 + m2(μ) + λ
+
+
+
+. (115) 
+
+In particular, lim t→∞ e−βt  E|st|2 + m2(μt) = 0 and therefore, the function V from (31) satisfies that 
+
+lim  
+
+> t→∞
+
+e−βt E|V (st, μ t)| = 0 (116) 
+
+Proof. Define the feedback coefficients Θ ∗ := −S−1U, ¯Θ∗ := −S−1W, and θ∗ := −S−1O, so that the mean of the Gaussian kernel π∗ is ˆ a(s, μ ) = Θ ∗(s − ¯μ) + ¯Θ∗ ¯μ + θ∗. Hence 
+
+bπ∗
+
+(s, μ ) = ( A + BΘ∗)( s − ¯μ) + ( ˜A + B ¯Θ∗)¯ μ + Bθ ∗,
+
+where ˜A := A + ¯A. Moreover, if we set C∗ := D + F Θ∗, ¯C∗ := D + ¯D + F ¯Θ∗, and σ∗ 
+
+> 0
+
+:= γ + F θ ∗, then Σπ∗
+
+(s, μ ) =  C∗(s − ¯μ) + ¯C∗ ¯μ + σ∗
+
+> 0
+
+  C∗(s − ¯μ) + ¯C∗ ¯μ + σ∗
+
+> 0
+
+⊤ + λ
+
+2 F S −1F ⊤.
+
+Taking expectation in the population dynamics yields ˙¯μt = ( ˜A + B ¯Θ∗)¯ μt + Bθ ∗.
+
+By Lemma A.7, ˜Aβ + B ¯Θ∗ = ˜Aβ − BS −1W is Hurwitz. Therefore there exist constants Cm ≥ 1 and 
+
+κm > 0 such that 
+
+e−βt |¯μt|2 ≤ Cme−2κmt 1 + |m0|2. (117) Next, we derive the Lyapunov inequality needed for the fluctuation ξt = st − ¯μt. Set M ∗ := A + BΘ∗.
+
+After completing squares in (113), we have 
+
+K(Aβ + BΘ∗) + ( Aβ + BΘ∗)⊤K + ( D + F Θ∗)⊤K(D + F Θ∗) = −Q Θ∗ ,
+
+> 33
+
+where QΘ∗ := Q + (Θ ∗)⊤N Θ∗ + (Θ ∗)⊤I + I⊤Θ∗. Equivalently, since Aβ = A − β 
+
+> 2
+
+Id,(M ∗)⊤K + KM ∗ + ( C∗)⊤KC ∗ = βK − Q Θ∗ .
+
+Moreover, by Assumption A4, QΘ∗ = Q − I⊤N −1I + (Θ ∗ + N −1I)⊤N (Θ ∗ + N −1I) ≻ 0. Since K ∈ Sd
+
+> ++
+
+,the two positive definite quadratic forms QΘ∗ and K are comparable. Hence there exists κξ > 0 such that QΘ∗ ⪰ 2κξ K. Therefore, (M ∗)⊤K + KM ∗ + ( C∗)⊤KC ∗ = βK − Q Θ∗ ⪯ βK − 2κξ K = ( β − 2κξ )K. 
+
+Thus, with G := K, we obtain (A + BΘ∗)⊤G + G(A + BΘ∗) + ( D + F Θ∗)⊤G(D + F Θ∗) ⪯ (β − 2κξ )G. (118) We now apply Itˆ o’s formula to the quadratic function x 7 → x⊤Gx along the fluctuation processes ξt and ˜ξt. Set ht := ¯C∗ ¯μt + σ∗ 
+
+> 0
+
+. For ξt, the drift is M ∗ξt and the covariance matrix is ( C∗ξt + ht)( C∗ξt + ht)⊤ + 
+
+> λ
+> 2
+
+F S −1F ⊤. Hence, ddt E[ξ⊤ 
+
+> t
+
+Gξ t] = Eξ⊤
+
+> t
+
+ (M ∗)⊤G + GM ∗ξt
+
+ + E(C∗ξt + ht)⊤G(C∗ξt + ht) + λ
+
+2 Tr( GF S −1F ⊤)= Eξ⊤
+
+> t
+
+ (M ∗)⊤G + GM ∗ + ( C∗)⊤GC ∗ξt
+
+ + 2 Eξ⊤ 
+
+> t
+
+(C∗)⊤Gh t
+
+
+
++ h⊤ 
+
+> t
+
+Gh t + λ
+
+2 Tr( GF S −1F ⊤).
+
+Using (118), we get ddt E[ξ⊤ 
+
+> t
+
+Gξ t] ≤ (β − 2κξ )E[ξ⊤ 
+
+> t
+
+Gξ t] + 2 Eξ⊤ 
+
+> t
+
+(C∗)⊤Gh t
+
+ + h⊤ 
+
+> t
+
+Gh t + λ
+
+2 Tr( GF S −1F ⊤).
+
+The cross term is controlled by Young’s inequality: for every ε > 0, 2 ξ⊤ 
+
+> t
+
+(C∗)⊤Gh t ≤ ε ξ ⊤ 
+
+> t
+
+Gξ t + Cε|ht|2.
+
+Moreover, since ht = ¯C∗ ¯μt + σ∗ 
+
+> 0
+
+, we have |ht|2 ≤ C(1 + |¯μt|2), while λ 
+
+> 2
+
+Tr( GF S −1F ⊤) ≤ Cλ. Therefore, possibly reducing κξ > 0 and keeping the same notation, we obtain ddt E[ξ⊤ 
+
+> t
+
+Gξ t] ≤ (β − 2κξ )E[ξ⊤ 
+
+> t
+
+Gξ t] + C 1 + |¯μt|2 + λ.
+
+The same computation applied to ˜ξt gives ddt E[ ˜ξ⊤ 
+
+> t
+
+G ˜ξt] ≤ (β − 2κξ )E[ ˜ξ⊤ 
+
+> t
+
+G ˜ξt] + C 1 + |¯μt|2 + λ,
+
+for some constant C > 0 independent of t. Multiplying by e−βt gives ddt
+
+
+
+e−βt E[ξ⊤ 
+
+> t
+
+Gξ t]
+
+
+
+≤ − 2κξ e−βt E[ξ⊤ 
+
+> t
+
+Gξ t] + C e −βt  1 + |¯μt|2 + λ,
+
+and the same inequality with ˜ξt in place of ξt.Using (117) and Gr¨ onwall’s inequality, we deduce that there exist constants C ≥ 1 and κ > 0 such that 
+
+e−βt E|ξt|2 + e−βt E| ˜ξt|2 + e−βt |¯μt|2 ≤ C e −2κt 
+
+1 + |s|2 + m2(μ) + λ
+
+
+
+, t ≥ 0,
+
+which is exactly (115). Finally, since 
+
+E|st|2 ≤ 2E|ξt|2 + 2 |¯μt|2, m2(μt) = E|˜st|2 = E| ˜ξt|2 + |¯μt|2,
+
+(115) implies that lim t→∞ e−βt  E|st|2 + m2(μt) = 0. Because the quadratic candidate satisfies 
+
+|V (s, μ )| ≤ CV
+
+ 1 + |s|2 + m2(μ),
+
+for some constant CV > 0, we conclude (116). □
+
+Proof of Proposition 6.4 . Fix ( s, μ ) ∈ Rd × P 2(Rd) and let π ∈ Πadd . For t ≥ 0, define 
+
+Sπt := e−βt V (st, μ t) + 
+
+Z t
+
+> 0
+
+e−βr 
+
+r(sr , μ r , a sr ) − λ log pπ (sr , μ r , a sr )
+
+
+
+dr. (119) For n ∈ N, let τn := inf {t ≥ 0 : |st|2 + m2(μt) ≥ n}.
+
+Step 1: Derivatives of the candidate value function. Since V in (31) depends on μ only through ¯μ, one has 
+
+∇sV (s, μ ) = −2K(s − ¯μ) − 2Y, ∇2
+
+> ss
+
+V (s, μ ) = −2K, (120) and 
+
+∂μV (s, μ )( ξ) = 2 K(s − ¯μ) − 2Λ¯ μ, Dξ ∂μV (s, μ )( ξ) = 0 . (121) 
+
+> 34
+
+Step 2: Localized verification identity. Applying Itˆ o’s formula to e−β(t∧τn)V (st∧τn , μ t∧τn ), using (120)-(121), and taking expectations, we obtain 
+
+ESπt∧τn
+
+ = V (s, μ ) + E
+
+Z t∧τn
+
+> 0
+
+e−βr 
+
+−βV (sr , μ r ) + ( Lπb, ΣV )( sr , μ r ) + rπλ (sr , μ r )
+
+
+
+dr
+
+
+
+. (122) 
+
+Step 3: Static entropy minimization. For η ∈ Rm and for every probability density p on Rm
+
+such that R 
+
+> Rm
+
+(|a|2 + | log p(a)|) p(a) d a < ∞, define 
+
+Jη (p) := 
+
+Z
+
+> Rm
+
+
+
+a⊤Sa + 2 a⊤η + λ log p(a)
+
+
+
+p(a) d a. (123) Note that the first two terms inside the integral can be rewritten as a⊤Sa + 2 a⊤η =  a + S−1η⊤S a +
+
+S−1η − η⊤S−1η. Hence, defining 
+
+gη (a) := 
+
+√det S
+
+(π0λ)m/ 2 exp 
+
+
+
+− 1
+
+λ
+
+ a + S−1η⊤S a + S−1η
+
+.
+
+With this definition, (123) becomes 
+
+Jη (p) = −η⊤S−1η − λ
+
+2
+
+
+
+m log( π0λ) − log det S
+
+
+
++ λ KL( p ∥ gη ). (124) In particular, Jη (p) is minimized uniquely at p = gη .
+
+Step 4: Expansion of the drift term. Set z := s − ¯μ and η(s, μ ) := U s + ( W − U )¯ μ + O. Using (29), (30), (120)-(121), and the definitions (36)-(37), a direct computation yields 
+
+−βV (s, μ )+( Lπb, ΣV )( s, μ ) + rπλ (s, μ ) = −z⊤
+
+Q − βK + KA + A⊤K + D⊤KD 
+
+
+
+z
+
+− ¯μ⊤
+
+Q + ¯Q − βΛ + Λ( A + ¯A) + ( A + ¯A)⊤Λ + ( D + ¯D)⊤K(D + ¯D)
+
+
+
+¯μ
+
+− 2
+
+
+
+M + ( A⊤ − βI d)Y + D⊤Kγ 
+
+⊤
+
+s −
+
+
+
+−βR + γ⊤Kγ 
+
+
+
+−
+
+Z
+
+> Rm
+
+
+
+a⊤Sa + 2 a⊤η(s, μ ) + λ log pπ (s, μ, a )
+
+
+
+π(d a | s, μ ).
+
+Applying (124) with η = η(s, μ ) and p = pπ (s, μ, ·), we obtain 
+
+− βV (s, μ ) + ( Lπb, ΣV )( s, μ ) + rπλ (s, μ ) = −z⊤ΓK z − ¯μ⊤ΓΛ ¯μ − 2Γ ⊤ 
+
+> Y
+
+s − ΓR − λ KL( pπ (s, μ, ·) ∥ gs,μ ) ,
+
+where gs,μ := gη(s,μ ) and ΓK = Q − βK + KA + A⊤K + D⊤KD − U ⊤S−1U, 
+
+ΓΛ = Q + ¯Q − βΛ + Λ( A + ¯A) + ( A + ¯A)⊤Λ + ( D + ¯D)⊤K(D + ¯D) − W ⊤S−1W, 
+
+ΓY = M + ( A⊤ − βI d)Y + D⊤Kγ − U ⊤S−1O, 
+
+and ΓR = −βR + γ⊤Kγ − O⊤S−1O − λ
+
+2
+
+
+
+m log( π0λ) − log det S
+
+
+
+.
+
+By (32)-(35), all these coefficients vanish. Hence 
+
+−βV (s, μ ) + ( Lπb, ΣV )( s, μ ) + rπλ (s, μ ) = −λ KL( pπ (s, μ, ·) ∥ gs,μ ) . (125) 
+
+Step 5: Comparison for an arbitrary policy. Substituting (125) into (122) yields 
+
+ESπt∧τn
+
+ = V (s, μ ) − λ E
+
+Z t∧τn
+
+> 0
+
+e−βr KL( pπ (sr , μ r , ·) ∥ gsr ,μ r ) d r
+
+
+
+≤ V (s, μ ). (126) Since V has quadratic growth and, by definition of Π add , the discounted second moments vanish at infinity, we may let n → ∞ in (126) and obtain, for every t ≥ 0, 
+
+E[Sπt ] = V (s, μ ) − λ E
+
+Z t
+
+> 0
+
+e−βr KL( pπ (sr , μ r , ·) ∥ gsr ,μ r ) d r
+
+
+
+≤ V (s, μ ). (127) Recalling (119), this implies 
+
+Ee−βt V (st, μ t) + Es,μ,π 
+
+Z t
+
+> 0
+
+e−βr 
+
+r(sr , μ r , a sr ) − λ log pπ (sr , μ r , a sr )
+
+
+
+dr
+
+
+
+≤ V (s, μ ). (128) 
+
+> 35
+
+Letting t → ∞ in (128) and using the defining property of Π add , namely lim  
+
+> t→∞
+
+e−βt 
+
+E|st|2 + m2(μt)
+
+
+
+= 0 ,
+
+together with the quadratic growth of V , we conclude that 
+
+V π (s, μ ) ≤ V (s, μ ) for every π ∈ Πadd . (129) Hence V ∗(s, μ ) ≤ V (s, μ ). 
+
+Step 6: Optimality of the candidate policy. By construction, the Gaussian kernel (38) has density pπ∗ (s, μ, ·) = gs,μ , so the Kullback-Leibler term in (125) vanishes identically for π = π∗. Moreover, Lemma A.8 shows that π∗ ∈ Πadd . Therefore (127) becomes 
+
+E
+
+h
+
+Sπ∗
+
+> t
+
+i
+
+= V (s, μ ), t ≥ 0.
+
+Letting t → ∞ and using Lemma A.8 again, we obtain V π∗
+
+(s, μ ) = V (s, μ ). Combining this with (129), we conclude that V ∗(s, μ ) = V π∗
+
+(s, μ ) = V (s, μ ).
+
+Step 7: Uniqueness of the optimal policy. Let ˆ π ∈ Πadd be another optimal stationary feedback policy. Then V ˆπ (s, μ ) = V (s, μ ) for every ( s, μ ), and (127) implies 
+
+E
+
+Z ∞
+
+> 0
+
+e−βr KL( pˆπ (sr , μ r , ·) ∥ gsr ,μ r ) d r
+
+
+
+= 0 .
+
+Since the integrand is nonnegative, it follows that KL( pˆπ (sr , μ r , ·) ∥ gsr ,μ r ) = 0 for almost every r ≥ 0, almost surely. Hence pˆπ (sr , μ r , ·) = gsr ,μ r for almost every r ≥ 0, almost surely. Since the initial condition ( s, μ ) is arbitrary and the minimizer in (124) is unique, we conclude that ˆ π = π∗ as stationary feedback kernels. Therefore π∗ is the unique optimal stationary feedback policy in Π add . □
+
+References 
+
+[1] Yves Achdou and Mathieu Lauri` ere. Mean field type control with congestion. Applied Mathematics & Optimization ,73(3):393–418, 2016. [2] Yves Achdou and Mathieu Lauri` ere. Mean field type control with congestion II: An augmented lagrangian method. 
+
+Applied Mathematics & Optimization , 74(3):535–578, 2016. [3] Daniel Andersson and Boualem Djehiche. A maximum principle for SDEs of mean-field type. Applied Mathematics and Optimization , 63(3):341–356, 2011. [4] Alex Ayoub, Zeyu Jia, Csaba Szepesv´ ari, Mengdi Wang, and Lin F. Yang. Model-based reinforcement learning with value-targeted regression. In Proceedings of the 37th International Conference on Machine Learning , volume 119 of 
+
+Proceedings of Machine Learning Research , pages 463–474. PMLR, 2020. [5] Leemon C. Baird. Reinforcement learning in continuous time: advantage updating. Proceedings of 1994 IEEE Inter-national Conference on Neural Networks (ICNN’94) , 4:2448–2453 vol.4, 1994. [6] Matteo Basei and Huyˆ en Pham. A weak martingale approach to linear-quadratic McKean–Vlasov stochastic control problems. Journal of Optimization Theory and Applications , 181(2):347–382, 2019. [7] Erhan Bayraktar, Hang Cheung, Ibrahim Ekren, Jinniao Qiu, Ho Man Tai, and Xin Zhang. Viscosity solutions of fully second-order hjb equations in the wasserstein space. SIAM Journal on Control and Optimization , 2026. To appear. [8] Erhan Bayraktar, Andrea Cosso, and Huyˆ en Pham. Randomized dynamic programming principle and feynman–kac representation for optimal control of mckean–vlasov dynamics. Transactions of the American Mathematical Society ,370(3):2115–2165, 2018. [9] Erhan Bayraktar, Ibrahim Ekren, Xihao He, and Xin Zhang. Comparison for semi-continuous viscosity solutions for second order pdes on the wasserstein space. Journal of Differential Equations , 455:1–31, 2026. [10] Erhan Bayraktar, Ibrahim Ekren, and Xin Zhang. Comparison of viscosity solutions for a class of second-order pdes on the wasserstein space. Communications in Partial Differential Equations , 50(4):570–613, 2025. [11] Erhan Bayraktar, Ibrahim Ekren, and Xin Zhang. Convergence rate of particle system for second-order pdes on wasserstein space. SIAM Journal on Control and Optimization , 63(3):1515–1782, 2025. [12] Erhan Bayraktar, Martin Hernandez, Qinxin Yan, and Yuhua Zhu. Mean-field phibe: Continuous-time mean-field reinforcement learning from discrete-time data. Preprint , 2026. arXiv preprint. [13] Erhan Bayraktar and Jiamin Jian. Ergodicity and turnpike properties of linear-quadratic mean field control problems. 
+
+arXiv preprint , 2024. [14] Erhan Bayraktar and Jiamin Jian. Convergence and turnpike properties of linear-quadratic mean field control problems with common noise. arXiv preprint arXiv , 2025. [15] Erhan Bayraktar and Ali Devran Kara. Learning with linear function approximations in mean-field control. Journal of Machine Learning Research , 26(192):1–53, 2025. [16] Erhan Bayraktar, Ruoyu Wu, and Xin Zhang. Propagation of chaos of forward-backward stochastic differential equa-tions with graphon interactions. Applied Mathematics and Optimization , 88(1):Article 25, 2023. [17] Alain Bensoussan, Jens Frehse, and Phillip Yam. Mean field games and mean field type control theory . SpringerBriefs in Mathematics. Springer, New York, 2013. 
+
+> 36
+
+[18] Benoˆ ıt Bonnet and Francesco Rossi. The pontryagin maximum principle in the wasserstein space. Calculus of Varia-tions and Partial Differential Equations , 58:1–36, 2017. [19] Rainer Buckdahn, Boualem Djehiche, and Juan Li. A general maximum principle for SDEs of mean-field type. Applied Mathematics and Optimization , 64(2):197–216, 2011. [20] Rainer Buckdahn, Juan Li, Shige Peng, and Chao Rainer. Mean-field stochastic differential equations and associated pdes. Annals of Probability , 45(2):824–878, 2017. [21] Matteo Burzoni, Vincenzo Ignazio, A. Max Reppen, and H. Mete Soner. Viscosity solutions for controlled McKean– Vlasov jump-diffusions. SIAM Journal on Control and Optimization , 58(3):1676–1699, 2020. [22] Ren´ e Carmona. Lectures on BSDEs, stochastic control, and stochastic differential games with financial applications ,volume 1 of Financial Mathematics . Society for Industrial and Applied Mathematics (SIAM), Philadelphia, PA, 2016. [23] Ren´ e Carmona and Fran¸ cois Delarue. Forward–backward stochastic differential equations and controlled McKean– Vlasov dynamics. Annals of Probability , 43(5):2647–2700, 2015. [24] Ren´ e Carmona and Fran¸ cois Delarue. Probabilistic theory of mean field games with applications. I , volume 83 of 
+
+Probability Theory and Stochastic Modelling . Springer, Cham, 2018. Mean field FBSDEs, control, and games. [25] Ren´ e Carmona and Fran¸ cois Delarue. Probabilistic theory of mean field games with applications. II , volume 84 of 
+
+Probability Theory and Stochastic Modelling . Springer, Cham, 2018. Mean field games with common noise and master equations. [26] Ren´ e Carmona, Fran¸ cois Delarue, and Aim´ e Lachapelle. Control of McKean–Vlasov dynamics versus mean field games. 
+
+Mathematics and Financial Economics , 7(2):131–166, 2013. [27] Ren´ e Carmona, Jean-Pierre Fouque, and Li-Hsien Sun. Mean field games and systemic risk. Communications in Mathematical Sciences , 13(4):911–933, 2015. [28] Ren´ e Carmona and Mathieu Lauri` ere. Convergence analysis of machine learning algorithms for the numerical solution of mean field control and games: II — the finite horizon case. Annals of Applied Probability , 32(6):4065–4105, 2022. [29] Ren´ e Carmona, Mathieu Lauri` ere, and Zongjun Tan. Linear-quadratic mean-field reinforcement learning: Convergence of policy gradient methods. Preprint arXiv:1910.04295 , 2019. [30] Jos´ e A. Carrillo, Young-Pil Choi, and Maxime Hauray. The derivation of swarming models: Mean-field limit and Wasserstein distances. In Collective Dynamics from Bacteria to Crowds , CISM International Centre for Mechanical Sciences, pages 1–46. Springer, 2014. [31] Jos´ e A. Carrillo, Massimo Fornasier, Giuseppe Toscani, and Francesco Vecil. Particle, kinetic, and hydrodynamic models of swarming. In Mathematical Modeling of Collective Behavior in Socio-Economic and Life Sciences , Modeling and Simulation in Science, Engineering and Technology, pages 297–336. Birkh¨ auser Boston, 2010. [32] Louis-Pierre Chaintron and Antoine Diez. Propagation of chaos: A review of models, methods and applications. I. models and methods. Kinetic and Related Models , 15(6):895–1015, 2022. [33] Jean-Fran¸ cois Chassagneux, Dan Crisan, and Fran¸ cois Delarue. Numerical method for FBSDEs of McKean–Vlasov type. Annals of Applied Probability , 29(3):1640–1684, 2019. [34] Felipe Cucker and Steve Smale. Emergent behavior in flocks. IEEE Transactions on Automatic Control , 52(5):852–862, 2007. [35] Mao Fabrice Djete, Dylan Possama¨ ı, and Xiaolu Tan. Mckean–vlasov optimal control: Limit theory and equivalence between different formulations. Mathematics of Operations Research , 47(4):2891–2930, 2022. [36] Nicole El Karoui and Sylvie M´ el´ eard. Martingale measures and stochastic calculus. Probability Theory and Related Fields , 84(1–2):83–101, 1990. [37] Noufel Frikha, Maximilien Germain, Mathieu Lauriere, Huyˆ en Pham, and Xuanye Song. Actor-critic learning for mean-field control in continuous time. J. Mach. Learn. Res. , 26:Paper No. [127], 42, 2025. [38] Noufel Frikha, Huyˆ en Pham, and Xuanye Song. Full error analysis of policy gradient learning algorithms for exploratory linear quadratic mean-field control problem in continuous time with common noise. Preprint arXiv:2408.02489 , 2024. [39] Wilfrid Gangbo, Truyen Nguyen, and Adrian Tudorascu. Hamilton-Jacobi equations in the Wasserstein space. Methods Appl. Anal. , 15(2):155–183, 2008. [40] Rainer Hegselmann and Ulrich Krause. Opinion dynamics and bounded confidence: Models, analysis and simulation. 
+
+Journal of Artificial Societies and Social Simulation , 5(3), 2002. [41] Ronald A. Howard. Dynamic programming and Markov processes . Technology Press of M.I.T., Cambridge, MA; John Wiley & Sons, Inc., New York-London, 1960. [42] Jianhui Huang, Xun Li, and Jiongmin Yong. A linear-quadratic optimal control problem for mean-field stochastic differential equations in infinite horizon. Math. Control Relat. Fields , 5(1):97–139, 2015. [43] Ryan Hynd and Hwa Kil Kim. Infinite horizon value functions in the Wasserstein spaces. J. Differential Equations ,258(6):1933–1966, 2015. [44] Yanwei Jia, Du Ouyang, and Yufei Zhang. Accuracy of discretely sampled stochastic policies in continuous-time reinforcement learning. Preprint arXiv:2503.09981, 2025. [45] Yanwei Jia and Xun Yu Zhou. Policy evaluation and temporal-difference learning in continuous time and space: Amartingale approach. Journal of Machine Learning Research , 23(1):6918–6972, 2022. [46] Yanwei Jia and Xun Yu Zhou. Policy gradient and actor-critic learning in continuous time and space. Journal of Machine Learning Research , 23(1):12603–12652, 2022. [47] Yanwei Jia and Xun Yu Zhou. q-learning in continuous time. Journal of Machine Learning Research , 24(161):1–61, 2023. [48] Chi Jin, Zhuoran Yang, Zhaoran Wang, and Michael I. Jordan. Provably efficient reinforcement learning with linear function approximation. In Proceedings of the Thirty Third Conference on Learning Theory , volume 125 of Proceedings of Machine Learning Research , pages 2137–2143. PMLR, 2020. [49] Daniel Lacker. Limit theory for controlled McKean–Vlasov dynamics. SIAM Journal on Control and Optimization ,55(3):1641–1672, 2017. 
+
+> 37
+
+[50] Jean-Michel Lasry and Pierre-Louis Lions. Mean field games. Japanese Journal of Mathematics , 2(1):229–260, 2007. [51] Mathieu Lauri` ere. Numerical methods for mean field games and mean field type control. Proceedings of Symposia in Applied Mathematics , 78:221–282, 2021. [52] Mathieu Lauri` ere and Olivier Pironneau. Dynamic programming for mean-field type control. Comptes Rendus Math´ ematique. Acad´ emie des Sciences. Paris , 352(9):707–713, 2014. [53] Xun Li, Jingrui Sun, and Jiongmin Yong. Mean-field stochastic linear quadratic optimal control problems: Closed-loop solvability. Probability, Uncertainty and Quantitative Risk , 1(1):2, 2016. [54] Pierre-Louis Lions. Cours au Coll` ege de France: Th´ eorie des jeux ` a champ moyen, 2012. Audio lectures, 2006–2012. [55] Huyˆ en Pham. Linear quadratic optimal control of conditional McKean–Vlasov equation with random coefficients and applications. Journal of Mathematical Economics , 66:7–26, 2016. [56] Huyˆ en Pham and Xavier Warin. Actor-critic learning algorithms for mean-field control with moment neural networks. 
+
+Methodology and Computing in Applied Probability , 27(13), 2025. [57] Huyˆ en Pham and Xiaoli Wei. Dynamic programming for optimal control of stochastic McKean–Vlasov dynamics. 
+
+SIAM Journal on Control and Optimization , 55(2):1069–1101, 2017. [58] Huyˆ en Pham and Xiaoli Wei. Bellman equation and viscosity solutions for mean-field stochastic control problem. 
+
+ESAIM Control Optim. Calc. Var. , 24(1):437–461, 2018. [59] Huyˆ en Pham and Xavier Warin. Mean-field neural networks: Learning mappings on wasserstein space. Neural Net-works , 168:380–393, 2023. [60] Zhenjie Ren, Xiaoli Wei, Xiang Yu, and Xun Yu Zhou. Continuous-time q-learning for mean-field control with common noise, part-i: Theoretical foundations, 2026. [61] Zhenjie Ren, Xiaoli Wei, Xiang Yu, and Xun Yu Zhou. Continuous-time q-learning for mean-field control with common noise, part-ii: q-learning algorithms, 2026. [62] Lars Ruthotto, Stanley J. Osher, Wuchen Li, Levon Nurbekyan, and Samy Wu Fung. A machine learning framework for solving high-dimensional mean field game and mean field control problems. Proceedings of the National Academy of Sciences , 117(17):9183–9193, 2020. [63] H. Mete Soner, Josef Teichmann, and Qinxin Yan. Learning algorithms for mean field optimal control. Preprint arXiv:2503.17869 , 2025. [64] H. Mete Soner and Qinxin Yan. Viscosity solutions for McKean–Vlasov control on a torus. SIAM Journal on Control and Optimization , 62(2):903–923, 2024. [65] H. Mete Soner and Qinxin Yan. Viscosity solutions of the eikonal equation on the wasserstein space. Applied Mathe-matics & Optimization , 90(1), 2024. [66] Jingrui Sun. Mean-field stochastic linear quadratic optimal control problems: Open-loop solvabilities. ESAIM: Control, Optimisation and Calculus of Variations , 23(3):1099–1127, 2017. [67] Jingrui Sun and Hanxiao Wang. Mean-field stochastic linear-quadratic optimal control problems: Weak closed-loop solvability. Mathematical Control and Related Fields , 11(1):47–71, 2021. [68] Jingrui Sun and Jiongmin Yong. Stochastic linear-quadratic optimal control theory: differential games and mean-field problems . Springer Nature, 2020. [69] Yeneng Sun. The exact law of large numbers via fubini extension and characterization of insurable risks. Journal of Economic Theory , 126(1):31–69, 2006. [70] Richard S. Sutton and Andrew G. Barto. Reinforcement learning: an introduction . Adaptive Computation and Ma-chine Learning. MIT Press, Cambridge, MA, second edition, 2018. [71] Csaba Szepesv´ ari. Algorithms for Reinforcement Learning . Synthesis Lectures on Artificial Intelligence and Machine Learning. Morgan & Claypool, 2010. [72] Alain-Sol Sznitman. Topics in propagation of chaos. In ´Ecole d’ ´Et´ e de Probabilit´ es de Saint-Flour XIX—1989 , volume 1464 of Lecture Notes in Mathematics , pages 165–251. Springer, Berlin, Heidelberg, 1991. [73] Lukasz Szpruch, Tanut Treetanthiploet, and Yufei Zhang. Optimal scheduling of entropy regularizer for continuous-time linear-quadratic reinforcement learning. SIAM Journal on Control and Optimization , 62(1):135–166, 2024. [74] Corentin Tallec, L´ eonard Blier, and Yann Ollivier. Making deep Q-learning methods robust to time discretization. In 
+
+Proceedings of the 36th International Conference on Machine Learning (ICML) , volume 97 of PMLR , pages 6096– 6104, 2019. [75] Giuseppe Toscani. Kinetic models of opinion formation. Communications in Mathematical Sciences , 4(3):481–496, 2006. [76] Haoran Wang, Thaleia Zariphopoulou, and Xun Yu Zhou. Reinforcement learning in continuous time and space: A stochastic control approach. Journal of Machine Learning Research , 21(198):1–34, 2020. [77] Weichen Wang, Jiequn Han, Zhuoran Yang, and Zhaoran Wang. Global convergence of policy gradient for linear-quadratic mean-field control/game in continuous time. In Proceedings of the 38th International Conference on Machine Learning (ICML) , volume 139 of PMLR , pages 10772–10782, 2021. [78] Xiaoli Wei and Xiang Yu. Continuous time q-learning for mean-field control problems. Applied Mathematics & Opti-mization , 91(1):10, 2025. [79] Xiaoli Wei, Xiang Yu, and Fengyi Yuan. Unified continuous-time q-learning for mean-field game and mean-field control problems. ArXiv , abs/2407.04521, 2024. [80] Dong Yin, Botao Hao, Yasin Abbasi-Yadkori, Nevena Lazi´ c, and Csaba Szepesv´ ari. Efficient local planning with linear function approximation. In Proceedings of the 33rd International Conference on Algorithmic Learning Theory , volume 167 of Proceedings of Machine Learning Research , pages 1165–1192. PMLR, 2022. [81] Jiongmin Yong. Linear-quadratic optimal control problems for mean-field stochastic differential equations. SIAM Journal on Control and Optimization , 51(4):2809–2838, 2013. [82] Yuhua Zhu. PhiBE: A PDE-based Bellman equation for continuous time policy evaluation. Preprint arXiv:2405.12535, 2024.

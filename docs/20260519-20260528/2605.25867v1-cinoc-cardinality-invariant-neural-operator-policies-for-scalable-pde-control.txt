@@ -1,0 +1,2141 @@
+Title: CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control
+
+URL Source: https://arxiv.org/pdf/2605.25867v1
+
+Published Time: Tue, 26 May 2026 02:20:09 GMT
+
+Number of Pages: 40
+
+Markdown Content:
+# CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Pietro Zanotta * 1 Dibakar Roy Sarkar * 1 Honghui Zheng * 1 Somdatta Goswami 1 J´ an Drgo ˇ na 1
+
+## Abstract 
+
+Controlling partial differential equations (PDEs) with learning-based policies remains fundamen-tally limited by fixed-dimensional representations: policies trained for a specific sensor, actuator, or agent configuration typically fail when the con-figuration changes. This limitation is particularly severe in multi-agent PDE control, where poli-cies do not scale across population sizes without retraining. We address this challenge by introduc-ing Cardinality Invariant Neural Operator Control (CINOC ), reformulating PDE control as an op-erator learning problem that maps state fields to continuous control functions and trains them end-to-end through differentiable PDE solvers, yield-ing policies that naturally adapt to varying sensor and actuator configurations. Remarkably, CINOC policies trained on small swarms exhibit cardinal-ity invariance, allowing for zero-shot transfer to significantly larger populations as well as robust-ness to partial agent failure. This scalability arises from agents sharing a common policy and coordi-nating through their physical environment, which produces an emergent self-normalization effect. To explain this phenomenon, we provide a theo-rem grounded in mean-field theory demonstrating that policy gradients computed from finite-agent systems converge to those of a continuous control limit. Empirically, we validate CINOC on track-ing, stabilization, and density transport across lin-ear, nonlinear, chaotic, and turbulent PDEs. 
+
+## 1. Introduction 
+
+Partial differential equations (PDEs) govern a vast array of physical processes, from turbulent flows (Kalnay, 2003; 
+
+> *
+
+Equal contribution 1Department of Civil and System Engineer-ing, Johns Hopkins University, Baltimore, USA. Correspondence to: Pietro Zanotta <pzanott1@jh.edu >.
+
+Proceedings of the 43 rd International Conference on Machine Learning , Seoul, South Korea. PMLR 306, 2026. Copyright 2026 by the author(s). 
+
+Figure 1. Cardinality-Invariant Neural Operator Policy. Ashared neural operator maps PDE field observations to control actions for multiple agents, enabling zero-shot scalability across agent populations. Framework handles diverse tasks: (top right) chaos stabilization, (middle right) reference tracking, and (bottom right) density transport. 
+
+Pope, 2001) to heat transfer and chemical reactions (Crank, 1979; Turing, 1990). Reliable control of these systems is central to many engineering applications, yet remains challenging because PDEs evolve in infinite-dimensional function spaces and exhibit complex spatiotemporal dynam-ics. Classical control theory provides rigorous analytical frameworks, but these methods typically demand accurate system models, computationally intensive online optimiza-tion, or problem-specific designs that do not transfer across domains (Krstic & Smyshlyaev, 2008; Kouvaritakis & Can-non, 2016). Learning-based approaches offer a promising alternative by approximating control policies from data, bypassing the need for explicit models or online solvers (Farahmand et al., 2017; Rabault et al., 2019; Bhan et al., 2024; Zhang et al., 2024; Becktepe et al., 2026). However, existing methods face a critical architectural bottleneck: they parameterize policies with discretized, fixed-dimensional representations. Consequently, any change in the number of sensors, actua-tors, or multi-agent swarm size generally requires the policy architecture to be redesigned and retrained from scratch. We address these limitations by introducing Cardinality 
+
+Invariant Neural Operator Control ( CINOC ), reformulat-ing policy synthesis as an operator learning problem (Lu et al., 2021; Li et al., 2021). Our policy maps the current 1
+
+> arXiv:2605.25867v1 [eess.SY] 25 May 2026 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control
+
+PDE state field to a continuous control function over the spatial domain, trained end-to-end through differentiable PDE solvers (Holl et al., 2020). Figure 1 illustrates this framework, which accommodates fixed and mobile actua-tors (Demetriou, 2010), global and local sensor fields, and centralized- or decentralized agent configurations. In the decentralized setting, agents sharing a common policy co-ordinate implicitly through the PDE-governed environment. This stigmergic interaction (Theraulaz & Bonabeau, 1999) enables policies trained on small swarms to transfer zero-shot to larger populations, with graceful degradation under partial agent failures. 
+
+Contributions: We make the following contributions. 
+
+(1) Neural operator framework for PDE control. We in-troduce CINOC, which parameterizes PDE control policies as neural operators, yielding configuration-invariant policies 
+
+(2) Differentiable-physics-based policy optimization. We train control policies end-to-end by differentiating through PDE solvers, providing efficient and scalable policy gradi-ents for a broad class of PDE control problems. 
+
+(3) Cardinality-invariant multi-agent control. A key discovery in this work is that CINOC’s shared policies can induce complex multi-agent control via environment-mediated (stigmergic) coupling. We identify an emergent self-normalization phenomenon that enables cardinality-invariant behavior. 
+
+(4) Mean-field analysis of policy gradient. To ground these empirical findings, we provide a theoretical analysis linking finite-population gradient learning to a mean-field limit, leading to the cardinality invariance property. 
+
+(5) Empirical evaluation across diverse PDE regimes. We demonstrate stabilization, tracking, and density transport across diverse PDEs, including nonlinear reaction, diffusion, and chaotic spatiotemporal dynamics, validating scalability across sensing, actuation, and population configurations. 
+
+## 2. Related Work 
+
+Classical PDE Control: Classical methods face a funda-mental tension between mathematical rigor and real-time feasibility. Model Predictive Control (MPC) is effective but computationally demanding (Kouvaritakis & Cannon, 2016), while backstepping offers stability guarantees yet is bottlenecked by complex kernel computations (Krstic & Smyshlyaev, 2008; Qi et al., 2024). Adjoint-based meth-ods provide gradients but scale poorly with state dimen-sion (Gunzburger, 2002). To address dimensionality, re-search has pursued finite-dimensional reductions (Lunasin & Titi, 2015) and optimal actuator/sensor placement (Morris, 2010; Guo & Yang, 2015; Privat et al., 2015). For parabolic systems, explicit stabilization with finitely many actuators provides constructive guarantees (Kunisch & Rodrigues, 2019). Classical frameworks also address mobile actuator-sensor networks (Demetriou, 2010) and spatially scheduled actuation (Iftime & Demetriou, 2009). While powerful un-der complete model assumptions, these methods rely on centralized synthesis and fixed actuator configurations. 
+
+RL-based PDE Control: Reinforcement learning offers a model-free alternative, avoiding explicit system models or adjoint computations. Farahmand et al. (2017) intro-duced Deep Fitted Q-Iteration with transfer learning capa-bilities. Addressing high-dimensional action spaces, Pan et al. (2018) proposed action descriptors encoding spatial regularities, inspiring our operator-based formulation where policies output continuous control functions. Applications to fluid control validated this paradigm (Rabault et al., 2019; Pirmorad et al., 2021). Peitz et al. (2024) exploited transla-tional equivariance for zero-shot domain transfer, demon-strating that architectural symmetries enable generalization. Integration with neural operators has enabled adaptive con-trol (Hu et al., 2025). Standardized benchmarks like PDE Control Gym (Bhan et al., 2024) and Controlgym (Zhang et al., 2024) now provide reproducible testbeds. Multi-agent reinforcement learning (MARL) (Lowe et al., 2017; H ¨uttenrauch et al., 2019) has been applied to dis-tributed control problems. However, these methods face fundamental limitations for our setting: they require fixed state-action dimensions tied to a specific swarm size, pre-cluding zero-shot transfer across population sizes, and rely on high-variance gradient estimators rather than exact gra-dients from differentiable physics. Although preliminary MARL studies (Guo et al., 2025; Bousias et al., 2025; Wang et al., 2025) exhibit zero-shot scalability, they achieve this via architectural mechanisms such as parameter shar-ing, GNNs, and equivariance constraints. In fact, while Permutation-Invariant MARL (PI-MARL) methods achieve variable-size scalability via attention, graph networks, or hy-pernetworks that embed explicit permutation invariance and equivariance (Jianye et al., 2022; Hu et al., 2021; Wen et al., 2022; Park et al., 2025), a direct empirical comparison is infeasible. Furthermore, while empirical demonstrations of cardinality invariance have recently emerged in fluid dynam-ics, such as the use of MARL for turbulent drag reduction in channel flows (Guastoni et al., 2023) and the control of three-dimensional Rayleigh-B ´enard convection (Vasanth et al., 2025), these works treat the property primarily as an empirical consequence of the system’s spatial translational invariance. To rigorously evaluate our approach against standard contin-uous control paradigms, we adapted state-of-the-art single-agent and multi-agent reinforcement learning algorithms to our PDE environments. Complete architectural and algorith-mic details for these baselines are deferred to Appendix G. 2CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Differentiable Physics for Control: Differentiable physics engines enable backpropagation of control objectives through system dynamics, providing scalable gradient-based control across a wide range of applications (Qiao et al., 2020; de Avila Belbute-Peres et al., 2018). In the context of PDE control, Holl et al. (2020) demonstrated end-to-end training with differentiable solvers, ensuring strict physi-cal consistency. Drgo ˇna et al. (2024) used this paradigm to learn policies for parametric MPC problems. Recent open-source libraries have further broadened accessibility to physics-based learning by providing tools for differen-tiable simulation and control (Murthy et al., 2021; Gradu et al., 2020; Drgona et al., 2023). These advances have en-abled scalable gradient-based control in robotics, including control of quadcopters, locomotion, and contact-rich dy-namics (Schwarke et al., 2024; Song et al., 2024; Pan et al., 2026). This paradigm forms the computational backbone of our training algorithm. 
+
+Operator Learning for Control: Neural operators (NOs), such as DeepONet and FNO (Lu et al., 2021; Li et al., 2021), learn mappings between infinite-dimensional function spaces. NOs can accelerate model-based controllers while preserving theoretical guarantees. Neural backstepping ap-proximates parameter-to-gain kernel mappings (Bhan et al., 2023; Vazquez & Krstic, 2024; Qi et al., 2024; Lamarque et al., 2025), achieving substantial speedups while retaining stability certificates (Bhan et al., 2025; Abdolbaghi et al., 2025). This demonstrates operator learning can encode control-theoretic structures, motivating our investigation of policies as operators. Physics-informed approaches embed PDE residuals and Port-Hamiltonian structure (Li et al., 2025), while safety-critical extensions combine NOs with control barrier functions (Hu & Liu, 2024; Hu et al.). NOs can serve as differentiable surrogates within opti-mization loops. Wang et al. (2021) compressed PDE-constrained optimization using self-supervised DeepONets, while de Jong et al. (2025) introduced multi-step DeepONet for MPC. Zhao et al. (2025) achieved drag reduction with zero-shot Reynolds number generalization. Hwang et al. (2022) employs NOs within PDE-constrained optimization, achieving substantial speedups. Fabiani et al. (2025) uti-lizes local NOs for equation-free control, while Lundqvist & Oliveira (2025) combines NOs for dynamics prediction with physics-informed loss terms and online learning. Simi-larly, Guven et al. (2025) use DeepOnet, while Sarkar et al. (2025) use time-integrated DeepONet for offline learning of neural policies. While these methods leverage NOs for dynamics representation, our approach instead places op-erator learning at the core of control synthesis, unifying policy parameterization and optimization within a single operator-learning framework. The literature establishes powerful tools for PDE control. However, a critical gap remains: existing approaches rely on fixed-dimensional state-action representations, prevent-ing scalability to varying actuator counts without complete retraining. This architectural constraint also limits decen-tralized coordination when agents operate with only local observations. Our work addresses this gap by reformulating policy learning as an operator learning problem, directly parameterizing policies as neural operators mapping state fields to control functions. This formulation yields policies with emergent properties including cardinality invariance across actuator counts, effective decentralized coordination despite sparse local sensing, and mean-field consistent gra-dient learning in the large-population limit. 
+
+## 3. Problem Formulation 
+
+We consider the optimal control of a time-dependent state field z(x, t ) ∈ Z over a bounded spatial domain Ω ⊂ Rd
+
+and a finite time horizon t ∈ [0 , T ]. The system is actuated by M agents, where the i-th agent is located at ξi(t) ∈ Ω
+
+and applies a localized control intensity ui(t) ∈ R. For mobile agents, the position evolves according to a controlled velocity vi(t) ∈ Rd. Our goal is to synthesize joint control trajectories for the actions uM (t) = {u1(t), . . . , u M (t)}
+
+and velocities vM (t) = {v1(t), . . . , vM (t)} that minimize a cumulative cost subject to the governing PDE dynamics and physical constraints. Let ψ ∼ D prob represent a problem instance drawn from a distribution of physical parameters. Each instance ψ =(z0, z target , cenv ) defines the initial condition z0(x), the target state ztarget (x), and environment-specific constraints cenv 
+
+(e.g., static obstacles). The general multi-agent PDE control problem is formulated as the problem of finding the optimal control variables to minimize the expected cost: 
+
+min  
+
+> uM,vM
+
+J = Eψ∼D prob 
+
+"Z T
+
+> 0
+
+ℓ z(x, t ), uM (t), vM (t), ψdt 
+
+#
+
+s.t. ∂z ∂t = F (z(x, t ); ψ) + 
+
+> M
+
+X
+
+> i=1
+
+B x, u i(t), ξi(t),
+
+˙ξi(t) = vi(t), i = 1 , . . . , M, 
+
+c z(x, t ), uM (t), vM (t), ξM (t), ψ ≤ 0.
+
+(1) Here, the loss functional ℓ maps the global state and control efforts to a scalar cost, penalizing deviations from ztarget and excessive energy expenditure. The nonlinear differential operator F : Z → Z governs the intrinsic PDE dynamics. The actuation map B : Ω × R × Ω → Z projects the scalar control input ui(t) into the spatial domain around the agent’s current location ξi(t). For static agents, the kinematic constraint simply becomes ˙ξi(t) = 0. Finally, 3CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control Agent 1 Agent  nConstraintsLocalInitialCond.1LocalReference1ConstraintsLocalInitialCond. 
+
+> nLocalReference
+> n
+> Neural Operator Policies for Cardinality Invariant PDE Control
+> Task Loss + Constraints ReferenceTrackingStabilizationDensityMatchingConstraintsPenalties
+> Neural Operator
+> Policies Di ff erentiable
+> Physics Evolution
+> Control
+> Parameters Backward Propagation
+> Forward Propagation
+
+Figure 2. Schematic of the multi-agent operator learning for PDE control. The PDE solver acts as a differentiable layer. The operator policy Gθ (shared among the agents) takes error observations and outputs control actions. Gradients propagate through the solver to update θ.
+
+the vector-valued function c enforces constraints such as maximum control amplitudes, kinematic limits, and spatial obstacle avoidance. Throughout our analysis and empirical evaluations, we oper-ate under the assumption that the underlying PDE systems are locally observable and controllable given the chosen agent densities, spatial distributions, and sensor radii. A ded-icated discussion detailing how these physical constraints inform our framework’s applicability and deployment is provided in Appendix D.7. This formulation describes the fundamental continuous con-trol problem independent of the chosen solution architec-ture. In Section 4, we introduce our specific methodology, which tackles this problem by parameterizing the decen-tralized control actions [ui(t), vi(t)] ⊤ as the output of a shared neural operator policy Gθ acting strictly on local field observations. 
+
+## 4. Methodology 
+
+We propose a scalable, self-supervised learning framework for PDE control that seamlessly integrates neural operators with differentiable physics. To enable cardinality invariance, the ability to control swarms of varying size M with a sin-gle policy, we recast control synthesis as a shared operator learning problem in which all agents query a shared neu-ral operator policy. As illustrated in Figure 2 and detailed in Algorithm 1, our method consists of four coupled dif-ferentiable components arranged in a closed loop: (i) an observation operator that samples and processes the PDE state within the field of view of each actuator; (ii) a neural operator policy that maps local observations and agent coor-dinates to control actions; (iii) a differentiable PDE solver that evolves the system state; and (iv) a learning objective that evaluates control performance and backpropagates gra-dients through the physics to update the policy parameters. 
+
+Observation operator. Agents in large scale systems typi-cally lack global visibility; therefore, we employ an obser-vation operator Obs : Z × Ω → Z local that subtracts ztarget 
+
+from z(x, t ) to form a task-relevant error representation, and extracts a local field of view zpatch  
+
+> i
+
+(t) ∈ Z local relative to the i-th agent’s position ξi, aligned with the PDE mesh: 
+
+zpatch  
+
+> i
+
+(t) = Obs  z(x, t ), ξi(t), ψ. (2) Processing the local field includes evaluating the pointwise error of the current and target states, as well as spatial deriva-tives computed on the mesh. 
+
+Neural Operator Policy. We define the policy Gθ as a mapping from the local observation space Zlocal and local agent coordinates Ω to the control space U, Gθ : Zlocal ×
+
+Ω → U .Each agent i queries this shared operator using its local observation zpatch  
+
+> i
+
+and coordinate ξi. We parameterize Gθ
+
+using DeepONet (Lu et al., 2021), where a branch net Br θ2
+
+encodes the local field and a trunk net Tr θ3 encodes the spatial coordinate. A final feed-forward net χθ1 fuses these representations to the control action: 
+
+ui(t) = Gθ (zpatch  
+
+> i
+
+, ξi) = χθ1
+
+
+
+Br θ2 (zpatch  
+
+> i
+
+) · Tr θ3 (ξi)
+
+
+
+.
+
+(3) Here · denotes the dot product. For kinematic actua-tors, the same operator can synthesize a composite action 
+
+[ui(t), vi(t)] ⊤. Crucially, the parameters θ = {θ1, θ2, θ3}
+
+are shared across all i = 1 , . . . , M actuators, ensuring per-mutation invariance and constant input dimensionality re-gardless of M . Unlike standard MARL frameworks where agents often hold distinct roles, our actuators form a homo-geneous swarm deployed to cooperatively solve a unified task. Parameter sharing is therefore a logical reflection of this physical homogeneity. 
+
+Differentiable Physics and Actuation. To train θ without expert supervision, we embed the physical dynamics directly into the optimization loop using a Discretize-then-Optimize (DtO) approach. We define the solver Ψ as the transition operator that explicitly solves the discretization form of the PDE dynamics F from Eq. 1: 
+
+zt+1 , {ξi,t +1 }Mi=1 = Ψ( zt, {ξi,t }Mi=1 , uM (t); ∆ t). (4) The solver Ψ aggregates the individual control actions 
+
+uM (t) and advances the state field zt+1 . Simultaneously, it updates the actuator positions based on the agent type. For static actuators positions remain fixed, ξi,t +1 = ξi,t . The policy outputs strictly forcing intensity ui, while for kinetic actuators the policy outputs a composite vector [ui, vi]⊤.The solver integrates the velocity vi to update positions, 
+
+ξi,t +1 = ξi,t + vi∆t. Because Ψ is implemented via auto-matic differentiation, it provides exact gradients ∂z t+1 /∂ θ,linking the system state directly to the policy actions. No-tably, our formulation remains compatible with the optimize-then-discretize (OtD) framework (Ricky et al., 2018). 4CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Learning Objectives. The training paradigm minimizes the expected cumulative cost over sampled problem instances 
+
+ψ. The training loss function is explicitly parameterized by the swarm size M to balance performance and total control effort. For trajectory tracking tasks, we minimize: 
+
+J (θ) = 
+
+> T
+
+X
+
+> t=0
+
+ ∥zt − ztarget ∥2 
+
+> Z
+
++ λ∥uM (t)∥2 . (5) Here, the weight λ penalizes the aggregate control energy. For density matching problems, the tracking error norm is replaced by a Moment Matching loss W(zt, z target ):
+
+J (θ) = 
+
+> T
+
+X
+
+> t=0
+
+ W(zt, z target ) + λ∥uM (t)∥2 . (6) The parameters θ are updated via stochastic gradient de-scent, with gradients computed by backpropagating the loss through the physics solver Ψ (BPTT) (Werbos, 1990). 
+
+Algorithm 1 Self-Supervised Operator Policy Training  
+
+> 1:
+
+Input: distribution Dprob , horizon T , number of agents 
+
+M 
+
+> 2:
+
+Initialize: shared policy parameters θ 
+
+> 3:
+
+while not converged do  
+
+> 4:
+
+{1. Data Sampling } 
+
+> 5:
+
+Sample instances ψ = ( z0, z target , . . . ) ∼ D prob  
+
+> 6:
+
+Initialize state z0, actuator positions {ξi,t =0 }Mi=1  
+
+> 7:
+
+for t = 0 to T do  
+
+> 8:
+
+{2. Shared Policy Inference } 
+
+> 9:
+
+for i = 1 to M do  
+
+> 10:
+
+zpatch  
+
+> i
+
+← O bs (zt, ξi,t , ψ) 
+
+> 11:
+
+[ui(t), vi]⊤ ← G θ (zpatch  
+
+> i
+
+, ξi,t ) 
+
+> 12:
+
+end for  
+
+> 13:
+
+{3. Differentiable Physics Step } 
+
+> 14:
+
+zt+1 , {ξt+1 } ← Ψ( zt, {ξt}, uMt ) 
+
+> 15:
+
+{4. Loss } 
+
+> 16:
+
+J ← J + ℓ(zt+1 , uMt , ψ) 
+
+> 17:
+
+end for  
+
+> 18:
+
+Update: θ ← θ −η∇θ J {Backprop via Physics } 
+
+> 19:
+
+end while 
+
+## 5. Theoretical Analysis 
+
+In this section, we provide a theoretical foundation for the convergence and scalability of our multi-agent framework. We focus on two key questions: (1) Does training on a finite swarm of size M optimize the underlying continuous control problem? and (2) What mechanism allows a policy trained on one swarm size to transfer zero-shot to another? To establish convergence and scalability, we analyze the system in the large-population limit ( M → ∞ ). For read-ers less familiar with the functional analytic setting (e.g., Gelfand triples, Aubin-Lions lemma (Simon, 1986)) and the mean-field measure convergence concepts utilized in these proofs, we provide a detailed primer in Appendix A. 
+
+5.1. Mean-Field Gradient Consistency 
+
+To ensure CINOC is not simply overfitting to a specific swarm configuration, we analyze the system behavior in the large-population limit ( M → ∞ ). Intuitively, as the num-ber of agents increases, the discrete collection of actuators converges to a continuous actuator density measure. By em-ploying mean-field theory, we define a limiting mean-field forcing operator B∞(z) that acts on this density rather than on discrete agent positions. Our primary theoretical result establishes that the gradients computed during our discrete multi-agent training are con-sistent estimators of the gradients for this continuous limit. 
+
+Theorem 5.1 (Consistency of Discrete Policy Gradients (Informal)) . As the number of agents M → ∞ , the discrete policy gradient ∇θ JM converges to the mean-field gradient 
+
+Dθ J∞. (Formal statement and proof in Appendix B). Proof sketch. The proof relies on the discrete physics uni-formly approximates the mean-field physics. 
+
+Uniform Bounds : We first show that the PDE state and adjoint variables remain uniformly bounded in suitable func-tion spaces regardless of M , preventing physical blow-ups as agents are added. 
+
+Compactness & Convergence : Using the Aubin-Lions lemma (Simon, 1986), we extract strongly convergent sub-sequences of the state trajectories, showing that the discrete dynamics converge to a unique mean-field limit. 
+
+Gradient Identification : Finally, we decompose the gra-dient error into a state-dependent term and a measure-dependent term. We show both vanish in the limit, proving that optimizing the swarm is asymptotically equivalent to optimizing the continuous operator. 
+
+Significance : Theorem 5.1 guarantees that our policies learn the fundamental operator dynamics of the PDE rather than becoming dependent on a specific cardinality. This consistency is the theoretical bedrock that allows the learned operator Gθ to function effectively across different swarm cardinalities. 
+
+5.2. Conjecture: Emergent Self-Normalization 
+
+While Theorem 5.1 assumes normalized forcing ( 1/M ), our implementation uses unnormalized superposition ( P ui). We conjecture that the optimization process induces an im-plicit normalization via the effort regularization term λu,therefore extending the Theorem 5.1 to the unnormalized 5CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+case. 
+
+Conjecture 1 (Self-Normalization via Effort Regularization) .
+
+The optimization process induces an implicit scaling where the optimal policy outputs intensities ui ≈ O(1 /M ). This ensures the total forcing remains bounded while individual effort vanishes. 
+
+Intuition : This scaling represents a form of cooperative efficiency gain; the solver seeks an equilibrium between minimizing tracking error (which requires a certain total ag-gregate force) and minimizing control effort (which pushes 
+
+ui → 0 for all agents). Because the DeepONet policy shares parameters between all agents and closes the loop through the global physical field z, this scaling is discovered sequen-tially; agents sense the magnitude of the aggregate field and adjust their output accordingly, without ever needing to communicate the total population count M. This mechanism is a key driver of the cardinality invariance observed in our experiments. 
+
+## 6. Experiment Results and Discussion 
+
+To validate the multi-agent operator learning framework, we analyze the learned policies across four dimensions: (1) con-trol efficacy across diverse set of 1D and 2D PDEs (linear, nonlinear, turbulent, and chaotic dynamics), (2) versatility across distinct control objectives, including stabilization, tra-jectory tracking, and density transportation, (3) comparative performance against standard single-agent and multi-agent reinforcement learning baselines (Papoudakis et al., 2020; Fujimoto et al., 2018; Yu et al., 2022; Schulman et al., 2017), and (4) invariance to swarm sizes cardinalities. Table 1 de-tails the experimental configurations and reports the average performance of the learned policy alongside the evaluated baselines on all test cases, categorizing each PDE by its dimensionality, control objective, and actuator dynamics. Details on governing equations, simulation parameters, and further results are provided in Appendix E. The code to reproduce all experiments is available on Github 1. Fur-thermore, to contextualize these data-driven approaches against classical optimal control, we benchmarked a Nonlin-ear Model Predictive Control (NMPC) (Allg ¨ower & Zheng, 2012) baseline on the 1D KS stabilization task. While theo-retically sound, NMPC suffers from severe computational bottlenecks (requiring over 590 ms per optimization step), making it computationally intractable for real-time deploy-ment or scaling to high-dimensional 2D domains. Our neu-ral operator framework bypasses this limitation by shift-ing the computational burden to the offline training phase (see Appendix G.10 for detailed NMPC timing and perfor-
+
+> 1
+
+https://github.com/SOLARIS-JHU/CINOC , while complete architectural and algorithmic details for the RL baselines are deferred to Appendix G 
+
+mance). 
+
+Table 1. Multi-Agent Control Performance. A distilled com-parison of CINOC against uncontrolled evolution, DPC, and the best-performing Reinforcement Learning (RL) baseline for each specific task. The “Best RL” column reports the strongest result among PPO, TD3, MAPPO, and MATD3 (MAPPO for FKPP/Heat/KS tasks, MATD3 for Turbulence, PPO for Density). Comprehensive results for all baselines are provided in Appendix X. Values represent Tracking MSE, L2 Energy/Enstrophy, and Moment Matching Loss (MML); lower is better. See Table 2 for comprehensive baselines.                                                                                                     
+
+> Environment Unctrl. DPC Best RL CINOC
+> Tracking (MSE)
+> FKPP 1D 0.103 ±0.128 1.4e-4±1.9e-40.004 ±0.010 4.6e-5±7.5e-5
+> Heat 1D 0.390 ±1.144 7.9e-5±1.1e-40.001 ±0.002 2.9e-4±4.3e-4
+> Heat 2D 0.176 ±0.378 2.1e-4±2.2e-40.006 ±0.016 1.5e-4±1.8e-4
+> Heat 2D (Obs) 0.176 ±0.378 2.7e-4±2.6e-40.004 ±0.015 1.2e-4±1.7e-4
+> Stabilization (Energy/Enstrophy)
+> KS 1D 1.45 ±0.69 0.16 ±0.15 0.13 ±0.13 0.13 ±0.12
+> KS 2D 13 .91 ±4.61 9.74 ±2.32 0.50 ±0.24 0.37 ±0.19
+> Turbulence 2D 50 .49 ±13 .29 3.28 ±2.19 3.71 ±2.46 3.23 ±2.22
+> Density Matching (MML)
+> Density Control 0.027 ±0.026 0.002 ±0.010 0.005 ±0.005 0.002 ±0.002
+
+6.1. Stabilizing Spatiotemporal Chaos Task Setup. We first challenge the policy with the 2D Kuramoto-Sivashinsky (KS) equation, a canonical model for pattern formation that exhibits flame-front instabilities and negative diffusion. The system is governed by high-order spatial derivatives that drive energy production at large scales, which is then dissipated at small scales, result-ing in fully developed spatiotemporal chaos. We employ a uniform grid of 100 fixed actuators to provide localized control inputs. The goal is to drive the system from a chaotic state to the zero equilibrium u(x, t ) = 0 . This equilibrium is linearly unstable; infinitesimal perturbations in the un-controlled dynamics grow exponentially until the system returns to the chaotic attractor. This makes the task a chal-lenging test of the policy’s ability to manage non-linear amplification and precisely balance energy production with dissipative control. 
+
+Result Evaluation. Figure 3 illustrates the stabilization performance. The system is evolved to the chaotic attrac-tor (phase t < 0) to ensure the policy confronts a realistic, complex state. Upon activating the control at t = 0 , we ob-serve a rapid suppression of the turbulent structures. While the uncontrolled baseline (Natural Evolution) continues to exhibit cellular fluctuations with magnitudes spanning ap-proximately [−9.3, 7.6] , the learned policy induces an ex-ponential decay. By t = 5 .0s, the policy has effectively eliminated the chaotic shedding, reducing the field to a near-zero state and maintaining this unstable equilibrium despite the system’s inherent drive toward instability. Compared to uncontrolled evolution, resulting in an energy level of 12 .16 ,the controlled evolution is able to drive the energy to 0.20 .6CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control t=0.0s t=2.0s t=5.0s     
+
+> Natural Evolution
+> t=7.0s t=9.0s
+> t=0.0s t=2.0s t=5.0s
+> Controlled Evolution
+> t=7.0s t=9.0s
+> 9.34
+> 7.46
+> 5.57
+> 3.68
+> 1.79
+> 0.09
+> 1.98
+> 3.87
+> 5.76
+> 7.65
+
+Figure 3. Stabilization of 2D Kuramoto-Sivashinsky chaos. Top: Natural (uncontrolled) evolution of u(x, t ) showing persistent chaotic dynamics. Bottom: Controlled evolution of u(x, t ) with policy applied at t = 0 . The system, initially in a developed chaotic state, rapidly converges to the zero equilibrium within approximately 5 seconds. 
+
+Furthermore, as detailed in Table 1, CINOC significantly outperforms both DPC and all RL baselines on the KS 2D task. While DPC struggles to stabilize the system (achieving an average energy of 9.74 ± 2.32 ) and the best RL base-line (MAPPO) reaches 0.50 ± 0.24 , our policy achieves the lowest energy state of 0.37 ± 0.19 .
+
+6.2. Trajectory Tracking with Actuator Constraints Task Setup. To evaluate the policy’s ability to handle non-convex spatial constraints in the multi-agent setting with kinetic actuators, we consider a 2D diffusion control task with static “keep-out” zones and we introduce K = 3 cir-cular obstacles O ⊂ Ω. We employ 16 kinetic actuators so that the policy outputs, for each agent i, a velocity vi = ˙ξi
+
+governing agent motion and a scalar control intensity ui for local actuation. The task for the policy drives the system’s spatial state along a time-parameterized path, ensuring the continuous evolution of the shape from its initial configu-ration to a desired terminal state. We also impose kinetic and actuator constraints to better reflect real-world applica-tion. The challenge for this example lies in the geometric constraints given by the ostacles: while the physical temper-ature field, governed by a 2d Heat Equation, diffuses freely through these regions, the actuators are strictly barred from entering them. The policy must therefore sink heat from within the forbidden zones by optimally positioning agents along the permissible boundaries (the hull of O), without having actuators getting too close to the obstacle itself: 
+
+min  
+
+> k
+
+∥ξi − ck∥ ≥ Rsafe + rk. (7) 
+
+Results Evaluation. Figure 4 visualizes the emergent co-ordination strategies under spatial constraints. At t = 30 
+
+and t = 80 , rather than forming perimeters around the ob-stacles, agents cluster within the high-magnitude regions of the temperature field. This suggests the policy prioritizes direct intervention in areas of maximum deviation. t=0 t=30 t=80           
+
+> Natural Evolution
+> t=150 t=299
+> t=0 t=30 t=80
+> Controlled Evolution
+> t=150 t=299
+> -0.47
+> -0.37
+> -0.28
+> -0.18
+> -0.09
+> 0.00
+> 0.10
+> 0.19
+> 0.29
+> 0.38
+> 0200
+> Time Step
+> 10 4
+> 10 3
+> 10 2
+> MSE  Uncontrolled
+> Controlled
+> 0200
+> Time Step
+> 0.0
+> 0.5
+> Avg
+> 0200
+> Time Step
+> 0
+> 5
+> 10
+> Avg |u|
+
+Figure 4. Control under Actuator Constraints. (Top) Uncon-trolled thermal field evolution. (Middle) Controlled evolution where agents (dots) regulate the temperature field toward dashed reference contours while avoiding static obstacles (orange cir-cles). (Bottom) Performance metrics: (left) MSE for controlled vs. uncontrolled convergence; (center) average velocity ˙ξi of the actuators; (right) average control intensity |ui|.
+
+Despite the presence of three large exclusion zones (orange circles), the bottom-left panel shows the Mean Squared Er-ror (MSE) converging rapidly, reaching a steady state of MSE ≈ 8 × 10 −4, significantly lower than the uncontrolled baseline ( M SE ≈ 10 −2). The control effort, ( Avg |ui|), spikes initially to move agents into position and then stabi-lizes, indicating that the policy maintains the desired thermal state with minimal energy expenditure once the spatial con-figuration is established. Quantitatively, as shown in Table 1 for the obstacle-constrained Heat 2D environment, CINOC achieves an MSE of 1.2e-4, outperforming the DPC baseline (2.7e-4) and drastically surpassing the best multi-agent RL algorithm, MAPPO ( 0.004 ). This highlights the advantage of CINOC over both traditional differentiable physics and trial-and-error learning in geometrically constrained track-ing scenarios, a trend also reflected in the unconstrained 1D and 2D Heat tasks where CINOC consistently outper-forms RL baselines by orders of magnitude. Crucially, while MARL baselines prove capable of managing the restorative forcing required for stabilization, the precise spatiotempo-ral coordination demanded by trajectory tracking exposes a massive performance gap where CINOC’s operator-driven formulation demonstrates a clear superiority. 
+
+6.3. Density Transport via Flow Manipulation Task Setup. While the previous tasks focused on suppress-ing instability and trajectory tracking, we now evaluate the policy’s capacity for constructive pattern formation. The ob-jective is to transport a passive scalar distribution to match a target configuration ρ∗ while strictly conserving mass (de-tails in Appendix E.3), while subject to the 2d Advection-7CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Diffusion equation. This task introduces a specific opti-mization challenge: when the support of the current density and the target are disjoint, standard pointwise metrics (e.g., MSE, KL-divergence) yield vanishing gradients. We ad-dress this by optimizing the Wasserstein distance inspired moment matching (1st and 2nd moment), which leverages the underlying metric geometry to provide informative trans-port gradients even in the absence of spatial overlap. We employ 9 kinetic agents for this task to influence the field by controlling the local velocity term vi rather than using direct mass forcing. Physically, this corresponds to advecting the density mass across the domain rather than locally creating or destroying it. 
+
+Results Evaluation. Figure 5 showcases the policy con-trolling M = 9 mobile advection agents. The results high-light a sophisticated two-phase strategy: in the initial phase (t < 75 ), agents do not merely push the density from behind. Instead, they organize into a semi-circular “herding” forma-tion (visible at t = 30 , t = 75 ). This shape serves a dual purpose: it maximizes the advective velocity toward the target while simultaneously acting as a barrier to prevent the density from diffusing outward. Once the target is reached (see Tracking Error, bottom left), the policy undergoes a phase transition. At t ≈ 75 , the control input (purple line) drops from saturation levels to a low-energy maintenance mode. The agents effectively switch from transporting to station-keeping, applying only minimal actuation required to counteract natural diffusion and hold the shape in place. As reported in Table 1, our approach matches the DPC base-line with a loss of 0.002 , while significantly outperforming all standard and multi-agent RL baselines, which fail to achieve a loss lower than 0.005 (PPO) and struggle up to 
+
+0.021 (TD3 and MATD3). 
+
+6.4. Verification of Cardinality Invariance 
+
+A central claim of CINOC is the ability to train on Mtrain 
+
+agents and deploy on Mtest ̸ = Mtrain without fine-tuning. We validate the cardinality invariance property (Sec. B.2) by training a single policy for each of our numerical ex-periments and deploying it zero-shot on different swarm cardinalities. Figure 6 visualizes these results, while Table 3 reports the maximum and minimum parameter counts that keep the error bounded below an arbitrary 250% threshold. We observe a distinct dimensionality effect where 2D poli-cies generally exhibit broader scaling margins than their 1D counterparts. This stems from the topology of actuator den-sity: while inter-agent distance decays linearly ( M −1) in 1D, it decays as M −1/2 in 2D. Consequently, 1D domains suffer from rapid kernel saturation, whereas 2D domains offer greater geometric capacity to accommodate additional agents without forcing conflicts. Notably, the Density 2D task achieves the highest scalability (up to 64 ×) because the t=0 t=30 t=75          
+
+> Natural Evolution
+> t=120 t=149
+> t=0 t=30 t=75
+> Controlled Evolution
+> t=120 t=149 0.0
+> 0.1
+> 0.2
+> 0.3
+> 0.4
+> 0.4
+> 0.5
+> 0.6
+> 0.7
+> 0.8
+> 0100
+> Time Step
+> 10 1
+> Dist.  Uncontrolled
+> Controlled
+> 0100
+> Time Step
+> 0.0
+> 0.2
+> Avg
+> 0100
+> Time Step
+> 0.0
+> 0.2
+> Avg | v|
+
+Figure 5. Density Transport via Mobile Advection. (Top) Un-controlled evolution of density. (Middle) Controlled evolution where agents (dots) coordinate to “blow” the density blob into the target zone (green circle). (Bottom) Performance metrics: (left) Wasserstein distance showing controlled vs. uncontrolled conver-gence; (center) average velocity ˙ξi of the actuators; (right) average control action |vi|.
+
+policy learns a geometric “containment” strategy around the target zone, rather than applying continuous high-magnitude forcing. This station-keeping behavior allows excess agents to simply join the perimeter without disrupting the physics. 0.25 0.5 1    
+
+> Relative Swarm Size
+> 0%
+> 50%
+> 100%
+> 150%
+> 200%
+> 250%
+> Relative MSE
+> Training
+> Scale
+> Decreasing Swarm Size ( MMtrain )
+> 125
+> Relative Swarm Size
+> Training
+> Scale
+> Increasing Swarm Size ( MMtrain )
+> KS 1D
+> FKPP 1D
+> Heat 1D
+> KS 2D
+> Turbulence 2D
+> Heat 2D
+> Density Transport 2D
+> Baseline (100%)
+
+Figure 6. Cardinality invariance across diverse PDE bench-marks. The plots show the Relative MSE as a function of the swarm size relative to the original training scale. Left: Perfor-mance regimes for decreasing swarm sizes ( M ≤ Mtrain ). Right: 
+
+Performance regimes for increasing swarm sizes ( M ≥ Mtrain ). The 100% dashed line indicates the baseline performance at the training population. Policies deployed in 2D environments (e.g., Density 2D, Turbulence 2D) exhibit significantly broader scaling margins than 1D counterparts due to higher geometric capacity and slower inter-agent distance decay. Conversely, chaotic regimes like the Kuramoto-Sivashinsky (KS) equation display the tightest stability margins as minor deviations in the aggregate forcing field are rapidly amplified. 
+
+Conversely, chaotic systems like the Kuramoto-Sivashinsky equation display the tightest stability margins (e.g., KS 2D transfers only up to 1.3×). Even minor deviations in the ag-gregate forcing field, introduced by the training-test density 8CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+mismatch, are rapidly amplified by the non-linear dynam-ics. Finally, we note that trajectory-tracking tasks (Fisher-KPP, Heat) generally support lower maximum cardinalities than pure transport. The tracking objective requires pre-cise, localized destructive interference to reshape the state dynamically, a complex balance that is more sensitive to overcrowding. Last, to demonstrate that this cardinality invariance is an intrinsic property of the operator learning formulation rather than an artifact of the differentiable physics training, we parametrize our policies using DeepONet and train them via standard model-free MARL algorithms. Complete architec-tural and algorithmic details for these RL experiments are provided in Appendix D.6. 
+
+6.5. Ablation Studies 
+
+We evaluate the robustness of CINOC through extensive ablations on solver fidelity, signal noise, sensor dimension and PDE parameters mismatch. Our results confirm that the proposed effort regularization is critical for emergent self-normalization, while restricting agents to local observation windows is necessary to prevent instability in large swarms. Furthermore, the learned policies exhibit strong robustness to changes in grid resolution and graceful degradation to changes in physical coefficients. We also highlight the role of noise injection during training serving as a key regularizer for cardinality invariance. More details about the ablations in Appendix 6.5. 
+
+## 7. Conclusion 
+
+In this work, we presented a scalable framework for the con-trol of partial differential equations (PDEs) that integrates neural operators with differentiable physics. By reformu-lating policy learning as an operator learning problem, we overcame the fixed-dimensional constraints of traditional reinforcement learning approaches, enabling cardinality-invariant policies. Theoretically, we grounded this capability in a mean-field limit analysis, proving that discrete policy gradients yield consistent estimators of the underlying continuous operator gradients. Furthermore, we identified an emergent self-normalization phenomenon driven by effort regularization, where individual agents automatically scale their output to maintain bounded aggregate forcing as the population grow. Empirically, the framework proved robust across a diverse suite of linear, nonlinear, and chaotic PDE regimes and control task, including the Kuramoto-Sivashinsky equation and turbulent flows. Crucially, our extensive ablation studies confirmed that these policies remain robust to partial agent failure, sensor noise, grid resolution changes, and small parametric shifts in the underlying physics. While our framework demonstrates strong performance, it is not without limitations. First, our training pipeline implies a model-based setting, relying on access to a fully differ-entiable solver and explicit knowledge of the governing equations. Second, while empirically robust on nonlinear systems, our theoretical convergence guarantees are strictly established only for linear, dissipative regimes. Future work will aim to relax these constraints by extending the theoret-ical analysis to broader classes of nonlinear PDEs. Addi-tionally, we plan to explore training parametric operators conditioned on physical coefficients, enabling zero-shot gen-eralization across diverse dynamical systems. Finally, we aim to scale this framework to high-dimensional, industri-ally relevant environments, such as 3D turbulent channel flows, to further bridge the gap between data-driven learning and rigorous control theory. 
+
+## Acknowledgments 
+
+This research is partially supported by the U.S. DOE, Office of Science, ASCR program under the Scientific Discovery through Advanced Computing (SciDAC) Institute “LEADS: LEarning-Accelerated Domain Science”, and also partially supported by the Ralph O’Connor Sustainable Energy In-stitute (ROSEI) at Johns Hopkins University. The authors would like to acknowledge computing support provided by the Advanced Research Computing at Hopkins (ARCH) core facility at Johns Hopkins University and the Rockfish cluster. ARCH core facility (rockfish.jhu.edu) is supported by the National Science Foundation (NSF) grant number OAC1920103. The research efforts of DRS and SG are supported by the National Science Foundation (NSF) under Grant No. 2436738. 
+
+## Impact Statement 
+
+This paper presents work whose goal is to advance the field of machine learning. There are many potential societal consequences of our work, none of which we feel must be specifically highlighted here. 
+
+## References 
+
+Abdolbaghi, M., Keyanpour, M., and Tabatabaei, S. A. H. Backstepping controllers based on neural operators for coupled PDE-ODE systems. IEEE Control Systems Let-ters , 2025. Allg ¨ower, F. and Zheng, A. Nonlinear model predictive control . Birkh¨ auser, 2012. Alphonse, A., Caetano, D., Djurdjevac, A., and Elliott, C. M. Function spaces, time derivatives and compactness for evolving families of Banach spaces with applications to 9CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+PDEs. Journal of Differential Equations , 353:268–338, 2023. Becktepe, J., Franz, A., Thuerey, N., and Peitz, S. Plug-and-Play Benchmarking of Reinforcement Learning Algorithms for Large-Scale Flow Control, 2026. URL https://arxiv.org/abs/2601. 15015 . GitHub: https://github.com/safe-autonomous-systems/fluidgym. Bhan, L., Shi, Y., and Krstic, M. Neural operators for bypassing gain and control computations in PDE back-stepping. IEEE Transactions on Automatic Control , 69 (8):5310–5325, 2023. Bhan, L., Bian, Y., Krstic, M., and Shi, Y. PDE control gym: A benchmark for data-driven boundary control of partial differential equations. In 6th Annual Learning for Dynamics & Control Conference , pp. 1083–1095. PMLR, 2024. Bhan, L., Shi, Y., and Krstic, M. Adaptive con-trol of reaction–diffusion PDEs via neural operator-approximated gain kernels. Systems & Control Letters ,195:105968, 2025. Bousias, N., Pertigkiozoglou, S., Daniilidis, K., and Pappas, G. Symmetries-enhanced Multi-Agent Re-inforcement Learning. PMLR , pp. 999–1011, May 2025. URL https://proceedings.mlr.press/ v283/bousias25a.html .Bradbury, J., Frostig, R., Hawkins, P., Johnson, M. J., Leary, C., Maclaurin, D., Necula, G., Paszke, A., VanderPlas, J., Wanderman-Milne, S., and Zhang, Q. JAX: composable transformations of Python+NumPy programs, 2018. URL 
+
+http://github.com/jax-ml/jax .Carrillo, J. A. and Choi, Y.-P. Mean-field limits: from particle descriptions to macroscopic equations. Archive for Rational Mechanics and Analysis , 241(3):1529–1573, 2021. Crank, J. The mathematics of diffusion . Oxford university press, 1979. de Avila Belbute-Peres, F., Smith, K., Allen, K., Tenenbaum, J., and Kolter, J. Z. End-to-End Differentiable Physics for Learning and Control. In Advances in Neural Information Processing Systems , volume 31. Curran Associates, Inc., 2018. URL https://proceedings.neurips. cc/paper_files/paper/2018/file/ 842424a1d0595b76ec4fa03c46e8d755-Paper. pdf .de Jong, T. O., Shukla, K., and Lazar, M. Deep Operator Neural Network Model Predictive Control. arXiv preprint arXiv:2505.18008 , 2025. Demetriou, M. A. Guidance of mobile actuator-plus-sensor networks for improved control and estimation of dis-tributed parameter systems. IEEE Transactions on Auto-matic Control , 55(7):1570–1584, 2010. Drgona, J., Tuor, A., Koch, J., Shapiro, M., Jacob, B., and Vrabie, D. NeuroMANCER: Neural Modules with Adaptive Nonlinear Constraints and Efficient Regulariza-tions. 2023. URL https://github.com/pnnl/ neuromancer .Drgo ˇna, J., Tuor, A., and Vrabie, D. Learning constrained parametric differentiable predictive control policies with guarantees. IEEE Transactions on Systems, Man, and Cybernetics: Systems , 54(6):3596–3607, 2024. Fabiani, G., Siettos, C., and Kevrekidis, I. G. Equation-Free Coarse Control of Distributed Parameter Systems via Lo-cal Neural Operators. arXiv preprint arXiv:2509.23975 ,2025. Farahmand, A.-m., Nabi, S., and Nikovski, D. N. Deep reinforcement learning for partial differential equation control. In 2017 American Control Conference (ACC) ,pp. 3120–3127. IEEE, 2017. Fujimoto, S., Hoof, H., and Meger, D. Addressing function approximation error in actor-critic methods. In Interna-tional conference on machine learning , pp. 1587–1596. PMLR, 2018. Golse, F. The mean-field limit for the dynamics of large par-ticle systems. Journ ´ees ´equations aux d ´eriv ´ees partielles ,pp. 1–47, 2003. Gradu, P., Hallman, J., Suo, D., Yu, A., Agarwal, N., Ghai, U., Singh, K., Zhang, C., Majumdar, A., and Hazan, E. Deluca–A Differentiable Control Library: Environ-ments, Methods, and Benchmarking. Differentiable Com-puter Vision, Graphics, and Physics in Machine Learning (Neurips 2020 Workshop) , 2020. Guastoni, L., Rabault, J., Schlatter, P., Azizpour, H., and Vinuesa, R. Deep reinforcement learning for turbulent drag reduction in channel flows. The European Physical Journal E , 46(4):27, 2023. Gunzburger, M. D. Perspectives in flow control and opti-mization . SIAM, 2002. Guo, B.-Z. and Yang, D.-H. Optimal actuator location for time and norm optimal control of null controllable heat equation. Mathematics of Control, Signals, and Systems ,27(1):23–48, 2015. Guo, X., Shi, D., Yu, J., and Fan, W. Heteroge-neous multi-agent reinforcement learning for 10 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+zero-shot scalable collaboration. Neurocomput-ing , 648:130716, 2025. ISSN 0925-2312. doi: https://doi.org/10.1016/j.neucom.2025.130716. URL https://www.sciencedirect.com/ science/article/pii/S0925231225013888 .Guven, Y., Di Vito, V., and Fioretto, F. Learning to Solve Optimization Problems Constrained with Partial Differen-tial Equations. arXiv preprint arXiv:2509.24573 , 2025. H ¨afner, D. and Lavin, A. Tesseract core: Universal, autodiff-native software components for simulation intelligence. 
+
+Journal of Open Source Software , 10(111):8385, 2025. doi: 10.21105/joss.08385. URL https://doi.org/ 10.21105/joss.08385 .Holl, P. and Thuerey, N. Φflow (PhiFlow): Differentiable Simulations for PyTorch, TensorFlow and Jax. In Inter-national Conference on Machine Learning . PMLR, 2024. Holl, P., Koltun, V., and Thuerey, N. Learning to Control PDEs with Differentiable Physics, 2020. URL https: //arxiv.org/abs/2001.07457 .Hu, H. and Liu, C. Safe pde boundary control with neural operators. arXiv preprint arXiv:2411.15643 , 2024. Hu, J., Qi, J., and Zhang, J. Neural Operator based Re-inforcement Learning for Control of first-order PDEs with Spatially-Varying State Delay. arXiv preprint arXiv:2501.18201 , 2025. Hu, P., Qian, X., Deng, W., Wang, R., Feng, H., Feng, R., Zhang, T., Wei, L., Wang, Y., Ma, Z.-M., et al. From Uncertain to Safe: Conformal Adaptation of Diffusion Models for Safe PDE Control. In Forty-second Interna-tional Conference on Machine Learning .Hu, S., Zhu, F., Chang, X., and Liang, X. Updet: Universal multi-agent reinforcement learning via policy decoupling with transformers. arXiv preprint arXiv:2101.08001 ,2021. H ¨uttenrauch, M., ˇSo ˇsi ´c, A., and Neumann, G. Deep rein-forcement learning for swarm systems. Journal of Ma-chine Learning Research , 20(54):1–31, 2019. Hwang, R., Lee, J. Y., Shin, J. Y., and Hwang, H. J. Solving PDE-constrained control problems using operator learn-ing. In Proceedings of the AAAI Conference on Artificial Intelligence , volume 36, pp. 4504–4512, 2022. Iftime, O. V. and Demetriou, M. A. Optimal control of switched distributed parameter systems with spatially scheduled actuators. Automatica , 45(2):312–323, 2009. Jianye, H., Hao, X., Mao, H., Wang, W., Yang, Y., Li, D., Zheng, Y., and Wang, Z. Boosting multiagent reinforce-ment learning via permutation invariant and permutation equivariant networks. In The eleventh international con-ference on learning representations , 2022. Kalnay, E. Atmospheric modeling, data assimilation and predictability . Cambridge university press, 2003. Kouvaritakis, B. and Cannon, M. Model predictive control. 
+
+Switzerland: Springer International Publishing , 38(13-56):7, 2016. Krstic, M. and Smyshlyaev, A. Boundary control of PDEs: A course on backstepping designs . SIAM, 2008. Kunisch, K. and Rodrigues, S. S. Explicit exponential stabi-lization of nonautonomous linear parabolic-like systems by a finite number of internal actuators. ESAIM: Control, Optimisation and Calculus of Variations , 25:67, 2019. Lamarque, M., Bhan, L., Vazquez, R., and Krstic, M. Gain scheduling with a neural operator for a transport PDE with nonlinear recirculation. IEEE Transactions on Auto-matic Control , 2025. Li, P., Tan, K., and Beckers, T. NAPI-MPC: Neural Acceler-ated Physics-Informed MPC for Nonlinear PDE Systems. 
+
+Proceedings of Machine Learning Research vol , 283:1– 13, 2025. Li, Z., Kovachki, N. B., Azizzadenesheli, K., liu, B., Bhat-tacharya, K., Stuart, A., and Anandkumar, A. Fourier Neural Operator for Parametric Partial Differential Equa-tions. In International Conference on Learning Represen-tations , 2021. URL https://openreview.net/ forum?id=c8P9NQVtmnO .Lowe, R., Wu, Y. I., Tamar, A., Harb, J., Pieter Abbeel, O., and Mordatch, I. Multi-agent actor-critic for mixed cooperative-competitive environments. Advances in neu-ral information processing systems , 30, 2017. Lu, L., Jin, P., Pang, G., Zhang, Z., and Karniadakis, G. E. Learning nonlinear operators via DeepONet based on the universal approximation theorem of operators. Nature machine intelligence , 3(3):218–229, 2021. Lunasin, E. and Titi, E. S. Finite determining param-eters feedback control for distributed nonlinear dissi-pative systems-a computational study. arXiv preprint arXiv:1506.03709 , 2015. Lundqvist, O. G. and Oliveira, F. Was Residual Penalty and Neural Operators All We Needed for Solving Optimal Control Problems? arXiv preprint arXiv:2506.04742 ,2025. Morris, K. Linear-quadratic optimal actuator location. IEEE Transactions on Automatic Control , 56(1):113–124, 2010. 11 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Murthy, J. K., Macklin, M., Golemo, F., Voleti, V., Petrini, L., Weiss, M., Considine, B., Parent-L ´evesque, J., Xie, K., Erleben, K., Paull, L., Shkurti, F., Nowrouzezahrai, D., and Fidler, S. gradsim: Differentiable simulation for system identification and visuomotor control. In 
+
+International Conference on Learning Representations ,2021. URL https://openreview.net/forum? id=c_E8kFWfhp0 .Pan, J., Xing, J., Reiter, R., Zhai, Y., Aljalbout, E., and Scaramuzza, D. Learning on the Fly: Rapid Policy Adap-tation via Differentiable Simulation. In IEEE Robotics and Automation Letters , 2026. Pan, Y., Farahmand, A.-m., White, M., Nabi, S., Grover, P., and Nikovski, D. Reinforcement learning with function-valued action spaces for partial differential equation con-trol. In International Conference on Machine Learning ,pp. 3986–3995. PMLR, 2018. Papoudakis, G., Christianos, F., Sch ¨afer, L., and Albrecht, S. V. Benchmarking multi-agent deep reinforcement learning algorithms in cooperative tasks. arXiv preprint arXiv:2006.07869 , 2020. Park, H., Seong, B., and Ko, S.-K. Spectra: Scalable multi-agent reinforcement learning with permutation-free net-works. arXiv preprint arXiv:2503.11726 , 2025. Peitz, S., Stenner, J., Chidananda, V., Wallscheid, O., Brun-ton, S. L., and Taira, K. Distributed control of partial differential equations using convolutional reinforcement learning. Physica D: Nonlinear Phenomena , 461:134096, 2024. Pirmorad, E., Khoshbakhtian, F., Mansouri, F., and Farah-mand, A.-m. Deep reinforcement learning for online control of stochastic partial differential equations. arXiv preprint arXiv:2110.11265 , 2021. Pope, S. B. Turbulent flows. Measurement Science and Technology , 12(11):2020–2021, 2001. Privat, Y., Tr ´elat, E., and Zuazua, E. Optimal shape and location of sensors for parabolic equations with random initial data. Archive for Rational Mechanics and Analysis ,216(3):921–981, 2015. Qi, J., Zhang, J., and Krstic, M. Neural operators for PDE backstepping control of first-order hyperbolic PIDE with recycle and delay. Systems & Control Letters , 185: 105714, 2024. Qiao, Y.-L., Liang, J., Koltun, V., and Lin, M. C. Scalable Differentiable Physics for Learning and Control. In ICML ,2020. Rabault, J., Kuchta, M., Jensen, A., R ´eglade, U., and Cer-ardi, N. Artificial neural networks trained through deep re-inforcement learning discover control strategies for active flow control. Journal of fluid mechanics , 865:281–302, 2019. Ricky, Rubanova, Y., Bettencourt, J., and Duvenaud, D. Neural Ordinary Differential Equations, 2018. URL 
+
+https://arxiv.org/abs/1806.07366 .Sarkar, D. R., Drgo ˇna, J., and Goswami, S. Learning to Control PDEs with Differentiable Predictive Control and Time-Integrated Neural Operators. arXiv preprint arXiv:2511.08992 , 2025. Schulman, J., Wolski, F., Dhariwal, P., Radford, A., and Klimov, O. Proximal policy optimization algorithms. 
+
+arXiv preprint arXiv:1707.06347 , 2017. Schwarke, C., Klemm, V., Bagajo, J., Sleiman, J.-P., Georgiev, I., Tordesillas, J., and Hutter, M. Learning Deployable Locomotion Control via Differentiable Simulation. 2024. URL https: //api.semanticscholar.org/CorpusID: 268876388 .Simon, J. Compact sets in the space L p (O, T; B). Annali di Matematica pura ed applicata , 146(1):65–96, 1986. Song, Y., bae Kim, S., and Scaramuzza, D. Learning Quadruped Locomotion Using Differentiable Simula-tion. In 8th Annual Conference on Robot Learning ,2024. URL https://openreview.net/forum? id=XopATjibyz .Theraulaz, G. and Bonabeau, E. A brief history of stigmergy. 
+
+Artificial life , 5(2):97–116, 1999. Turing, A. M. The chemical basis of morphogenesis. Bul-letin of mathematical biology , 52(1):153–197, 1990. Vasanth, J., Rabault, J., Alc ´antara- ´Avila, F., Mortensen, M., and Vinuesa, R. Multi-agent reinforcement learning for the control of three-dimensional Rayleigh-B ´enard convection. Flow, Turbulence and Combustion , 115(3): 1319–1355, 2025. Vazquez, R. and Krstic, M. Gain-only neural operator ap-proximators of PDE backstepping controllers. In 2024 European Control Conference (ECC) , pp. 354–359. IEEE, 2024. Wang, K., Zhong, T., Chang, D., and Allen-Blanchette, C. Local-Canonicalization Equivariant Graph Neural Networks for Sample-Efficient and Generalizable Swarm Robot Control, 2025. URL https://arxiv.org/ abs/2509.14431 .12 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Wang, S., Bhouri, M. A., and Perdikaris, P. Fast PDE-constrained optimization via self-supervised operator learning. arXiv preprint arXiv:2110.13297 , 2021. Wen, M., Kuba, J., Lin, R., Zhang, W., Wen, Y., Wang, J., and Yang, Y. Multi-agent reinforcement learning is a sequence modeling problem. Advances in Neural Infor-mation Processing Systems , 35:16509–16521, 2022. Werbos, P. J. Backpropagation through time: what it does and how to do it. Proceedings of the IEEE , 78(10):1550– 1560, 1990. Yu, C., Velu, A., Vinitsky, E., Gao, J., Wang, Y., Bayen, A., and Wu, Y. The surprising effectiveness of ppo in cooper-ative multi-agent games. Advances in neural information processing systems , 35:24611–24624, 2022. Zhang, X., Mao, W., Mowlavi, S., Benosman, M., and Ba s¸ ar, T. Controlgym: Large-scale control environments for benchmarking reinforcement learning algorithms. In 6th Annual Learning for Dynamics & Control Conference ,pp. 181–196. PMLR, 2024. Zhao, Z., Li, Z., Hassibi, K., Azizzadenesheli, K., Yan, J., Bae, H. J., Zhou, D., and Anandkumar, A. Physics-informed Neural-operator Predictive Control for Drag Reduction in Turbulent Flows. arXiv preprint arXiv:2510.03360 , 2025. 13 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+## A. Mathematical Preliminaries 
+
+To formalize the multi-agent control problem and subsequently analyze its large-population limit in our theoretical proofs, we rely on foundational concepts from infinite-dimensional functional analysis and mean-field theory. 
+
+A.1. Functional Spaces and PDE Dynamics 
+
+We consider the state of the PDE evolving in infinite-dimensional function spaces. Let H = L2(Ω) denote the standard Hilbert space of square-integrable functions over the spatial domain Ω, and V = H10 (Ω) denote the Sobolev space of H1
+
+functions whose trace vanishes on the boundary ∂Ω. Physically, these spaces capture essential properties of the system: 
+
+H typically represents states with finite total energy, while V ensures the field is sufficiently regular, meaning its gradient is square-integrable, and properly respects the boundary conditions. These spaces form a Gelfand triple V , → H , → V ∗,where V ∗ is the dual space of V , and the embeddings are continuous and dense. The evolution of the system’s state z(x, t ) over a time horizon T is analyzed within Sobolev-Bochner spaces, such as 
+
+L2(0 , T ; V ). A crucial tool for our theoretical guarantees is the Aubin-Lions lemma. In finite-dimensional spaces, bounded sequences naturally have convergent subsequences, but this is not automatically true in infinite dimensions, and the Aubin-Lions lemma provides the necessary compactness criteria to bridge this gap. For our framework, it guarantees that as we scale the number of agents, the sequence of discrete PDE state trajectories remains well-behaved and does not exhibit infinitely fast, unbounded oscillations. This allows us to extract strongly convergent subsequences, which is a foundational step for analyzing nonlinear evolution equations and proving the existence of unique continuum limits of our discretized system (Alphonse et al., 2023). 
+
+A.2. Mean-Field Theory and Measure Convergence 
+
+In our multi-agent configurations, the aggregate spatial influence of M discrete agents located at positions ξi(t) can be represented by the empirical measure μM (t) = 1
+
+> M
+
+PMi=1 δξi(t).To establish the cardinality invariance of our learned policies, we study the system in the mean-field limit as the number of agents M → ∞ . In this regime, discrete interacting particle systems can be shown to converge to continuous macroscopic limits (Golse, 2003). This transition from discrete particle descriptions to continuous integral equations relies on the weak-* convergence of the empirical measures μM (t) to a limit probability measure μ(·, t ) (Carrillo & Choi, 2021). We rely on weak-* convergence because discrete particles (modeled as Dirac deltas) cannot converge to a continuous density function under standard norms (such as strong Lp norms or total variation distance). Instead of tracking individual particle paths, weak-* convergence ensures that the overall integrated influence of the swarm on the PDE environment admits a well-defined continuum limit as the population scales. This convergence guarantees that the discrete forcing field applied by a finite swarm smoothly transitions into an integral operator defined over the continuous agent density. By establishing this, we can prove that gradients computed during discrete multi-agent training are consistent estimators of the gradients for the continuous control limit. 
+
+## B. Full Theoretical Proofs 
+
+B.1. Mean-Field Gradient Consistency 
+
+To study the behavior of the system as M → ∞ , we establish the functional analytic setting. Let H = L2(Ω) and 
+
+V = H10 (Ω) . While CINOC applies to general nonlinear operators F, for the theoretical analysis we restrict our attention to linear, strictly dissipative operators A to establish rigorous convergence guarantees. We therefore consider the PDE dynamics governed by a linear operator A : V → V ∗ that is strictly dissipative, i.e., ⟨A z, z ⟩ ≤ − α∥z∥2 
+
+> V
+
+for some α > 0.We define the parabolic regularity constant CT := sup t∈[0 ,T ]
+
+R t 
+
+> 0
+
+∥S(t − s)∥L(H) ds < ∞, where {S(t)}t≥0 is the analytic 
+
+C0-semigroup generated by A.To simplify the following mean-field derivation without loss of generality, we treat the policy Gθ as a scalar mapping to the control intensities u, noting that the convergence of the velocity field v follows an analogous analytic structure. To make the notation lighter, we use assume a continuous observation operator with a FOV of 100% of the field, meaning Zlocal ≡ H.
+
+The Normalized Limit. To analyze convergence, we define a theoretical normalized forcing term operator BM acting on 14 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+the empirical measure μM (t) = 1
+
+> M
+
+PMi=1 δξi(t):
+
+BM (z)( x, t ) = 1
+
+M
+
+> M
+
+X
+
+> i=1
+
+b(x, ξi(t)) Gθ (z(·, t ), ξi(t)) =
+
+Z
+
+> Ω
+
+b(x, y)Gθ (z, y) dμ M (y). (8) In the limit M → ∞ , we define the mean-field forcing operator: 
+
+B∞(z)( x, t ) = 
+
+Z
+
+> Ω
+
+b(x, y)Gθ (z, y) μ(y, t ) dy, (9) where μ ∈ L∞(Ω × [0 , T ]) is the limiting agent density. The associated mean-field gradient Dθ J∞ represents the sensitivity of the limit functional to the parameters θ:
+
+Dθ J∞ =
+
+Z T
+
+> 0
+
+Z
+
+> Ω
+
+p∞(x, t ) ∇θ Gθ (z∞, y) · b(x, y) μ(y, t ) dy dx dt, (10) where p∞ is the solution to the continuous adjoint equation. 
+
+Theorem B.1 (Consistency of Discrete Policy Gradients) . Let the initial state z0 ∈ H be independent of M . Assume: 
+
+(H1) Measure Convergence: μM (t) ⇀∗ μ(·, t ) dy weakly-* in M(Ω) for a.e. t ∈ [0 , T ], with μ ∈ L∞(Ω × [0 , T ]) .
+
+(H2) Policy Regularity: Gθ : H × Ω → R satisfies: (i) Uniform boundedness: |G θ (z, y)| ≤ M for all z ∈ H, y ∈ Ω;(ii) Lipschitz continuity in state: |G θ (z1, y) − G θ (z2, y)| ≤ LG ∥z1 − z2∥H ;(iii) Continuity in position: y 7 → G θ (z, y) is continuous for each fixed z ∈ H;(iv) Parameter regularity: ∇θ Gθ exists and satisfies (i)–(iii) with constants Mθ and LG,θ .
+
+(H3) Kernel Regularity: b ∈ L2(Ω × Ω) with ∥b∥L2 ≤ Lb, and y 7 → b(·, y) is continuous as a map into H.If LG LbCT < 1, then as M → ∞ , the discrete policy gradient converges to the mean-field gradient: 
+
+∇θ JM → D θ J∞. (11) 
+
+Proof. Step 1: Uniform Bounds and Strong State Convergence. 
+
+The discrete state zM satisfies the mild formulation: 
+
+zM (t) = S(t)z0 +
+
+Z t
+
+> 0
+
+S(t − s)BM (zM )( s) ds. (12) By hypothesis (H2)(i) and (H3), the forcing term is uniformly bounded: 
+
+∥B M (z)∥H ≤ LbM. (13) Under the smallness condition LG LbCT < 1, the Picard iteration map Φ : C([0 , T ]; H) → C([0 , T ]; H) defined by the right-hand side is a strict contraction, guaranteeing a unique solution zM for each M .Standard energy estimates yield: multiplying the PDE by zM and integrating, using the dissipativity of A, we obtain 
+
+12
+
+ddt ∥zM ∥2 
+
+> H
+
++ α∥zM ∥2 
+
+> V
+
+≤ ∥B M (zM )∥H ∥zM ∥H ≤ LbM ∥zM ∥H . (14) Applying Gr¨ onwall’s inequality yields uniform bounds: 
+
+sup 
+
+> M
+
+
+
+∥zM ∥2  
+
+> L∞(0 ,T ;H)
+
++ ∥zM ∥2  
+
+> L2(0 ,T ;V)
+
+
+
+≤ C(z0, T, L b, M, α ). (15) 15 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+For the time derivative, from ∂tzM = −A zM + BM (zM ), we have: 
+
+∥∂tzM ∥L2(0 ,T ;V ∗) ≤ ∥A zM ∥L2(0 ,T ;V ∗) + ∥B M (zM )∥L2(0 ,T ;H) ≤ C, (16) where we used the continuous embedding H , → V ∗ and the bound ∥A zM ∥V ∗ ≤ C∥zM ∥V .By the Aubin–Lions Lemma (with V , →,→ H , → V ∗), the sequence {zM } is relatively compact in L2(0 , T ; H). Hence there exists a subsequence (still denoted zM ) such that: 
+
+zM → z∞ strongly in L2(0 , T ; H). (17) 
+
+Step 2: Forcing Convergence and Identification of the Limit. 
+
+We show that z∞ solves the mean-field equation with forcing B∞. Decompose the forcing error: 
+
+∥B M (zM ) − B ∞(z∞)∥H ≤ ∥B M (zM ) − B M (z∞)∥H
+
+| {z }
+
+> (a) State error
+
++ ∥B M (z∞) − B ∞(z∞)∥H
+
+| {z }
+
+> (b) Measure error
+
+. (18) 
+
+Term (a): Using the Lipschitz property (H2)(ii) and the kernel bound (H3): 
+
+∥B M (zM ) − B M (z∞)∥H =
+
+Z
+
+> Ω
+
+b(·, y) [ Gθ (zM , y) − G θ (z∞, y)] dμ M (y)
+
+> H
+
+≤ LbLG ∥zM − z∞∥H → 0, (19) since zM → z∞ strongly in L2(0 , T ; H).
+
+Term (b): For fixed t and z∞(·, t ) ∈ H, define the test function φ : Ω → H by φ(y) = b(·, y)Gθ (z∞, y). By hypotheses (H2)(i), (H2)(iii), and (H3), the map y 7 → φ(y) is continuous and bounded in H. Therefore, by the Portmanteau Theorem 
+
+for weak-* convergence of measures: 
+
+Z
+
+> Ω
+
+φ(y) dμ M (y) →
+
+Z
+
+> Ω
+
+φ(y) μ(y) dy = B∞(z∞). (20) Combining terms (a) and (b), we conclude BM (zM ) → B ∞(z∞) in L2(0 , T ; H), and by uniqueness of limits in the mild formulation, z∞ is the unique solution to the mean-field state equation. 
+
+Step 3: Adjoint Convergence. 
+
+The discrete adjoint pM satisfies the backward parabolic equation: 
+
+−∂tpM + A∗pM = 2( zM − zref ), pM (T ) = 0 . (21) Since zM → z∞ strongly in L2(0 , T ; H), the source term 2( zM − zref ) converges strongly in L2(0 , T ; H). By standard parabolic regularity for the backward equation: 
+
+sup 
+
+> M
+
+ ∥pM ∥L∞(0 ,T ;H) + ∥pM ∥L2(0 ,T ;V ) + ∥∂tpM ∥L2(0 ,T ;V ∗)
+
+ ≤ C. (22) A second application of the Aubin–Lions Lemma yields: 
+
+pM → p∞ strongly in L2(0 , T ; H), (23) where p∞ solves the mean-field adjoint equation with source 2( z∞ − zref ).
+
+Step 4: Gradient Consistency. 
+
+The discrete gradient is: 
+
+∇θ JM =
+
+Z T
+
+> 0
+
+⟨pM , ∇θ BM (zM )⟩H dt, (24) 16 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+where ∇θ BM (z) = R 
+
+> Ω
+
+b(·, y)∇θ Gθ (z, y) dμ M (y).We decompose the error: 
+
+|∇ θ JM − D θ J∞| ≤ 
+
+Z T
+
+> 0
+
+|⟨ pM − p∞, ∇θ BM (zM )⟩H | dt 
+
++
+
+Z T
+
+> 0
+
+|⟨ p∞, ∇θ BM (zM ) − ∇ θ B∞(z∞)⟩H | dt. (25) 
+
+First term: By hypothesis (H2)(iv), ∥∇ θ BM (zM )∥H ≤ LbMθ uniformly. Thus: 
+
+Z T
+
+> 0
+
+|⟨ pM − p∞, ∇θ BM (zM )⟩H | dt ≤ LbMθ ∥pM − p∞∥L2(0 ,T ;H) · √T → 0. (26) 
+
+Second term: Applying the same decomposition as in Step 2 to ∇θ Gθ (using (H2)(iv)), we obtain ∇θ BM (zM ) →∇θ B∞(z∞) in L2(0 , T ; H). Since p∞ ∈ L2(0 , T ; H):
+
+Z T
+
+> 0
+
+|⟨ p∞, ∇θ BM (zM ) − ∇ θ B∞(z∞)⟩H | dt → 0. (27) Combining both terms, we conclude: 
+
+∇θ JM → D θ J∞ as M → ∞ . (28) 
+
+B.2. Conjecture: Emergent Self-Normalization 
+
+While Theorem B.1 relies on normalized forcing ( 1
+
+> M
+
+P ui), our implementation (Eq. 1) uses unnormalized superposition (P ui). In our experiments in fact we operate under the assumption that no communication is allowed among the agents (not even the number of agents), to mimic scenarios where communication is impossible or limited. We conjecture that the optimization process induces an implicit normalization, enabling zero-shot transfer. 
+
+Conjecture 2 (Self-Normalization via Effort Regularization) . Let θ∗ 
+
+> M
+
+be the optimal policy minimizing JM with effort penalty λu > 0 and unnormalized forcing. As M → ∞ :1. Intensity Scaling: The learned control intensities scale as u∗ 
+
+> i
+
+(t) := Gθ∗ 
+
+> M
+
+(zM , ξi) = O(1 /M ).2. Forcing Consistency: The total forcing BM remains bounded, i.e., sup M ∥B M ∥L2(0 ,T ;H) < ∞.3. Effort Decay: The total control effort vanishes as Lforce = PMi=1 |u∗ 
+
+> i
+
+(t)|2 = O(1 /M ) → 0.This scaling emerges from the equilibrium between the tracking cost (requiring O(1) total force) and the effort penalty (pushing ui → 0). If intensities remained O(1) , the total force would grow as O(M ), causing massive overshoot and high cost. Gradient descent drives the shared policy θ to the unique scale ui ∼ 1/M where the field z is controlled effectively while minimizing λu∥uM ∥2.This implies a cooperative efficiency gain: larger swarms achieve the same control objective with vanishingly small individual effort. Because the DeepONet policy shares parameters across all agents, this scaling is discovered stigmergically 
+
+via the global state field z, without explicit communication of M .
+
+Remark B.2 (Zero-Shot Transfer) . This conjecture provides the mechanism for zero-shot scalability. The policy learns a response function that intrinsically balances the local contribution against the global field magnitude. When deployed with a different swarm size Q̸ = M , the feedback loop through the physics z automatically adjusts the aggregate forcing to the correct O(1) level. 17 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control                                                                                                                                                                                    
+
+> Table 2. Multi-Agent Control Performance Across Tasks. Benchmark results comparing CINOC and DPC against uncontrolled evolution and standard single-agent/multi-agent RL baselines. Values represent Tracking MSE, L2Energy/Enstrophy, and Moment Matching Loss (MML) depending on the task category and Lower is better. Tracking density matching problems involve kinetic actuators, while stabilization tasks use fixed actuators.
+> Environment Unctrl. PPO TD3 MAPPO MATD3 DPC CINOC
+> Tracking (MSE)
+> FKPP 1D 0.103 ±0.128 0.053 ±0.091 0.010 ±0.016 0.004 ±0.010 0.022 ±0.050 1.4e-4±1.9e-44.6e-5±7.5e-5
+> Heat 1D 0.390 ±1.144 0.016 ±0.062 0.006 ±0.029 0.001 ±0.002 0.016 ±0.032 7.9e-5±1.1e-42.9e-4±4.3e-4
+> Heat 2D 0.176 ±0.378 0.015 ±0.026 0.009 ±0.016 0.006 ±0.016 0.022 ±0.016 2.1e-4±2.2e-41.5e-4±1.8e-4
+> Heat 2D (Obs) 0.176 ±0.378 0.016 ±0.023 0.012 ±0.014 0.004 ±0.015 0.015 ±0.012 2.7e-4±2.6e-41.2e-4±1.7e-4
+> Stabilization (Energy/Enstrophy)
+> KS 1D 1.45 ±0.69 0.13 ±0.13 0.13 ±0.13 0.13 ±0.13 0.18 ±0.18 0.16 ±0.15 0.13 ±0.12
+> KS 2D 13 .91 ±4.61 12 .96 ±4.24 1.66 ±0.58 0.50 ±0.24 0.91 ±0.27 9.74 ±2.32 0.37 ±0.19
+> Turbulence 2D 50 .49 ±13 .29 34 .52 ±12 .35 5.57 ±3.15 4.48 ±2.84 3.71 ±2.46 3.28 ±2.19 3.23 ±2.22
+> Density Matching (MML)
+> Density Control 0.027 ±0.026 0.005 ±0.005 0.021 ±0.017 0.008 ±0.008 0.021 ±0.017 0.002 ±0.010 0.002 ±0.002
+
+## C. Additional Numerical Experiments 
+
+This appendix provides extended qualitative results for the control problems referenced in the quantitative analysis (Table 2). We include visualizations for the 1D Fisher-KPP tracking, 1D and 2D Heat equation tracking in unconstrained domains, and scale-variant stabilization of the 1D Kuramoto-Sivashinsky equation. Further experimental details are reported in Appendix E. 
+
+C.1. Fisher-KPP 1D: Tracking of Nonlinear Traveling Waves 
+
+We evaluate the learned policy on the Fisher-KPP equation, a canonical model characterized by the interplay between linear diffusion and non-linear reaction kinetics. This environment serves as a rigorous benchmark for assessing the coordination of 20 kinetic actuators. As illustrated in Figure 7, the emergent control strategy exhibits a distinct bi-phasic behavior. During the initial transient phase, the agents exert high-magnitude control input and maintain elevated velocities (see the Avg Velocity panel) to intercept the propagating wavefront. Upon achieving the target distribution at t ≈ 50 , the system undergoes a regime shift to a “maintenance mode.” In this state, the agents transition to a quasi-stationary configuration, applying minimal restorative forcing to counteract the natural diffusive dissipation and preserve the desired spatial profile. 
+
+C.2. Heat Equation 1D: Kinetic Source Tracking in Linear Systems 
+
+The 1D Heat equation tracking task isolates the control challenge of mitigating rapid dissipation within a linear parabolic system. Similar to the Fisher-KPP results, Figure 8 reveals an efficient allocation of control effort. The 8 kinetic actuators leverage their mobility to dynamically relocate to high-residual regions, indicated by the transient spike in Avg Velocity ,where they inject thermal energy to match the target manifold. Subsequently, the agents adopt a stationary formation, providing the necessary forcing to balance the smoothing effects of the diffusion operator. 
+
+C.3. Heat 2D: Emergent Coordination in Unconstrained Domains 
+
+To decouple the effects of geometric constraints from the emergent multi-agent coordination, we examine a 2D diffusion tracking task in an unconstrained domain. While the physical parameters and actuator count ( M = 16 ) are identical to the obstacle-avoidance scenario in Section 6.2, the absence of “keep-out” zones permits a direct coverage strategy. As visualized in Figure 9, the 16 kinetic agents adopt a dynamic tessellation of the domain, positioning themselves at the centroids of the local error distribution to maximize control authority. This stands in contrast to the “perimeter defense” behavior observed in the presence of obstacles, where agents were forced to act along boundary manifolds. This comparison confirms that the agent configurations are not a fixed artifact of the policy architecture, but rather an adaptive response to the environmental topology and the spatial requirements of the diffusion operator. 18 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 0          
+
+> 100
+> 200
+> 300
+> Time Step
+> Natural Evolution
+> 0.01
+> 0.11
+> 0.21
+> 0.31
+> 0.41
+> 0.51
+> 0.61
+> 0.71
+> 0.81
+> 0.91
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Space ( x)
+> 0
+> 100
+> 200
+> 300
+> Time Step
+> Controlled Evolution (DPC)
+> 0200
+> Time Step
+> 10 4
+> 10 2
+> MSE
+> Tracking Error
+> Uncontrolled
+> Controlled
+> 0200
+> Time Step
+> 0.0
+> 0.2
+> 0.4
+> Avg Velocity  |v| Agent Agility
+> 0200
+> Time Step
+> 0
+> 5
+> 10
+> Avg Input  |u| Control Effort
+
+Figure 7. Fisher-KPP 1D Tracking. (Top) Uncontrolled evolution of the reaction-diffusion wavefront. (Bottom) Controlled trajectory wherein mobile actuators modulate the density field. The performance metrics demonstrate an efficient convergence: an initial high-velocity approach rapidly minimizes the tracking error, followed by a transition to a low-energy station-keeping configuration. 0          
+
+> 100
+> 200
+> 300
+> Time Step
+> Natural Evolution
+> 0.025
+> 0.275
+> 0.525
+> 0.775
+> 1.025
+> 1.275
+> 1.525
+> 1.775
+> 2.025
+> 2.275 Temperature ( z)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> Space ( x)
+> 0
+> 100
+> 200
+> 300
+> Time Step
+> Controlled Evolution (DPC)
+> 0200
+> Time Step
+> 10 2
+> 10 0
+> MSE
+> Tracking Error
+> Uncontrolled
+> Controlled
+> 0200
+> Time Step
+> 0.00
+> 0.25
+> 0.50
+> Avg Velocity  |v| Agent Agility
+> 0200
+> Time Step
+> 0
+> 10
+> 20
+> Avg Input  |u| Control Effort
+
+Figure 8. Heat 1D Tracking. (Top) Natural evolution demonstrating characteristic thermal dissipation. (Bottom) Controlled evolution maintaining a multi-modal target distribution. The policy exhibits rapid convergence (MSE attenuation) followed by a decay in control effort as the system reaches a steady-state maintenance phase. 
+
+C.4. Kuramoto-Sivashinsky 1D: Multi-Scale Stabilization of Chaotic Dynamics 
+
+Finally, we investigate the stabilization of the 1D Kuramoto-Sivashinsky (KS) equation across varying spatial scales. To assess the scalability of the training pipeline, we evaluated three separate policies on domains of increasing length (L ∈ { 64 , 200 , 500 }) with a proportional increase in fixed actuators ( M ∈ { 30 , 80 , 200 }). Increased domain length in the KS equation corresponds to a higher-dimensional chaotic attractor and a denser spectrum of unstable modes (Figure 10, Left). Despite the increased complexity of the spatiotemporal chaos, the operator-learning framework consistently identifies robust control laws. Energy evolution metrics (Figure 10, Right) show that the policies successfully suppress chaotic fluctuations, driving system energy below 10 −4 within t = 5 s. These results suggest that the 19 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control Uncontrolled DPC              
+
+> (obstacle-free)
+> DPC
+> (w/ obstacles)
+> 10 3
+> 10 2
+> 10 1
+> 10 0
+> Mean Squared Error
+> Tracking Performance (N=100)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> y
+> Agent Trajectories
+> (Obstacle-Free)
+> 0.0 0.2 0.4 0.6 0.8 1.0
+> x
+> 0.0
+> 0.2
+> 0.4
+> 0.6
+> 0.8
+> 1.0
+> y
+> Agent Trajectories
+> (With Obstacles)
+> Obstacle
+> Safety Zone
+> Start
+> End
+
+Figure 9. Unconstrained Heat 2D Tracking. Decentralized DPC performance on 2D heat equation control. (Left) Tracking MSE distribution shows significant error reduction for controlled scenarios regardless of obstacle presence (N=100). (Middle) Obstacle-free agents exhibit more aggressive motion toward high-error regions. (Right) Obstacle-aware agents execute prompt collision avoidance near safety boundaries (dashed circles) while maintaining tracking accuracy. Obstacles are shown as solid red circles. 
+
+learned local operators are able to effectively stabilize highly-chaotic systems. 0 5 10 15 
+
+> Time (s)
+> 0
+> 20
+> 40
+> 60
+> Scale L=64
+> x
+
+Natural Evolution (L=64)    
+
+> 0510 15
+> Time (s)
+
+Controlled Evolution      
+
+> 0510 15
+> Time (s)
+> 10 4
+> 10 2
+> 10 0
+> Energy  u2
+
+Stabilization Performance                               
+
+> Natural
+> Controlled
+> 0510 15
+> Time (s)
+> 0
+> 50
+> 100
+> 150
+> 200
+> Scale L=200
+> x
+> 0510 15
+> Time (s)
+> 0510 15
+> Time (s)
+> 10 4
+> 10 2
+> 10 0
+> Energy  u2
+> 0510 15
+> Time (s)
+> 0
+> 100
+> 200
+> 300
+> 400
+> 500
+> Scale L=500
+> x
+> 0510 15
+> Time (s)
+> 0510 15
+> Time (s)
+> 10 3
+> 10 1
+> Energy  u2
+> 3210123
+> State field u(x,t)
+
+Figure 10. Scale-Invariant Stabilization (KS 1D). (Left) Natural evolution heatmaps illustrating the increase in chaotic complexity with domain size L. (Right) Energy evolution for natural (dashed) vs. controlled (solid) trajectories. The policy consistently achieves stabilization regardless of domain scale, demonstrating effective control of the underlying chaotic manifold. 
+
+## D. Ablation studies 
+
+D.1. Empirical Verification of Emergent Scaling 
+
+A direct prediction of our Self-Normalization Conjecture (Section B.2) is the inverse scaling of individual control effort with population size. Specifically, for the total aggregate forcing to remain bounded as M → ∞ , individual agent intensities must scale approximately as ui ∼ O(1 /M ). Consequently, the total squared effort metric should decay according to 20 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+PMi=1 u2 
+
+> i
+
+∼ M · (1 /M )2 = O(1 /M ).We verify this emergent scaling empirically on the FKPP task. Figure 11 plots the mean total squared effort against the number of agents M on a log-log scale. Crucially, this metric is computed only over the last 70% of the control horizon. This averaging window is necessary to capture the steady-state behavior, allowing initial transient dynamics to settle and the stigmergic coordination loop via the PDE field to fully establish itself. The results highlight the critical role of the effort penalty λu in driving this cooperative efficiency. For sufficiently large regularization (e.g., λu ≥ 0.05 in the provided plot), we observe the predicted monotonic decrease in total effort as 
+
+M increases, providing evidence for the conjectured O(1 /M ) scaling. Conversely, when the penalty is negligible (e.g., 
+
+λu = 0 .001 ), the emergent scaling breaks down: agents fail to regulate down their individual contributions, leading to massive over-actuation and a sharp increase in total effort at larger swarm sizes. This confirms that the effort term provides the necessary optimization pressure to discover scalable, cooperative solutions and the relevance of the penalty effort as a hyperparameter in our setup. 15 20 30 40 50 60 
+
+Number of Agents ( M)
+
+10 0
+
+> Mean  u2
+> i
+
+Steady-State Effort: u2 
+
+> i
+> u
+
+= 0.001  
+
+> u
+
+= 0.005  
+
+> u
+
+= 0.01  
+
+> u
+
+= 0.05  
+
+> u
+
+= 0.1  
+
+> u
+
+= 0.5  
+
+> u
+
+= 1.0 
+
+Figure 11. Scaling of Steady-State Total Effort (Fisher-KPP). The plot shows the mean P u2 
+
+> i
+
+computed over the final 70% of trajectories against the number of agents M on a log-log scale. For sufficient effort penalties ( λu ≥ 0.05 ), the total effort decreases with a slope indicating O(1 /M ) scaling, confirming cooperative self-normalization. Insufficient penalties ( λu ≤ 0.005 ) on control inputs lead to a breakdown of this scaling at larger M .
+
+Table 3. Cardinality Invariance. The valid range of inference-time agent counts ( Mtest ) where the policy maintains stability, defined as a loss ≤ 250% of the training baseline ( Mtest = Mtrain ). Values in parentheses indicate the scaling factor relative to the training size (Mtrain ). Gray values denote the specific relative loss percentage at each boundary. 
+
+PDE Train 
+
+(Mtrain )
+
+Min Stable 
+
+(Mtest )
+
+Max Stable 
+
+(Mtest )FKPP 1D 30 
+
+> 100.00
+
+20 (0.7 ×)
+
+> 114.97
+
+150 (5.0 ×)
+
+> 128.73
+
+Heat 1D 30 
+
+> 100.00
+
+15 (0.5 ×)
+
+> 145.65
+
+120 (4.0 ×)
+
+> 207.86
+
+Heat 2D 16 
+
+> 100.00
+
+16 (1.0 ×)
+
+> 100.00
+
+256 (16.0 ×)
+
+> 53.50
+
+KS 2D 196 
+
+> 100.00
+
+144 (0.7 ×)
+
+> 45.02
+
+256 (1.3 ×)
+
+> 230.10
+
+KS 1D 30 
+
+> 100.00
+
+15 (0.5 ×)
+
+> 99.75
+
+90 (3.0 ×)
+
+> 114.42
+
+Turbulence 2D 64 
+
+> 100.00
+
+36 (0.6 ×)
+
+> 199.80
+
+1024 (16.0 ×)
+
+> 75.89
+
+Density 2D 16 
+
+> 100.00
+
+4 (0.2 ×)
+
+> 141.53
+
+1024 (64.0 ×)
+
+> 83.71
+
+21 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+D.2. Is CINOC Robust to Solver Fidelity? 
+
+We evaluate the robustness of our learned policy to the fidelity of the differentiable solver. A critical requirement for practical deployment is that a policy trained on coarse, computationally efficient simulations must retain its efficacy when transferred to high-fidelity environments. To verify this resilience to discretization, we take a policy trained on the KS-2D stabilization task using a coarse solver with 64 × 64 grid points and evaluate it zero-shot against a high-fidelity simulation resolving 
+
+512 × 512 grid points. Figure 12 (Left) illustrates the performance consistency across solver fidelities. Visually, the spatiotemporal evolution of the field in the top row ( 64 × 64 ) and bottom row ( 512 × 512 ) exhibits a high degree of coherence, indicating that the policy does not rely on grid-scale artifacts of the coarse solver. Quantitatively, this robustness is confirmed by the system energy trajectories shown in Figure 12 (Right). The energy decay profile of the high-fidelity simulation (dashed red line) closely tracks that of the low-fidelity training environment (solid blue line). Both solvers are driven to the zero-state equilibrium with comparable rates (the low-fidelity simulation case achieves an energy of 0.83 , while the high-fidelity results in an energy of 0.15 , while the uncontrolled dynamics energy is 11 .43 ), demonstrating that the neural operator has successfully captured the underlying continuous control physics. This confirms the policy’s robustness across discretization levels without retraining. Resolution          
+
+> 64×64
+> t = 0.00s t = 1.25s t = 2.50s t = 3.75s t = 5.00s
+> Resolution
+> 512×512
+> 2.0
+> 1.5
+> 1.0
+> 0.5
+> 0.0
+> 0.5
+> 1.0
+> 1.5
+> 2.0
+> u(x, y)
+> 012345
+> Time (s)
+> 0
+> 2
+> 4
+> 6
+> 8
+> 10
+> 12
+> System Energy  u2
+> N=64 (Low-Fidelity)
+> N=512 (High-Fidelity)
+> Solver Fidelity Robustness in KS-2D Control
+
+Figure 12. Solver Fidelity Robustness in KS-2D Control. Left: Comparison of the spatiotemporal evolution of the field u(x, y ). The policy, trained on a coarse discretization of 64 × 64 (Top), is deployed zero-shot on a high-fidelity solver with 512 × 512 grid points (Bottom). Right: Temporal evolution of the System Energy ⟨u2⟩. The high-fidelity trajectory ( N = 512 , dashed) closely matches the training performance ( N = 64 , solid), confirming the policy is robust to changes in solver discretization. 
+
+D.3. Is the Learned Policy Robust to Signal Corruption? 
+
+To assess the robustness of the learned policies, we evaluate performance subject to stochastic signal corruption on the FKPP trajectory tracking task. We distinguish between actuator uncertainty (σu), modeled as additive Gaussian noise on the control output, and observation uncertainty (σz ), representing sensor measurement noise. 
+
+Robustness via Regularization. Figure 15 illustrates the performance of policies trained in noisy environments and subsequently deployed in low- to mid-noise regimes (for both actuators and sensors). Results indicate that the Baseline 
+
+policy, trained with zero standard deviation for sensor noise ( σu = 0 ) and actuator noise ( σz = 0 ), degrades severely as the swarm scales to M = 100 . In contrast, policies trained with moderate state noise demonstrate superior performance across the entire population spectrum, even in noise-free scenarios as shown in Figure 13. The injected noise in each example is Gaussian with zero mean. 
+
+Robustness and Stability Limits. We identify noise injection during training as a technique to enhance the cardinality invariance properties of our policies. As illustrated in Figure 16 where a policy trained with noise-free actuators and sensors (Baseline) and a policy trained with σz = 0 .01 and σu = 0 .02 are compared in terms of their MSE, the latter policy preserve 22 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 20 30 40 60 80 100 Deployment Agent Count 
+
+10 5
+
+10 4
+
+10 3    
+
+> Final MSE
+> Noise-Free Evaluation ( u= 0.0, z= 0.0 )
+
+Policy Type 
+
+> Baseline Actuator 0.02 Actuator 0.1 Sensor 0.01 Sensor 0.05 Training Scale ( M=30)
+
+Figure 13. Robustness Analysis. Performance comparison between models trained with different noise levels. Inference is performed in a noise-less environment. Policies trained with marginal sensor noise exhibit better cardinality invariance. 
+
+the self-normalization property for larger swarm sizes compared to the baseline policy, which fails to maintain the necessary inverse effort scaling ( O(1 /M )) as the population grows. This suggests that, in the absence of noise regularization, the policy devolves into competitive behaviors, where agents over-actuate to correct for the perturbations introduced by their neighbors, leading to destructive interference and high-frequency oscillations. In contrast, the noise-conditioned policy maintains the correct scaling slope, effectively decoupling the agents and ensuring stronger cardinality invariance properties, confirming noise-injection as a mean to enhance the robustness of our method. 20 30 40 50 60 70 80 90 100 
+
+Deployment Agent Count 
+
+10 4
+
+> Final Tracking Error (MSE)
+
+Sensor Range Sensitivity 
+
+> Range (%)
+> 0.04
+> 0.06
+> 0.08
+> 0.12
+> 0.2
+> 0.3
+> 0.5
+> 1.0
+> Training (M=30)
+
+Figure 14. Sensitivity to Field of View (FOV). Comparison of control error (MSE) against swarm size for different observation radii on the FKPP task. While Global FOV (100%) performs well for small swarms, it creates oscillatory instability at large M due to spurious coupling. Local FOV (10% - 20%) acts as a necessary regularizer, maintaining stability as population scales. 
+
+D.4. What is the Role of Field of View Dimension? 
+
+We analyze the impact of the policy’s observational range on performance by varying the Field of View (FOV) on the Fisher-KPP trajectory tracking task and comparing the performance of the different models across different swarm cardinalities. Figure 14 reveals a counter-intuive phenomenon: while access to global information theoretically bounds performance from above, the global policy creates instability and oscillations as the swarm size M increases. Specifically, with a fixed, small network architecture the global policy degrades significantly for M > 50 , whereas the local policy remains stable. We attribute this to the fact that the Branch network compresses the input field into a low-dimensional latent embedding and when the input is the global state, the network must encode the entire domain’s complexity into this fixed bottleneck and 23 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 20 30 40 60 80 100        
+
+> Deployment Agent Count
+> 10 5
+> 10 4
+> 10 3
+> Final MSE Error
+> Low Actuator Noise ( u= 0.02, z= 0.0)
+> Policy Type
+> Baseline
+> Actuator 0.02
+> Actuator 0.1
+> Sensor 0.01
+> Sensor 0.05
+> Training Scale ( M=30)
+
+(a) Actuator Noise Resilience 20 30 40 60 80 100         
+
+> Deployment Agent Count
+> 10 4
+> 10 3
+> Final MSE Error
+> Low State Noise ( u= 0.0, z= 0.01)
+> Policy Type
+> Baseline
+> Actuator 0.02
+> Actuator 0.1
+> Sensor 0.01
+> Sensor 0.05
+> Training Scale ( M=30)
+
+(b) Actuator Noise Resilience 20 30 40 60 80 100        
+
+> Deployment Agent Count
+> 10 5
+> 10 4
+> 10 3
+> Final MSE Error
+> Mid Actuator Noise ( u= 0.1, z= 0.0)
+> Policy Type
+> Baseline
+> Actuator 0.02
+> Actuator 0.1
+> Sensor 0.01
+> Sensor 0.05
+> Training Scale ( M=30)
+
+(c) Actuator Noise Resilience 20 30 40 60 80 100        
+
+> Deployment Agent Count
+> 10 4
+> 10 3
+> Final MSE Error
+> Mid State Noise ( u= 0.0, z= 0.05)
+> Policy Type
+> Baseline
+> Actuator 0.02
+> Actuator 0.1
+> Sensor 0.01
+> Sensor 0.05
+> Training Scale ( M=30)
+
+(d) State Noise Resilience 
+
+Figure 15. Robustness Analysis. Comparative evaluation of Mean Squared Error (MSE) against deployment population size ( M ) in low-and mid-noise environments. The Baseline policy, trained in a noise-free environment, (solid black) degrades significantly as M increases, indicating overfitting to the training physics. Policies trained with sensor-noise injection (dashed blue) exhibit robust scalability, reducing error by up to an order of magnitude at M = 100 .10 2
+
+Number of Agents ( N)
+
+10 0
+
+10 1
+
+10 2
+
+10 3
+
+10 4
+
+> Mean  u2
+> i (Steady State)
+
+Total Quadratic Effort ( u2 
+
+> i
+
+)
+
+Model 
+
+Baseline 
+
+Low Noise 
+
+Training N = 30 
+
+Figure 16. The Role of Noise for more Robust Self-Normalization. Log-log plot of total control effort vs. agent count. The Baseline policy (black), trained on a zero-noise environment, diverges from the ideal O(1 /M ) scaling slope at high M , indicating a loss of coordination and the onset of competitive over-actuation. The policy trained in a low noise-scenario ( σz = 0 .01 and σu = 0 .02 ) maintains the correct power law, preserving self normalization at higher cardinalities and ensuring better cardinality-invariant properties. 
+
+high-frequency local error features, critical for immediate stabilization, are dilute by the global signal, preventing the agent from reacting precisely to local disturbances. Furthermore, global observation creates an all-to-all dependency graph. If Agent i observes a perturbation caused by Agent 
+
+j at the opposite end of the domain, a small network may erroneously trigger a corrective action. Given the delay inherent in physical transport (diffusive time scales), this reaction arrives out of phase, inducing system-wide oscillations. 
+
+D.5. Can the Policy Transfer to Unseen Physics? 
+
+To verify that the learned operator Gθ encodes a generalized control policy, we evaluate its zero-shot transfer performance across variations in the underlying PDE coefficients. This evaluation spans two distinct control objectives: trajectory tracking 24 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+on reaction-diffusion dynamics and stabilization of 2D turbulent flow. We first stress the policy on the Fisher-KPP trajectory tracking task by perturbing the dynamics relative to the training configuration ( νtrain = 0 .005 , ρ train = 3 .0). As shown in Figure 17, the policy maintains precise tracking even under extreme shifts, such as the complete removal of diffusion ( ν → 0) or the doubling of reaction rates ( ρ → 8.0). This confirms that the agents do not rely solely on passive diffusion to distribute control influence, nor are they brittle to faster instability growth when tracking dynamic targets. We further validate this on the stabilization of a 2D turbulent flow trained at a viscosity of νtrain = 5 × 10 −4. We deploy this fixed policy into environments with progressively lower viscosities (down to 2 × 10 −4), effectively increasing the Reynolds number. Figure 18 demonstrates that the policy successfully suppresses the energy cascade across this spectrum. Additionally, Figure 19 reveals a scalable synergy: increasing the actuator count consistently reduces steady-state error, effectively compensating for the harder dynamics of high-Reynolds-number flows. We emphasize that these results demonstrate a degree of inherent robustness to parameter mismatch coming from the control feedback loop, rather than full generalization to arbitrary physics. We do not claim that the current method solves the parametric control problem, as the policy has no access to the physical coefficients. Extending this framework to parametric policies, which explicitly condition on physical parameters to enable broad generalization, remains a promising direction for future work. 20 30 40 50 60 70 80 90 100              
+
+> Agents
+> 10 4
+> 10 3
+> Final Tracking Error (MSE)
+> Sensitivity to Diffusion ( )
+> Training = 0.005 (Black Line)
+> Value
+> 0.0
+> 0.001
+> 0.002
+> 0.003
+> 0.004
+> 0.005
+> 20 30 40 50 60 70 80 90 100
+> Agents
+> Sensitivity to Growth Rate ( )
+> Training = 3.0 (Black Line)
+> Value
+> 4
+> 5
+> 6
+> 7
+> 8
+> 3
+
+Figure 17. Zero-Shot Robustness to Parametric Shifts (FKPP Tracking). The policy, trained on fixed parameters ( ν = 0 .005 , ρ = 3 ), is deployed on mismatched dynamics to test generalization. (Left) The agent exhibits graceful degradation: tracking remains stable even when natural diffusion is eliminated ( ν = 0 .0), maintaining coherent behavior despite the expected increase in tracking error. (Right) Agents track targets in systems with large reaction rates, resulting in bounded performance deviation. 
+
+D.6. Model-Free MARL Validation of Cardinality Invariance 
+
+To further demonstrate that this cardinality invariance is an intrinsic property of the operator learning formulation rather than an artifact of the differentiable physics (model-based) training, we parameterized our policies using DeepONet and trained them via standard model-free multi-agent reinforcement learning (MARL) algorithms. Specifically, we evaluated Multi-Agent Proximal Policy Optimization (MAPPO) and Multi-Agent Twin Delayed DDPG (MATD3) on the 2D turbulent flow stabilization task. 
+
+Network Architecture: The DeepONet actor architecture for both MARL models utilizes a branch network consisting of a 2-layer Convolutional Neural Network (32 and 64 channels with 3 × 3 kernels and max pooling) followed by a dense layer with 128 units to process the local observation patches. The trunk network is composed of Fourier features (4 frequency bands) combined with a 2-layer MLP (64 and 128 units) to encode the spatial coordinates of the agents. These representations are merged via an element-wise product and passed through a final MLP to output the control actions. The centralized critic networks process the flattened global state (and joint actions for MATD3) using a 3-layer MLP with 512 and 256 hidden units. 
+
+Training and Hyperparameters: The MAPPO and MATD3 algorithms were trained for a total of 1,000,000 timesteps. For MAPPO, we utilized an actor and critic learning rate of 3 × 10 −4 (with linear decay), a clip ratio of 0.2, and 4 PPO 25 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control =2e-04  t = 0.0s t = 0.5s t = 1.0s t = 2.0s 
+
+100 
+
+> 2
+
+Enstrophy Evolution 
+
+> Natural
+> Controlled
+> =3e-04
+
+10 
+
+100 
+
+> 2
+> =4e-04
+
+10.0 
+
+> 2
+> =5e-04
+
+0 1 2
+
+Time (s) 
+
+10 
+
+100           
+
+> 2
+> Figure 18. Zero-Shot Transfer in 2D Turbulence (Stabilization). The policy, trained at ν= 5 ×10 −4, is evaluated on more turbulent flows. (Left) Vorticity fields show suppression of chaotic structures even at ν= 2 ×10 −4. (Right) Enstrophy evolution confirms exponential decay across all tested regimes.
+
+optimization epochs per rollout with a minibatch size of 200. For MATD3, the models were trained using a batch size of 256, an actor learning rate of 1 × 10 −4, and a critic learning rate of 5 × 10 −4. The MATD3 target policy smoothing noise was set to 0.2 (clipped at 0.5) with a policy update delay frequency of 2 steps. As illustrated in Figure 20, the zero-shot scalability curve of the RL-trained policies closely mirrors that of CINOC. Both MAPPO and MATD3 exhibit robust cardinality invariance, maintaining low relative enstrophy when generalizing to swarms significantly larger than the training size ( N = 64 ). This confirms that the emergent scalability is fundamentally tied to mapping the multi-agent control problem to an operator learning framework, independent of the underlying optimization scheme. 
+
+D.7. Practical Guidelines and Rules of Thumb for Deployment 
+
+We appreciate that for practitioners, universal heuristics for deploying multi-agent PDE control would be highly desirable. However, the reality of deploying decentralized control across vastly different physical regimes, ranging from purely diffusive processes to chaotic, advective flows, is that optimal configurations are inherently dependent on the specific PDE and the downstream task. Because characteristic length scales, energy dissipation rates, and instability mechanisms vary so drastically between equations like Fisher-KPP and Navier-Stokes, a single, universal set of deployment rules is currently out of reach. 26 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 60 80 100 120 140 160 180 200 220     
+
+> Number of Actuators
+> 10 1
+> Residual Enstrophy
+> Scalability & Robustness (Trained @ = 5 e04 )
+> Viscosity
+> 2.0e-04
+> 3.0e-04
+> 4.0e-04
+> 5.0e-04
+> Training (8x8)
+> Figure 19. Scalability under Physical Shift. Residual enstrophy vs. agent count for different fluid viscosities. Performance improves monotonically with swarm size, showing that increased actuation density can compensate for the tougher dynamics of lower viscosity flows.
+
+While deploying this framework on a novel PDE currently requires task-specific empirical tuning, our experiments reveal several consistent heuristics to guide the selection of agent density, sensing radii, and actuation widths based on the domain’s unique physical properties. D.7.1. A GENT POPULATION (M ) AND CONTROLLABILITY 
+
+The minimum number of agents, Mmin , is fundamentally bounded by the theoretical controllability and observability of the underlying PDE. For instance, in the 1D Kuramoto-Sivashinsky (KS) equation, the number of linearly unstable spatial modes dictates a strict mathematical minimum for the number of actuators required to stabilize the system; deploying fewer agents makes stabilization physically impossible regardless of the policy’s quality. 
+
+Rule of Thumb: Identify the highest-frequency spatial mode or characteristic length scale of the target instability (e.g., the Taylor microscale in turbulence or the wavelength of the most unstable mode). Ensure the baseline agent population Mtrain 
+
+provides sufficient spatial sampling to address these modes, conceptually similar to a spatial Nyquist-Shannon criterion. D.7.2. A CTUATION RANGE (σ)The width of the Gaussian control kernel, σ, must balance numerical stability with control precision. As noted in our scaling analysis, inter-agent distance decays linearly ( M −1) in 1D, but as M −1/2 in 2D. 
+
+Rule of Thumb: To prevent grid-scale numerical artifacts and ensure smooth, differentiable gradients, σ should be large enough to span at least 3–5 spatial grid points of the discretized solver. However, to prevent destructive interference and saturation at higher cardinalities, σ must remain strictly smaller than the average inter-agent distance ( ∝ L/M train in 1D, or 
+
+∝ pA/M train in 2D). D.7.3. F IELD OF VIEW (FOV) AND SENSING RADIUS 
+
+While a global FOV theoretically maximizes available information, our ablation studies (Appendix D.4) demonstrate that it can induce oscillatory instability in large swarms due to out-of-phase reactions to distant perturbations. 
+
+Rule of Thumb: The FOV should be restricted to the local characteristic length scale of the PDE’s dynamics (e.g., the typical width of a flame front or vortex) plus a buffer accounting for the advective/diffusive transport expected during the control horizon. For wave-like or highly chaotic systems, a strictly local FOV (e.g., 10% -20% of the spatial domain) acts as a necessary regularizer to decouple agents, prevent spurious coupling, and preserve cardinality invariance. 27 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 50 100 150 200 250 300 350 400 
+
+Number of Agents (N) 
+
+> 0
+> 5
+> 10
+> 15
+> 20
+> 25
+> 30
+> 35
+> 40
+> Absolute Enstrophy
+
+Absolute Scalability (Zero-Shot) 
+
+> Ours
+> MAPPO
+> MATD3
+> Train Size (N=64)
+
+Figure 20. Relative Scalability (Zero-Shot) of MARL-trained Operator Policies. Comparison of zero-shot scalability on the 2D Turbulence stabilization task. The plot evaluates Relative Enstrophy (%) as a function of the inference-time agent count ( M ), with all models trained at M = 64 . DeepONet policies trained with model-free algorithms (MAPPO and MATD3) exhibit almost identical cardinality invariance properties to CINOC, confirming that zero-shot scalability is a fundamental property of the operator parameterization rather than the training modality. 
+
+## E. Experimental Details 
+
+This section details the architectural configurations, training hyperparameters, and numerical discretization schemes used for our experiments. A quantitative performance comparison between the controlled evolution and the uncontrolled evolution is reported in Table 1. 
+
+E.1. Trajectory Tracking 
+
+For trajectory tracking tasks, we instantiate the general control formulation (Equation 1) with kinetic (mobile) actuators and a tracking-specific objective. The optimization problem is defined as: 28 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+min  
+
+> θ
+
+J (θ) = Ez0,ξ0
+
+"Z T
+
+> 0
+
+(λtLtrack + λuLeffort + λsLsafe ) dt 
+
+#
+
+s.t. ∂z ∂t = F(z) + 
+
+> M
+
+X
+
+> i=1
+
+b(x, ξi(t)) ui(t)˙ξi(t) = vi(t)
+
+|ui(t)| ≤ umax , |vi(t)| ≤ vmax , ξi(t) ∈ Ω[u(t), v(t)] = Gθ (z(x, t ), ξ(t)) 
+
+(29) Here, F denotes the PDE-specific differential operator (e.g., diffusion, reaction-diffusion), while the forcing term instantiates the actuation operator B from Equation 1 as: 
+
+B(x, u(t)) = 
+
+> M
+
+X
+
+> i=1
+
+b(x, ξi(t)) ui(t) (30) where ui(t) represents the control intensity at actuator i, ξi(t) is the actuator position, and vi(t) governs the actuator’s velocity. The spatial influence of each actuator is modeled via a Gaussian kernel: 
+
+b(x, ξi) = 1(2 πσ 2)d/ 2 exp 
+
+
+
+− |x − ξi|2
+
+2σ2
+
+
+
+(31) where σ is fixed to represent the physical actuation range, mimicking real-world actuator characteristics. This superposition structure allows the total forcing field to be a weighted sum of localized actuator contributions, naturally accommodating varying numbers of agents without architectural changes. The composite loss function comprises three components: 
+
+Ltrack =
+
+Z
+
+> Ω
+
+(z(x, t ) − ztarget (x)) 2 dx,
+
+Leffort = 1
+
+M
+
+> M
+
+X
+
+> i=1
+
+ ui(t)2 + λv vi(t)2 + λa ˙vi(t)2 ,
+
+Lsafe = 1
+
+M
+
+> M
+
+X
+
+> i=1
+
+
+
+> M
+
+X
+
+> j=1
+
+b(x, ξj (t)) uj (t)
+
+
+
+> 2
+
++ X 
+
+> j̸=i
+
+ReLU (Rsafe − | ξi − ξj |)2
+
+ .
+
+(32) The tracking term Ltrack measures the L2 deviation from the target profile. The effort term Leffort penalizes control intensity, kinetic energy ( λv v2 
+
+> i
+
+), and acceleration ( λa ˙v2 
+
+> i
+
+) to promote energy-efficient policies. The safety term Lsafe enforces collision safety by penalizing inter-agent distances below the safe radius Rsafe and constrains the total forcing magnitude to prevent actuator saturation. The constraints ensure that control intensities remain bounded by umax , actuator velocities respect kinematic limits vmax ,and agents remain within the spatial domain Ω throughout the control horizon. 
+
+Implementation. Our differentiable PDE solvers are implemented in JAX (Bradbury et al., 2018), with density transport problems utilizing PhiFlow (Holl & Thuerey, 2024) for advection-diffusion dynamics. For large-scale or high-fidelity simulations, the Tesseract framework (H¨ afner & Lavin, 2025) provides scalable alternatives. 
+
+Heat 1D We instantiate the problem formulation for the one-dimensional heat equation with mobile source terms. The system is defined over the spatial domain Ω = [0 , 1] subject to homogeneous Dirichlet boundary conditions, z(0 , t ) = 
+
+29 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+z(1 , t ) = 0 . The intrinsic dynamics are governed by linear diffusion: 
+
+∂z ∂t = ν ∂2z∂x 2 +
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξ i(t)) (33) where ν = 0 .2 represents the diffusion coefficient. We simulate the environment with M = 8 controllable agents, each having an actuator width of σ = 0 .1. The problem requires the policy to steer the field from an initial state z0(x) to a target state ztarget (x) within a fixed time horizon. To ensure robustness, both z0 and ztarget are sampled from smooth Gaussian Random Fields (GRF) with Radial Basis Function (RBF) kernels. We utilize length scales of l = 0 .2 for initial conditions and l = 0 .4 for targets to generate diverse topological challenges. The physics are discretized on a spatial grid of Nx = 100 
+
+points using a Crank-Nicolson scheme with a fixed timestep ∆t = 0 .001 .
+
+Fisher-KPP 1D. We apply the framework to the Fisher-Kolmogorov-Petrovsky-Piskunov (FKPP) equation, a fundamental model for nonlinear reaction-diffusion processes such as population dynamics, biological invasions, and epidemic spread. The system evolution on Ω = [0 , 1] is governed by: 
+
+∂z ∂t = ν ∂2z∂x 2 + ρz (1 − z) + 
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξ i(t)) . (34) We select a diffusion coefficient ν = 0 .005 and a reaction rate ρ = 3 .0, placing the system in a regime where both spatial transport and local logistic growth are significant. The control objective is achieved by M = 20 agents with an actuator influence width of σ = 0 .05 .Due to the semi-linear nature of the equation, we employ an operator splitting numerical scheme. At each timestep 
+
+∆t = 0 .001 , the non-linear reaction and control forcing are integrated via an explicit Euler step, followed by a fully implicit solution of the linear diffusion operator using a tridiagonal solver. To ensure physically meaningful population densities (z ∈ [0 , 1] ), the initialization and target data are not drawn from raw GRFs. Instead, we generate a latent GRF g(x) and apply a transformation z(x) ∝ exp( g(x)) sin 2(πx ), where the sine envelope strictly enforces Dirichlet boundary conditions while the exponential ensures positivity. 
+
+Heat 2D We extend the experimental evaluation to the two-dimensional diffusion setting on the unit square Ω = [0 , 1] 2.The dynamics are governed by the 2D heat equation with isotropic diffusion: 
+
+∂z ∂t = ν
+
+ ∂2z∂x 2 + ∂2z∂y 2
+
+
+
++
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξi(t)) (35) subject to homogeneous Dirichlet boundary conditions z(x, t ) = 0 for all x ∈ ∂Ω. We increase the swarm size to M = 16 
+
+agents to cover the larger domain area, with a corresponding increase in actuator width to σ = 0 .15 and a collision safety radius of Rsafe = 0 .08 .Due to the increased computational cost of fully implicit schemes in 2D, the physics solver utilizes the Peaceman-Rachford Alternating Direction Implicit (ADI) method. This splits the time evolution into two half-steps, implicit in x then implicit in y, allowing for the inversion of tridiagonal matrices rather than the full sparse Hessian. The domain is discretized on a 
+
+32 × 32 spatial grid. Initial and target configurations are sampled from 2D Gaussian Random Fields. To satisfy the boundary constraints without introducing discontinuities, we apply a 2D bridge correction that subtracts a bilinear interpolation of the field’s boundary values. 
+
+Heat 2D with Obstacles To evaluate the collision avoidance capabilities of the policy in constrained environments, we introduce static forbidden regions O ⊂ Ω. The physical dynamics, solver configuration, and domain discretization follow the setup described in Section E.1. The environment includes K = 3 circular obstacles defined by centers ck and radii rk = 0 .08 , positioned at (0 .15 , 0.50) ,
+
+(0 .85 , 0.50) , and (0 .50 , 0.15) . The forbidden set is defined as O = SKk=1 {x : ∥x − ck∥2 ≤ rk}. Consequently, the optimization problem is modified to include a soft penalty term that discourages obstacle violation. The safety constraint for the i-th agent is updated to: 
+
+min   
+
+> j̸=i
+
+∥ξi − ξj ∥ ≥ Rsafe and min  
+
+> k
+
+∥ξi − ck∥ ≥ Rsafe + rk (36) 30 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+where Rsafe remains 0.08 . Target field generation and boundary corrections are identical to the unconstrained case. 
+
+E.2. Stabilization 
+
+The problem definition for our stabilization tasks is akin to Equation 29, with the difference that ztarget is chosen to be 0. We also employ fixed actuators to showcase our paradigm in different settings. 
+
+Kuramoto-Sivashinsky 1D (KS) We investigate the control of spatiotemporal chaos using the Kuramoto-Sivashinsky equation, a canonical model for pattern formation in flame fronts and thin-film flows. The system evolves on a periodic domain Ω = [0 , L ] according to: 
+
+∂z ∂t + z ∂z ∂x + ∂2z∂x 2 + ∂4z∂x 4 =
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξ i). (37) We set the domain size to L = 22 .0, a regime exhibiting sustained chaotic behavior. The control interface consists of M = 8 
+
+static actuators ( ˙ξi = 0 ) equidistantly spaced across the domain, modulating their intensity ui(t) with a spatial influence width of σ = 1 .0. The objective is to suppress the intrinsic turbulence and stabilize the system to the zero state z(x) ≡ 0.Unlike the diffusion-dominated examples, we utilize a pseudo-spectral numerical scheme to accurately resolve high-order derivatives. The linear operator L = −∂2 
+
+> x
+
+− ∂4 
+
+> x
+
+is computed diagonally in Fourier space ( k2 − k4), while the non-linear advection term uu x is computed in real space and transformed via FFT. Time integration is performed using a semi-implicit Crank-Nicolson method with ∆t = 0 .05 on a grid of Nx = 128 modes. To ensure robust stabilization capabilities, training initial conditions are not random noise but rather “spun-up” states: random perturbations evolved autonomously for 
+
+Twarm = 5000 time units to project the system onto its chaotic attractor before control begins. 
+
+Kuramoto-Sivashinsky 2D Extending the chaotic stabilization task described in Sec. E.2, we consider the two-dimensional variant on a periodic domain Ω = [0 , L ]2 with L = 32 .0. The dynamics are governed by the equation: 
+
+∂z ∂t = −∇ 2z − ∇ 4z − 12 |∇ z|2 +
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξi). (38) The system is actuated by a dense grid of M = 100 static agents arranged in a 10 × 10 lattice, with an actuator width of 
+
+σ = 1 .2.The numerical challenges in 2D require a more sophisticated solver than the semi-implicit schemes used in 1D. We employ the Fourth-order Exponential Time Differencing Runge-Kutta (ETDRK4) method, which provides superior stability for stiff PDEs by treating the linear operator in Fourier space. Spatial derivatives are computed spectrally on a 64 × 64 grid with the  
+
+> 23
+
+-rule applied for de-aliasing the non-linear term. To align the control frequency with the characteristic timescales of the turbulence while maintaining numerical precision, we employ temporal action repetition: the physics integration proceeds at a fine timestep ∆t = 0 .005 , while the control policy is queried every k = 20 substeps (effective control ∆tc = 0 .1). As in the 1D case, training is performed on fully developed chaotic states generated via a spin-up procedure. 
+
+Turbulence 2D We address the control of fully developed decaying isotropic turbulence. The system is modeled by the incompressible Navier-Stokes equations in their vorticity-streamfunction formulation, which casts the dynamics as a non-linear advection-diffusion problem for the vorticity ω:
+
+∂ω ∂t + ( q · ∇ )ω = ν∇2ω +
+
+> M
+
+X
+
+> i=1
+
+ui(t)b(x, ξi). (39) Unlike passive scalar advection, the velocity field q is coupled to the vorticity via the stream function Poisson equation 
+
+∇2ψ = −ω, where q = ( ∂y ψ, −∂xψ). This non-linear self-advection drives the turbulent energy cascade. We simulate the system with viscosity ν = 5 × 10 −4 on a periodic domain Ω = [0 , 1] 2, using a Pseudo-Spectral solver with RK4 integration (∆t = 0 .01 ) and 32 -rule de-aliasing to resolve the non-linear interactions. Similarly to the KS problems outlined above, we train the policy to drive the system to 0 after evolving the system to a turbulent state. 31 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+E.3. Density Matching 
+
+For density matching tasks, we shift from controlling source terms to manipulating the advection field itself. The objective is to transport a passive scalar distribution ρ(x, t ) to match a static target configuration ρ∗(x) while conserving total mass: 
+
+min  
+
+> θ
+
+J (θ) = Eρ0,ξ0
+
+"
+
+λwW(ρ(T ), ρ ∗) + 
+
+Z T
+
+> 0
+
+(λmLmass + λuLeffort + λsLsafe ) dt 
+
+#
+
+s.t. ∂ρ ∂t + ∇ · (ρq) = ν∇2ρ
+
+q(x, t ) = qnat +
+
+> M
+
+X
+
+> i=1
+
+vi(t)b(x, ξi(t)) ˙ξi(t) = αvi(t)
+
+|vi(t)| ≤ vmax , ξi(t) ∈ Ω
+
+(40) This formulation differs fundamentally from trajectory tracking (Eq. 29) in several key aspects. First, the velocity field q is constructed as a superposition of a background drift qnat and local flow fields injected by mobile agents. Second, the primary objective W employs a moment-matching loss (computed via center-of-mass distance) rather than pointwise L2 error. In the density transport task, the initial density ρ(x, t ) and the target density ρ∗(x) often have disjoint supports (i.e., they do not overlap). In this regime, pointwise metrics such as Mean Squared Error (MSE) or Cross-Entropy fail to provide informative gradients, as the derivative of the loss with respect to position is zero in the empty space between distributions. To provide a dense gradient signal that guides the agents to transport mass across the domain, we minimize the discrepancy between the first and second statistical moments of the distributions. Let ˜ρ = ρ/ R 
+
+> Ω
+
+ρ d x be the normalized probability measure of the density field. We compute the spatial centroid (first moment) μ ∈ R2:
+
+μ(ρ) = 
+
+Z
+
+> Ω
+
+x ˜ρ(x) dx. (41) To ensure the transported density matches the shape of the target, we also compute the spatial spread (approximated by the standard deviation of the distribution relative to its centroid): 
+
+σ(ρ) = 
+
+Z 
+
+> Ω
+
+∥x − μ(ρ)∥2 ˜ρ(x) dx
+
+1/2
+
+. (42) The total Moment Matching loss is defined as the weighted sum of the centroid distance (Wasserstein-1 approximation) and the spread difference: 
+
+W(ρ, ρ ∗) = ∥μ(ρ) − μ(ρ∗)∥2 + λvar |σ(ρ) − σ(ρ∗)|, (43) where we set λvar = 0 .5 in our experiments. This formulation provides a convex gradient landscape that pulls the density toward the target location regardless of spatial overlap. Last, the mass conservation penalty is defined as Lmass =  R  
+
+> Ω
+
+ρ(x, t ) dx − m0
+
+2, ensuring the policy transports rather than creates or destroys density. 
+
+Advection-Diffusion 2D (AD) We instantiate this formulation on a rectangular domain Ω = [0 , 1] × [0 , 1.25] with zero-flux (Neumann) boundary conditions. The control interface comprises M = 9 mobile agents that inject velocity with Gaussian spatial influence (width σ = 0 .2) and maximum intensity vmax = 0 .8. The diffusion coefficient ν = 0 .01 creates an advection-dominated regime with mild diffusive smoothing. To maintain stability under high-velocity transport, we employ a Semi-Lagrangian scheme. The advective term is resolved via backward trajectory tracing ( xsrc = x − q∆t) with bilinear interpolation of the density field. This approach permits a relatively large timestep ∆t = 1 .0 on a 64 × 80 grid without violating CFL stability conditions. The simulation horizon is 
+
+T = 150 timesteps. The loss function prioritizes terminal-state accuracy with weight λw = 4 .0 on the moment-matching term, while strongly penalizing mass loss ( λm = 6 .0) to prevent the policy from trivially minimizing error by artificially removing density. The effort and safety penalties ( λu, λ s) follow the same structure as in trajectory tracking. 32 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+## F. Training and Architecture Specifications 
+
+F.1. Training Hyperparameters 
+
+Table 4 summarizes the optimization settings used for training the neural operator policies across all problem domains. All experiments employ the Adam optimizer with gradient clipping to ensure stable training dynamics. The choice of batch size reflects a trade-off between sample efficiency and GPU memory constraints, with smaller batches (4-16) used for high-resolution 2D problems and larger batches (32) for 1D cases. The turbulent flow problem requires fewer epochs (50) due to its higher per-epoch computational cost, while the density transport task benefits from extended training (1000 epochs) to learn the complex advection dynamics.  
+
+> Table 4. Training hyperparameters for all benchmark problems.
+
+Problem Batch Size Epochs LR Schedule Initial LR Grad Clip 
+
+FKPP 1D 32 500 Exp. decay 1e-3 1.0 Heat 1D 32 500 Exp. decay 1e-3 1.0 Heat 2D 16 500 Exp. decay 1e-3 1.0 KS 1D 32 500 Exp. decay 1e-3 1.0 KS 2D 4 500 Warmup+Cosine 5e-4 → 1e-3 → 1e-5 1.0 Turb. 2D 4 500 Warmup+Cosine 1e-4 → 5e-4 → 1e-6 1.0 Density 4 1000 Exp. decay 1e-3 1.0 
+
+Learning Rate Schedules: 
+
+• Exponential decay : ηt = η0 · γt/T decay where γ = 0 .5.• Warmup + Cosine : Linear warmup to peak LR followed by cosine annealing to minimum LR. 
+
+F.2. Loss Function Weights 
+
+The total loss function balances multiple objectives: tracking accuracy, control effort minimization, constraint satisfaction, and problem-specific regularization. Table 5 presents the weight coefficients for each loss component. The tracking weight (λtrack ) is consistently the largest term to prioritize control performance. The effort penalty ( λeffort ) is kept small to avoid over-penalizing control authority. Boundary violation penalties ( λbound ) are large (10-100) to enforce hard constraints. The collision avoidance weight ( λcoll ) varies from 1.0 to 20.0 depending on agent density and obstacle presence. Problem-specific terms include enstrophy regularization for turbulence control and mass conservation penalties for density transport.           
+
+> Table 5. Loss function weight coefficients. Components: Ltrack (state tracking), Leffort (control regularization), Lbound (boundary violations),
+> Lcoll (collision avoidance), Laccel (velocity smoothness).
+
+Problem λtrack λeffort λbound λcoll λaccel Other 
+
+FKPP 1D 5.0 0.001 100.0 1.0 0.1 —Heat 1D 5.0 0.001 100.0 1.0 0.1 —Heat 2D 5.0 0.001 100.0 20.0 0.1 —KS 1D 10.0 0.001 — — — —KS 2D 100.0 1e-4 — — — —Turb. 2D — 1e-5 — — — Enstrophy: 1.0 Density 4.0 (hold) 0.001 10.0 14.0 0.1 λmass = 6 .0, λsmooth = 0 .1
+
+F.3. Policy Network Architecture 
+
+All policies follow the DeepONet framework with problem-specific adaptations to the branch and trunk networks. Table 6 details the architectural choices for each benchmark. For 1D problems, we use purely MLP-based branch networks that process the local field observations. For 2D problems, we employ convolutional layers in the branch network to efficiently extract spatial features from the high-dimensional observation patches. The trunk network consistently uses Fourier features 33 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+(4 frequency bands) combined with an MLP to encode agent positions, enabling the policy to learn position-dependent control strategies. The output dimensionality varies by problem: kinetic actuators produce both forcing ( u) and velocity ( v)outputs, while static actuators generate only forcing terms.                                         
+
+> Table 6. Neural operator policy architectures. Fourier features use 4 frequency bands: [sin(2 πkξ ),cos(2 πkξ )] for k∈ { 1,2,4,8}.
+> Problem Branch Net Trunk Net Output
+> FKPP 1D MLP (64, 64) Fourier (4 freq) + MLP (32, 32) u,v
+> Heat 1D MLP (64, 64) Fourier (4 freq) + MLP (32, 32) u,v
+> Heat 2D CNN (16, 32) + MLP Fourier (4 freq) + MLP (32, 32) u,v
+> KS 1D MLP (64, 64) Fourier (4 freq) + MLP (32, 32) uonly KS 2D CNN (16, 32) + MLP Fourier (4 freq) + MLP (32, 32) uonly Turb. 2D CNN (32, 64) + MLP Fourier (4 freq) + MLP (32, 32) uonly Density CNN (16, 32) + MLP Fourier + Direction vectors vonly
+
+F.4. Local Observation Specifications 
+
+To enable scalable multi-agent control, each actuator observes only a local patch of the global state field, as detailed in Table 7. The observation window size is chosen to balance information content with computational efficiency: 1D problems use sliding windows covering 8% of the domain (20 points), while 2D problems employ square patches of size 12 × 12 
+
+or 20 × 20 . All observations include the tracking error field and its spatial gradients, computed via finite differences. For periodic domains (KS and Turbulence), observations wrap around boundaries to maintain consistency. The turbulence problem uses vorticity ( ω) instead of the velocity field to provide a more compact representation of the flow dynamics.  
+
+> Table 7. Local observation specifications for each agent. Each observation includes the tracking error and its spatial gradients computed via finite differences.
+
+Problem Observation Type Patch/Window Size Channels 
+
+FKPP 1D 1D sliding window 8% of domain → 20 points error + ∇error Heat 1D 1D sliding window 8% of domain → 20 points error + ∇error Heat 2D 2D local patch 12 × 12 error + ∇x error + ∇y error KS 1D 1D periodic window 4 points → 20 error + ∇error KS 2D 2D periodic patch 12 × 12 error + ∇x + ∇y
+
+Turb. 2D 2D periodic patch 20 × 20 ω + ∇xω + ∇y ω
+
+Density Full Field – error + ∇error 
+
+F.5. Control Saturation Limits 
+
+Control inputs are bounded to ensure physical feasibility and numerical stability, as specified in Table 8. The bounds are enforced via tanh activation functions in the policy output layer. Forcing magnitude limits ( umax ) range from 1.0 for the sensitive KS 1D system to 75.0 for the high-Reynolds turbulent flow, reflecting the different energy scales of each problem. Velocity limits ( vmax ) for kinetic actuators are set to allow meaningful displacement within each control timestep while preventing excessively rapid motion that could destabilize the coupled system. Static actuators (KS and Turbulence) generate only forcing terms and maintain fixed positions throughout the episode. 
+
+F.6. Data Generation and Initial Conditions 
+
+Training data is generated by sampling diverse initial and target states to ensure policy generalization, as detailed in Table 9. For linear and weakly nonlinear systems (Heat, FKPP), we use Gaussian Random Fields (GRF) with different length scales (ℓ) for initial and target distributions to create meaningful tracking tasks. For chaotic systems (KS 1D, KS 2D), initial conditions are evolved from the chaotic attractor with extended warmup periods (200-5000 time units) to ensure the system resides on its strange attractor at training onset. The turbulent flow is initialized from a developed turbulent state and controlled toward the zero equilibrium. The density transport problem uses randomly placed Gaussian blobs to simulate diverse scalar distribution patterns. 34 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control      
+
+> Table 8. Control input saturation limits enforced via tanh( ·)activation. u: forcing term; v: actuator velocity.
+
+Problem umax vmax Control Type 
+
+FKPP 1D 40.0 2.0 Forcing + Velocity Heat 1D 40.0 2.0 Forcing + Velocity Heat 2D 40.0 5.0 Forcing + 2D Velocity KS 1D 1.0 — Forcing only (static) KS 2D 10.0 — Forcing only (static) Turb. 2D 75.0 — Forcing only (static) Density — 0.8 Velocity only (push)  
+
+> Table 9. Data generation protocols for training: initial condition (IC) types, target distributions, and warmup procedures. GRF denotes Gaussian Random Field.
+
+Problem IC Type Target Warmup 
+
+FKPP 1D GRF ( ℓ = 0 .2) GRF ( ℓ = 0 .4) —Heat 1D GRF ( ℓ = 0 .2) GRF ( ℓ = 0 .4) —Heat 2D 2D GRF ( ℓ = 0 .25 ) 2D GRF ( ℓ = 0 .4) —KS 1D Chaotic attractor Zero state 5000 time units KS 2D Chaotic attractor Zero state 200 time units Turb. 2D Turbulent state Zero state Warmup evolution Density Gaussian blobs Gaussian blobs —
+
+F.7. Hardware Configuration 
+
+Experiments were executed on a local workstation equipped with an Intel(R) Core(TM) Ultra 9 275HX processor, featuring 24 physical cores and a maximum clock speed of 5.4 GHz. High-speed parallel computations for the PDE solvers and neural networks were offloaded to an NVIDIA GeForce RTX 5090 Laptop GPU with 24 GB of dedicated GDDR7 VRAM and a peak SM clock rate of 3090 MHz. 
+
+F.8. Software Environment 
+
+The computational environment was hosted on Windows Subsystem for Linux (WSL2) running Ubuntu 22.04 with Linux Kernel 6.6.87. We utilized the JAX framework for high-performance numerical computing and hardware acceleration. The software stack versioning is summarized in Table 10.  
+
+> Table 10. Software stack and library versions used for evaluation.
+
+Component Local Workstation 
+
+OS Ubuntu 22.04 (WSL2) Linux Kernel 6.6.87 NVIDIA Driver 581.57 JAX Backend CUDA (GPU) JAX Version 0.8.1 Optimization Optax (latest) Job Scheduler N/A 
+
+## G. Baseline Reinforcement Learning Benchmarks 
+
+To evaluate the proposed framework, we benchmarked it against standard continuous control reinforcement learning (RL) and multi-agent reinforcement learning (MARL) algorithms. This section details the shared architectures, algorithm implementations, and environment-specific configurations used across all baseline comparisons. For a complete list of training hyperparameters, please refer to Appendix F. 35 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+G.1. Baseline Algorithms and Network Architectures 
+
+We evaluated multiple algorithms, spanning on-policy, off-policy, centralized, decentralized, and differentiable predictive control paradigms to benchmark the 1D Heat Equation environment. Unless otherwise specified, all actor and critic networks share a common backbone: a Multi-Layer Perceptron (MLP) with two hidden layers of 256 units and ReLU activations. To maintain representational stability under large spatiotemporal state variations, the final hidden representation x undergoes a soft L2 normalization trick: x = x/ (|| x|| 2 + 1 .0) prior to the output heads. Action outputs are bounded using tanh 
+
+activations scaled by the environment’s physical limits. • Centralized RL (TD3 & PPO): These baselines treat the swarm as a single entity. The actor observes the flattened global state (current PDE state, target state, and all agent coordinates) and outputs the joint action space for all agents simultaneously. The critics evaluate the global state to predict a single joint Q(s, a ) for TD3 or a global state-value 
+
+V (s) for PPO. PPO actors additionally learn a state-independent log( σ) standard deviation parameter for exploration. • Decentralized MARL (MATD3 & MAPPO): These baselines follow the Centralized Training with Decentralized Execution (CTDE) paradigm. Decentralized actors share weights and process strictly localized observations (a concatenation of a localized spatial patch of the error field and a Positional Encoding of their coordinates) to output individual actions. The centralized critics observe the full global state to compute joint Q-values (MATD3) or individual, agent-specific state-values Vi(s) (MAPPO) to solve spatial credit assignment. • Differentiable Predictive Control (DPC): As a non-RL baseline, we utilize a DPC framework. Unlike the RL agents that learn via a learned value function and trial-and-error, the DPC policy exploits the exact gradients of the differentiable JAX-based PDE solver. The network is trained directly via Backpropagation Through Time (BPTT) by unrolling the dynamics over T steps and minimizing the trajectory loss. 
+
+G.2. Hyperparameters: Fisher-KPP 1D Environment 
+
+Table 11 details the specific network inputs, optimization schedules, and algorithm-specific hyperparameters utilized for the Fisher-KPP 1D benchmark. For spatial state dimensions, the global state representation consists of the current PDE state ( Ngrid = 100 ), the target PDE state ( Ngrid = 100 ), and all agent coordinates ( Nagents = 20 ), totaling 220 dimensions. The joint action space encompasses 40 dimensions (2 actions × 20 agents). Decentralized actors observe a local spatial patch combined with a Sinusoidal Positional Encoding (PE). 
+
+Table 11. Hyperparameters and Architectural Details for the FKPP 1D Benchmark                                                         
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3→0, step 2k) 32 Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (5.0), Bound (100.0)
+> Centralized TD3 Global Global + Joint Act Constant ( 10 −4/5×10 −4)256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global Global Linear Decay ( 3×10 −4/10 −3)1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01, VF Coef: 0.5
+> MATD3 (MARL) Local Patch + PE Global + Joint Act Linear Decay ( 10 −4/5×10 −4)1024 Updates: 100k, Buffer: 125k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> MAPPO (MARL) Local Patch + PE Global Linear Decay ( 3×10 −4/3×10 −4)1024 Rollout: 300, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01, VF Coef: 0.5
+
+G.3. Hyperparameters: Heat 1D Environment 
+
+Table 12 details the specific network inputs, optimization schedules, and algorithm-specific hyperparameters utilized for the Heat 1D benchmark. For the Heat 1D task, the swarm consists of fewer agents ( Nagents = 8 ). Consequently, the flattened global state representation encompasses 208 dimensions (current PDE state Ngrid = 100 , target PDE state Ngrid = 100 , and 8 agent coordinates). The centralized joint action space spans 16 dimensions (2 actions × 8 agents). As with the FKPP setup, decentralized MARL actors observe a localized spatial patch augmented with a PE. 36 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Table 12. Hyperparameters and Architectural Details for the Heat 1D Benchmark 
+
+Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3 → 0, step 2k) 32 Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (5.0), Bound (100.0), Accel (0.1) 
+
+Centralized TD3 Global Global + Joint Act Constant ( 10 −4 / 5 × 10 −4) 256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0 
+
+τ = 0 .005 , Policy Delay: 2, Warmup: 500 
+
+Centralized PPO Global Global Linear Decay ( 3 × 10 −4 / 10 −3) 1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 1.0 Clip ϵ = 0 .2, Ent. Coef: 0.01, VF Coef: 0.5 
+
+MATD3 (MARL) Local Patch + PE Joint Local Obs + Joint Act Linear Decay ( 10 −4 / 5 × 10 −4) 256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0 
+
+τ = 0 .005 , Policy Delay: 2, Warmup: 500 
+
+MAPPO (MARL) Local Patch + PE Global Linear Decay ( 3 × 10 −4 / 3 × 10 −4) 1024 Rollout: 300, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ = 0 .2, Ent. Coef: 0.01, VF Coef: 0.5 
+
+G.4. Hyperparameters: Heat 2D Environment 
+
+Table 13 outlines the network architectures, optimization configurations, and algorithm-specific hyperparameters for the Heat 2D benchmark. Due to the increased spatial complexity of the 2D grid ( 32 ×32 ), the flattened global state representation expands significantly to 2,080 dimensions (1,024 current state, 1,024 target state, and 16 × 2 agent coordinates). The centralized joint action space spans 48 dimensions ( [u, v x, v y ] per agent). Decentralized MARL actors observe a localized 2D spatial patch combined with a 2D PE. 
+
+Table 13. Hyperparameters and Architectural Details for the Heat 2D Benchmark 
+
+Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3 → 0, step 2k) 16 Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (5.0), Coll (20.0), Accel (0.1) 
+
+Centralized TD3 Global Global + Joint Act Constant ( 10 −4 / 5 × 10 −4) 256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0 
+
+τ = 0 .005 , Policy Delay: 2, Warmup: 500 
+
+Centralized PPO Global Global Constant ( 3 × 10 −4 / 10 −3) 1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ = 0 .2, Ent. Coef: 0.01, VF Coef: 0.5 
+
+MATD3 (MARL) Local Patch + PE Joint Local Obs + Joint Act Constant ( 10 −4 / 5 × 10 −4) 256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0 
+
+τ = 0 .005 , Policy Delay: 2, Warmup: 500 
+
+MAPPO (MARL) Local Patch + PE Global Linear Decay ( 3 × 10 −4 / 3 × 10 −4) 1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ = 0 .2, Ent. Coef: 0.01, VF Coef: 0.5 
+
+G.5. Hyperparameters: Heat 2D Environment (with Obstacles) 
+
+Table 14 outlines the network architectures, optimization configurations, and algorithm-specific hyperparameters for the Heat 2D benchmark with static obstacles. Operating on a 32 × 32 spatial grid, the flattened global state representation encompasses 2,080 dimensions (1,024 current state, 1,024 target state, and 16 × 2 agent coordinates). The centralized joint action space spans 48 dimensions ( [u, v x, v y ]
+
+per agent). Decentralized MARL actors observe a localized 2D spatial patch combined with a 2D PE. All models incorporate steep penalties for breaching the safety radius ( Rsaf e obstacle = 0 .04 ) of the three stationary obstacles. 
+
+Table 14. Hyperparameters and Architectural Details for the Heat 2D (Obstacles) Benchmark                                                             
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3→0, step 2k) 16 Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (5.0), Coll-Agent (20.0), Coll-Obs (100.0)
+> Centralized TD3 Global Global + Joint Act Constant ( 10 −4/5×10 −4)256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global Global Constant ( 3×10 −4/10 −3)1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01, VF Coef: 0.5
+> MATD3 (MARL) Local Patch + PE Joint Local Obs + Joint Act Constant ( 10 −4/5×10 −4)256 Updates: 100k, Buffer: 125k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> MAPPO (MARL) Local Patch + PE Global Linear Decay ( 3×10 −4→0/3×10 −4→0)1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01, VF Coef: 0.5
+
+37 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+G.6. Hyperparameters: Kuramoto-Sivashinsky (KS) 1D Environment 
+
+Table 15 outlines the network architectures, optimization configurations, and algorithm-specific hyperparameters utilized for the highly chaotic Kuramoto-Sivashinsky (KS) 1D benchmark. In this stabilization task, 8 static actuators are distributed across a spatial domain of Ngrid = 128 . For the centralized RL baselines, the models observe only the current dimensional PDE state, with the actor outputting an 8-dimensional joint action vector. The DPC baseline observes an augmented 264-dimensional global state (current state, target state, and fixed actuator coordinates). Notably, to maintain stability against the rapidly diverging KS dynamics, the off-policy RL algorithms utilize significantly lower learning rates compared to other environments, and observation states are scaled by a normalization factor of 5.0. 
+
+Table 15. Hyperparameters and Architectural Details for the KS 1D Benchmark                                                              
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3→0, step 2k) 32 Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (10.0), Effort (0.001)
+> Centralized TD3 Global Global + Joint Act Constant ( 10 −6/5×10 −5)512 Updates: 100k, Buffer: 200k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global Global Constant ( 3×10 −4/10 −3)1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01, VF Coef: N/A
+> Indep. TD3 (MARL) Local Patch + PE + μLocal Obs + PE + Local Act Constant ( 10 −6/5×10 −5)512 Updates: 100k, Buffer: 125k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> MAPPO (MARL) Global + Pos (1) Global Linear Decay ( 3×10 −4→0/3×10 −4→0)1024 Rollout: 128, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01
+
+G.7. Hyperparameters: Kuramoto-Sivashinsky (KS) 2D Environment 
+
+Table 16 details the specific network inputs, optimization schedules, and algorithm-specific hyperparameters utilized for the highly complex Kuramoto-Sivashinsky (KS) 2D benchmark. This environment scales the stabilization task to a 64 × 64 spatial grid with a dense array of Nagents = 100 static actuators. Consequently, the flattened spatial state spans 4,096 dimensions, and the joint action space encompasses 100 dimensions. The DPC baseline observes an augmented 8,392-dimensional global state (current state, target state, and fixed 2D actuator coordinates). To maintain stability against the rapidly diverging 2D chaotic dynamics, the off-policy RL algorithms utilize significantly reduced learning rates, and all RL/MARL state observations are scaled down by a normalization factor of 5.0. 
+
+Table 16. Hyperparameters and Architectural Details for the KS 2D Benchmark                                                                
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Cosine Decay ( 10 −3→10 −5, warmup 50) 4Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Track (100.0), Effort ( 10 −4)
+> Centralized TD3 Global Global + Joint Act Constant ( 10 −6/5×10 −5)128 Updates: 100k, Buffer: 12.5k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global Global Linear Decay ( 10 −4→0/10 −3→0)1600 Rollout: 50, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.001, Target KL: 0.05
+> Indep. TD3 (MARL) Local Patch + PE + μLocal Obs + PE + Local Act Constant ( 10 −6/5×10 −5)128 Updates: 100k, Buffer: 12.5k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> MAPPO (MARL) Local Patch + PE Global Linear Decay ( 3×10 −4→0/3×10 −4→0)1600 Rollout: 50, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01
+
+G.8. Hyperparameters: Turbulence 2D Environment 
+
+Table 17 details the specific network inputs, optimization schedules, and algorithm-specific hyperparameters utilized for the decaying Turbulence 2D benchmark. To preserve the spatial alignment between the 2D fluid dynamics ( 64 × 64 grid) and the 64 static actuators (arranged in an 
+
+8 × 8 grid), all centralized baselines (DPC, TD3, PPO) replace standard Multi-Layer Perceptrons with Fully Convolutional Networks (FCNs). The actors downsample the 4,096-dimensional global vorticity field directly into an 8 × 8 × 1 spatial action grid. Centralized critics utilize Global Average Pooling (GAP) to compute global values. For the decentralized MARL baselines, the local observation is expanded into a 20 × 20 × 3 tensor patch containing the local vorticity alongside its spatial gradients ( ∇x, ∇y ). This patch is flattened and concatenated with a PE before passing 38 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+through the dense layers. Due to the extreme chaos of the system, state observations across all off-policy RL algorithms are divided by a normalization factor of 50.0. 
+
+Table 17. Hyperparameters and Architectural Details for the Turbulence 2D Benchmark                                                                       
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global (FCN) N/A Warmup Cosine ( 10 −4→5×10 −4→10 −6)4Updates: 500 Epochs, Grad Clip: 1.0 Loss Weights: Enstrophy (1.0), Effort ( 10 −5)
+> Centralized TD3 Global (FCN) Global + Spatial Act (FCN) Cosine Decay ( 10 −4→10 −5/10 −4→10 −5)128 Updates: 100k, Buffer: 100k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global (FCN) Global (FCN) Cosine Decay ( 10 −5→0/10 −3→0)1600 Rollout: 150, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .1, Ent. Coef: 0.001, Target KL: 0.05
+> Indep. TD3 (MARL) Local Patch + PE Local Patch + PE + Act Constant ( 3×10 −5/3×10 −5)512 Updates: 50k, Buffer: 100k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Indep. PPO (MAPPO) Local Patch + PE Local Patch + PE Linear Decay ( 3×10 −4→0/3×10 −4→0)400 Rollout: 150, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.01
+
+G.9. Hyperparameters: Density 2D Environment (Navier-Stokes) 
+
+Table 18 outlines the network architectures, optimization configurations, and algorithm-specific hyperparameters for the Density 2D benchmark. In this environment, a swarm of Nagents = 9 mobile injectors operates over a 64 × 80 fluid grid. The flattened global state encompasses 10,258 dimensions (5,120 current density, 5,120 target density, and 18 agent coordinates). The centralized joint action space spans 18 dimensions ( [vx, v y ] per agent). 
+
+Table 18. Hyperparameters and Architectural Details for the Density 2D Benchmark                                                                 
+
+> Algorithm Actor Input Critic Input Learning Rate (Actor / Critic) Batch Size Alg-Specific Hyperparameters DPC Global N/A Exp. Decay ( 10 −3→0, step 2k) 4Updates: 1000 Epochs, Grad Clip: 1.0 Loss Weights: Track (10.0), Coll (1000.0)
+> Centralized TD3 Global Global + Joint Act Constant ( 10 −4/5×10 −4)256 Updates: 100k, Buffer: 50k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> Centralized PPO Global Global Linear Decay ( 10 −4→0/5×10 −4→0)1600 Rollout: 50, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.001, Target KL: 0.05
+> MATD3 (MARL) Global + One-Hot ID (10,267) Global + Joint Act Constant ( 10 −4/5×10 −4)256 Updates: 100k, Buffer: 50k, Grad Clip: 1.0
+> τ= 0 .005 , Policy Delay: 2, Warmup: 500
+> MAPPO (MARL) Global Obs Stack Global Linear Decay ( 3×10 −4→0/3×10 −4→0)1600 Rollout: 50, PPO Epochs: 4, Grad Clip: 0.5 Clip ϵ= 0 .2, Ent. Coef: 0.001
+
+This section provides detailed hyperparameter specifications for all experiments. These tables supplement the problem descriptions and results already presented in the main appendix sections. 
+
+G.10. Nonlinear MPC (NMPC) Baseline 
+
+To contextualize the performance of our neural operator policies against classical optimal control, we also benchmarked a Nonlinear Model Predictive Control (NMPC) algorithm (Allg ¨ower & Zheng, 2012) on the 1D Kuramoto-Sivashinsky (KS) stabilization task. The NMPC solves a finite-horizon open-loop optimal control problem at each time step, explicitly utilizing the differentiable KS physics solver. Table 19 details the tracking performance and computational timing of the NMPC baseline. While the NMPC achieves competitive stabilization performance (Final Window MSE of 1.37 × 10 −4), it highlights the fundamental limitation of online optimization for PDE control: computational latency. The solver requires an average of 592.09 ms per step (reaching up to 1.7 seconds during complex chaotic transients). In multi-agent or 2D settings, this online computational cost scales poorly, rendering real-time control intractable. In contrast, our learned neural operator policy evaluates in a fraction of a millisecond, demonstrating the critical advantage of amortizing the optimization cost during offline training. 39 CINOC: Cardinality-Invariant Neural Operator Policies for Scalable PDE Control 
+
+Table 19. NMPC Performance and Timing Statistics for the 1D KS Equation 
+
+Parameter / Metric Mean Std. Dev. 
+
+System Setup 
+
+Samples Evaluated 10 Rollout Steps 400 Prediction Horizon 20 
+
+Control Performance 
+
+Final Window MSE 1.3797 × 10 −4 4.0648 × 10 −5
+
+Timing Statistics (ms) 
+
+Per-step MPC Solve Time a 592.09 27.91 Full Rollout Time 237105.59  
+
+> a
+
+Optimization only. The absolute minimum solve time was 558.96 ms, and the maximum was 1730.05 ms. 
+
+40
