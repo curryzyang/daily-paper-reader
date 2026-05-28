@@ -388,6 +388,13 @@
           { type: 'style', path: 'app/vendor/katex/0.16.9/dist/katex.min.css' },
           { type: 'script', path: 'app/vendor/katex/0.16.9/dist/katex.min.js' },
           { type: 'script', path: 'app/vendor/katex/0.16.9/dist/contrib/auto-render.min.js' },
+        ]).then(function () {
+          document.dispatchEvent(new Event('dpr-math-assets-ready'));
+        }).catch(function (err) {
+          console.error('[DPR] 数学公式资源加载失败：', err);
+        });
+
+        window.DPRLoadAssets([
           { type: 'script', path: 'app/chat.discussion.js' },
           { type: 'script', path: 'app/subscriptions.github-token.js' },
           { type: 'script', path: 'app/subscriptions.smart-query.js' },

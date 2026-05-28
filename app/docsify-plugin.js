@@ -886,18 +886,38 @@ window.$docsify = {
           console.error('Zotero meta update failed:', e);
         });
 
+      let pendingMathRenderRoot = null;
+
+      const getCurrentMathRoot = () => {
+        const file = vm && vm.route ? vm.route.file : '';
+        const mainContent = document.querySelector('.markdown-section');
+        if (!mainContent) return null;
+        return isPaperRouteFile(file) ? ensurePageContentRoot() : mainContent;
+      };
+
       // 公共工具：在指定元素上渲染公式
       const renderMathInEl = (el) => {
-        if (!window.renderMathInElement || !el) return;
-        window.renderMathInElement(el, {
-          delimiters: [
-            { left: '$$', right: '$$', display: true },
-            { left: '\\[', right: '\\]', display: true },
-            { left: '\\(', right: '\\)', display: false },
-            { left: '$', right: '$', display: false },
-          ],
-          throwOnError: false,
-        });
+        if (!el) return false;
+        if (!window.renderMathInElement) {
+          pendingMathRenderRoot = el;
+          return false;
+        }
+        try {
+          window.renderMathInElement(el, {
+            delimiters: [
+              { left: '$$', right: '$$', display: true },
+              { left: '\\[', right: '\\]', display: true },
+              { left: '\\(', right: '\\)', display: false },
+              { left: '$', right: '$', display: false },
+            ],
+            throwOnError: false,
+          });
+          pendingMathRenderRoot = null;
+          return true;
+        } catch (e) {
+          console.warn('[DPR] 数学公式渲染失败：', e);
+          return false;
+        }
       };
 
       const normalizeLatexDelimiters = (markdown) =>
@@ -4472,6 +4492,13 @@ window.$docsify = {
         return paperHtml + body;
       });
 
+      const refreshPageMathRendering = () => {
+        const root = getCurrentMathRoot() || pendingMathRenderRoot;
+        if (root) {
+          renderMathInEl(root);
+        }
+      };
+
       const refreshDeferredPageEnhancements = () => {
         try {
           const paperId = getPaperId();
@@ -4484,11 +4511,7 @@ window.$docsify = {
             routePath === '/' ||
             routePath === '';
           const isLandingLikePage = isHomePage || isReportRouteFile(file);
-          const mainContent = document.querySelector('.markdown-section');
-          if (mainContent) {
-            const root = isPaperRouteFile(file) ? ensurePageContentRoot() : null;
-            renderMathInEl(root || mainContent);
-          }
+          refreshPageMathRendering();
           if (!isLandingLikePage && window.PrivateDiscussionChat) {
             window.PrivateDiscussionChat.initForPage(paperId);
           }
@@ -4501,6 +4524,7 @@ window.$docsify = {
         'dpr-deferred-assets-ready',
         refreshDeferredPageEnhancements,
       );
+      document.addEventListener('dpr-math-assets-ready', refreshPageMathRendering);
 
       // --- Docsify 生命周期钩子 ---
       hook.doneEach(function () {
@@ -4547,12 +4571,7 @@ window.$docsify = {
         });
 
         // A. 对正文区域进行一次全局公式渲染（支持 $...$ / $$...$$）
-        const mainContent = document.querySelector('.markdown-section');
-        if (mainContent) {
-          // 先创建正文包装层，避免后续切页动画影响聊天浮层
-          const root = isPaperPage ? ensurePageContentRoot() : null;
-          renderMathInEl(root || mainContent);
-        }
+        refreshPageMathRendering();
 
         // 论文页标题条排版（只对 docs/YYYYMM/DD/*.md 生效）
         applyPaperTitleBar();
