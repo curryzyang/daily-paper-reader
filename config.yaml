@@ -29,13 +29,12 @@ subscriptions:
     - tag: SR
       description: 符号回归和科学发现相结合
       enabled: true
+      paper_sources:
+        - arxiv
       keywords:
         - keyword: symbolic regression
           keyword_cn: 符号回归
           query: symbolic regression for scientific discovery
-        - keyword: genetic programming
-          keyword_cn: 遗传规划
-          query: genetic programming for symbolic regression
         - keyword: mathematical expression discovery
           keyword_cn: 数学表达式发现
           query: automated discovery of mathematical expressions from data
@@ -48,15 +47,6 @@ subscriptions:
         - keyword: physics-informed learning
           keyword_cn: 物理启发学习
           query: physics-informed symbolic regression models
-        - keyword: AI for Science
-          keyword_cn: 科学人工智能
-          query: artificial intelligence for scientific research and discovery
-        - keyword: mathematical modeling
-          keyword_cn: 数学建模
-          query: automated mathematical modeling of physical systems
-        - keyword: symbolic AI
-          keyword_cn: 符号人工智能
-          query: symbolic artificial intelligence in natural sciences
       intent_queries:
         - query: state of the art symbolic regression algorithms
           query_cn: 最先进的符号回归算法
@@ -78,19 +68,58 @@ subscriptions:
           enabled: true
           source: manual
           note: ''
-        - query: What are the most significant recent scientific discoveries?
-          query_cn: 最近有哪些重大的科学发现？
+      updated_at: '2026-05-28T07:52:13.832Z'
+      paused: true
+    - tag: pde-swarm
+      description: 请帮我查找PDE control和swarm robots结合的相关论文
+      enabled: true
+      paper_sources:
+        - arxiv
+      keywords:
+        - keyword: partial differential equation swarm
+          keyword_cn: 偏微分方程群体机器人
+          query: partial differential equation swarm robotics control
+        - keyword: distributed parameter system swarm
+          keyword_cn: 分布参数系统群体
+          query: distributed parameter system control for robot swarms
+        - keyword: swarm robot PDE
+          keyword_cn: 群体机器人偏微分方程
+          query: swarm robot control using partial differential equations
+        - keyword: multi-agent PDE
+          keyword_cn: 多智能体偏微分方程
+          query: multi-agent systems governed by partial differential equations
+        - keyword: boundary control swarm
+          keyword_cn: 边界控制群体
+          query: boundary control of swarm robotic systems
+      intent_queries:
+        - query: PDE based control of swarm of robots
+          query_cn: 基于偏微分方程的群体机器人控制
           enabled: true
-          source: generated
+          source: manual
           note: ''
-        - query: how to combine symbolic regression with scientific discovery
-          query_cn: 如何将符号回归与科学发现相结合
+        - query: application of partial differential equations in multi robot systems
+          query_cn: 偏微分方程在多机器人系统中的应用
           enabled: true
-          source: generated
+          source: manual
           note: ''
-        - query: interpretable symbolic models for scientific data analysis
-          query_cn: 用于科学数据分析的可解释符号模型
+        - query: distributed control of robot swarms using PDE methods
+          query_cn: 使用偏微分方程方法的群体机器人分布式控制
           enabled: true
-          source: generated
+          source: manual
           note: ''
-      updated_at: '2026-03-06T06:25:49.955Z'
+      updated_at: '2026-05-28T07:51:34.801Z'
+source_backends:
+  arxiv:
+    papers_table: arxiv_papers
+    use_vector_rpc: true
+    vector_rpc: match_arxiv_papers
+    vector_rpc_exact: match_arxiv_papers_exact
+    use_bm25_rpc: true
+    bm25_rpc: match_arxiv_papers_bm25
+    sync_table: arxiv_sync_status
+    sync_success_value: success
+    schema: public
+    kind: supabase
+    enabled: true
+    url: https://lyucdwgefyfbmaiopjbk.supabase.co
+    anon_key: sb_publishable_lX-oi64Uxyd7SIVv3_w2Uw_MTOojeKq
